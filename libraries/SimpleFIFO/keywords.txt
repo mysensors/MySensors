@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map For SimpleFIFO
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SimpleFIFO	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+peek	KEYWORD2
+enqueue	KEYWORD2
+dequeue	KEYWORD2
+flush	KEYWORD2
+count	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+size	LITERAL1

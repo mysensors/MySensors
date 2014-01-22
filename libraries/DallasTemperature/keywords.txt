@@ -1,0 +1,52 @@
+#######################################
+# Syntax Coloring Map For Ultrasound
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+DallasTemperature	KEYWORD1
+OneWire	KEYWORD1
+AlarmHandler KEYWORD1
+DeviceAddress KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+setResolution	KEYWORD2
+getResolution	KEYWORD2
+getTempC	KEYWORD2
+toFahrenheit	KEYWORD2
+getTempF	KEYWORD2
+getTempCByIndex 	KEYWORD2
+getTempFByIndex	KEYWORD2
+requestTemperatures	KEYWORD2
+requestTemperaturesByAddress KEYWORD2
+requestTemperaturesByIndex KEYWORD2
+isParasitePowerMode	KEYWORD2
+begin KEYWORD2
+getDeviceCount	KEYWORD2
+getAddress	KEYWORD2
+validAddress	KEYWORD2
+isConnected	KEYWORD2
+readScratchPad	KEYWORD2
+writeScratchPad	KEYWORD2
+readPowerSupply	KEYWORD2
+setHighAlarmTemp	KEYWORD2
+setLowAlarmTemp	KEYWORD2
+getHighAlarmTemp	KEYWORD2
+getLowAlarmTemp	KEYWORD2
+resetAlarmSearch	KEYWORD2
+alarmSearch	KEYWORD2
+hasAlarm	KEYWORD2
+toCelsius	KEYWORD2
+processAlarmss	KEYWORD2
+setAlarmHandlers	KEYWORD2
+defaultAlarmHandler	KEYWORD2
+calculateTemperature	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
