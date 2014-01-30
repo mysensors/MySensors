@@ -29,20 +29,56 @@ void Relay::begin(uint8_t _radioId) {
 }
 
 
+boolean Relay::sendData(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binary) {
+	bool ok = false;
+	if (length < sizeof(msg.data)) {
+		uint8_t route = getChildRoute(to);
+		if (route>0) {
+			debug(PSTR("Found child in routing table. Sending to %d\n"),route);
+			buildMsg(from, to, childId, messageType, type, data, length, binary);
+			// Found node in route table
+			ok = sendWrite(route, msg, length);
+		} if (radioId == GATEWAY_ADDRESS) {
+			// If we're GW (no parent...). As a last resort try sending message directly to node.
+			debug(PSTR("Target not found in routing table. \n"));
+			buildMsg(from, to, childId, messageType, type, data, length, binary);
+			// Found node in route table
+			ok = sendWrite(to, msg, length);
+
+		} else {
+			debug(PSTR("Route message back to relay\n"));
+			// We are probably a repeater node which should send message back to relay
+			ok = Sensor::sendData(from, to, childId, messageType, type, data, length, binary);
+		}
+	} else {
+		debug(PSTR("Message too large\n"));
+	}
+	return ok;
+}
+
+
+
 boolean Relay::send(message_s message, int length) {
 	bool ok = true;
 	uint8_t route = getChildRoute(msg.header.to);
 
 	if (route>0 && route<255 && message.header.to != GATEWAY_ADDRESS) {
-		debug(PSTR("Routing message.\n"));
+		debug(PSTR("Routing message to %d.\n"), route);
 		// Message destination is not gateway and is in routing table for this node.
 		// Send it downstream
-		sendWrite(route, message, length);
+		ok = sendWrite(route, message, length);
+
+
 	} else if (radioId != GATEWAY_ADDRESS) {
 		debug(PSTR("Sending message back towards gw.\n"));
 		// Should be routed back to gateway. Sensor code knows how to do this.
 		ok = Sensor::send(message, length);
 	}
+
+	if (!ok) {
+		debug(PSTR("No ack received.\n"));
+	}
+	return ok;
 }
 
 
@@ -50,6 +86,11 @@ boolean Relay::send(message_s message, int length) {
 boolean Relay::messageAvailable() {
 	uint8_t pipe;
 	boolean available = RF24::available(&pipe);
+
+	if (available) {
+		debug(PSTR("Message available on pipe %d\n"),pipe);
+	}
+
 	if (available) {
 		uint8_t len = RF24::getDynamicPayloadSize()-sizeof(msg.header);
 		readMessage();
@@ -91,6 +132,9 @@ boolean Relay::messageAvailable() {
 						return false;
 					}
 					// Return rest of internal messages back to sketch...
+					if (msg.header.last != GATEWAY_ADDRESS)
+						addChildRoute(msg.header.from, msg.header.last);
+
 					return true;
 				} else {
 					// If this is variable message from sensor net gateway. Send ack back.
@@ -101,6 +145,9 @@ boolean Relay::messageAvailable() {
 						sendVariableAck();
 					}
 					// Return message to waiting sketch...
+					if (msg.header.last != GATEWAY_ADDRESS)
+						addChildRoute(msg.header.from, msg.header.last);
+
 					return true;
 				}
 			} else {
@@ -204,9 +251,15 @@ void Relay::clearChildRoutes() {
 
 void Relay::sendChildren() {
 	// Send in which children that is using this node as an relay.
-	debug(PSTR("Send child info to sensor gateway.\n"));
-	sendInternal(I_CHILDREN, "not implemented");
 	// TODO: Fix this
+	debug(PSTR("Send child info to sensor gateway.\n"));
+
+	for (int i=0;i< 10; i++) {
+//		Serial.println(childNodeTable[i]);
+		debug(PSTR("rt:%d, %d\n"), i, getChildRoute(i) );
+	}
+
+	//sendInternal(I_CHILDREN, "not implemented");
 }
 
 

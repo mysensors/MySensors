@@ -85,6 +85,11 @@ void Gateway::checkButtonTriggeredInclusion() {
     serial(PSTR("0;0;%d;%d;Inclusion started by button.\n"),  M_INTERNAL, I_LOG_MESSAGE);
     buttonTriggeredInclusion = false;
     setInclusionMode(true);
+
+#ifdef DEBUG
+    sendChildren();
+#endif
+
   }
 }
 

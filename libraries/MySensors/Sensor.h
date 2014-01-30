@@ -22,7 +22,7 @@
 #include <avr/progmem.h>
 #include <stdarg.h>
 
-#define DEBUG // Turn on/off debug mode by having/removing this define
+#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -42,7 +42,7 @@
 
 // This is the radioId for sensor net gateway receiver sketch (where all sensors should send their data).
 // This is also act as base value for sensor radioId
-#define BASE_RADIO_ID 0xABCDABC000LL
+#define BASE_RADIO_ID ((uint64_t)0xABCDABC000LL)
 #define GATEWAY_ADDRESS ((uint8_t)0)
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
 

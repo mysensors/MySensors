@@ -113,6 +113,7 @@ void Sensor::findRelay() {
 	// Open a reading pipe for current radioId (if it differs from broadcast)
 	if (radioId != BROADCAST_PIPE) {
 		RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID+radioId);
+		debug(PSTR("Open ping reading pipe: %d\n"), radioId);
 	}
 	distance = 255;
 	uint8_t oldRelayId = relayId;
@@ -123,6 +124,7 @@ void Sensor::findRelay() {
 		// Wait for replies for max 10 seconds (or when buffer for all relay nodes have been filled up)
 		unsigned long enter = millis();
 		uint8_t neighborDistanceToGW;
+
 		// Wait for ack responses 5 seconds
 		while (millis() - enter < 5000) {
 			if (messageAvailable()) {
@@ -218,18 +220,19 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 	// Add current radioId to last-field and calculate crc
 	message.header.last = radioId;
 	message.header.crc = crc8Message(message);
-	debug(PSTR("Sending: from=%d, to=%d, childId=%d, mtype=%d, type=%d, crc=%d, '%s', sent via %d\n"),
-			message.header.from,message.header.to, message.header.childId, message.header.messageType, message.header.type, message.header.crc, message.data, dest);
+	debug(PSTR("Tx: f=%d,t=%d,p=%d,n=%d,c=%d,mt=%d,t=%d,x=%d: %s\n"),
+			message.header.from,message.header.to, message.header.last, dest, message.header.childId, message.header.messageType, message.header.type, message.header.crc,  message.data);
 
 	RF24::stopListening();
 	bool ok = false;
-	RF24::openWritingPipe(BASE_RADIO_ID + dest);
+	RF24::openWritingPipe(BASE_RADIO_ID+ dest);
 	int retry = 5;
 	do {
 		ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length));
 	}
 	while ( !ok && --retry );
 	RF24::startListening();
+//	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID+radioId);
 
 	if (ok) {
 		debug(PSTR("Sent successfully\n"));
@@ -369,7 +372,15 @@ void Sensor::requestIsMetricSystem() {
 
 
 boolean Sensor::messageAvailable() {
-	if (RF24::available()) {
+	uint8_t pipe;
+	boolean available = RF24::available(&pipe);
+
+	if (available) {
+		debug(PSTR("Message available on pipe %d\n"),pipe);
+	}
+
+
+	if (available) {
 		readMessage();
 		boolean ok = validate() == VALIDATE_OK;
 		debug(PSTR("Mess crc %s.\n"),ok?"ok":"error");
@@ -408,8 +419,8 @@ message_s Sensor::readMessage() {
 	bool done = RF24::read(&msg, len);
 	// Make sure string gets terminated ok.
 	msg.data[len - sizeof(header_s) ] = '\0';
-	debug(PSTR("Received: from=%d, to=%d, childId=%d, mtype=%d, type=%d, crc=%d, '%s'\n"),
-			msg.header.from,msg.header.to, msg.header.childId, msg.header.messageType, msg.header.type,msg.header.crc, msg.data);
+	debug(PSTR("Rx: f=%d,t=%d,l=%d,c=%d,mt=%d,t=%d,x=%d: %s\n"),
+			msg.header.from,msg.header.to, msg.header.last, msg.header.childId, msg.header.messageType, msg.header.type,msg.header.crc, msg.data);
 	return msg;
 }
 
@@ -518,15 +529,18 @@ void Sensor::debugPrint(const char *fmt, ... ) {
 	vsnprintf_P(fmtBuffer, 300, fmt, args);
 	va_end (args);
 	if (radioId == GATEWAY_ADDRESS) {
-		// Truncte message if this is gateway node
-		vsnprintf_P(fmtBuffer, 97, fmt, args);
-		fmtBuffer[96] = '\n';
-		fmtBuffer[97] = '\0';
+		// Truncate message if this is gateway node
+		vsnprintf_P(fmtBuffer, 60, fmt, args);
+		fmtBuffer[59] = '\n';
+		fmtBuffer[60] = '\0';
 	} else {
 		vsnprintf_P(fmtBuffer, 299, fmt, args);
 	}
 	va_end (args);
 	Serial.print(fmtBuffer);
+
+
+	//Serial.print("0;0;4;11;Mem free:");
 	//Serial.println(freeRam());
 }
 #endif

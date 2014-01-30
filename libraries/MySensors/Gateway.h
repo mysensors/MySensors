@@ -48,6 +48,8 @@ class Gateway : public Relay
 	    void ledTimersInterrupt();
 	    void startInclusionInterrupt();
 
+
+
 	private:
 	    char commandBuffer[MAX_RECEIVE_LENGTH];
 	    char serialBuffer[MAX_SEND_LENGTH]; // Buffer for building string when sending data to vera
@@ -64,12 +66,12 @@ class Gateway : public Relay
 	    uint8_t pinTx;
 	    uint8_t pinEr;
 
+	    void serial(const char *fmt, ... );
 	    uint8_t validate();
 	    void serial(message_s msg);
 	    void interruptStartInclusion();
 	    void checkButtonTriggeredInclusion();
 	    void setInclusionMode(boolean newMode);
-	    void serial(const char *fmt, ... );
 	    void checkInclusionFinished();
 	    void ledTimers();
 	    void rxBlink(uint8_t cnt);

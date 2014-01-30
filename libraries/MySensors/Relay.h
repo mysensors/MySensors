@@ -43,7 +43,10 @@ class Relay : public Sensor
 		boolean messageAvailable();
 		boolean send(message_s message, int length);
 
+		boolean sendData(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binary);
+
 	protected:
+		void sendChildren();
 
 	private:
 		uint8_t childNodeTable[256]; // Buffer to store child node information. Store this in EEPROM
@@ -52,7 +55,6 @@ class Relay : public Sensor
 		void addChildRoute(uint8_t childId, uint8_t route);
 		void removeChildRoute(uint8_t childId);
 		void clearChildRoutes();
-		void sendChildren();
 		void relayMessage(uint8_t length, uint8_t pipe);
 
 };
