@@ -380,7 +380,7 @@ boolean Sensor::messageAvailable() {
 	}
 
 
-	if (available) {
+	if (available && pipe<7) {
 		readMessage();
 		boolean ok = validate() == VALIDATE_OK;
 		debug(PSTR("Mess crc %s.\n"),ok?"ok":"error");

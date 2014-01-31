@@ -38,15 +38,13 @@ boolean Relay::sendData(uint8_t from, uint8_t to, uint8_t childId, uint8_t messa
 			buildMsg(from, to, childId, messageType, type, data, length, binary);
 			// Found node in route table
 			ok = sendWrite(route, msg, length);
-		} if (radioId == GATEWAY_ADDRESS) {
+		} else if (radioId == GATEWAY_ADDRESS) {
 			// If we're GW (no parent...). As a last resort try sending message directly to node.
-			debug(PSTR("Target not found in routing table. \n"));
+			debug(PSTR("No route... try sending direct.\n"));
 			buildMsg(from, to, childId, messageType, type, data, length, binary);
 			// Found node in route table
 			ok = sendWrite(to, msg, length);
-
 		} else {
-			debug(PSTR("Route message back to relay\n"));
 			// We are probably a repeater node which should send message back to relay
 			ok = Sensor::sendData(from, to, childId, messageType, type, data, length, binary);
 		}
@@ -91,7 +89,7 @@ boolean Relay::messageAvailable() {
 		debug(PSTR("Message available on pipe %d\n"),pipe);
 	}
 
-	if (available) {
+	if (available && pipe<7) {
 		uint8_t len = RF24::getDynamicPayloadSize()-sizeof(msg.header);
 		readMessage();
 		boolean ok = validate() == VALIDATE_OK;
