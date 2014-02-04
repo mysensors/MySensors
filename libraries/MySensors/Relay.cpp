@@ -23,9 +23,6 @@ void Relay::begin(uint8_t _radioId) {
 	for (int i=0;i<sizeof(childNodeTable);i++) {
 		childNodeTable[i] = EEPROM.read(EEPROM_ROUTES_ADDRESS+i);
 	}
-
-	// Start listening for incoming messages
-	RF24::startListening();
 }
 
 
@@ -91,14 +88,11 @@ boolean Relay::messageAvailable() {
 
 	if (available && pipe<7) {
 		uint8_t len = RF24::getDynamicPayloadSize()-sizeof(msg.header);
-		readMessage();
-		boolean ok = validate() == VALIDATE_OK;
-		debug(PSTR("Message crc %s.\n"),ok?"ok":"error");
+		boolean ok = readMessage();
 		if (ok) {
 			if (msg.header.messageType == M_INTERNAL &&
 				msg.header.type == I_PING) {
 					// We always answer ping messages
-					debug(PSTR("Answer ping message.\n"));
 					// Wait a random delay of 0-2 seconds to minimize collision
 					// between ping ack messages from other relaying nodes
 					randomSeed(millis());

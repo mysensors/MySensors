@@ -67,7 +67,7 @@ class Gateway : public Relay
 	    uint8_t pinEr;
 
 	    void serial(const char *fmt, ... );
-	    uint8_t validate();
+	    uint8_t validate(uint8_t length);
 	    void serial(message_s msg);
 	    void interruptStartInclusion();
 	    void checkButtonTriggeredInclusion();

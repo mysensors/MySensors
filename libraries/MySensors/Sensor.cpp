@@ -23,16 +23,17 @@ void Sensor::setupRadio() {
 	// Start up the radio library
 	RF24::begin();
 	RF24::enableDynamicPayloads();
-
-	RF24::setAutoAck(true);
-	RF24::setRetries(15, 15);
-
-	//RF24::setChannel(70);
-	RF24::setDataRate(RF24_1MBPS);
+    RF24::setAutoAck(false);
+    RF24::setRetries(15, 15);
+	RF24::setPALevel(RF24_PA_MAX);
+	//RF24::setChannel(70); // Default 70
+	RF24::setDataRate(RF24_2MBPS);
 	RF24::setCRCLength(RF24_CRC_16);
 
-	// All (relaying) nodes listen to broadcast pipe (for PING messages)
-	RF24::openReadingPipe(BROADCAST_PIPE, BASE_RADIO_ID + BROADCAST_ADDRESS);
+	// All repeater nodes and gateway listen to broadcast pipe (for PING messages)
+	if (isRelay) {
+		RF24::openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+	}
 }
 
 void Sensor::begin(uint8_t _radioId) {
@@ -55,7 +56,7 @@ void Sensor::begin(uint8_t _radioId) {
 	initializeRadioId();
 
 	// Open reading pipe for messages directed to this node
-	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID+radioId);
+	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(radioId));
 
 	// Send presentation for this radio node
 	sendSensorPresentation(NODE_CHILD_ID, isRelay? S_ARDUINO_RELAY : S_ARDUINO_NODE);
@@ -85,7 +86,7 @@ void Sensor::initializeRadioId() {
 			// No radio id has been fetched yet ant EEPROM is unwritten.
 			// Request new id from sensor net gateway. Use radioId 4095 temporarily
 			// to be able to receive my correct nodeId.
-			RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID+radioId);
+			RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(radioId));
 			radioId = atoi(getInternal(I_REQUEST_ID));
 			// Write id to EEPROM
 			if (radioId == AUTO) { // sensor net gateway will return max id if all sensor id are taken
@@ -112,7 +113,7 @@ void Sensor::findRelay() {
 
 	// Open a reading pipe for current radioId (if it differs from broadcast)
 	if (radioId != BROADCAST_PIPE) {
-		RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID+radioId);
+		RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(radioId));
 		debug(PSTR("Open ping reading pipe: %d\n"), radioId);
 	}
 	distance = 255;
@@ -156,10 +157,6 @@ void Sensor::findRelay() {
 		EEPROM.write(EEPROM_RELAY_ID_ADDRESS, relayId);
 		EEPROM.write(EEPROM_DISTANCE_ADDRESS, distance);
 	}
-
-	// Always listen to relay pipe (relay broadcasts messages that might be for this
-	// nodes children)
-	RF24::openReadingPipe(RELAY_PIPE, BASE_RADIO_ID + relayId);
 }
 
 
@@ -205,7 +202,7 @@ boolean Sensor::send(message_s message, int length) {
 	if (!ok && radioId != GATEWAY_ADDRESS) {
 		// Failure when sending to relay node. The relay node might be down and we
 		// need to find another route to gateway. Max 20 retries before giving up.
-		if (failedTransmissions>20) {
+		if (failedTransmissions > FIND_RELAY_RETRIES) {
 			findRelay();
 		}
 		failedTransmissions++;
@@ -217,27 +214,45 @@ boolean Sensor::send(message_s message, int length) {
 
 
 boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
-	// Add current radioId to last-field and calculate crc
-	message.header.last = radioId;
-	message.header.crc = crc8Message(message);
-	debug(PSTR("Tx: f=%d,t=%d,p=%d,n=%d,c=%d,mt=%d,t=%d,x=%d: %s\n"),
-			message.header.from,message.header.to, message.header.last, dest, message.header.childId, message.header.messageType, message.header.type, message.header.crc,  message.data);
 
+	message.header.last = radioId;
+	message.header.crc = crc8Message(message, length);
+	debug(PSTR("Tx: fr=%d,to=%d,la=%d,ne=%d,ci=%d,mt=%d,ty=%d,cr=%d: %s\n"),
+			message.header.from,message.header.to, message.header.last, dest, message.header.childId, message.header.messageType, message.header.type,  message.header.crc, message.data);
+
+	bool ok = true;
+	bool broadcast =  message.header.messageType == M_INTERNAL &&  message.header.type == I_PING;
+	int retry = WRITE_RETRY;
 	RF24::stopListening();
-	bool ok = false;
-	RF24::openWritingPipe(BASE_RADIO_ID+ dest);
-	int retry = 5;
-	do {
-		ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length));
-	}
-	while ( !ok && --retry );
+	RF24::openWritingPipe(TO_ADDR(dest));
+	RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
 	RF24::startListening();
-//	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID+radioId);
+	RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+
+	if (!broadcast) {
+		// ---------------- WAIT FOR ACK ------------------
+		 unsigned long startedWaiting = millis();
+		 bool timeout = false;
+		 // Wait max 100 ms
+		 while ( !RF24::available() && !timeout ) {
+			if (millis() - startedWaiting > 100 ) {
+				timeout = true;
+				ok = false;
+			}
+		 }
+		// Check payload size and content
+		if ( !timeout && RF24::getDynamicPayloadSize()==sizeof(uint8_t)) {
+			uint8_t idest;
+			RF24::read( &idest, sizeof(uint8_t));
+			if (dest != idest) { ok == false; }
+		} else { ok = false; }
+		//--------------------
+	}
 
 	if (ok) {
 		debug(PSTR("Sent successfully\n"));
 	} else {
-		debug(PSTR("Send failed. No ack received.\n"));
+		debug(PSTR("Send failed.\n"));
 	}
 	return ok;
 }
@@ -381,9 +396,7 @@ boolean Sensor::messageAvailable() {
 
 
 	if (available && pipe<7) {
-		readMessage();
-		boolean ok = validate() == VALIDATE_OK;
-		debug(PSTR("Mess crc %s.\n"),ok?"ok":"error");
+		boolean ok = readMessage();
 		if (ok && msg.header.to == radioId) {
 			// This message is addressed to this node
 			debug(PSTR("Message addressed for this node.\n"));
@@ -414,106 +427,81 @@ message_s Sensor::getMessage() {
 }
 
 
-message_s Sensor::readMessage() {
+boolean Sensor::readMessage() {
 	uint8_t len = RF24::getDynamicPayloadSize();
-	bool done = RF24::read(&msg, len);
-	// Make sure string gets terminated ok.
+	boolean done = RF24::read(&msg, len);
+
+	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING_ACK)) {
+		RF24::stopListening();
+		RF24::openWritingPipe(TO_ADDR(msg.header.last));
+		RF24::write(&radioId, sizeof(uint8_t));
+		RF24::startListening();
+		RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+	}
+	uint8_t cb = msg.header.crc;
+	uint8_t valid = validate(len-sizeof(header_s));
+	boolean ok = valid == VALIDATE_OK;
+
+
+	// Make sure string gets terminated ok for full sized messages.
 	msg.data[len - sizeof(header_s) ] = '\0';
-	debug(PSTR("Rx: f=%d,t=%d,l=%d,c=%d,mt=%d,t=%d,x=%d: %s\n"),
-			msg.header.from,msg.header.to, msg.header.last, msg.header.childId, msg.header.messageType, msg.header.type,msg.header.crc, msg.data);
-	return msg;
+	debug(PSTR("Rx: fr=%d,to=%d,la=%d,ci=%d,mt=%d,t=%d,cr=%d(%s): %s\n"),
+			msg.header.from,msg.header.to, msg.header.last, msg.header.childId, msg.header.messageType, msg.header.type, msg.header.crc, valid==0?"ok":valid==1?"ec":"ev", msg.data);
+	return ok;
 }
 
-/*
- * raw CRC 8 bit calculation
- */
-uint8_t Sensor::crc8Raw ( uint8_t *data_in, uint8_t number_of_bytes_to_read )
-{
-  uint8_t  crc;
-  uint8_t loop_count;
-  uint8_t  bit_counter;
-  uint8_t  data;
-  uint8_t  feedback_bit;
-
-  crc = CRC8INIT;
-
-  for (loop_count = 0; loop_count != number_of_bytes_to_read; loop_count++)
-  {
-    data = data_in[loop_count];
-
-    bit_counter = 8;
-    do {
-      feedback_bit = (crc ^ data) & 0x01;
-
-      if ( feedback_bit == 0x01 ) {
-        crc = crc ^ CRC8POLY;
-      }
-      crc = (crc >> 1) & 0x7F;
-      if ( feedback_bit == 0x01 ) {
-        crc = crc | 0x80;
-      }
-
-      data = data >> 1;
-      bit_counter--;
-
-    } while (bit_counter > 0);
-  }
-  return crc;
-}
 /*
  * calculate CRC8 on message_s data taking care of data structure and protocol version
  */
-uint8_t Sensor::crc8Message(message_s var_msg) {
+uint8_t Sensor::crc8Message(message_s var_msg, uint8_t len) {
+	uint8_t crc = 0x00;
+	uint8_t loop_count;
+	uint8_t bit_counter;
+	uint8_t data;
+	uint8_t feedback_bit;
+	uint8_t number_of_bytes_to_read = (uint8_t)sizeof(var_msg);
+
 	// Must set crc to a constant value.
 	var_msg.header.crc = 0;
+
 	// fill unused space by zeroes for string data only
-	if(!var_msg.header.binary) {
-		uint8_t len = strlen(var_msg.data);
-		if(len < sizeof(var_msg.data)-1) {
-			memset(&var_msg.data[len], 0, sizeof(var_msg.data) - 1 - len);
-		}
+	if(len>=0 && len < sizeof(var_msg.data)-1) {
+		memset(&var_msg.data[len], 0, sizeof(var_msg.data) - 1 - len);
 	}
-	return crc8Raw((uint8_t*)&var_msg, (uint8_t)sizeof(var_msg));
+
+
+	for (loop_count = 0; loop_count != number_of_bytes_to_read; loop_count++)
+	{
+		data = ((uint8_t*)&var_msg)[loop_count];
+
+		bit_counter = 8;
+		do {
+		  feedback_bit = (crc ^ data) & 0x01;
+
+		  if ( feedback_bit == 0x01 ) {
+			crc = crc ^ 0x18;              //0X18 = X^8+X^5+X^4+X^0
+		  }
+		  crc = (crc >> 1) & 0x7F;
+		  if ( feedback_bit == 0x01 ) {
+			crc = crc | 0x80;
+		  }
+
+		  data = data >> 1;
+		  bit_counter--;
+
+		} while (bit_counter > 0);
+	}
+	return crc;
 }
 
 
-/*
-uint8_t Sensor::crc8Message(message_s var_msg) {
-	struct {
-		message_s msg;
-		uint8_t protocol_version;
-	} crc_data;
-	memcpy(&crc_data, &var_msg, sizeof(var_msg));
-	crc_data.protocol_version = PROTOCOL_VERSION;
-	// some clean up needed for repeated result
-	crc_data.msg.header.crc = 0;
-	// fill unused space by zeroes for string data only
-	if(!crc_data.msg.header.binary) {
-		uint8_t len = strlen(crc_data.msg.data);
-		if(len < sizeof(crc_data.msg.data)-1) {
-			memset(&crc_data.msg.data[len], 0, sizeof(crc_data.msg.data) - 1 - len);
-		}
-	}
-	return crc8Raw((uint8_t*)&crc_data, (uint8_t)sizeof(crc_data));
-} */
+uint8_t Sensor::validate(uint8_t length) {
+	uint8_t oldCrc = msg.header.crc;
+	uint8_t newCrc = crc8Message(msg, length);
 
+	if(!(msg.header.version == PROTOCOL_VERSION)) return VALIDATE_BAD_VERSION;
 
-/*
- * true if message is consistent *
- */
-bool Sensor::checkCRC(message_s var_msg) {
-	uint8_t oldCrc = var_msg.header.crc;
-
-	//debug(PSTR("CRC: in %d, calc %d\n"),oldCrc, crc8Message(var_msg));
-
-	return (oldCrc == crc8Message(var_msg))?true:false;
-}
-
-uint8_t Sensor::validate() {
-	bool crc_check = checkCRC(msg);
-	bool version_check = (msg.header.version == PROTOCOL_VERSION);
-	if(!version_check) return VALIDATE_BAD_VERSION;
-	if(!crc_check) return VALIDATE_BAD_CRC;
+	if(!(oldCrc == newCrc)) return VALIDATE_BAD_CRC;
 	return VALIDATE_OK;
 }
 

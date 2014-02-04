@@ -45,15 +45,18 @@
 #define BASE_RADIO_ID ((uint64_t)0xABCDABC000LL)
 #define GATEWAY_ADDRESS ((uint8_t)0)
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
+#define TO_ADDR(x) (BASE_RADIO_ID + x)
 
-#define MAX_MESSAGE_LENGTH 32
-
+#define WRITE_PIPE ((uint8_t)0)
 #define CURRENT_NODE_PIPE ((uint8_t)1)
 #define BROADCAST_PIPE ((uint8_t)2)
-#define RELAY_PIPE ((uint8_t)3)
 
-#define CRC8INIT  0x00
-#define CRC8POLY  0x18              //0X18 = X^8+X^5+X^4+X^0
+
+#define WRITE_RETRY 5
+#define FIND_RELAY_RETRIES 20
+
+
+#define MAX_MESSAGE_LENGTH 32
 
 // Message types
 typedef enum {
@@ -235,7 +238,7 @@ class Sensor : public RF24
 	/**
 	 * Validates consistency of the message including CRC and protocol version
 	 */
-	uint8_t validate();
+	uint8_t validate(uint8_t length);
 
 
 #ifdef DEBUG
@@ -257,7 +260,7 @@ class Sensor : public RF24
 	void findRelay();
 	boolean send(message_s message, int length);
 	boolean sendWrite(uint8_t dest, message_s message, int length);
-	message_s readMessage(void);
+	boolean readMessage();
 	void buildMsg(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binary);
 	void sendInternal(uint8_t variableType, const char *value);
 	boolean sendVariableAck();
@@ -269,9 +272,7 @@ class Sensor : public RF24
 	message_s ack;  // Buffer for ack messages.
 
 	void initializeRadioId();
-	uint8_t crc8Raw(uint8_t *data_in, uint8_t number_of_bytes_to_read);
-	uint8_t crc8Message(message_s);
-	bool checkCRC(message_s);
+	uint8_t crc8Message(message_s, uint8_t length);
 	char* get(uint8_t nodeId, uint8_t childId, uint8_t sendType, uint8_t receiveType, uint8_t variableType);
 	char *getInternal(uint8_t variableType);
 };

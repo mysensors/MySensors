@@ -13,11 +13,13 @@
 
 Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time) : Relay(_cepin, _cspin) {
 	ledMode = false;
+	isRelay = true;
 	inclusionTime = _inclusion_time;
 }
 
 Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion, uint8_t _inclusion_time, uint8_t _rx, uint8_t _tx, uint8_t _er) : Relay(_cepin, _cspin) {
 	ledMode = true;
+	isRelay = true;
 	pinInclusion = _inclusion;
 	inclusionTime = _inclusion_time;
 	pinRx = _rx;
@@ -169,8 +171,8 @@ void Gateway::setInclusionMode(boolean newMode) {
 
 
 // Override normal validate to add error blink if crc check fails
-uint8_t Gateway::validate() {
-	uint8_t res = Sensor::validate();
+uint8_t Gateway::validate(uint8_t length) {
+	uint8_t res = Sensor::validate(length);
 	if (res == VALIDATE_BAD_CRC) {
 		errBlink(1);
 	}
