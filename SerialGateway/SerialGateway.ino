@@ -39,17 +39,15 @@
 // If blink and include mode button not is used uncomment and use below constructor instead
 Gateway gw(9, 10, INCLUSION_MODE_TIME);
 
-String inputString = "";    // A string to hold incoming commands from serial interface
+char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
+int inputPos = 0;
 boolean commandComplete = false;  // whether the string is complete
 
 void setup()  
 { 
-  // reserve bytes for the inputString. RadioId;ChildId;VAR=VALUE
-  inputString.reserve(MAX_RECEIVE_LENGTH);
   gw.begin();
-  gw.setPALevel(RF24_PA_HIGH);  //Adjust PA-level: MIN, LOW, HIGH, MAX   (MAX can sometimes cause problems when using amplified NRF24L01)
+  gw.setPALevel(RF24_PA_LOW);  //Adjust PA-level: MIN, LOW, HIGH, MAX   (MAX can sometimes cause problems when using amplified NRF24L01)
 
- 
   // C++ classes and interrupts really sucks. Need to attach interrupt 
   // outside thw Gateway class due to language shortcomings! Gah! 
 
@@ -81,10 +79,9 @@ void checkSerialInput() {
   if (commandComplete) {
     // A command wass issued from serial interface
     // We will now try to send it to the actuator
-    commandComplete = false;  
     gw.parseAndSend(inputString);
-    // clear the string:
-    inputString = "";
+    commandComplete = false;  
+    inputPos = 0;
   }
 }
 
@@ -100,11 +97,18 @@ void serialEvent() {
     char inChar = (char)Serial.read(); 
     // if the incoming character is a newline, set a flag
     // so the main loop can do something about it:
-    if (inChar == '\n') {
-      commandComplete = true;
+    if (inputPos<MAX_RECEIVE_LENGTH-1 && !commandComplete) { 
+      if (inChar == '\n') {
+        inputString[inputPos] = 0;
+        commandComplete = true;
+      } else {
+        // add it to the inputString:
+        inputString[inputPos] = inChar;
+        inputPos++;
+      }
     } else {
-      // add it to the inputString:
-      inputString += inChar;
+       // Incoming message too long. Throw away 
+        inputPos = 0;
     }
   }
 }

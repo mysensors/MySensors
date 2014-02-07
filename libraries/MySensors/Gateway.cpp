@@ -27,8 +27,15 @@ Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion, uint8_t _in
 	pinEr = _er;
 }
 
+void Gateway::begin(uint8_t _radioId, void (*inDataCallback)(char *)) {
 
-void Gateway::begin(uint8_t _radioId) {
+	if (inDataCallback != NULL) {
+		useWriteCallback = true;
+		dataCallback = inDataCallback;
+	} else {
+		useWriteCallback = false;
+	}
+
 	radioId = 0;
 	distance = 0;
 	inclusionMode = 0;
@@ -103,7 +110,7 @@ void Gateway::checkInclusionFinished() {
 }
 
 
-void Gateway::parseAndSend(String inputString) {
+void Gateway::parseAndSend(char *commandBuffer) {
   boolean ok;
   char *str, *p, *value;
   int i = 0;
@@ -111,8 +118,6 @@ void Gateway::parseAndSend(String inputString) {
   uint8_t childId;
   uint8_t messageType;
   uint8_t type;
-  // Copy command to char* buffer
-  inputString.toCharArray(commandBuffer, MAX_RECEIVE_LENGTH);
 
   // Extract command data coming on serial line
   for (str = strtok_r(commandBuffer, ";", &p);       // split using semicolon
@@ -150,6 +155,7 @@ void Gateway::parseAndSend(String inputString) {
     }
   } else {
     txBlink(1);
+
     ok = sendData(GATEWAY_ADDRESS, sensorRadioId, childId, messageType, type, value, strlen(value), false);
     if (!ok) {
       errBlink(1);
@@ -202,6 +208,10 @@ void Gateway::serial(const char *fmt, ... ) {
    vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
    va_end (args);
    Serial.print(serialBuffer);
+   if (useWriteCallback) {
+	   // We have a registered write callback (probably Ethernet)
+	   dataCallback(serialBuffer);
+   }
 }
 
 void Gateway::serial(message_s msg) {

@@ -35,7 +35,7 @@ void setup()
   // Fetch the number of attached sensors  
   numSensors = sensors.getDeviceCount();
   // Register all sensors to gw (they will be created as child devices)
-  for (int i=0; i<numSensors; i++) {   
+  for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {   
      gw.sendSensorPresentation(i, S_TEMP);
   }
   metric = gw.isMetricSystem();
@@ -48,7 +48,7 @@ void loop()
 {     
   sensors.requestTemperatures(); // Fetch temperatures from Dallas
   delay(100);
-  for (int i=0; i<numSensors; i++) {
+  for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {
     // Fetch and round temperature to one decimal
     float temperature = static_cast<float>(static_cast<int>((metric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
     // Only send data if temperature has changed and no error

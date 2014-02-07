@@ -39,7 +39,7 @@ class Relay : public Sensor
 		*/
 		Relay(uint8_t _cepin, uint8_t _cspin);
 
-		void begin(uint8_t _radioId);
+		void begin(uint8_t _radioId=AUTO);
 		boolean messageAvailable();
 		boolean send(message_s message, int length);
 

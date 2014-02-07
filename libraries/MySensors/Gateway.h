@@ -14,10 +14,8 @@
 
 #include "Relay.h"
 
-
-#define MAX_RECEIVE_LENGTH 50 // Max buffersize needed for messages coming from vera
+#define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from vera
 #define MAX_SEND_LENGTH 120 // Max buffersize needed for messages coming from vera
-
 
 class Gateway : public Relay
 {
@@ -41,17 +39,16 @@ class Gateway : public Relay
 		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time);
 		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion, uint8_t _inclusion_time, uint8_t _rx, uint8_t _tx, uint8_t _er);
 
-		void begin(uint8_t _radioId = 0);
+		/* Use this and pass a function that should be called when you want to process commands that arrive from radio network */
+		void begin(uint8_t _radioId=AUTO, void (*dataCallback)(char *)=NULL);
+
 		void processRadioMessage();
-	    void parseAndSend(String inputString);
+	    void parseAndSend(char *inputString);
 	    boolean isLedMode();
 	    void ledTimersInterrupt();
 	    void startInclusionInterrupt();
 
-
-
 	private:
-	    char commandBuffer[MAX_RECEIVE_LENGTH];
 	    char serialBuffer[MAX_SEND_LENGTH]; // Buffer for building string when sending data to vera
 	    unsigned long inclusionStartTime;
 	    boolean inclusionMode; // Keeps track on inclusion mode
@@ -60,6 +57,10 @@ class Gateway : public Relay
 	    volatile uint8_t countTx;
 	    volatile uint8_t countErr;
 	    boolean ledMode;
+	    boolean useWriteCallback;
+	    void (*dataCallback)(char *);
+
+
 	    uint8_t pinInclusion;
 	    uint8_t inclusionTime;
 	    uint8_t pinRx;

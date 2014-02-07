@@ -22,7 +22,7 @@
 #include <avr/progmem.h>
 #include <stdarg.h>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -134,8 +134,7 @@ class Sensor : public RF24
 	* Call this in setup(), before calling any other sensor net library methods.
 	* @param _radioId The unique id (1-254) for this sensor. Specify 255 for auto id mode.
 	*/
-	void begin(uint8_t _radioId);
-
+	void begin(uint8_t _radioId=AUTO);
 
 	uint8_t getRadioId();
 

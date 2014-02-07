@@ -10,7 +10,7 @@
 #define RADIO_ID AUTO
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
-#define NUMBER_OF_RELAYS 2 
+#define NUMBER_OF_RELAYS 1 
 
 #define RELAY_ON 0
 #define RELAY_OFF 1
