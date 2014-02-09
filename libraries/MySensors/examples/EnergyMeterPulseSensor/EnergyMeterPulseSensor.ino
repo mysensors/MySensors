@@ -60,9 +60,11 @@ void setup()
 
 void loop()     
 { 
-  unsigned long now = millis();
+   unsigned long now = millis();
   // Only send values at a maximum frequency or woken up from sleep
   if (SLEEP_MODE || now - lastSend > 1000*SEND_FREQUENCY) {
+    gw.powerUp(); // Power up radio
+
     // New watt value has been calculated  
     if (!SLEEP_MODE && watt != oldWatt) {
       // Check that we dont get unresonable large watt value. 

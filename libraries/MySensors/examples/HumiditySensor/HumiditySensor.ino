@@ -36,7 +36,8 @@ void setup()
 }
 
 void loop()      
-{     
+{  
+  gw.powerUp(); // Power up radio
   delay(dht.getMinimumSamplingPeriod());
 
   float temperature = dht.getTemperature();

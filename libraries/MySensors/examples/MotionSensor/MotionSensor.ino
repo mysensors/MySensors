@@ -28,6 +28,7 @@ void setup()
 
 void loop()     
 {     
+  gw.powerUp(); // Power up radio
   // Read digital motion value
   boolean tripped = digitalRead(DIGITAL_INPUT_SENSOR) == HIGH; 
         

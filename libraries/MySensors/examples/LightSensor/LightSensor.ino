@@ -28,6 +28,8 @@ void setup()
 
 void loop()      
 {     
+  gw.powerUp(); // Power up radio
+
   int lightLevel = (1023-analogRead(LIGHT_SENSOR_ANALOG_PIN))/10.23; 
   Serial.println(lightLevel);
   if (lightLevel != lastLightLevel) {

@@ -79,6 +79,8 @@ void loop()
 	
     // Only send values at a maximum frequency or woken up from sleep
   if (SLEEP_MODE || currentTime - lastSend > 1000*SEND_FREQUENCY) {
+    gw.powerUp(); // Power up radio
+    
     // New flow value has been calculated  
     if (!SLEEP_MODE && flow != oldflow) {
       // Check that we dont get unresonable large flow value. 

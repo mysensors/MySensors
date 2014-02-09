@@ -35,6 +35,7 @@ void setup()
 
 void loop()      
 {     
+  gw.powerUp(); // Power up radio
   int dist = metric?sonar.ping_cm():sonar.ping_in();
 
   Serial.print("Ping: ");
