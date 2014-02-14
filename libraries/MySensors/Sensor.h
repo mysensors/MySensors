@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <SPI.h>
 #include <EEPROM.h>
-#include <avr/progmem.h>
+#include <avr/pgmspace.h>
 #include <stdarg.h>
 
 //#define DEBUG

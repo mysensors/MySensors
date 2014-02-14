@@ -176,7 +176,6 @@ void Sensor::buildMsg(uint8_t from, uint8_t to, uint8_t childId, uint8_t message
 
 
 boolean Sensor::sendData(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binary) {
-	bool ok = false;
 	if (length < sizeof(msg.data)) {
 		buildMsg(from, to, childId, messageType, type, data, length, binary);
 		return send(msg,length);
@@ -222,7 +221,7 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 
 	bool ok = true;
 	bool broadcast =  message.header.messageType == M_INTERNAL &&  message.header.type == I_PING;
-	int retry = WRITE_RETRY;
+//	int retry = WRITE_RETRY;
 	RF24::stopListening();
 	RF24::openWritingPipe(TO_ADDR(dest));
 	RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
@@ -244,8 +243,12 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 		if ( !timeout && RF24::getDynamicPayloadSize()==sizeof(uint8_t)) {
 			uint8_t idest;
 			RF24::read( &idest, sizeof(uint8_t));
-			if (dest != idest) { ok == false; }
-		} else { ok = false; }
+			if (dest != idest) {
+				ok = false;
+			}
+		} else {
+			ok = false;
+		}
 		//--------------------
 	}
 
