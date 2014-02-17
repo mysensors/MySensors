@@ -18,9 +18,8 @@ Relay::Relay(uint8_t _cepin, uint8_t _cspin) : Sensor(_cepin, _cspin) {
 
 void Relay::begin(uint8_t _radioId) {
 	Sensor::begin(_radioId);
-
 	// Read routing table from EEPROM
-	for (int i=0;i<sizeof(childNodeTable);i++) {
+	for (unsigned int i=0;i<sizeof(childNodeTable);i++) {
 		childNodeTable[i] = EEPROM.read(EEPROM_ROUTES_ADDRESS+i);
 	}
 }
@@ -235,7 +234,7 @@ uint8_t Relay::getChildRoute(uint8_t childId) {
 
 void Relay::clearChildRoutes() {
 	debug(PSTR("Clear child routing data\n"));
-	for (int i=0;i< sizeof(childNodeTable); i++) {
+	for (unsigned int i=0;i< sizeof(childNodeTable); i++) {
 		removeChildRoute(i);
 	}
 	sendInternal(I_CHILDREN, "");

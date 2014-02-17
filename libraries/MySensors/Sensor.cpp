@@ -432,7 +432,7 @@ message_s Sensor::getMessage() {
 
 boolean Sensor::readMessage() {
 	uint8_t len = RF24::getDynamicPayloadSize();
-	boolean done = RF24::read(&msg, len);
+	RF24::read(&msg, len);
 
 	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING_ACK)) {
 		RF24::stopListening();
@@ -441,10 +441,8 @@ boolean Sensor::readMessage() {
 		RF24::startListening();
 		RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
 	}
-	uint8_t cb = msg.header.crc;
 	uint8_t valid = validate(len-sizeof(header_s));
 	boolean ok = valid == VALIDATE_OK;
-
 
 	// Make sure string gets terminated ok for full sized messages.
 	msg.data[len - sizeof(header_s) ] = '\0';
