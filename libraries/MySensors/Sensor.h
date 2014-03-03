@@ -123,18 +123,20 @@ class Sensor : public RF24
 	*
 	* Creates a new instance of Sensor class.
 	*
-	* @param _cepin The pin attached to RF24 Chip Enable on the RF module
-	* @param _cspin The pin attached to RF24 Chip Select
+	* @param _cepin The pin attached to RF24 Chip Enable on the RF module (defualt 9)
+	* @param _cspin The pin attached to RF24 Chip Select (default 10)
 	*/
-	Sensor(uint8_t _cepin, uint8_t _cspin);
+	Sensor(uint8_t _cepin=9, uint8_t _cspin=10);
 
 	/**
 	* Begin operation of the sensor net library
 	*
 	* Call this in setup(), before calling any other sensor net library methods.
-	* @param _radioId The unique id (1-254) for this sensor. Specify 255 for auto id mode.
+	* @param radioId The unique id (1-254) for this sensor. Default 255 (auto mode).
+	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
+	* @param channel Radio channel. Default RF24_PA_MAX
 	*/
-	void begin(uint8_t _radioId=AUTO);
+	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=70);
 
 	uint8_t getRadioId();
 
@@ -255,7 +257,7 @@ class Sensor : public RF24
 	message_s msg;  // Buffer for incoming messages.
 	char convBuffer[20];
 
-	void setupRadio();
+	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel);
 	void findRelay();
 	boolean send(message_s message, int length);
 	boolean sendWrite(uint8_t dest, message_s message, int length);

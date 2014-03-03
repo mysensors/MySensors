@@ -17,7 +17,7 @@ Sensor::Sensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 }
 
 
-void Sensor::setupRadio() {
+void Sensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel) {
 	failedTransmissions = 0;
 
 	// Start up the radio library
@@ -25,8 +25,8 @@ void Sensor::setupRadio() {
 	RF24::enableDynamicPayloads();
     RF24::setAutoAck(false);
     RF24::setRetries(15, 15);
-	RF24::setPALevel(RF24_PA_MAX);
-	//RF24::setChannel(70); // Default 70
+	RF24::setPALevel(paLevel);
+	RF24::setChannel(channel);
 	RF24::setDataRate(RF24_2MBPS);
 	RF24::setCRCLength(RF24_CRC_16);
 
@@ -36,12 +36,14 @@ void Sensor::setupRadio() {
 	}
 }
 
-void Sensor::begin(uint8_t _radioId) {
+void Sensor::begin(uint8_t _radioId, rf24_pa_dbm_e paLevel, uint8_t channel) {
+	Serial.begin(BAUD_RATE);
+
 	radioId = _radioId;
 
 	debug(PSTR("Started %s.\n"), isRelay?"relay":"sensor");
 
-	setupRadio();
+	setupRadio(paLevel, channel);
 
 	// Fetch relay from EEPROM
 	relayId = EEPROM.read(EEPROM_RELAY_ID_ADDRESS);

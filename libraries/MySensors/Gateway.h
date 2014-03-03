@@ -27,20 +27,20 @@ class Gateway : public Relay
 		* If you don't use status leds and/or inclusion mode button on your arduino gateway
 		* you can disable this functionality by calling the 2 argument constructor.
 		*
-		* @param _cepin The pin attached to RF24 Chip Enable on the RF module
-		* @param _cspin The pin attached to RF24 Chip Select
-		* @param _inclusion Digital pin that triggers inclusion mode
-		* @param _inclusion_time Time of inclusion mode (in minutes)
+		* @param _cepin The pin attached to RF24 Chip Enable on the RF module (default 9)
+		* @param _cspin The pin attached to RF24 Chip Select (defualt 10)
+		* @param _inclusion_time Time of inclusion mode (in minutes, default 1)
+		* @param _inclusion_pin Digital pin that triggers inclusion mode
 		* @param _rx Digital pin for receive led
 		* @param _tx Digital pin for transfer led
 		* @param _er Digital pin for error led
 		*
 		*/
-		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time);
-		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion, uint8_t _inclusion_time, uint8_t _rx, uint8_t _tx, uint8_t _er);
+		Gateway(uint8_t _cepin=9, uint8_t _cspin=10, uint8_t _inclusion_time = 1);
+		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er);
 
 		/* Use this and pass a function that should be called when you want to process commands that arrive from radio network */
-		void begin(uint8_t _radioId=AUTO, void (*dataCallback)(char *)=NULL);
+		void begin(rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=70, void (*dataCallback)(char *)=NULL);
 
 		void processRadioMessage();
 	    void parseAndSend(char *inputString);

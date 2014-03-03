@@ -4,29 +4,22 @@
 #include <RF24.h>
 #include <Sensor.h>  
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
 #define DIGITAL_INPUT_SOIL_SENSOR 3   // Digital input did you attach your soil sensor.  
 #define INTERRUPT DIGITAL_INPUT_SOIL_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
 #define CHILD_ID 0   // Id of the sensor child
 
-Sensor gw(9, 10);
+Sensor gw;
 Sleep sleep;
+int lastSoilValue = -1;
 
 void setup()  
 { 
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   pinMode(DIGITAL_INPUT_SOIL_SENSOR, INPUT);      // sets the soil sensor digital pin as input
   // Register all sensors to gw (they will be created as child devices)  
   gw.sendSensorPresentation(CHILD_ID, S_MOTION);
-
 }
-
-int lastSoilValue = -1;
  
 void loop()     
 {     

@@ -9,23 +9,19 @@
 #include <EEPROM.h>  
 #include <RF24.h>
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
-Relay gw(9,10);
+Relay gw;
 
 void setup()  
 {  
-  Serial.begin(BAUD_RATE);  // Used to write debug info
-  gw.begin(RADIO_ID);
-  
+  gw.begin();
 }
 
 void loop() 
 {
-  if (gw.messageAvailable()) {
-    // Incoming message for this node... 
+  // By calling this regularely you route messages in the background
+  if (gw.messageAvailable()) {  
+
+    // Handleincoming message for this node here... 
   }
 }
 

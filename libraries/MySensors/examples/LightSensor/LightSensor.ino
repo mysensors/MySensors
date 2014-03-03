@@ -4,23 +4,18 @@
 #include <EEPROM.h>  
 #include <Sensor.h>  
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
 #define CHILD_ID_LIGHT 0
 #define LIGHT_SENSOR_ANALOG_PIN 0
 
 unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
 
-Sensor gw(9,10);
-
+Sensor gw;
 int lastLightLevel;
 Sleep sleep;
 
 void setup()  
 { 
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register all sensors to gateway (they will be created as child devices)
   gw.sendSensorPresentation(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
@@ -28,7 +23,7 @@ void setup()
 
 void loop()      
 {     
-  gw.powerUp(); // Power up radio
+  gw.powerUp(); // Power up radio (after sleep)
 
   int lightLevel = (1023-analogRead(LIGHT_SENSOR_ANALOG_PIN))/10.23; 
   Serial.println(lightLevel);

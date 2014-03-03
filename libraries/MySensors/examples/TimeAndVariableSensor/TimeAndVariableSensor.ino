@@ -8,19 +8,14 @@
 #include <Sensor.h>  
 #include <Time.h>  
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
 #define CHILD_ID 0   // Id of the sensor child
 
-Sensor gw(9, 10);
+Sensor gw;
 
 
 void setup()  
 {  
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register any sensortype. This example we just create a motion sensor.
   gw.sendSensorPresentation(CHILD_ID, S_MOTION);

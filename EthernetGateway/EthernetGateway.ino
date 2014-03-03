@@ -80,30 +80,28 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // DEAD BEEF FEED
 // a R/W server on the port
 EthernetServer server = EthernetServer(IP_PORT);
 
+// No blink or button functionality. Use the vanilla constructor.
+Gateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
 
 // Uncomment this constructor if you have leds and include button attached to your gateway 
-//Gateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+//Gateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
 
-// Constructor for NON blinking gateway
-Gateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
 
 void setup()  
 { 
-
-  gw.begin(GATEWAY_ADDRESS, writeEthernet);
+  // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
+  gw.begin(RF24_PA_MAX, 70, writeEthernet);
  
   Ethernet.begin(mac, myIp);
-
 
   // give the Ethernet interface a second to initialize
   delay(1000);
 
   // start listening for clients
   server.begin();
-
    
   // C++ classes and interrupts really sucks. Need to attach interrupt 
   // outside thw Gateway class due to language shortcomings! Gah! 

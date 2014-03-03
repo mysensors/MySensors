@@ -11,10 +11,6 @@
 #include <RF24.h>
 #include <IRremote.h>
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
 int RECV_PIN = 8;
 
 #define CHILD_1  3  // childId
@@ -23,17 +19,12 @@ IRsend irsend;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
-
-Sensor gw(9,10);
-
-
+Sensor gw;
 
 void setup()  
 {  
-  Serial.begin(BAUD_RATE);  // Used to write debug info
-
   irrecv.enableIRIn(); // Start the ir receiver
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register a sensors to gw. Use binary light for test purposes.
   gw.sendSensorPresentation(CHILD_1, S_LIGHT);

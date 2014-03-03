@@ -25,25 +25,18 @@
 #include <BH1750.h>
 #include <Wire.h> 
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
 #define CHILD_ID_LIGHT 0
 #define LIGHT_SENSOR_ANALOG_PIN 0
-
-BH1750  lightSensor;
-
 unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
 
-Sensor gw(9,10);
-
-int lastlux;
+BH1750  lightSensor;
+Sensor gw;
 Sleep sleep;
+int lastlux;
 
 void setup()  
 { 
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register all sensors to gateway (they will be created as child devices)
   gw.sendSensorPresentation(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
@@ -53,7 +46,7 @@ void setup()
 
 void loop()      
 {     
-  gw.powerUp(); // Power up radio
+  gw.powerUp(); // Power up radio (after sleep)
 
   uint16_t lux = lightSensor.readLightLevel();// Get Lux value
   Serial.println(lux);

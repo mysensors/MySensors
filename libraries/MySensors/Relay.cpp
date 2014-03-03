@@ -16,8 +16,8 @@ Relay::Relay(uint8_t _cepin, uint8_t _cspin) : Sensor(_cepin, _cspin) {
 }
 
 
-void Relay::begin(uint8_t _radioId) {
-	Sensor::begin(_radioId);
+void Relay::begin(uint8_t radioId, rf24_pa_dbm_e paLevel, uint8_t channel) {
+	Sensor::begin(radioId, paLevel, channel);
 	// Read routing table from EEPROM
 	for (unsigned int i=0;i<sizeof(childNodeTable);i++) {
 		childNodeTable[i] = EEPROM.read(EEPROM_ROUTES_ADDRESS+i);

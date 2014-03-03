@@ -17,17 +17,18 @@ Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time) : Rela
 	inclusionTime = _inclusion_time;
 }
 
-Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion, uint8_t _inclusion_time, uint8_t _rx, uint8_t _tx, uint8_t _er) : Relay(_cepin, _cspin) {
+Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er) : Relay(_cepin, _cspin) {
 	ledMode = true;
 	isRelay = true;
-	pinInclusion = _inclusion;
+	pinInclusion = _inclusion_pin;
 	inclusionTime = _inclusion_time;
 	pinRx = _rx;
 	pinTx = _tx;
 	pinEr = _er;
 }
 
-void Gateway::begin(uint8_t _radioId, void (*inDataCallback)(char *)) {
+void Gateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, void (*inDataCallback)(char *)) {
+	Serial.begin(BAUD_RATE);
 
 	if (inDataCallback != NULL) {
 		useWriteCallback = true;
@@ -64,11 +65,8 @@ void Gateway::begin(uint8_t _radioId, void (*inDataCallback)(char *)) {
 
 	}
 
-	// Set baudrate of serial link
-	Serial.begin(BAUD_RATE);
-
 	// Start up the radio library
-	setupRadio();
+	setupRadio(paLevel, channel);
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
 	RF24::startListening();
 
@@ -103,7 +101,7 @@ void Gateway::checkButtonTriggeredInclusion() {
 }
 
 void Gateway::checkInclusionFinished() {
-	if (inclusionMode && millis()-inclusionStartTime>60000L*inclusionTime) {
+	if (inclusionMode && millis()-inclusionStartTime>60000UL*inclusionTime) {
 	     // inclusionTimeInMinutes minute(s) has passed.. stop inclusion mode
 	    setInclusionMode(false);
 	 }
@@ -111,13 +109,13 @@ void Gateway::checkInclusionFinished() {
 
 
 void Gateway::parseAndSend(char *commandBuffer) {
-  boolean ok;
-  char *str, *p, *value;
+  boolean ok = false;
+  char *str, *p, *value=NULL;
   int i = 0;
-  uint16_t sensorRadioId;
-  uint8_t childId;
-  uint8_t messageType;
-  uint8_t type;
+  uint16_t sensorRadioId = 0;
+  uint8_t childId = 0;
+  uint8_t messageType = 0;
+  uint8_t type = 0;
 
   // Extract command data coming on serial line
   for (str = strtok_r(commandBuffer, ";", &p);       // split using semicolon

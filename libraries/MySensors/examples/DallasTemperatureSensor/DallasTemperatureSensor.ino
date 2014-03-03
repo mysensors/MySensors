@@ -6,31 +6,22 @@
 #include <RF24.h>
 #include <Sensor.h>  
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
-
+#define MAX_ATTACHED_DS18B20 16
 unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-
-Sensor gw(9, 10);
+Sensor gw;
 Sleep sleep;
-
-#define MAX_ATTACHED_DS18B20 16
-
 float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
 boolean metric = true; 
 
 void setup()  
 { 
-  Serial.begin(BAUD_RATE);  // Used to type in characters
   sensors.begin();
-  gw.begin(RADIO_ID);
+  gw.begin(); 
 
   // Fetch the number of attached sensors  
   numSensors = sensors.getDeviceCount();
@@ -41,9 +32,6 @@ void setup()
   metric = gw.isMetricSystem();
 }
 
-
-
- 
 void loop()     
 {     
   gw.powerUp();

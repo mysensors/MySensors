@@ -5,27 +5,21 @@
 #include <Sensor.h>  
 #include <DHT.h>  
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
 #define CHILD_ID_HUM 0
 #define CHILD_ID_TEMP 1
 #define HUMIDITY_SENSOR_DIGITAL_PIN 3
-
 unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
 
-Sensor gw(9, 10);
+Sensor gw;
 DHT dht;
 Sleep sleep;
-
 float lastTemp;
 float lastHum;
 boolean metric = true; 
 
 void setup()  
 { 
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN); 
 
   // Register all sensors to gw (they will be created as child devices)

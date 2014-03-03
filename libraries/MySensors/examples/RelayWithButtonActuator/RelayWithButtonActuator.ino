@@ -7,14 +7,9 @@
 #include <EEPROM.h>  
 #include <RF24.h>
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
 #define RELAY_PIN  4  // Arduino Digital I/O pin number for relay 
 #define BUTTON_PIN  3  // Arduino Digital I/O pin number for button (with 10k pulldown) 
-
 #define CHILD_ID 1   // Id of the sensor child
-
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
@@ -25,13 +20,11 @@ int switched = 0;
 long pressTime = 0;    // the last time the button pin was pressed
 long debounce = 200;   // the debounce time, increase if the output flickers
 
-Relay gw(9,10);
+Relay gw;
 
 void setup()  
 {  
-  Serial.begin(BAUD_RATE);  // Used to write debug info
-
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Set buttonPin as Input
   pinMode(BUTTON_PIN, INPUT);

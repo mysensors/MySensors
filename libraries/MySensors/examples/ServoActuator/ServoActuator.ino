@@ -16,24 +16,18 @@
 #define SERVO_MIN 0 // Fine tune your servos min. 0-180
 #define SERVO_MAX 180  // Fine tune your servos max. 0-180
 #define DETACH_DELAY 900 // Tune this to let your movement finish before detaching the servo
-
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID 6
 #define CHILD_ID 10   // Id of the sensor child
 
-Sensor gw(9, 10);
+Sensor gw;
 Servo myservo;  // create servo object to control a servo 
                 // a maximum of eight servo objects can be created Sensor gw(9,10);
 unsigned long timeOfLastChange = 0;
 bool attachedServo = false;
 
-                
-
+            
 void setup() 
 { 
-  Serial.begin(BAUD_RATE);
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register all sensors to gw (they will be created as child devices)
   gw.sendSensorPresentation(CHILD_ID, S_COVER);

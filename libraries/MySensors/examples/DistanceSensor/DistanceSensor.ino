@@ -5,28 +5,21 @@
 #include <Sensor.h>  
 #include <NewPing.h>
 
-
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID 8
-
 #define TRIGGER_PIN  6  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     5  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 300 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
-
 unsigned long SLEEP_TIME = 5; // Sleep time between reads (in seconds)
 
-Sensor gw(9, 10);
+Sensor gw;
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 Sleep sleep;
 
 int lastDist;
-boolean metric; 
+boolean metric = true; 
 
 void setup()  
 { 
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register all sensors to gw (they will be created as child devices)
   gw.sendSensorPresentation(0, S_DISTANCE);

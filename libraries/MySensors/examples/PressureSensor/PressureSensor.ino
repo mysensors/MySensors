@@ -6,16 +6,11 @@
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
 #define LIGHT_SENSOR_ANALOG_PIN 0
-
 unsigned long SLEEP_TIME = 60; // Sleep time between reads (in seconds)
 
 Adafruit_BMP085 bmp = Adafruit_BMP085();      // Digital Pressure Sensor 
-Sensor gw(9, 10);
+Sensor gw;
 
 float lastPressure = -1;
 float lastTemp = -1;
@@ -31,8 +26,7 @@ float dP_dt;
 boolean metric; 
 
 void setup() {
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
   if (!bmp.begin()) {
     Serial.println("Could not find a valid BMP085 sensor, check wiring!");
     while (1) { }
@@ -42,7 +36,6 @@ void setup() {
   gw.sendSensorPresentation(0, S_BARO);
   gw.sendSensorPresentation(1, S_TEMP);
   metric = gw.isMetricSystem();
-
 }
 
 

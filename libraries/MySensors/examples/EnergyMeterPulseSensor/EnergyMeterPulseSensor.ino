@@ -13,21 +13,15 @@
 #include <RF24.h>
 #include <Sensor.h>  
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
 #define PULSE_FACTOR 1000       // Nummber of blinks per KWH of your meeter
 #define SLEEP_MODE false        // Watt-value can only be reported when sleep mode is false.
 #define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
+#define INTERRUPT DIGITAL_INPUT_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
+#define CHILD_ID 1   // Id of the sensor child
 unsigned long SEND_FREQUENCY = 20; // Minimum time between send (in seconds). We don't wnat to spam the gateway.
 
-
-#define INTERRUPT DIGITAL_INPUT_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
-#define CHILD_ID 5   // Id of the sensor child
-
-Sensor gw(9,10);
-
+Sensor gw;
 Sleep sleep;
 
 //double kwhPerBlink = 1.0/((double)PULSE_FACTOR); 
@@ -43,8 +37,7 @@ unsigned long lastSend;
 
 void setup()  
 {  
-  Serial.begin(BAUD_RATE);  // Used to type in characters
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register this device as power sensor
   gw.sendSensorPresentation(CHILD_ID, S_POWER);

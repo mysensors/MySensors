@@ -33,11 +33,13 @@
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN 3 // Digital pin used for inclusion mode button
 
-// Start gateway with include button and led blinking functionality enabled (see documetation)
-//Gateway gw(9, 10, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, 6, 5, 4);
 
-// If blink and include mode button not is used uncomment and use below constructor instead
-Gateway gw(9, 10, INCLUSION_MODE_TIME);
+// No blink or button functionality. Use the vanilla constructor.
+Gateway gw;
+
+// To start gateway with include button and led blinking functionality enabled use this instead!
+//Gateway gw(9, 10, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN,  6, 5, 4);
+
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
@@ -46,7 +48,7 @@ boolean commandComplete = false;  // whether the string is complete
 void setup()  
 { 
   gw.begin();
-  gw.setPALevel(RF24_PA_LOW);  //Adjust PA-level: MIN, LOW, HIGH, MAX   (MAX can sometimes cause problems when using amplified NRF24L01)
+  gw.setPALevel(RF24_PA_LOW);  //Adjust PA-level: MIN, LOW, HIGH, MAX (MAX can sometimes cause problems when using amplified NRF24L01)
 
   // C++ classes and interrupts really sucks. Need to attach interrupt 
   // outside thw Gateway class due to language shortcomings! Gah! 
@@ -66,6 +68,7 @@ void loop()
   checkSerialInput();
   
 }
+
 
 void startInclusionInterrupt() {
   gw.startInclusionInterrupt();

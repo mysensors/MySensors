@@ -5,23 +5,16 @@
 #include <EEPROM.h>  
 #include <RF24.h>
 
-// Set RADIO_ID to something unique in your sensor network (1-254)
-// or set to AUTO if you want gw to assign a RADIO_ID for you.
-#define RADIO_ID AUTO
-
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
 #define NUMBER_OF_RELAYS 1 
-
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-Relay gw(9,10);
+Relay gw;
 
 void setup()  
 {  
-  Serial.begin(BAUD_RATE);  // Used to write debug info
-
-  gw.begin(RADIO_ID);
+  gw.begin();
 
   // Register all sensors to gw (they will be created as child devices)
   for (int i=0; i<NUMBER_OF_RELAYS;i++) {

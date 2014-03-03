@@ -34,12 +34,12 @@ class Relay : public Sensor
 		*
 		* Creates a new instance of Relay class.
 		*
-		* @param _cepin The pin attached to RF24 Chip Enable on the RF module
-		* @param _cspin The pin attached to RF24 Chip Select
+		* @param _cepin The pin attached to RF24 Chip Enable on the RF module (default 9)
+		* @param _cspin The pin attached to RF24 Chip Select (defualt 10)
 		*/
-		Relay(uint8_t _cepin, uint8_t _cspin);
+		Relay(uint8_t _cepin = 9, uint8_t _cspin = 10);
 
-		void begin(uint8_t _radioId=AUTO);
+		void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=70);
 		boolean messageAvailable();
 		boolean send(message_s message, int length);
 
