@@ -1,0 +1,63 @@
+// This is an example on how to send in battery measurement for a sensor
+// For instruction how to measure battery power on A0 see the follwoing forum
+// thread: http://forum.micasaverde.com/index.php/topic,20078.0.html
+
+
+#include <Sleep_n0m1.h>
+#include <SPI.h>
+#include <EEPROM.h>
+#include <RF24.h>
+#include <Sensor.h>
+
+int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
+
+Sensor gw;
+Sleep sleep;
+unsigned long SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
+int oldBatteryPcnt = 0;
+
+void setup()  
+{
+   // use the 1.1 V internal reference
+   analogReference(INTERNAL);
+   gw.begin();
+}
+
+void loop()
+{
+   // get the battery Voltage
+   int sensorValue = analogRead(BATTERY_SENSE_PIN);
+   Serial.println(sensorValue);
+
+   // 1M, 470K divider across battery and using internal ADC ref of 1.1V
+   // Sense point is bypassed with 0.1 uF cap to reduce noise at that point
+   // ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
+   // 3.44/1023 = Volts per bit = 0.003363075
+   float batteryV  = sensorValue * 0.003363075;
+   int batteryPcnt = sensorValue / 10;
+
+   Serial.print("Battery Voltage: ");
+   Serial.print(batteryV);
+   Serial.println(" V");
+
+   Serial.print("Battery percent: ");
+   Serial.print(batteryPcnt);
+   Serial.println(" %");
+
+   if (oldBatteryPcnt != batteryPcnt) {
+     // Power up radio after sleep
+     gw.powerUp();
+     gw.sendBatteryLevel(batteryPcnt);
+     oldBatteryPcnt = batteryPcnt;
+   }
+
+   // delay to allow transmissions to gateway to be completed before sleep
+   delay(500);
+
+   // Power down the radio. Note that the radio will get powered back up
+   // on the next write() call
+   gw.powerDown();
+
+   sleep.pwrDownMode();           // set sleep mode
+   sleep.sleepDelay(SLEEP_TIME);  // sleep for SLEEP_TIME
+}
