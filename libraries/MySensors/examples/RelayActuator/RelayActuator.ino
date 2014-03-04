@@ -10,7 +10,7 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-Relay gw;
+Sensor gw;
 
 void setup()  
 {  
@@ -20,7 +20,6 @@ void setup()
   for (int i=0; i<NUMBER_OF_RELAYS;i++) {
     gw.sendSensorPresentation(RELAY_1+i, S_LIGHT);
   }
-
   // Fetch relay status
   for (int i=0; i<NUMBER_OF_RELAYS;i++) {
     // Make sure relays are off when starting up

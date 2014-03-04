@@ -22,7 +22,7 @@
 #include <avr/pgmspace.h>
 #include <stdarg.h>
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -136,7 +136,7 @@ class Sensor : public RF24
 	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
 	* @param channel Radio channel. Default RF24_PA_MAX
 	*/
-	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=70);
+	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=76);
 
 	uint8_t getRadioId();
 

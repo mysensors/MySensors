@@ -39,7 +39,7 @@ class Relay : public Sensor
 		*/
 		Relay(uint8_t _cepin = 9, uint8_t _cspin = 10);
 
-		void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=70);
+		void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=76);
 		boolean messageAvailable();
 		boolean send(message_s message, int length);
 
