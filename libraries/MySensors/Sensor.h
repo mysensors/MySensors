@@ -22,7 +22,7 @@
 #include <avr/pgmspace.h>
 #include <stdarg.h>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -129,14 +129,15 @@ class Sensor : public RF24
 	Sensor(uint8_t _cepin=9, uint8_t _cspin=10);
 
 	/**
-	* Begin operation of the sensor net library
+	* Begin operation of the MySensors library
 	*
 	* Call this in setup(), before calling any other sensor net library methods.
 	* @param radioId The unique id (1-254) for this sensor. Default 255 (auto mode).
 	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
-	* @param channel Radio channel. Default RF24_PA_MAX
+	* @param channel Radio channel. Default is channel 76
+	* @param dataRate Radio transmission speed. Default RF24_2MBPS
 	*/
-	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=76);
+	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=76, rf24_datarate_e dataRate=RF24_2MBPS);
 
 	uint8_t getRadioId();
 
@@ -257,7 +258,7 @@ class Sensor : public RF24
 	message_s msg;  // Buffer for incoming messages.
 	char convBuffer[20];
 
-	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel);
+	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
 	void findRelay();
 	boolean send(message_s message, int length);
 	boolean sendWrite(uint8_t dest, message_s message, int length);

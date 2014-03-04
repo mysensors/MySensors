@@ -27,7 +27,7 @@ Gateway::Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_
 	pinEr = _er;
 }
 
-void Gateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, void (*inDataCallback)(char *)) {
+void Gateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(char *)) {
 	Serial.begin(BAUD_RATE);
 
 	if (inDataCallback != NULL) {
@@ -66,7 +66,7 @@ void Gateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, void (*inDataCallbac
 	}
 
 	// Start up the radio library
-	setupRadio(paLevel, channel);
+	setupRadio(paLevel, channel, dataRate);
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
 	RF24::startListening();
 

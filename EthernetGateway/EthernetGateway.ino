@@ -93,7 +93,7 @@ int inputPos = 0;
 void setup()  
 { 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(RF24_PA_MAX, 70, writeEthernet);
+  gw.begin(RF24_PA_MAX, 70, RF24_2MBPS, writeEthernet);
  
   Ethernet.begin(mac, myIp);
 
