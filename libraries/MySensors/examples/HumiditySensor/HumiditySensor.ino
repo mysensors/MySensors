@@ -22,6 +22,9 @@ void setup()
   gw.begin();
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN); 
 
+  // Send the Sketch Version Information to the Gateway
+  gw.sendSketchInfo("Humidity", "1.0")
+
   // Register all sensors to gw (they will be created as child devices)
   gw.sendSensorPresentation(CHILD_ID_HUM, S_HUM);
   gw.sendSensorPresentation(CHILD_ID_TEMP, S_TEMP);

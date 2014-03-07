@@ -22,7 +22,7 @@
 #include <avr/pgmspace.h>
 #include <stdarg.h>
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -80,7 +80,7 @@ typedef enum {
 typedef enum {
 	I_BATTERY_LEVEL, I_BATTERY_DATE, I_LAST_TRIP, I_TIME, I_VERSION, I_REQUEST_ID,
 	I_INCLUSION_MODE, I_RELAY_NODE, I_LAST_UPDATE, I_PING, I_PING_ACK,
-	I_LOG_MESSAGE, I_CHILDREN, I_UNIT
+	I_LOG_MESSAGE, I_CHILDREN, I_UNIT, I_SKETCH_NAME, I_SKETCH_VERSION
 } internalMessageType;
 
 // Sensor types
@@ -176,6 +176,24 @@ class Sensor : public RF24
 	void sendVariable(uint8_t radioId, uint8_t childId, uint8_t variableType, unsigned int value);
 	void sendVariable(uint8_t radioId, uint8_t childId, uint8_t variableType, int value);
 
+        /**
+         * Sends sketch info to sensor net gateway for this radio node.
+         * @param name String containing a short Sketch name
+         * @param version String containing a short Sketch version
+         */
+        void sendSketchInfo(const char *name, const char *version);
+
+        /**
+         * Sends sketch name to sensor net gateway for this radio node.
+         * @param info String containing a short Sketch name and version
+         */
+        void sendSketchName(const char *name);
+
+        /**
+         * Sends sketch version to sensor net gateway for this radio node.
+         * @param info String containing a short Sketch name and version
+         */
+        void sendSketchVersion(const char *version);
 
 	/**
 	 * Sends battery status to sensor net gateway for this radio node.

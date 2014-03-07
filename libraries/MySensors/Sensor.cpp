@@ -1,4 +1,4 @@
-/*
+ /*
  The Sensor Net Arduino library adds a new layer on top of the RF24 library.
  It handles radio network routing, relaying and ids.
 
@@ -333,6 +333,21 @@ void Sensor::requestStatus(uint8_t childId, uint8_t variableType) {
 
 void Sensor::requestStatus(uint8_t nodeId, int8_t childId, uint8_t variableType) {
 	sendData(radioId, nodeId, childId, M_REQ_VARIABLE, variableType, "", 0, false);
+}
+
+void Sensor::sendSketchInfo(const char *name, const char *version) {
+        sendSketchName(name);
+        sendSketchVersion(version);
+}
+
+void Sensor::sendSketchName(const char *name) {
+        if (name != NULL)
+                sendInternal(I_SKETCH_NAME, name);
+}
+
+void Sensor::sendSketchVersion(const char *version) {
+        if (version != NULL)
+                sendInternal(I_SKETCH_VERSION, version);
 }
 
 void Sensor::sendBatteryLevel(int value) {
