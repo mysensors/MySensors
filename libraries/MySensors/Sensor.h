@@ -22,7 +22,7 @@
 #include <avr/pgmspace.h>
 #include <stdarg.h>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
