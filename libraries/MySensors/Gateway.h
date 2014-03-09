@@ -40,7 +40,7 @@ class Gateway : public Relay
 		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er);
 
 		/* Use this and pass a function that should be called when you want to process commands that arrive from radio network */
-		void begin(rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=76, rf24_datarate_e dataRate=RF24_2MBPS, void (*dataCallback)(char *)=NULL);
+		void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(char *)=NULL);
 
 		void processRadioMessage();
 	    void parseAndSend(char *inputString);

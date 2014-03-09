@@ -12,6 +12,7 @@
 #ifndef Sensor_h
 #define Sensor_h
 
+#include "Config.h"
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24_config.h>
@@ -21,8 +22,6 @@
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 #include <stdarg.h>
-
-//#define DEBUG
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -137,7 +136,7 @@ class Sensor : public RF24
 	* @param channel Radio channel. Default is channel 76
 	* @param dataRate Radio transmission speed. Default RF24_2MBPS
 	*/
-	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_MAX, uint8_t channel=76, rf24_datarate_e dataRate=RF24_2MBPS);
+	void begin(uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
 
 	uint8_t getRadioId();
 
