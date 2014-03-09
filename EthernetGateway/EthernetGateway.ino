@@ -57,7 +57,7 @@
 #include <avr/progmem.h>
 
 #include <UIPEthernet.h>  // Use this if you have attached a Ethernet ENC28J60 shields  
-//#include <Ethernet.h>   // Use this fo WizNET module or Arduino Ethernet Shield 
+//#include <Ethernet.h>   // Use this fo WizNET module and Arduino Ethernet Shield 
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
@@ -70,7 +70,7 @@
 #define RADIO_TX_LED_PIN    9  // the PCB, on board LED
 
 #define IP_PORT 5003        // The port you want to open 
-IPAddress myIp (192, 168, 178, 66);  // Configure your static ip here
+IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here
 
 // The MAC address can be anything you want but should be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
@@ -93,7 +93,7 @@ int inputPos = 0;
 void setup()  
 { 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(RF24_PA_MAX, 70, RF24_2MBPS, writeEthernet);
+  gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet);
  
   Ethernet.begin(mac, myIp);
 
