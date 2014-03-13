@@ -48,7 +48,6 @@ boolean commandComplete = false;  // whether the string is complete
 void setup()  
 { 
   gw.begin();
-  gw.setPALevel(RF24_PA_LOW);  //Adjust PA-level: MIN, LOW, HIGH, MAX (MAX can sometimes cause problems when using amplified NRF24L01)
 
   // C++ classes and interrupts really sucks. Need to attach interrupt 
   // outside thw Gateway class due to language shortcomings! Gah! 
