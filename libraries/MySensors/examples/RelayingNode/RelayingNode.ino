@@ -16,7 +16,7 @@ void setup()
   gw.begin();
 
   //Send the sensor node sketch version information to the gateway
-  gw.sendSketchInfo("RelayingNode", "1.2");
+  gw.sendSketchInfo("Relaying Node", "1.0");
 }
 
 void loop() 

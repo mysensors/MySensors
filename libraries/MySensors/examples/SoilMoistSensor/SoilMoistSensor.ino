@@ -16,6 +16,9 @@ void setup()
 { 
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Soil Moisture Sensor", "1.0");
+
   pinMode(DIGITAL_INPUT_SOIL_SENSOR, INPUT);      // sets the soil sensor digital pin as input
   // Register all sensors to gw (they will be created as child devices)  
   gw.sendSensorPresentation(CHILD_ID, S_MOTION);

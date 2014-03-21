@@ -17,6 +17,9 @@ void setup()
 {  
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Clock", "1.0");
+
   // Register any sensortype. This example we just create a motion sensor.
   gw.sendSensorPresentation(CHILD_ID, S_MOTION);
 

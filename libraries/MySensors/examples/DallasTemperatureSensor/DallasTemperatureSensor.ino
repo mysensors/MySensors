@@ -23,6 +23,9 @@ void setup()
   sensors.begin();
   gw.begin(); 
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Temperature Sensor", "1.0");
+
   // Fetch the number of attached sensors  
   numSensors = sensors.getDeviceCount();
   // Register all sensors to gw (they will be created as child devices)

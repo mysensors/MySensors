@@ -1,5 +1,5 @@
-// This is an example on how to send in battery measurement for a sensor
-// For instruction how to measure battery power on A0 see the follwoing forum
+// This is an example that demonstrates how to report the battery level for a sensor
+// Instructions for measuring battery capacity on A0 are available in the follwoing forum
 // thread: http://forum.micasaverde.com/index.php/topic,20078.0.html
 
 
@@ -21,6 +21,9 @@ void setup()
    // use the 1.1 V internal reference
    analogReference(INTERNAL);
    gw.begin();
+
+   // Send the sketch version information to the gateway and Controller
+   gw.sendSketchInfo("Battery Meter", "1.0");
 }
 
 void loop()

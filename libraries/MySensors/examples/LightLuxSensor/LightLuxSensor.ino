@@ -38,6 +38,9 @@ void setup()
 { 
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Light Lux Sensor", "1.0");
+
   // Register all sensors to gateway (they will be created as child devices)
   gw.sendSensorPresentation(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
   

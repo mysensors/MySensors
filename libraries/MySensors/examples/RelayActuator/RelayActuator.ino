@@ -16,6 +16,9 @@ void setup()
 {  
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Relay", "1.0");
+
   // Register all sensors to gw (they will be created as child devices)
   for (int i=0; i<NUMBER_OF_RELAYS;i++) {
     gw.sendSensorPresentation(RELAY_1+i, S_LIGHT);

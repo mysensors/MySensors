@@ -26,6 +26,9 @@ void setup()
 {  
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Relay & Button", "1.0");
+
   // Set buttonPin as Input
   pinMode(BUTTON_PIN, INPUT);
   buttVal = digitalRead(BUTTON_PIN); //read initial state
