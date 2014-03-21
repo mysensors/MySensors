@@ -21,6 +21,9 @@ void setup()
 { 
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Distance Sensor", "1.0");
+
   // Register all sensors to gw (they will be created as child devices)
   gw.sendSensorPresentation(0, S_DISTANCE);
   metric = gw.isMetricSystem();

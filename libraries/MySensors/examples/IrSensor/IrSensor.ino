@@ -26,6 +26,9 @@ void setup()
   irrecv.enableIRIn(); // Start the ir receiver
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("IR Sensor", "1.0");
+
   // Register a sensors to gw. Use binary light for test purposes.
   gw.sendSensorPresentation(CHILD_1, S_LIGHT);
 }

@@ -27,6 +27,10 @@ boolean metric;
 
 void setup() {
   gw.begin();
+
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Pressure Sensor", "1.0");
+
   if (!bmp.begin()) {
     Serial.println("Could not find a valid BMP085 sensor, check wiring!");
     while (1) { }

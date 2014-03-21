@@ -29,6 +29,9 @@ void setup()
 { 
   gw.begin();
 
+  // Send the sketch version information to the gateway and Controller
+  gw.sendSketchInfo("Servo", "1.0");
+
   // Register all sensors to gw (they will be created as child devices)
   gw.sendSensorPresentation(CHILD_ID, S_COVER);
 
