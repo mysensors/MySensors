@@ -452,7 +452,7 @@ void RF24::powerUp(void)
   {
      //printf("RF24::powerUp - powering up radio\n");
      write_register(CONFIG,read_register(CONFIG) | _BV(PWR_UP));
-     delayMicroseconds(150);
+     delayMicroseconds(400);
   }
 }
 
