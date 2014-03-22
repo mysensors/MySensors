@@ -226,20 +226,19 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 //	int retry = WRITE_RETRY;
 	RF24::stopListening();
 	RF24::openWritingPipe(TO_ADDR(dest));
-	ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
-        debug(PSTR("Sensor::sendWrite() - return value = %s\n"), ok ? "true" : "false" );
+	RF24::startWrite(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
 	RF24::startListening();
 	RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
 
-	if (!broadcast && (radioId == GATEWAY_ADDRESS)) {
+	if (!broadcast) {
 		// ---------------- WAIT FOR ACK ------------------
 		 unsigned long startedWaiting = millis();
 		 bool timeout = false;
-		 // Wait max 100 ms
+		 // Wait for ack message maximum 50 ms
 		 while ( !RF24::available() && !timeout ) {
-			if (millis() - startedWaiting > 100 ) {
+			if (millis() - startedWaiting > ACK_MAX_WAIT ) {
 				timeout = true;
-				debug(PSTR("Transmit: timeout\n"));
+				debug(PSTR("Ack: receive timeout\n"));
 				ok = false;
 			}
 		 }
@@ -248,12 +247,12 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 			uint8_t idest;
 			RF24::read( &idest, sizeof(uint8_t));
 			if (dest != idest) {
-				debug(PSTR("Transmit: size problem\n"));
+				debug(PSTR("Ack: received ack from the wrong sensor\n"));
 				ok = false;
 			}
 		} else {
 			ok = false;
-			debug(PSTR("Transmit: general fail\n"));
+			debug(PSTR("Ack: received non ack msg.\n"));
 		}
 		//--------------------
 	}
@@ -456,11 +455,13 @@ boolean Sensor::readMessage() {
 	RF24::read(&msg, len);
 
 	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING_ACK)) {
+		delay(ACK_SEND_DELAY); // Small delay here to let other side switch to reading mode
 		RF24::stopListening();
 		RF24::openWritingPipe(TO_ADDR(msg.header.last));
 		RF24::write(&radioId, sizeof(uint8_t));
 		RF24::startListening();
 		RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+		debug(PSTR("Sent ack msg to %d\n"), msg.header.last);
 	}
 	uint8_t valid = validate(len-sizeof(header_s));
 	boolean ok = valid == VALIDATE_OK;
