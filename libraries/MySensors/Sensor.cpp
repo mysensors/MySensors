@@ -226,9 +226,9 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 //	int retry = WRITE_RETRY;
 	RF24::stopListening();
 	RF24::openWritingPipe(TO_ADDR(dest));
-	RF24::startWrite(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
-	RF24::startListening();
+	RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
 	RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+	RF24::startListening();
 
 	if (!broadcast) {
 		// ---------------- WAIT FOR ACK ------------------
@@ -459,8 +459,8 @@ boolean Sensor::readMessage() {
 		RF24::stopListening();
 		RF24::openWritingPipe(TO_ADDR(msg.header.last));
 		RF24::write(&radioId, sizeof(uint8_t));
-		RF24::startListening();
 		RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+		RF24::startListening();
 		debug(PSTR("Sent ack msg to %d\n"), msg.header.last);
 	}
 	uint8_t valid = validate(len-sizeof(header_s));
