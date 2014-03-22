@@ -49,8 +49,6 @@ void setup()
 
 void loop()      
 {     
-  gw.powerUp(); // Power up radio (after sleep)
-
   uint16_t lux = lightSensor.readLightLevel();// Get Lux value
   Serial.println(lux);
   if (lux != lastlux) {

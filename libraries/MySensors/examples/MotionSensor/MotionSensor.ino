@@ -13,6 +13,8 @@ Sleep sleep;
 
 void setup()  
 {  
+  EEPROM.write(EEPROM_RELAY_ID_ADDRESS, 0);
+  
   gw.begin();
 
   // Send the sketch version information to the gateway and Controller
@@ -25,7 +27,6 @@ void setup()
 
 void loop()     
 {     
-  gw.powerUp(); // Power up radio
   // Read digital motion value
   boolean tripped = digitalRead(DIGITAL_INPUT_SENSOR) == HIGH; 
         

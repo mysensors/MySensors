@@ -37,7 +37,6 @@ void setup()
 
 void loop()     
 {     
-  gw.powerUp();
   sensors.requestTemperatures(); // Fetch temperatures from Dallas
   delay(100);
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {

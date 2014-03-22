@@ -49,7 +49,6 @@ void loop()
 
    if (oldBatteryPcnt != batteryPcnt) {
      // Power up radio after sleep
-     gw.powerUp();
      gw.sendBatteryLevel(batteryPcnt);
      oldBatteryPcnt = batteryPcnt;
    }

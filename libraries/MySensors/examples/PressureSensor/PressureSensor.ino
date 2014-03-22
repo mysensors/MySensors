@@ -44,8 +44,6 @@ void setup() {
 
 
 void loop() {
-  gw.powerUp(); // Power up radio
-
   float pressure = bmp.readPressure();
   float temperature = bmp.readTemperature();
   

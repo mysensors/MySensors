@@ -26,7 +26,6 @@ void setup()
  
 void loop()     
 {     
-  gw.powerUp(); // Power up radio
   // Read digital soil value
   int soilValue = digitalRead(DIGITAL_INPUT_SOIL_SENSOR); // 1 = Not triggered, 0 = In soil with water 
   if (soilValue != lastSoilValue) {
