@@ -51,7 +51,7 @@
 #define BROADCAST_PIPE ((uint8_t)2)
 
 #define ACK_MAX_WAIT 50
-#define ACK_SEND_DELAY 5
+#define ACK_SEND_DELAY 10 
 
 #define WRITE_RETRY 5
 #define FIND_RELAY_RETRIES 20
