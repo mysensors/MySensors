@@ -402,7 +402,13 @@ void RF24::begin(void)
 
 void RF24::startListening(void)
 {
-  write_register(CONFIG, read_register(CONFIG) | _BV(PWR_UP) | _BV(PRIM_RX));
+
+  // receiver on, transmitter off
+  write_register(CONFIG, read_register(CONFIG) | _BV(PRIM_RX));
+
+  // if not powered up already, power up the radio
+  powerUp();
+
   write_register(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   // Restore the pipe0 adddress, if exists
@@ -417,9 +423,6 @@ void RF24::startListening(void)
 
   // Go!
   ce(HIGH);
-
-  // wait for the radio to come up (130us actually only needed)
-  delayMicroseconds(130);
 }
 
 /****************************************************************************/
@@ -442,8 +445,15 @@ void RF24::powerDown(void)
 
 void RF24::powerUp(void)
 {
-  write_register(CONFIG,read_register(CONFIG) | _BV(PWR_UP));
-  delayMicroseconds(150);
+  uint8_t cfg = read_register(CONFIG);
+  
+  // if not powered up then power up and wait for the radio to initialize
+  if (!(cfg & _BV(PWR_UP)))
+  {
+     //printf("RF24::powerUp - powering up radio\n");
+     write_register(CONFIG,read_register(CONFIG) | _BV(PWR_UP));
+     delayMicroseconds(150);
+  }
 }
 
 /******************************************************************/
@@ -509,8 +519,11 @@ bool RF24::write( const void* buf, uint8_t len, const bool multicast )
 
 void RF24::startWrite( const void* buf, uint8_t len, const bool multicast )
 {
-  // Transmitter power-up
-  write_register(CONFIG, ( read_register(CONFIG) | _BV(PWR_UP) ) & ~_BV(PRIM_RX) );
+  // receiver off, transmitter on
+  write_register(CONFIG, read_register(CONFIG) & ~_BV(PRIM_RX));
+
+  // if not powered up already, power up the radio
+  powerUp();
 
   // Send the payload - Unicast (W_TX_PAYLOAD) or multicast (W_TX_PAYLOAD_NO_ACK)
   write_payload( buf, len,

@@ -226,11 +226,12 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 //	int retry = WRITE_RETRY;
 	RF24::stopListening();
 	RF24::openWritingPipe(TO_ADDR(dest));
-	RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
+	ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
+        debug(PSTR("Sensor::sendWrite() - return value = %s\n"), ok ? "true" : "false" );
 	RF24::startListening();
 	RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
 
-	if (!broadcast) {
+	if (!broadcast && (radioId == GATEWAY_ADDRESS)) {
 		// ---------------- WAIT FOR ACK ------------------
 		 unsigned long startedWaiting = millis();
 		 bool timeout = false;
@@ -238,6 +239,7 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 		 while ( !RF24::available() && !timeout ) {
 			if (millis() - startedWaiting > 100 ) {
 				timeout = true;
+				debug(PSTR("Transmit: timeout\n"));
 				ok = false;
 			}
 		 }
@@ -246,10 +248,12 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 			uint8_t idest;
 			RF24::read( &idest, sizeof(uint8_t));
 			if (dest != idest) {
+				debug(PSTR("Transmit: size problem\n"));
 				ok = false;
 			}
 		} else {
 			ok = false;
+			debug(PSTR("Transmit: general fail\n"));
 		}
 		//--------------------
 	}
