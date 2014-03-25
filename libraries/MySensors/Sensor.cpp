@@ -242,26 +242,26 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 				ok = false;
 			}
 		 }
-		// Check payload size and content
-		if ( !timeout && RF24::getDynamicPayloadSize()==sizeof(uint8_t)) {
-			uint8_t idest;
-			RF24::read( &idest, sizeof(uint8_t));
-			if (dest != idest) {
-				debug(PSTR("Ack: received ack from the wrong sensor\n"));
-				ok = false;
-			}
-		} else {
-			ok = false;
-			debug(PSTR("Ack: received non ack msg.\n"));
+		 // Check payload size and content
+		 if (!timeout) {
+		   // Check payload size and content
+		   if (RF24::getDynamicPayloadSize()==sizeof(uint8_t)) {
+			 uint8_t idest;
+			 RF24::read( &idest, sizeof(uint8_t));
+			 if (dest != idest) {
+				 debug(PSTR("Ack: received ack from the wrong sensor\n"));
+				 ok = false;
+			 } else {
+				 debug(PSTR("Ack: received OK\n"));
+			 }
+		   } else {
+			   ok = false;
+			   debug(PSTR("Ack: received none ack msg.\n"));
+		   }
 		}
-		//--------------------
 	}
 
-	if (ok) {
-		debug(PSTR("Sent successfully\n"));
-	} else {
-		debug(PSTR("Send failed.\n"));
-	}
+
 	return ok;
 }
 
