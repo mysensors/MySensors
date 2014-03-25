@@ -127,35 +127,40 @@ void processEthernetMessages()
    // bytes available to read via the client object
    EthernetClient client = server.available();
 
-   if (client)
+  if (client)
    {
-      // read the bytes incoming from the client
-      char inChar = client.read();
+      // if got 1 or more bytes
+      if (client.available())
+      {
+         // read the bytes incoming from the client
+         char inChar = client.read();
 
-      // echo the bytes to the serial port
-      Serial.print(inChar);
+         if (inputPos<MAX_RECEIVE_LENGTH-1) { 
+           // if newline then command is complete
+           if (inChar == '\n')
+           {  // a command was issued by the client
+              // we will now try to send it to the actuator
+              inputString[inputPos] = 0;
 
-      if (inputPos<MAX_RECEIVE_LENGTH-1) { 
-        // if newline then command is complete
-        if (inChar == '\n')
-        {  // a command was issued by the client
-           // we will now try to send it to the actuator
-           inputString[inputPos] = 0;
-           gw.parseAndSend(inputString);
-  
-           // clear the string:
+              // echo the string to the serial port
+              Serial.print(inputString);
+
+              gw.parseAndSend(inputString);
+
+              // clear the string:
+              inputPos = 0;
+           }
+           else
+           {  // add it to the inputString:
+              inputString[inputPos] = inChar;
+              inputPos++;
+           }
+        } else {
+           // Incoming message too long. Throw away 
            inputPos = 0;
         }
-        else
-        {  // add it to the inputString:
-           inputString[inputPos] = inChar;
-           inputPos++;
-        }
-     } else {
-       // Incoming message too long. Throw away 
-        inputPos = 0;
-     }
-   }
+      }
+   }  
 }
 
 
