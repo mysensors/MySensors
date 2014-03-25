@@ -136,7 +136,7 @@ uint8_t RF24::read_payload(void* buf, uint8_t len)
   while ( blank_len-- )
     SPI.transfer(0xff);
   csn(HIGH);
-
+  ce(HIGH);  //? ADDED IN
   return status;
 }
 
