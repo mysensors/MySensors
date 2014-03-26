@@ -128,7 +128,8 @@ uint8_t RF24::read_payload(void* buf, uint8_t len)
   uint8_t blank_len = dynamic_payloads_enabled ? 0 : payload_size - data_len;
   
   //printf("[Reading %u bytes %u blanks]",data_len,blank_len);
-  
+  ce(LOW);   // <----- NEED THIS ALSO
+
   csn(LOW);
   status = SPI.transfer( R_RX_PAYLOAD );
   while ( data_len-- )
