@@ -13,6 +13,7 @@
 #define Sensor_h
 
 #include "Config.h"
+#include "Version.h"
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24_config.h>
@@ -29,7 +30,6 @@
 #define debug(x,...)
 #endif
 
-#define LIBRARY_VERSION "1.2+"
 #define PROTOCOL_VERSION 1
 #define BAUD_RATE 115200
 
