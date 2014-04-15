@@ -50,7 +50,7 @@ void loop()
 }
 
 void setRelayStatus(message_s message) {
-  if (message.header.messageType=M_SET_VARIABLE &&
+  if (message.header.messageType==M_SET_VARIABLE &&
       message.header.type==V_LIGHT) {
      int incomingRelayStatus = atoi(message.data);
      // Change relay state

@@ -454,7 +454,10 @@ boolean Sensor::readMessage() {
 	uint8_t len = RF24::getDynamicPayloadSize();
 	RF24::read(&msg, len);
 
-	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING_ACK)) {
+	uint8_t valid = validate(len-sizeof(header_s));
+	boolean ok = valid == VALIDATE_OK;
+
+	if (ok && !(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING_ACK)) {
 		delay(ACK_SEND_DELAY); // Small delay here to let other side switch to reading mode
 		RF24::stopListening();
 		RF24::openWritingPipe(TO_ADDR(msg.header.last));
@@ -463,8 +466,6 @@ boolean Sensor::readMessage() {
 		RF24::startListening();
 		debug(PSTR("Sent ack msg to %d\n"), msg.header.last);
 	}
-	uint8_t valid = validate(len-sizeof(header_s));
-	boolean ok = valid == VALIDATE_OK;
 
 	// Make sure string gets terminated ok for full sized messages.
 	msg.data[len - sizeof(header_s) ] = '\0';
