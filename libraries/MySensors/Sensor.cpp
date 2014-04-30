@@ -107,7 +107,7 @@ void Sensor::initializeRadioId() {
 void Sensor::findRelay() {
 	// This can be improved by using status = read_register(OBSERVE_TX,&observe_tx,1) on the
 	// sending side.. the problem is getting this information here without too much fuss.
-	// Stay in this method until one or more relay nodes answers ping message.
+	// Try to find relay 3 times before giving up
 	if (radioId == GATEWAY_ADDRESS)
 		return; // Gateway has no business here!
 
@@ -120,7 +120,8 @@ void Sensor::findRelay() {
 	}
 	distance = 255;
 	uint8_t oldRelayId = relayId;
-	while (distance == 255) {
+	uint8_t retries=0;
+	while (distance == 255 && retries<3) {
 		// Send ping message to BROADCAST_ADDRESS (to which all nodes listens and should reply to)
 		buildMsg(radioId, BROADCAST_ADDRESS, NODE_CHILD_ID, M_INTERNAL, I_PING, "", 0, false);
 		sendWrite(BROADCAST_ADDRESS, msg, 0);
@@ -152,6 +153,7 @@ void Sensor::findRelay() {
 			debug(PSTR("No relay nodes was found. Trying again in 10 seconds.\n"));
 			delay(10000);
 		}
+		retries++;
 	}
 
 	// Store new relay address in EEPROM
@@ -454,7 +456,7 @@ boolean Sensor::readMessage() {
 	uint8_t len = RF24::getDynamicPayloadSize();
 	RF24::read(&msg, len);
 
-	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING_ACK)) {
+	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING)) {
 		delay(ACK_SEND_DELAY); // Small delay here to let other side switch to reading mode
 		RF24::stopListening();
 		RF24::openWritingPipe(TO_ADDR(msg.header.last));
