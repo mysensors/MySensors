@@ -22,13 +22,14 @@ void Sensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e 
 
 	// Start up the radio library
 	RF24::begin();
-	RF24::enableDynamicPayloads();
-    RF24::setAutoAck(false);
-    RF24::setRetries(15, 15);
-	RF24::setPALevel(paLevel);
 	RF24::setChannel(channel);
+	RF24::setPALevel(paLevel);
 	RF24::setDataRate(dataRate);
+	RF24::setAutoAck(true);
+	RF24::setRetries(2,15);
 	RF24::setCRCLength(RF24_CRC_16);
+	RF24::enableDynamicPayloads();
+
 
 	// All repeater nodes and gateway listen to broadcast pipe (for PING messages)
 	if (isRelay) {
@@ -217,51 +218,21 @@ boolean Sensor::send(message_s message, int length) {
 
 
 boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
-
 	message.header.last = radioId;
 	message.header.crc = crc8Message(message, length);
 	debug(PSTR("Tx: fr=%d,to=%d,la=%d,ne=%d,ci=%d,mt=%d,ty=%d,cr=%d: %s\n"),
 			message.header.from,message.header.to, message.header.last, dest, message.header.childId, message.header.messageType, message.header.type,  message.header.crc, message.data);
 
-	bool ok = true;
 	bool broadcast =  message.header.messageType == M_INTERNAL &&  message.header.type == I_PING;
-//	int retry = WRITE_RETRY;
 	RF24::stopListening();
 	RF24::openWritingPipe(TO_ADDR(dest));
-	RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
-	RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+	bool ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
 	RF24::startListening();
 
-	if (!broadcast) {
-		// ---------------- WAIT FOR ACK ------------------
-		 unsigned long startedWaiting = millis();
-		 bool timeout = false;
-		 // Wait for ack message maximum 50 ms
-		 while ( !RF24::available() && !timeout ) {
-			if (millis() - startedWaiting > ACK_MAX_WAIT ) {
-				timeout = true;
-				debug(PSTR("Ack: receive timeout\n"));
-				ok = false;
-			}
-		 }
-		 // Check payload size and content
-		 if (!timeout) {
-		   // Check payload size and content
-		   if (RF24::getDynamicPayloadSize()==sizeof(uint8_t)) {
-			 uint8_t idest;
-			 RF24::read( &idest, sizeof(uint8_t));
-			 if (dest != idest) {
-				 debug(PSTR("Ack: received ack from the wrong sensor\n"));
-				 ok = false;
-			 } else {
-				 debug(PSTR("Ack: received OK\n"));
-			 }
-		   } else {
-			   ok = false;
-			   debug(PSTR("Ack: received none ack msg.\n"));
-		   }
-		}
-	}
+	if (ok)
+		debug(PSTR("Sent successfully\n"));
+	else
+		debug(PSTR("Send failed\n"));
 
 
 	return ok;
@@ -456,15 +427,6 @@ boolean Sensor::readMessage() {
 	uint8_t len = RF24::getDynamicPayloadSize();
 	RF24::read(&msg, len);
 
-	if (!(msg.header.messageType==M_INTERNAL && msg.header.type == I_PING)) {
-		delay(ACK_SEND_DELAY); // Small delay here to let other side switch to reading mode
-		RF24::stopListening();
-		RF24::openWritingPipe(TO_ADDR(msg.header.last));
-		RF24::write(&radioId, sizeof(uint8_t));
-		RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
-		RF24::startListening();
-		debug(PSTR("Sent ack msg to %d\n"), msg.header.last);
-	}
 	uint8_t valid = validate(len-sizeof(header_s));
 	boolean ok = valid == VALIDATE_OK;
 
