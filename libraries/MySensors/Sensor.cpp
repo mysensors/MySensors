@@ -122,7 +122,7 @@ void Sensor::findRelay() {
 	distance = 255;
 	uint8_t oldRelayId = relayId;
 	uint8_t retries=0;
-	while (distance == 255 && retries<3) {
+	while (distance == 255 && retries<FIND_RELAY_RETRIES) {
 		// Send ping message to BROADCAST_ADDRESS (to which all nodes listens and should reply to)
 		buildMsg(radioId, BROADCAST_ADDRESS, NODE_CHILD_ID, M_INTERNAL, I_PING, "", 0, false);
 		sendWrite(BROADCAST_ADDRESS, msg, 0);
@@ -206,7 +206,7 @@ boolean Sensor::send(message_s message, int length) {
 	if (!ok && radioId != GATEWAY_ADDRESS) {
 		// Failure when sending to relay node. The relay node might be down and we
 		// need to find another route to gateway. Max 20 retries before giving up.
-		if (failedTransmissions > FIND_RELAY_RETRIES) {
+		if (failedTransmissions > FIND_RELAY_AFTER_FAILED_TRANSMISSIONS) {
 			findRelay();
 		}
 		failedTransmissions++;
