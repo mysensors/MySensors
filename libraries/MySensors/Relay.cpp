@@ -1,5 +1,5 @@
 /*
- The Sensor Net Arduino library adds a new layer on top of the RF24 library.
+ The MySensors Arduino library adds a new layer on top of the RF24 library.
  It handles radio network routing, relaying and ids.
 
  Created by Henrik Ekblad <henrik.ekblad@gmail.com>

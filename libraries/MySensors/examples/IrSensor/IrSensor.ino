@@ -9,7 +9,7 @@
 #include <SPI.h>
 #include <EEPROM.h>  
 #include <RF24.h>
-#include <IRremote.h>
+#include <IRLib.h>
 
 int RECV_PIN = 8;
 
@@ -17,13 +17,16 @@ int RECV_PIN = 8;
 
 IRsend irsend;
 IRrecv irrecv(RECV_PIN);
-decode_results results;
+IRdecode decoder;
+//decode_results results;
+unsigned int Buffer[RAWBUF];
 
 Sensor gw;
 
 void setup()  
 {  
   irrecv.enableIRIn(); // Start the ir receiver
+  decoder.UseExtnBuf(Buffer);
   gw.begin();
 
   // Send the sketch version information to the gateway and Controller
@@ -41,22 +44,24 @@ void loop()
 
      int incomingRelayStatus = atoi(message.data);
      if (incomingRelayStatus == 1) {
-      irsend.sendNEC(0x1EE17887, 32); // Vol up yamaha ysp-900
+      irsend.send(NEC, 0x1EE17887, 32); // Vol up yamaha ysp-900
      } else {
-      irsend.sendNEC(0x1EE1F807, 32); // Vol down yamaha ysp-900
+      irsend.send(NEC, 0x1EE1F807, 32); // Vol down yamaha ysp-900
      }
      // Start receiving ir again...
     irrecv.enableIRIn(); 
   }
   
  
-  if (irrecv.decode(&results)) {
+  if (irrecv.GetResults(&decoder)) {
+    irrecv.resume(); 
+    decoder.decode();
+    decoder.DumpResults();
+        
     char buffer[10];
-    sprintf(buffer, "%08lx", results.value);
-    dump(&results);
+    sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
     gw.sendVariable(CHILD_1, V_VAR1, buffer);
-    irrecv.resume(); // Receive the next value
   }
 }
 
@@ -66,7 +71,7 @@ void loop()
 // void * to work around compiler issue
 //void dump(void *v) {
 //  decode_results *results = (decode_results *)v
-void dump(decode_results *results) {
+/*void dump(decode_results *results) {
   int count = results->rawlen;
   if (results->decode_type == UNKNOWN) {
     Serial.print("Unknown encoding: ");
@@ -110,4 +115,4 @@ void dump(decode_results *results) {
   }
   Serial.println("");
 }
-
+*/
