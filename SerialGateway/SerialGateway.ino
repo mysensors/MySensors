@@ -28,7 +28,6 @@
 #include <PinChangeInt.h>
 #include <Gateway.h>  
 #include <stdarg.h>
-#include <avr/progmem.h>
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN 3 // Digital pin used for inclusion mode button

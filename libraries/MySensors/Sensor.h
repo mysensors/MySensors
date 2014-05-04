@@ -1,5 +1,5 @@
 /*
- The Sensor Net Arduino library adds a new layer on top of the RF24 library.
+ The MySensors library adds a new layer on top of the RF24 library.
  It handles radio network routing, relaying and ids.
 
  Created by Henrik Ekblad <henrik.ekblad@gmail.com>
@@ -41,7 +41,7 @@
 
 // This is the radioId for sensor net gateway receiver sketch (where all sensors should send their data).
 // This is also act as base value for sensor radioId
-#define BASE_RADIO_ID ((uint64_t)0xABCDABC000LL)
+#define BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
 #define GATEWAY_ADDRESS ((uint8_t)0)
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
 #define TO_ADDR(x) (BASE_RADIO_ID + x)
@@ -61,7 +61,7 @@ typedef enum {
 	M_PRESENTATION = 0,
     M_SET_VARIABLE = 1,
     M_REQ_VARIABLE = 2,
-    M_ACK_VARIABLE = 3,
+    M_SET_WITH_ACK = 3,
     M_INTERNAL = 4
 } messageType;
 
@@ -278,7 +278,7 @@ class Sensor : public RF24
 	void findRelay();
 	boolean send(message_s message, int length);
 	boolean sendWrite(uint8_t dest, message_s message, int length);
-	boolean readMessage();
+	//boolean readMessage();
 	void buildMsg(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binary);
 	void sendInternal(uint8_t variableType, const char *value);
 	boolean sendVariableAck();

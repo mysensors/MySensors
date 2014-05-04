@@ -1,5 +1,5 @@
 /*
- The MySensors Arduino library adds a new layer on top of the RF24 library.
+ The MySensors library adds a new layer on top of the RF24 library.
  It handles radio network routing, relaying and ids.
 
  Created by Henrik Ekblad <henrik.ekblad@gmail.com>
@@ -67,6 +67,7 @@ void Gateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e data
 
 	// Start up the radio library
 	setupRadio(paLevel, channel, dataRate);
+	RF24::openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
 	RF24::startListening();
 

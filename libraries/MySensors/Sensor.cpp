@@ -22,13 +22,20 @@ void Sensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e 
 
 	// Start up the radio library
 	RF24::begin();
+	RF24::setAutoAck(1);
+	RF24::enableAckPayload();
+	if (!RF24::isPVariant()) {
+		debug(PSTR("Sorry, you'll need to use the P version of NRF24L01.\n"));
+		while(1);
+	}
+
 	RF24::setChannel(channel);
 	RF24::setPALevel(paLevel);
 	RF24::setDataRate(dataRate);
-	RF24::setAutoAck(true);
-	RF24::setRetries(2,15);
+	RF24::setRetries(5,15);
 	RF24::setCRCLength(RF24_CRC_16);
 	RF24::enableDynamicPayloads();
+
 
 
 	// All repeater nodes and gateway listen to broadcast pipe (for PING messages)
@@ -44,6 +51,7 @@ void Sensor::begin(uint8_t _radioId, rf24_pa_dbm_e paLevel, uint8_t channel, rf2
 
 	debug(PSTR("Started %s.\n"), isRelay?"relay":"sensor");
 
+
 	setupRadio(paLevel, channel, dataRate);
 
 	// Fetch relay from EEPROM
@@ -58,7 +66,8 @@ void Sensor::begin(uint8_t _radioId, rf24_pa_dbm_e paLevel, uint8_t channel, rf2
 
 	initializeRadioId();
 
-	// Open reading pipe for messages directed to this node
+	// Open reading pipe for messages directed to this node (set write pipe to same)
+	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(radioId));
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(radioId));
 
 	// Send presentation for this radio node
@@ -224,10 +233,15 @@ boolean Sensor::sendWrite(uint8_t dest, message_s message, int length) {
 			message.header.from,message.header.to, message.header.last, dest, message.header.childId, message.header.messageType, message.header.type,  message.header.crc, message.data);
 
 	bool broadcast =  message.header.messageType == M_INTERNAL &&  message.header.type == I_PING;
+
 	RF24::stopListening();
 	RF24::openWritingPipe(TO_ADDR(dest));
 	bool ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, sizeof(message.header) + length), broadcast);
 	RF24::startListening();
+
+
+	//RF24::closeReadingPipe(WRITE_PIPE); // Stop listening to write-pipe after transmit
+	//delay(50);
 
 	if (ok)
 		debug(PSTR("Sent successfully\n"));
@@ -351,11 +365,11 @@ char* Sensor::get(uint8_t nodeId, uint8_t childId, uint8_t sendType, uint8_t rec
 }
 
 char* Sensor::getStatus(uint8_t childId, uint8_t variableType) {
-	return get(GATEWAY_ADDRESS, childId, M_REQ_VARIABLE, M_ACK_VARIABLE, variableType);
+	return get(GATEWAY_ADDRESS, childId, M_REQ_VARIABLE, M_SET_VARIABLE, variableType);
 }
 
 char * Sensor::getStatus(uint8_t nodeId, int8_t childId, uint8_t variableType) {
-	return get(nodeId, childId, M_REQ_VARIABLE, M_ACK_VARIABLE, variableType);
+	return get(nodeId, childId, M_REQ_VARIABLE, M_SET_VARIABLE, variableType);
 }
 
 
@@ -385,22 +399,33 @@ void Sensor::requestIsMetricSystem() {
 boolean Sensor::messageAvailable() {
 	uint8_t pipe;
 	boolean available = RF24::available(&pipe);
-
-	if (available) {
-		debug(PSTR("Message available on pipe %d\n"),pipe);
-	}
-
-
 	if (available && pipe<7) {
-		boolean ok = readMessage();
+
+		uint8_t len = RF24::getDynamicPayloadSize();
+		RF24::read(&msg, len);
+		RF24::writeAckPayload(pipe,&pipe, 1 );
+
+		if (available) {
+			debug(PSTR("Message available on pipe %d\n"),pipe);
+		}
+
+		uint8_t valid = validate(len-sizeof(header_s));
+		boolean ok = valid == VALIDATE_OK;
+
+		// Make sure string gets terminated ok for full sized messages.
+		msg.data[len - sizeof(header_s) ] = '\0';
+		debug(PSTR("Rx: fr=%d,to=%d,la=%d,ci=%d,mt=%d,t=%d,cr=%d(%s): %s\n"),
+				msg.header.from,msg.header.to, msg.header.last, msg.header.childId, msg.header.messageType, msg.header.type, msg.header.crc, valid==0?"ok":valid==1?"ec":"ev", msg.data);
+
+		// boolean ok = readMessage();
 		if (ok && msg.header.to == radioId) {
 			// This message is addressed to this node
 			debug(PSTR("Message addressed for this node.\n"));
-			if (msg.header.from == GATEWAY_ADDRESS &&
-				// If this is variable message from sensor net gateway. Send ack back.
-				msg.header.messageType == M_SET_VARIABLE) {
-				// Send back ack message to sensor net gateway
+			// Send set-message back to sender if sender wants this
+			if (msg.header.messageType == M_SET_WITH_ACK) {
 				sendVariableAck();
+				// The library user should not need to care about this ack request. Just treat it as a normal SET.
+				msg.header.messageType = M_SET_VARIABLE;
 			}
 			// Return message to waiting sketch...
 			return true;
@@ -423,7 +448,7 @@ message_s Sensor::getMessage() {
 }
 
 
-boolean Sensor::readMessage() {
+/*boolean Sensor::readMessage() {
 	uint8_t len = RF24::getDynamicPayloadSize();
 	RF24::read(&msg, len);
 
@@ -435,7 +460,7 @@ boolean Sensor::readMessage() {
 	debug(PSTR("Rx: fr=%d,to=%d,la=%d,ci=%d,mt=%d,t=%d,cr=%d(%s): %s\n"),
 			msg.header.from,msg.header.to, msg.header.last, msg.header.childId, msg.header.messageType, msg.header.type, msg.header.crc, valid==0?"ok":valid==1?"ec":"ev", msg.data);
 	return ok;
-}
+}*/
 
 /*
  * calculate CRC8 on message_s data taking care of data structure and protocol version

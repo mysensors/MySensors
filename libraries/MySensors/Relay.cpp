@@ -1,5 +1,5 @@
 /*
- The MySensors Arduino library adds a new layer on top of the RF24 library.
+ The MySensors library adds a new layer on top of the RF24 library.
  It handles radio network routing, relaying and ids.
 
  Created by Henrik Ekblad <henrik.ekblad@gmail.com>
@@ -86,8 +86,20 @@ boolean Relay::messageAvailable() {
 	}
 
 	if (available && pipe<7) {
-		uint8_t len = RF24::getDynamicPayloadSize()-sizeof(msg.header);
-		boolean ok = readMessage();
+		uint8_t len = RF24::getDynamicPayloadSize();
+		RF24::read(&msg, len);
+		RF24::writeAckPayload(pipe,&pipe, 1 );
+
+		uint8_t valid = validate(len-sizeof(header_s));
+		boolean ok = valid == VALIDATE_OK;
+
+		// Make sure string gets terminated ok for full sized messages.
+		msg.data[len - sizeof(header_s) ] = '\0';
+		debug(PSTR("Rx: fr=%d,to=%d,la=%d,ci=%d,mt=%d,t=%d,cr=%d(%s): %s\n"),
+					msg.header.from,msg.header.to, msg.header.last, msg.header.childId, msg.header.messageType, msg.header.type, msg.header.crc, valid==0?"ok":valid==1?"ec":"ev", msg.data);
+
+
+		//boolean ok = readMessage();
 		if (ok) {
 			if (msg.header.messageType == M_INTERNAL &&
 				msg.header.type == I_PING) {
@@ -130,11 +142,14 @@ boolean Relay::messageAvailable() {
 				} else {
 					// If this is variable message from sensor net gateway. Send ack back.
 					debug(PSTR("Message addressed for this node.\n"));
-					if (msg.header.from == GATEWAY_ADDRESS &&
-						msg.header.messageType == M_SET_VARIABLE) {
-						// Send back ack message to sensor net gateway
+
+					// Send set-message back to sender if sender wants this
+					if (msg.header.messageType == M_SET_WITH_ACK) {
 						sendVariableAck();
+						// The library user should not need to care about this ack request. Just treat it as a normal SET.
+						msg.header.messageType = M_SET_VARIABLE;
 					}
+
 					// Return message to waiting sketch...
 					if (msg.header.last != GATEWAY_ADDRESS)
 						addChildRoute(msg.header.from, msg.header.last);
@@ -143,7 +158,7 @@ boolean Relay::messageAvailable() {
 				}
 			} else {
 				// We should probably try to relay this message
-				relayMessage(len, pipe);
+				relayMessage(len-sizeof(msg.header), pipe);
 			}
 		}
 	}
@@ -243,14 +258,14 @@ void Relay::clearChildRoutes() {
 void Relay::sendChildren() {
 	// Send in which children that is using this node as an relay.
 	// TODO: Fix this
-	debug(PSTR("Send child info to sensor gateway.\n"));
+	debug(PSTR("Dump beginning of routing table\n"));
 
-	for (int i=0;i< 10; i++) {
+	for (int i=0;i< 50; i++) {
 //		Serial.println(childNodeTable[i]);
 		debug(PSTR("rt:%d, %d\n"), i, getChildRoute(i) );
 	}
 
-	//sendInternal(I_CHILDREN, "not implemented");
+	sendInternal(I_CHILDREN, "not implemented");
 }
 
 

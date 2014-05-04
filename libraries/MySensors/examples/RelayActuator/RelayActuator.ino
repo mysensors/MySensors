@@ -6,11 +6,11 @@
 #include <RF24.h>
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
-#define NUMBER_OF_RELAYS 1 
-#define RELAY_ON 0
-#define RELAY_OFF 1
+#define NUMBER_OF_RELAYS 1 // Total number of attached relays
+#define RELAY_ON 1  // GPIO value to write to turn on attached relay
+#define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
-Sensor gw;
+Relay gw;
 
 void setup()  
 {  
