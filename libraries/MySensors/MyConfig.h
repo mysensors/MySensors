@@ -1,5 +1,5 @@
-#ifndef Config_h
-#define Config_h
+#ifndef MyConfig_h
+#define MyConfig_h
 
 /***
  * Configure Sensor Network
@@ -12,6 +12,6 @@
 /***
  * Enable/Disable debug logging
  */
-#define DEBUG
+//#define DEBUG
 
 #endif

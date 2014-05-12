@@ -52,9 +52,9 @@
 #include <RF24.h>
 #include <MsTimer2.h>
 #include <PinChangeInt.h>
-#include <Gateway.h>  
+#include <MyGateway.h>  
 #include <stdarg.h>
-#include <avr/progmem.h>
+//#include <avr/progmem.h>
 
 #include <UIPEthernet.h>  // Use this if you have attached a Ethernet ENC28J60 shields  
 //#include <Ethernet.h>   // Use this fo WizNET module and Arduino Ethernet Shield 
@@ -81,7 +81,7 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // DEAD BEEF FEED
 EthernetServer server = EthernetServer(IP_PORT);
 
 // No blink or button functionality. Use the vanilla constructor.
-Gateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
+MyGateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
 
 // Uncomment this constructor if you have leds and include button attached to your gateway 
 //Gateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);

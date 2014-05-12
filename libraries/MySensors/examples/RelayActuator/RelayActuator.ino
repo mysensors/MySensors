@@ -1,27 +1,31 @@
 // Example sketch showing how to control physical relays. 
 
-#include <Relay.h>
+#include <MyConfig.h>
+#include <MyMessage.h>
+#include <MySensor.h>
 #include <SPI.h>
 #include <EEPROM.h>  
 #include <RF24.h>
+
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
-Relay gw;
+MySensor gw;
 
 void setup()  
-{  
-  gw.begin();
+{   
+  // Initialize library and add callback for incoming messages
+  gw.begin(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Relay", "1.0");
+  gw.sketchInfo("Relay", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
   for (int i=0; i<NUMBER_OF_RELAYS;i++) {
-    gw.sendSensorPresentation(RELAY_1+i, S_LIGHT);
+    gw.present(RELAY_1+i, S_LIGHT);
   }
   // Fetch relay status
   for (int i=0; i<NUMBER_OF_RELAYS;i++) {
@@ -30,35 +34,30 @@ void setup()
     // Then set relay pins in output mode
     pinMode(RELAY_1+i, OUTPUT);   
       
-    // Request/wait for relay status
-    gw.getStatus(RELAY_1+i, V_LIGHT);
-    setRelayStatus(gw.getMessage()); // Wait here until status message arrive from gw
+    // Request and wait for relay status from controller
+    gw.request(RELAY_1+i, V_LIGHT);
   }
   
 }
 
 
-/*
-*  Example on how to asynchronously check for new messages from gw
-*/
 void loop() 
 {
-  if (gw.messageAvailable()) {
-    message_s message = gw.getMessage(); 
-    setRelayStatus(message);
-  }
+  // Process incoming messages
+  gw.process();
 }
 
-void setRelayStatus(message_s message) {
-  if (message.header.messageType==M_SET_VARIABLE &&
-      message.header.type==V_LIGHT) {
-     int incomingRelayStatus = atoi(message.data);
+void incomingMessage(MyMessage message) {
+  // We only expect one type of message from controller. But we better check anyway.
+  if (message.getType()==V_LIGHT) {
+     bool status = message.getBool();
      // Change relay state
-     digitalWrite(message.header.childId, incomingRelayStatus==1?RELAY_ON:RELAY_OFF);
+     digitalWrite(message.getSensor(), status?RELAY_ON:RELAY_OFF);
+
      // Write some debug info
      Serial.print("Incoming change for relay on pin:");
-     Serial.print(message.header.childId);
+     Serial.print(message.getSensor());
      Serial.print(", New status: ");
-     Serial.println(incomingRelayStatus);
+     Serial.println(status);
    }
 }

@@ -677,9 +677,6 @@ void RF24::startFastWrite( const void* buf, uint8_t len, const bool multicast){ 
 //Allows the library to pass all tests
 void RF24::startWrite( const void* buf, uint8_t len, const bool multicast ){
 
-	// Powerup radio if not already alive.
-	powerUp();
-
   // Send the payload
 
   //write_payload( buf, len );
