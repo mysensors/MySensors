@@ -9,21 +9,21 @@
  version 2 as published by the Free Software Foundation.
 */
 
-#ifndef Gateway_h
-#define Gateway_h
+#ifndef MyGateway_h
+#define MyGateway_h
 
-#include "Relay.h"
+#include "MySensor.h"
 
 #define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from vera
 #define MAX_SEND_LENGTH 120 // Max buffersize needed for messages coming from vera
 
-class Gateway : public Relay
+class MyGateway : public MySensor
 {
 	public:
 		/**
 		* Constructor
 		*
-		* Creates a new instance of Gateway class.
+		* Creates a new instance of MyGateway class.
 		* If you don't use status leds and/or inclusion mode button on your arduino gateway
 		* you can disable this functionality by calling the 2 argument constructor.
 		*
@@ -36,8 +36,8 @@ class Gateway : public Relay
 		* @param _er Digital pin for error led
 		*
 		*/
-		Gateway(uint8_t _cepin=9, uint8_t _cspin=10, uint8_t _inclusion_time = 1);
-		Gateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er);
+		MyGateway(uint8_t _cepin=9, uint8_t _cspin=10, uint8_t _inclusion_time = 1);
+		MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er);
 
 		/* Use this and pass a function that should be called when you want to process commands that arrive from radio network */
 		void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(char *)=NULL);
@@ -68,8 +68,8 @@ class Gateway : public Relay
 	    uint8_t pinEr;
 
 	    void serial(const char *fmt, ... );
-	    uint8_t validate(uint8_t length);
-	    void serial(message_s msg);
+	    void serial(MyMessage msg);
+	    uint8_t validate(MyMessage message);
 	    void interruptStartInclusion();
 	    void checkButtonTriggeredInclusion();
 	    void setInclusionMode(boolean newMode);
