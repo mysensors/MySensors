@@ -18,8 +18,7 @@ MySensor gw;
 void setup()  
 {   
   // Initialize library and add callback for incoming messages
-  gw.begin(incomingMessage);
-
+  gw.begin(incomingMessage, false);
   // Send the sketch version information to the gateway and Controller
   gw.sketchInfo("Relay", "1.0");
 
@@ -49,8 +48,10 @@ void loop()
 
 void incomingMessage(MyMessage message) {
   // We only expect one type of message from controller. But we better check anyway.
+     Serial.println("hej");
   if (message.getType()==V_LIGHT) {
      bool status = message.getBool();
+     
      // Change relay state
      digitalWrite(message.getSensor(), status?RELAY_ON:RELAY_OFF);
 
@@ -61,3 +62,4 @@ void incomingMessage(MyMessage message) {
      Serial.println(status);
    }
 }
+
