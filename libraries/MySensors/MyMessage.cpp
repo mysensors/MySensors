@@ -116,7 +116,11 @@ char* MyMessage::getString(char *buffer) {
 }
 
 uint8_t MyMessage::getByte() {
-	return data[0];
+	if (getPayloadType() == P_BYTE)
+		return data[0];
+	if (getPayloadType() == P_STRING)
+		return atoi(data);
+	return 0;
 }
 bool MyMessage::getBool() {
 	return !(data[0]-'0'==0);
@@ -125,17 +129,34 @@ bool MyMessage::getBool() {
 double MyMessage::getDouble() {
 	return strtod(data, NULL);
 }
+
 long MyMessage::getLong() {
-	return lValue;
+	if (getPayloadType() == P_LONG32)
+		return lValue;
+	if (getPayloadType() == P_STRING)
+		return atol(data);
+	return 0;
 }
 unsigned long MyMessage::getULong() {
-	return ulValue;
+	if (getPayloadType() == P_ULONG32)
+		return ulValue;
+	if (getPayloadType() == P_STRING)
+		return atol(data);
+	return 0;
 }
 int MyMessage::getInt() {
-	return iValue;
+	if (getPayloadType() == P_INT16)
+		return iValue;
+	if (getPayloadType() == P_STRING)
+		return atoi(data);
+	return 0;
 }
 unsigned int MyMessage::getUInt() {
-	return uiValue;
+	if (getPayloadType() == P_UINT16)
+		return uiValue;
+	if (getPayloadType() == P_STRING)
+		return atoi(data);
+	return 0;
 }
 
 // Header setters

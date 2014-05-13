@@ -26,7 +26,7 @@
 #include <RF24.h>
 #include <MsTimer2.h>
 #include <PinChangeInt.h>
-#include <Gateway.h>  
+#include <MyGateway.h>  
 #include <stdarg.h>
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
@@ -37,7 +37,7 @@
 //Gateway gw;
 
 // To start gateway with include button and led blinking functionality enabled use this instead!
-Gateway gw(9, 10, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN,  6, 5, 4);
+MyGateway gw(9, 10, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN,  6, 5, 4);
 
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface

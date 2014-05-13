@@ -37,8 +37,8 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 		useWriteCallback = false;
 	}
 
-	radioId = 0;
-	distance = 0;
+	s.nodeId = 0;
+	s.distance = 0;
 	inclusionMode = 0;
 	buttonTriggeredInclusion = false;
 	countRx = 0;

@@ -21,7 +21,7 @@
 #include <Arduino.h>
 #include <stddef.h>
 #include <SPI.h>
-#include <EEPROM.h>
+#include <avr/eeprom.h>
 #include <avr/pgmspace.h>
 #include <stdarg.h>
 
@@ -33,16 +33,18 @@
 
 #define BAUD_RATE 115200
 
-#define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of radioId.
+#define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
 #define NODE_CHILD_ID 0xFF // Node child id is always created for when a new sensor is detected
-#define EEPROM_RADIO_ID_ADDRESS 0 // Where to store radio id in EEPROM
-#define EEPROM_RELAY_ID_ADDRESS 1 // Where to store relay id in EEPROM
-#define EEPROM_DISTANCE_ADDRESS 2 // Where to store distance to gateway in EEPROM
-#define EEPROM_ROUTES_ADDRESS ((uint8_t)3) // Where to start storing routing information in EEPROM. Will allocate 256 bytes.
+
+#define EEPROM_START 0
+#define EEPROM_NODE_ID_ADDRESS EEPROM_START // Where to store radio id in EEPROM
+#define EEPROM_PARENT_NODE_ID_ADDRESS (EEPROM_START+1) // Where to store relay id in EEPROM
+#define EEPROM_DISTANCE_ADDRESS (EEPROM_PARENT_NODE_ID_ADDRESS+1) // Where to store distance to gateway in EEPROM
+#define EEPROM_ROUTES_ADDRESS (EEPROM_DISTANCE_ADDRESS+1) // Where to start storing routing information in EEPROM. Will allocate 256 bytes.
 
 
-// This is the radioId for sensor net gateway receiver sketch (where all sensors should send their data).
-// This is also act as base value for sensor radioId
+// This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
+// This is also act as base value for sensor nodeId
 #define BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
 #define GATEWAY_ADDRESS ((uint8_t)0)
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
@@ -53,8 +55,7 @@
 #define BROADCAST_PIPE ((uint8_t)2)
 
 #define SEND_RETRIES 3
-#define FIND_RELAY_RETRIES 2
-#define FIND_RELAY_AFTER_FAILED_TRANSMISSIONS 20
+#define FIND_RELAY_AFTER_FAILED_TRANSMISSIONS 5
 
 
 class MySensor : public RF24
@@ -76,27 +77,27 @@ class MySensor : public RF24
 	* Call this in setup(), before calling any other sensor net library methods.
 	* @param incomingMessageCallback Callback function for incoming messages. Default is NULL
 	* @param relayMode Activate relay mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
-	* @param radioId The unique id (1-254) for this sensor. Default is AUTO(255) which means sensor tries to fetch an id from controller.
+	* @param nodeId The unique id (1-254) for this sensor. Default is AUTO(255) which means sensor tries to fetch an id from controller.
 	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
 	* @param channel Radio channel. Default is channel 76
 	* @param dataRate Radio transmission speed. Default RF24_1MBPS
 	*/
 
-	void begin(void (* msgCallback)(MyMessage)=NULL, boolean relayMode=false, uint8_t radioId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
+	void begin(void (* msgCallback)(MyMessage)=NULL, boolean relayMode=false, uint8_t nodeId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
 
 	/**
-	 * Return the nodes radioId.
+	 * Return the nodes nodeId.
 	 */
-	uint8_t getRadioId();
+	uint8_t getNodeId();
 
 	/**
 	* Each node must present all attached sensors before any values can be handled correctly by the controller.
     * It is usually good to present all attached sensors after power-up in setup().
 	*
-	* @param sensorChildId Sensor child id for the presented. Choose anything between 0-254.
+	* @param sensorId Select a unique sensor id for this sensor. Choose a number between 0-254.
 	* @param sensorType The sensor type. See sensor typedef in Message.h.
 	*/
-	void present(uint8_t sensorChildId, uint8_t sensorType);
+	void present(uint8_t sensorId, uint8_t sensorType);
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
@@ -128,7 +129,7 @@ class MySensor : public RF24
 	*
 	* @param childSensorId  The unique child id for the different sensors connected to this arduino. 0-254.
 	* @param variableType The variableType to fetch
-	* @param destination The radioId of other node in radio network. Default is gateway
+	* @param destination The nodeId of other node in radio network. Default is gateway
 	* @param number of attempts to fetch
 	* @return Message response
 	*/
@@ -141,7 +142,7 @@ class MySensor : public RF24
 	* @param childSensorId  The unique child id for the different sensors connected to this arduino. 0-254.
 	* @param variableType The variableType to fetch
 	* @param callback for result. This will be called when a message reply is received or request fails (see status of second argument).
-	* @param destination The radioId of other node in radio network. Default is gateway
+	* @param destination The nodeId of other node in radio network. Default is gateway
 	*/
 	/*void (* msgCallback)(MyMessage, bool)=NULL, */
 	void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS);
@@ -187,19 +188,22 @@ class MySensor : public RF24
 	int freeRam();
 #endif
 
-
   protected:
 	MyMessage msg;  // Buffer for incoming messages.
 	uint8_t failedTransmissions;
+	struct settings_t
+	{
+		uint8_t nodeId; // Current node id
+		uint8_t parentNodeId; // Where this node sends its messages
+		uint8_t distance; // This nodes distance to sensor net gateway (number of hops)
+		uint8_t *childNodeTable; // In memory buffer for routing to other nodes. also stored in EEPROM
+	} s;
 	boolean relayMode;
-	uint8_t radioId;
-	uint8_t distance; // This nodes distance to sensor net gateway (number of hops)
-	uint8_t relayId;
 	char convBuffer[20];
 
 	void setupRelayMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
-	void findRelay();
+	void findParentNode();
 	boolean sendRoute(MyMessage message);
 	boolean sendWrite(uint8_t dest, MyMessage message);
 	void sendInternal(uint8_t variableType, const char *value);
@@ -219,11 +223,12 @@ class MySensor : public RF24
 		uint8_t type;
 		void (*msgCallback)(MyMessage, bool);
 	};*/
+
+
 	MyMessage ack;  // Buffer for ack messages.
-	uint8_t *childNodeTable; // In memory buffer for routing to other nodes. Also stored in EEPROM
     void (*msgCallback)(MyMessage); // Callback for undefined incoming messages
 
-	void initializeRadioId();
+	void requestNodeId();
 	uint8_t crc8Message(MyMessage);
 	MyMessage wait(MyMessage msg, uint8_t expectedReceiveType, uint8_t retry);
 	MyMessage getInternal(uint8_t variableType, uint8_t retry=SEND_RETRIES);
