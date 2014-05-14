@@ -49,6 +49,7 @@ class MyGateway : public MySensor
 	    void startInclusionInterrupt();
 
 	private:
+	    char convBuf[MAX_PAYLOAD*2+1];
 	    char serialBuffer[MAX_SEND_LENGTH]; // Buffer for building string when sending data to vera
 	    unsigned long inclusionStartTime;
 	    boolean inclusionMode; // Keeps track on inclusion mode

@@ -213,7 +213,7 @@ void MyGateway::serial(const char *fmt, ... ) {
 }
 
 void MyGateway::serial(MyMessage msg) {
-  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.getSender(), msg.getSensor(), msg.getCommand(), msg.getType(), msg.getString());
+  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.getSender(), msg.getSensor(), msg.getCommand(), msg.getType(), msg.getString(convBuf));
 }
 
 

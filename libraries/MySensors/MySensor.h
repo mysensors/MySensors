@@ -114,7 +114,7 @@ class MySensor : public RF24
 	* @param retry Number of attempts before giving up. Default is SEND_RETRIES
 	* @return true Retuns false if ack is enabled and no ack came back
 	*/
-	bool send(MyMessage msg, bool ack=false, uint8_t retry=SEND_RETRIES);
+	bool send(MyMessage msg, bool ack=false/*, uint8_t retry=SEND_RETRIES*/);
 
 	/**
 	 * Send this nodes battery level to gateway.
@@ -133,7 +133,7 @@ class MySensor : public RF24
 	* @param number of attempts to fetch
 	* @return Message response
 	*/
-	MyMessage get(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS, uint8_t retry=SEND_RETRIES);
+//	MyMessage get(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS, uint8_t retry=SEND_RETRIES);
 
 	/**
 	* Requests a value from gateway or some other sensor in the radio network.
@@ -189,8 +189,6 @@ class MySensor : public RF24
 #endif
 
   protected:
-	MyMessage msg;  // Buffer for incoming messages.
-	uint8_t failedTransmissions;
 	struct settings_t
 	{
 		uint8_t nodeId; // Current node id
@@ -198,16 +196,18 @@ class MySensor : public RF24
 		uint8_t distance; // This nodes distance to sensor net gateway (number of hops)
 		uint8_t *childNodeTable; // In memory buffer for routing to other nodes. also stored in EEPROM
 	} s;
+	MyMessage msg;  // Buffer for incoming messages.
+	uint8_t failedTransmissions;
 	boolean relayMode;
-	char convBuffer[20];
+//	char convBuffer[20];
 
 	void setupRelayMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
 	void findParentNode();
 	boolean sendRoute(MyMessage message);
 	boolean sendWrite(uint8_t dest, MyMessage message);
-	void sendInternal(uint8_t variableType, const char *value);
-	boolean sendAck(MyMessage message);
+//	void sendInternal(uint8_t variableType, const char *value);
+//	boolean sendAck(MyMessage message);
 	boolean sendData(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binaryMessage);
 	uint8_t validate(MyMessage message);
 	void sendChildren();
@@ -230,8 +230,8 @@ class MySensor : public RF24
 
 	void requestNodeId();
 	uint8_t crc8Message(MyMessage);
-	MyMessage wait(MyMessage msg, uint8_t expectedReceiveType, uint8_t retry);
-	MyMessage getInternal(uint8_t variableType, uint8_t retry=SEND_RETRIES);
+//	MyMessage wait(MyMessage msg, uint8_t expectedReceiveType, uint8_t retry);
+//	MyMessage getInternal(uint8_t variableType, uint8_t retry=SEND_RETRIES);
 
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
