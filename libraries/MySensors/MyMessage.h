@@ -18,7 +18,6 @@
 #define MAX_MESSAGE_LENGTH 32
 #define HEADER_SIZE 8
 #define MAX_PAYLOAD (MAX_MESSAGE_LENGTH - HEADER_SIZE)
-#define GATEWAY_ADDRESS ((uint8_t)0)
 
 // Message types
 typedef enum {
@@ -27,8 +26,7 @@ typedef enum {
 	C_REQ_VARIABLE = 2,
 	C_SET_WITH_ACK = 3,
 	C_INTERNAL = 4,
-	C_STREAM = 5, // For Firmaware and other larger chunks of data that need to be divided into pieces.
-	C_FAILED = 6
+	C_STREAM = 5 // For Firmaware and other larger chunks of data that need to be divided into pieces.
 } command;
 
 // Type of sensor data (for set/req/ack messages)
@@ -44,7 +42,7 @@ typedef enum {
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_REQUEST_ID,
 	I_INCLUSION_MODE, I_RELAY_NODE, I_PING, I_PING_ACK,
-	I_LOG_MESSAGE, I_CHILDREN, I_UNIT, I_SKETCH_NAME, I_SKETCH_VERSION
+	I_LOG_MESSAGE, I_CHILDREN, I_CONFIG, I_SKETCH_NAME, I_SKETCH_VERSION
 } internal;
 
 // Type of sensor  (for presentation message)
@@ -82,33 +80,36 @@ typedef enum {
 // Insert a new bitfield value x into y.
 #define BF_SET(y, x, start, len)    ( y= ((y) &~ BF_MASK(start, len)) | BF_PREP(x, start, len) )
 
+// Getters/setters for special fields in header
+#define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 3)
+#define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
+#define mSetCommand(_msg,_command) BF_SET(_msg.command_payload, _command, 0, 4)
+#define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_payload, _pt, 4, 4)
+
+#define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
+#define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
+#define mGetCommand(_msg) BF_GET(_msg.command_payload, 0, 4)
+#define mGetPayloadType(_msg) BF_GET(_msg.command_payload, 4, 4)
+
+// internal access for special fileds
+#define miGetPayloadType() BF_GET(command_payload, 4, 4)
+#define miGetLength() BF_GET(version_length, 3, 5)
+
+#define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
+#define miSetPayloadType(_pt) BF_SET(command_payload, _pt, 4, 4)
+
+
+// Check and fetch data from special messages
+#define isTimeResponse(_msg) (mGetCommand(_msg)==C_INTERN && _msg.type==I_TIME)
+#define isConfigResponse(_msg) (mGetCommand(_msg)==C_INTERN && _msg.type==I_CONFIG)
+#define mIsMetric(_msg) (_msg.getByte() == 'M')
 
 
 class MyMessage
 {
 public:
 	// Constructors
-	MyMessage(uint8_t sensor, uint8_t type, uint8_t destination=GATEWAY_ADDRESS);
 	MyMessage();
-
-	/* Check this after callback to see if request failed */
-//	bool failed();
-
-
-	// Getters for header
-	uint8_t getCRC();
-	uint8_t getVersion();
-	uint8_t getLength();
-	uint8_t getCommand();
-	uint8_t getPayloadType();
-	uint8_t getType();
-	uint8_t getSensor();
-	uint8_t getSender();
-	uint8_t getLast();
-	uint8_t getDestination();
-
-	// Getters for payload
-
 
 	/**
 	 * If payload is something else than P_STRING you can have payload the value converted
@@ -116,12 +117,7 @@ public:
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
 	 */
 	char* getString(char *buffer = NULL);
-
-	/**
-	 * Returns payload untouched
-	 */
 	void* getCustom();
-
 	uint8_t getByte();
 	bool getBool();
 	double getDouble();
@@ -129,21 +125,6 @@ public:
 	unsigned long getULong();
 	int getInt();
 	unsigned int getUInt();
-
-	// Builder helper
-	MyMessage build(uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type);
-
-	// Setters for header
-	MyMessage setCRC(uint8_t crc);
-	MyMessage setVersion(uint8_t version);
-	MyMessage setLength(uint8_t length);
-	MyMessage setCommand(uint8_t command);
-	MyMessage setPayloadType(uint8_t pt);
-	MyMessage setType(uint8_t type);
-	MyMessage setSensor(uint8_t sensor);
-	MyMessage setSender(uint8_t sender);
-	MyMessage setLast(uint8_t last);
-	MyMessage setDestination(uint8_t destination);
 
 
 	// Setters for payload
@@ -166,6 +147,7 @@ public:
 	uint8_t last;            // 8 bit - Id of last node this message passed
 	uint8_t destination;     // 8 bit - Id of destination node
 	uint8_t crc;             // 8 bit - Message checksum
+
 	// Each message can transfer a payload. We add one extra byte for string
 	// terminator \0 to be "printable" this is not transferred OTA
 	// This union is used to simplify the construction of the binary transferred int/long values.

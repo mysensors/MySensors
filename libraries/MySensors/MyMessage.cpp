@@ -4,73 +4,8 @@
 
 
 MyMessage::MyMessage() {
-	setVersion(PROTOCOL_VERSION);
 }
 
-MyMessage::MyMessage(uint8_t _sensor, uint8_t _type, uint8_t _destination) {
-	sensor = _sensor;
-	type = _type;
-	destination = _destination;
-	setVersion(PROTOCOL_VERSION);
-	setCommand(C_SET_VARIABLE);
-}
-
-MyMessage MyMessage::build(uint8_t _sender, uint8_t _destination, uint8_t _sensor, uint8_t _command, uint8_t _type) {
-	sender = _sender;
-	destination = _destination;
-	sensor = _sensor;
-	type = _type;
-	setCommand(_command);
-	setLength(0);
-	setPayloadType(P_STRING);
-	return *this;
-}
-
-/*MyMessage MyMessage::failed() {
-	return getCommand() == C_FAILED
-}*/
-
-// Header getters
-
-uint8_t MyMessage::getCRC() {
-	return crc;
-}
-
-uint8_t MyMessage::getVersion() {
-	return BF_GET(version_length, 0, 3);
-}
-
-uint8_t MyMessage::getLength() {
-	return BF_GET(version_length, 3, 5);
-}
-
-uint8_t MyMessage::getCommand() {
-	return BF_GET(command_payload, 0, 4);
-}
-
-uint8_t MyMessage::getPayloadType() {
-	return BF_GET(command_payload, 4, 4);
-}
-
-uint8_t MyMessage::getType() {
-	return type;
-}
-
-uint8_t MyMessage::getSensor() {
-	return sensor;
-}
-
-uint8_t MyMessage::getSender() {
-	return sender;
-}
-
-uint8_t MyMessage::getLast() {
-	return last;
-}
-
-uint8_t MyMessage::getDestination() {
-	return destination;
-}
 
 
 /* Getters for payload converted to desired form */
@@ -80,10 +15,10 @@ void* MyMessage::getCustom() {
 
 /* NOTE: Calling this method might affect the payload by converting it to its string representation */
 char* MyMessage::getString(char *buffer) {
-	uint8_t payloadType = getPayloadType();
+	uint8_t payloadType = miGetPayloadType();
 
 	if (payloadType == P_STRING) {
-		data[getLength()] = '\0';
+		data[miGetLength()] = '\0';
 		return data;
 	} else if (buffer != NULL) {
 		switch(payloadType) {
@@ -116,11 +51,14 @@ char* MyMessage::getString(char *buffer) {
 }
 
 uint8_t MyMessage::getByte() {
-	if (getPayloadType() == P_BYTE)
+	switch(miGetPayloadType()) {
+	case P_BYTE:
 		return data[0];
-	if (getPayloadType() == P_STRING)
+	case P_STRING:
 		return atoi(data);
-	return 0;
+	default:
+		return 0;
+	}
 }
 bool MyMessage::getBool() {
 	return !(data[0]-'0'==0);
@@ -131,90 +69,55 @@ double MyMessage::getDouble() {
 }
 
 long MyMessage::getLong() {
-	if (getPayloadType() == P_LONG32)
+	switch(miGetPayloadType()) {
+	case P_LONG32:
 		return lValue;
-	if (getPayloadType() == P_STRING)
+	case P_STRING:
 		return atol(data);
-	return 0;
+	default:
+		return 0;
+	}
 }
+
 unsigned long MyMessage::getULong() {
-	if (getPayloadType() == P_ULONG32)
+	switch(miGetPayloadType()) {
+	case P_ULONG32:
 		return ulValue;
-	if (getPayloadType() == P_STRING)
+	case P_STRING:
 		return atol(data);
-	return 0;
+	default:
+		return 0;
+	}
 }
+
 int MyMessage::getInt() {
-	if (getPayloadType() == P_INT16)
+	switch(miGetPayloadType()) {
+	case P_INT16:
 		return iValue;
-	if (getPayloadType() == P_STRING)
+	case P_STRING:
 		return atoi(data);
-	return 0;
+	default:
+		return 0;
+	}
 }
+
 unsigned int MyMessage::getUInt() {
-	if (getPayloadType() == P_UINT16)
+	switch(miGetPayloadType()) {
+	case P_UINT16:
 		return uiValue;
-	if (getPayloadType() == P_STRING)
+	case P_STRING:
 		return atoi(data);
-	return 0;
-}
+	default:
+		return 0;
+	}
 
-// Header setters
-MyMessage MyMessage::setCRC(uint8_t _crc) {
-	crc = _crc;
-	return *this;
-}
-
-MyMessage MyMessage::setVersion(uint8_t version) {
-	BF_SET(version_length, version, 0, 3);
-	return *this;
-}
-
-MyMessage MyMessage::setLength(uint8_t length) {
-	BF_SET(version_length, length, 3, 5);
-	return *this;
-}
-
-MyMessage MyMessage::setCommand(uint8_t command) {
-	BF_SET(command_payload, command, 0, 4);
-	return *this;
-}
-
-MyMessage MyMessage::setPayloadType(uint8_t pt) {
-	BF_SET(command_payload, pt, 4, 4);
-	return *this;
-}
-
-MyMessage MyMessage::setType(uint8_t _type) {
-	type = _type;
-	return *this;
-}
-
-MyMessage MyMessage::setSensor(uint8_t _sensor) {
-	sensor = _sensor;
-	return *this;
-}
-
-MyMessage MyMessage::setSender(uint8_t _sender) {
-	sender = _sender;
-	return *this;
-}
-
-MyMessage MyMessage::setLast(uint8_t _last) {
-	last=_last;
-	return *this;
-}
-
-MyMessage MyMessage::setDestination(uint8_t _destination) {
-	destination = _destination;
-	return *this;
 }
 
 
 // Set payload
 MyMessage MyMessage::set(void* value, uint8_t length) {
-	setPayloadType(P_CUSTOM);
-	setLength(length);
+	miSetPayloadType(P_CUSTOM);
+	miSetLength(length);
 	memcpy(data, value, min(length, MAX_PAYLOAD));
 	return *this;
 }
@@ -222,57 +125,57 @@ MyMessage MyMessage::set(void* value, uint8_t length) {
 
 MyMessage MyMessage::set(const char* value) {
 	uint8_t length = strlen(value);
-	setLength(length);
-	setPayloadType(P_STRING);
+	miSetLength(length);
+	miSetPayloadType(P_STRING);
 	strncpy(data, value, min(length, MAX_PAYLOAD));
 	return *this;
 }
 
 MyMessage MyMessage::set(uint8_t value) {
-	setLength(1);
-	setPayloadType(P_BYTE);
+	miSetLength(1);
+	miSetPayloadType(P_BYTE);
 	data[0] = value;
 	return *this;
 }
 
 MyMessage MyMessage::set(bool value) {
-	setLength(1);
-	setPayloadType(P_STRING);
+	miSetLength(1);
+	miSetPayloadType(P_STRING);
 	data[0] = value?'1':'0';
 	return *this;
 }
 
 MyMessage MyMessage::set(double value, uint8_t decimals) {
 	dtostrf(value,2,decimals,data);
-	setLength(strlen(data));
-	setPayloadType(P_STRING);
+	miSetLength(strlen(data));
+	miSetPayloadType(P_STRING);
 	return *this;
 }
 
 MyMessage MyMessage::set(unsigned long value) {
-	setPayloadType(P_ULONG32);
-	setLength(4);
+	miSetPayloadType(P_ULONG32);
+	miSetLength(4);
 	ulValue = value;
 	return *this;
 }
 
 MyMessage MyMessage::set(long value) {
-	setPayloadType(P_LONG32);
-	setLength(4);
+	miSetPayloadType(P_LONG32);
+	miSetLength(4);
 	lValue = value;
 	return *this;
 }
 
 MyMessage MyMessage::set(unsigned int value) {
-	setPayloadType(P_INT16);
-	setLength(2);
+	miSetPayloadType(P_INT16);
+	miSetLength(2);
 	uiValue = value;
 	return *this;
 }
 
 MyMessage MyMessage::set(int value) {
-	setPayloadType(P_UINT16);
-	setLength(2);
+	miSetPayloadType(P_UINT16);
+	miSetLength(2);
 	iValue = value;
 	return *this;
 }

@@ -187,7 +187,7 @@ void MyGateway::processRadioMessage() {
 	if (process()) {
 	  // A new message was received from one of the sensors
 	  MyMessage message = getLastMessage();
-	  if (message.getCommand() == C_PRESENTATION && inclusionMode) {
+	  if (mGetCommand(message) == C_PRESENTATION && inclusionMode) {
 		rxBlink(3);
 	  } else {
 		rxBlink(1);
@@ -213,7 +213,7 @@ void MyGateway::serial(const char *fmt, ... ) {
 }
 
 void MyGateway::serial(MyMessage msg) {
-  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.getSender(), msg.getSensor(), msg.getCommand(), msg.getType(), msg.getString(convBuf));
+  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
 }
 
 

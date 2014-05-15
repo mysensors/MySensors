@@ -4,7 +4,6 @@
 #include <MyMessage.h>
 #include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
 #include <RF24.h>
 
 
@@ -48,18 +47,15 @@ void loop()
 
 void incomingMessage(MyMessage message) {
   // We only expect one type of message from controller. But we better check anyway.
-     Serial.println("hej");
-  if (message.getType()==V_LIGHT) {
-     bool status = message.getBool();
-     
+  if (message.type==V_LIGHT) {
      // Change relay state
-     digitalWrite(message.getSensor(), status?RELAY_ON:RELAY_OFF);
+     digitalWrite(message.sensor, message.getBool()?RELAY_ON:RELAY_OFF);
 
      // Write some debug info
-     Serial.print("Incoming change for relay on pin:");
-     Serial.print(message.getSensor());
+     Serial.print("Incoming change for sensor:");
+     Serial.print(message.sensor);
      Serial.print(", New status: ");
-     Serial.println(status);
-   }
+     Serial.println(message.getBool());
+   } 
 }
 

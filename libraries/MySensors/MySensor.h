@@ -57,6 +57,22 @@
 #define SEND_RETRIES 3
 #define FIND_RELAY_AFTER_FAILED_TRANSMISSIONS 5
 
+#define build(_msg, _sender, _destination, _sensor, _cmd, _type) \
+	_msg.sender = _sender; \
+	_msg.destination = _destination;\
+	_msg.sensor = _sensor; \
+	_msg.type = _type; \
+	mSetCommand(_msg,_cmd); \
+
+#define buildSend(_msg, _sender, _destination, _sensor, _cmd, _type) \
+	build(_msg, _sender, _destination, _sensor, _cmd, _type) \
+	sendRoute(_msg);
+
+#define buildSendPayload(_msg, _sender, _destination, _sensor, _cmd, _type, _value) \
+	build(_msg, _sender, _destination, _sensor, _cmd, _type) \
+	_msg.set(_value); \
+	sendRoute(_msg);
+
 
 class MySensor : public RF24
 {
@@ -120,7 +136,7 @@ class MySensor : public RF24
 	 * Send this nodes battery level to gateway.
 	 * @param level Level between 0-100(%)
 	 */
-	void sendBatteryLevel(int level);
+	void sendBatteryLevel(uint8_t level);
 
 	/**
 	* Fetches a value from gateway or some other sensor in the radio network. Resends request and waits for response.
@@ -144,26 +160,24 @@ class MySensor : public RF24
 	* @param callback for result. This will be called when a message reply is received or request fails (see status of second argument).
 	* @param destination The nodeId of other node in radio network. Default is gateway
 	*/
-	/*void (* msgCallback)(MyMessage, bool)=NULL, */
 	void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS);
 
 
 	/**
-	 * Fetches time from sensor net gateway.
+	 * Requests time from controller. Pick up response in callback.
 	 *
-	 * @return Seconds since 1970, 0 if failed.
+	 * @return Seconds since 1970.
 	 */
-//	unsigned long getTime(uint8_t retry=SEND_RETRIES);
 	void requestTime();
 
 	/**
-	 * Fetches unit setting from sensor net gateway. Returns true if metric system has been selected which means
-	 * that sensor should report it's information in: celsius, meter, cm, gram, km/h, m/s etc..
+	 * Fetches configuration from controller. Returns true if metric system has been selected which means
+	 * that sensor should report it's information in:
+	 * celsius, meter, cm, gram, km/h, m/s etc..
 	 * If false is returned the sensor should report data in imperial system which means
 	 * fahrenheit, feet, gallon, mph etc...
 	 */
-	void requestIsMetricSystem();
-//	bool isMetricSystem(uint8_t retry=SEND_RETRIES);
+	void requestConfiguration();
 
 
 	/**
@@ -177,9 +191,6 @@ class MySensor : public RF24
 	* Returns the last received message
 	*/
 	MyMessage getLastMessage(void);
-
-
-
 
 
 
@@ -199,44 +210,24 @@ class MySensor : public RF24
 	MyMessage msg;  // Buffer for incoming messages.
 	uint8_t failedTransmissions;
 	boolean relayMode;
-//	char convBuffer[20];
 
 	void setupRelayMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
 	void findParentNode();
 	boolean sendRoute(MyMessage message);
-	boolean sendWrite(uint8_t dest, MyMessage message);
-//	void sendInternal(uint8_t variableType, const char *value);
-//	boolean sendAck(MyMessage message);
-	boolean sendData(uint8_t from, uint8_t to, uint8_t childId, uint8_t messageType, uint8_t type, const char *data, uint8_t length, boolean binaryMessage);
+	boolean sendWrite(uint8_t dest, MyMessage message, bool broadcast=false);
 	uint8_t validate(MyMessage message);
-	void sendChildren();
-
 
   private:
-	// Callbacks for reqeusts
-/*	struct callback {
-		bool active; // Deactivates callback after each reply
-		uint8_t command; // Command type
-		uint8_t sender;
-		uint8_t sensor;
-		uint8_t type;
-		void (*msgCallback)(MyMessage, bool);
-	};*/
-
-
 	MyMessage ack;  // Buffer for ack messages.
     void (*msgCallback)(MyMessage); // Callback for undefined incoming messages
 
 	void requestNodeId();
 	uint8_t crc8Message(MyMessage);
-//	MyMessage wait(MyMessage msg, uint8_t expectedReceiveType, uint8_t retry);
-//	MyMessage getInternal(uint8_t variableType, uint8_t retry=SEND_RETRIES);
 
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
 	void removeChildRoute(uint8_t childId);
-	void clearChildRoutes();
 };
 
 #endif
