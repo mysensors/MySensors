@@ -21,7 +21,7 @@ void setup()
   gw.sendSketchInfo("Relay", "1.0");
 
   // Fetch relay status
-  for (int sensor=0, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
+  for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
     // Register all sensors to gw (they will be created as child devices)
     gw.present(sensor, S_LIGHT);
     // Then set relay pins in output mode

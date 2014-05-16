@@ -14,7 +14,16 @@ void* MyMessage::getCustom() {
 	return (void *)data;
 }
 
-/* NOTE: Calling this method might affect the payload by converting it to its string representation */
+char* MyMessage::getString() {
+	uint8_t payloadType = miGetPayloadType();
+	if (payloadType == P_STRING) {
+		data[miGetLength()] = '\0';
+		return data;
+	} else {
+		return NULL;
+	}
+}
+
 char* MyMessage::getString(char *buffer) {
 	uint8_t payloadType = miGetPayloadType();
 
@@ -116,85 +125,85 @@ unsigned int MyMessage::getUInt() {
 }
 
 
-MyMessage MyMessage::setType(uint8_t _type) {
+MyMessage* MyMessage::setType(uint8_t _type) {
 	type = _type;
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::setSensor(uint8_t _sensor) {
+MyMessage* MyMessage::setSensor(uint8_t _sensor) {
 	sensor = _sensor;
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::setDestination(uint8_t _destination) {
+MyMessage* MyMessage::setDestination(uint8_t _destination) {
 	destination = _destination;
-	return *this;
+	return this;
 }
 
 // Set payload
-MyMessage MyMessage::set(void* value, uint8_t length) {
+MyMessage* MyMessage::set(void* value, uint8_t length) {
 	miSetPayloadType(P_CUSTOM);
 	miSetLength(length);
 	memcpy(data, value, min(length, MAX_PAYLOAD));
-	return *this;
+	return this;
 }
 
 
-MyMessage MyMessage::set(const char* value) {
+MyMessage* MyMessage::set(const char* value) {
 	uint8_t length = strlen(value);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
 	strncpy(data, value, min(length, MAX_PAYLOAD));
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(uint8_t value) {
+MyMessage* MyMessage::set(uint8_t value) {
 	miSetLength(1);
 	miSetPayloadType(P_BYTE);
 	data[0] = value;
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(bool value) {
+MyMessage* MyMessage::set(bool value) {
 	miSetLength(1);
 	miSetPayloadType(P_STRING);
 	data[0] = value?'1':'0';
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(double value, uint8_t decimals) {
+MyMessage* MyMessage::set(double value, uint8_t decimals) {
 	dtostrf(value,2,decimals,data);
 	miSetLength(strlen(data));
 	miSetPayloadType(P_STRING);
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(unsigned long value) {
+MyMessage* MyMessage::set(unsigned long value) {
 	miSetPayloadType(P_ULONG32);
 	miSetLength(4);
 	ulValue = value;
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(long value) {
+MyMessage* MyMessage::set(long value) {
 	miSetPayloadType(P_LONG32);
 	miSetLength(4);
 	lValue = value;
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(unsigned int value) {
+MyMessage* MyMessage::set(unsigned int value) {
 	miSetPayloadType(P_INT16);
 	miSetLength(2);
 	uiValue = value;
-	return *this;
+	return this;
 }
 
-MyMessage MyMessage::set(int value) {
+MyMessage* MyMessage::set(int value) {
 	miSetPayloadType(P_UINT16);
 	miSetLength(2);
 	iValue = value;
-	return *this;
+	return this;
 }
 
 

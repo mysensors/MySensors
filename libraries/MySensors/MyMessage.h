@@ -85,11 +85,20 @@ typedef enum {
 #define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
 #define mSetCommand(_msg,_command) BF_SET(_msg.command_payload, _command, 0, 4)
 #define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_payload, _pt, 4, 4)
+#define mSetVersionP(_msg,_version) BF_SET(_msg->version_length, _version, 0, 3)
+#define mSetLengthP(_msg,_length) BF_SET(_msg->version_length, _length, 3, 5)
+#define mSetCommandP(_msg,_command) BF_SET(_msg->command_payload, _command, 0, 4)
+#define mSetPayloadTypeP(_msg, _pt) BF_SET(_msg->command_payload, _pt, 4, 4)
 
 #define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
 #define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
 #define mGetCommand(_msg) BF_GET(_msg.command_payload, 0, 4)
 #define mGetPayloadType(_msg) BF_GET(_msg.command_payload, 4, 4)
+#define mGetVersionP(_msg) BF_GET(_msg->version_length, 0, 3)
+#define mGetLengthP(_msg) BF_GET(_msg->version_length, 3, 5)
+#define mGetCommandP(_msg) BF_GET(_msg->command_payload, 0, 4)
+#define mGetPayloadTypeP(_msg) BF_GET(_msg->command_payload, 4, 4)
+
 
 // internal access for special fileds
 #define miGetPayloadType() BF_GET(command_payload, 4, 4)
@@ -105,12 +114,14 @@ public:
 	// Constructors
 	MyMessage();
 
+
+	char* getString();
 	/**
-	 * If payload is something else than P_STRING you can have payload the value converted
-	 * to string representation by supplying a buffer with the minimum size of
+	 * If payload is something else than P_STRING you can have the payload value converted
+	 * into string representation by supplying a buffer with the minimum size of
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
 	 */
-	char* getString(char *buffer = NULL);
+	char* getString(char *buffer);
 	void* getCustom();
 	uint8_t getByte();
 	bool getBool();
@@ -121,20 +132,20 @@ public:
 	unsigned int getUInt();
 
 	// Setters for building message "on the fly"
-	MyMessage setType(uint8_t type);
-	MyMessage setSensor(uint8_t sensor);
-	MyMessage setDestination(uint8_t destination);
+	MyMessage* setType(uint8_t type);
+	MyMessage* setSensor(uint8_t sensor);
+	MyMessage* setDestination(uint8_t destination);
 
 	// Setters for payload
-	MyMessage set(void* payload, uint8_t length);
-	MyMessage set(const char* value);
-	MyMessage set(uint8_t value);
-	MyMessage set(bool value);
-	MyMessage set(double value, uint8_t decimals);
-	MyMessage set(unsigned long value);
-	MyMessage set(long value);
-	MyMessage set(unsigned int value);
-	MyMessage set(int value);
+	MyMessage* set(void* payload, uint8_t length);
+	MyMessage* set(const char* value);
+	MyMessage* set(uint8_t value);
+	MyMessage* set(bool value);
+	MyMessage* set(double value, uint8_t decimals);
+	MyMessage* set(unsigned long value);
+	MyMessage* set(long value);
+	MyMessage* set(unsigned int value);
+	MyMessage* set(int value);
 
 
 	uint8_t version_length;  // 3 bit - Protocol version + 5 bit - Length of payload

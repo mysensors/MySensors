@@ -61,7 +61,7 @@ void loop()
     if (lastTemperature[i] != temperature && temperature != -127.00) {
  
       // Send in the new temperature
-      gw.send(out.setSensor(i).set(temperature,1));
+      gw.send(out.setSensor(i)->set(temperature,1));
       lastTemperature[i]=temperature;
     }
   }

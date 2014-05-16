@@ -130,7 +130,7 @@ class MySensor : public RF24
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 	* @return true Returns true if message reached the first stop on its way to destination.
 	*/
-	bool send(MyMessage msg, bool ack=false);
+	bool send(MyMessage *msg, bool ack=false);
 
 	/**
 	 * Send this nodes battery level to gateway.
@@ -191,7 +191,7 @@ class MySensor : public RF24
 	/**
 	* Returns the last received message
 	*/
-	MyMessage getLastMessage(void);
+	MyMessage* getLastMessage(void);
 
 
 
@@ -209,9 +209,9 @@ class MySensor : public RF24
 
 	void setupRelayMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
-	boolean sendRoute(MyMessage message);
-	boolean sendWrite(uint8_t dest, MyMessage message, bool broadcast=false);
-	uint8_t validate(MyMessage message);
+	boolean sendRoute(MyMessage *message);
+	boolean sendWrite(uint8_t dest, MyMessage *message, bool broadcast=false);
+	uint8_t validate(MyMessage *message);
 
   private:
 	uint8_t failedTransmissions;
@@ -221,7 +221,7 @@ class MySensor : public RF24
 
 	void requestNodeId();
 	void findParentNode();
-	uint8_t crc8Message(MyMessage);
+	uint8_t crc8Message(MyMessage *message);
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
 	void removeChildRoute(uint8_t childId);
