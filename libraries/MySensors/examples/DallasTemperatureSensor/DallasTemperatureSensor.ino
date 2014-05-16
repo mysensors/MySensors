@@ -25,10 +25,10 @@ void setup()
   sensors.begin();
 
   // Startup and initialize MySensors library. Set callback for incoming messages. 
-  gw.begin(response); 
+  gw.begin(); 
 
   // Send the sketch version information to the gateway and Controller
-  gw.sketchInfo("Temperature Sensor", "1.0");
+  gw.sendSketchInfo("Temperature Sensor", "1.0");
 
   // Fetch the number of attached temperature sensors  
   numSensors = sensors.getDeviceCount();
@@ -38,56 +38,39 @@ void setup()
      gw.present(i, S_TEMP);
   }
 
-  // Request configuration from controller (use this to determine if we're supposed to send in Ceclscius or Farenheit)
-  gw.requestConfig();
-  
-  // Initialize outgoing message to always send temperature
+    // Initialize outgoing message to always send temperature
   out.type = V_TEMP;
 }
 
 
 void loop()     
 {     
-  // Process incoming messages
+  // Process incoming messages (like config from server)
   gw.process(); 
 
-  if (receivedConfig) {
-    // Fetch temperatures from Dallas sensors
-    sensors.requestTemperatures(); 
+  // Fetch temperatures from Dallas sensors
+  sensors.requestTemperatures(); 
 
-    // Read temperatures and send them to controller 
-    for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {
+  // Read temperatures and send them to controller 
+  for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {
  
-      // Fetch and round temperature to one decimal
-      float temperature = static_cast<float>(static_cast<int>((metric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
+    // Fetch and round temperature to one decimal
+    float temperature = static_cast<float>(static_cast<int>((gw.getConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
  
-      // Only send data if temperature has changed and no error
-      if (lastTemperature[i] != temperature && temperature != -127.00) {
+    // Only send data if temperature has changed and no error
+    if (lastTemperature[i] != temperature && temperature != -127.00) {
  
-        // Send in the new temperature
-        gw.send(out.setSensor(i).set(temperature,1));
-        lastTemperature[i]=temperature;
-      }
+      // Send in the new temperature
+      gw.send(out.setSensor(i).set(temperature,1));
+      lastTemperature[i]=temperature;
     }
-    // Power down the radio and sleep Arduino to save batteries.  
-    delay(500);
-    gw.powerDown();
-    sleep.pwrDownMode(); //set sleep mode
-    sleep.sleepDelay(SLEEP_TIME * 1000); //sleep for: sleepTime 
-  } else {
-    // We're still missing the configuration. Wait a little bit and request it again.
-    delay(1000);  
-    gw.requestConfig();
   }
+  // Power down the radio and sleep Arduino to save batteries.  
+  delay(500);
+  gw.powerDown();
+  sleep.pwrDownMode(); //set sleep mode
+  sleep.sleepDelay(SLEEP_TIME * 1000); //sleep for: sleepTime 
 }
 
-void response(MyMessage msg) {
-  // Check that received message is a configuration
-  if (isConfigResponse(msg)) {
-    // Read config from message
-    metric = mIsMetric(msg);
-    receivedConfig = true;
-  }
-}
 
 

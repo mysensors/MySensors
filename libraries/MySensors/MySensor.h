@@ -34,14 +34,19 @@
 #define BAUD_RATE 115200
 
 #define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
-#define NODE_CHILD_ID 0xFF // Node child id is always created for when a new sensor is detected
+#define NODE_SENSOR_ID 0xFF // Node child id is always created for when a node
 
+// EEPROM start address for mysensors library data
 #define EEPROM_START 0
-#define EEPROM_NODE_ID_ADDRESS EEPROM_START // Where to store radio id in EEPROM
-#define EEPROM_PARENT_NODE_ID_ADDRESS (EEPROM_START+1) // Where to store relay id in EEPROM
-#define EEPROM_DISTANCE_ADDRESS (EEPROM_PARENT_NODE_ID_ADDRESS+1) // Where to store distance to gateway in EEPROM
+// EEPROM location of node id
+#define EEPROM_NODE_ID_ADDRESS EEPROM_START
+// EEPROM location of parent id
+#define EEPROM_PARENT_NODE_ID_ADDRESS (EEPROM_START+1)
+// EEPROM location of distance to gateway
+#define EEPROM_DISTANCE_ADDRESS (EEPROM_PARENT_NODE_ID_ADDRESS+1)
 #define EEPROM_ROUTES_ADDRESS (EEPROM_DISTANCE_ADDRESS+1) // Where to start storing routing information in EEPROM. Will allocate 256 bytes.
-
+#define EEPROM_CONTROLLER_CONFIG_ADDRESS (EEPROM_ROUTES_ADDRESS+256) // Location of controller sent configuration (we allow one payload of config data from controller)
+#define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_CONTROLLER_CONFIG_ADDRESS+24) // First free address for sketch static configuration
 
 // This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
 // This is also act as base value for sensor nodeId
@@ -54,7 +59,20 @@
 #define CURRENT_NODE_PIPE ((uint8_t)1)
 #define BROADCAST_PIPE ((uint8_t)2)
 
-#define FIND_RELAY_AFTER_FAILED_TRANSMISSIONS 5
+// Search for a new parent node after this many transmission failures
+#define SEARCH_FAILURES  5
+
+struct NodeConfig
+{
+	uint8_t nodeId; // Current node id
+	uint8_t parentNodeId; // Where this node sends its messages
+	uint8_t distance; // This nodes distance to sensor net gateway (number of hops)
+};
+
+struct ControllerConfig {
+	uint8_t isMetric;
+};
+
 
 
 class MySensor : public RF24
@@ -74,7 +92,7 @@ class MySensor : public RF24
 	* Begin operation of the MySensors library
 	*
 	* Call this in setup(), before calling any other sensor net library methods.
-	* @param incomingMessageCallback Callback function for incoming messages. Default is NULL
+	* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses. Default is NULL.
 	* @param relayMode Activate relay mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
 	* @param nodeId The unique id (1-254) for this sensor. Default is AUTO(255) which means sensor tries to fetch an id from controller.
 	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
@@ -103,7 +121,7 @@ class MySensor : public RF24
 	 * @param name String containing a short Sketch name or NULL  if not applicable
 	 * @param version String containing a short Sketch version or NULL if not applicable
 	 */
-	void sketchInfo(const char *name, const char *version);
+	void sendSketchInfo(const char *name, const char *version);
 
 	/**
 	* Sends a message to gateway or one of the other nodes in the radio network
@@ -122,30 +140,20 @@ class MySensor : public RF24
 
 	/**
 	* Requests a value from gateway or some other sensor in the radio network.
-	* Make sure to add callback in begin() to handle request response.
+	* Make sure to add callback-method in begin-method to handle request responses.
 	*
 	* @param childSensorId  The unique child id for the different sensors connected to this arduino. 0-254.
 	* @param variableType The variableType to fetch
-	* @param callback for result. This will be called when a message reply is received or request fails (see status of second argument).
 	* @param destination The nodeId of other node in radio network. Default is gateway
 	*/
 	void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS);
 
 	/**
-	 * Requests time from controller. Pick up response in callback.
+	 * Requests time from controller. Answer will be delivered to callback.
 	 *
-	 * @return Seconds since 1970.
+	 * @param callback for time request. Incoming argument is seconds since 1970.
 	 */
-	void requestTime();
-
-	/**
-	 * Requests configuration from controller. Returns true if metric system has been selected which means
-	 * that sensor should report it's information in:
-	 * celsius, meter, cm, gram, km/h, m/s etc..
-	 * If false is returned the sensor should report data in imperial system which means
-	 * fahrenheit, feet, gallon, mph etc...
-	 */
-	void requestConfig();
+	void requestTime(void (* timeCallback)(unsigned long));
 
 
 	/**
@@ -153,7 +161,32 @@ class MySensor : public RF24
 	* Returns true if there is a message addressed for this node just was received.
 	* Use callback to handle incoming messages.
 	*/
-	boolean process(void);
+	boolean process();
+
+	/**
+	 * Returns the most recent node configuration received from controller
+	 */
+	ControllerConfig getConfig();
+
+	/**
+	 * Save a state (in local EEPROM). Good for actuators to "remember" state between
+	 * power cycles.
+	 *
+	 * You have 256 bytes to play with. Note that there is a limitation on the number
+	 * of writes the EEPROM can handle (~100 000 cycles).
+	 *
+	 * @param pos The position to store value in (0-255)
+	 * @param Value to store in position
+	 */
+	void saveState(uint8_t pos, uint8_t value);
+
+	/**
+	 * Load a state (from local EEPROM).
+	 *
+	 * @param pos The position to fetch value from  (0-255)
+	 * @return Value to store in position
+	 */
+	uint8_t loadState(uint8_t pos);
 
 	/**
 	* Returns the last received message
@@ -168,31 +201,27 @@ class MySensor : public RF24
 #endif
 
   protected:
-	struct settings_t
-	{
-		uint8_t nodeId; // Current node id
-		uint8_t parentNodeId; // Where this node sends its messages
-		uint8_t distance; // This nodes distance to sensor net gateway (number of hops)
-		uint8_t *childNodeTable; // In memory buffer for routing to other nodes. also stored in EEPROM
-	} s;
-	MyMessage msg;  // Buffer for incoming messages.
-	uint8_t failedTransmissions;
+	NodeConfig nc; // Essential settings for node to work
+	ControllerConfig cc; // Configuration coming from controller
 	boolean relayMode;
 
 	void setupRelayMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
-	void findParentNode();
 	boolean sendRoute(MyMessage message);
 	boolean sendWrite(uint8_t dest, MyMessage message, bool broadcast=false);
 	uint8_t validate(MyMessage message);
 
   private:
+	uint8_t failedTransmissions;
+	uint8_t *childNodeTable; // In memory buffer for routing information to other nodes. also stored in EEPROM
+	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage ack;  // Buffer for ack messages.
-    void (*msgCallback)(MyMessage); // Callback for undefined incoming messages
+    void (*timeCallback)(unsigned long); // Callback for requested time messages
+    void (*msgCallback)(MyMessage); // Callback for incoming messages from other nodes and gateway.
 
 	void requestNodeId();
+	void findParentNode();
 	uint8_t crc8Message(MyMessage);
-
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
 	void removeChildRoute(uint8_t childId);

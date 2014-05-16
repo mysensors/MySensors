@@ -1,4 +1,5 @@
 // Example sketch showing how to control physical relays. 
+// This example will remember relay state even after power failure.
 
 #include <MySensor.h>
 #include <SPI.h>
@@ -17,29 +18,23 @@ void setup()
   // Initialize library and add callback for incoming messages
   gw.begin(incomingMessage, false);
   // Send the sketch version information to the gateway and Controller
-  gw.sketchInfo("Relay", "1.0");
+  gw.sendSketchInfo("Relay", "1.0");
 
-  // Register all sensors to gw (they will be created as child devices)
-  for (int i=0; i<NUMBER_OF_RELAYS;i++) {
-    gw.present(RELAY_1+i, S_LIGHT);
-  }
   // Fetch relay status
-  for (int i=0; i<NUMBER_OF_RELAYS;i++) {
-    // Make sure relays are off when starting up
-    digitalWrite(RELAY_1+i, RELAY_OFF);
+  for (int sensor=0, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
+    // Register all sensors to gw (they will be created as child devices)
+    gw.present(sensor, S_LIGHT);
     // Then set relay pins in output mode
-    pinMode(RELAY_1+i, OUTPUT);   
-      
-    // Request and wait for relay status from controller
-    gw.request(RELAY_1+i, V_LIGHT);
+    pinMode(pin, OUTPUT);   
+    // Set relay to last known state (using eeprom storage) 
+    digitalWrite(pin, gw.loadState(sensor));
   }
-  
 }
 
 
 void loop() 
 {
-  // Process incoming messages
+  // Alway process incoming messages whenever possible
   gw.process();
 }
 
@@ -48,6 +43,8 @@ void incomingMessage(MyMessage message) {
   if (message.type==V_LIGHT) {
      // Change relay state
      digitalWrite(message.sensor, message.getBool()?RELAY_ON:RELAY_OFF);
+     // Store state in eeprom
+     gw.saveState(message.sensor, message.getBool());
 
      // Write some debug info
      Serial.print("Incoming change for sensor:");

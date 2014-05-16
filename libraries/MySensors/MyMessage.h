@@ -41,8 +41,8 @@ typedef enum {
 // Type of internal messages (for internal messages)
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_REQUEST_ID,
-	I_INCLUSION_MODE, I_RELAY_NODE, I_PING, I_PING_ACK,
-	I_LOG_MESSAGE, I_CHILDREN, I_CONFIG, I_SKETCH_NAME, I_SKETCH_VERSION
+	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
+	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION
 } internal;
 
 // Type of sensor  (for presentation message)
@@ -97,12 +97,6 @@ typedef enum {
 
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
 #define miSetPayloadType(_pt) BF_SET(command_payload, _pt, 4, 4)
-
-
-// Check and fetch data from special messages
-#define isTimeResponse(_msg) (mGetCommand(_msg)==C_INTERNAL && _msg.type==I_TIME)
-#define isConfigResponse(_msg) (mGetCommand(_msg)==C_INTERNAL && _msg.type==I_CONFIG)
-#define mIsMetric(_msg) (_msg.getByte() == 'M')
 
 
 class MyMessage
