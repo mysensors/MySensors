@@ -100,8 +100,8 @@ typedef enum {
 
 
 // Check and fetch data from special messages
-#define isTimeResponse(_msg) (mGetCommand(_msg)==C_INTERN && _msg.type==I_TIME)
-#define isConfigResponse(_msg) (mGetCommand(_msg)==C_INTERN && _msg.type==I_CONFIG)
+#define isTimeResponse(_msg) (mGetCommand(_msg)==C_INTERNAL && _msg.type==I_TIME)
+#define isConfigResponse(_msg) (mGetCommand(_msg)==C_INTERNAL && _msg.type==I_CONFIG)
 #define mIsMetric(_msg) (_msg.getByte() == 'M')
 
 
@@ -126,6 +126,10 @@ public:
 	int getInt();
 	unsigned int getUInt();
 
+	// Setters for building message "on the fly"
+	MyMessage setType(uint8_t type);
+	MyMessage setSensor(uint8_t sensor);
+	MyMessage setDestination(uint8_t destination);
 
 	// Setters for payload
 	MyMessage set(void* payload, uint8_t length);

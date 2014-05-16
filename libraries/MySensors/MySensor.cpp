@@ -11,6 +11,27 @@
 
 #include "MySensor.h"
 
+// Inline and macros
+inline MyMessage build (MyMessage msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type) {
+	msg.sender = sender;
+	msg.destination = destination;
+	msg.sensor = sensor;
+	msg.type = type;
+	mSetCommand(msg,command);
+	return msg;
+}
+
+// Created macros for these, compiler seems to do a bad job when doing sendRoute(build(...))
+#define buildSend(_msg, _sender, _destination, _sensor, _cmd, _type) \
+		build(_msg, _sender, _destination, _sensor, _cmd, _type);\
+		sendRoute(_msg);
+
+#define buildSendPayload(_msg, _sender, _destination, _sensor, _cmd, _type, _value) \
+		build(_msg, _sender, _destination, _sensor, _cmd, _type).set(_value);\
+		_msg.set(_value);\
+		sendRoute(_msg);
+
+
 MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 }
 
@@ -109,7 +130,7 @@ void MySensor::findParentNode() {
 	s.distance = 255;
 
 	// Send ping message to BROADCAST_ADDRESS (to which all relaying nodes and gateway listens and should reply to)
-	build(msg, s.nodeId, BROADCAST_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_PING)
+	build(msg, s.nodeId, BROADCAST_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_PING);
 	sendWrite(BROADCAST_ADDRESS, msg, true);
 
 	unsigned long enter = millis();

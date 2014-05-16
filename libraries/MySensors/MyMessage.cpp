@@ -4,6 +4,7 @@
 
 
 MyMessage::MyMessage() {
+	destination = 0; // Gateway is default destination
 }
 
 
@@ -60,6 +61,7 @@ uint8_t MyMessage::getByte() {
 		return 0;
 	}
 }
+
 bool MyMessage::getBool() {
 	return !(data[0]-'0'==0);
 }
@@ -113,6 +115,21 @@ unsigned int MyMessage::getUInt() {
 
 }
 
+
+MyMessage MyMessage::setType(uint8_t _type) {
+	type = _type;
+	return *this;
+}
+
+MyMessage MyMessage::setSensor(uint8_t _sensor) {
+	sensor = _sensor;
+	return *this;
+}
+
+MyMessage MyMessage::setDestination(uint8_t _destination) {
+	destination = _destination;
+	return *this;
+}
 
 // Set payload
 MyMessage MyMessage::set(void* value, uint8_t length) {

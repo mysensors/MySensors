@@ -1,7 +1,5 @@
 // Example sketch showing how to control physical relays. 
 
-#include <MyConfig.h>
-#include <MyMessage.h>
 #include <MySensor.h>
 #include <SPI.h>
 #include <RF24.h>

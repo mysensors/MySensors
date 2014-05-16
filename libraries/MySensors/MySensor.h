@@ -56,22 +56,6 @@
 
 #define FIND_RELAY_AFTER_FAILED_TRANSMISSIONS 5
 
-#define build(_msg, _sender, _destination, _sensor, _cmd, _type) \
-	_msg.sender = _sender; \
-	_msg.destination = _destination;\
-	_msg.sensor = _sensor; \
-	_msg.type = _type; \
-	mSetCommand(_msg,_cmd); \
-
-#define buildSend(_msg, _sender, _destination, _sensor, _cmd, _type) \
-	build(_msg, _sender, _destination, _sensor, _cmd, _type) \
-	sendRoute(_msg);
-
-#define buildSendPayload(_msg, _sender, _destination, _sensor, _cmd, _type, _value) \
-	build(_msg, _sender, _destination, _sensor, _cmd, _type) \
-	_msg.set(_value); \
-	sendRoute(_msg);
-
 
 class MySensor : public RF24
 {
