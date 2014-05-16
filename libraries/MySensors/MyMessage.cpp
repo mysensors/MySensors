@@ -26,16 +26,16 @@ char* MyMessage::getString(char *buffer) {
 				itoa(bValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_INT16:
-				itoa(iValue, data, MAX_PAYLOAD);
+				itoa(iValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_UINT16:
-				ltoa(uiValue, data, MAX_PAYLOAD);
+				ltoa(uiValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_LONG32:
-				ltoa(lValue, data, MAX_PAYLOAD);
+				ltoa(lValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_ULONG32:
-				ltoa(ulValue, data, MAX_PAYLOAD);
+				ltoa(ulValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_CUSTOM:
 				// TODO: Ok, what do we do here? We should probably convert this to hex

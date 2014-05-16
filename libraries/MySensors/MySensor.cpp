@@ -111,11 +111,10 @@ void MySensor::findParentNode() {
 	// Send ping message to BROADCAST_ADDRESS (to which all relaying nodes and gateway listens and should reply to)
 	build(msg, s.nodeId, BROADCAST_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_PING)
 	sendWrite(BROADCAST_ADDRESS, msg, true);
-	// Wait for replies for max 10 seconds (or when buffer for all parent nodes have been filled up)
 
 	unsigned long enter = millis();
-	// Wait for ack responses 5 seconds
-	while (millis() - enter < 5000) {
+	// Wait for ack responses slightly more than 1 second
+	while (millis() - enter < 1200) {
 		process();
 	}
 
@@ -187,6 +186,8 @@ bool MySensor::send(MyMessage message, bool enableAck) {
 	message.sender = s.nodeId;
 	if (enableAck) {
 		mSetCommand(message,C_SET_WITH_ACK);
+	} else {
+		mSetCommand(message,C_SET);
 	}
 	return sendRoute(message);
 }
@@ -209,15 +210,14 @@ void MySensor::sketchInfo(const char *name, const char *version) {
 }
 
 void MySensor::request(uint8_t childSensorId, uint8_t variableType, uint8_t destination) {
-	buildSend(msg, s.nodeId, destination, childSensorId, C_REQ_VARIABLE, variableType);
+	buildSend(msg, s.nodeId, destination, childSensorId, C_REQ, variableType);
 }
 
 void MySensor::requestTime() {
 	buildSend(msg, s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_TIME);
 }
 
-
-void MySensor::requestConfiguration() {
+void MySensor::requestConfig() {
 	buildSend(msg, s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_CONFIG);
 }
 
@@ -225,179 +225,184 @@ boolean MySensor::process() {
 	uint8_t pipe;
 	boolean available = RF24::available(&pipe);
 
-	if (available && pipe<7) {
-		uint8_t len = RF24::getDynamicPayloadSize();
-		RF24::read(&msg, len);
-		RF24::writeAckPayload(pipe,&pipe, 1 );
+	if (!available || pipe>6)
+		return false;
 
-		uint8_t valid = validate(msg);
-		boolean ok = valid == VALIDATE_OK;
+	uint8_t len = RF24::getDynamicPayloadSize();
+	RF24::read(&msg, len);
+	RF24::writeAckPayload(pipe,&pipe, 1 );
 
-		// Make sure string gets terminated ok for full string messages.
-		msg.data[len - HEADER_SIZE ] = '\0';
-		debug(PSTR("rx: %d-%d-%d s=%d,c=%d,t=%d,cr=%s: %s\n"),
-					msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, valid==0?"ok":valid==1?"ec":"ev", msg.getString());
+	uint8_t valid = validate(msg);
+	boolean ok = valid == VALIDATE_OK;
 
-		if (ok) {
-			uint8_t command = mGetCommand(msg);
-			uint8_t type = msg.type;
-			uint8_t sender = msg.sender; //getSender();
-			uint8_t last = msg.last;
-			uint8_t destination = msg.destination;
+	// Make sure string gets terminated ok for full string messages.
+	msg.data[len - HEADER_SIZE ] = '\0';
+	debug(PSTR("rx: %d-%d-%d s=%d,c=%d,t=%d,cr=%s: %s\n"),
+				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, valid==0?"ok":valid==1?"ec":"ev", msg.getString());
 
-			if (relayMode && command == C_INTERNAL && type == I_PING && s.nodeId != AUTO) {
-				// Relaying nodes should always answer ping messages
-				// Wait a random delay of 0-2 seconds to minimize collision
-				// between ping ack messages from other relaying nodes
-				randomSeed(millis());
-				delay(random(2000));
-				uint8_t replyTo = msg.sender;
-				build(msg, s.nodeId, replyTo, NODE_CHILD_ID, C_INTERNAL, I_PING_ACK);
-				msg.set(s.distance);
-				sendWrite(replyTo, msg);
+	if (!ok)
+		return false;
+
+	uint8_t command = mGetCommand(msg);
+	uint8_t type = msg.type;
+	uint8_t sender = msg.sender; //getSender();
+	uint8_t last = msg.last;
+	uint8_t destination = msg.destination;
+
+	if (relayMode && command == C_INTERNAL && type == I_PING) {
+		// Relaying nodes should always answer ping messages
+		// Wait a random delay of 0-2 seconds to minimize collision
+		// between ping ack messages from other relaying nodes
+		delay(millis() & 0x3ff);
+
+		build(msg, s.nodeId, sender, NODE_CHILD_ID, C_INTERNAL, I_PING_ACK);
+		msg.set(s.distance);
+		sendWrite(sender, msg);
+		return false;
+	} else if (destination == s.nodeId) {
+		// This message is addressed to this node
+
+		if (relayMode && last != s.parentNodeId) {
+			// Message is from one of the child nodes. Add it to routing table.
+			addChildRoute(sender, last);
+		}
+
+		if (command == C_INTERNAL) {
+			if (type == I_PING_ACK) {
+				// We've received a reply to our PING message looking for parent.
+				uint8_t distance = msg.getByte();
+				if (distance<s.distance-1) {
+					// Found a neighbor closer to GW than previously found
+					s.distance = distance + 1;
+					s.parentNodeId = msg.sender;
+					eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, s.parentNodeId);
+					eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, s.distance);
+					debug(PSTR("p=%d, d=%d\n"), s.parentNodeId, s.distance);
+				}
 				return false;
-			} else if (destination == s.nodeId) {
-				// This message is addressed to this node
-
-				if (relayMode && last != s.parentNodeId) {
-					// Message is from one of the child nodes. Add it to routing table.
-					addChildRoute(sender, last);
-				}
-
-				if (command == C_INTERNAL) {
-					if (type == I_PING_ACK) {
-						uint8_t distance = msg.getByte();
-						if (distance<s.distance-1) {
-							// Found a neighbor closer to GW than previously found
-							s.distance = distance + 1;
-							s.parentNodeId = msg.sender;
-							eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, s.parentNodeId);
-							eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, s.distance);
-							debug(PSTR("p=%d, d=%d\n"), s.parentNodeId, s.distance);
-						}
-					} else if (type == I_REQUEST_ID && sender == GATEWAY_ADDRESS) {
-						if (s.nodeId == AUTO) {
-							s.nodeId = msg.getByte();
-							// Write id to EEPROM
-							if (s.nodeId == AUTO) {
-								// sensor net gateway will return max id if all sensor id are taken
-								debug(PSTR("full\n"));
-								while (1); // Wait here. Nothing else we can do...
-							} else {
-								RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(s.nodeId));
-								eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, s.nodeId);
-							}
-							debug(PSTR("id=%d\n"), s.nodeId);
-						}
-						return false;
-					} else if (relayMode && sender == GATEWAY_ADDRESS) {
-						if (type == I_RELAY_NODE && destination != GATEWAY_ADDRESS) {
-							// Someone at sensor net gateway side wants this node to refresh its relay node
-							findParentNode();
-							// Send relay information back to sensor net gateway node device.
-							buildSendPayload(msg,s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_RELAY_NODE,s.parentNodeId);
-							return false;
-						} else if (type == I_CHILDREN) {
-							if (msg.getByte() == 'F') {
-								// TODO: We should send in as many children we can fit in a message (binary)
-								// For now we only print routing table for this node.
-								for (uint8_t i=0;i< 50; i++) {
-									debug(PSTR("rd=%d, %d\n"), i, getChildRoute(i) );
-								}
-								buildSendPayload(msg, s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_CHILDREN, "n/a");
-							} else if (msg.getByte() == 'C') {
-								// Clears child relay data for this node
-								debug(PSTR("rd=clear\n"));
-								for (uint8_t i=0;i< sizeof(s.childNodeTable); i++) {
-									removeChildRoute(i);
-								}
-								buildSendPayload(msg, s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_CHILDREN,"");
-							}
-							return false;
-						}
-					}
-				}
-				// Check if sender requests an ack back.
-				if (command == C_SET_WITH_ACK) {
-					ack = msg;
-					mSetCommand(ack,C_SET_VARIABLE);
-					ack.sender = s.nodeId;
-					ack.destination = msg.sender;
-					sendRoute(ack);
-					// The library user should not need to care about this ack request. Just treat it as a normal SET.
-					mSetCommand(msg,C_SET_VARIABLE);
-				}
-				// Call incoming message callback if available
-				if (msgCallback != NULL) {
-					msgCallback(msg);
-				}
-				// Return true if message was addressed for this node...
-				return true;
-			} else if (relayMode) {
-				// We should try to relay this message to another node
-
-				uint8_t route = getChildRoute(msg.destination);
-				if (route>0 && route<255) {
-					// This message should be forwarded to a child node. If we send message
-					// to this nodes pipe then all children will receive it because the are
-					// all listening to this nodes pipe.
-					//
-					//    +----B
-					//  -A
-					//    +----C------D
-					//
-					//  We're node C, Message comes from A and has destination D
-					//
-					// lookup route in table and send message there
-					sendWrite(route, msg);
-				} else if (pipe == CURRENT_NODE_PIPE) {
-					// A message comes from a child node and we have no
-					// route for it.
-					//
-					//    +----B
-					//  -A
-					//    +----C------D    <-- Message comes from D
-					//
-					//     We're node C
-					//
-					// Message should be passed to node A (this nodes relay)
-
-					// This message should be routed back towards sensor net gateway
-					sendWrite(s.parentNodeId, msg);
-					// Add this child to our "routing table" if it not already exist
-					addChildRoute(sender, last);
-				} else {
-					// We're snooped a message directed to gateway from another branch
-					// Make sure to remove the sender node from our routing table.
-					//
-					//    +-----B    <-- Message comes from here
-					//  -A
-					//    +-----C    <-- We're here
-					//
-					// So the sender of message should never be in our
-					// routing table.
-					//
-					// We could also end up in this else-statement if message
-					// destination has no route.
-					// This can happen if a node never has sent any message to
-					// sensor net gateway (which will build up routing information in all nodes
-					// that gets passed).
-
-					// THIS SHOULD NOT HAPPEN ANY MORE
-
-					/*if (s.nodeId == GATEWAY_ADDRESS) {
-						// We should perhaps inform gateway about the no-route situation?!
-						debug(PSTR("ro=?\n"));
-
+			} else if (type == I_REQUEST_ID && sender == GATEWAY_ADDRESS) {
+				if (s.nodeId == AUTO) {
+					s.nodeId = msg.getByte();
+					// Write id to EEPROM
+					if (s.nodeId == AUTO) {
+						// sensor net gateway will return max id if all sensor id are taken
+						debug(PSTR("full\n"));
+						while (1); // Wait here. Nothing else we can do...
 					} else {
-						//debug(PSTR("Remove child node from routing table.\n"));
-						removeChildRoute(sender);
-					}*/
+						RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(s.nodeId));
+						eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, s.nodeId);
+					}
+					debug(PSTR("id=%d\n"), s.nodeId);
 				}
-
+				return false;
+			} else if (relayMode && sender == GATEWAY_ADDRESS) {
+				if (type == I_RELAY_NODE && destination != GATEWAY_ADDRESS) {
+					// Gatewa/controller wants this node to refresh its parent node
+					findParentNode();
+					// Send relay information back to sensor net gateway node device.
+					buildSendPayload(msg,s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_RELAY_NODE,s.parentNodeId);
+					return false;
+				} else if (type == I_CHILDREN) {
+					if (msg.getByte() == 'F') {
+						// TODO: We should send in as many children we can fit in a message (binary)
+						// For now we only print routing table for this node.
+						for (uint8_t i=0;i< 50; i++) {
+							debug(PSTR("rd=%d, %d\n"), i, getChildRoute(i) );
+						}
+						buildSendPayload(msg, s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_CHILDREN, "n/a");
+					} else if (msg.getByte() == 'C') {
+						// Clears child relay data for this node
+						debug(PSTR("rd=clear\n"));
+						for (uint8_t i=0;i< sizeof(s.childNodeTable); i++) {
+							removeChildRoute(i);
+						}
+						buildSendPayload(msg, s.nodeId, GATEWAY_ADDRESS, NODE_CHILD_ID, C_INTERNAL, I_CHILDREN,"");
+					}
+					return false;
+				}
 			}
 		}
+		// Check if sender requests an ack back.
+		if (command == C_SET_WITH_ACK) {
+			ack = msg;
+			mSetCommand(ack,C_SET);
+			ack.sender = s.nodeId;
+			ack.destination = msg.sender;
+			sendRoute(ack);
+			// The library user should not need to care about this ack request. Just treat it as a normal SET.
+			mSetCommand(msg,C_SET);
+		}
+		// Call incoming message callback if available
+		if (msgCallback != NULL) {
+			msgCallback(msg);
+		}
+		// Return true if message was addressed for this node...
+		return true;
+	} else if (relayMode) {
+		// We should try to relay this message to another node
+
+		uint8_t route = getChildRoute(msg.destination);
+		if (route>0 && route<255) {
+			// This message should be forwarded to a child node. If we send message
+			// to this nodes pipe then all children will receive it because the are
+			// all listening to this nodes pipe.
+			//
+			//    +----B
+			//  -A
+			//    +----C------D
+			//
+			//  We're node C, Message comes from A and has destination D
+			//
+			// lookup route in table and send message there
+			sendWrite(route, msg);
+		} else if (pipe == CURRENT_NODE_PIPE) {
+			// A message comes from a child node and we have no
+			// route for it.
+			//
+			//    +----B
+			//  -A
+			//    +----C------D    <-- Message comes from D
+			//
+			//     We're node C
+			//
+			// Message should be passed to node A (this nodes relay)
+
+			// This message should be routed back towards sensor net gateway
+			sendWrite(s.parentNodeId, msg);
+			// Add this child to our "routing table" if it not already exist
+			addChildRoute(sender, last);
+		} else {
+			// We're snooped a message directed to gateway from another branch
+			// Make sure to remove the sender node from our routing table.
+			//
+			//    +-----B    <-- Message comes from here
+			//  -A
+			//    +-----C    <-- We're here
+			//
+			// So the sender of message should never be in our
+			// routing table.
+			//
+			// We could also end up in this else-statement if message
+			// destination has no route.
+			// This can happen if a node never has sent any message to
+			// sensor net gateway (which will build up routing information in all nodes
+			// that gets passed).
+
+			// THIS SHOULD NOT HAPPEN ANY MORE
+
+			/*if (s.nodeId == GATEWAY_ADDRESS) {
+				// We should perhaps inform gateway about the no-route situation?!
+				debug(PSTR("ro=?\n"));
+
+			} else {
+				//debug(PSTR("Remove child node from routing table.\n"));
+				removeChildRoute(sender);
+			}*/
+		}
+
 	}
+
+
 	return false;
 }
 

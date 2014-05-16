@@ -54,7 +54,6 @@
 #define CURRENT_NODE_PIPE ((uint8_t)1)
 #define BROADCAST_PIPE ((uint8_t)2)
 
-#define SEND_RETRIES 3
 #define FIND_RELAY_AFTER_FAILED_TRANSMISSIONS 5
 
 #define build(_msg, _sender, _destination, _sensor, _cmd, _type) \
@@ -127,29 +126,15 @@ class MySensor : public RF24
 	*
 	* @param msg Message to send
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
-	* @param retry Number of attempts before giving up. Default is SEND_RETRIES
-	* @return true Retuns false if ack is enabled and no ack came back
+	* @return true Returns true if message reached the first stop on its way to destination.
 	*/
-	bool send(MyMessage msg, bool ack=false/*, uint8_t retry=SEND_RETRIES*/);
+	bool send(MyMessage msg, bool ack=false);
 
 	/**
 	 * Send this nodes battery level to gateway.
 	 * @param level Level between 0-100(%)
 	 */
 	void sendBatteryLevel(uint8_t level);
-
-	/**
-	* Fetches a value from gateway or some other sensor in the radio network. Resends request and waits for response.
-	* Note that if you have registered a callback in begin() it will also be called before message is returned
-	* by get()
-	*
-	* @param childSensorId  The unique child id for the different sensors connected to this arduino. 0-254.
-	* @param variableType The variableType to fetch
-	* @param destination The nodeId of other node in radio network. Default is gateway
-	* @param number of attempts to fetch
-	* @return Message response
-	*/
-//	MyMessage get(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS, uint8_t retry=SEND_RETRIES);
 
 	/**
 	* Requests a value from gateway or some other sensor in the radio network.
@@ -162,7 +147,6 @@ class MySensor : public RF24
 	*/
 	void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS);
 
-
 	/**
 	 * Requests time from controller. Pick up response in callback.
 	 *
@@ -171,13 +155,13 @@ class MySensor : public RF24
 	void requestTime();
 
 	/**
-	 * Fetches configuration from controller. Returns true if metric system has been selected which means
+	 * Requests configuration from controller. Returns true if metric system has been selected which means
 	 * that sensor should report it's information in:
 	 * celsius, meter, cm, gram, km/h, m/s etc..
 	 * If false is returned the sensor should report data in imperial system which means
 	 * fahrenheit, feet, gallon, mph etc...
 	 */
-	void requestConfiguration();
+	void requestConfig();
 
 
 	/**

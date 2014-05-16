@@ -22,8 +22,8 @@
 // Message types
 typedef enum {
 	C_PRESENTATION = 0,
-	C_SET_VARIABLE = 1,
-	C_REQ_VARIABLE = 2,
+	C_SET = 1,
+	C_REQ = 2,
 	C_SET_WITH_ACK = 3,
 	C_INTERNAL = 4,
 	C_STREAM = 5 // For Firmaware and other larger chunks of data that need to be divided into pieces.
