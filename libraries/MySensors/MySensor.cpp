@@ -154,7 +154,7 @@ void MySensor::findParentNode() {
 
 boolean MySensor::sendRoute(MyMessage message) {
 	// Make sure to process any incoming messages before sending (could this end up in recursive loop?)
-	process();
+	// process();
 
 	// If we still don't have any node id, re-request and skip this message.
 	if (nc.nodeId == AUTO && !(mGetCommand(message) == C_INTERNAL && message.type == I_REQUEST_ID)) {

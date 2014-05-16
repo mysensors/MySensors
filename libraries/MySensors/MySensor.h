@@ -204,6 +204,8 @@ class MySensor : public RF24
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
 	boolean relayMode;
+	MyMessage msg;  // Buffer for incoming messages.
+	MyMessage ack;  // Buffer for ack messages.
 
 	void setupRelayMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
@@ -214,8 +216,6 @@ class MySensor : public RF24
   private:
 	uint8_t failedTransmissions;
 	uint8_t *childNodeTable; // In memory buffer for routing information to other nodes. also stored in EEPROM
-	MyMessage msg;  // Buffer for incoming messages.
-	MyMessage ack;  // Buffer for ack messages.
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(MyMessage); // Callback for incoming messages from other nodes and gateway.
 

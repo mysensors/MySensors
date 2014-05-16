@@ -12,6 +12,6 @@
 /***
  * Enable/Disable debug logging
  */
-//#define DEBUG
+#define DEBUG
 
 #endif

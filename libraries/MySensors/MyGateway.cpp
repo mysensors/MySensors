@@ -11,6 +11,7 @@
 
 #include "MyGateway.h"
 
+
 MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time) : MySensor(_cepin, _cspin) {
 	ledMode = false;
 	inclusionTime = _inclusion_time;
@@ -37,8 +38,8 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 		useWriteCallback = false;
 	}
 
-	s.nodeId = 0;
-	s.distance = 0;
+	nc.nodeId = 0;
+	nc.distance = 0;
 	inclusionMode = 0;
 	buttonTriggeredInclusion = false;
 	countRx = 0;
@@ -93,11 +94,6 @@ void MyGateway::checkButtonTriggeredInclusion() {
     serial(PSTR("0;0;%d;%d;Inclusion started by button.\n"),  C_INTERNAL, I_LOG_MESSAGE);
     buttonTriggeredInclusion = false;
     setInclusionMode(true);
-
-#ifdef DEBUG
-    sendChildren();
-#endif
-
   }
 }
 
@@ -154,7 +150,13 @@ void MyGateway::parseAndSend(char *commandBuffer) {
     }
   } else {
     txBlink(1);
-    ok = sendRoute(msg.build(GATEWAY_ADDRESS, destination, sensor, command, type).set(value));
+    msg.sender = GATEWAY_ADDRESS;
+	msg.destination = destination;
+	msg.sensor = sensor;
+	msg.type = type;
+	mSetCommand(msg,command);
+	msg.set(value);
+    ok = sendRoute(msg);
     if (!ok) {
       errBlink(1);
     }
