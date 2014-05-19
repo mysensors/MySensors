@@ -213,7 +213,8 @@ class MySensor : public RF24
   protected:
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
-	boolean relayMode;
+	bool relayMode;
+	bool isGateway;
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage ack;  // Buffer for ack messages.
 

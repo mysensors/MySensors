@@ -29,6 +29,7 @@ MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, ui
 void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(char *)) {
 	Serial.begin(BAUD_RATE);
 	relayMode = true;
+	isGateway = true;
 	setupRelayMode();
 
 	if (inDataCallback != NULL) {

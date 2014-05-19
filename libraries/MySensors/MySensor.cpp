@@ -28,6 +28,7 @@ MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 
 void MySensor::begin(void (*_msgCallback)(MyMessage), uint8_t _nodeId, boolean _relayMode, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
 	Serial.begin(BAUD_RATE);
+	isGateway = false;
 	relayMode = _relayMode;
 	msgCallback = _msgCallback;
 
@@ -122,9 +123,6 @@ void MySensor::requestNodeId() {
 
 
 void MySensor::findParentNode() {
-	if (nc.nodeId == GATEWAY_ADDRESS)
-		return; // Gateway has no business here!
-
 	failedTransmissions = 0;
 
 	// Set distance to max
@@ -149,11 +147,10 @@ void MySensor::waitForReply() {
 boolean MySensor::sendRoute(MyMessage *message) {
 	// Make sure to process any incoming messages before sending (could this end up in recursive loop?)
 	// process();
-	bool requestId = (mGetCommandP(message) == C_INTERNAL && message->type == I_ID_REQUEST);
-	bool responseId = (mGetCommandP(message) == C_INTERNAL && message->type == I_ID_RESPONSE);
+	bool isInternal = mGetCommandP(message) == C_INTERNAL;
 
 	// If we still don't have any node id, re-request and skip this message.
-	if (nc.nodeId == AUTO && !requestId) {
+	if (nc.nodeId == AUTO && !(isInternal && message->type == I_ID_REQUEST)) {
 		requestNodeId();
 		return false;
 	}
@@ -166,14 +163,14 @@ boolean MySensor::sendRoute(MyMessage *message) {
 			// Message destination is not gateway and is in routing table for this node.
 			// Send it downstream
 			return sendWrite(route, message);
-		} else if (responseId && dest==BROADCAST_ADDRESS) {
+		} else if (isInternal && message->type == I_ID_RESPONSE && dest==BROADCAST_ADDRESS) {
 			// Node has not yet received any id. We need to send it
 			// by doing a broadcast sending,
 			return sendWrite(BROADCAST_ADDRESS, message, true);
 		}
 	}
 
-	if (nc.nodeId != GATEWAY_ADDRESS) {
+	if (!isGateway) {
 		// --- debug(PSTR("route parent\n"));
 		// Should be routed back to gateway.
 		bool ok = sendWrite(nc.parentNodeId, message);
@@ -205,7 +202,6 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage *message, bool broadcast) {
 	bool ok = RF24::write(message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length), broadcast);
 	RF24::startListening();
 
-	// Only debug print payload if it is of string type
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d, st=%s:%s\n"),
 			message->sender,message->last, next, message->destination, message->sensor, mGetCommandP(message), message->type, ok?"ok":"fail", message->getString(convBuf));
 
@@ -293,7 +289,7 @@ boolean MySensor::process() {
 		}
 
 		if (command == C_INTERNAL) {
-			if (type == I_PING_ACK && nc.nodeId != GATEWAY_ADDRESS) {
+			if (type == I_PING_ACK && !isGateway) {
 				// We've received a reply to a PING message. Check if the distance is
 				// shorter than we already have.
 				uint8_t distance = msg.getByte();
@@ -521,7 +517,7 @@ long MySensor::getInternalTemp(void)
 #ifdef DEBUG
 void MySensor::debugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
-	if (nc.nodeId == GATEWAY_ADDRESS) {
+	if (isGateway) {
 		// prepend debug message to be handled correctly by gw (C_INTERNAL, I_LOG_MESSAGE)
 		Serial.write("0;0;4;8;");
 	}
@@ -529,7 +525,7 @@ void MySensor::debugPrint(const char *fmt, ... ) {
 	va_start (args, fmt );
 	vsnprintf_P(fmtBuffer, 300, fmt, args);
 	va_end (args);
-	if (nc.nodeId == GATEWAY_ADDRESS) {
+	if (isGateway) {
 		// Truncate message if this is gateway node
 		vsnprintf_P(fmtBuffer, 60, fmt, args);
 		fmtBuffer[59] = '\n';
