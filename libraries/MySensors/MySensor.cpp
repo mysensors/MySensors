@@ -25,37 +25,8 @@ inline MyMessage* build (MyMessage* msg, uint8_t sender, uint8_t destination, ui
 MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 }
 
-void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
-	failedTransmissions = 0;
 
-	// Start up the radio library
-	RF24::begin();
-
-	if (!RF24::isPVariant()) {
-		debug(PSTR("check wires\n"));
-		while(1);
-	}
-	RF24::setAutoAck(1);
-	RF24::enableAckPayload();
-	RF24::setChannel(channel);
-	RF24::setPALevel(paLevel);
-	RF24::setDataRate(dataRate);
-	RF24::setRetries(5,15);
-	RF24::setCRCLength(RF24_CRC_16);
-	RF24::enableDynamicPayloads();
-
-	// All repeater nodes and gateway listen to broadcast pipe (for PING messages)
-	if (relayMode) {
-		RF24::openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
-	}
-}
-
-void MySensor::setupRelayMode(){
-	childNodeTable = new uint8_t[256];
-	eeprom_read_block((void*)childNodeTable, (void*)EEPROM_ROUTES_ADDRESS, 256);
-}
-
-void MySensor::begin(void (*_msgCallback)(MyMessage), boolean _relayMode, uint8_t _nodeId, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
+void MySensor::begin(void (*_msgCallback)(MyMessage), uint8_t _nodeId, boolean _relayMode, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
 	Serial.begin(BAUD_RATE);
 	relayMode = _relayMode;
 	msgCallback = _msgCallback;
@@ -86,7 +57,7 @@ void MySensor::begin(void (*_msgCallback)(MyMessage), boolean _relayMode, uint8_
 		requestNodeId();
 	}
 
-	debug(PSTR("%s started\n"), relayMode?"relay":"sensor");
+	debug(PSTR("%s started, id %d\n"), relayMode?"relay":"sensor", nc.nodeId);
 
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
@@ -99,8 +70,38 @@ void MySensor::begin(void (*_msgCallback)(MyMessage), boolean _relayMode, uint8_
 	// Node sends parent node. Controller answers with latest node configuration
 	// which is picked up in process()
 	sendRoute(build(&msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG)->set(nc.parentNodeId));
-	Serial.print("XX");
-	Serial.println(nc.parentNodeId);
+
+	// Wait configuration reply.
+	waitForReply();
+}
+
+void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
+	failedTransmissions = 0;
+
+	// Start up the radio library
+	RF24::begin();
+
+	if (!RF24::isPVariant()) {
+		debug(PSTR("check wires\n"));
+		while(1);
+	}
+	RF24::setAutoAck(1);
+	RF24::setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
+	RF24::enableAckPayload();
+	RF24::setChannel(channel);
+	RF24::setPALevel(paLevel);
+	RF24::setDataRate(dataRate);
+	RF24::setRetries(5,15);
+	RF24::setCRCLength(RF24_CRC_16);
+	RF24::enableDynamicPayloads();
+
+	// All nodes listen to broadcast pipe (for PING-ACK messages)
+	RF24::openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+}
+
+void MySensor::setupRelayMode(){
+	childNodeTable = new uint8_t[256];
+	eeprom_read_block((void*)childNodeTable, (void*)EEPROM_ROUTES_ADDRESS, 256);
 }
 
 
@@ -115,7 +116,8 @@ ControllerConfig MySensor::getConfig() {
 void MySensor::requestNodeId() {
 	debug(PSTR("req node id\n"));
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-	sendRoute(build(&msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_ID));
+	sendRoute(build(&msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST)->set(""));
+	waitForReply();
 }
 
 
@@ -125,31 +127,33 @@ void MySensor::findParentNode() {
 
 	failedTransmissions = 0;
 
-	// Open a reading pipe for current nodeId (if it differs from broadcast)
-	if (nc.nodeId != BROADCAST_PIPE) {
-		RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-	}
 	// Set distance to max
 	nc.distance = 255;
 
 	// Send ping message to BROADCAST_ADDRESS (to which all relaying nodes and gateway listens and should reply to)
-	build(&msg, nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING);
+	build(&msg, nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING)->set("");
 	sendWrite(BROADCAST_ADDRESS, &msg, true);
 
+	// Wait for ping response.
+	waitForReply();
+}
+
+void MySensor::waitForReply() {
 	unsigned long enter = millis();
-	// Wait for ack responses slightly more than 1 second
-	while (millis() - enter < 1200) {
+	// Wait a couple of seconds for response
+	while (millis() - enter < 2000) {
 		process();
 	}
-
 }
 
 boolean MySensor::sendRoute(MyMessage *message) {
 	// Make sure to process any incoming messages before sending (could this end up in recursive loop?)
 	// process();
+	bool requestId = (mGetCommandP(message) == C_INTERNAL && message->type == I_ID_REQUEST);
+	bool responseId = (mGetCommandP(message) == C_INTERNAL && message->type == I_ID_RESPONSE);
 
 	// If we still don't have any node id, re-request and skip this message.
-	if (nc.nodeId == AUTO && !(mGetCommandP(message) == C_INTERNAL && message->type == I_REQUEST_ID)) {
+	if (nc.nodeId == AUTO && !requestId) {
 		requestNodeId();
 		return false;
 	}
@@ -157,16 +161,20 @@ boolean MySensor::sendRoute(MyMessage *message) {
 	if (relayMode) {
 		uint8_t dest = message->destination;
 		uint8_t route = getChildRoute(dest);
-		if (route>0 && route<255 && dest != GATEWAY_ADDRESS) {
-			debug(PSTR("route %d.\n"), route);
+		if (route>GATEWAY_ADDRESS && route<BROADCAST_ADDRESS && dest != GATEWAY_ADDRESS) {
+			// --- debug(PSTR("route %d.\n"), route);
 			// Message destination is not gateway and is in routing table for this node.
 			// Send it downstream
 			return sendWrite(route, message);
+		} else if (responseId && dest==BROADCAST_ADDRESS) {
+			// Node has not yet received any id. We need to send it
+			// by doing a broadcast sending,
+			return sendWrite(BROADCAST_ADDRESS, message, true);
 		}
 	}
 
 	if (nc.nodeId != GATEWAY_ADDRESS) {
-		debug(PSTR("route parent\n"));
+		// --- debug(PSTR("route parent\n"));
 		// Should be routed back to gateway.
 		bool ok = sendWrite(nc.parentNodeId, message);
 
@@ -190,7 +198,6 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage *message, bool broadcast) {
 	message->last = nc.nodeId;
 	mSetVersionP(message, PROTOCOL_VERSION);
 	message->crc = crc8Message(message);
-
 	// Make sure radio has powered up
 	RF24::powerUp();
 	RF24::stopListening();
@@ -199,8 +206,8 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage *message, bool broadcast) {
 	RF24::startListening();
 
 	// Only debug print payload if it is of string type
-	debug(PSTR("tx: %d-%d-%d-%d s=%d,c=%d,t=%d, st=%s:%s\n"),
-			message->sender,message->last, next, message->destination, message->sensor, mGetCommandP(message), message->type, ok?"ok":"fail", message->getString());
+	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d, st=%s:%s\n"),
+			message->sender,message->last, next, message->destination, message->sensor, mGetCommandP(message), message->type, ok?"ok":"fail", message->getString(convBuf));
 
 	return ok;
 }
@@ -259,8 +266,8 @@ boolean MySensor::process() {
 
 	// Make sure string gets terminated ok for full string messages.
 	msg.data[len - HEADER_SIZE ] = '\0';
-	debug(PSTR("rx: %d-%d-%d s=%d,c=%d,t=%d,cr=%s: %s\n"),
-				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, valid==0?"ok":valid==1?"ec":"ev", msg.getString());
+	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,cr=%s: %s\n"),
+				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, valid==0?"ok":valid==1?"ec":"ev", msg.getString(convBuf));
 
 	if (!ok)
 		return false;
@@ -276,7 +283,7 @@ boolean MySensor::process() {
 		// Wait a random delay of 0-2 seconds to minimize collision
 		// between ping ack messages from other relaying nodes
 		delay(millis() & 0x3ff);
-		sendWrite(sender, build(&msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PING_ACK)->set(nc.distance));
+		sendWrite(sender, build(&msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PING_ACK)->set(nc.distance), true);
 		return false;
 	} else if (destination == nc.nodeId) {
 		// This message is addressed to this node
@@ -286,8 +293,9 @@ boolean MySensor::process() {
 		}
 
 		if (command == C_INTERNAL) {
-			if (type == I_PING_ACK) {
-				// We've received a reply to our PING message looking for parent.
+			if (type == I_PING_ACK && nc.nodeId != GATEWAY_ADDRESS) {
+				// We've received a reply to a PING message. Check if the distance is
+				// shorter than we already have.
 				uint8_t distance = msg.getByte();
 				if (distance<nc.distance-1) {
 					// Found a neighbor closer to GW than previously found
@@ -295,14 +303,14 @@ boolean MySensor::process() {
 					nc.parentNodeId = msg.sender;
 					eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
 					eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
-					debug(PSTR("p=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+					debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
 				}
 				return false;
 			} else if (sender == GATEWAY_ADDRESS) {
 				bool isMetric;
 
 				switch (type) {
-				case I_REQUEST_ID:
+				case I_ID_RESPONSE:
 					if (nc.nodeId == AUTO) {
 						nc.nodeId = msg.getByte();
 						// Write id to EEPROM
@@ -363,7 +371,7 @@ boolean MySensor::process() {
 		}
 		// Return true if message was addressed for this node...
 		return true;
-	} else if (relayMode) {
+	} else if (relayMode && pipe == CURRENT_NODE_PIPE) {
 		// We should try to relay this message to another node
 
 		uint8_t route = getChildRoute(msg.destination);
@@ -380,7 +388,7 @@ boolean MySensor::process() {
 			//
 			// lookup route in table and send message there
 			sendWrite(route, &msg);
-		} else if (pipe == CURRENT_NODE_PIPE) {
+		} else  {
 			// A message comes from a child node and we have no
 			// route for it.
 			//
@@ -396,33 +404,6 @@ boolean MySensor::process() {
 			sendWrite(nc.parentNodeId, &msg);
 			// Add this child to our "routing table" if it not already exist
 			addChildRoute(sender, last);
-		} else {
-			// We're snooped a message directed to gateway from another branch
-			// Make sure to remove the sender node from our routing table.
-			//
-			//    +-----B    <-- Message comes from here
-			//  -A
-			//    +-----C    <-- We're here
-			//
-			// So the sender of message should never be in our
-			// routing table.
-			//
-			// We could also end up in this else-statement if message
-			// destination has no route.
-			// This can happen if a node never has sent any message to
-			// sensor net gateway (which will build up routing information in all nodes
-			// that gets passed).
-
-			// THIS SHOULD NOT HAPPEN ANY MORE
-
-			/*if (nc.nodeId == GATEWAY_ADDRESS) {
-				// We should perhaps inform gateway about the no-route situation?!
-				debug(PSTR("ro=?\n"));
-
-			} else {
-				//debug(PSTR("Remove child node from routing table.\n"));
-				removeChildRoute(sender);
-			}*/
 		}
 
 	}
@@ -495,11 +476,11 @@ uint8_t MySensor::validate(MyMessage *message) {
 
 void MySensor::saveState(uint8_t pos, uint8_t value) {
 	if (loadState(pos) != value) {
-		eeprom_write_byte((uint8_t*)EEPROM_LOCAL_CONFIG_ADDRESS+pos, value);
+		eeprom_write_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos), value);
 	}
 }
 uint8_t MySensor::loadState(uint8_t pos) {
-	return eeprom_read_byte((uint8_t*)EEPROM_LOCAL_CONFIG_ADDRESS+pos);
+	return eeprom_read_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos));
 }
 
 
@@ -522,12 +503,27 @@ uint8_t MySensor::getChildRoute(uint8_t childId) {
 }
 
 
+long MySensor::getInternalTemp(void)
+{
+  long result;
+  // Read internal temp sensor against 1.1V reference
+  ADMUX = _BV(REFS1) | _BV(REFS0) | _BV(MUX3);
+  delay(2); // Wait until Vref has settled
+  ADCSRA |= _BV(ADSC);
+  while (bit_is_set(ADCSRA,ADSC));
+  result = ADCL;
+  result |= ADCH<<8;
+  result = (result - 125) * 1075;
+
+  return result;
+}
+
 #ifdef DEBUG
 void MySensor::debugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	if (nc.nodeId == GATEWAY_ADDRESS) {
-		// prepend debug message to be handled correctly by gw
-		Serial.write("0;0;4;11;");
+		// prepend debug message to be handled correctly by gw (C_INTERNAL, I_LOG_MESSAGE)
+		Serial.write("0;0;4;8;");
 	}
 	va_list args;
 	va_start (args, fmt );

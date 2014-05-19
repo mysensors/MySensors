@@ -16,7 +16,7 @@ MySensor gw;
 void setup()  
 {   
   // Initialize library and add callback for incoming messages
-  gw.begin(incomingMessage, false);
+  gw.begin(incomingMessage, AUTO, true);
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Relay", "1.0");
 
@@ -42,10 +42,9 @@ void incomingMessage(MyMessage message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
      // Change relay state
-     digitalWrite(message.sensor, message.getBool()?RELAY_ON:RELAY_OFF);
+     digitalWrite(message.sensor-1+RELAY_1, message.getBool()?RELAY_ON:RELAY_OFF);
      // Store state in eeprom
      gw.saveState(message.sensor, message.getBool());
-
      // Write some debug info
      Serial.print("Incoming change for sensor:");
      Serial.print(message.sensor);

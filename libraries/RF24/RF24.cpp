@@ -680,10 +680,10 @@ void RF24::startWrite( const void* buf, uint8_t len, const bool multicast ){
   // Send the payload
 
   //write_payload( buf, len );
-  write_payload( buf, len,multicast? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD ) ;
+  write_payload( buf, len, multicast?static_cast<uint8_t>(W_TX_PAYLOAD_NO_ACK):static_cast<uint8_t>(W_TX_PAYLOAD)) ;
 
   ce(HIGH);
-  ce(LOW);
+   ce(LOW);
 
 
 }

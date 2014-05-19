@@ -54,7 +54,6 @@
 #include <PinChangeInt.h>
 #include <MyGateway.h>  
 #include <stdarg.h>
-//#include <avr/progmem.h>
 
 #include <UIPEthernet.h>  // Use this if you have attached a Ethernet ENC28J60 shields  
 //#include <Ethernet.h>   // Use this fo WizNET module and Arduino Ethernet Shield 

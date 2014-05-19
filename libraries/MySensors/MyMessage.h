@@ -40,7 +40,7 @@ typedef enum {
 
 // Type of internal messages (for internal messages)
 typedef enum {
-	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_REQUEST_ID,
+	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION
 } internal;
@@ -114,6 +114,7 @@ public:
 	// Constructors
 	MyMessage();
 
+	MyMessage(uint8_t sensor, uint8_t type);
 
 	char* getString();
 	/**

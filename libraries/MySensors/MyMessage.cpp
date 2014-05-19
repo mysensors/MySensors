@@ -7,6 +7,11 @@ MyMessage::MyMessage() {
 	destination = 0; // Gateway is default destination
 }
 
+MyMessage::MyMessage(uint8_t _sensor, uint8_t _type) {
+	destination = 0; // Gateway is default destination
+	sensor = _sensor;
+	type = _type;
+}
 
 
 /* Getters for payload converted to desired form */

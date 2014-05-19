@@ -93,14 +93,14 @@ class MySensor : public RF24
 	*
 	* Call this in setup(), before calling any other sensor net library methods.
 	* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses. Default is NULL.
-	* @param relayMode Activate relay mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
 	* @param nodeId The unique id (1-254) for this sensor. Default is AUTO(255) which means sensor tries to fetch an id from controller.
+	* @param relayMode Activate relay mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
 	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
 	* @param channel Radio channel. Default is channel 76
 	* @param dataRate Radio transmission speed. Default RF24_1MBPS
 	*/
 
-	void begin(void (* msgCallback)(MyMessage)=NULL, boolean relayMode=false, uint8_t nodeId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
+	void begin(void (* msgCallback)(MyMessage)=NULL, uint8_t nodeId=AUTO, boolean relayMode=false,  rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
 
 	/**
 	 * Return the nodes nodeId.
@@ -194,6 +194,16 @@ class MySensor : public RF24
 	MyMessage* getLastMessage(void);
 
 
+	/**
+	 * getInternalTemp
+	 *
+	 * Read temp from internal (ATMEGA328 only) temperature sensor
+	 *
+	 * @return Temperature in milli-degrees Celsius
+	 */
+	long getInternalTemp(void);
+
+
 
 #ifdef DEBUG
 	void debugPrint(const char *fmt, ... );
@@ -214,12 +224,16 @@ class MySensor : public RF24
 	uint8_t validate(MyMessage *message);
 
   private:
+#ifdef DEBUG
+	char convBuf[MAX_PAYLOAD];
+#endif
 	uint8_t failedTransmissions;
 	uint8_t *childNodeTable; // In memory buffer for routing information to other nodes. also stored in EEPROM
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(MyMessage); // Callback for incoming messages from other nodes and gateway.
 
-	void requestNodeId();
+    void waitForReply();
+    void requestNodeId();
 	void findParentNode();
 	uint8_t crc8Message(MyMessage *message);
 	uint8_t getChildRoute(uint8_t childId);

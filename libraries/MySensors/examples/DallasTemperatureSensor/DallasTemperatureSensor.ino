@@ -17,7 +17,8 @@ float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
 boolean receivedConfig = false;
 boolean metric = true; 
-MyMessage out;
+// Initialize temperature message
+MyMessage msg(0,V_TEMP);
 
 void setup()  
 { 
@@ -37,9 +38,6 @@ void setup()
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {   
      gw.present(i, S_TEMP);
   }
-
-    // Initialize outgoing message to always send temperature
-  out.type = V_TEMP;
 }
 
 
@@ -61,7 +59,7 @@ void loop()
     if (lastTemperature[i] != temperature && temperature != -127.00) {
  
       // Send in the new temperature
-      gw.send(out.setSensor(i)->set(temperature,1));
+      gw.send(msg.setSensor(i)->set(temperature,1));
       lastTemperature[i]=temperature;
     }
   }
