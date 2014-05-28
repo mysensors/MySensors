@@ -44,13 +44,13 @@ char* MyMessage::getString(char *buffer) {
 				itoa(iValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_UINT16:
-				ltoa(uiValue, buffer, MAX_PAYLOAD);
+				utoa(uiValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_LONG32:
 				ltoa(lValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_ULONG32:
-				ltoa(ulValue, buffer, MAX_PAYLOAD);
+				ultoa(ulValue, buffer, MAX_PAYLOAD);
 				break;
 			case P_CUSTOM:
 				// TODO: Ok, what do we do here? We should probably convert this to hex
@@ -198,14 +198,14 @@ MyMessage* MyMessage::set(long value) {
 }
 
 MyMessage* MyMessage::set(unsigned int value) {
-	miSetPayloadType(P_INT16);
+	miSetPayloadType(P_UINT16);
 	miSetLength(2);
 	uiValue = value;
 	return this;
 }
 
 MyMessage* MyMessage::set(int value) {
-	miSetPayloadType(P_UINT16);
+	miSetPayloadType(P_INT16);
 	miSetLength(2);
 	iValue = value;
 	return this;
