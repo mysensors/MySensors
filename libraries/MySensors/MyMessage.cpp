@@ -38,19 +38,19 @@ char* MyMessage::getString(char *buffer) {
 	} else if (buffer != NULL) {
 		switch(payloadType) {
 			case P_BYTE:
-				itoa(bValue, buffer, MAX_PAYLOAD);
+				itoa(bValue, buffer, 10);
 				break;
 			case P_INT16:
-				itoa(iValue, buffer, MAX_PAYLOAD);
+				itoa(iValue, buffer, 10);
 				break;
 			case P_UINT16:
-				utoa(uiValue, buffer, MAX_PAYLOAD);
+				utoa(uiValue, buffer, 10);
 				break;
 			case P_LONG32:
-				ltoa(lValue, buffer, MAX_PAYLOAD);
+				ltoa(lValue, buffer, 10);
 				break;
 			case P_ULONG32:
-				ultoa(ulValue, buffer, MAX_PAYLOAD);
+				ultoa(ulValue, buffer, 10);
 				break;
 			case P_CUSTOM:
 				// TODO: Ok, what do we do here? We should probably convert this to hex
