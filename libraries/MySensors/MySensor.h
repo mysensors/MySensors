@@ -24,6 +24,7 @@
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
 #include <stdarg.h>
+#include "LowPower.h"
 
 #ifdef DEBUG
 #define debug(x,...) debugPrint(x, ##__VA_ARGS__)
@@ -193,15 +194,30 @@ class MySensor : public RF24
 	*/
 	MyMessage* getLastMessage(void);
 
+	/**
+	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer.
+	 * @param ms Number of milliseconds to sleep.
+	 */
+	void sleep(int ms);
+
+	/**
+	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer or pin change.
+	 * See: http://arduino.cc/en/Reference/attachInterrupt for details on modes and which pin
+	 * is assigned to what interrupt. On Nano/Pro Mini: 0=Pin2, 1=Pin3
+	 * @param interrupt Interrupt that should trigger the wakeup
+	 * @param mode RISING, FALLING, CHANGE
+	 * @param ms Number of milliseconds to sleep or 0 to sleep forever
+	 */
+	void sleep(int interrupt, int mode, int ms=0);
 
 	/**
 	 * getInternalTemp
 	 *
 	 * Read temp from internal (ATMEGA328 only) temperature sensor
 	 *
-	 * @return Temperature in milli-degrees Celsius
+	 * @return Temperature in degrees Celsius (one decimal)
 	 */
-	long getInternalTemp(void);
+	float getInternalTemp(void);
 
 
 
@@ -240,6 +256,7 @@ class MySensor : public RF24
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
 	void removeChildRoute(uint8_t childId);
+	void internalSleep(int ms);
 };
 
 #endif

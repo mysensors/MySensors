@@ -1,21 +1,21 @@
-#include <Sleep_n0m1.h>
 #include <SPI.h>
-#include <EEPROM.h>  
 #include <RF24.h>
-#include <Sensor.h>  
+#include <MySensor.h>  
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
+
+#define BARO_CHILD 0
+#define TEMP_CHILD 1
 
 #define LIGHT_SENSOR_ANALOG_PIN 0
 unsigned long SLEEP_TIME = 60; // Sleep time between reads (in seconds)
 
 Adafruit_BMP085 bmp = Adafruit_BMP085();      // Digital Pressure Sensor 
-Sensor gw;
+MySensor gw;
 
 float lastPressure = -1;
 float lastTemp = -1;
 int lastForecast = -1;
-Sleep sleep;
 char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
 int minutes;
 float pressureSamples[180];
@@ -24,6 +24,11 @@ bool firstRound = true;
 float pressureAvg[7];
 float dP_dt;
 boolean metric; 
+MyMessage tempMsg(TEMP_CHILD, V_TEMP);
+MyMessage pressureMsg(BARO_CHILD, V_PRESSURE);
+MyMessage forecastMsg(BARO_CHILD, V_FORECAST);
+
+
 
 void setup() {
   gw.begin();
@@ -37,9 +42,9 @@ void setup() {
   }
 
   // Register sensors to gw (they will be created as child devices)
-  gw.sendSensorPresentation(0, S_BARO);
-  gw.sendSensorPresentation(1, S_TEMP);
-  metric = gw.isMetricSystem();
+  gw.present(BARO_CHILD, S_BARO);
+  gw.present(TEMP_CHILD, S_TEMP);
+  metric =  gw.getConfig().isMetric;
 }
 
 
@@ -64,17 +69,17 @@ void loop() {
 
 
   if (temperature != lastTemp) {
-    gw.sendVariable(1, V_TEMP, temperature,1);
+    gw.send(tempMsg.set(temperature,1));
     lastTemp = temperature;
   }
 
   if (pressure != lastPressure) {
-    gw.sendVariable(0, V_PRESSURE, pressure, 0);
+    gw.send(pressureMsg.set(pressure, 0));
     lastPressure = pressure;
   }
 
   if (forecast != lastForecast) {
-    gw.sendVariable(0, V_FORECAST, weather[forecast]);
+    gw.send(forecastMsg.set(weather[forecast]));
     lastForecast = forecast;
   }
   
@@ -89,12 +94,8 @@ void loop() {
    5 = "Unknown (More Time needed) 
   */
 
-  // Power down the radio.  Note that the radio will get powered back up
-  // on the next write() call.
-  delay(1000); //delay to allow serial to fully print before sleep
-  gw.powerDown();
-  sleep.pwrDownMode(); //set sleep mode
-  sleep.sleepDelay(SLEEP_TIME * 1000); // sleep to conserve power
+  delay(300); //delay to allow serial to fully print before sleep
+  gw.sleep(SLEEP_TIME * 1000);
 }
 
 int sample(float pressure) {

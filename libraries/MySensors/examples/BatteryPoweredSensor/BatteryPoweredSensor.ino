@@ -2,17 +2,13 @@
 // Instructions for measuring battery capacity on A0 are available in the follwoing forum
 // thread: http://forum.micasaverde.com/index.php/topic,20078.0.html
 
-
-#include <Sleep_n0m1.h>
 #include <SPI.h>
-#include <EEPROM.h>
 #include <RF24.h>
-#include <Sensor.h>
+#include <MySensor.h>
 
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
 
-Sensor gw;
-Sleep sleep;
+MySensor gw;
 unsigned long SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
 
@@ -54,12 +50,6 @@ void loop()
    }
 
    // delay to allow transmissions to gateway to be completed before sleep
-   delay(500);
-
-   // Power down the radio. Note that the radio will get powered back up
-   // on the next write() call
-   gw.powerDown();
-
-   sleep.pwrDownMode();           // set sleep mode
-   sleep.sleepDelay(SLEEP_TIME);  // sleep for SLEEP_TIME
+   delay(300);
+   gw.sleep(SLEEP_TIME);
 }

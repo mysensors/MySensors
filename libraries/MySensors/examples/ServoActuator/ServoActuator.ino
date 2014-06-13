@@ -6,9 +6,8 @@
 // Contribution by: Derek Macias
 
 
-#include <Sensor.h>
+#include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
 #include <Servo.h> 
 #include <RF24.h>
 
@@ -18,7 +17,7 @@
 #define DETACH_DELAY 900 // Tune this to let your movement finish before detaching the servo
 #define CHILD_ID 10   // Id of the sensor child
 
-Sensor gw;
+MySensor gw;
 Servo myservo;  // create servo object to control a servo 
                 // a maximum of eight servo objects can be created Sensor gw(9,10);
 unsigned long timeOfLastChange = 0;
@@ -33,7 +32,7 @@ void setup()
   gw.sendSketchInfo("Servo", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
-  gw.sendSensorPresentation(CHILD_ID, S_COVER);
+  gw.present(CHILD_ID, S_COVER);
 
   // Fetch servo state at startup
   gw.getStatus(CHILD_ID, V_DIMMER);

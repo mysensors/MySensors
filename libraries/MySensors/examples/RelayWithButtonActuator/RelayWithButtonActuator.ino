@@ -1,11 +1,12 @@
 // Example sketch för a "light switch" where you can control light or something 
 // else from both vera and a local physical button (connected between digital
 // pin 3 and +5V).
+// This node also works as a repeader for other nodes
 
-#include <Relay.h>
+#include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
 #include <RF24.h>
+#include <Bounce2.h>
 
 #define RELAY_PIN  4  // Arduino Digital I/O pin number for relay 
 #define BUTTON_PIN  3  // Arduino Digital I/O pin number for button (with 10k pulldown) 
@@ -13,37 +14,40 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-int buttVal;
-int previousVal;
-int state;
-int switched = 0;
-long pressTime = 0;    // the last time the button pin was pressed
-long debounce = 200;   // the debounce time, increase if the output flickers
-
-Relay gw;
+Bounce debouncer = Bounce(); 
+int oldValue=-1;
+bool state;
+MySensor gw;
+MyMessage msg(CHILD_ID,V_LIGHT);
 
 void setup()  
 {  
-  gw.begin();
+  gw.begin(incomingMessage, AUTO, true);
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Relay & Button", "1.0");
 
-  // Set buttonPin as Input
-  pinMode(BUTTON_PIN, INPUT);
-  buttVal = digitalRead(BUTTON_PIN); //read initial state
+ // Setup the button
+  pinMode(BUTTON_PIN,INPUT);
+  // Activate internal pull-up
+  digitalWrite(BUTTON_PIN,HIGH);
+  
+  // After setting up the button, setup debouncer
+  debouncer.attach(BUTTON_PIN);
+  debouncer.interval(5);
+
 
   // Register all sensors to gw (they will be created as child devices)
-  gw.sendSensorPresentation(CHILD_ID, S_LIGHT);
+  gw.present(CHILD_ID, S_LIGHT);
 
   // Make sure relays are off when starting up
   digitalWrite(RELAY_PIN, RELAY_OFF);
   // Then set relay pins in output mode
   pinMode(RELAY_PIN, OUTPUT);   
       
-  // Request/wait for relay status
-  gw.getStatus(CHILD_ID, V_LIGHT);
-  setRelayStatus(gw.getMessage()); // Wait here until status message arrive from gw
+    // Set relay to last known state (using eeprom storage) 
+  digitalWrite(RELAY_PIN, gw.loadState(CHILD_ID));
+
   
 }
 
@@ -53,40 +57,35 @@ void setup()
 */
 void loop() 
 {
-  if (gw.messageAvailable()) {
-    // ot new messsage from gw
-    message_s message = gw.getMessage(); 
-    setRelayStatus(message);
-  }
+  gw.process();
+  debouncer.update();
+  // Get the update value
+  int value = debouncer.read();
 
-  buttVal = digitalRead(BUTTON_PIN);      // read input value and store it in val
-
-  if (buttVal == HIGH && previousVal == LOW) {
-      // Start counter from when button was pressed
-      pressTime = millis();
-      switched = 0;
-   }
-
-   if (buttVal == HIGH && switched == 0 && millis() - pressTime > debounce) {
-     // Switch state if button pressed more than 200 msec
-     state = state==1?0:1;
-     gw.sendVariable(CHILD_ID, V_LIGHT, state); // We will receive an ack message
-     switched = 1; // No more switches until button is released
+  if (value != oldValue && value!=0) {
+     gw.saveState(CHILD_ID, state);
+     gw.send(msg.set(state==1?0:1), true); // Send and request ack
+     oldValue = value;
     }
-    previousVal = buttVal;
 } 
  
   
   
-
-void setRelayStatus(message_s message) {
-  if (message.header.type==V_LIGHT) { // This could be M_ACK_VARIABLE or M_SET_VARIABLE
-     state = atoi(message.data);
+void incomingMessage(MyMessage message) {
+    Serial.println(gw.getInternalTemp());
+  // We only expect one type of message from controller. But we better check anyway.
+  if (message.type==V_LIGHT) {
      // Change relay state
-     digitalWrite(RELAY_PIN, state==1?RELAY_ON:RELAY_OFF);
+     state = message.getBool();
+     digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
+     // Store state in eeprom
+     gw.saveState(CHILD_ID, state);
+    
      // Write some debug info
-     Serial.print(message.header.messageType == M_ACK_VARIABLE ? "Button":"Gateway");
-     Serial.print(" change. New state: ");
-     Serial.println(state == 1 ?"on":"off" );
-   }
+     Serial.print("Incoming change for sensor:");
+     Serial.print(message.sensor);
+     Serial.print(", New status: ");
+     Serial.println(message.getBool());
+   } 
 }
+

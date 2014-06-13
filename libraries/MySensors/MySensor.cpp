@@ -10,6 +10,8 @@
  */
 
 #include "MySensor.h"
+#include "LowPower.h"
+
 
 // Inline function and macros
 inline MyMessage* build (MyMessage* msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type) {
@@ -499,7 +501,7 @@ uint8_t MySensor::getChildRoute(uint8_t childId) {
 }
 
 
-long MySensor::getInternalTemp(void)
+float MySensor::getInternalTemp(void)
 {
   long result;
   // Read internal temp sensor against 1.1V reference
@@ -511,8 +513,47 @@ long MySensor::getInternalTemp(void)
   result |= ADCH<<8;
   result = (result - 125) * 1075;
 
-  return result;
+  return static_cast<float>(static_cast<int>(result/1000.)) / 10.;
 }
+
+int continueTimer = true;
+void wakeUp()	 //place to send the interrupts
+{
+	continueTimer = false;
+}
+
+void MySensor::internalSleep(int ms) {
+	while (continueTimer && ms >= 8000) { LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); ms -= 8000; }
+	if (continueTimer && ms >= 4000)    { LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); ms -= 4000; }
+	if (continueTimer && ms >= 2000)    { LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); ms -= 2000; }
+	if (continueTimer && ms >= 1000)    { LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); ms -= 1000; }
+	if (continueTimer && ms >= 500)     { LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); ms -= 500; }
+	if (continueTimer && ms >= 250)     { LowPower.powerDown(SLEEP_250MS, ADC_OFF, BOD_OFF); ms -= 250; }
+	if (continueTimer && ms >= 125)     { LowPower.powerDown(SLEEP_120MS, ADC_OFF, BOD_OFF); ms -= 120; }
+	if (continueTimer && ms >= 64)      { LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF); ms -= 60; }
+	if (continueTimer && ms >= 32)      { LowPower.powerDown(SLEEP_30MS, ADC_OFF, BOD_OFF); ms -= 30; }
+	if (continueTimer && ms >= 16)      { LowPower.powerDown(SLEEP_15Ms, ADC_OFF, BOD_OFF); ms -= 15; }
+}
+
+void MySensor::sleep(int ms) {
+	RF24::powerDown();
+	continueTimer = true;
+	internalSleep(ms);
+}
+
+void MySensor::sleep(int interrupt, int mode, int ms) {
+	RF24::powerDown();
+	attachInterrupt(interrupt, wakeUp, mode); //Interrupt on pin 3 for any change in solar power
+	if (ms>0) {
+		continueTimer = true;
+		sleep(ms);
+	} else {
+		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
+	}
+	detachInterrupt(interrupt);
+}
+
+
 
 #ifdef DEBUG
 void MySensor::debugPrint(const char *fmt, ... ) {

@@ -1,6 +1,5 @@
 // Example sketch showing how to send in OneWire temperature readings
 #include <MySensor.h>  
-#include <Sleep_n0m1.h>
 #include <SPI.h>
 #include <DallasTemperature.h>
 #include <OneWire.h>
@@ -12,7 +11,6 @@ unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 MySensor gw;
-Sleep sleep;
 float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
 boolean receivedConfig = false;
@@ -64,10 +62,8 @@ void loop()
     }
   }
   // Power down the radio and sleep Arduino to save batteries.  
-  delay(500);
-  gw.powerDown();
-  sleep.pwrDownMode(); //set sleep mode
-  sleep.sleepDelay(SLEEP_TIME * 1000); //sleep for: sleepTime 
+  delay(300);
+  gw.sleep(SLEEP_TIME * 1000);
 }
 
 

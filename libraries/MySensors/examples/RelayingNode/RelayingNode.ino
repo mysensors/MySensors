@@ -4,16 +4,16 @@
 // gw.messageAvailable() frequently. This sketch should not 
 // sleep.
 
-#include <Relay.h>
+#include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
 #include <RF24.h>
 
-Relay gw;
+MySensor gw;
 
 void setup()  
 {  
-  gw.begin();
+  // The third argument enables relaying mode.
+  gw.begin(NULL, AUTO, true);
 
   //Send the sensor node sketch version information to the gateway
   gw.sendSketchInfo("Relaying Node", "1.0");
@@ -21,10 +21,7 @@ void setup()
 
 void loop() 
 {
-  // By calling this regularely you route messages in the background
-  if (gw.messageAvailable()) {  
-
-    // Handleincoming message for this node here... 
-  }
+  // By calling process() you route messages in the background
+  gw.process();
 }
 
