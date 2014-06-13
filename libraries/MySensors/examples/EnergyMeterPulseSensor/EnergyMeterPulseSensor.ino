@@ -96,7 +96,7 @@ void loop()
 void incomingMessage(MyMessage message) {
   if (message.type==V_VAR1) {  
     pulseCount = oldPulseCount = message.getLong();
-    Serial.print("Last pulse count from gw:");
+    Serial.print("Received last pulse count from gw:");
     Serial.println(pulseCount);
     pcReceived = true;
   }
