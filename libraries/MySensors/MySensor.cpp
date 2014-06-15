@@ -432,10 +432,9 @@ uint8_t MySensor::crc8Message(MyMessage *message) {
 	message->crc = 0;
 
 	// fill unused space by zeroes for string data only
-	if(len>=0 && len < sizeof(message->data)-1) {
-		memset(&message->data[len], 0, sizeof(message->data) - 1 - len);
+	if(len>=0 && len < sizeof(message->data)) {
+		memset(&message->data[len], 0, sizeof(message->data) - len);
 	}
-
 
 	for (loop_count = 0; loop_count != number_of_bytes_to_read; loop_count++)
 	{
