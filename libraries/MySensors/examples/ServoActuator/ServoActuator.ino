@@ -49,7 +49,7 @@ void loop()
   }
 } 
 
-void incomingMessage(MyMessage message) {
+void incomingMessage(const MyMessage &message) {
   myservo.attach(SERVO_DIGITAL_OUT_PIN);   
   attachedServo = true;
   if (message.type==V_DIMMER) { // This could be M_ACK_VARIABLE or M_SET_VARIABLE

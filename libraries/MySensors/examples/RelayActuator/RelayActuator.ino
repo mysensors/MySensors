@@ -38,7 +38,7 @@ void loop()
   gw.process();
 }
 
-void incomingMessage(MyMessage message) {
+void incomingMessage(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
      // Change relay state

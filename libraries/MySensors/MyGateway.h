@@ -69,8 +69,8 @@ class MyGateway : public MySensor
 	    uint8_t pinEr;
 
 	    void serial(const char *fmt, ... );
-	    void serial(MyMessage *msg);
-	    uint8_t validate(MyMessage *message);
+	    void serial(MyMessage &msg);
+	    uint8_t validate(MyMessage &message);
 	    void interruptStartInclusion();
 	    void checkButtonTriggeredInclusion();
 	    void setInclusionMode(boolean newMode);

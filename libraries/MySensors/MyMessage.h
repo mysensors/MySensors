@@ -24,9 +24,8 @@ typedef enum {
 	C_PRESENTATION = 0,
 	C_SET = 1,
 	C_REQ = 2,
-	C_SET_WITH_ACK = 3,
-	C_INTERNAL = 4,
-	C_STREAM = 5 // For Firmaware and other larger chunks of data that need to be divided into pieces.
+	C_INTERNAL = 3,
+	C_STREAM = 4 // For Firmware and other larger chunks of data that need to be divided into pieces.
 } command;
 
 // Type of sensor data (for set/req/ack messages)
@@ -49,7 +48,7 @@ typedef enum {
 typedef enum {
 	S_DOOR, S_MOTION, S_SMOKE, S_LIGHT, S_DIMMER, S_COVER, S_TEMP, S_HUM, S_BARO, S_WIND,
 	S_RAIN, S_UV, S_WEIGHT, S_POWER, S_HEATER, S_DISTANCE, S_LIGHT_LEVEL, S_ARDUINO_NODE,
-	S_ARDUINO_RELAY, S_LOCK, S_IR, S_WATER
+	S_ARDUINO_REPEATER_NODE, S_LOCK, S_IR, S_WATER
 } sensor;
 
 // Type of data stream  (for streamed message)
@@ -83,29 +82,23 @@ typedef enum {
 // Getters/setters for special fields in header
 #define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 3)
 #define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
-#define mSetCommand(_msg,_command) BF_SET(_msg.command_payload, _command, 0, 4)
-#define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_payload, _pt, 4, 4)
-#define mSetVersionP(_msg,_version) BF_SET(_msg->version_length, _version, 0, 3)
-#define mSetLengthP(_msg,_length) BF_SET(_msg->version_length, _length, 3, 5)
-#define mSetCommandP(_msg,_command) BF_SET(_msg->command_payload, _command, 0, 4)
-#define mSetPayloadTypeP(_msg, _pt) BF_SET(_msg->command_payload, _pt, 4, 4)
+#define mSetCommand(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 0, 3)
+#define mSetAck(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 3, 1)
+#define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 4, 4)
 
 #define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
 #define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
-#define mGetCommand(_msg) BF_GET(_msg.command_payload, 0, 4)
-#define mGetPayloadType(_msg) BF_GET(_msg.command_payload, 4, 4)
-#define mGetVersionP(_msg) BF_GET(_msg->version_length, 0, 3)
-#define mGetLengthP(_msg) BF_GET(_msg->version_length, 3, 5)
-#define mGetCommandP(_msg) BF_GET(_msg->command_payload, 0, 4)
-#define mGetPayloadTypeP(_msg) BF_GET(_msg->command_payload, 4, 4)
+#define mGetCommand(_msg) BF_GET(_msg.command_ack_payload, 0, 3)
+#define mGetAck(_msg) BF_GET(_msg.command_ack_payload, 3, 1)
+#define mGetPayloadType(_msg) BF_GET(_msg.command_ack_payload, 4, 4)
 
 
-// internal access for special fileds
-#define miGetPayloadType() BF_GET(command_payload, 4, 4)
+// internal access for special fields
+#define miGetPayloadType() BF_GET(command_ack_payload, 4, 4)
 #define miGetLength() BF_GET(version_length, 3, 5)
 
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
-#define miSetPayloadType(_pt) BF_SET(command_payload, _pt, 4, 4)
+#define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 4, 4)
 
 
 class MyMessage
@@ -116,47 +109,50 @@ public:
 
 	MyMessage(uint8_t sensor, uint8_t type);
 
-	char* getString();
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted
 	 * into string representation by supplying a buffer with the minimum size of
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
 	 */
-	char* getString(char *buffer);
-	void* getCustom();
-	uint8_t getByte();
-	bool getBool();
-	double getDouble();
-	long getLong();
-	unsigned long getULong();
-	int getInt();
-	unsigned int getUInt();
+	char* getString(char *buffer) const;
+	const char* getString() const;
+	void* getCustom() const;
+	uint8_t getByte() const;
+	bool getBool() const;
+	double getDouble() const;
+	long getLong() const;
+	unsigned long getULong() const;
+	int getInt() const;
+	unsigned int getUInt() const;
 
 	// Setters for building message "on the fly"
-	MyMessage* setType(uint8_t type);
-	MyMessage* setSensor(uint8_t sensor);
-	MyMessage* setDestination(uint8_t destination);
+	MyMessage& setType(uint8_t type);
+	MyMessage& setSensor(uint8_t sensor);
+	MyMessage& setDestination(uint8_t destination);
 
 	// Setters for payload
-	MyMessage* set(void* payload, uint8_t length);
-	MyMessage* set(const char* value);
-	MyMessage* set(uint8_t value);
-	MyMessage* set(bool value);
-	MyMessage* set(double value, uint8_t decimals);
-	MyMessage* set(unsigned long value);
-	MyMessage* set(long value);
-	MyMessage* set(unsigned int value);
-	MyMessage* set(int value);
+	MyMessage& set(void* payload, uint8_t length);
+	MyMessage& set(const char* value);
+	MyMessage& set(uint8_t value);
+	MyMessage& set(bool value);
+	MyMessage& set(double value, uint8_t decimals);
+	MyMessage& set(unsigned long value);
+	MyMessage& set(long value);
+	MyMessage& set(unsigned int value);
+	MyMessage& set(int value);
 
 
-	uint8_t version_length;  // 3 bit - Protocol version + 5 bit - Length of payload
-	uint8_t command_payload; // 4 bit - Command type + 4 bit - Payload data type
-	uint8_t type;            // 8 bit - Type varies depending on command
-	uint8_t sensor;          // 8 bit - Id of sensor that this message concerns.
-	uint8_t sender;          // 8 bit - Id of sender node
-	uint8_t last;            // 8 bit - Id of last node this message passed
-	uint8_t destination;     // 8 bit - Id of destination node
-	uint8_t crc;             // 8 bit - Message checksum
+	uint8_t version_length;      // 3 bit - Protocol version
+			                     // 5 bit - Length of payload
+	uint8_t command_ack_payload; // 3 bit - Command type
+	                             // 1 bit - Indicator that receiver should send an ack back.
+	                             // 4 bit - Payload data type
+	uint8_t type;            	 // 8 bit - Type varies depending on command
+	uint8_t sensor;          	 // 8 bit - Id of sensor that this message concerns.
+	uint8_t sender;          	 // 8 bit - Id of sender node
+	uint8_t last;            	 // 8 bit - Id of last node this message passed
+	uint8_t destination;     	 // 8 bit - Id of destination node
+	uint8_t crc;             	 // 8 bit - Message checksum
 
 	// Each message can transfer a payload. We add one extra byte for string
 	// terminator \0 to be "printable" this is not transferred OTA

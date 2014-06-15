@@ -95,13 +95,13 @@ class MySensor : public RF24
 	* Call this in setup(), before calling any other sensor net library methods.
 	* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses. Default is NULL.
 	* @param nodeId The unique id (1-254) for this sensor. Default is AUTO(255) which means sensor tries to fetch an id from controller.
-	* @param relayMode Activate relay mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
+	* @param repeaterMode Activate repeater mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
 	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
 	* @param channel Radio channel. Default is channel 76
 	* @param dataRate Radio transmission speed. Default RF24_1MBPS
 	*/
 
-	void begin(void (* msgCallback)(MyMessage)=NULL, uint8_t nodeId=AUTO, boolean relayMode=false,  rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
+	void begin(void (* msgCallback)(const MyMessage &)=NULL, uint8_t nodeId=AUTO, boolean repeaterMode=false,  rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
 
 	/**
 	 * Return the nodes nodeId.
@@ -113,16 +113,19 @@ class MySensor : public RF24
     * It is usually good to present all attached sensors after power-up in setup().
 	*
 	* @param sensorId Select a unique sensor id for this sensor. Choose a number between 0-254.
-	* @param sensorType The sensor type. See sensor typedef in Message.h.
+	* @param sensorType The sensor type. See sensor typedef in MyMessage.h.
+	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 	*/
-	void present(uint8_t sensorId, uint8_t sensorType);
+	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false);
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
 	 * @param name String containing a short Sketch name or NULL  if not applicable
 	 * @param version String containing a short Sketch version or NULL if not applicable
+	 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+	 *
 	 */
-	void sendSketchInfo(const char *name, const char *version);
+	void sendSketchInfo(const char *name, const char *version, bool ack=false);
 
 	/**
 	* Sends a message to gateway or one of the other nodes in the radio network
@@ -131,19 +134,21 @@ class MySensor : public RF24
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 	* @return true Returns true if message reached the first stop on its way to destination.
 	*/
-	bool send(MyMessage *msg, bool ack=false);
+	bool send(MyMessage &msg, bool ack=false);
 
 	/**
 	 * Send this nodes battery level to gateway.
 	 * @param level Level between 0-100(%)
+	 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+	 *
 	 */
-	void sendBatteryLevel(uint8_t level);
+	void sendBatteryLevel(uint8_t level, bool ack=false);
 
 	/**
 	* Requests a value from gateway or some other sensor in the radio network.
 	* Make sure to add callback-method in begin-method to handle request responses.
 	*
-	* @param childSensorId  The unique child id for the different sensors connected to this arduino. 0-254.
+	* @param childSensorId  The unique child id for the different sensors connected to this Arduino. 0-254.
 	* @param variableType The variableType to fetch
 	* @param destination The nodeId of other node in radio network. Default is gateway
 	*/
@@ -192,7 +197,7 @@ class MySensor : public RF24
 	/**
 	* Returns the last received message
 	*/
-	MyMessage* getLastMessage(void);
+	MyMessage& getLastMessage(void);
 
 	/**
 	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer.
@@ -229,16 +234,16 @@ class MySensor : public RF24
   protected:
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
-	bool relayMode;
+	bool repeaterMode;
 	bool isGateway;
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage ack;  // Buffer for ack messages.
 
-	void setupRelayMode();
+	void setupRepeaterMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
-	boolean sendRoute(MyMessage *message);
-	boolean sendWrite(uint8_t dest, MyMessage *message, bool broadcast=false);
-	uint8_t validate(MyMessage *message);
+	boolean sendRoute(MyMessage &message);
+	boolean sendWrite(uint8_t dest, MyMessage &message, bool broadcast=false);
+	uint8_t validate(MyMessage &message);
 
   private:
 #ifdef DEBUG
@@ -247,12 +252,12 @@ class MySensor : public RF24
 	uint8_t failedTransmissions;
 	uint8_t *childNodeTable; // In memory buffer for routing information to other nodes. also stored in EEPROM
     void (*timeCallback)(unsigned long); // Callback for requested time messages
-    void (*msgCallback)(MyMessage); // Callback for incoming messages from other nodes and gateway.
+    void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
     void waitForReply();
     void requestNodeId();
 	void findParentNode();
-	uint8_t crc8Message(MyMessage *message);
+	uint8_t crc8Message(MyMessage &message);
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
 	void removeChildRoute(uint8_t childId);

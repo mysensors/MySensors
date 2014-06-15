@@ -28,9 +28,9 @@ MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, ui
 
 void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(char *)) {
 	Serial.begin(BAUD_RATE);
-	relayMode = true;
+	repeaterMode = true;
 	isGateway = true;
-	setupRelayMode();
+	setupRepeaterMode();
 
 	if (inDataCallback != NULL) {
 		useWriteCallback = true;
@@ -157,7 +157,7 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	msg.type = type;
 	mSetCommand(msg,command);
 	msg.set(value);
-    ok = sendRoute(&msg);
+    ok = sendRoute(msg);
     if (!ok) {
       errBlink(1);
     }
@@ -178,7 +178,7 @@ void MyGateway::setInclusionMode(boolean newMode) {
 
 
 // Override normal validate to add error blink if crc check fails
-uint8_t MyGateway::validate(MyMessage *message) {
+uint8_t MyGateway::validate(MyMessage &message) {
 	uint8_t res = MySensor::validate(message);
 	if (res == VALIDATE_BAD_CRC) {
 		errBlink(1);
@@ -189,8 +189,8 @@ uint8_t MyGateway::validate(MyMessage *message) {
 void MyGateway::processRadioMessage() {
 	if (process()) {
 	  // A new message was received from one of the sensors
-	  MyMessage *message = getLastMessage();
-	  if (mGetCommandP(message) == C_PRESENTATION && inclusionMode) {
+	  MyMessage message = getLastMessage();
+	  if (mGetCommand(message) == C_PRESENTATION && inclusionMode) {
 		rxBlink(3);
 	  } else {
 		rxBlink(1);
@@ -215,8 +215,8 @@ void MyGateway::serial(const char *fmt, ... ) {
    }
 }
 
-void MyGateway::serial(MyMessage *msg) {
-  serial(PSTR("%d;%d;%d;%d;%s\n"),msg->sender, msg->sensor, mGetCommandP(msg), msg->type, msg->getString(convBuf));
+void MyGateway::serial(MyMessage &msg) {
+  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
 }
 
 

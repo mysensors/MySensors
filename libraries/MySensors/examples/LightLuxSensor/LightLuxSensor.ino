@@ -29,7 +29,7 @@ unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
 BH1750 lightSensor;
 MySensor gw;
 MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL);
-int lastlux;
+uint16_t lastlux;
 
 void setup()  
 { 
