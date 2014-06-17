@@ -5,7 +5,6 @@
 
 #include <MySensor.h>
 #include <SPI.h>
-#include <RF24.h>
 
 MySensor gw;
 

@@ -1,12 +1,11 @@
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>  
 #include <DHT.h>  
 
 #define CHILD_ID_HUM 0
 #define CHILD_ID_TEMP 1
 #define HUMIDITY_SENSOR_DIGITAL_PIN 3
-unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
+unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
 MySensor gw;
 DHT dht;
@@ -59,9 +58,7 @@ void loop()
       Serial.println(humidity);
   }
 
-  delay(300); //delay to allow serial to fully print before sleep
-  gw.sleep(SLEEP_TIME * 1000); //sleep a bit
+  gw.sleep(SLEEP_TIME); //sleep a bit
 }
-
 
 

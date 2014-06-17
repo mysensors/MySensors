@@ -2,7 +2,6 @@
 // Example sketch showing how to request time from controller
 
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>  
 #include <Time.h>  
 

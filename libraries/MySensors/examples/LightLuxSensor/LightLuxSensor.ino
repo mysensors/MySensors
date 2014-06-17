@@ -17,14 +17,13 @@
 */
 
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>  
 #include <BH1750.h>
 #include <Wire.h> 
 
 #define CHILD_ID_LIGHT 0
 #define LIGHT_SENSOR_ANALOG_PIN 0
-unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
+unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
 BH1750 lightSensor;
 MySensor gw;
@@ -53,6 +52,5 @@ void loop()
       lastlux = lux;
   }
   
-  delay(300); //delay to allow serial to fully print before sleep
-  gw.sleep(SLEEP_TIME * 1000);
+  gw.sleep(SLEEP_TIME);
 }

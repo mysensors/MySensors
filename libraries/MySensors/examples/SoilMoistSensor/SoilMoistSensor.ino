@@ -1,5 +1,4 @@
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>  
 
 #define DIGITAL_INPUT_SOIL_SENSOR 3   // Digital input did you attach your soil sensor.  

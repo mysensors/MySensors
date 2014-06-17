@@ -9,7 +9,6 @@
 #include <MySensor.h>
 #include <SPI.h>
 #include <Servo.h> 
-#include <RF24.h>
 
 #define SERVO_DIGITAL_OUT_PIN 3
 #define SERVO_MIN 0 // Fine tune your servos min. 0-180
@@ -23,7 +22,6 @@ Servo myservo;  // create servo object to control a servo
                 // a maximum of eight servo objects can be created Sensor gw(9,10);
 unsigned long timeOfLastChange = 0;
 bool attachedServo = false;
-
             
 void setup() 
 { 

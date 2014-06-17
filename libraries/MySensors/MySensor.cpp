@@ -10,7 +10,9 @@
  */
 
 #include "MySensor.h"
-#include "LowPower.h"
+#include "utility/LowPower.h"
+#include "utility/RF24.h"
+#include "utility/RF24_config.h"
 
 
 // Inline function and macros
@@ -205,8 +207,8 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, bool broadcast) {
 	bool ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length), broadcast);
 	RF24::startListening();
 
-	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d, st=%s:%s\n"),
-			message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type, ok?"ok":"fail", message.getString(convBuf));
+	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
+			message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type, mGetPayloadType(message), mGetLength(message), ok?"ok":"fail", message.getString(convBuf));
 
 	return ok;
 }
@@ -215,7 +217,7 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, bool broadcast) {
 bool MySensor::send(MyMessage &message, bool enableAck) {
 	message.sender = nc.nodeId;
 	mSetCommand(message,C_SET);
-	mSetAck(message,enableAck);
+    mSetAck(message,enableAck);
 	return sendRoute(message);
 }
 
@@ -260,10 +262,10 @@ boolean MySensor::process() {
 	uint8_t valid = validate(msg);
 	boolean ok = valid == VALIDATE_OK;
 
-	// Make sure string gets terminated ok for full string messages.
-	msg.data[len - HEADER_SIZE ] = '\0';
-	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,cr=%s: %s\n"),
-				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, valid==0?"ok":valid==1?"ec":"ev", msg.getString(convBuf));
+	// Add termination, good for string messages.
+	msg.data[mGetLength(msg)] = '\0';
+	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,cr=%s:%s\n"),
+				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), valid==0?"ok":valid==1?"ec":"ev", msg.getString(convBuf));
 
 	if (!ok)
 		return false;
@@ -497,19 +499,19 @@ uint8_t MySensor::getChildRoute(uint8_t childId) {
 }
 
 
-float MySensor::getInternalTemp(void)
+int MySensor::getInternalTemp(void)
 {
   long result;
   // Read internal temp sensor against 1.1V reference
   ADMUX = _BV(REFS1) | _BV(REFS0) | _BV(MUX3);
-  delay(2); // Wait until Vref has settled
+  delay(20); // Wait until Vref has settled
   ADCSRA |= _BV(ADSC);
   while (bit_is_set(ADCSRA,ADSC));
   result = ADCL;
   result |= ADCH<<8;
-  result = (result - 125) * 1075;
+  result = (result - 125) * 1075  + 500; // add 500 to round to nearest full degree
 
-  return static_cast<float>(static_cast<int>(result/1000.)) / 10.;
+  return result/10000;
 }
 
 int continueTimer = true;
@@ -532,12 +534,16 @@ void MySensor::internalSleep(int ms) {
 }
 
 void MySensor::sleep(int ms) {
+	// Let serial prints finish (debug, log etc)
+	Serial.flush();
 	RF24::powerDown();
 	continueTimer = true;
 	internalSleep(ms);
 }
 
 void MySensor::sleep(int interrupt, int mode, int ms) {
+	// Let serial prints finish (debug, log etc)
+	Serial.flush();
 	RF24::powerDown();
 	attachInterrupt(interrupt, wakeUp, mode); //Interrupt on pin 3 for any change in solar power
 	if (ms>0) {
@@ -556,11 +562,11 @@ void MySensor::debugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	if (isGateway) {
 		// prepend debug message to be handled correctly by gw (C_INTERNAL, I_LOG_MESSAGE)
-		Serial.write("0;0;4;8;");
+		snprintf_P(fmtBuffer, 299, PSTR("0;0;%d;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+		Serial.print(fmtBuffer);
 	}
 	va_list args;
 	va_start (args, fmt );
-	vsnprintf_P(fmtBuffer, 300, fmt, args);
 	va_end (args);
 	if (isGateway) {
 		// Truncate message if this is gateway node
@@ -574,7 +580,6 @@ void MySensor::debugPrint(const char *fmt, ... ) {
 	Serial.print(fmtBuffer);
 	Serial.flush();
 
-	//Serial.write("0;0;4;11;Mem free:");
 	//Serial.write(freeRam());
 }
 #endif

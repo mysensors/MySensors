@@ -32,8 +32,7 @@ char* MyMessage::getString(char *buffer) const {
 	uint8_t payloadType = miGetPayloadType();
 
 	if (payloadType == P_STRING) {
-		strncpy(buffer, data, miGetLength());
-		buffer[miGetLength()] = '\0';
+		strcpy(buffer, data);
 		return buffer;
 	} else if (buffer != NULL) {
 		switch(payloadType) {
@@ -77,7 +76,7 @@ uint8_t MyMessage::getByte() const {
 }
 
 bool MyMessage::getBool() const {
-	return !(data[0]-'0'==0);
+	return getInt();
 }
 
 double MyMessage::getDouble() const {
@@ -169,12 +168,6 @@ MyMessage& MyMessage::set(uint8_t value) {
 	return *this;
 }
 
-MyMessage& MyMessage::set(bool value) {
-	miSetLength(1);
-	miSetPayloadType(P_STRING);
-	data[0] = value?'1':'0';
-	return *this;
-}
 
 MyMessage& MyMessage::set(double value, uint8_t decimals) {
 	dtostrf(value,2,decimals,data);

@@ -1,5 +1,4 @@
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>  
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
@@ -8,7 +7,7 @@
 #define TEMP_CHILD 1
 
 #define LIGHT_SENSOR_ANALOG_PIN 0
-unsigned long SLEEP_TIME = 60; // Sleep time between reads (in seconds)
+unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in seconds)
 
 Adafruit_BMP085 bmp = Adafruit_BMP085();      // Digital Pressure Sensor 
 MySensor gw;
@@ -28,8 +27,6 @@ MyMessage tempMsg(TEMP_CHILD, V_TEMP);
 MyMessage pressureMsg(BARO_CHILD, V_PRESSURE);
 MyMessage forecastMsg(BARO_CHILD, V_FORECAST);
 
-
-
 void setup() {
   gw.begin();
 
@@ -46,7 +43,6 @@ void setup() {
   gw.present(TEMP_CHILD, S_TEMP);
   metric =  gw.getConfig().isMetric;
 }
-
 
 void loop() {
   float pressure = bmp.readPressure();
@@ -94,8 +90,7 @@ void loop() {
    5 = "Unknown (More Time needed) 
   */
 
-  delay(300); //delay to allow serial to fully print before sleep
-  gw.sleep(SLEEP_TIME * 1000);
+  gw.sleep(SLEEP_TIME);
 }
 
 int sample(float pressure) {

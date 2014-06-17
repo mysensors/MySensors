@@ -8,8 +8,6 @@
 // to calculate/report watt-number.
 
 #include <SPI.h>
-#include <EEPROM.h>  
-#include <RF24.h>
 #include <MySensor.h>  
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
@@ -18,7 +16,7 @@
 #define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
 #define INTERRUPT DIGITAL_INPUT_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
 #define CHILD_ID 1              // Id of the sensor child
-unsigned long SEND_FREQUENCY = 20; // Minimum time between send (in seconds). We don't wnat to spam the gateway.
+unsigned long SEND_FREQUENCY = 20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
 MySensor gw;
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
 boolean pcReceived = false;
@@ -88,8 +86,7 @@ void loop()
   }
   
   if (SLEEP_MODE) {
-    delay(300); //delay to allow serial to fully print before sleep
-    gw.sleep(SEND_FREQUENCY * 1000);
+    gw.sleep(SEND_FREQUENCY);
   }
 }
 

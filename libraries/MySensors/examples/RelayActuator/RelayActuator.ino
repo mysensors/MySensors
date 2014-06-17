@@ -3,8 +3,6 @@
 
 #include <MySensor.h>
 #include <SPI.h>
-#include <RF24.h>
-
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
@@ -27,7 +25,7 @@ void setup()
     // Then set relay pins in output mode
     pinMode(pin, OUTPUT);   
     // Set relay to last known state (using eeprom storage) 
-    digitalWrite(pin, gw.loadState(sensor));
+    digitalWrite(pin, gw.loadState(sensor)?RELAY_ON:RELAY_OFF);
   }
 }
 

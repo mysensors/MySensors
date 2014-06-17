@@ -7,8 +7,6 @@
 
 #include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
-#include <RF24.h>
 #include <IRLib.h>
 
 int RECV_PIN = 8;

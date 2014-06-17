@@ -10,7 +10,6 @@
 //
 
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>  
 
 #define DIGITAL_INPUT_SENSOR 3                  // The digital input you attached your sensor.  (Only 2 and 3 generates interrupt!)
@@ -19,7 +18,7 @@
 #define MAX_FLOW 40                             // Max flow (l/min) value to report. This filetrs outliers.
 #define INTERRUPT DIGITAL_INPUT_SENSOR-2        // Usually the interrupt = pin -2 (on uno/nano anyway)
 #define CHILD_ID 5                              // Id of the sensor child
-unsigned long SEND_FREQUENCY = 20;              // Minimum time between send (in seconds). We don't want to spam the gateway.
+unsigned long SEND_FREQUENCY = 20000;           // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 
 MySensor gw;
  
@@ -104,8 +103,7 @@ void loop()
   }
   
   if (SLEEP_MODE) {
-    delay(300);                                                       //delay to allow serial to fully print before sleep
-    gw.sleep(SEND_FREQUENCY * 1000);
+    gw.sleep(SEND_FREQUENCY);
   }
 }
 

@@ -3,11 +3,10 @@
 #include <SPI.h>
 #include <DallasTemperature.h>
 #include <OneWire.h>
-#include <RF24.h>
 
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
 #define MAX_ATTACHED_DS18B20 16
-unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
+unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 MySensor gw;
@@ -61,9 +60,7 @@ void loop()
       lastTemperature[i]=temperature;
     }
   }
-  // Power down the radio and sleep Arduino to save batteries.  
-  delay(300);
-  gw.sleep(SLEEP_TIME * 1000);
+  gw.sleep(SLEEP_TIME);
 }
 
 

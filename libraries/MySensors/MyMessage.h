@@ -82,12 +82,14 @@ typedef enum {
 // Getters/setters for special fields in header
 #define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 3)
 #define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
+
 #define mSetCommand(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 0, 3)
 #define mSetAck(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 3, 1)
 #define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 4, 4)
 
 #define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
 #define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
+
 #define mGetCommand(_msg) BF_GET(_msg.command_ack_payload, 0, 3)
 #define mGetAck(_msg) BF_GET(_msg.command_ack_payload, 3, 1)
 #define mGetPayloadType(_msg) BF_GET(_msg.command_ack_payload, 4, 4)
@@ -134,7 +136,6 @@ public:
 	MyMessage& set(void* payload, uint8_t length);
 	MyMessage& set(const char* value);
 	MyMessage& set(uint8_t value);
-	MyMessage& set(bool value);
 	MyMessage& set(double value, uint8_t decimals);
 	MyMessage& set(unsigned long value);
 	MyMessage& set(long value);
@@ -164,9 +165,7 @@ public:
 		unsigned int uiValue;
 		int iValue;
 		char data[MAX_PAYLOAD + 1];
-	};
-
-
-};
+	} __attribute__((packed));
+} __attribute__((packed));
 
 #endif

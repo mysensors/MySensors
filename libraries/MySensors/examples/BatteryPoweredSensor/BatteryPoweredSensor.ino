@@ -3,7 +3,6 @@
 // thread: http://forum.micasaverde.com/index.php/topic,20078.0.html
 
 #include <SPI.h>
-#include <RF24.h>
 #include <MySensor.h>
 
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
@@ -27,7 +26,7 @@ void loop()
    // get the battery Voltage
    int sensorValue = analogRead(BATTERY_SENSE_PIN);
    Serial.println(sensorValue);
-
+   
    // 1M, 470K divider across battery and using internal ADC ref of 1.1V
    // Sense point is bypassed with 0.1 uF cap to reduce noise at that point
    // ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
@@ -48,8 +47,5 @@ void loop()
      gw.sendBatteryLevel(batteryPcnt);
      oldBatteryPcnt = batteryPcnt;
    }
-
-   // delay to allow transmissions to gateway to be completed before sleep
-   delay(300);
    gw.sleep(SLEEP_TIME);
 }

@@ -114,10 +114,11 @@ void MyGateway::parseAndSend(char *commandBuffer) {
   uint8_t sensor = 0;
   uint8_t command = 0;
   uint8_t type = 0;
+  uint8_t ack = 0;
 
   // Extract command data coming on serial line
   for (str = strtok_r(commandBuffer, ";", &p);       // split using semicolon
-  		str && i < 5;         // loop while str is not null an max 5 times
+  		str && i < 6;         // loop while str is not null an max 5 times
   		str = strtok_r(NULL, ";", &p)               // get subsequent tokens
 				) {
 	switch (i) {
@@ -130,10 +131,13 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	  case 2: // Message type
 		command = atoi(str);
 		break;
-	  case 3: // Data type
+	  case 3: // Should we request ack from destination?
+		ack = atoi(str);
+		break;
+	  case 4: // Data type
 		type = atoi(str);
 		break;
-	  case 4: // Variable value
+	  case 5: // Variable value
 		value = str;
 		break;
 	  }
@@ -156,6 +160,7 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	msg.sensor = sensor;
 	msg.type = type;
 	mSetCommand(msg,command);
+	mSetAck(msg,ack==0?false:true);
 	msg.set(value);
     ok = sendRoute(msg);
     if (!ok) {

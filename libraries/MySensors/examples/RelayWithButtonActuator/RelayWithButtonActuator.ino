@@ -5,17 +5,16 @@
 
 #include <MySensor.h>
 #include <SPI.h>
-#include <RF24.h>
 #include <Bounce2.h>
 
 #define RELAY_PIN  4  // Arduino Digital I/O pin number for relay 
-#define BUTTON_PIN  3  // Arduino Digital I/O pin number for button (with 10k pulldown) 
+#define BUTTON_PIN  3  // Arduino Digital I/O pin number for button 
 #define CHILD_ID 1   // Id of the sensor child
-#define RELAY_ON 0
-#define RELAY_OFF 1
+#define RELAY_ON 1
+#define RELAY_OFF 0
 
 Bounce debouncer = Bounce(); 
-int oldValue=-1;
+int oldValue=0;
 bool state;
 MySensor gw;
 MyMessage msg(CHILD_ID,V_LIGHT);
@@ -36,7 +35,6 @@ void setup()
   debouncer.attach(BUTTON_PIN);
   debouncer.interval(5);
 
-
   // Register all sensors to gw (they will be created as child devices)
   gw.present(CHILD_ID, S_LIGHT);
 
@@ -45,10 +43,9 @@ void setup()
   // Then set relay pins in output mode
   pinMode(RELAY_PIN, OUTPUT);   
       
-    // Set relay to last known state (using eeprom storage) 
-  digitalWrite(RELAY_PIN, gw.loadState(CHILD_ID));
-
-  
+  // Set relay to last known state (using eeprom storage) 
+  state = gw.loadState(CHILD_ID);
+  digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
 }
 
 
@@ -61,16 +58,12 @@ void loop()
   debouncer.update();
   // Get the update value
   int value = debouncer.read();
-
-  if (value != oldValue && value!=0) {
-     gw.saveState(CHILD_ID, state);
-     gw.send(msg.set(state==1?0:1), true); // Send and request ack
-     oldValue = value;
-    }
+  if (value != oldValue && value==0) {
+      gw.send(msg.set(state?false:true), true); // Send new state and request ack back
+  }
+  oldValue = value;
 } 
  
-  
-  
 void incomingMessage(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
