@@ -46,7 +46,10 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	eeprom_read_block((void*)&cc, (void*)EEPROM_LOCAL_CONFIG_ADDRESS, sizeof(ControllerConfig));
-
+	if (cc.isMetric == 0xff) {
+		// Eeprom empty, set default to metric
+		cc.isMetric = 0x01;
+	}
 
 	if (_nodeId != AUTO) {
 		// Set static id
@@ -541,18 +544,22 @@ void MySensor::sleep(int ms) {
 	internalSleep(ms);
 }
 
-void MySensor::sleep(int interrupt, int mode, int ms) {
+bool MySensor::sleep(int interrupt, int mode, int ms) {
 	// Let serial prints finish (debug, log etc)
+	bool pinTriggeredWakeup = true;
 	Serial.flush();
 	RF24::powerDown();
 	attachInterrupt(interrupt, wakeUp, mode); //Interrupt on pin 3 for any change in solar power
 	if (ms>0) {
 		continueTimer = true;
 		sleep(ms);
+		pinTriggeredWakeup = !continueTimer;
 	} else {
+		Serial.flush();
 		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 	}
 	detachInterrupt(interrupt);
+	return pinTriggeredWakeup;
 }
 
 
