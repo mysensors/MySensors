@@ -60,11 +60,6 @@ typedef enum {
 	P_STRING, P_BYTE, P_INT16, P_UINT16, P_LONG32, P_ULONG32, P_CUSTOM
 } payload;
 
-// Possible return values by validate() when doing crc check of received message.
-typedef enum {
-	VALIDATE_OK, VALIDATE_BAD_CRC, VALIDATE_BAD_VERSION
-} validationResult;
-
 
 
 #define BIT(n)                  ( 1<<(n) )
@@ -148,12 +143,11 @@ public:
 	uint8_t command_ack_payload; // 3 bit - Command type
 	                             // 1 bit - Indicator that receiver should send an ack back.
 	                             // 4 bit - Payload data type
-	uint8_t type;            	 // 8 bit - Type varies depending on command
-	uint8_t sensor;          	 // 8 bit - Id of sensor that this message concerns.
 	uint8_t sender;          	 // 8 bit - Id of sender node
 	uint8_t last;            	 // 8 bit - Id of last node this message passed
 	uint8_t destination;     	 // 8 bit - Id of destination node
-	uint8_t crc;             	 // 8 bit - Message checksum
+	uint8_t type;            	 // 8 bit - Type varies depending on command
+	uint8_t sensor;          	 // 8 bit - Id of sensor that this message concerns.
 
 	// Each message can transfer a payload. We add one extra byte for string
 	// terminator \0 to be "printable" this is not transferred OTA

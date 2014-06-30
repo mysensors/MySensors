@@ -70,7 +70,6 @@ class MyGateway : public MySensor
 
 	    void serial(const char *fmt, ... );
 	    void serial(MyMessage &msg);
-	    uint8_t validate(MyMessage &message);
 	    void interruptStartInclusion();
 	    void checkButtonTriggeredInclusion();
 	    void setInclusionMode(boolean newMode);

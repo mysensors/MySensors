@@ -202,7 +202,6 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, bool broadcast) {
 	uint8_t length = mGetLength(message);
 	message.last = nc.nodeId;
 	mSetVersion(message, PROTOCOL_VERSION);
-	message.crc = crc8Message(message);
 	// Make sure radio has powered up
 	RF24::powerUp();
 	RF24::stopListening();
@@ -262,16 +261,15 @@ boolean MySensor::process() {
 	RF24::read(&msg, len);
 	RF24::writeAckPayload(pipe,&pipe, 1 );
 
-	uint8_t valid = validate(msg);
-	boolean ok = valid == VALIDATE_OK;
-
 	// Add termination, good for string messages.
 	msg.data[mGetLength(msg)] = '\0';
-	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,cr=%s:%s\n"),
-				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), valid==0?"ok":valid==1?"ec":"ev", msg.getString(convBuf));
+	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d:%s\n"),
+				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), msg.getString(convBuf));
 
-	if (!ok)
+	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
+		debug(PSTR("version mismatch"));
 		return false;
+	}
 
 	uint8_t command = mGetCommand(msg);
 	uint8_t type = msg.type;
@@ -405,10 +403,7 @@ boolean MySensor::process() {
 			// Add this child to our "routing table" if it not already exist
 			addChildRoute(sender, last);
 		}
-
 	}
-
-
 	return false;
 }
 
@@ -417,61 +412,6 @@ MyMessage& MySensor::getLastMessage() {
 	return msg;
 }
 
-
-/*
- * calculate CRC8 on MyMessage data taking care of data structure and protocol version
- */
-uint8_t MySensor::crc8Message(MyMessage &message) {
-	uint8_t len = mGetLength(message);
-	uint8_t crc = 0x00;
-	uint8_t loop_count;
-	uint8_t bit_counter;
-	uint8_t data;
-	uint8_t feedback_bit;
-	uint8_t number_of_bytes_to_read = (uint8_t)sizeof(MyMessage);
-
-	// Must set crc to a constant value.
-	message.crc = 0;
-
-	// fill unused space by zeroes for string data only
-	if(len>=0 && len < sizeof(message.data)) {
-		memset(&message.data[len], 0, sizeof(message.data) - len);
-	}
-
-	for (loop_count = 0; loop_count != number_of_bytes_to_read; loop_count++)
-	{
-		data = ((uint8_t*)&message)[loop_count];
-
-		bit_counter = 8;
-		do {
-		  feedback_bit = (crc ^ data) & 0x01;
-
-		  if ( feedback_bit == 0x01 ) {
-			crc = crc ^ 0x18;              //0X18 = X^8+X^5+X^4+X^0
-		  }
-		  crc = (crc >> 1) & 0x7F;
-		  if ( feedback_bit == 0x01 ) {
-			crc = crc | 0x80;
-		  }
-
-		  data = data >> 1;
-		  bit_counter--;
-
-		} while (bit_counter > 0);
-	}
-	return crc;
-}
-
-
-uint8_t MySensor::validate(MyMessage &message) {
-	uint8_t oldCrc = message.crc;
-	uint8_t newCrc = crc8Message(message);
-
-	if(!(mGetVersion(message) == PROTOCOL_VERSION)) return VALIDATE_BAD_VERSION;
-
-	if(!(oldCrc == newCrc)) return VALIDATE_BAD_CRC;
-	return VALIDATE_OK;
-}
 
 void MySensor::saveState(uint8_t pos, uint8_t value) {
 	if (loadState(pos) != value) {

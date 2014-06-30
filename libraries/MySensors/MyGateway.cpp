@@ -181,16 +181,6 @@ void MyGateway::setInclusionMode(boolean newMode) {
     }
 }
 
-
-// Override normal validate to add error blink if crc check fails
-uint8_t MyGateway::validate(MyMessage &message) {
-	uint8_t res = MySensor::validate(message);
-	if (res == VALIDATE_BAD_CRC) {
-		errBlink(1);
-	}
-	return res;
-}
-
 void MyGateway::processRadioMessage() {
 	if (process()) {
 	  // A new message was received from one of the sensors
