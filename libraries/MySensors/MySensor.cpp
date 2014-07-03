@@ -31,7 +31,7 @@ MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 }
 
 
-void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
+void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
 	Serial.begin(BAUD_RATE);
 	isGateway = false;
 	repeaterMode = _repeaterMode;
@@ -51,13 +51,20 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		cc.isMetric = 0x01;
 	}
 
+	if (_parentNodeId != AUTO) {
+		nc.parentNodeId = _parentNodeId;
+		autoFindParent = false;
+	} else {
+		autoFindParent = true;
+	}
+
 	if (_nodeId != AUTO) {
 		// Set static id
 		nc.nodeId = _nodeId;
 	}
 
-	// If no parent was found. Try to find one.
-	if (nc.parentNodeId == 0xff) {
+	// If no parent was found in eeprom. Try to find one.
+	if (autoFindParent && nc.parentNodeId == 0xff) {
 		findParentNode();
 	}
 
@@ -186,7 +193,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		if (!ok) {
 			// Failure when sending to parent node. The parent node might be down and we
 			// need to find another route to gateway.
-			if (failedTransmissions > SEARCH_FAILURES) {
+			if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
 				findParentNode();
 			}
 			failedTransmissions++;
