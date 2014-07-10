@@ -1,6 +1,6 @@
 // Example sketch för a "light switch" where you can control light or something 
 // else from both vera and a local physical button (connected between digital
-// pin 3 and +5V).
+// pin 3 and GND).
 // This node also works as a repeader for other nodes
 
 #include <MySensor.h>
