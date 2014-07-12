@@ -269,7 +269,7 @@ boolean MySensor::process() {
 	RF24::read(&msg, len);
 	RF24::writeAckPayload(pipe,&pipe, 1 );
 
-	// Add termination, good for string messages.
+	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
 	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d:%s\n"),
 				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), msg.getString(convBuf));
