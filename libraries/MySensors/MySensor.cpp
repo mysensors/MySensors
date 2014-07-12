@@ -22,7 +22,8 @@ inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, ui
 	msg.sensor = sensor;
 	msg.type = type;
 	mSetCommand(msg,command);
-	mSetAck(msg,enableAck);
+	mSetRequestAck(msg,enableAck);
+	mSetAck(msg,false);
 	return msg;
 }
 
@@ -226,7 +227,7 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, bool broadcast) {
 bool MySensor::send(MyMessage &message, bool enableAck) {
 	message.sender = nc.nodeId;
 	mSetCommand(message,C_SET);
-    mSetAck(message,enableAck);
+    mSetRequestAck(message,enableAck);
 	return sendRoute(message);
 }
 
@@ -293,10 +294,11 @@ boolean MySensor::process() {
 		return false;
 	} else if (destination == nc.nodeId) {
 		// Check if sender requests an ack back.
-		if (mGetAck(msg)) {
+		if (mGetRequestAck(msg)) {
 			// Copy message
 			ack = msg;
-			mSetAck(ack,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+			mSetRequestAck(ack,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+			mSetAck(ack,true);
 			ack.sender = nc.nodeId;
 			ack.destination = msg.sender;
 			sendRoute(ack);

@@ -74,28 +74,40 @@ typedef enum {
 // Insert a new bitfield value x into y.
 #define BF_SET(y, x, start, len)    ( y= ((y) &~ BF_MASK(start, len)) | BF_PREP(x, start, len) )
 
-// Getters/setters for special fields in header
+// Getters/setters for special bit fields in header
 #define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 3)
-#define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
-
-#define mSetCommand(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 0, 3)
-#define mSetAck(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 3, 1)
-#define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 4, 4)
-
 #define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
+
+#define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
 #define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
 
+#define mSetCommand(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 0, 3)
 #define mGetCommand(_msg) BF_GET(_msg.command_ack_payload, 0, 3)
-#define mGetAck(_msg) BF_GET(_msg.command_ack_payload, 3, 1)
-#define mGetPayloadType(_msg) BF_GET(_msg.command_ack_payload, 4, 4)
+
+#define mSetRequestAck(_msg,_rack) BF_SET(_msg.command_ack_payload, _rack, 3, 1)
+#define mGetRequestAck(_msg) BF_GET(_msg.command_ack_payload, 3, 1)
+
+#define mSetAck(_msg,_ack) BF_SET(_msg.command_ack_payload, _ack, 4, 1)
+#define mGetAck(_msg) BF_GET(_msg.command_ack_payload, 4, 1)
+
+#define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 5, 3)
+#define mGetPayloadType(_msg) BF_GET(_msg.command_ack_payload, 5, 3)
 
 
 // internal access for special fields
+#define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 4, 4)
 #define miGetPayloadType() BF_GET(command_ack_payload, 4, 4)
-#define miGetLength() BF_GET(version_length, 3, 5)
 
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
-#define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 4, 4)
+#define miGetLength() BF_GET(version_length, 3, 5)
+
+#define miSetRequestAck(_rack) BF_SET(command_ack_payload, _rack, 3, 1)
+#define miGetRequestAck() BF_GET(command_ack_payload, 3, 1)
+
+#define miSetAck(_ack) BF_SET(command_ack_payload, _ack, 4, 1)
+#define miGetAck() BF_GET(command_ack_payload, 4, 1)
+
+
 
 
 class MyMessage
@@ -122,6 +134,9 @@ public:
 	int getInt() const;
 	unsigned int getUInt() const;
 
+	// Getter for ack-flag. True if this is an ack message.
+	bool isAck() const;
+
 	// Setters for building message "on the fly"
 	MyMessage& setType(uint8_t type);
 	MyMessage& setSensor(uint8_t sensor);
@@ -141,8 +156,9 @@ public:
 	uint8_t version_length;      // 3 bit - Protocol version
 			                     // 5 bit - Length of payload
 	uint8_t command_ack_payload; // 3 bit - Command type
-	                             // 1 bit - Indicator that receiver should send an ack back.
-	                             // 4 bit - Payload data type
+	                             // 1 bit - Request an ack - Indicator that receiver should send an ack back.
+								 // 1 bit - Is ack messsage - Indicator that this is the actual ack message.
+	                             // 3 bit - Payload data type
 	uint8_t sender;          	 // 8 bit - Id of sender node
 	uint8_t last;            	 // 8 bit - Id of last node this message passed
 	uint8_t destination;     	 // 8 bit - Id of destination node

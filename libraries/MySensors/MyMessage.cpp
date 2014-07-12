@@ -14,6 +14,11 @@ MyMessage::MyMessage(uint8_t _sensor, uint8_t _type) {
 }
 
 
+bool MyMessage::isAck() const {
+	return miGetAck();
+}
+
+
 /* Getters for payload converted to desired form */
 void* MyMessage::getCustom() const {
 	return (void *)data;
