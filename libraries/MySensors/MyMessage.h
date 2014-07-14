@@ -12,6 +12,8 @@
 #ifndef MyMessage_h
 #define MyMessage_h
 
+#include "MyConfig.h"
+
 #include <SPI.h>
 
 #define PROTOCOL_VERSION 2
@@ -41,7 +43,8 @@ typedef enum {
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
-	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION
+	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
+	I_FIRMWARE_CONFIG, I_FIRMWARE_REQUEST, I_FIRMWARE_RESPONSE, I_REBOOT
 } internal;
 
 // Type of sensor  (for presentation message)
@@ -105,6 +108,10 @@ public:
 	MyMessage();
 
 	MyMessage(uint8_t sensor, uint8_t type);
+
+#ifdef GW_BINARY
+		char i2h(uint8_t i) const;
+#endif
 
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted

@@ -28,6 +28,17 @@ const char* MyMessage::getString() const {
 	}
 }
 
+#ifdef GW_BINARY
+// handles single character hex (0 - 15)
+char MyMessage::i2h(uint8_t i) const {
+	uint8_t k = i & 0x0F;
+	if (k <= 9)
+		return '0' + k;
+	else
+		return 'A' + k - 10;
+}
+#endif
+
 char* MyMessage::getString(char *buffer) const {
 	uint8_t payloadType = miGetPayloadType();
 
@@ -55,7 +66,14 @@ char* MyMessage::getString(char *buffer) const {
 				// TODO: Ok, what do we do here? We should probably convert this to hex
 				// Mostly gateway interested in this so we do the special handling of this
 				// over there.
-
+#ifdef GW_BINARY
+				for (uint8_t i = 0; i < miGetLength(); i++)
+				{
+					buffer[i * 2] = i2h(data[i] >> 4);
+					buffer[(i * 2) + 1] = i2h(data[i]);
+				}
+				buffer[miGetLength() * 2] = '\0';
+#endif
 				break;
 		}
 		return buffer;
