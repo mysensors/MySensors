@@ -14,9 +14,4 @@
  */
 #define DEBUG
 
-/***
- * Gateway communication to host (serial or ethernet) binary instead of string
- */
-#define GW_BINARY
-
 #endif

@@ -326,7 +326,7 @@ boolean MySensor::process() {
 				bool isMetric;
 
 				switch (type) {
-				case I_ID_REBOOT:
+				case I_REBOOT:
 					wdt_enable(WDTO_15MS);
 					for (;;);
 					break;
