@@ -68,6 +68,10 @@ class MyGateway : public MySensor
 	    uint8_t pinTx;
 	    uint8_t pinEr;
 
+#ifdef GW_BINARY
+		uint8_t h2i(char c);
+#endif
+
 	    void serial(const char *fmt, ... );
 	    void serial(MyMessage &msg);
 	    void interruptStartInclusion();
