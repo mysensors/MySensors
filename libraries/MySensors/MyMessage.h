@@ -12,7 +12,11 @@
 #ifndef MyMessage_h
 #define MyMessage_h
 
-#include <SPI.h>
+#ifdef __cplusplus
+#include <Arduino.h>
+#include <string.h>
+#include <stdint.h>
+#endif
 
 #define PROTOCOL_VERSION 2
 #define MAX_MESSAGE_LENGTH 32
@@ -41,7 +45,8 @@ typedef enum {
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
-	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION
+	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
+	I_FIRMWARE_CONFIG_REQUEST, I_FIRMWARE_CONFIG_RESPONSE, I_FIRMWARE_REQUEST, I_FIRMWARE_RESPONSE, I_REBOOT
 } internal;
 
 // Type of sensor  (for presentation message)
@@ -97,7 +102,7 @@ typedef enum {
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
 #define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 4, 4)
 
-
+#ifdef __cplusplus
 class MyMessage
 {
 public:
@@ -105,6 +110,10 @@ public:
 	MyMessage();
 
 	MyMessage(uint8_t sensor, uint8_t type);
+
+#ifdef GW_BINARY
+		char i2h(uint8_t i) const;
+#endif
 
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted
@@ -137,6 +146,13 @@ public:
 	MyMessage& set(unsigned int value);
 	MyMessage& set(int value);
 
+#else
+
+typedef union {
+struct
+{
+
+#endif
 
 	uint8_t version_length;      // 3 bit - Protocol version
 			                     // 5 bit - Length of payload
@@ -160,6 +176,12 @@ public:
 		int iValue;
 		char data[MAX_PAYLOAD + 1];
 	} __attribute__((packed));
+#ifdef __cplusplus
 } __attribute__((packed));
+#else
+};
+uint8_t array[7 + MAX_PAYLOAD + 1];	
+} __attribute__((packed)) MyMessage;
+#endif
 
 #endif

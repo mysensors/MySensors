@@ -105,10 +105,28 @@ void MyGateway::checkInclusionFinished() {
 	 }
 }
 
+#ifdef GW_BINARY
+uint8_t MyGateway::h2i(char c) {
+	uint8_t i = 0;
+	if (c <= '9')
+		i += c - '0';
+	else if (c >= 'a')
+		i += c - 'a' + 10;
+	else
+		i += c - 'A' + 10;
+	return i;
+}
+#endif
 
 void MyGateway::parseAndSend(char *commandBuffer) {
   boolean ok = false;
-  char *str, *p, *value=NULL;
+  char *str, *p;
+#ifdef GW_BINARY
+  uint8_t value[MAX_PAYLOAD];
+  uint8_t len = 0;
+#else
+  char *value=NULL;
+#endif
   int i = 0;
   uint16_t destination = 0;
   uint8_t sensor = 0;
@@ -138,7 +156,19 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 		type = atoi(str);
 		break;
 	  case 5: // Variable value
+#ifdef GW_BINARY
+		len = 0;
+		uint8_t val;
+		while (*str) {
+			val = h2i(*str++) << 4;
+			val += h2i(*str++);
+			value[len] = val;
+//			value[len] = (h2i(*str++) << 4) + h2i(*str++);
+			len++;
+		}
+#else
 		value = str;
+#endif
 		break;
 	  }
 	  i++;
@@ -151,7 +181,11 @@ void MyGateway::parseAndSend(char *commandBuffer) {
       serial(PSTR("0;0;%d;%d;%s\n"),C_INTERNAL, I_VERSION, LIBRARY_VERSION);
     } else if (type == I_INCLUSION_MODE) {
       // Request to change inclusion mode
+#ifdef GW_BINARY
+      setInclusionMode(value[0] == 1);
+#else
       setInclusionMode(atoi(value) == 1);
+#endif
     }
   } else {
     txBlink(1);
@@ -161,7 +195,11 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	msg.type = type;
 	mSetCommand(msg,command);
 	mSetAck(msg,ack==0?false:true);
+#ifdef GW_BINARY
+	msg.set(value, len);
+#else
 	msg.set(value);
+#endif
     ok = sendRoute(msg);
     if (!ok) {
       errBlink(1);
