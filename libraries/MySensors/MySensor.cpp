@@ -472,7 +472,7 @@ void wakeUp()	 //place to send the interrupts
 	continueTimer = false;
 }
 
-void MySensor::internalSleep(int ms) {
+void MySensor::internalSleep(unsigned long ms) {
 	while (continueTimer && ms >= 8000) { LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); ms -= 8000; }
 	if (continueTimer && ms >= 4000)    { LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); ms -= 4000; }
 	if (continueTimer && ms >= 2000)    { LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); ms -= 2000; }
@@ -485,7 +485,7 @@ void MySensor::internalSleep(int ms) {
 	if (continueTimer && ms >= 16)      { LowPower.powerDown(SLEEP_15Ms, ADC_OFF, BOD_OFF); ms -= 15; }
 }
 
-void MySensor::sleep(int ms) {
+void MySensor::sleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
 	RF24::powerDown();
@@ -493,7 +493,7 @@ void MySensor::sleep(int ms) {
 	internalSleep(ms);
 }
 
-bool MySensor::sleep(int interrupt, int mode, int ms) {
+bool MySensor::sleep(int interrupt, int mode, unsigned long  ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
 	Serial.flush();

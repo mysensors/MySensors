@@ -203,7 +203,7 @@ class MySensor : public RF24
 	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer.
 	 * @param ms Number of milliseconds to sleep.
 	 */
-	void sleep(int ms);
+	void sleep(unsigned long ms);
 
 	/**
 	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer or pin change.
@@ -214,7 +214,7 @@ class MySensor : public RF24
 	 * @param ms Number of milliseconds to sleep or 0 to sleep forever
 	 * @return true if wake up was triggered by pin change and false means timer woke it up.
 	 */
-	bool sleep(int interrupt, int mode, int ms=0);
+	bool sleep(int interrupt, int mode, unsigned long ms=0);
 
 	/**
 	 * getInternalTemp
@@ -264,7 +264,7 @@ class MySensor : public RF24
 	uint8_t getChildRoute(uint8_t childId);
 	void addChildRoute(uint8_t childId, uint8_t route);
 	void removeChildRoute(uint8_t childId);
-	void internalSleep(int ms);
+	void internalSleep(unsigned long ms);
 };
 
 #endif
