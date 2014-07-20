@@ -23,7 +23,6 @@ static struct NodeConfig nc;
 static struct FirmwareConfig fc;
 static MyMessage msg;
 static MyMessage rmsg;
-//static MyMessage ack;
 
 static uint8_t progBuf[SPM_PAGESIZE];
 
@@ -70,7 +69,6 @@ static void boot_program_page(uint32_t page, uint8_t *buf) {
 }
 
 static boolean sendWrite(MyMessage message) {
-	message.last = nc.nodeId;
 	return write(nc.parentNodeId, message.array, HEADER_SIZE + mGetLength(message), (message.destination == BROADCAST_ADDRESS));
 }
 
@@ -89,15 +87,6 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 					if(!(mGetVersion(rmsg) == PROTOCOL_VERSION))
 						continue;
 					if (rmsg.destination == nc.nodeId) {
-/*
-						if (mGetAck(rmsg)) {
-							ack = rmsg;
-							mSetAck(ack,false);
-							ack.sender = nc.nodeId;
-							ack.destination = rmsg.sender;
-							sendWrite(ack);
-						}
-*/
 						if (mGetCommand(rmsg) == C_INTERNAL) {
 							if (rmsg.type == resType) {
 								if (rmsg.data[0] < nc.distance - 1) {
@@ -126,10 +115,6 @@ int main () {
 	MCUSR = 0;
 	// enable watchdog to avoid deadlock
 	wdt_enable(WDTO_8S);
-//	wdt_disable();
-	// delay start to avoid issues during programming (can be removed once fully tested)
-	delaym(2000);
-	wdt_reset();
 
 #ifdef LED_DEBUG
 	// enable LEDs for debugging and blink once as visual "bootloader started" sign
@@ -142,20 +127,18 @@ int main () {
 	uart_puts("Go\n");
 #endif
 
+	wdt_reset();
+	// initialize RF module
 	begin();
 	wdt_reset();
-
 	// Read settings from EEPROM
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(struct NodeConfig));
-
 	wdt_reset();
 
-// !!! FOR TESTING ONLY !!!
-//	nc.nodeId = 255;
-//	nc.parentNodeId = 255;
-//	nc.distance = 255;
-
 	msg.sender = nc.nodeId;
+	msg.last = nc.nodeId;
+	address(nc.nodeId);
+
 	msg.sensor = NODE_SENSOR_ID;
 	mSetCommand(msg,C_INTERNAL);
 	mSetLength(msg, 0);
@@ -180,14 +163,11 @@ int main () {
 		if (nc.nodeId == AUTO)
 			reboot();
 		eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
+		msg.sender = nc.nodeId;
+		msg.last = nc.nodeId;
+		address(nc.nodeId);
 	}
-
-	msg.sender = nc.nodeId;
-
-	// Open reading pipe for messages directed to this node (set write pipe to same)
-	openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
-	openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-
+	
 	// Read settings from EEPROM
 	eeprom_read_block((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(struct FirmwareConfig));
 

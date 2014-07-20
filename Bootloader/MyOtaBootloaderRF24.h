@@ -9,6 +9,7 @@
 // hardware-agnostic interface to transceiver
 // ******************************************
 // static void begin()
+// static void address(uint8_t addr)
 // static boolean write(uint8_t next, uint8_t* packet, uint8_t length, boolean multicast)
 // static bool available(uint8_t* pipe_num)
 // static void read(uint8_t* buf, uint8_t pipe)
@@ -274,6 +275,14 @@ static boolean write(uint8_t next, uint8_t* packet, uint8_t length, boolean mult
 	bool ok = writem(packet, length, multicast);
 	startListening();
 	return ok;
+}
+
+static void address(uint8_t addr)
+{
+	if (addr != BROADCAST_ADDRESS) {
+		openReadingPipe(WRITE_PIPE, TO_ADDR(addr));
+		openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(addr));
+	}
 }
 
 static void begin(void)
