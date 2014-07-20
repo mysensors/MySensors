@@ -94,6 +94,7 @@ struct FirmwareConfig
 typedef struct
 {
 	uint16_t type;
+	uint16_t version;
 } FirmwareConfigRequest;
 
 typedef struct

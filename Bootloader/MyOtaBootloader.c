@@ -177,6 +177,7 @@ int main () {
 	FirmwareConfigResponse *firmwareConfigResponse = (FirmwareConfigResponse *)rmsg.data;
 	mSetLength(msg, sizeof(FirmwareConfigRequest));
 	firmwareConfigRequest->type = fc.type;
+	firmwareConfigRequest->version = fc.version;
 	if (!sendAndWait(I_FIRMWARE_CONFIG_REQUEST, I_FIRMWARE_CONFIG_RESPONSE))
 //	starting existing firmware if no firmware config response (if firmware is valid)
 //		reboot();
