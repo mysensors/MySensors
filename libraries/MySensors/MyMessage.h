@@ -111,9 +111,7 @@ public:
 
 	MyMessage(uint8_t sensor, uint8_t type);
 
-#ifdef GW_BINARY
-		char i2h(uint8_t i) const;
-#endif
+	char i2h(uint8_t i) const;
 
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted

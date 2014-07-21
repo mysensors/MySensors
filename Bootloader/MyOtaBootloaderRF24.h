@@ -206,28 +206,6 @@ static void openReadingPipe(uint8_t child, uint64_t address)
 	write_register(EN_RXADDR,read_register(EN_RXADDR) | _BV(ERX_P0 + child));
 }
 
-static void toggle_features(void)
-{
-	csnlow();
-	SPItransfer(ACTIVATE);
-	SPItransfer(0x73);
-	csnhigh();
-}
-
-static void enableDynamicPayloads(void)
-{
-	toggle_features();
-	write_register(FEATURE,read_register(FEATURE) | _BV(EN_DPL));
-	write_register(DYNPD,read_register(DYNPD) | _BV(DPL_P5) | _BV(DPL_P4) | _BV(DPL_P3) | _BV(DPL_P2) | _BV(DPL_P1) | _BV(DPL_P0));
-}
-
-static void enableAckPayload(void)
-{
-	toggle_features();
-	write_register(FEATURE,read_register(FEATURE) | _BV(EN_ACK_PAY) | _BV(EN_DPL) );
-	write_register(DYNPD,read_register(DYNPD) | _BV(DPL_P1) | _BV(DPL_P0));
-}
-
 static boolean write(uint8_t next, uint8_t* packet, uint8_t length, boolean multicast) {
 	powerUp();
 	stopListening();
@@ -252,25 +230,52 @@ static void begin(void)
 	SPIinit();
 	delaym( 10 ) ;
 
-	write_register(SETUP_RETR,5<<ARD | 15<<ARC);
-	write_register(EN_AA, 0b111111);
-	write_register( EN_AA, read_register( EN_AA ) & ~_BV(BROADCAST_PIPE) ) ;
-	enableAckPayload();
-	write_register(RF_CH,RF24_CHANNEL);
-	write_register( RF_SETUP, (read_register(RF_SETUP) & 0b11010000) | ((RF24_PA_LEVEL << 1) + 1) | ((RF24_DATARATE & 0b00000010 ) << 4) | ((RF24_DATARATE & 0b00000001 ) << 3) ) ;
-	write_register( CONFIG, read_register(CONFIG) | _BV(CRCO) | _BV(EN_CRC) ) ;
-	write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
-	enableDynamicPayloads();	
+	write_register(SETUP_RETR, 5 << ARD | 15 << ARC);
+	write_register(EN_AA, 0b00111111 & ~_BV(BROADCAST_PIPE)) ;
+	write_register(RF_CH, RF24_CHANNEL);
+	write_register(RF_SETUP, (read_register(RF_SETUP) & 0b11010000) | ((RF24_PA_LEVEL << 1) + 1) | ((RF24_DATARATE & 0b00000010 ) << 4) | ((RF24_DATARATE & 0b00000001 ) << 3));
+	write_register(CONFIG, read_register(CONFIG) | _BV(CRCO) | _BV(EN_CRC)) ;
+	write_register(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
+
+	csnlow();
+	SPItransfer(ACTIVATE);
+	SPItransfer(0x73);
+	csnhigh();
+	write_register(FEATURE, read_register(FEATURE) | _BV(EN_ACK_PAY) | _BV(EN_DPL) );
+	write_register(DYNPD, read_register(DYNPD) | _BV(DPL_P5) | _BV(DPL_P4) | _BV(DPL_P3) | _BV(DPL_P2) | _BV(DPL_P1) | _BV(DPL_P0));
+
 	spiTrans(FLUSH_RX);
 	spiTrans(FLUSH_TX);
 
 	powerUp(); //Power up by default when begin() is called
-	write_register(CONFIG, ( read_register(CONFIG) ) & ~_BV(PRIM_RX) );
+	write_register(CONFIG, read_register(CONFIG) & ~_BV(PRIM_RX));
 	openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
 }
 
 static void end()
 {
+	// 0-9: 8, 63, 3, 3, 3, 2, 7, 14, 0, 0,
+	// 17-23: 0, 0, 0, 0, 0, 0, 17
+	// 28-29: 0, 0
+	write_register(29, 0);
+	write_register(28, 0);
+	write_register(23, 17);
+	write_register(22, 0);
+	write_register(21, 0);
+	write_register(20, 0);
+	write_register(19, 0);
+	write_register(18, 0);
+	write_register(17, 0);
+	write_register(9, 0);
+	write_register(8, 0);
+	write_register(7, 14);
+	write_register(6, 7);
+	write_register(5, 2);
+	write_register(4, 3);
+	write_register(3, 3);
+	write_register(2, 3);
+	write_register(1, 63);
+	write_register(0, 8);
 	celow(); // Guarantee CE is low on powerDown
 	write_register(CONFIG,read_register(CONFIG) & ~_BV(PWR_UP));
 }

@@ -105,7 +105,6 @@ void MyGateway::checkInclusionFinished() {
 	 }
 }
 
-#ifdef GW_BINARY
 uint8_t MyGateway::h2i(char c) {
 	uint8_t i = 0;
 	if (c <= '9')
@@ -116,17 +115,13 @@ uint8_t MyGateway::h2i(char c) {
 		i += c - 'A' + 10;
 	return i;
 }
-#endif
 
 void MyGateway::parseAndSend(char *commandBuffer) {
   boolean ok = false;
-  char *str, *p;
-#ifdef GW_BINARY
-  uint8_t value[MAX_PAYLOAD];
-  uint8_t len = 0;
-#else
-  char *value=NULL;
-#endif
+  char *str, *p, *value=NULL;
+  boolean binary = true;
+  uint8_t bvalue[MAX_PAYLOAD];
+  uint8_t blen = 0;
   int i = 0;
   uint16_t destination = 0;
   uint8_t sensor = 0;
@@ -148,27 +143,30 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 		break;
 	  case 2: // Message type
 		command = atoi(str);
+		if (command != C_INTERNAL)
+			binary = false;
 		break;
 	  case 3: // Should we request ack from destination?
 		ack = atoi(str);
 		break;
 	  case 4: // Data type
 		type = atoi(str);
+		if ((type != I_FIRMWARE_CONFIG_RESPONSE) && (type != I_FIRMWARE_RESPONSE))
+			binary = false;
 		break;
 	  case 5: // Variable value
-#ifdef GW_BINARY
-		len = 0;
-		uint8_t val;
-		while (*str) {
-			val = h2i(*str++) << 4;
-			val += h2i(*str++);
-			value[len] = val;
-//			value[len] = (h2i(*str++) << 4) + h2i(*str++);
-			len++;
+		if (binary) {
+			blen = 0;
+			uint8_t val;
+			while (*str) {
+				val = h2i(*str++) << 4;
+				val += h2i(*str++);
+				bvalue[blen] = val;
+				blen++;
+			}
+		} else {
+			value = str;
 		}
-#else
-		value = str;
-#endif
 		break;
 	  }
 	  i++;
@@ -181,11 +179,7 @@ void MyGateway::parseAndSend(char *commandBuffer) {
       serial(PSTR("0;0;%d;%d;%s\n"),C_INTERNAL, I_VERSION, LIBRARY_VERSION);
     } else if (type == I_INCLUSION_MODE) {
       // Request to change inclusion mode
-#ifdef GW_BINARY
-      setInclusionMode(value[0] == 1);
-#else
       setInclusionMode(atoi(value) == 1);
-#endif
     }
   } else {
     txBlink(1);
@@ -195,11 +189,10 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	msg.type = type;
 	mSetCommand(msg,command);
 	mSetAck(msg,ack==0?false:true);
-#ifdef GW_BINARY
-	msg.set(value, len);
-#else
-	msg.set(value);
-#endif
+	if (binary)
+		msg.set(bvalue, blen);
+	else
+		msg.set(value);
     ok = sendRoute(msg);
     if (!ok) {
       errBlink(1);
