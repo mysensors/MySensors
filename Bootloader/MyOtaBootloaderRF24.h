@@ -228,47 +228,6 @@ static void enableAckPayload(void)
 	write_register(DYNPD,read_register(DYNPD) | _BV(DPL_P1) | _BV(DPL_P0));
 }
 
-static bool setDataRate(rf24_datarate_e speed)
-{
-	bool result = false;
-	uint8_t setup = read_register(RF_SETUP) ;
-	// HIGH and LOW '00' is 1Mbs - our default
-	//  wide_band = false ;
-	setup &= ~(_BV(RF_DR_LOW) | _BV(RF_DR_HIGH)) ;
-	if( speed == RF24_250KBPS )
-	{
-		// Must set the RF_DR_LOW to 1; RF_DR_HIGH (used to be RF_DR) is already 0
-		// Making it '10'.
-//    wide_band = false ;
-		setup |= _BV( RF_DR_LOW ) ;
-	}
-	else
-	{
-		// Set 2Mbs, RF_DR (RF_DR_HIGH) is set 1
-		// Making it '01'
-		if ( speed == RF24_2MBPS )
-		{
-//      wide_band = true ;
-			setup |= _BV(RF_DR_HIGH);
-		}
-		else
-		{
-			// 1Mbs
-//      wide_band = false ;
-		}
-	}
-	write_register(RF_SETUP,setup);
-	if ( read_register(RF_SETUP) == setup )
-	{
-		result = true;
-	}
-	else
-	{
-//    wide_band = false;
-	}
-	return result;
-}
-
 static boolean write(uint8_t next, uint8_t* packet, uint8_t length, boolean multicast) {
 	powerUp();
 	stopListening();
@@ -297,11 +256,10 @@ static void begin(void)
 	write_register(EN_AA, 0b111111);
 	write_register( EN_AA, read_register( EN_AA ) & ~_BV(BROADCAST_PIPE) ) ;
 	enableAckPayload();
-	setDataRate(RF24_DATARATE);
+	write_register(RF_CH,RF24_CHANNEL);
+	write_register( RF_SETUP, (read_register(RF_SETUP) & 0b11010000) | ((RF24_PA_LEVEL << 1) + 1) | ((RF24_DATARATE & 0b00000010 ) << 4) | ((RF24_DATARATE & 0b00000001 ) << 3) ) ;
 	write_register( CONFIG, read_register(CONFIG) | _BV(CRCO) | _BV(EN_CRC) ) ;
 	write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
-	write_register(RF_CH,RF24_CHANNEL);
-	write_register( RF_SETUP, (read_register(RF_SETUP) & 0b11010111) | ((RF24_PA_LEVEL & 0b00000010 ) << 4) | ((RF24_PA_LEVEL & 0b00000001 ) << 3) ) ;	// Write it to the chip
 	enableDynamicPayloads();	
 	spiTrans(FLUSH_RX);
 	spiTrans(FLUSH_TX);
