@@ -9,6 +9,7 @@
 // hardware-agnostic interface to transceiver
 // ******************************************
 // static void begin()
+// static void end()
 // static void address(uint8_t addr)
 // static boolean write(uint8_t next, uint8_t* packet, uint8_t length, boolean multicast)
 // static bool available(uint8_t* pipe_num)
@@ -300,7 +301,7 @@ static void begin(void)
 	write_register( CONFIG, read_register(CONFIG) | _BV(CRCO) | _BV(EN_CRC) ) ;
 	write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 	write_register(RF_CH,RF24_CHANNEL);
-	write_register( RF_SETUP, (read_register(RF_SETUP) & 0b11111000) | ((RF24_PA_LEVEL << 1) + 1) ) ;	// Write it to the chip
+	write_register( RF_SETUP, (read_register(RF_SETUP) & 0b11010111) | ((RF24_PA_LEVEL & 0b00000010 ) << 4) | ((RF24_PA_LEVEL & 0b00000001 ) << 3) ) ;	// Write it to the chip
 	enableDynamicPayloads();	
 	spiTrans(FLUSH_RX);
 	spiTrans(FLUSH_TX);
@@ -310,4 +311,9 @@ static void begin(void)
 	openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
 }
 
+static void end()
+{
+	celow(); // Guarantee CE is low on powerDown
+	write_register(CONFIG,read_register(CONFIG) & ~_BV(PWR_UP));
+}
 #endif // MyOtaBootloaderRF24_H

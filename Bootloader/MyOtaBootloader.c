@@ -44,8 +44,10 @@ static void reboot() {
 
 static void startup() {
 	if (validFirmware()) {
-		clock_prescale_set(clock_div_1);
+		end();
+		delaym(1000);
 		wdt_disable();
+		clock_prescale_set(clock_div_1);
 		((void(*)()) 0)();
 	} else
 		reboot();
