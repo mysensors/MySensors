@@ -79,6 +79,7 @@ char* MyMessage::getString(char *buffer) const {
 				// TODO: Ok, what do we do here? We should probably convert this to hex
 				// Mostly gateway interested in this so we do the special handling of this
 				// over there.
+				
 				break;
 		}
 		return buffer;

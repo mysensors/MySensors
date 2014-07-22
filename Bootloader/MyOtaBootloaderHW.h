@@ -5,7 +5,7 @@
 #include <avr/power.h>
 
 //#define LED_DEBUG
-#define UART_DEBUG
+//#define UART_DEBUG
 
 // hardware
 // ********
@@ -29,7 +29,6 @@ typedef uint8_t boolean;
 // *****
 
 static void delayu() {
-	asm("nop"); 
 	asm("nop"); 
 }
 

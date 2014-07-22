@@ -20,7 +20,7 @@
 
 #define PROTOCOL_VERSION 2
 #define MAX_MESSAGE_LENGTH 32
-#define HEADER_SIZE 8
+#define HEADER_SIZE 7
 #define MAX_PAYLOAD (MAX_MESSAGE_LENGTH - HEADER_SIZE)
 
 // Message types
@@ -181,7 +181,7 @@ struct
 } __attribute__((packed));
 #else
 };
-uint8_t array[7 + MAX_PAYLOAD + 1];	
+uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];	
 } __attribute__((packed)) MyMessage;
 #endif
 

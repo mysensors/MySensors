@@ -74,8 +74,7 @@ static boolean sendWrite(MyMessage message) {
 	return write(nc.parentNodeId, message.array, HEADER_SIZE + mGetLength(message), (message.destination == BROADCAST_ADDRESS));
 }
 
-static uint8_t sendAndWait(uint8_t cmd, uint8_t reqType, uint8_t resType) {
-	mSetCommand(msg, cmd);
+static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 	msg.type = reqType;
 	for (uint8_t i = 0; i < 10; i++) {
 		sendWrite(msg);
@@ -100,7 +99,7 @@ static uint8_t sendAndWait(uint8_t cmd, uint8_t reqType, uint8_t resType) {
 								}
 							}
 						}
-						if ((mGetCommand(rmsg) == cmd) && (rmsg.type == resType))
+						if ((mGetCommand(rmsg) == mGetCommand(msg)) && (rmsg.type == resType))
 							return 1;
 					}
 				}
@@ -150,8 +149,9 @@ int main () {
 	mSetVersion(msg, PROTOCOL_VERSION);
 
 	nc.distance = 255;
+	mSetCommand(msg, C_INTERNAL);
 	msg.destination = BROADCAST_ADDRESS;
-	if (!sendAndWait(C_INTERNAL, I_PING, I_PING_ACK))
+	if (!sendAndWait(I_PING, I_PING_ACK))
 //	starting existing firmware if no ping response (if firmware is valid)
 //		reboot();
 		startup();
@@ -160,9 +160,12 @@ int main () {
 
 	if (nc.nodeId == AUTO) {
 		openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-		if (!sendAndWait(C_INTERNAL, I_ID_REQUEST, I_ID_RESPONSE))
+		if (!sendAndWait(I_ID_REQUEST, I_ID_RESPONSE))
 			reboot();
-		nc.nodeId = rmsg.data[0];
+		if (miGetPayloadType() == P_BYTE)
+			nc.nodeId = rmsg.data[0];
+		else if (miGetPayloadType() == P_STRING)
+			nc.nodeId = atoi(rmsg.data);
 		if (nc.nodeId == AUTO)
 			reboot();
 		eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
@@ -177,14 +180,15 @@ int main () {
 	mSetPayloadType(msg,P_CUSTOM);
 
 	FirmwareConfigRequest *firmwareConfigRequest = (FirmwareConfigRequest *)msg.data;
-	FirmwareConfigResponse *firmwareConfigResponse = (FirmwareConfigResponse *)rmsg.data;
 	mSetLength(msg, sizeof(FirmwareConfigRequest));
+	mSetCommand(msg, C_STREAM);
 	firmwareConfigRequest->type = fc.type;
 	firmwareConfigRequest->version = fc.version;
-	if (!sendAndWait(C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE))
+	if (!sendAndWait(ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE))
 //	starting existing firmware if no firmware config response (if firmware is valid)
 //		reboot();
 		startup();
+	FirmwareConfigResponse *firmwareConfigResponse = (FirmwareConfigResponse *)rmsg.data;
 	if (firmwareConfigResponse->version == fc.version)
 		if (firmwareConfigResponse->blocks == fc.blocks)
 			if (firmwareConfigResponse->crc == fc.crc)
@@ -196,14 +200,14 @@ int main () {
 	fc.crc = firmwareConfigResponse->crc;
 
 	FirmwareRequest *firmwareRequest = (FirmwareRequest *)msg.data;
-	FirmwareResponse *firmwareResponse = (FirmwareResponse *)rmsg.data;
 	mSetLength(msg, sizeof(FirmwareRequest));
 	firmwareRequest->type = fc.type;
 	firmwareRequest->version = fc.version;
 	for (uint16_t block = 0; block < fc.blocks; block++) {
 		firmwareRequest->block = block;
-		if (!sendAndWait(C_STREAM, ST_FIRMWARE_REQUEST, ST_FIRMWARE_RESPONSE))
+		if (!sendAndWait(ST_FIRMWARE_REQUEST, ST_FIRMWARE_RESPONSE))
 			reboot();
+		FirmwareResponse *firmwareResponse = (FirmwareResponse *)rmsg.data;
 		uint8_t offset = (block * FIRMWARE_BLOCK_SIZE) % SPM_PAGESIZE;
 		memcpy(progBuf + offset, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 		if (offset == SPM_PAGESIZE - FIRMWARE_BLOCK_SIZE)
