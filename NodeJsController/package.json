@@ -1,0 +1,9 @@
+{
+  "name": "NodeJsController",
+  "version": "0.0.1",
+  "description": "MySensors Controller based on Node JS",
+  "dependencies": {
+    "net": "~1.0.2",
+    "mongodb": "~1.4.7"
+  }
+}
