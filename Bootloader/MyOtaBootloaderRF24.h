@@ -9,7 +9,6 @@
 // hardware-agnostic interface to transceiver
 // ******************************************
 // static void begin()
-// static void end()
 // static void address(uint8_t addr)
 // static boolean write(uint8_t next, uint8_t* packet, uint8_t length, boolean multicast)
 // static bool available(uint8_t* pipe_num)
@@ -250,33 +249,5 @@ static void begin(void)
 	powerUp(); //Power up by default when begin() is called
 	write_register(CONFIG, read_register(CONFIG) & ~_BV(PRIM_RX));
 	openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
-}
-
-static void end()
-{
-	// 0-9: 8, 63, 3, 3, 3, 2, 7, 14, 0, 0,
-	// 17-23: 0, 0, 0, 0, 0, 0, 17
-	// 28-29: 0, 0
-	write_register(29, 0);
-	write_register(28, 0);
-	write_register(23, 17);
-	write_register(22, 0);
-	write_register(21, 0);
-	write_register(20, 0);
-	write_register(19, 0);
-	write_register(18, 0);
-	write_register(17, 0);
-	write_register(9, 0);
-	write_register(8, 0);
-	write_register(7, 14);
-	write_register(6, 7);
-	write_register(5, 2);
-	write_register(4, 3);
-	write_register(3, 3);
-	write_register(2, 3);
-	write_register(1, 63);
-	write_register(0, 8);
-	celow(); // Guarantee CE is low on powerDown
-	write_register(CONFIG,read_register(CONFIG) & ~_BV(PWR_UP));
 }
 #endif // MyOtaBootloaderRF24_H

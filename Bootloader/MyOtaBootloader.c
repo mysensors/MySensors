@@ -38,16 +38,16 @@ static uint8_t validFirmware () {
 }
 
 static void reboot() {
-  wdt_enable(WDTO_15MS);
-  for (;;);
+	wdt_enable(WDTO_15MS);
+	for (;;);
 }
 
 static void startup() {
 	if (validFirmware()) {
 		end();
-		delaym(1000);
+		delaym(100);
 		wdt_disable();
-		clock_prescale_set(clock_div_1);
+//		clock_prescale_set(clock_div_1);
 		((void(*)()) 0)();
 	} else
 		reboot();
@@ -111,9 +111,9 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 }
 
 int main () {
-	asm volatile ("clr __zero_reg__");
+//	asm volatile ("clr __zero_reg__");
 	// switch to 4 MHz
-	clock_prescale_set(clock_div_4);
+//	clock_prescale_set(clock_div_4);
 	MCUSR = 0;
 	// enable watchdog to avoid deadlock
 	wdt_enable(WDTO_8S);

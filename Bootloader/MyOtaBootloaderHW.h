@@ -21,12 +21,15 @@ typedef uint8_t boolean;
 
 static void delayu() {
 	asm("nop"); 
+	asm("nop"); 
+	asm("nop"); 
+	asm("nop");
 }
 
 static void delaym(uint16_t t) {
 	uint16_t d, a;
 	for (d = 0; d < t; d++)
-		for (a = 0; a < 500; a++)
+		for (a = 0; a < 2000; a++)
 			asm("nop"); 
 }
 
