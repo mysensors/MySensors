@@ -24,6 +24,8 @@ static struct FirmwareConfig fc;
 static MyMessage msg;
 static MyMessage rmsg;
 
+static clock_div_t orgClockDiv = 0;
+
 static uint8_t progBuf[SPM_PAGESIZE];
 
 static uint16_t calcCRCrom (const void* ptr, uint16_t len) {
@@ -45,7 +47,7 @@ static void reboot() {
 static void startup() {
 	if (validFirmware()) {
 		wdt_disable();
-//		clock_prescale_set(clock_div_1);
+		clock_prescale_set(orgClockDiv);
 		((void(*)()) 0)();
 	} else
 		reboot();
@@ -72,7 +74,8 @@ static boolean sendWrite(MyMessage message) {
 	return write(nc.parentNodeId, message.array, HEADER_SIZE + mGetLength(message), (message.destination == BROADCAST_ADDRESS));
 }
 
-static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
+static uint8_t sendAndWait(uint8_t cmd, uint8_t reqType, uint8_t resType) {
+	mSetCommand(msg, cmd);
 	msg.type = reqType;
 	for (uint8_t i = 0; i < 10; i++) {
 		sendWrite(msg);
@@ -88,7 +91,7 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 						continue;
 					if (rmsg.destination == nc.nodeId) {
 						if (mGetCommand(rmsg) == C_INTERNAL) {
-							if (rmsg.type == resType) {
+							if (rmsg.type == I_PING_ACK) {
 								if (rmsg.data[0] < nc.distance - 1) {
 									nc.distance = rmsg.data[0] + 1;
 									nc.parentNodeId = rmsg.sender;
@@ -96,9 +99,9 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 									eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
 								}
 							}
-							if (rmsg.type == resType)
-								return 1;
 						}
+						if ((mGetCommand(rmsg) == cmd) && (rmsg.type == resType))
+							return 1;
 					}
 				}
 				delaym(1);
@@ -109,9 +112,10 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 }
 
 int main () {
-//	asm volatile ("clr __zero_reg__");
+	asm volatile ("clr __zero_reg__");
 	// switch to 4 MHz
-//	clock_prescale_set(clock_div_4);
+	orgClockDiv = clock_prescale_get();
+	clock_prescale_set(F_CPU_DIV);
 	MCUSR = 0;
 	// enable watchdog to avoid deadlock
 	wdt_enable(WDTO_8S);
@@ -140,7 +144,6 @@ int main () {
 	address(nc.nodeId);
 
 	msg.sensor = NODE_SENSOR_ID;
-	mSetCommand(msg,C_INTERNAL);
 	mSetLength(msg, 0);
 	mSetPayloadType(msg, P_STRING);
 	mSetAck(msg,false);
@@ -148,7 +151,7 @@ int main () {
 
 	nc.distance = 255;
 	msg.destination = BROADCAST_ADDRESS;
-	if (!sendAndWait(I_PING, I_PING_ACK))
+	if (!sendAndWait(C_INTERNAL, I_PING, I_PING_ACK))
 //	starting existing firmware if no ping response (if firmware is valid)
 //		reboot();
 		startup();
@@ -157,7 +160,7 @@ int main () {
 
 	if (nc.nodeId == AUTO) {
 		openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-		if (!sendAndWait(I_ID_REQUEST, I_ID_RESPONSE))
+		if (!sendAndWait(C_INTERNAL, I_ID_REQUEST, I_ID_RESPONSE))
 			reboot();
 		nc.nodeId = rmsg.data[0];
 		if (nc.nodeId == AUTO)
@@ -178,7 +181,7 @@ int main () {
 	mSetLength(msg, sizeof(FirmwareConfigRequest));
 	firmwareConfigRequest->type = fc.type;
 	firmwareConfigRequest->version = fc.version;
-	if (!sendAndWait(I_FIRMWARE_CONFIG_REQUEST, I_FIRMWARE_CONFIG_RESPONSE))
+	if (!sendAndWait(C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE))
 //	starting existing firmware if no firmware config response (if firmware is valid)
 //		reboot();
 		startup();
@@ -199,7 +202,7 @@ int main () {
 	firmwareRequest->version = fc.version;
 	for (uint16_t block = 0; block < fc.blocks; block++) {
 		firmwareRequest->block = block;
-		if (!sendAndWait(I_FIRMWARE_REQUEST, I_FIRMWARE_RESPONSE))
+		if (!sendAndWait(C_STREAM, ST_FIRMWARE_REQUEST, ST_FIRMWARE_RESPONSE))
 			reboot();
 		uint8_t offset = (block * FIRMWARE_BLOCK_SIZE) % SPM_PAGESIZE;
 		memcpy(progBuf + offset, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);

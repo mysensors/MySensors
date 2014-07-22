@@ -119,7 +119,6 @@ uint8_t MyGateway::h2i(char c) {
 void MyGateway::parseAndSend(char *commandBuffer) {
   boolean ok = false;
   char *str, *p, *value=NULL;
-  boolean binary = true;
   uint8_t bvalue[MAX_PAYLOAD];
   uint8_t blen = 0;
   int i = 0;
@@ -143,19 +142,15 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 		break;
 	  case 2: // Message type
 		command = atoi(str);
-		if (command != C_INTERNAL)
-			binary = false;
 		break;
 	  case 3: // Should we request ack from destination?
 		ack = atoi(str);
 		break;
 	  case 4: // Data type
 		type = atoi(str);
-		if ((type != I_FIRMWARE_CONFIG_RESPONSE) && (type != I_FIRMWARE_RESPONSE))
-			binary = false;
 		break;
 	  case 5: // Variable value
-		if (binary) {
+		if (command == C_STREAM) {
 			blen = 0;
 			uint8_t val;
 			while (*str) {
@@ -189,7 +184,7 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	msg.type = type;
 	mSetCommand(msg,command);
 	mSetAck(msg,ack==0?false:true);
-	if (binary)
+	if (command == C_STREAM)
 		msg.set(bvalue, blen);
 	else
 		msg.set(value);
@@ -242,7 +237,7 @@ void MyGateway::serial(const char *fmt, ... ) {
 }
 
 void MyGateway::serial(MyMessage &msg) {
-  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
+  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, (mGetCommand(msg) == C_STREAM) ? msg.getStream(convBuf) : msg.getString(convBuf));
 }
 
 

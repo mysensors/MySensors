@@ -37,6 +37,21 @@ char MyMessage::i2h(uint8_t i) const {
 		return 'A' + k - 10;
 }
 
+char* MyMessage::getStream(char *buffer) const {
+	uint8_t cmd = miGetCommand();
+	if ((cmd == C_STREAM) && (buffer != NULL)) {
+		for (uint8_t i = 0; i < miGetLength(); i++)
+		{
+			buffer[i * 2] = i2h(data[i] >> 4);
+			buffer[(i * 2) + 1] = i2h(data[i]);
+		}
+		buffer[miGetLength() * 2] = '\0';
+		return buffer;
+	} else {
+		return NULL;
+	}
+}
+
 char* MyMessage::getString(char *buffer) const {
 	uint8_t payloadType = miGetPayloadType();
 
@@ -64,12 +79,6 @@ char* MyMessage::getString(char *buffer) const {
 				// TODO: Ok, what do we do here? We should probably convert this to hex
 				// Mostly gateway interested in this so we do the special handling of this
 				// over there.
-				for (uint8_t i = 0; i < miGetLength(); i++)
-				{
-					buffer[i * 2] = i2h(data[i] >> 4);
-					buffer[(i * 2) + 1] = i2h(data[i]);
-				}
-				buffer[miGetLength() * 2] = '\0';
 				break;
 		}
 		return buffer;

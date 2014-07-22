@@ -2,9 +2,18 @@
 #define MyOtaBootloaderHW_H
 
 #include <stdlib.h>
+#include <avr/power.h>
 
 //#define LED_DEBUG
-//#define UART_DEBUG
+#define UART_DEBUG
+
+// hardware
+// ********
+
+#define F_CPU_DIV	clock_div_4
+#define F_CPU_REAL	F_CPU / (1 << F_CPU_DIV)
+#define UART_BAUD	9600UL
+#define DELAY_M		125 * (1 << F_CPU_DIV)
 
 // boolean definition
 // ******************
@@ -22,14 +31,12 @@ typedef uint8_t boolean;
 static void delayu() {
 	asm("nop"); 
 	asm("nop"); 
-	asm("nop"); 
-	asm("nop");
 }
 
 static void delaym(uint16_t t) {
 	uint16_t d, a;
 	for (d = 0; d < t; d++)
-		for (a = 0; a < 2000; a++)
+		for (a = 0; a < DELAY_M; a++)
 			asm("nop"); 
 }
 
@@ -65,15 +72,12 @@ static void blink(uint8_t mask, uint16_t time) {
 // **********
 
 #ifdef UART_DEBUG
-#define F_CPU_DIV 4000000UL
-#define BAUD 9600UL
-
 static void uart_init()
 {
 	UCSR0A = _BV(U2X0); //Double speed mode USART0
 	UCSR0B = _BV(RXEN0) | _BV(TXEN0);
 	UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
-	UBRR0L = (uint8_t)( (F_CPU_DIV + BAUD * 4L) / (BAUD * 8L) - 1 );
+	UBRR0L = (uint8_t)( (F_CPU_REAL + UART_BAUD * 4L) / (UART_BAUD * 8L) - 1 );
 }
 
 static void uart_putc(char ch) {

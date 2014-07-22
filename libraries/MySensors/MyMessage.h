@@ -46,7 +46,7 @@ typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
-	I_FIRMWARE_CONFIG_REQUEST, I_FIRMWARE_CONFIG_RESPONSE, I_FIRMWARE_REQUEST, I_FIRMWARE_RESPONSE, I_REBOOT
+	I_REBOOT
 } internal;
 
 // Type of sensor  (for presentation message)
@@ -58,7 +58,8 @@ typedef enum {
 
 // Type of data stream  (for streamed message)
 typedef enum {
-	ST_FIRMWARE, ST_SOUND, ST_IMAGE
+	ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE, ST_FIRMWARE_REQUEST, ST_FIRMWARE_RESPONSE,
+	ST_SOUND, ST_IMAGE
 } stream;
 
 typedef enum {
@@ -96,6 +97,7 @@ typedef enum {
 
 
 // internal access for special fields
+#define miGetCommand() BF_GET(command_ack_payload, 0, 3)
 #define miGetPayloadType() BF_GET(command_ack_payload, 4, 4)
 #define miGetLength() BF_GET(version_length, 3, 5)
 
@@ -118,6 +120,7 @@ public:
 	 * into string representation by supplying a buffer with the minimum size of
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
 	 */
+	char* getStream(char *buffer) const;
 	char* getString(char *buffer) const;
 	const char* getString() const;
 	void* getCustom() const;
