@@ -49,7 +49,6 @@
 
 #include <SPI.h>  
 #include <EEPROM.h>  
-#include <RF24.h>
 #include <MsTimer2.h>
 #include <PinChangeInt.h>
 #include <MyGateway.h>  

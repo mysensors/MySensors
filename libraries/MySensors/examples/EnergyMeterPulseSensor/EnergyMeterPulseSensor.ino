@@ -55,7 +55,7 @@ void loop()
   gw.process();
   unsigned long now = millis();
   // Only send values at a maximum frequency or woken up from sleep
-  bool sendTime = now - lastSend > 1000*SEND_FREQUENCY;
+  bool sendTime = now - lastSend > SEND_FREQUENCY;
   if (pcReceived && (SLEEP_MODE || sendTime)) {
     // New watt value has been calculated  
     if (!SLEEP_MODE && watt != oldWatt) {

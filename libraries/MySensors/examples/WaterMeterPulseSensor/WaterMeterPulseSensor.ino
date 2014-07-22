@@ -66,7 +66,7 @@ void loop()
   currentTime = millis();
 	
     // Only send values at a maximum frequency or woken up from sleep
-  bool sendTime = currentTime - lastSend > 1000*SEND_FREQUENCY;
+  bool sendTime = currentTime - lastSend > SEND_FREQUENCY;
   if (pcReceived && (SLEEP_MODE || sendTime)) {
     // New flow value has been calculated  
     if (!SLEEP_MODE && flow != oldflow) {
