@@ -13,6 +13,8 @@
 #define MyMessage_h
 
 #include <SPI.h>
+#include <string.h>
+#include <stdint.h>
 
 #define PROTOCOL_VERSION 2
 #define MAX_MESSAGE_LENGTH 32
@@ -92,6 +94,7 @@ typedef enum {
 
 
 // internal access for special fields
+#define miGetCommand() BF_GET(command_ack_payload, 0, 3)
 #define miGetPayloadType() BF_GET(command_ack_payload, 4, 4)
 #define miGetLength() BF_GET(version_length, 3, 5)
 
@@ -107,11 +110,14 @@ public:
 
 	MyMessage(uint8_t sensor, uint8_t type);
 
+	char i2h(uint8_t i) const;
+
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted
 	 * into string representation by supplying a buffer with the minimum size of
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
 	 */
+	char* getStream(char *buffer) const;
 	char* getString(char *buffer) const;
 	const char* getString() const;
 	void* getCustom() const;
