@@ -20,6 +20,7 @@
 #include <SPI.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 #include <stdarg.h>
 #include "utility/LowPower.h"
 #include "utility/RF24.h"

@@ -326,6 +326,10 @@ boolean MySensor::process() {
 				bool isMetric;
 
 				switch (type) {
+				case I_REBOOT:
+					wdt_enable(WDTO_15MS);
+					for (;;);
+					break;
 				case I_ID_RESPONSE:
 					if (nc.nodeId == AUTO) {
 						nc.nodeId = msg.getByte();
