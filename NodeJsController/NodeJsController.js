@@ -264,6 +264,21 @@ function saveProtocol(sender, payload, db) {
 	});
 }
 
+function saveSensor(sender, sensor, type, db) {
+	db.collection('node', function(err, c) {
+		c.update({
+			'id': sender
+		}, {
+			$addToSet: {
+				sensor: type
+			}
+		}, function(err, result) {
+			if (err)
+				console.log("Error writing sensor to database");
+		});
+	});
+}
+
 function saveValue(sender, sensor, type, payload, db) {
 	var cn = "Value-" + sender.toString() + "-" + sensor.toString();
 	db.createCollection(cn, function(err, c) { 
@@ -389,7 +404,8 @@ function sendFirmwareConfigResponse(destination, fwtype, fwversion, db, gw) {
 		}, {
 			$set: {
 				'type': fwtype,
-				'version': fwversion
+				'version': fwversion,
+				'reboot': 0
 			}
 		}, {
 			upsert: true
@@ -416,20 +432,22 @@ function sendFirmwareConfigResponse(destination, fwtype, fwversion, db, gw) {
 		}, function(err, result) {
 			if (err)
 				console.log('Error finding firmware for type ' + fwtype);
-			if (!result)
+			else if (!result)
 				console.log('No firmware found for type ' + fwtype);
-			var payload = [];
-			pushWord(payload, result.type);
-			pushWord(payload, result.version);
-			pushWord(payload, result.blocks);
-			pushWord(payload, result.crc);
-			var sensor = NODE_SENSOR_ID;
-			var command = C_STREAM;
-			var acknowledge = 0; // no ack
-			var type = 1; // I_FIRMWARE_CONFIG_RESPONSE
-			var td = encode(destination, sensor, command, acknowledge, type, payload);
-			console.log('-> ' + td.toString());
-			gw.write(td);
+			else {
+				var payload = [];
+				pushWord(payload, result.type);
+				pushWord(payload, result.version);
+				pushWord(payload, result.blocks);
+				pushWord(payload, result.crc);
+				var sensor = NODE_SENSOR_ID;
+				var command = C_STREAM;
+				var acknowledge = 0; // no ack
+				var type = ST_FIRMWARE_CONFIG_RESPONSE;
+				var td = encode(destination, sensor, command, acknowledge, type, payload);
+				console.log('-> ' + td.toString());
+				gw.write(td);
+			}
 		});
 	});
 }
@@ -459,15 +477,43 @@ function sendFirmwareResponse(destination, fwtype, fwversion, fwblock, db, gw) {
 	});
 }
 
-function rebootNode(destination, gw) {
+function saveRebootRequest(destination, db) {
+	db.collection('node', function(err, c) {
+		c.update({
+			'id': destination
+		}, {
+			$set: {
+				'reboot': 1
+			}
+		}, function(err, result) {
+			if (err)
+				console.log("Error writing reboot request to database");
+		});
+	});
+}
+
+function checkRebootRequest(destination, db, gw) {
+	db.collection('node', function(err, c) {
+		c.find({
+			'id': destination
+		}, function(err, item) {
+			if (err)
+				console.log('Error checking reboot request');
+			else if (item.reboot == 1)
+				sendRebootMessage(destination, gw);
+		});
+	});
+}
+
+function sendRebootMessage(destination, gw) {
 	var sensor = NODE_SENSOR_ID;
-	var command = C_INTERNAL;
-	var acknowledge = 0; // no ack
-	var type = I_REBOOT;
-	var payload = "";
-	var td = encode(destination, sensor, command, acknowledge, type, payload);
-	console.log('-> ' + td.toString());
-	gw.write(td);
+        var command = C_INTERNAL;
+        var acknowledge = 0; // no ack
+        var type = I_REBOOT;
+        var payload = "";
+        var td = encode(destination, sensor, command, acknowledge, type, payload);
+        console.log('-> ' + td.toString());
+        gw.write(td);
 }
 
 function rfReceived(data, db, gw) {
@@ -481,7 +527,7 @@ function rfReceived(data, db, gw) {
 		var type = +datas[3];
 		var rawpayload = datas[4].trim();
 		var payload;
-		if (command == 4) {
+		if (command == C_STREAM) {
 			payload = [];
 			for (var i = 0; i < rawpayload.length; i+=2)
 				payload.push(parseInt(rawpayload.substring(i, i + 2), 16));
@@ -491,7 +537,9 @@ function rfReceived(data, db, gw) {
 		// decision on appropriate response
 		switch (command) {
 		case C_PRESENTATION:
-			saveProtocol(sender, payload, db);
+			if (sensor == NODE_SENSOR_ID)
+				saveProtocol(sender, payload, db);
+			saveSensor(sender, sensor, type, db);
 			break;
 		case C_SET:
 			saveValue(sender, sensor, type, payload, db);
@@ -560,6 +608,7 @@ function rfReceived(data, db, gw) {
 			}
 			break;
 		}
+		checkRebootRequest(sender, db, gw);
 	}
 }
 
@@ -574,8 +623,8 @@ dbc.connect('mongodb://' + dbAddress + ':' + dbPort + '/' + dbName, function(err
 	db.createCollection('firmware', function(err, collection) { });
 
 	// ToDo : check for new hex files / only load if new / get type and version from filename
-	for (var i = 0; i < hexFiles.length; i++)
-		loadFirmware(i, 1, hexFiles[i], db);
+	for (var i = 0; i < fwHexFiles.length; i++)
+		loadFirmware(i, 1, fwHexFiles[i], db);
 
 	var gw;
 	if (gwType == 'Ethernet') {
