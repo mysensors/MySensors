@@ -6,7 +6,6 @@
 #define BARO_CHILD 0
 #define TEMP_CHILD 1
 
-#define LIGHT_SENSOR_ANALOG_PIN 0
 unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in seconds)
 
 Adafruit_BMP085 bmp = Adafruit_BMP085();      // Digital Pressure Sensor 

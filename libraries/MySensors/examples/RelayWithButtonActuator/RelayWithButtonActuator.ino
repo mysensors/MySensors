@@ -66,6 +66,10 @@ void loop()
  
 void incomingMessage(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
+  if (message.isAck()) {
+     Serial.println("This is an ack from gateway");
+  }
+
   if (message.type==V_LIGHT) {
      // Change relay state
      state = message.getBool();

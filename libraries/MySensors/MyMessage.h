@@ -67,6 +67,7 @@ typedef enum {
 #define BIT_MASK(len)           ( BIT(len)-1 )
 // Create a bitfield mask of length starting at bit 'start'.
 #define BF_MASK(start, len)     ( BIT_MASK(len)<<(start) )
+
 // Prepare a bitmask for insertion or combining.
 #define BF_PREP(x, start, len)  ( ((x)&BIT_MASK(len)) << (start) )
 // Extract a bitfield of length len starting at bit 'start' from y.
@@ -87,7 +88,7 @@ typedef enum {
 #define mSetRequestAck(_msg,_rack) BF_SET(_msg.command_ack_payload, _rack, 3, 1)
 #define mGetRequestAck(_msg) BF_GET(_msg.command_ack_payload, 3, 1)
 
-#define mSetAck(_msg,_ack) BF_SET(_msg.command_ack_payload, _ack, 4, 1)
+#define mSetAck(_msg,_ackMsg) BF_SET(_msg.command_ack_payload, _ackMsg, 4, 1)
 #define mGetAck(_msg) BF_GET(_msg.command_ack_payload, 4, 1)
 
 #define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 5, 3)
@@ -95,9 +96,6 @@ typedef enum {
 
 
 // internal access for special fields
-#define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 4, 4)
-#define miGetPayloadType() BF_GET(command_ack_payload, 4, 4)
-
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
 #define miGetLength() BF_GET(version_length, 3, 5)
 
@@ -107,6 +105,8 @@ typedef enum {
 #define miSetAck(_ack) BF_SET(command_ack_payload, _ack, 4, 1)
 #define miGetAck() BF_GET(command_ack_payload, 4, 1)
 
+#define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 5, 3)
+#define miGetPayloadType() BF_GET(command_ack_payload, 5, 3)
 
 
 

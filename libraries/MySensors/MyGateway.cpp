@@ -160,7 +160,7 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	msg.sensor = sensor;
 	msg.type = type;
 	mSetCommand(msg,command);
-	mSetRequestAck(msg,ack==0?false:true);
+	mSetRequestAck(msg,ack?1:0);
 	mSetAck(msg,false);
 	msg.set(value);
     ok = sendRoute(msg);

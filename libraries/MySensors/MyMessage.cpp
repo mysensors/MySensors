@@ -35,10 +35,9 @@ const char* MyMessage::getString() const {
 
 char* MyMessage::getString(char *buffer) const {
 	uint8_t payloadType = miGetPayloadType();
-
 	if (payloadType == P_STRING) {
 		strncpy(buffer, data, miGetLength());
-		buffer[miGetLength()] = '\0';
+		buffer[miGetLength()] = 0;
 		return buffer;
 	} else if (buffer != NULL) {
 		switch(payloadType) {
