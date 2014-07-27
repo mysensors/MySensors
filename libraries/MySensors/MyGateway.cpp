@@ -105,10 +105,22 @@ void MyGateway::checkInclusionFinished() {
 	 }
 }
 
+uint8_t MyGateway::h2i(char c) {
+	uint8_t i = 0;
+	if (c <= '9')
+		i += c - '0';
+	else if (c >= 'a')
+		i += c - 'a' + 10;
+	else
+		i += c - 'A' + 10;
+	return i;
+}
 
 void MyGateway::parseAndSend(char *commandBuffer) {
   boolean ok = false;
   char *str, *p, *value=NULL;
+  uint8_t bvalue[MAX_PAYLOAD];
+  uint8_t blen = 0;
   int i = 0;
   uint16_t destination = 0;
   uint8_t sensor = 0;
@@ -138,7 +150,18 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 		type = atoi(str);
 		break;
 	  case 5: // Variable value
-		value = str;
+		if (command == C_STREAM) {
+			blen = 0;
+			uint8_t val;
+			while (*str) {
+				val = h2i(*str++) << 4;
+				val += h2i(*str++);
+				bvalue[blen] = val;
+				blen++;
+			}
+		} else {
+			value = str;
+		}
 		break;
 	  }
 	  i++;
@@ -163,6 +186,10 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	mSetRequestAck(msg,ack?1:0);
 	mSetAck(msg,false);
 	msg.set(value);
+	if (command == C_STREAM)
+		msg.set(bvalue, blen);
+	else
+		msg.set(value);
     ok = sendRoute(msg);
     if (!ok) {
       errBlink(1);

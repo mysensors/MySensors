@@ -12,11 +12,15 @@
 #ifndef MyMessage_h
 #define MyMessage_h
 
-#include <SPI.h>
+#ifdef __cplusplus
+#include <Arduino.h>
+#include <string.h>
+#include <stdint.h>
+#endif
 
 #define PROTOCOL_VERSION 2
 #define MAX_MESSAGE_LENGTH 32
-#define HEADER_SIZE 8
+#define HEADER_SIZE 7
 #define MAX_PAYLOAD (MAX_MESSAGE_LENGTH - HEADER_SIZE)
 
 // Message types
@@ -41,7 +45,8 @@ typedef enum {
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
-	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION
+	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
+	I_REBOOT
 } internal;
 
 // Type of sensor  (for presentation message)
@@ -53,7 +58,8 @@ typedef enum {
 
 // Type of data stream  (for streamed message)
 typedef enum {
-	ST_FIRMWARE, ST_SOUND, ST_IMAGE
+	ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE, ST_FIRMWARE_REQUEST, ST_FIRMWARE_RESPONSE,
+	ST_SOUND, ST_IMAGE
 } stream;
 
 typedef enum {
@@ -96,6 +102,8 @@ typedef enum {
 
 
 // internal access for special fields
+#define miGetCommand() BF_GET(command_ack_payload, 0, 3)
+
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5)
 #define miGetLength() BF_GET(version_length, 3, 5)
 
@@ -109,7 +117,7 @@ typedef enum {
 #define miGetPayloadType() BF_GET(command_ack_payload, 5, 3)
 
 
-
+#ifdef __cplusplus
 class MyMessage
 {
 public:
@@ -118,11 +126,14 @@ public:
 
 	MyMessage(uint8_t sensor, uint8_t type);
 
+	char i2h(uint8_t i) const;
+
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted
 	 * into string representation by supplying a buffer with the minimum size of
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
 	 */
+	char* getStream(char *buffer) const;
 	char* getString(char *buffer) const;
 	const char* getString() const;
 	void* getCustom() const;
@@ -152,6 +163,13 @@ public:
 	MyMessage& set(unsigned int value);
 	MyMessage& set(int value);
 
+#else
+
+typedef union {
+struct
+{
+
+#endif
 
 	uint8_t version_length;      // 3 bit - Protocol version
 			                     // 5 bit - Length of payload
@@ -176,6 +194,12 @@ public:
 		int iValue;
 		char data[MAX_PAYLOAD + 1];
 	} __attribute__((packed));
+#ifdef __cplusplus
 } __attribute__((packed));
+#else
+};
+uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];	
+} __attribute__((packed)) MyMessage;
+#endif
 
 #endif
