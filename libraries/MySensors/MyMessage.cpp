@@ -80,6 +80,9 @@ char* MyMessage::getString(char *buffer) const {
 			case P_ULONG32:
 				ultoa(ulValue, buffer, 10);
 				break;
+			case P_FLOAT32:
+				dtostrf(fValue,2,fPrecision,buffer);
+				break;
 			case P_CUSTOM:
 				return getStream(buffer);
 				break;
@@ -105,8 +108,15 @@ bool MyMessage::getBool() const {
 	return getInt();
 }
 
-double MyMessage::getDouble() const {
-	return strtod(data, NULL);
+float MyMessage::getFloat() const {
+	switch(miGetPayloadType()) {
+	case P_FLOAT32:
+		return fValue;
+	case P_STRING:
+		return atof(data);
+	default:
+		return 0;
+	}
 }
 
 long MyMessage::getLong() const {
@@ -195,10 +205,11 @@ MyMessage& MyMessage::set(uint8_t value) {
 }
 
 
-MyMessage& MyMessage::set(double value, uint8_t decimals) {
-	dtostrf(value,2,decimals,data);
-	miSetLength(strlen(data));
-	miSetPayloadType(P_STRING);
+MyMessage& MyMessage::set(float value, uint8_t decimals) {
+	miSetLength(5); // 32 bit float + persi
+	miSetPayloadType(P_FLOAT32);
+	fValue=value;
+	fPrecision = decimals;
 	return *this;
 }
 

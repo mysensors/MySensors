@@ -63,7 +63,7 @@ typedef enum {
 } stream;
 
 typedef enum {
-	P_STRING, P_BYTE, P_INT16, P_UINT16, P_LONG32, P_ULONG32, P_CUSTOM
+	P_STRING, P_BYTE, P_INT16, P_UINT16, P_LONG32, P_ULONG32, P_CUSTOM, P_FLOAT32
 } payload;
 
 
@@ -139,7 +139,7 @@ public:
 	void* getCustom() const;
 	uint8_t getByte() const;
 	bool getBool() const;
-	double getDouble() const;
+	float getFloat() const;
 	long getLong() const;
 	unsigned long getULong() const;
 	int getInt() const;
@@ -157,7 +157,7 @@ public:
 	MyMessage& set(void* payload, uint8_t length);
 	MyMessage& set(const char* value);
 	MyMessage& set(uint8_t value);
-	MyMessage& set(double value, uint8_t decimals);
+	MyMessage& set(float value, uint8_t decimals);
 	MyMessage& set(unsigned long value);
 	MyMessage& set(long value);
 	MyMessage& set(unsigned int value);
@@ -192,6 +192,10 @@ struct
 		long lValue;
 		unsigned int uiValue;
 		int iValue;
+		struct {
+			float fValue;
+			uint8_t fPrecision;   // Number of decimals when serializing
+		};
 		char data[MAX_PAYLOAD + 1];
 	} __attribute__((packed));
 #ifdef __cplusplus

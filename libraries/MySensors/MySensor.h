@@ -57,8 +57,6 @@
 #define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_FIRMWARE_CRC_ADDRESS+2) // First free address for sketch static configuration
 
 // This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
-// This is also act as base value for sensor nodeId
-#define BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
 #define GATEWAY_ADDRESS ((uint8_t)0)
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
 #define TO_ADDR(x) (BASE_RADIO_ID + x)
