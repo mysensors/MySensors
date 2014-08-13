@@ -1,32 +1,63 @@
-// 				MyMQTT Gateway 0.1b
-//
-// Created by Daniel Wiegert <daniel.wiegert@gmail.com>
-// Based on Mysensors Ethernet Gateway by Henrik Ekblad <henrik.ekblad@gmail.com>
-// http://www.mysensors.org
-//
-// Requires MySensors lib 1.4b
-// 
-// Don't forget to look at the definitions in MyMQTT.h! 
-// Don't forget to configure Radio pins, IP and MAC-address!
-// 
-// Address-layout is : [MQTT_BROKER_PREFIX]/[NodeID]/[SensorID]/Light
-// NodeID and SensorID is Decimal number.
-// Last segment is translation of the sensor type, look inside MyMQTT.cpp for 
-// the definitions. User can change this to their needs.
-//
-// Features:
-// Supports automatic nodeID delegation
-// Recieve sketchname and version Example: (openhab item)
-//String sketch20 "Node 20 Sketch name [%s]"			(sketch,name,a)	{mqtt="<[mysensor:MyMQTT/20/255/Sketch_name:state:default]"}
-//String sketch21 "Node 21 Sketch name [%s]"			(sketch,name,a)	{mqtt="<[mysensor:MyMQTT/21/255/Sketch_name:state:default]"}
-// ...
-//
-// Todo:
-// DOCUMENTATION...
-// Special commands : clear or set EEPROM Values
-// Special commands : Reboot
-// ...
+/*            MyMQTT Gateway 0.1b
 
+ Created by Daniel Wiegert <daniel.wiegert@gmail.com>
+ Based on Mysensors Ethernet Gateway by Henrik Ekblad <henrik.ekblad@gmail.com>
+ Requires MySensors lib 1.4b
+    http://www.mysensors.org  
+ 
+ * Don't forget to look at the definitions in MyMQTT.h! 
+ * Don't forget to configure Radio pins, IP and MAC-address!
+ 
+ * Address-layout is : [MQTT_BROKER_PREFIX]/[NodeID]/[SensorID]/Light
+    NodeID and SensorID is number (0-255).
+    Last segment is translation of the sensor type, look inside MyMQTT.cpp for 
+    the definitions. User can change this to their needs.
+
+Example openhab setup: http://www.openhab.org/
+
+* openhab.cfg
+---
+mqtt:mysensor.url=tcp://192.168.0.234:1883
+mqtt:mysensor.clientId=MQTT
+---
+
+* items/test.items
+---
+Group test
+Number Temp_test  "Temp [%.1f °C]" (test)  {mqtt="<[mysensor:MyMQTT/20/#/Temperature:state:default]"}
+Number Hum_test  "Hum [%.1f %%]" (test)  {mqtt="<[mysensor:MyMQTT/20/#/Humidity:state:default]"}
+Number test_test  "test [%s]" (test)  {mqtt="<[mysensor:MyMQTT/20/3/#:state:default]"}
+Switch sw1 "sw 1"     (test)     {<[mysensor:MyMQTT/21/1/Light:command:MAP(1.map)]"}
+--- (Note; # = Wildcard character)
+
+* sitemap/test.site
+---
+sitemap demo label="Menu"
+Frame label="Openhab" {
+        Group item=test label="Test group"
+}
+---
+
+* transform/1.map
+---
+1=ON
+0=OFF
+---
+
+* Features:
+ - Supports automatic nodeID delegation
+ - Recieve sketchname and version Example: (openhab item)
+String sketch20 "Node 20 Sketch name [%s]"			(sketch,name,a)	{mqtt="<[mysensor:MyMQTT/20/255/Sketch_name:state:default]"}
+String sketch21 "Node 21 Sketch name [%s]"			(sketch,name,a)	{mqtt="<[mysensor:MyMQTT/21/255/Sketch_name:state:default]"}
+[...]
+
+* Todo:
+ - DOCUMENTATION...
+ - Special commands
+    Read and set EEPROM Values
+    Send Reboot, And reboot gateway itself.
+...
+*/
 
 #include <SPI.h>
 #include <MyMQTT.h>
