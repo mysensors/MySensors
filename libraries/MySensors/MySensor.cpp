@@ -275,7 +275,7 @@ boolean MySensor::process() {
 				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), msg.getString(convBuf));
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
-		debug(PSTR("version mismatch"));
+		debug(PSTR("version mismatch\n"));
 		return false;
 	}
 
