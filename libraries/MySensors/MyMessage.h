@@ -44,7 +44,7 @@ typedef enum {
 // Type of internal messages (for internal messages)
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
-	I_INCLUSION_MODE, I_CONFIG, I_PING, I_PING_ACK,
+	I_INCLUSION_MODE, I_CONFIG, I_FIND_PARENT, I_FIND_PARENT_RESPONSE,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
 	I_REBOOT
 } internal;
@@ -185,16 +185,20 @@ struct
 
 	// Each message can transfer a payload. We add one extra byte for string
 	// terminator \0 to be "printable" this is not transferred OTA
-	// This union is used to simplify the construction of the binary transferred int/long values.
+	// This union is used to simplify the construction of the binary data types transferred.
 	union {
 		uint8_t bValue;
 		unsigned long ulValue;
 		long lValue;
 		unsigned int uiValue;
 		int iValue;
-		struct {
+		struct { // Float messages
 			float fValue;
 			uint8_t fPrecision;   // Number of decimals when serializing
+		};
+		struct {  // Presentation messages
+			uint8_t version; 	  // Library version
+   		    uint8_t sensorType;   // Sensor type hint for controller, see table above
 		};
 		char data[MAX_PAYLOAD + 1];
 	} __attribute__((packed));

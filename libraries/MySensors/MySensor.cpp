@@ -112,7 +112,7 @@ void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_
 	RF24::setCRCLength(RF24_CRC_16);
 	RF24::enableDynamicPayloads();
 
-	// All nodes listen to broadcast pipe (for PING-ACK messages)
+	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	RF24::openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
 }
 
@@ -145,7 +145,7 @@ void MySensor::findParentNode() {
 	nc.distance = 255;
 
 	// Send ping message to BROADCAST_ADDRESS (to which all relaying nodes and gateway listens and should reply to)
-	build(msg, nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set("");
+	build(msg, nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set("");
 	sendWrite(BROADCAST_ADDRESS, msg, true);
 
 	// Wait for ping response.
@@ -285,12 +285,12 @@ boolean MySensor::process() {
 	uint8_t last = msg.last;
 	uint8_t destination = msg.destination;
 
-	if (repeaterMode && command == C_INTERNAL && type == I_PING) {
+	if (repeaterMode && command == C_INTERNAL && type == I_FIND_PARENT) {
 		// Relaying nodes should always answer ping messages
 		// Wait a random delay of 0-2 seconds to minimize collision
 		// between ping ack messages from other relaying nodes
 		delay(millis() & 0x3ff);
-		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PING_ACK, false).set(nc.distance), true);
+		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
 		return false;
 	} else if (destination == nc.nodeId) {
 		// Check if sender requests an ack back.
@@ -311,8 +311,8 @@ boolean MySensor::process() {
 		}
 
 		if (command == C_INTERNAL) {
-			if (type == I_PING_ACK && !isGateway) {
-				// We've received a reply to a PING message. Check if the distance is
+			if (type == I_FIND_PARENT_RESPONSE && !isGateway) {
+				// We've received a reply to a FIND_PARENT message. Check if the distance is
 				// shorter than we already have.
 				uint8_t distance = msg.getByte();
 				if (distance<nc.distance-1) {
