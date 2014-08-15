@@ -14,11 +14,10 @@ version 2 as published by the Free Software Foundation.
 
 #include "MySensor.h"
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
-#define TCPDUMP						// Dump TCP packages.
+#define TCPDUMP					// Dump TCP packages.
 #endif
 
 #define MQTT_FIRST_SENSORID	20  		// If you want manually configured nodes below this value.
@@ -54,17 +53,19 @@ version 2 as published by the Free Software Foundation.
 #define MQTTQOS1        (1 << 1)
 #define MQTTQOS2        (2 << 1)
 
-class MyMQTT : 
+#define MyTestVar F("Test")
+
+class MyMQTT :
 public MySensor {
 public:
-	MyMQTT(uint8_t _cepin=9, uint8_t _cspin=10);
-
+	MyMQTT(uint8_t _cepin=5, uint8_t _cspin=6, uint8_t _rx=NULL, uint8_t _tx=NULL, uint8_t _er=NULL);
 	void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(char *, int *)=NULL);
 	void processRadioMessage();
 	void processMQTTMessage(char *inputString, int inputPos);
-	
+	boolean isLedMode();
+	void ledTimersInterrupt();
 private:
-	bool MQTTClient;
+	bool MQTTClientConnected;
 	char buffer[MQTT_MAX_PACKET_SIZE];
 	int buffsize;
 	char convBuf[MAX_PAYLOAD*2+1];
@@ -72,9 +73,18 @@ private:
 	void (*dataCallback)(char *, int *);
 	void SendMQTT(MyMessage &msg);
 	char strncpysType_retL(char *str, char index, char start);
+
+	volatile uint8_t countRx;
+	volatile uint8_t countTx;
+	volatile uint8_t countErr;
+	uint8_t pinRx;
+	uint8_t pinTx;
+	uint8_t pinEr;
+	boolean ledMode;
+	void ledTimers();
+	void rxBlink(uint8_t cnt);
+	void txBlink(uint8_t cnt);
+	void errBlink(uint8_t cnt);
 };
 
-
-
 #endif
-

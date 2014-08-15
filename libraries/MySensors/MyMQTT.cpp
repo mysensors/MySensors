@@ -66,31 +66,39 @@ char S_50[] PROGMEM = "Sketch_version"; // Does not exist in mysensors lib!
 
 
 PROGMEM const char *sType[] =
-{ S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_10, 
+{ S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_10,
 	S_11, S_12, S_13, S_14, S_15, S_16, S_17, S_18, S_19, S_20,
-	S_21, S_22, S_23, S_24, S_25, S_26, S_27, S_28, S_29, S_30, 
+	S_21, S_22, S_23, S_24, S_25, S_26, S_27, S_28, S_29, S_30,
 	S_31, S_32, S_33, S_34, S_35, S_36, S_37, S_38, S_39, S_40,
 	S_41, S_42, S_43, S_44, S_45, S_46, S_47, S_48, S_49, S_50};
 
-	
-MyMQTT::MyMQTT(uint8_t _cepin, uint8_t _cspin) : 
+
+MyMQTT::MyMQTT(uint8_t _cepin, uint8_t _cspin, uint8_t _rx, uint8_t _tx, uint8_t _er) :
 MySensor(_cepin, _cspin) {
+	if (_rx != NULL) {
+		pinRx = _rx;
+		pinMode(pinRx, OUTPUT);
+		ledMode = true;
+	}
+	if (_tx != NULL) {
+		pinTx = _tx;
+		pinMode(pinTx, OUTPUT);
+		ledMode = true;
+	}
+	if (_er != NULL) {
+		pinEr = _er;
+		pinMode(pinEr, OUTPUT);
+		ledMode = true;
+	}
 }
 
 void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(char *, int *)) {
 	Serial.begin(BAUD_RATE);
 	repeaterMode = true;
 	isGateway = true;
-	MQTTClient = false;
+	MQTTClientConnected = false;
 	setupRepeaterMode();
-
-	if (inDataCallback != NULL) {
-		useWriteCallback = true;
-		dataCallback = inDataCallback;
-	} 
-	else {
-		useWriteCallback = false;
-	}
+	dataCallback = inDataCallback;
 
 	nc.nodeId = 0;
 	nc.distance = 0;
@@ -110,6 +118,7 @@ void MyMQTT::processRadioMessage() {
 		// A new message was received from one of the sensors
 		MyMessage message = getLastMessage();
 		// Pass along the message from sensors to serial line
+		rxBlink(3);
 		SendMQTT(message);
 	}
 
@@ -121,7 +130,7 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 	buffer[0]= 0;
 	buffsize = 0;
 #ifdef TCPDUMP
-	Serial.print("<<"); 
+	Serial.print("<<");
 	char buf[4];
 	for (int a=0; a<inputPos; a++) { sprintf(buf,"%02X ",(byte)inputString[a]); Serial.print(buf); } Serial.println("");
 #endif
@@ -130,7 +139,7 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 		buffer[buffsize++] = 0x02;                  // Remaining length
 		buffer[buffsize++] = 0x00;                  // Connection accepted
 		buffer[buffsize++] = 0x00;                  // Reserved
-		MQTTClient=true;
+		MQTTClientConnected=true;
 	}
 	if ((byte)inputString[0] >> 4 == MQTTPINGREQ) {
 		buffer[buffsize++] = MQTTPINGRESP << 4;
@@ -150,18 +159,18 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 		buffer[buffsize++] = (byte)inputString[3];  // Message ID LSB
 	}
 	if ((byte)inputString[0] >> 4 == MQTTDISCONNECT) {
-		MQTTClient=false;
+		MQTTClientConnected=false;
 	}
 	if (buffsize > 0) {
 #ifdef TCPDUMP
-		Serial.print(">>"); 
+		Serial.print(">>");
 		char buf[4];
-		for (int a=0; a<buffsize; a++) { sprintf(buf,"%02X ",(byte)buffer[a]);  Serial.print(buf); } Serial.println("");    
+		for (int a=0; a<buffsize; a++) { sprintf(buf,"%02X ",(byte)buffer[a]);  Serial.print(buf); } Serial.println("");
 #endif
 		dataCallback(buffer,&buffsize);
 	}
 	// We publish everything we get, we dont care if its subscribed or not!
-	if ((byte)inputString[0] >> 4 == MQTTPUBLISH || (MQTT_SEND_SUBSCRIPTION && (byte)inputString[0] >> 4 == MQTTSUBSCRIBE)) { 
+	if ((byte)inputString[0] >> 4 == MQTTPUBLISH || (MQTT_SEND_SUBSCRIPTION && (byte)inputString[0] >> 4 == MQTTSUBSCRIBE)) {
 		buffer[0]= 0;
 		buffsize = 0;
 		if ((byte)inputString[0] >> 4 == MQTTSUBSCRIBE) {
@@ -171,7 +180,7 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 		}
 		msg.sender = GATEWAY_ADDRESS;
 		for (str = strtok_r(buffer, "/", &p);       // split using semicolon
-		str && i < 4; str = strtok_r(NULL, "/", &p)  //get subsequent tokens (?) 
+		str && i < 4; str = strtok_r(NULL, "/", &p)  //get subsequent tokens (?)
 		) {
 			switch (i) {
 			case 0: // Radioid (destination)
@@ -188,11 +197,11 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 			case 3:
 				char match=0;
 				for (int j=0; strcpy_P(convBuf, (char*)pgm_read_word(&(sType[j]))) ; j++) {
-					if (strcmp(str,convBuf)==0) { 
-						match=j; 
+					if (strcmp(str,convBuf)==0) {
+						match=j;
 						break;
 					}
-				} 
+				}
 				msg.type = match;
 				break;
 			}
@@ -201,7 +210,7 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 		if ((char)inputString[1] > (char)(inputString[3]+2) && !((byte)inputString[0] >> 4 == MQTTSUBSCRIBE)) {
 			strcpy(convBuf,inputString+(inputString[3]+4));
 			msg.set(convBuf);
-		} else { 
+		} else {
 			msg.set("");
 		}
 		msg.sender = GATEWAY_ADDRESS;
@@ -209,7 +218,8 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 		mSetRequestAck(msg,false);
 		mSetAck(msg,false);
 		mSetVersion(msg, PROTOCOL_VERSION);
-		sendRoute(msg);	
+		txBlink(1);
+		if (!sendRoute(msg)) errBlink(1);
 	}
 }
 
@@ -217,11 +227,11 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 void MyMQTT::SendMQTT(MyMessage &msg) {
 //serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
 	buffsize = 0;
-	if (!MQTTClient) return;
+	if (!MQTTClientConnected) return;
 	if (msg.isAck()) {
 Serial.println("msg is ack!");
 		if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
-			// TODO: sending ACK request on id_response fucks node up. doesn't work. 
+			// TODO: sending ACK request on id_response fucks node up. doesn't work.
 			// The idea was to confirm id and save to EEPROM_LATEST_NODE_ADDRESS.
 		}
 	} else {
@@ -233,11 +243,11 @@ Serial.println("msg is ack!");
 			saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);
 		}
 		if (mGetCommand(msg)==C_INTERNAL && msg.type==I_CONFIG) {  // CONFIG
-			// As for now there is only one 'config' request. 
+			// As for now there is only one 'config' request.
 			// We force SI! Resistance is futile!
 			//
-			// Todo : Support for more config types, Maybe just read from own EEPROM? 
-			// 			Use internal EEPROM_CONTROLLER_CONFIG_ADDRESS and special MQTT address to write to 
+			// Todo : Support for more config types, Maybe just read from own EEPROM?
+			// 			Use internal EEPROM_CONTROLLER_CONFIG_ADDRESS and special MQTT address to write to
 			//			EEPROM_CONTROLLER_CONFIG_ADDRESS & EEPROM_LOCAL_CONFIG_ADDRESS
 			msg.destination = msg.sender; //NodeID
 			msg.sender = GATEWAY_ADDRESS;
@@ -248,7 +258,8 @@ Serial.println("msg is ack!");
 			mSetAck(msg,false);
 			msg.set("M");
 			mSetVersion(msg, PROTOCOL_VERSION);
-			sendRoute(msg);
+			txBlink(1);
+			if (!sendRoute(msg)) errBlink(1);
 		} else if (mGetCommand(msg)==C_PRESENTATION && (msg.type==S_ARDUINO_NODE || msg.type==S_ARDUINO_REPEATER_NODE)) {
 			//Doesnt work to check new sensorID here, this message does not always arrive.. See above.
 		} else if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
@@ -264,11 +275,12 @@ Serial.println("msg is ack!");
 			mSetAck(msg,false);
 			msg.set((uint8_t)newNodeID);					//Payload
 			mSetVersion(msg, PROTOCOL_VERSION);
-			sendRoute(msg);
+			txBlink(1);
+			if (!sendRoute(msg)) errBlink(1);
 //			if (sendRoute(msg)) saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);  // If send OK save to eeprom. DOES NOT ALWAYS RETURN 'OK'!?
 		} else if (mGetCommand(msg)!=0) {
 			if (mGetCommand(msg)==3) msg.type=msg.type+38;
-			buffer[buffsize++] = MQTTPUBLISH << 4;	    // 0: 
+			buffer[buffsize++] = MQTTPUBLISH << 4;	    // 0:
 			buffer[buffsize++] = 0x09;                  // 1: Remaining length with no payload, we'll set this later to correct value, buffsize -2
 			buffer[buffsize++] = 0x00;                  // 2: Length MSB (Remaing length can never exceed ff,so MSB must be 0!)
 			buffer[buffsize++] = 0x08;				    // 3: Length LSB (ADDR), We'll set this later
@@ -289,17 +301,59 @@ Serial.println("msg is ack!");
 #ifdef TCPDUMP
 			Serial.print(">>");
 			char buf[4];
-			for (int a=0; a<buffsize; a++) { sprintf(buf,"%02X ",(byte)buffer[a]);  Serial.print(buf); } Serial.println("");    
+			for (int a=0; a<buffsize; a++) { sprintf(buf,"%02X ",(byte)buffer[a]);  Serial.print(buf); } Serial.println("");
 #endif
 			dataCallback(buffer,&buffsize);
 		}
-	}	
+	}
+}
+
+boolean MyMQTT::isLedMode() {
+	return ledMode;
+}
+
+void MyMQTT::ledTimersInterrupt() {
+  if(countRx && countRx != 255) {
+    // switch led on
+    digitalWrite(pinRx, LOW);
+  } else if(!countRx) {
+     // switching off
+     digitalWrite(pinRx, HIGH);
+  }
+  if(countRx != 255) { countRx--; }
+
+  if(countTx && countTx != 255) {
+    // switch led on
+    digitalWrite(pinTx, LOW);
+  } else if(!countTx) {
+     // switching off
+     digitalWrite(pinTx, HIGH);
+  }
+  if(countTx != 255) { countTx--; }
+  if(countErr && countErr != 255) {
+    // switch led on
+    digitalWrite(pinEr, LOW);
+  } else if(!countErr) {
+     // switching off
+     digitalWrite(pinEr, HIGH);
+  }
+  if(countErr != 255) { countErr--; }
+}
+
+void MyMQTT::rxBlink(uint8_t cnt) {
+  if(countRx == 255) { countRx = cnt; }
+}
+void MyMQTT::txBlink(uint8_t cnt) {
+  if(countTx == 255) { countTx = cnt; }
+}
+void MyMQTT::errBlink(uint8_t cnt) {
+  if(countErr == 255) { countErr = cnt; }
 }
 
 char MyMQTT::strncpysType_retL(char *str, char index, char start) {
 	char c;
 	char l;
-	char *p = (char *)pgm_read_word(&(sType[index])); 
+	char *p = (char *)pgm_read_word(&(sType[index]));
 	str+=start;
 	while ((c = pgm_read_byte(p))) {
 		*str=c;
