@@ -15,7 +15,7 @@
        Pin 0: Program button used for recording a new Knock (connect Pin0 -> button -> GND) 
        Pin 1: Optional: Connect LED here (remember resisor in series)
        Pin 2: Optional: Piezo element (for beeps). 
-       Pin 1: A sound sensor (digital output) for sensing knocks. See MySensors purchase guide. I used this: http://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_ff3=2&pub=5575069610&toolid=10001&campid=5337433187&customid=&icep_item=200941260251&ipn=psmain&icep_vectorid=229466&kwid=902099&mtid=824&kw=lg 
+       Pin 5: A sound sensor (digital output) for sensing knocks. See MySensors purchase guide. I used this: http://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_ff3=2&pub=5575069610&toolid=10001&campid=5337433187&customid=&icep_item=200941260251&ipn=psmain&icep_vectorid=229466&kwid=902099&mtid=824&kw=lg 
        Pin 4: Connects to either 1. Relay which open door or lock or 
                                  2. transistor that opens a solenoid lock when HIGH (see adafruit guide for this option).
                                      
