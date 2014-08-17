@@ -12,44 +12,45 @@ version 2 as published by the Free Software Foundation.
 #include "MyMQTT.h"
 
 char broker[] PROGMEM = MQTT_BROKER_PREFIX;
-char S_0[] PROGMEM = "Temperature";
-char S_1[] PROGMEM = "Humidity";
-char S_2[] PROGMEM = "Light";
-char S_3[] PROGMEM = "Dimmer";
-char S_4[] PROGMEM = "Pressure";
-char S_5[] PROGMEM = "Forecast";
-char S_6[] PROGMEM = "Rain";
-char S_7[] PROGMEM = "Rainrate";
-char S_8[] PROGMEM = "Wind";
-char S_9[] PROGMEM = "Gust";
-char S_10[] PROGMEM = "Direction";
-char S_11[] PROGMEM = "UV";
-char S_12[] PROGMEM = "Weight";
-char S_13[] PROGMEM = "Distance";
-char S_14[] PROGMEM = "Impedance";
-char S_15[] PROGMEM = "Armed";
-char S_16[] PROGMEM = "Tripped";
-char S_17[] PROGMEM = "Watt";
-char S_18[] PROGMEM = "KWH";
-char S_19[] PROGMEM = "Scene_ON";
-char S_20[] PROGMEM = "Scene_OFF";
-char S_21[] PROGMEM = "Heater";
-char S_22[] PROGMEM = "Heater_SW";
-char S_23[] PROGMEM = "LightLVL";
-char S_24[] PROGMEM = "Var1";
-char S_25[] PROGMEM = "Var2";
-char S_26[] PROGMEM = "Var3";
-char S_27[] PROGMEM = "Var4";
-char S_28[] PROGMEM = "Var5,";
-char S_29[] PROGMEM = "Up";
-char S_30[] PROGMEM = "Down";
-char S_31[] PROGMEM = "Stop";
-char S_32[] PROGMEM = "IR_Send";
-char S_33[] PROGMEM = "IR_Receive";
-char S_34[] PROGMEM = "Flow";
-char S_35[] PROGMEM = "Volume";
-char S_36[] PROGMEM = "Lock_Status";
-char S_37[] PROGMEM = "Volt_Batt";  // Does not exist in mysensors lib!
+
+char S_0[] PROGMEM = "Temperature";	//V_TEMP
+char S_1[] PROGMEM = "Humidity";	//V_HUM
+char S_2[] PROGMEM = "Light";		//V_LIGHT
+char S_3[] PROGMEM = "Dimmer";		//V_DIMMER
+char S_4[] PROGMEM = "Pressure";	//V_PRESSURE
+char S_5[] PROGMEM = "Forecast";	//V_FORECAST
+char S_6[] PROGMEM = "Rain";		//V_RAIN
+char S_7[] PROGMEM = "Rainrate";	//V_RAINRATE
+char S_8[] PROGMEM = "Wind";		//V_WIND
+char S_9[] PROGMEM = "Gust";		//V_GUST
+char S_10[] PROGMEM = "Direction";	//V_DIRECTION
+char S_11[] PROGMEM = "UV";			//V_UV
+char S_12[] PROGMEM = "Weight";		//V_WEIGHT
+char S_13[] PROGMEM = "Distance";	//V_DISTANCE
+char S_14[] PROGMEM = "Impedance";	//V_IMPEDANCE
+char S_15[] PROGMEM = "Armed";		//V_ARMED
+char S_16[] PROGMEM = "Tripped";	//V_TRIPPED
+char S_17[] PROGMEM = "Watt";		//V_WATT
+char S_18[] PROGMEM = "KWH";		//V_KWH
+char S_19[] PROGMEM = "Scene_ON";	//V_SCENE_ON
+char S_20[] PROGMEM = "Scene_OFF";	//V_SCENE_OFF
+char S_21[] PROGMEM = "Heater";		//V_HEATER
+char S_22[] PROGMEM = "Heater_SW";	//V_HEATER_SW
+char S_23[] PROGMEM = "LightLevel";	//V_LIGHT_LEVEL
+char S_24[] PROGMEM = "Var1";		//V_VAR1
+char S_25[] PROGMEM = "Var2";		//V_VAR2
+char S_26[] PROGMEM = "Var3";		//V_VAR3
+char S_27[] PROGMEM = "Var4";		//V_VAR4
+char S_28[] PROGMEM = "Var5,";		//V_VAR5
+char S_29[] PROGMEM = "Up";			//V_UP
+char S_30[] PROGMEM = "Down";		//V_DOWN
+char S_31[] PROGMEM = "Stop";		//V_STOP
+char S_32[] PROGMEM = "IR_Send";	//V_IR_SEND
+char S_33[] PROGMEM = "IR_Receive";	//V_IR_RECEIVE
+char S_34[] PROGMEM = "Flow";		//V_FLOW
+char S_35[] PROGMEM = "Volume";		//V_VOLUME
+char S_36[] PROGMEM = "Lock_Status";//V_LOCK_STATUS
+char S_37[] PROGMEM = "DustLevel";	//V_DUST_LEVEL
 char S_38[] PROGMEM = "";
 char S_39[] PROGMEM = "";
 char S_40[] PROGMEM = "";
@@ -57,20 +58,21 @@ char S_41[] PROGMEM = "";
 char S_42[] PROGMEM = "";
 char S_43[] PROGMEM = "";
 char S_44[] PROGMEM = "";
-char S_45[] PROGMEM = "";
+char S_45[] PROGMEM = "Volt_Batt";		// Does not exist in MyMessage.h!
 char S_46[] PROGMEM = "";
 char S_47[] PROGMEM = "";
 char S_48[] PROGMEM = "";
-char S_49[] PROGMEM = "Sketch_name"; // Does not exist in mysensors lib!
-char S_50[] PROGMEM = "Sketch_version"; // Does not exist in mysensors lib!
+char S_49[] PROGMEM = "Sketch_name"; 	// Does not exist in MyMessage.h!
+char S_50[] PROGMEM = "Sketch_version"; // Does not exist in MyMessage.h!
 
 
-PROGMEM const char *sType[] =
-{ S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_10,
+PROGMEM const char *sType[] = {
+	S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_10,
 	S_11, S_12, S_13, S_14, S_15, S_16, S_17, S_18, S_19, S_20,
 	S_21, S_22, S_23, S_24, S_25, S_26, S_27, S_28, S_29, S_30,
 	S_31, S_32, S_33, S_34, S_35, S_36, S_37, S_38, S_39, S_40,
-	S_41, S_42, S_43, S_44, S_45, S_46, S_47, S_48, S_49, S_50};
+	S_41, S_42, S_43, S_44, S_45, S_46, S_47, S_48, S_49, S_50
+};
 
 
 MyMQTT::MyMQTT(uint8_t _cepin, uint8_t _cspin, uint8_t _rx, uint8_t _tx, uint8_t _er) :
@@ -118,7 +120,7 @@ void MyMQTT::processRadioMessage() {
 		// A new message was received from one of the sensors
 		MyMessage message = getLastMessage();
 		// Pass along the message from sensors to serial line
-		rxBlink(3);
+		rxBlink(1);
 		SendMQTT(message);
 	}
 
@@ -179,22 +181,17 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 			strncat(buffer,inputString+4,inputString[3]);
 		}
 		msg.sender = GATEWAY_ADDRESS;
-		for (str = strtok_r(buffer, "/", &p);       // split using semicolon
-		str && i < 4; str = strtok_r(NULL, "/", &p)  //get subsequent tokens (?)
-		) {
-			switch (i) {
-			case 0: // Radioid (destination)
+		for (str = strtok_r(buffer,"/",&p) ; str && i<4 ; str = strtok_r(NULL,"/",&p)) {  //split using semicolon
+			// TODO: Check if we should send ack or not.
+			if (i == 0) {
 				if (strcmp_P(str,broker)!=0) {
 					return; //Message not for us or malformatted!
 				}
-				break;
-			case 1:
+			} else if (i==1) {
 				msg.destination = atoi(str);
-				break;
-			case 2:
+			} else if (i==2) {
 				msg.sensor = atoi(str);
-				break;
-			case 3:
+			} else if (i==3) {
 				char match=0;
 				for (int j=0; strcpy_P(convBuf, (char*)pgm_read_word(&(sType[j]))) ; j++) {
 					if (strcmp(str,convBuf)==0) {
@@ -203,7 +200,6 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 					}
 				}
 				msg.type = match;
-				break;
 			}
 			i++;
 		}
@@ -225,11 +221,11 @@ void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
 
 
 void MyMQTT::SendMQTT(MyMessage &msg) {
-//serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
+	//serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
 	buffsize = 0;
 	if (!MQTTClientConnected) return;
 	if (msg.isAck()) {
-Serial.println("msg is ack!");
+		Serial.println("msg is ack!");
 		if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
 			// TODO: sending ACK request on id_response fucks node up. doesn't work.
 			// The idea was to confirm id and save to EEPROM_LATEST_NODE_ADDRESS.
@@ -253,7 +249,7 @@ Serial.println("msg is ack!");
 			msg.sender = GATEWAY_ADDRESS;
 			msg.sensor = 255;	  		//SensorID
 			msg.type = I_CONFIG;		//msgType
-			mSetCommand(msg,C_INTERNAL);  //Subtype
+			mSetCommand(msg,C_INTERNAL);//Subtype
 			mSetRequestAck(msg,false);
 			mSetAck(msg,false);
 			msg.set("M");
@@ -277,7 +273,7 @@ Serial.println("msg is ack!");
 			mSetVersion(msg, PROTOCOL_VERSION);
 			txBlink(1);
 			if (!sendRoute(msg)) errBlink(1);
-//			if (sendRoute(msg)) saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);  // If send OK save to eeprom. DOES NOT ALWAYS RETURN 'OK'!?
+			//			if (sendRoute(msg)) saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);  // If send OK save to eeprom. DOES NOT ALWAYS RETURN 'OK'!?
 		} else if (mGetCommand(msg)!=0) {
 			if (mGetCommand(msg)==3) msg.type=msg.type+38;
 			buffer[buffsize++] = MQTTPUBLISH << 4;	    // 0:
@@ -313,41 +309,42 @@ boolean MyMQTT::isLedMode() {
 }
 
 void MyMQTT::ledTimersInterrupt() {
-  if(countRx && countRx != 255) {
-    // switch led on
-    digitalWrite(pinRx, LOW);
-  } else if(!countRx) {
-     // switching off
-     digitalWrite(pinRx, HIGH);
-  }
-  if(countRx != 255) { countRx--; }
+	if(countRx && countRx != 255) {
+		// switch led on
+		digitalWrite(pinRx, LOW);
+	} else if(!countRx) {
+		// switching off
+		digitalWrite(pinRx, HIGH);
+	}
+	if(countRx != 255) { countRx--; }
 
-  if(countTx && countTx != 255) {
-    // switch led on
-    digitalWrite(pinTx, LOW);
-  } else if(!countTx) {
-     // switching off
-     digitalWrite(pinTx, HIGH);
-  }
-  if(countTx != 255) { countTx--; }
-  if(countErr && countErr != 255) {
-    // switch led on
-    digitalWrite(pinEr, LOW);
-  } else if(!countErr) {
-     // switching off
-     digitalWrite(pinEr, HIGH);
-  }
-  if(countErr != 255) { countErr--; }
+	if(countTx && countTx != 255) {
+		// switch led on
+		digitalWrite(pinTx, LOW);
+	} else if(!countTx) {
+		// switching off
+		digitalWrite(pinTx, HIGH);
+	}
+	if(countTx != 255) { countTx--; }
+
+	if(countErr && countErr != 255) {
+		// switch led on
+		digitalWrite(pinEr, LOW);
+	} else if(!countErr) {
+		// switching off
+		digitalWrite(pinEr, HIGH);
+	}
+	if(countErr != 255) { countErr--; }
 }
 
 void MyMQTT::rxBlink(uint8_t cnt) {
-  if(countRx == 255) { countRx = cnt; }
+	if(countRx == 255) { countRx = cnt; }
 }
 void MyMQTT::txBlink(uint8_t cnt) {
-  if(countTx == 255) { countTx = cnt; }
+	if(countTx == 255) { countTx = cnt; }
 }
 void MyMQTT::errBlink(uint8_t cnt) {
-  if(countErr == 255) { countErr = cnt; }
+	if(countErr == 255) { countErr = cnt; }
 }
 
 char MyMQTT::strncpysType_retL(char *str, char index, char start) {

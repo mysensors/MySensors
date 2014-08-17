@@ -64,28 +64,21 @@ char* MyMessage::getString(char *buffer) const {
 		buffer[miGetLength()] = 0;
 		return buffer;
 	} else if (buffer != NULL) {
-		switch(payloadType) {
-			case P_BYTE:
-				itoa(bValue, buffer, 10);
-				break;
-			case P_INT16:
-				itoa(iValue, buffer, 10);
-				break;
-			case P_UINT16:
-				utoa(uiValue, buffer, 10);
-				break;
-			case P_LONG32:
-				ltoa(lValue, buffer, 10);
-				break;
-			case P_ULONG32:
-				ultoa(ulValue, buffer, 10);
-				break;
-			case P_FLOAT32:
-				dtostrf(fValue,2,fPrecision,buffer);
-				break;
-			case P_CUSTOM:
-				return getStream(buffer);
-				break;
+		if (payloadType == P_BYTE) {
+			itoa(bValue, buffer, 10);
+		} else if (payloadType == P_INT16) {
+			itoa(iValue, buffer, 10);
+		} else if (payloadType == P_UINT16) {
+			utoa(uiValue, buffer, 10);
+		} else if (payloadType == P_LONG32) {
+			ltoa(lValue, buffer, 10);
+		} else if (payloadType == P_ULONG32) {
+		
+			ultoa(ulValue, buffer, 10);
+		} else if (payloadType == P_FLOAT32) {
+			dtostrf(fValue,2,fPrecision,buffer);
+		} else if (payloadType == P_CUSTOM) {
+			return getStream(buffer);
 		}
 		return buffer;
 	} else {
@@ -94,12 +87,11 @@ char* MyMessage::getString(char *buffer) const {
 }
 
 uint8_t MyMessage::getByte() const {
-	switch(miGetPayloadType()) {
-	case P_BYTE:
+	if (miGetPayloadType() == P_BYTE) {
 		return data[0];
-	case P_STRING:
+	} else if (miGetPayloadType() == P_STRING) {
 		return atoi(data);
-	default:
+	} else {
 		return 0;
 	}
 }
@@ -109,56 +101,51 @@ bool MyMessage::getBool() const {
 }
 
 float MyMessage::getFloat() const {
-	switch(miGetPayloadType()) {
-	case P_FLOAT32:
+	if (miGetPayloadType() == P_FLOAT32) {
 		return fValue;
-	case P_STRING:
+	} else if (miGetPayloadType() == P_STRING) {
 		return atof(data);
-	default:
+	} else {
 		return 0;
 	}
 }
 
 long MyMessage::getLong() const {
-	switch(miGetPayloadType()) {
-	case P_LONG32:
+	if (miGetPayloadType() == P_LONG32) {
 		return lValue;
-	case P_STRING:
+	} else if (miGetPayloadType() == P_STRING) {
 		return atol(data);
-	default:
+	} else {
 		return 0;
 	}
 }
 
 unsigned long MyMessage::getULong() const {
-	switch(miGetPayloadType()) {
-	case P_ULONG32:
+	if (miGetPayloadType() == P_ULONG32) {
 		return ulValue;
-	case P_STRING:
+	} else if (miGetPayloadType() == P_STRING) {
 		return atol(data);
-	default:
+	} else {
 		return 0;
 	}
 }
 
 int MyMessage::getInt() const {
-	switch(miGetPayloadType()) {
-	case P_INT16:
+	if (miGetPayloadType() == P_INT16) { 
 		return iValue;
-	case P_STRING:
+	} else if (miGetPayloadType() == P_STRING) {
 		return atoi(data);
-	default:
+	} else {
 		return 0;
 	}
 }
 
 unsigned int MyMessage::getUInt() const {
-	switch(miGetPayloadType()) {
-	case P_UINT16:
+	if (miGetPayloadType() == P_UINT16) { 
 		return uiValue;
-	case P_STRING:
+	} else if (miGetPayloadType() == P_STRING) {
 		return atoi(data);
-	default:
+	} else {
 		return 0;
 	}
 
