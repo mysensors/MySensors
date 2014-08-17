@@ -8,7 +8,7 @@
   out >>> A0     
   
   Contribution: epierre, bulldoglowell
-  Cobverted to 1.4 by Henrik Ekblad
+  Converted to 1.4 by Henrik Ekblad
 
   License: Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)
  
