@@ -101,7 +101,7 @@
             chirp(500, 1500);
             delay(500);
           }
-          while (digitalRead(programButton) == HIGH){
+          while (digitalRead(programButton) == LOW){
             delay(10);                         // Hang around until the button is released.
           } 
         }
@@ -172,6 +172,8 @@
       if (programModeActive == false){           // Only do this if we're not recording a new knock.
         if (validateKnock() == true){
           // Lock/unlock door
+          chirp(500, 1500);                  // And play a tone in case the user can't see the LED.
+          chirp(500, 1000);
           setLockState(!lockStatus, true); 
         } else {
           Serial.println("fail unlock");
