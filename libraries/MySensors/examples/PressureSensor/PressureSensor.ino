@@ -44,7 +44,7 @@ void setup() {
 }
 
 void loop() {
-  float pressure = bmp.readPressure();
+  float pressure = bmp.readPressure()/100;
   float temperature = bmp.readTemperature();
   
   if (!metric) {
