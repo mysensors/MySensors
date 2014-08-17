@@ -170,6 +170,9 @@ struct
 {
 
 #endif
+	uint8_t last;            	 // 8 bit - Id of last node this message passed
+	uint8_t sender;          	 // 8 bit - Id of sender node (origin)
+	uint8_t destination;     	 // 8 bit - Id of destination node
 
 	uint8_t version_length;      // 3 bit - Protocol version
 			                     // 5 bit - Length of payload
@@ -177,9 +180,6 @@ struct
 	                             // 1 bit - Request an ack - Indicator that receiver should send an ack back.
 								 // 1 bit - Is ack messsage - Indicator that this is the actual ack message.
 	                             // 3 bit - Payload data type
-	uint8_t sender;          	 // 8 bit - Id of sender node
-	uint8_t last;            	 // 8 bit - Id of last node this message passed
-	uint8_t destination;     	 // 8 bit - Id of destination node
 	uint8_t type;            	 // 8 bit - Type varies depending on command
 	uint8_t sensor;          	 // 8 bit - Id of sensor that this message concerns.
 
