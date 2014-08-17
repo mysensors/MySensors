@@ -74,7 +74,7 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	RF24::startListening();
 
 	// Send startup log message on serial
-	serial(PSTR("0;0;%d;%d;Arduino startup complete.\n"),  C_INTERNAL, I_LOG_MESSAGE);
+	serial(PSTR("0;0;%d;0;%d;Arduino startup complete.\n"),  C_INTERNAL, I_LOG_MESSAGE);
 
 }
 
@@ -92,7 +92,7 @@ void MyGateway::checkButtonTriggeredInclusion() {
    if (buttonTriggeredInclusion) {
     // Ok, someone pressed the inclusion button on the gateway
     // start inclusion mode for 1 munute.
-    serial(PSTR("0;0;%d;%d;Inclusion started by button.\n"),  C_INTERNAL, I_LOG_MESSAGE);
+    serial(PSTR("0;0;%d;0;%d;Inclusion started by button.\n"),  C_INTERNAL, I_LOG_MESSAGE);
     buttonTriggeredInclusion = false;
     setInclusionMode(true);
   }
@@ -171,7 +171,7 @@ void MyGateway::parseAndSend(char *commandBuffer) {
     // Handle messages directed to gateway
     if (type == I_VERSION) {
       // Request for version
-      serial(PSTR("0;0;%d;%d;%s\n"),C_INTERNAL, I_VERSION, LIBRARY_VERSION);
+      serial(PSTR("0;0;%d;0;%d;%s\n"),C_INTERNAL, I_VERSION, LIBRARY_VERSION);
     } else if (type == I_INCLUSION_MODE) {
       // Request to change inclusion mode
       setInclusionMode(atoi(value) == 1);
@@ -202,7 +202,7 @@ void MyGateway::setInclusionMode(boolean newMode) {
   if (newMode != inclusionMode)
     inclusionMode = newMode;
     // Send back mode change on serial line to ack command
-    serial(PSTR("0;0;%d;%d;%d\n"), C_INTERNAL, I_INCLUSION_MODE, inclusionMode?1:0);
+    serial(PSTR("0;0;%d;0;%d;%d\n"), C_INTERNAL, I_INCLUSION_MODE, inclusionMode?1:0);
 
     if (inclusionMode) {
       inclusionStartTime = millis();
@@ -239,7 +239,7 @@ void MyGateway::serial(const char *fmt, ... ) {
 }
 
 void MyGateway::serial(MyMessage &msg) {
-  serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
+  serial(PSTR("%d;%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), mGetAck(msg), msg.type, msg.getString(convBuf));
 }
 
 
