@@ -327,12 +327,10 @@ boolean MySensor::process() {
 			} else if (sender == GATEWAY_ADDRESS) {
 				bool isMetric;
 
-				switch (type) {
-				case I_REBOOT:
+				if (type == I_REBOOT) {
 					wdt_enable(WDTO_15MS);
 					for (;;);
-					break;
-				case I_ID_RESPONSE:
+				} else if (type == I_ID_RESPONSE) {
 					if (nc.nodeId == AUTO) {
 						nc.nodeId = msg.getByte();
 						// Write id to EEPROM
@@ -346,8 +344,7 @@ boolean MySensor::process() {
 						}
 						debug(PSTR("id=%d\n"), nc.nodeId);
 					}
-					break;
-				case I_CONFIG:
+				} else if (type == I_CONFIG) {
 					// Pick up configuration from controller (currently only metric/imperial)
 					// and store it in eeprom if changed
 					isMetric = msg.getByte() == 'M' ;
@@ -356,8 +353,7 @@ boolean MySensor::process() {
 						eeprom_write_byte((uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
 						//eeprom_write_block((const void*)&cc, (uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 					}
-					break;
-				case I_CHILDREN:
+				} else if (type == I_CHILDREN) {
 					if (repeaterMode && msg.getByte() == 'C') {
 						// Clears child relay data for this node
 						debug(PSTR("rd=clear\n"));
@@ -366,8 +362,7 @@ boolean MySensor::process() {
 						}
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
 					}
-					break;
-				case I_TIME:
+				} else if (type == I_TIME) {
 					if (timeCallback != NULL) {
 						// Deliver time to callback
 						timeCallback(msg.getULong());
