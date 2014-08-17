@@ -14,13 +14,14 @@ version 2 as published by the Free Software Foundation.
 
 #include "MySensor.h"
 
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
-#define TCPDUMP					// Dump TCP packages.
+//#define TCPDUMP						// Dump TCP packages.
 #endif
 
-#define MQTT_FIRST_SENSORID	20  		// If you want manually configured nodes below this value.
+#define MQTT_FIRST_SENSORID	20  		// If you want manually configured nodes below this value. 255 = Disable
 #define MQTT_LAST_SENSORID	254 		// 254 is max! 255 reserved.
 #define MQTT_BROKER_PREFIX	"MyMQTT"	// First prefix in MQTT tree, keep short!
 #define MQTT_SEND_SUBSCRIPTION 1		// Send empty payload (request) to node upon MQTT client subscribe request.
@@ -55,7 +56,7 @@ version 2 as published by the Free Software Foundation.
 
 #define MyTestVar F("Test")
 
-class MyMQTT :
+class MyMQTT : 
 public MySensor {
 public:
 	MyMQTT(uint8_t _cepin=5, uint8_t _cspin=6, uint8_t _rx=NULL, uint8_t _tx=NULL, uint8_t _er=NULL);
@@ -73,7 +74,7 @@ private:
 	void (*dataCallback)(char *, int *);
 	void SendMQTT(MyMessage &msg);
 	char strncpysType_retL(char *str, char index, char start);
-
+	
 	volatile uint8_t countRx;
 	volatile uint8_t countTx;
 	volatile uint8_t countErr;
@@ -87,4 +88,7 @@ private:
 	void errBlink(uint8_t cnt);
 };
 
+
+
 #endif
+
