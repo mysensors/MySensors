@@ -517,7 +517,7 @@ void MySensor::debugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	if (isGateway) {
 		// prepend debug message to be handled correctly by gw (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf_P(fmtBuffer, 299, PSTR("0;0;%d;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+		snprintf_P(fmtBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		Serial.print(fmtBuffer);
 	}
 	va_list args;
