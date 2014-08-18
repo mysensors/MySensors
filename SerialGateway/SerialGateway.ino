@@ -15,14 +15,14 @@
  * - Inclusion button should be connected between digital pin 3 and GND
  * - RX/TX/ERR leds need to be connected between +5V (anode) and digital ping 6/5/4 with resistor 270-330R in a series
  *
- * LED purposes:
+ * LEDs (OPTIONAL):
  * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error  
  */
 
 #include <SPI.h>  
-#include <MsTimer2.h>
+#include <MsTimer2.h>  
 #include <PinChangeInt.h>
 #include <MyGateway.h>  
 #include <stdarg.h>
@@ -31,12 +31,7 @@
 #define INCLUSION_MODE_PIN 3 // Digital pin used for inclusion mode button
 
 
-// No blink or button functionality. Use the vanilla constructor.
-//Gateway gw;
-
-// To start gateway with include button and led blinking functionality enabled use this instead!
 MyGateway gw(9, 10, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN,  6, 5, 4);
-
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
