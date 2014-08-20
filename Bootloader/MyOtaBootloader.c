@@ -68,7 +68,7 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 						continue;
 					if (rmsg.destination == nc.nodeId) {
 						if (mGetCommand(rmsg) == C_INTERNAL) {
-							if (rmsg.type == I_PING_ACK) {
+							if (rmsg.type == I_FIND_PARENT_RESPONSE) {
 								if (rmsg.data[0] < nc.distance - 1) {
 									nc.distance = rmsg.data[0] + 1;
 									nc.parentNodeId = rmsg.sender;
@@ -129,8 +129,8 @@ int main () {
 	nc.distance = 255;
 	mSetCommand(msg, C_INTERNAL);
 	msg.destination = BROADCAST_ADDRESS;
-	if (!sendAndWait(I_PING, I_PING_ACK))
-//	starting existing firmware if no ping response (if firmware is valid)
+	if (!sendAndWait(I_FIND_PARENT, I_FIND_PARENT_RESPONSE))
+//	starting existing firmware if no parent responds (if firmware is valid)
 //		reboot();
 		startup();
 		
