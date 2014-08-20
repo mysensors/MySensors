@@ -4,6 +4,7 @@ const gwPort						= 9999;
 
 //const gwType = 'Serial';
 //const gwPort = 'COM4';
+//const gwPort = '/dev/ttyUSB0';
 //const gwBaud = 115200;
 
 const dbAddress						= '127.0.0.1';
@@ -116,6 +117,7 @@ const P_ULONG32						= 5;
 const P_CUSTOM						= 6;
 
 var fs = require('fs');
+var appendedString="";
 
 function crcUpdate(old, value) {
 	var c = old ^ value;
@@ -516,6 +518,22 @@ function sendRebootMessage(destination, gw) {
         gw.write(td);
 }
 
+
+function appendData(str, db, gw) {
+    pos=0;
+    while (str.charAt(pos) != '\n' && pos < str.length) {
+        appendedString=appendedString+str.charAt(pos);
+        pos++;
+    }
+    if (str.charAt(pos) == '\n') {
+        rfReceived(appendedString.trim(), db, gw);
+        appendedString="";
+    }
+    if (pos < str.length) {
+        appendData(str.substr(pos+1,str.length-pos-1), db, gw);
+    }
+}
+
 function rfReceived(data, db, gw) {
 	if ((data != null) && (data != "")) {
 		console.log('<- ' + data);
@@ -526,7 +544,10 @@ function rfReceived(data, db, gw) {
 		var command = +datas[2];
 		var ack = +datas[3];
 		var type = +datas[4];
-		var rawpayload = datas[5].trim();
+                var rawpayload="";
+                if (datas[5]) {
+                	rawpayload = datas[5].trim();
+		}
 		var payload;
 		if (command == C_STREAM) {
 			payload = [];
@@ -635,9 +656,7 @@ dbc.connect('mongodb://' + dbAddress + ':' + dbPort + '/' + dbName, function(err
 		gw.on('connect', function() {
 			console.log('connected to ethernet gateway at ' + gwAddress + ":" + gwPort);
 		}).on('data', function(rd) {
-			var rds = rd.toString().split('\n');
-			for (var i = 0; i < rds.length; i++)
-				rfReceived(rds[i].trim(), db, gw);
+			appendData(rd.toString(), db, gw);
 		}).on('end', function() {
 			console.log('disconnected from gateway');
 		}).on('error', function() {
@@ -646,14 +665,13 @@ dbc.connect('mongodb://' + dbAddress + ':' + dbPort + '/' + dbName, function(err
 			gw.setEncoding('ascii');
 		});
 	} else if (gwType == 'Serial') {
-		gw = require('serialport').SerialPort(gwPort, { baudrate: gwBaud }, false);
+		var SerialPort = require('serialport').SerialPort;
+		gw = new SerialPort(gwPort, { baudrate: gwBaud });
 		gw.open();
 		gw.on('open', function() {
 			console.log('connected to serial gateway at ' + gwPort);
 		}).on('data', function(rd) {
-			var rds = rd.toString().split('\n');
-			for (var i = 0; i < rds.length; i++)
-				rfReceived(rds[i].trim(), db, gw);
+			appendData(rd.toString(), db, gw);
 		}).on('end', function() {
 			console.log('disconnected from gateway');
 		}).on('error', function() {
