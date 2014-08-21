@@ -524,8 +524,9 @@ function rfReceived(data, db, gw) {
 		var sender = +datas[0];
 		var sensor = +datas[1];
 		var command = +datas[2];
-		var type = +datas[3];
-		var rawpayload = datas[4].trim();
+		var ack = +datas[3];
+		var type = +datas[4];
+		var rawpayload = datas[5].trim();
 		var payload;
 		if (command == C_STREAM) {
 			payload = [];
