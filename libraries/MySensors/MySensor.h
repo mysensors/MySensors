@@ -88,10 +88,10 @@ class MySensor : public RF24
 	*
 	* Creates a new instance of Sensor class.
 	*
-	* @param _cepin The pin attached to RF24 Chip Enable on the RF module (defualt 9)
+	* @param _cepin The pin attached to RF24 Chip Enable on the RF module (default 9)
 	* @param _cspin The pin attached to RF24 Chip Select (default 10)
 	*/
-	MySensor(uint8_t _cepin=9, uint8_t _cspin=10);
+	MySensor(uint8_t _cepin=DEFAULT_CE_PIN, uint8_t _cspin=DEFAULT_CS_PIN);
 
 	/**
 	* Begin operation of the MySensors library

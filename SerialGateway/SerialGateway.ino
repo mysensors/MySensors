@@ -1,4 +1,4 @@
-/*
+  /*
  * Copyright (C) 2013 Henrik Ekblad <henrik.ekblad@gmail.com>
  * 
  * This program is free software; you can redistribute it and/or
@@ -22,8 +22,6 @@
  */
 
 #include <SPI.h>  
-#include <MsTimer2.h>  
-#include <PinChangeInt.h>
 #include <MyGateway.h>  
 #include <stdarg.h>
 
@@ -31,7 +29,7 @@
 #define INCLUSION_MODE_PIN 3 // Digital pin used for inclusion mode button
 
 
-MyGateway gw(9, 10, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN,  6, 5, 4);
+MyGateway gw(DEFAULT_CE_PIN, DEFAULT_CS_PIN, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN,  6, 5, 4);
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
@@ -40,34 +38,15 @@ boolean commandComplete = false;  // whether the string is complete
 void setup()  
 { 
   gw.begin();
-
-  // C++ classes and interrupts really sucks. Need to attach interrupt 
-  // outside thw Gateway class due to language shortcomings! Gah! 
-
-  if (gw.isLedMode()) {
-    // Add led timer interrupt
-    MsTimer2::set(300, ledTimersInterrupt);
-    MsTimer2::start();
-    // Add interrupt for inclustion button to pin 
-    PCintPort::attachInterrupt(INCLUSION_MODE_PIN, startInclusionInterrupt, RISING);
-  }
 }
 
 void loop()  
 { 
   gw.processRadioMessage();   
   checkSerialInput();
-  
 }
 
 
-void startInclusionInterrupt() {
-  gw.startInclusionInterrupt();
-}
-
-void ledTimersInterrupt() {
-  gw.ledTimersInterrupt();
-}
 
 void checkSerialInput() {
   if (commandComplete) {

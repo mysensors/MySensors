@@ -10,6 +10,10 @@
 #define RF24_PA_LEVEL_GW   RF24_PA_LEVEL  //Gateway PA Level, defaults to Sensor net PA Level.  Tune here if using an amplified nRF2401+ in your gateway.
 #define BASE_RADIO_ID 	   ((uint64_t)0xA8A8E1FC00LL) // This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
 
+// MySensors online examples defaults
+#define DEFAULT_CE_PIN 9
+#define DEFAULT_CS_PIN 10
+
 
 /***
  * Enable/Disable debug logging

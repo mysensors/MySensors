@@ -10,21 +10,28 @@
 */
 
 #include "MyGateway.h"
+#include "utility/MsTimer2.h"
+#include "utility/PinChangeInt.h"
 
 
-MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time) : MySensor(_cepin, _cspin) {
-	ledMode = false;
-	inclusionTime = _inclusion_time;
-}
+uint8_t pinRx;
+uint8_t pinTx;
+uint8_t pinEr;
+boolean buttonTriggeredInclusion;
+volatile uint8_t countRx;
+volatile uint8_t countTx;
+volatile uint8_t countErr;
+boolean inclusionMode; // Keeps track on inclusion mode
+
 
 MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er) : MySensor(_cepin, _cspin) {
-	ledMode = true;
 	pinInclusion = _inclusion_pin;
 	inclusionTime = _inclusion_time;
 	pinRx = _rx;
 	pinTx = _tx;
 	pinEr = _er;
 }
+
 
 void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(char *)) {
 	Serial.begin(BAUD_RATE);
@@ -47,25 +54,23 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	countTx = 0;
 	countErr = 0;
 
-	if (ledMode) {
-		// Setup led pins
-		pinMode(pinRx, OUTPUT);
-		pinMode(pinTx, OUTPUT);
-		pinMode(pinEr, OUTPUT);
-		digitalWrite(pinRx, LOW);
-		digitalWrite(pinTx, LOW);
-		digitalWrite(pinEr, LOW);
+	// Setup led pins
+	pinMode(pinRx, OUTPUT);
+	pinMode(pinTx, OUTPUT);
+	pinMode(pinEr, OUTPUT);
+	digitalWrite(pinRx, LOW);
+	digitalWrite(pinTx, LOW);
+	digitalWrite(pinEr, LOW);
 
-		// Setup digital in that triggers inclusion mode
-		pinMode(pinInclusion, INPUT);
-		digitalWrite(pinInclusion, HIGH);
+	// Setup digital in that triggers inclusion mode
+	pinMode(pinInclusion, INPUT);
+	digitalWrite(pinInclusion, HIGH);
 
-		// Set initial state of leds
-		digitalWrite(pinRx, HIGH);
-		digitalWrite(pinTx, HIGH);
-		digitalWrite(pinEr, HIGH);
+	// Set initial state of leds
+	digitalWrite(pinRx, HIGH);
+	digitalWrite(pinTx, HIGH);
+	digitalWrite(pinEr, HIGH);
 
-	}
 
 	// Start up the radio library
 	setupRadio(paLevel, channel, dataRate);
@@ -73,19 +78,22 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
 	RF24::startListening();
 
+	// Add led timer interrupt
+    MsTimer2::set(300, ledTimersInterrupt);
+    MsTimer2::start();
+
+	// Add interrupt for inclusion button to pin
+	PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
+
 	// Send startup log message on serial
-	serial(PSTR("0;0;%d;0;%d;Arduino startup complete.\n"),  C_INTERNAL, I_LOG_MESSAGE);
-
+	serial(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
 }
 
 
-boolean MyGateway::isLedMode() {
-	return ledMode;
-}
-
-void MyGateway::startInclusionInterrupt() {
+void startInclusionInterrupt() {
 	  buttonTriggeredInclusion = true;
 }
+
 
 
 void MyGateway::checkButtonTriggeredInclusion() {
@@ -243,7 +251,7 @@ void MyGateway::serial(MyMessage &msg) {
 }
 
 
-void MyGateway::ledTimersInterrupt() {
+void ledTimersInterrupt() {
   if(countRx && countRx != 255) {
     // switch led on
     digitalWrite(pinRx, LOW);
