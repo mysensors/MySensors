@@ -19,7 +19,7 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="MySensors NodeJs Controller"
-NAME="NodeJsController.sh"
+NAME="MySensors.sh"
 PIDFILE="/usr/local/var/run/$NAME.pid"
 DAEMON="/home/pi/Arduino/NodeJsController/$NAME"
 DAEMON_ARGS="$PIDFILE"
