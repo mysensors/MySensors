@@ -92,7 +92,6 @@ transform/1on0off.map
 #include <SPI.h>
 #include <MyMQTT.h>
 #include <Ethernet.h>
-#include <MsTimer2.h>
 
 
 // Use this for IBOARD modded to use standard MISO/MOSI/SCK, see note *1 above!
@@ -135,12 +134,8 @@ void processEthernetMessages() {
 	}
 }
 
-void writeEthernet(char *writeBuffer, int *writeSize) {
-	server.write(writeBuffer, *writeSize); // Todo: Should this really be *writeSize?
-}
-
-void ledTimersInterrupt() {
-	gw.ledTimersInterrupt();
+void writeEthernet(const char *writeBuffer, int *writeSize) {
+	server.write((const uint8_t *)writeBuffer, *writeSize); // Todo: Should this really be *writeSize?
 }
 
 int main(void) {
@@ -149,11 +144,6 @@ int main(void) {
 	delay(1000);   // Wait for Ethernet to get configured.
 	gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet);
 	server.begin();
-	// Add led timer interrupt
-	if (gw.isLedMode()) {
-		MsTimer2::set(200, ledTimersInterrupt);
-		MsTimer2::start();
-	}
 	while (1) {
 		processEthernetMessages();
 		gw.processRadioMessage();

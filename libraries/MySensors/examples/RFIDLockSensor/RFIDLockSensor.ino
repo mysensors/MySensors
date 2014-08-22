@@ -34,9 +34,7 @@
 const uint8_t maxKeyLength = 7;
 uint8_t validKeys[][maxKeyLength] = {
                     { 0xB3, 0xC6, 0xD9, 0x80, 0x00, 0x00, 0x00 },
-                    { 0, 0, 0, 0, 0, 0, 0 },
-                    { 0, 0, 0, 0, 0, 0, 0 },
-                    { 0, 0, 0, 0, 0, 0, 0 },
+                    { 0, 0, 0, 0, 0, 0, 0 },    // ADD YOUR KEYS HERE!
                     { 0, 0, 0, 0, 0, 0, 0 }};
 int keyCount = sizeof validKeys / maxKeyLength; 
 
@@ -84,11 +82,12 @@ void setup() {
 }
  
 void loop() {
+  gw.process(); // Process incomming messages
+
   boolean success;
   uint8_t key[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
   uint8_t currentKeyLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 
-  gw.process(); // Process incomming messages
   
   // Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
   // 'uid' will be populated with the UID, and uidLength will indicate
@@ -158,4 +157,5 @@ void incomingMessage(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
+
 

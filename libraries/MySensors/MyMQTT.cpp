@@ -10,6 +10,9 @@ version 2 as published by the Free Software Foundation.
 */
 
 #include "MyMQTT.h"
+#include "utility/MsTimer2.h"
+
+
 
 char broker[] PROGMEM = MQTT_BROKER_PREFIX;
 
@@ -75,26 +78,19 @@ PROGMEM const char *sType[] = {
 };
 
 
-MyMQTT::MyMQTT(uint8_t _cepin, uint8_t _cspin, uint8_t _rx, uint8_t _tx, uint8_t _er) :
+extern volatile uint8_t countRx;
+extern volatile uint8_t countTx;
+extern volatile uint8_t countErr;
+extern uint8_t pinRx;
+extern uint8_t pinTx;
+extern uint8_t pinEr;
+
+MyMQTT::MyMQTT(uint8_t _cepin, uint8_t _cspin) :
 MySensor(_cepin, _cspin) {
-	if (_rx != NULL) {
-		pinRx = _rx;
-		pinMode(pinRx, OUTPUT);
-		ledMode = true;
-	}
-	if (_tx != NULL) {
-		pinTx = _tx;
-		pinMode(pinTx, OUTPUT);
-		ledMode = true;
-	}
-	if (_er != NULL) {
-		pinEr = _er;
-		pinMode(pinEr, OUTPUT);
-		ledMode = true;
-	}
+
 }
 
-void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(char *, int *)) {
+void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(const char *, int *), uint8_t _rx, uint8_t _tx, uint8_t _er) {
 	Serial.begin(BAUD_RATE);
 	repeaterMode = true;
 	isGateway = true;
@@ -110,6 +106,18 @@ void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataR
 	RF24::openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
 	RF24::startListening();
+
+	pinRx = _rx;
+	pinMode(pinRx, OUTPUT);
+	pinTx = _tx;
+	pinMode(pinTx, OUTPUT);
+	pinEr = _er;
+	pinMode(pinEr, OUTPUT);
+
+	MsTimer2::set(200, ledTimersInterrupt);
+	MsTimer2::start();
+
+
 	// Send startup log message on serial
 	//Serial.print(PSTR("Started\n"));//TODO: progmem gives error..? error: sType causes a section type conflict with __c
 	Serial.print("Started\n");//TODO: fix this...
@@ -127,7 +135,7 @@ void MyMQTT::processRadioMessage() {
 }
 
 void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
-	char *str, *p, *value=NULL;
+	char *str, *p;
 	char i = 0;
 	buffer[0]= 0;
 	buffsize = 0;
@@ -233,7 +241,7 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 	} else {
 		// we have to check every message if its a newly assigned id or not.
 		// Ack on I_ID_RESPONSE does not work, and checking on C_PRESENTATION isn't reliable.
-		char newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
+		uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
 		if (newNodeID <= MQTT_FIRST_SENSORID) newNodeID = MQTT_FIRST_SENSORID;
 		if (msg.sender==newNodeID) {
 			saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);
@@ -259,7 +267,7 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 		} else if (mGetCommand(msg)==C_PRESENTATION && (msg.type==S_ARDUINO_NODE || msg.type==S_ARDUINO_REPEATER_NODE)) {
 			//Doesnt work to check new sensorID here, this message does not always arrive.. See above.
 		} else if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
-			char newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
+			unsigned char newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
 			if (newNodeID <= MQTT_FIRST_SENSORID) newNodeID = MQTT_FIRST_SENSORID;
 			if (newNodeID >= MQTT_LAST_SENSORID) return; // Sorry no more id's left :(
 			msg.destination = msg.sender; 		//NodeID
@@ -289,7 +297,7 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 			Serial.println((char*)&buffer[4]);
 #endif
 			msg.getString(convBuf);
-			for (int a=0; a<strlen(convBuf); a++) {		// Payload
+			for (unsigned int a=0; a<strlen(convBuf); a++) {		// Payload
 				buffer[buffsize++] = convBuf[a];
 			}
 			buffer[1]=buffsize-2;						// Set correct Remaining length on byte 2.
@@ -304,38 +312,7 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 	}
 }
 
-boolean MyMQTT::isLedMode() {
-	return ledMode;
-}
 
-void MyMQTT::ledTimersInterrupt() {
-	if(countRx && countRx != 255) {
-		// switch led on
-		digitalWrite(pinRx, LOW);
-	} else if(!countRx) {
-		// switching off
-		digitalWrite(pinRx, HIGH);
-	}
-	if(countRx != 255) { countRx--; }
-
-	if(countTx && countTx != 255) {
-		// switch led on
-		digitalWrite(pinTx, LOW);
-	} else if(!countTx) {
-		// switching off
-		digitalWrite(pinTx, HIGH);
-	}
-	if(countTx != 255) { countTx--; }
-
-	if(countErr && countErr != 255) {
-		// switch led on
-		digitalWrite(pinEr, LOW);
-	} else if(!countErr) {
-		// switching off
-		digitalWrite(pinEr, HIGH);
-	}
-	if(countErr != 255) { countErr--; }
-}
 
 void MyMQTT::rxBlink(uint8_t cnt) {
 	if(countRx == 255) { countRx = cnt; }
@@ -347,7 +324,7 @@ void MyMQTT::errBlink(uint8_t cnt) {
 	if(countErr == 255) { countErr = cnt; }
 }
 
-char MyMQTT::strncpysType_retL(char *str, char index, char start) {
+char MyMQTT::strncpysType_retL(char *str, unsigned char index, char start) {
 	char c;
 	char l;
 	char *p = (char *)pgm_read_word(&(sType[index]));

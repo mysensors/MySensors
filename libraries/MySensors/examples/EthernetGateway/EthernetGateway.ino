@@ -44,17 +44,15 @@
  * Powering: both NRF24l01 radio and Ethernet(ENC28J60) uses 3.3V
  */
 
- 
-
-
 #include <SPI.h>  
-#include <MsTimer2.h>
-#include <PinChangeInt.h>
 #include <MyGateway.h>  
 #include <stdarg.h>
 
-#include <UIPEthernet.h>  // Use this if you have attached a Ethernet ENC28J60 shields  
-//#include <Ethernet.h>   // Use this fo WizNET module and Arduino Ethernet Shield 
+// Use this if you have attached a Ethernet ENC28J60 shields  
+#include <UIPEthernet.h>  
+
+// Use this fo WizNET module and Arduino Ethernet Shield 
+//#include <Ethernet.h>   
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
@@ -99,17 +97,6 @@ void setup()
 
   // start listening for clients
   server.begin();
-   
-  // C++ classes and interrupts really sucks. Need to attach interrupt 
-  // outside thw Gateway class due to language shortcomings! Gah! 
-
-  if (gw.isLedMode()) {
-    // Add led timer interrupt
-    MsTimer2::set(300, ledTimersInterrupt);
-    MsTimer2::start();
-    // Add interrupt for inclustion button to pin 
-    PCintPort::attachInterrupt(INCLUSION_MODE_PIN, startInclusionInterrupt, RISING);
-  }
 }
 
 // This will be called when data should be written to ethernet 
@@ -118,24 +105,22 @@ void writeEthernet(char *writeBuffer) {
 }
 
 
-void processEthernetMessages()
+void loop()
 {
-   // if an incoming client connects, there will be
-   // bytes available to read via the client object
-   EthernetClient client = server.available();
+  // if an incoming client connects, there will be
+  // bytes available to read via the client object
+  EthernetClient client = server.available();
 
-  if (client)
-   {
+  if (client) {
       // if got 1 or more bytes
-      if (client.available())
-      {
+      if (client.available()) {
          // read the bytes incoming from the client
          char inChar = client.read();
 
          if (inputPos<MAX_RECEIVE_LENGTH-1) { 
            // if newline then command is complete
-           if (inChar == '\n')
-           {  // a command was issued by the client
+           if (inChar == '\n') {  
+              // a command was issued by the client
               // we will now try to send it to the actuator
               inputString[inputPos] = 0;
 
@@ -146,11 +131,10 @@ void processEthernetMessages()
 
               // clear the string:
               inputPos = 0;
-           }
-           else
-           {  // add it to the inputString:
-              inputString[inputPos] = inChar;
-              inputPos++;
+           } else {  
+             // add it to the inputString:
+             inputString[inputPos] = inChar;
+             inputPos++;
            }
         } else {
            // Incoming message too long. Throw away 
@@ -158,24 +142,7 @@ void processEthernetMessages()
         }
       }
    }  
-}
-
-
-
-void loop()  
-{ 
-   // check for incoming commands from clients
-  processEthernetMessages();
-  
-  gw.processRadioMessage();    
-}
-
-void startInclusionInterrupt() {
-  gw.startInclusionInterrupt();
-}
-
-void ledTimersInterrupt() {
-  gw.ledTimersInterrupt();
+   gw.processRadioMessage();    
 }
 
 
