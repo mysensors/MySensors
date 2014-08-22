@@ -43,12 +43,6 @@ void setup()
 void loop()  
 { 
   gw.processRadioMessage();   
-  checkSerialInput();
-}
-
-
-
-void checkSerialInput() {
   if (commandComplete) {
     // A command wass issued from serial interface
     // We will now try to send it to the actuator
@@ -57,6 +51,7 @@ void checkSerialInput() {
     inputPos = 0;
   }
 }
+
 
 /*
   SerialEvent occurs whenever a new data comes in the
