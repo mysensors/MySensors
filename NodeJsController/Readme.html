@@ -10,12 +10,12 @@
 <ul>
 <li>login as pi / raspberry
 <li>sudo nano /etc/network/interfaces
-<p>#iface eth0 inet dhcp<br/>
-iface eth0 inet static<br/>
+<p><font color="#FF0000">#</font>iface eth0 inet dhcp<br/>
+<font color="#FF0000">iface eth0 inet static<br/>
 address 10.0.1.5<br/>
 netmask 255.255.255.0<br/>
 gateway 10.0.1.1<br/>
-nameserver 10.0.1.1</p>
+nameserver 10.0.1.1</font></p>
 <li>sudo raspi-config
 <ul>
 <li>1. Expand Filesystem
@@ -44,6 +44,7 @@ nameserver 10.0.1.1</p>
 <li>sudo apt-get upgrade
 <li>sudo reboot
 </ul>
+<!--
 <h2>Install Remote Desktop</h2>
 <p>Optional… my RPi is headless and I use xRDP to connect from a Windows PC to run a graphical UI if needed (e.g. for Arduino IDE)</p>
 <ul>
@@ -51,6 +52,7 @@ nameserver 10.0.1.1</p>
 <li>sudo apt-get install xrdp
 <li><i>to confirm it's working as expected try to connect from a remote computer to the RPi (e.g. from a Windows PC using the "Remote Desktop Connection" tool)</i>
 </ul>
+-->
 <h2>Install NodeJS (here: latest stable version available for RPi: 0.10.28)</h2>
 <ul>
 <li>login as pi / test
@@ -61,8 +63,8 @@ nameserver 10.0.1.1</p>
 <li>sudo cp -r node-v0.10.28-linux-arm-pi/* /opt/node
 <li>rm -rf node-v0.10.28-linux-arm-pi/
 <li>sudo nano /etc/profile
-<p>NODE_JS_HOME="/opt/node"<br/>
-PATH="$PATH:$NODE_JS_HOME/bin"<br/>
+<p><font color="#FF0000">NODE_JS_HOME="/opt/node"<br/>
+PATH="$PATH:$NODE_JS_HOME/bin"</font><br/>
 export PATH</p>
 <li>sudo reboot
 <li><i>to confirm it's working as expected login as pi/test and run "node -v" which should return the installed node version (here: v0.10.28)</i>
@@ -96,6 +98,7 @@ export PATH</p>
 <li><i>to confirm it's working as expected login as pi/test and run "/opt/mongo/bin/mongo" which should start the mongo shell (type "exit" to close the shell again)</i>
 <li><i>if the RPi loses power without proper shutdown while mongod is running, you can't restart without manually removing the pid file first. To do so run “sudo rm /var/lib/mongodb/mongod.lock”</i>
 </ul>
+<!--
 <h2>Install Arduino (and update to latest 1.0.5)</h2>
 <ul>
 <li>login as pi / test
@@ -128,6 +131,7 @@ export PATH</p>
 <li>cd ..
 <li>rm -rf avrdude-rpi-master
 </ul>
+-->
 <h2>Install MySensors from Git branch development (here: password: test)</h2>
 <ul>
 <li>login as pi / test
@@ -137,7 +141,7 @@ export PATH</p>
 <li>cd NodeJsController
 <li>npm install
 <li>nano NodeJsController.js (optional : removing sample firmwares)
-<p>const fwHexFiles = [ ];</p>
+<p>const fwHexFiles = <font color="#FF0000">[ ]</font>;</p>
 <li><i>to confirm that the NodeJsController is working as expected and connects to the local mongo DB: "node NodeJsController.js" which should start the controller, connect to the database and run into an error connecting to the gateway. Stop node again via Ctrl-c</i>
 </ul>
 <h2>Start NodeJsController on boot</h2>
@@ -151,6 +155,7 @@ export PATH</p>
 <li>sudo reboot
 <li><i>to confirm that NodeJsController is starting at boot, check the log file /home/pi/logs/NodeJsController.log</i>
 </ul>
+<!--
 <h2>Configure Arduino</h2>
 <ul>
 <li>start graphical UI (startx on RPi or via RDP)
@@ -163,11 +168,12 @@ export PATH</p>
 </ul>
 <li>Close Arduino IDE
 </ul>
+-->
 
 <h1>Serial Gateway</h1>
 <h2>Hardware</h2>
 <ul>
-<li>as described for the standard Serial Gateway
+<li>as described for the standard Serial Gateway - using the standard Serial Gateway sketch with DEBUG (in MyConfig.h) disabled
 <li>I'm using the version with inclusion mode button and LEDs based on no Arduino but a plain ATmega328p on a breadboard
 <li>Connect directly to the serial GPIO pins of the RPi:
 <p>Arduino GND <-> Raspberry Pi GND (pin 6)<br/>
@@ -176,17 +182,18 @@ Arduino TX <-> Raspberry Pi RX (pin 10)<br/>
 Arduino RESET <-> Raspberry Pi GPIO22 (pin 15)</p>
 <li>Right now I'm using a separate power supply for the serial gateway instead of the 3.3V or 5V pins of the RPi because I ran in some issues with power consumption during programming
 </ul>
-<h2>Disable default use of serial port</h2>
+<h2>Disable default use of RPi serial port</h2>
 <ul>
 <li>sudo nano /etc/inittab
-<p>#T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100</p>
+<p><font color="#FF0000">#</font>T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100</p>
 <li>sudo nano /boot/cmdline.txt - remove part of the file:
-<p>console=ttyAMA0,115200</p>
+<p><font color="#FF0000"><strike>console=ttyAMA0,115200</strike></font></p>
 <li>cd /dev
 <li>sudo ln -s ttyAMA0 ttyUSB9
 <li>sudo apt-get install minicom
 <li>sudo reboot
 </ul>
+<!--
 <h2>Flash (assuming that the ATmega has a valid Arduino bootloader installed)</h2>
 <ul>
 <li>login as pi / test
@@ -198,30 +205,33 @@ Arduino RESET <-> Raspberry Pi GPIO22 (pin 15)</p>
 <li>File - Upload
 </ul>
 </ul>
+-->
 <h2>Setup NodeJsController</h2>
 <ul>
 <li>nano ~/Arduino/NodeJsController/NodeJsController.js
-<p>//const gwType = 'Ethernet';<br/>
-//const gwAddress = '10.0.1.99';<br/>
-//const gwPort = 9999;<br/>
-const gwType = 'Serial';<br/>
-const gwPort = '/dev/ttyAMA0';<br/>
-const gwBaud = 115200;</p>
+<p><font color="#FF0000">//</font>const gwType = 'Ethernet';<br/>
+<font color="#FF0000">//</font>const gwAddress = '10.0.1.99';<br/>
+<font color="#FF0000">//</font>const gwPort = 9999;<br/>
+<font color="#FF0000"><strike>//</strike></font>const gwType = 'Serial';<br/>
+<font color="#FF0000"><strike>//</strike></font>const gwPort = '<font color="#FF0000">/dev/ttyAMA0</font>';<br/>
+<font color="#FF0000"><strike>//</strike></font>const gwBaud = 115200;</p>
 <li>sudo service mysensors restart
 </ul>
 
 <h1>Ethernet Gateway</h1>
 <h2>Hardware</h2>
 <ul>
-<li>as described for the standard Ethernet Gateway
+<li>as described for the standard Ethernet Gateway - using the standard Ethernet Gateway sketch with DEBUG (in MyConfig.h) disabled
 <li>I'm using the version with inclusion mode button and LEDs based on no Arduino but a plain ATmega328p on a breadboard and the ENC28J60 Ethernet module
+<li>here: 10.0.1.99 / port: 9999
 </ul>
+<!--
 <h2>Adjust Sourcecode (here: address 10.0.1.99 / port: 9999)</h2>
 <ul>
 <li>[I you are running into compilation errors due to missing files in the utility directory, do the following]
 cp -R ~/Arduino/libraries/UIPEthernet/src/utility ~/Arduino/libraries/UIPEthernet/utility
 <li>nano ~/Arduino/libraries/MySensors/MyConfig.h
-<p>//#define DEBUG</p>
+<p><font color="#FF0000">//</font>#define DEBUG</p>
 <li>start Arduino IDE
 <ul>
 <li>File - Sketchbook - EthernetGateway
@@ -247,10 +257,11 @@ IPAddress myIp (10, 0, 1, 99);</p>
 <li>File - Upload
 </ul>
 </ul>
+-->
 <h2>Setup NodeJsController</h2>
 <ul>
 <li>nano ~/Arduino/NodeJsController/NodeJsController.js
-<p>const gwAddress = '10.0.1.99';</p>
+<p>const gwAddress = '<font color="#FF0000">10.0.1.99</font>';</p>
 <li>sudo service mysensors restart
 </ul>
 
