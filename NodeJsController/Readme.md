@@ -1,5 +1,4 @@
 <h1>MySensors with NodeJS Controller and OTA bootloader on RPi</h1>
-<p>My RPi runs Arduino to compile and flash sketches and the bootloader. With this setup no separate PC/Mac is needed. Exactly the same could be achieved (faster) using a PC/Mac for all the Arduino compilation and flashing activities – just skip the steps and execute on PC/Mac instead.
 <h2>Hardware</h2>
 <p>Headless Raspberry Pi model B with wired Ethernet</p>
 <p>I'm connecting a monitor only for first time boot to get the IP address and then connect via Putty/xRDP</p>
@@ -140,8 +139,6 @@ export PATH</p>
 <li>git checkout development
 <li>cd NodeJsController
 <li>npm install
-<li>nano NodeJsController.js (optional : removing sample firmwares)
-<p>const fwHexFiles = <font color="#FF0000">[ ]</font>;</p>
 <li><i>to confirm that the NodeJsController is working as expected and connects to the local mongo DB: "node NodeJsController.js" which should start the controller, connect to the database and run into an error connecting to the gateway. Stop node again via Ctrl-c</i>
 </ul>
 <h2>Start NodeJsController on boot</h2>
@@ -215,7 +212,7 @@ Arduino RESET <-> Raspberry Pi GPIO22 (pin 15)</p>
 <font color="#FF0000"><strike>//</strike></font>const gwType = 'Serial';<br/>
 <font color="#FF0000"><strike>//</strike></font>const gwPort = '<font color="#FF0000">/dev/ttyAMA0</font>';<br/>
 <font color="#FF0000"><strike>//</strike></font>const gwBaud = 115200;</p>
-<li>sudo service mysensors restart
+<li>sudo service mysensors restart (at this point stop/restart doesn't work. use "sudo killall node" followed by "sudo service mysensors start" instead)
 </ul>
 
 <h1>Ethernet Gateway</h1>
@@ -262,7 +259,7 @@ IPAddress myIp (10, 0, 1, 99);</p>
 <ul>
 <li>nano ~/Arduino/NodeJsController/NodeJsController.js
 <p>const gwAddress = '<font color="#FF0000">10.0.1.99</font>';</p>
-<li>sudo service mysensors restart
+<li>sudo service mysensors restart (at this point stop/restart doesn't work. use "sudo killall node" followed by "sudo service mysensors start" instead)
 </ul>
 
 <h1>Sensor Node Bootloader</h1>
@@ -291,12 +288,14 @@ ISP_MCU = m328p</p>
 </ul>
 
 <h1>End-to-End Test</h1>
-<h2>Add Firmware to Controller</h2>
+<h2>Add Firmware to Controller (here: DallasTemperatureSensor)</h2>
 <ul>
+<li>use Arduino IDE or codebender or whatever other way to compile your sketch
+<li>copy the compiled DallasTemperatureSensor.cpp.hex file to the NodeJsController directory (if using the Arduino IDE, enable verbose logging in preferences and then watch the compilation process to find the temp directory where the output is stored)
 <li>nano ~/Arduino/NodeJsController/NodeJsController.js
-<p>const fwHexFiles = [ 'DallasTemperatureSensor.cpp.hex' ];<br/>
-const fwDefaultType = 0;</p>
-<li>sudo service mysensors restart
+<p>const fwHexFiles = [ <font color="#FF0000">'DallasTemperatureSensor.cpp.hex'</font> ];<br/>
+const fwDefaultType = <font color="#FF0000">0</font>;</p>
+<li>sudo service mysensors restart (at this point stop/restart doesn't work. use "sudo killall node" followed by "sudo service mysensors start" instead)
 </ul>
 <h2>Flash Firmware OTA</h2>
 <ul>
@@ -305,5 +304,5 @@ const fwDefaultType = 0;</p>
 </ul>
 <h2>Check functionality</h2>
 <ul>
-<li>in addition to watching the log file (tail command above) you can connect to the mongo db using a client (e.g. <a href="http://robomongo.org">Robomongo</a>) and check if new values are written to the database as a real end-to-end test
+<li>in addition to watching the log file (tail command above) you can connect to the mongo db using a client (e.g. <a href="http://robomongo.org">Robomongo</a>) and check if new values are written to the database as a real end-to-end test once the bootloader finished uploading the firmware
 </ul>

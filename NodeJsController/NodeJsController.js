@@ -11,8 +11,8 @@ const dbAddress						= '127.0.0.1';
 const dbPort						= 27017;
 const dbName						= 'MySensorsDb';
 
-const fwHexFiles 					= [ 'BlinkRed.hex', 'BlinkGreen.hex', 'DallasTemperatureSensor.cpp.hex' ];
-const fwDefaultType 				= 2; // index of hex file from array above
+const fwHexFiles 					= [ ];
+const fwDefaultType 				= 0xFFFF; // index of hex file from array above (0xFFFF == none defined)
 
 const FIRMWARE_BLOCK_SIZE			= 16;
 const BROADCAST_ADDRESS				= 255;
