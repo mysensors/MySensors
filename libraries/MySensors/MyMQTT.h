@@ -30,7 +30,7 @@ version 2 as published by the Free Software Foundation.
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-#define EEPROM_LATEST_NODE_ADDRESS EEPROM_LOCAL_CONFIG_ADDRESS+0
+#define EEPROM_LATEST_NODE_ADDRESS ((uint8_t)EEPROM_LOCAL_CONFIG_ADDRESS)
 #define MQTT_MAX_PACKET_SIZE 100
 
 #define MQTTPROTOCOLVERSION 3
@@ -57,35 +57,28 @@ version 2 as published by the Free Software Foundation.
 class MyMQTT :
 public MySensor {
 public:
-	MyMQTT(uint8_t _cepin=5, uint8_t _cspin=6, uint8_t _rx=NULL, uint8_t _tx=NULL, uint8_t _er=NULL);
-	void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(char *, int *)=NULL);
+	MyMQTT(uint8_t _cepin=5, uint8_t _cspin=6);
+	void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(const char *, int *)=NULL, uint8_t _rx=6, uint8_t _tx=5, uint8_t _er=4 );
 	void processRadioMessage();
 	void processMQTTMessage(char *inputString, int inputPos);
-	boolean isLedMode();
-	void ledTimersInterrupt();
 private:
 	bool MQTTClientConnected;
 	char buffer[MQTT_MAX_PACKET_SIZE];
 	int buffsize;
 	char convBuf[MAX_PAYLOAD*2+1];
 	boolean useWriteCallback;
-	void (*dataCallback)(char *, int *);
+	void (*dataCallback)(const char *, int *);
 	void SendMQTT(MyMessage &msg);
-	char strncpysType_retL(char *str, char index, char start);
+	char strncpysType_retL(char *str, unsigned char index, char start);
 
-	volatile uint8_t countRx;
-	volatile uint8_t countTx;
-	volatile uint8_t countErr;
-	uint8_t pinRx;
-	uint8_t pinTx;
-	uint8_t pinEr;
-	boolean ledMode;
+
 	void ledTimers();
 	void rxBlink(uint8_t cnt);
 	void txBlink(uint8_t cnt);
 	void errBlink(uint8_t cnt);
 };
 
+extern void ledTimersInterrupt();
 
 
 #endif
