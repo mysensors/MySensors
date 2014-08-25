@@ -5,6 +5,7 @@
   "dependencies": {
     "mongodb": "~1.4.7",
     "net": "~1.0.2",
+    "requestify": "^0.1.16",
     "serialport": "^1.4.5"
   }
 }
