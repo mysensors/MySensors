@@ -290,10 +290,8 @@ ISP_MCU = m328p</p>
 <h1>End-to-End Test</h1>
 <h2>Add Firmware to Controller (here: DallasTemperatureSensor)</h2>
 <ul>
-<li>use Arduino IDE or codebender or whatever other way to compile your sketch
-<li>copy the compiled DallasTemperatureSensor.cpp.hex file to the NodeJsController directory (if using the Arduino IDE, enable verbose logging in preferences and then watch the compilation process to find the temp directory where the output is stored)
 <li>nano ~/Arduino/NodeJsController/NodeJsController.js
-<p>const fwHexFiles = [ <font color="#FF0000">'DallasTemperatureSensor.cpp.hex'</font> ];<br/>
+<p>const fwHexFiles = [ <font color="#FF0000">'../libraries/MySensors/examples/DallasTemperatureSensor/DallasTemperatureSensor.ino'</font> ];<br/>
 const fwDefaultType = <font color="#FF0000">0</font>;</p>
 <li>sudo service mysensors restart (at this point stop/restart doesn't work. use "sudo killall node" followed by "sudo service mysensors start" instead)
 </ul>

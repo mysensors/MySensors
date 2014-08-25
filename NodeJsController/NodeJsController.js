@@ -11,8 +11,8 @@ const dbAddress						= '127.0.0.1';
 const dbPort						= 27017;
 const dbName						= 'MySensorsDb';
 
-const fwSketches					= [ '../libraries/MySensors/examples/DallasTemperatureSensor/DallasTemperatureSensor.ino' ];
-const fwDefaultType 				= 0; // index of hex file from array above
+const fwSketches					= [ ];
+const fwDefaultType 				= 0xFFFF; // index of hex file from array above (0xFFFF
 
 const FIRMWARE_BLOCK_SIZE			= 16;
 const BROADCAST_ADDRESS				= 255;
