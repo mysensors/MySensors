@@ -1,18 +1,18 @@
-const gwType						= 'Ethernet';
-const gwAddress						= '10.0.1.99';
-const gwPort						= 9999;
+//const gwType						= 'Ethernet';
+//const gwAddress						= '10.0.1.99';
+//const gwPort						= 9999;
 
-//const gwType = 'Serial';
+const gwType = 'Serial';
 //const gwPort = 'COM4';
-//const gwPort = '/dev/ttyUSB0';
-//const gwBaud = 115200;
+const gwPort = '/dev/ttyAMA0';
+const gwBaud = 115200;
 
 const dbAddress						= '127.0.0.1';
 const dbPort						= 27017;
 const dbName						= 'MySensorsDb';
 
-const fwHexFiles 					= [ ];
-const fwDefaultType 				= 0xFFFF; // index of hex file from array above (0xFFFF == none defined)
+const fwSketches					= [ '../libraries/MySensors/examples/DallasTemperatureSensor/DallasTemperatureSensor.ino' ];
+const fwDefaultType 				= 0; // index of hex file from array above
 
 const FIRMWARE_BLOCK_SIZE			= 16;
 const BROADCAST_ADDRESS				= 255;
@@ -117,6 +117,8 @@ const P_ULONG32						= 5;
 const P_CUSTOM						= 6;
 
 var fs = require('fs');
+var path = require('path');
+var requestify = require('requestify');
 var appendedString="";
 
 function crcUpdate(old, value) {
@@ -146,76 +148,99 @@ function pushDWord(arr, val) {
 	arr.push((val  >> 24) & 0x000000FF);
 }
 
-function loadFirmware(fwtype, fwversion, filename, db) {
-	console.log("loading firmware: " + filename);
-	fwdata = [];
-	var start = 0;
-	var end = 0;
-	var pos = 0;
-	var hex = fs.readFileSync(filename).toString().split("\n");
-	for(l in hex) {
-		line = hex[l].trim();
-		if (line.length > 0) {
-			while (line.substring(0, 1) != ":")
-				line = line.substring(1);
-			var reclen = parseInt(line.substring(1, 3), 16);
-			var offset = parseInt(line.substring(3, 7), 16);
-			var rectype = parseInt(line.substring(7, 9), 16);
-			var data = line.substring(9, 9 + 2 * reclen);
-			var chksum = parseInt(line.substring(9 + (2 * reclen), 9 + (2 * reclen) + 2), 16);
-			if (rectype == 0) {
-				if ((start == 0) && (end == 0)) {
-					if (offset % 128 > 0)
-						throw new Error("error loading hex file - offset can't be devided by 128");
-					start = offset;
-					end = offset;
+function loadFirmware(fwtype, fwversion, sketch, db) {
+	var filename = path.basename(sketch);
+        console.log("compiling firmware: " + filename);
+        var req = {
+                files: [{
+                        filename: filename,
+                        content: fs.readFileSync(sketch).toString()
+                }],
+                format: "hex",
+                version: "105",
+                build: {
+                        mcu: "atmega328p",
+                        f_cpu: "16000000L",
+                        core: "arduino",
+                        variant: "standard"
+                }
+        };
+        requestify.post('https://codebender.cc/utilities/compile/', req).then(function(res) {
+                var body = JSON.parse(res.getBody());
+                if (body.success) {
+			console.log("loading firmware: " + filename);
+			fwdata = [];
+			var start = 0;
+			var end = 0;
+			var pos = 0;
+			var hex = body.output.split("\n");
+			for(l in hex) {
+				line = hex[l].trim();
+				if (line.length > 0) {
+					while (line.substring(0, 1) != ":")
+						line = line.substring(1);
+					var reclen = parseInt(line.substring(1, 3), 16);
+					var offset = parseInt(line.substring(3, 7), 16);
+					var rectype = parseInt(line.substring(7, 9), 16);
+					var data = line.substring(9, 9 + 2 * reclen);
+					var chksum = parseInt(line.substring(9 + (2 * reclen), 9 + (2 * reclen) + 2), 16);
+					if (rectype == 0) {
+						if ((start == 0) && (end == 0)) {
+							if (offset % 128 > 0)
+								throw new Error("error loading hex file - offset can't be devided by 128");
+							start = offset;
+							end = offset;
+						}
+						if (offset < end)
+							throw new Error("error loading hex file - offset lower than end");
+						while (offset > end) {
+							fwdata.push(255);
+							pos++;
+							end++;
+						}
+						for (var i = 0; i < reclen; i++) {
+							fwdata.push(parseInt(data.substring(i * 2, (i * 2) + 2), 16));
+							pos++;
+						}
+						end += reclen;
+					}
 				}
-				if (offset < end)
-					throw new Error("error loading hex file - offset lower than end");
-				while (offset > end) {
-					fwdata.push(255);
-					pos++;
-					end++;
-				}
-				for (var i = 0; i < reclen; i++) {
-					fwdata.push(parseInt(data.substring(i * 2, (i * 2) + 2), 16));
-					pos++;
-				}
-				end += reclen;
+			}	
+			var pad = end % 128; // ATMega328 has 64 words per page / 128 bytes per page
+			for (var i = 0; i < 128 - pad; i++) {
+				fwdata.push(255);
+				pos++;
+				end++;
 			}
-		}
-	}	
-	var pad = end % 128; // ATMega328 has 64 words per page / 128 bytes per page
-	for (var i = 0; i < 128 - pad; i++) {
-		fwdata.push(255);
-		pos++;
-		end++;
-	}
-	var blocks = (end - start) / FIRMWARE_BLOCK_SIZE;
-	var crc = 0xFFFF;
-	for (var i = 0; i < blocks * FIRMWARE_BLOCK_SIZE; ++i) {
-		var v = crc;
-		crc = crcUpdate(crc, fwdata[i]);
-	}
-	db.collection('firmware', function(err, c) {
-		c.update({
-			'type': fwtype,
-			'version': fwversion
-		}, {
-			$set: {
-				'filename': filename,
-				'blocks': blocks,
-				'crc': crc,
-				'data': fwdata
+			var blocks = (end - start) / FIRMWARE_BLOCK_SIZE;
+			var crc = 0xFFFF;
+			for (var i = 0; i < blocks * FIRMWARE_BLOCK_SIZE; ++i) {
+				var v = crc;
+				crc = crcUpdate(crc, fwdata[i]);
 			}
-		}, {
-			upsert: true
-		}, function(err, result) {
-			if (err)
-				console.log('Error writing firmware to database');
-		});
-	});
-	console.log("loading firmware done. blocks: " + blocks + " / crc: " + crc);
+			db.collection('firmware', function(err, c) {
+				c.update({
+					'type': fwtype,
+					'version': fwversion
+				}, {
+					$set: {
+						'filename': filename,
+						'blocks': blocks,
+						'crc': crc,
+						'data': fwdata
+					}
+				}, {
+					upsert: true
+				}, function(err, result) {
+					if (err)
+						console.log('Error writing firmware to database');
+				});
+			});
+			console.log("loading firmware done. blocks: " + blocks + " / crc: " + crc);
+                } else {
+                        console.log("error: %j", res.body);
+                }
+        });
 }
 
 /*
@@ -645,8 +670,8 @@ dbc.connect('mongodb://' + dbAddress + ':' + dbPort + '/' + dbName, function(err
 	db.createCollection('firmware', function(err, collection) { });
 
 	// ToDo : check for new hex files / only load if new / get type and version from filename
-	for (var i = 0; i < fwHexFiles.length; i++)
-		loadFirmware(i, 1, fwHexFiles[i], db);
+	for (var i = 0; i < fwSketches.length; i++)
+		loadFirmware(i, 1, fwSketches[i], db);
 
 	var gw;
 	if (gwType == 'Ethernet') {
