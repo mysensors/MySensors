@@ -12,71 +12,89 @@ version 2 as published by the Free Software Foundation.
 #include "MyMQTT.h"
 #include "utility/MsTimer2.h"
 
+char V_0[] PROGMEM = "TEMP";		//V_TEMP
+char V_1[] PROGMEM = "HUM";		//V_HUM
+char V_2[] PROGMEM = "LIGHT";		//V_LIGHT
+char V_3[] PROGMEM = "DIMMER";		//V_DIMMER
+char V_4[] PROGMEM = "PRESSURE";	//V_PRESSURE
+char V_5[] PROGMEM = "FORECAST";	//V_FORECAST
+char V_6[] PROGMEM = "RAIN";		//V_RAIN
+char V_7[] PROGMEM = "RAINRATE";	//V_RAINRATE
+char V_8[] PROGMEM = "WIND";		//V_WIND
+char V_9[] PROGMEM = "GUST";		//V_GUST
+char V_10[] PROGMEM = "DIRECTON";	//V_DIRECTON
+char V_11[] PROGMEM = "UV";		//V_UV
+char V_12[] PROGMEM = "WEIGHT";		//V_WEIGHT
+char V_13[] PROGMEM = "DISTANCE";	//V_DISTANCE
+char V_14[] PROGMEM = "IMPEDANCE";	//V_IMPEDANCE
+char V_15[] PROGMEM = "ARMED";		//V_ARMED
+char V_16[] PROGMEM = "TRIPPED";	//V_TRIPPED
+char V_17[] PROGMEM = "WATT";		//V_WATT
+char V_18[] PROGMEM = "KWH";		//V_KWH
+char V_19[] PROGMEM = "SCENE_ON";	//V_SCENE_ON
+char V_20[] PROGMEM = "SCENE_OFF";	//V_SCENE_OFF
+char V_21[] PROGMEM = "HEATER";		//V_HEATER
+char V_22[] PROGMEM = "HEATER_SW";	//V_HEATER_SW
+char V_23[] PROGMEM = "LIGHT_LEVEL";	//V_LIGHT_LEVEL
+char V_24[] PROGMEM = "VAR1";		//V_VAR1
+char V_25[] PROGMEM = "VAR2";		//V_VAR2
+char V_26[] PROGMEM = "VAR3";		//V_VAR3
+char V_27[] PROGMEM = "VAR4";		//V_VAR4
+char V_28[] PROGMEM = "VAR5";		//V_VAR5
+char V_29[] PROGMEM = "UP";		//V_UP
+char V_30[] PROGMEM = "DOWN";		//V_DOWN
+char V_31[] PROGMEM = "STOP";		//V_STOP
+char V_32[] PROGMEM = "IR_SEND";	//V_IR_SEND
+char V_33[] PROGMEM = "IR_RECEIVE";	//V_IR_RECEIVE
+char V_34[] PROGMEM = "FLOW";		//V_FLOW
+char V_35[] PROGMEM = "VOLUME";		//V_VOLUME
+char V_36[] PROGMEM = "LOCK_STATUS";	//V_LOCK_STATUS
+char V_37[] PROGMEM = "DUST_LEVEL";	//V_DUST_LEVEL
+char V_38[] PROGMEM = "VOLTAGE";	//V_VOLTAGE
+char V_39[] PROGMEM = "CURRENT";	//V_CURRENT
+char V_40[] PROGMEM = "";		//
+char V_41[] PROGMEM = "";		//
+char V_42[] PROGMEM = "";		//
+char V_43[] PROGMEM = "";		//
+char V_44[] PROGMEM = "";		//
+char V_45[] PROGMEM = "";		//
+char V_46[] PROGMEM = "";		//
+char V_47[] PROGMEM = "";		//
+char V_48[] PROGMEM = "";		//
+char V_49[] PROGMEM = "";		//
+char V_50[] PROGMEM = "";		//
+char V_51[] PROGMEM = "";		//
+char V_52[] PROGMEM = "";		//
+char V_53[] PROGMEM = "";		//
+char V_54[] PROGMEM = "";		//
+char V_55[] PROGMEM = "";		//
+char V_56[] PROGMEM = "";		//
+char V_57[] PROGMEM = "";		//
+char V_58[] PROGMEM = "";		//
+char V_59[] PROGMEM = "";		//
+char V_60[] PROGMEM = "Started!\n";	//Custom for MQTTGateway
+char V_61[] PROGMEM = "SKETCH_NAME";	//Custom for MQTTGateway
+char V_62[] PROGMEM = "SKETCH_VERSION"; //Custom for MQTTGateway
+char V_63[] PROGMEM = "UNKNOWN"; 	//Custom for MQTTGateway
+
+//////////////////////////////////////////////////////////////////
+
+PROGMEM const char *vType[] = {
+	V_0, V_1, V_2, V_3, V_4, V_5, V_6, V_7, V_8, V_9, V_10,
+	V_11, V_12, V_13, V_14, V_15, V_16, V_17, V_18, V_19, V_20,
+	V_21, V_22, V_23, V_24, V_25, V_26, V_27, V_28, V_29, V_30,
+	V_31, V_32, V_33, V_34, V_35, V_36, V_37, V_38, V_39, V_40,
+	V_41, V_42, V_43, V_44, V_45, V_46, V_47, V_48, V_49, V_50,
+	V_51, V_52, V_53, V_54, V_55, V_56, V_57, V_58, V_59, V_60,
+	V_61, V_62, V_63
+};
 
 
 char broker[] PROGMEM = MQTT_BROKER_PREFIX;
 
-char S_0[] PROGMEM = "Temperature";	//V_TEMP
-char S_1[] PROGMEM = "Humidity";	//V_HUM
-char S_2[] PROGMEM = "Light";		//V_LIGHT
-char S_3[] PROGMEM = "Dimmer";		//V_DIMMER
-char S_4[] PROGMEM = "Pressure";	//V_PRESSURE
-char S_5[] PROGMEM = "Forecast";	//V_FORECAST
-char S_6[] PROGMEM = "Rain";		//V_RAIN
-char S_7[] PROGMEM = "Rainrate";	//V_RAINRATE
-char S_8[] PROGMEM = "Wind";		//V_WIND
-char S_9[] PROGMEM = "Gust";		//V_GUST
-char S_10[] PROGMEM = "Direction";	//V_DIRECTION
-char S_11[] PROGMEM = "UV";			//V_UV
-char S_12[] PROGMEM = "Weight";		//V_WEIGHT
-char S_13[] PROGMEM = "Distance";	//V_DISTANCE
-char S_14[] PROGMEM = "Impedance";	//V_IMPEDANCE
-char S_15[] PROGMEM = "Armed";		//V_ARMED
-char S_16[] PROGMEM = "Tripped";	//V_TRIPPED
-char S_17[] PROGMEM = "Watt";		//V_WATT
-char S_18[] PROGMEM = "KWH";		//V_KWH
-char S_19[] PROGMEM = "Scene_ON";	//V_SCENE_ON
-char S_20[] PROGMEM = "Scene_OFF";	//V_SCENE_OFF
-char S_21[] PROGMEM = "Heater";		//V_HEATER
-char S_22[] PROGMEM = "Heater_SW";	//V_HEATER_SW
-char S_23[] PROGMEM = "LightLevel";	//V_LIGHT_LEVEL
-char S_24[] PROGMEM = "Var1";		//V_VAR1
-char S_25[] PROGMEM = "Var2";		//V_VAR2
-char S_26[] PROGMEM = "Var3";		//V_VAR3
-char S_27[] PROGMEM = "Var4";		//V_VAR4
-char S_28[] PROGMEM = "Var5,";		//V_VAR5
-char S_29[] PROGMEM = "Up";			//V_UP
-char S_30[] PROGMEM = "Down";		//V_DOWN
-char S_31[] PROGMEM = "Stop";		//V_STOP
-char S_32[] PROGMEM = "IR_Send";	//V_IR_SEND
-char S_33[] PROGMEM = "IR_Receive";	//V_IR_RECEIVE
-char S_34[] PROGMEM = "Flow";		//V_FLOW
-char S_35[] PROGMEM = "Volume";		//V_VOLUME
-char S_36[] PROGMEM = "Lock_Status";//V_LOCK_STATUS
-char S_37[] PROGMEM = "DustLevel";	//V_DUST_LEVEL
-char S_38[] PROGMEM = "";
-char S_39[] PROGMEM = "";
-char S_40[] PROGMEM = "";
-char S_41[] PROGMEM = "";
-char S_42[] PROGMEM = "";
-char S_43[] PROGMEM = "";
-char S_44[] PROGMEM = "";
-char S_45[] PROGMEM = "Volt_Batt";		// Does not exist in MyMessage.h!
-char S_46[] PROGMEM = "";
-char S_47[] PROGMEM = "";
-char S_48[] PROGMEM = "";
-char S_49[] PROGMEM = "Sketch_name"; 	// Does not exist in MyMessage.h!
-char S_50[] PROGMEM = "Sketch_version"; // Does not exist in MyMessage.h!
-
-
-PROGMEM const char *sType[] = {
-	S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9, S_10,
-	S_11, S_12, S_13, S_14, S_15, S_16, S_17, S_18, S_19, S_20,
-	S_21, S_22, S_23, S_24, S_25, S_26, S_27, S_28, S_29, S_30,
-	S_31, S_32, S_33, S_34, S_35, S_36, S_37, S_38, S_39, S_40,
-	S_41, S_42, S_43, S_44, S_45, S_46, S_47, S_48, S_49, S_50
-};
-
+#define S_FIRSTCUSTOM 60
+#define TYPEMAXLEN 20
+#define V_TOTAL (sizeof(vType)/sizeof(char *))-1
 
 extern volatile uint8_t countRx;
 extern volatile uint8_t countTx;
@@ -90,11 +108,32 @@ MySensor(_cepin, _cspin) {
 
 }
 
-void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)(const char *, int *), uint8_t _rx, uint8_t _tx, uint8_t _er) {
+inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
+	msg.destination = destination;
+	msg.sender = sender;
+	msg.sensor = sensor;
+	msg.type = type;
+	mSetCommand(msg,command);
+	mSetRequestAck(msg,enableAck);
+	mSetAck(msg,false);
+	return msg;
+}
+
+char *getType(char *b, const char **index) {
+	char *q = b;
+	char *p = (char *)pgm_read_ptr(index);
+	while (*q++ = pgm_read_byte(p++));
+	*q=0;
+	return b;
+}
+
+void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate, void (*inDataCallback)
+			(const char *, uint8_t *), uint8_t _rx, uint8_t _tx, uint8_t _er) {
 	Serial.begin(BAUD_RATE);
 	repeaterMode = true;
 	isGateway = true;
 	MQTTClientConnected = false;
+
 	setupRepeaterMode();
 	dataCallback = inDataCallback;
 
@@ -117,10 +156,7 @@ void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataR
 	MsTimer2::set(200, ledTimersInterrupt);
 	MsTimer2::start();
 
-
-	// Send startup log message on serial
-	//Serial.print(PSTR("Started\n"));//TODO: progmem gives error..? error: sType causes a section type conflict with __c
-	Serial.print("Started\n");//TODO: fix this...
+	Serial.print(getType(convBuf, &vType[S_FIRSTCUSTOM]));
 }
 
 void MyMQTT::processRadioMessage() {
@@ -134,104 +170,97 @@ void MyMQTT::processRadioMessage() {
 
 }
 
-void MyMQTT::processMQTTMessage(char *inputString, int inputPos) {
+void MyMQTT::processMQTTMessage(char *inputString, uint8_t inputPos) {
 	char *str, *p;
-	char i = 0;
+	uint8_t i = 0;
 	buffer[0]= 0;
 	buffsize = 0;
-#ifdef TCPDUMP
-	Serial.print("<<");
-	char buf[4];
-	for (int a=0; a<inputPos; a++) { sprintf(buf,"%02X ",(byte)inputString[a]); Serial.print(buf); } Serial.println("");
-#endif
-	if ((byte)inputString[0] >> 4 == MQTTCONNECT) {
+
+	if ((uint8_t)inputString[0] >> 4 == MQTTCONNECT) {
 		buffer[buffsize++] = MQTTCONNACK << 4;
-		buffer[buffsize++] = 0x02;                  // Remaining length
-		buffer[buffsize++] = 0x00;                  // Connection accepted
-		buffer[buffsize++] = 0x00;                  // Reserved
-		MQTTClientConnected=true;
+		buffer[buffsize++] = 0x02;			// Remaining length
+		buffer[buffsize++] = 0x00;			// Connection accepted
+		buffer[buffsize++] = 0x00;			// Reserved
+		MQTTClientConnected=true;			// We have connection!
 	}
-	if ((byte)inputString[0] >> 4 == MQTTPINGREQ) {
+	if ((uint8_t)inputString[0] >> 4 == MQTTPINGREQ) {
 		buffer[buffsize++] = MQTTPINGRESP << 4;
 		buffer[buffsize++] = 0x00;
 	}
-	if ((byte)inputString[0] >> 4 == MQTTSUBSCRIBE) {
-		buffer[buffsize++] = MQTTSUBACK << 4;       // Just ack everything, we actually dont really care!
-		buffer[buffsize++] = 0x03;                  // Remaining length
-		buffer[buffsize++] = (byte)inputString[2];  // Message ID MSB
-		buffer[buffsize++] = (byte)inputString[3];  // Message ID LSB
-		buffer[buffsize++] = MQTTQOS0;              // QOS level
+	if ((uint8_t)inputString[0] >> 4 == MQTTSUBSCRIBE) {
+		buffer[buffsize++] = MQTTSUBACK << 4;		// Just ack everything, we actually dont really care!
+		buffer[buffsize++] = 0x03;			// Remaining length
+		buffer[buffsize++] = (uint8_t)inputString[2];	// Message ID MSB
+		buffer[buffsize++] = (uint8_t)inputString[3];	// Message ID LSB
+		buffer[buffsize++] = MQTTQOS0;			// QOS level
 	}
-	if ((byte)inputString[0] >> 4 == MQTTUNSUBSCRIBE) {
+	if ((uint8_t)inputString[0] >> 4 == MQTTUNSUBSCRIBE) {
 		buffer[buffsize++] = MQTTUNSUBACK << 4;
-		buffer[buffsize++] = 0x02;                  // Remaining length
-		buffer[buffsize++] = (byte)inputString[2];  // Message ID MSB
-		buffer[buffsize++] = (byte)inputString[3];  // Message ID LSB
+		buffer[buffsize++] = 0x02;			// Remaining length
+		buffer[buffsize++] = (uint8_t)inputString[2];	// Message ID MSB
+		buffer[buffsize++] = (uint8_t)inputString[3];	// Message ID LSB
 	}
-	if ((byte)inputString[0] >> 4 == MQTTDISCONNECT) {
-		MQTTClientConnected=false;
+	if ((uint8_t)inputString[0] >> 4 == MQTTDISCONNECT) {
+		MQTTClientConnected=false;			// We lost connection!
 	}
 	if (buffsize > 0) {
-#ifdef TCPDUMP
-		Serial.print(">>");
-		char buf[4];
-		for (int a=0; a<buffsize; a++) { sprintf(buf,"%02X ",(byte)buffer[a]);  Serial.print(buf); } Serial.println("");
-#endif
 		dataCallback(buffer,&buffsize);
 	}
+
 	// We publish everything we get, we dont care if its subscribed or not!
-	if ((byte)inputString[0] >> 4 == MQTTPUBLISH || (MQTT_SEND_SUBSCRIPTION && (byte)inputString[0] >> 4 == MQTTSUBSCRIBE)) {
+	if ((uint8_t)inputString[0] >> 4 == MQTTPUBLISH || (MQTT_SEND_SUBSCRIPTION && (uint8_t)inputString[0] >> 4 == MQTTSUBSCRIBE)) {
 		buffer[0]= 0;
 		buffsize = 0;
-		if ((byte)inputString[0] >> 4 == MQTTSUBSCRIBE) {
+		// Cut out address and payload depending on message type.
+		if ((uint8_t)inputString[0] >> 4 == MQTTSUBSCRIBE) {
 			strncat(buffer,inputString+6,inputString[5]);
 		} else {
 			strncat(buffer,inputString+4,inputString[3]);
 		}
-		msg.sender = GATEWAY_ADDRESS;
-		for (str = strtok_r(buffer,"/",&p) ; str && i<4 ; str = strtok_r(NULL,"/",&p)) {  //split using semicolon
-			// TODO: Check if we should send ack or not.
+
+		// TODO: Check if we should send ack or not.
+		for (str = strtok_r(buffer,"/",&p) ; str && i<4 ; str = strtok_r(NULL,"/",&p)) {
 			if (i == 0) {
-				if (strcmp_P(str,broker)!=0) {
-					return; //Message not for us or malformatted!
+				if (strcmp_P(str,broker)!=0) {	//look for MQTT_BROKER_PREFIX
+					return;			//Message not for us or malformatted!
 				}
 			} else if (i==1) {
-				msg.destination = atoi(str);
+				msg.destination = atoi(str);	//NodeID
 			} else if (i==2) {
-				msg.sensor = atoi(str);
+				msg.sensor = atoi(str);		//SensorID
 			} else if (i==3) {
-				char match=0;
-				for (int j=0; strcpy_P(convBuf, (char*)pgm_read_word(&(sType[j]))) ; j++) {
-					if (strcmp(str,convBuf)==0) {
+				char match=0;			//SensorType
+				//strcpy(str,(char*)&str[2]);  //Strip V_
+
+				for (uint8_t j=0; strcpy_P(convBuf, (char*)pgm_read_word(&(vType[j]))) ; j++) {
+					if (strcmp((char*)&str[2],convBuf)==0) { //Strip V_ and compare
 						match=j;
+						break;
+					}
+					if (j >= V_TOTAL) {	// No match found!
+						match=V_TOTAL;	// last item.
 						break;
 					}
 				}
 				msg.type = match;
 			}
 			i++;
-		}
-		if ((char)inputString[1] > (char)(inputString[3]+2) && !((byte)inputString[0] >> 4 == MQTTSUBSCRIBE)) {
+		}						//Check if packge has payload
+		if ((uint8_t)inputString[1] > (uint8_t)(inputString[3]+2) && !((uint8_t)inputString[0] >> 4 == MQTTSUBSCRIBE)) {
 			strcpy(convBuf,inputString+(inputString[3]+4));
-			msg.set(convBuf);
+			msg.set(convBuf);			//Payload
 		} else {
-			msg.set("");
+			msg.set("");				//No payload
 		}
-		msg.sender = GATEWAY_ADDRESS;
-		mSetCommand(msg,C_SET);
-		mSetRequestAck(msg,false);
-		mSetAck(msg,false);
-		mSetVersion(msg, PROTOCOL_VERSION);
 		txBlink(1);
-		if (!sendRoute(msg)) errBlink(1);
+		if (!sendRoute(build(msg, GATEWAY_ADDRESS, msg.destination, msg.sensor, C_SET, msg.type, 0))) errBlink(1);
+
 	}
 }
 
-
 void MyMQTT::SendMQTT(MyMessage &msg) {
-	//serial(PSTR("%d;%d;%d;%d;%s\n"),msg.sender, msg.sensor, mGetCommand(msg), msg.type, msg.getString(convBuf));
 	buffsize = 0;
-	if (!MQTTClientConnected) return;
+	if (!MQTTClientConnected) return;			//We have no connections - return
 	if (msg.isAck()) {
 		Serial.println("msg is ack!");
 		if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
@@ -246,95 +275,52 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 		if (msg.sender==newNodeID) {
 			saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);
 		}
-		if (mGetCommand(msg)==C_INTERNAL && msg.type==I_CONFIG) {  // CONFIG
-			// As for now there is only one 'config' request.
-			// We force SI! Resistance is futile!
-			//
-			// Todo : Support for more config types, Maybe just read from own EEPROM?
-			// 			Use internal EEPROM_CONTROLLER_CONFIG_ADDRESS and special MQTT address to write to
-			//			EEPROM_CONTROLLER_CONFIG_ADDRESS & EEPROM_LOCAL_CONFIG_ADDRESS
-			msg.destination = msg.sender; //NodeID
-			msg.sender = GATEWAY_ADDRESS;
-			msg.sensor = 255;	  		//SensorID
-			msg.type = I_CONFIG;		//msgType
-			mSetCommand(msg,C_INTERNAL);//Subtype
-			mSetRequestAck(msg,false);
-			mSetAck(msg,false);
-			msg.set("M");
-			mSetVersion(msg, PROTOCOL_VERSION);
-			txBlink(1);
-			if (!sendRoute(msg)) errBlink(1);
-		} else if (mGetCommand(msg)==C_PRESENTATION && (msg.type==S_ARDUINO_NODE || msg.type==S_ARDUINO_REPEATER_NODE)) {
-			//Doesnt work to check new sensorID here, this message does not always arrive.. See above.
-		} else if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
-			unsigned char newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
-			if (newNodeID <= MQTT_FIRST_SENSORID) newNodeID = MQTT_FIRST_SENSORID;
-			if (newNodeID >= MQTT_LAST_SENSORID) return; // Sorry no more id's left :(
-			msg.destination = msg.sender; 		//NodeID
-			msg.sender = GATEWAY_ADDRESS;
-			msg.sensor = 255;	  				//SensorID
-			msg.type = I_ID_RESPONSE;			//MsgType
-			mSetCommand(msg,C_INTERNAL); 		//Subtype
-			mSetRequestAck(msg,false);			//Request ack doesn't work, node/gateway gets stuck in enless loop.
-			mSetAck(msg,false);
-			msg.set((uint8_t)newNodeID);					//Payload
-			mSetVersion(msg, PROTOCOL_VERSION);
-			txBlink(1);
-			if (!sendRoute(msg)) errBlink(1);
-			//			if (sendRoute(msg)) saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);  // If send OK save to eeprom. DOES NOT ALWAYS RETURN 'OK'!?
+		if (mGetCommand(msg)==C_INTERNAL) {
+			if (msg.type==I_CONFIG) {
+				txBlink(1);
+				if (!sendRoute(build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL, I_CONFIG, 0).set("M"))) errBlink(1);
+			} else if (msg.type==I_ID_REQUEST && msg.sender==255) {
+				uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
+				if (newNodeID <= MQTT_FIRST_SENSORID) newNodeID = MQTT_FIRST_SENSORID;
+				if (newNodeID >= MQTT_LAST_SENSORID) return; // Sorry no more id's left :(
+				txBlink(1);
+				if (!sendRoute(build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL, I_ID_RESPONSE, 0).set(newNodeID))) errBlink(1);
+			}
 		} else if (mGetCommand(msg)!=0) {
-			if (mGetCommand(msg)==3) msg.type=msg.type+38;
-			buffer[buffsize++] = MQTTPUBLISH << 4;	    // 0:
-			buffer[buffsize++] = 0x09;                  // 1: Remaining length with no payload, we'll set this later to correct value, buffsize -2
-			buffer[buffsize++] = 0x00;                  // 2: Length MSB (Remaing length can never exceed ff,so MSB must be 0!)
-			buffer[buffsize++] = 0x08;				    // 3: Length LSB (ADDR), We'll set this later
+			if (mGetCommand(msg)==3) msg.type=msg.type+(S_FIRSTCUSTOM-10);	//Special message
+
+			buffer[buffsize++] = MQTTPUBLISH << 4;	// 0:
+			buffer[buffsize++] = 0x09;		// 1: Remaining length with no payload, we'll set this later to correct value, buffsize -2
+			buffer[buffsize++] = 0x00;		// 2: Length MSB (Remaing length can never exceed ff,so MSB must be 0!)
+			buffer[buffsize++] = 0x08;		// 3: Length LSB (ADDR), We'll set this later
+			if (msg.type > V_TOTAL) msg.type=V_TOTAL;// If type > defined types set to unknown.
 			strcpy_P(buffer+4, broker);
 			buffsize+=strlen_P(broker);
-			buffsize+=sprintf(&buffer[buffsize],"/%i/%i/",msg.sender,msg.sensor);
-			buffsize+=strncpysType_retL(buffer,msg.type,buffsize);
-			buffer[3]=buffsize-4;						// Set correct address length on byte 4.
+			buffsize+=sprintf(&buffer[buffsize],"/%i/%i/V_%s",msg.sender,msg.sensor,getType(convBuf, &vType[msg.type]));
+			buffer[3]=buffsize-4;			// Set correct address length on byte 4.
 #ifdef DEBUG
 			Serial.println((char*)&buffer[4]);
 #endif
 			msg.getString(convBuf);
-			for (unsigned int a=0; a<strlen(convBuf); a++) {		// Payload
+			for (uint8_t a=0; a<strlen(convBuf); a++) {// Payload
 				buffer[buffsize++] = convBuf[a];
 			}
-			buffer[1]=buffsize-2;						// Set correct Remaining length on byte 2.
-
-#ifdef TCPDUMP
-			Serial.print(">>");
-			char buf[4];
-			for (int a=0; a<buffsize; a++) { sprintf(buf,"%02X ",(byte)buffer[a]);  Serial.print(buf); } Serial.println("");
-#endif
+			buffer[1]=buffsize-2;			// Set correct Remaining length on byte 2.
 			dataCallback(buffer,&buffsize);
 		}
 	}
 }
 
-
-
 void MyMQTT::rxBlink(uint8_t cnt) {
 	if(countRx == 255) { countRx = cnt; }
 }
+
 void MyMQTT::txBlink(uint8_t cnt) {
 	if(countTx == 255) { countTx = cnt; }
 }
+
 void MyMQTT::errBlink(uint8_t cnt) {
 	if(countErr == 255) { countErr = cnt; }
 }
 
-char MyMQTT::strncpysType_retL(char *str, unsigned char index, char start) {
-	char c;
-	char l;
-	char *p = (char *)pgm_read_word(&(sType[index]));
-	str+=start;
-	while ((c = pgm_read_byte(p))) {
-		*str=c;
-		str++;
-		p++;
-		l++;
-	}
-	*str=0;
-	return l;
-}
+
