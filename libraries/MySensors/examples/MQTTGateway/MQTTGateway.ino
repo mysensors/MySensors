@@ -90,6 +90,7 @@ transform/1on0off.map
 
 
 #include <SPI.h>
+#include <MySensor.h>
 #include <MyMQTT.h>
 #include <Ethernet.h>
 

@@ -45,14 +45,15 @@
  */
 
 #include <SPI.h>  
+#include <MySensor.h>
 #include <MyGateway.h>  
 #include <stdarg.h>
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
-#include <UIPEthernet.h>  
+//#include <UIPEthernet.h>  
 
 // Use this fo WizNET module and Arduino Ethernet Shield 
-//#include <Ethernet.h>   
+#include <Ethernet.h>   
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
