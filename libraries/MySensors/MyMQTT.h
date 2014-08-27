@@ -14,11 +14,10 @@ version 2 as published by the Free Software Foundation.
 
 #include "MySensor.h"
 
-
-///////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
-#define TCPDUMP						// Dump TCP packages.
+#define TCPDUMP					// Dump TCP packages.
 #endif
 
 #define MQTT_FIRST_SENSORID	20  		// If you want manually configured nodes below this value. 255 = Disable
@@ -28,7 +27,7 @@ version 2 as published by the Free Software Foundation.
 // NOTE above : Beware to check if there is any length on payload in your incommingMessage code:
 // Example: if (msg.type==V_LIGHT && strlen(msg.getString())>0) otherwise the code might do strange things.
 
-///////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 #define EEPROM_LATEST_NODE_ADDRESS ((uint8_t)EEPROM_LOCAL_CONFIG_ADDRESS)
 #define MQTT_MAX_PACKET_SIZE 100
@@ -56,29 +55,27 @@ version 2 as published by the Free Software Foundation.
 
 class MyMQTT :
 public MySensor {
+
 public:
 	MyMQTT(uint8_t _cepin=5, uint8_t _cspin=6);
-	void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(const char *, int *)=NULL, uint8_t _rx=6, uint8_t _tx=5, uint8_t _er=4 );
+	void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)
+			(const char *, uint8_t *)=NULL, uint8_t _rx=6, uint8_t _tx=5, uint8_t _er=4 );
 	void processRadioMessage();
-	void processMQTTMessage(char *inputString, int inputPos);
+	void processMQTTMessage(char *inputString, uint8_t inputPos);
 private:
-	bool MQTTClientConnected;
-	char buffer[MQTT_MAX_PACKET_SIZE];
-	int buffsize;
-	char convBuf[MAX_PAYLOAD*2+1];
-	boolean useWriteCallback;
-	void (*dataCallback)(const char *, int *);
+	void (*dataCallback)(const char *, uint8_t *);
 	void SendMQTT(MyMessage &msg);
-	char strncpysType_retL(char *str, unsigned char index, char start);
-
-
 	void ledTimers();
 	void rxBlink(uint8_t cnt);
 	void txBlink(uint8_t cnt);
 	void errBlink(uint8_t cnt);
+
+	bool MQTTClientConnected;
+	char buffer[MQTT_MAX_PACKET_SIZE];
+	char convBuf[MAX_PAYLOAD*2+1];
+	uint8_t buffsize;
 };
 
 extern void ledTimersInterrupt();
-
 
 #endif
