@@ -57,6 +57,7 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 */
 
 #include <SPI.h>
+#include <MySensor.h>
 #include <MyMQTT.h>
 #include <Ethernet.h>
 
