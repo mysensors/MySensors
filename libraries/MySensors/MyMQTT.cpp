@@ -119,7 +119,7 @@ inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, ui
 	return msg;
 }
 
-char *getType(char *b, const char **index) {
+char *MyMQTT::getType(char *b, const char **index) {
 	char *q = b;
 	char *p = (char *)pgm_read_ptr(index);
 	while (*q++ = pgm_read_byte(p++));
