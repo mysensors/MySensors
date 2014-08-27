@@ -14,6 +14,7 @@ version 2 as published by the Free Software Foundation.
 
 #include "MySensor.h"
 
+
 //////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
@@ -74,6 +75,7 @@ private:
 	char buffer[MQTT_MAX_PACKET_SIZE];
 	char convBuf[MAX_PAYLOAD*2+1];
 	uint8_t buffsize;
+	char *getType(char *b, const char **index);
 };
 
 extern void ledTimersInterrupt();
