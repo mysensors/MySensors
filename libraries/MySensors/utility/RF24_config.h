@@ -21,7 +21,7 @@
   #include <stddef.h>
 
   //TMRh20:
-  //#define MINIMAL
+  #define MINIMAL // saves 432 bytes!
 
   // Define _BV for non-Arduino platforms and for Arduino DUE
 #if defined (ARDUINO)

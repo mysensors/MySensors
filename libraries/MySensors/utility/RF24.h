@@ -863,7 +863,7 @@ private:
    * @return Current value of status register
    */
   uint8_t get_status(void);
-
+#if !defined (MINIMAL)
   /**
    * Decode and print the given status to stdout
    *
@@ -907,7 +907,7 @@ private:
    * @param qty How many successive registers to print
    */
   void print_address_register(const char* name, uint8_t reg, uint8_t qty = 1);
-
+#endif
   /**
    * Turn on or off the special features of the chip
    *
