@@ -1,61 +1,67 @@
-#include <Sleep_n0m1.h>
+// Example sketch showing how to send in OneWire temperature readings
+#include <MySensor.h>  
 #include <SPI.h>
-#include <EEPROM.h>  
 #include <DallasTemperature.h>
 #include <OneWire.h>
-#include <RF24.h>
-#include <Sensor.h>  
 
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
 #define MAX_ATTACHED_DS18B20 16
-unsigned long SLEEP_TIME = 30; // Sleep time between reads (in seconds)
-
+unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-Sensor gw;
-Sleep sleep;
+MySensor gw;
 float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
+boolean receivedConfig = false;
 boolean metric = true; 
+// Initialize temperature message
+MyMessage msg(0,V_TEMP);
 
 void setup()  
 { 
+  // Startup OneWire 
   sensors.begin();
+
+  // Startup and initialize MySensors library. Set callback for incoming messages. 
   gw.begin(); 
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Temperature Sensor", "1.0");
 
-  // Fetch the number of attached sensors  
+  // Fetch the number of attached temperature sensors  
   numSensors = sensors.getDeviceCount();
-  // Register all sensors to gw (they will be created as child devices)
+
+  // Present all sensors to controller
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {   
-     gw.sendSensorPresentation(i, S_TEMP);
+     gw.present(i, S_TEMP);
   }
-  metric = gw.isMetricSystem();
 }
+
 
 void loop()     
 {     
-  sensors.requestTemperatures(); // Fetch temperatures from Dallas
-  delay(100);
+  // Process incoming messages (like config from server)
+  gw.process(); 
+
+  // Fetch temperatures from Dallas sensors
+  sensors.requestTemperatures(); 
+
+  // Read temperatures and send them to controller 
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {
+ 
     // Fetch and round temperature to one decimal
-    float temperature = static_cast<float>(static_cast<int>((metric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
+    float temperature = static_cast<float>(static_cast<int>((gw.getConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
+ 
     // Only send data if temperature has changed and no error
     if (lastTemperature[i] != temperature && temperature != -127.00) {
-      gw.powerUp(); // Powerup introduces a small delay (which is missing in radio.write powerup)
-      // Send variable (using registered shortcut) to gw
-      gw.sendVariable(i, V_TEMP, temperature, 1);
+ 
+      // Send in the new temperature
+      gw.send(msg.setSensor(i).set(temperature,1));
       lastTemperature[i]=temperature;
     }
   }
-  // Power down the radio.  Note that the radio will get powered back up
-  // on the next write() call.
-  delay(500);
-  gw.powerDown();
-  sleep.pwrDownMode(); //set sleep mode
-  sleep.sleepDelay(SLEEP_TIME * 1000); //sleep for: sleepTime 
+  gw.sleep(SLEEP_TIME);
 }
+
 
 

@@ -1,7 +1,0 @@
-Found the code via http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1267762668/9
-
-Noticed it's not interrupt safe so did a quick-and-dirty sprinkling of volatile keywors and it happens to work
-
-Also limited the FIFO size the 255 (char vs int, for strategic variables) to conserve memory.
-
-See also http://code.google.com/p/alexanderbrevig/downloads/list

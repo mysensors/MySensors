@@ -5,10 +5,8 @@
 // When binary light on is clicked - sketch will send volume up ir command
 // When binary light off is clicked - sketch will send volume down ir command
 
-#include <Sensor.h>
+#include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
-#include <RF24.h>
 #include <IRLib.h>
 
 int RECV_PIN = 8;
@@ -20,39 +18,26 @@ IRrecv irrecv(RECV_PIN);
 IRdecode decoder;
 //decode_results results;
 unsigned int Buffer[RAWBUF];
-
-Sensor gw;
+MySensor gw;
+MyMessage msg(CHILD_1, V_VAR1);
 
 void setup()  
 {  
   irrecv.enableIRIn(); // Start the ir receiver
   decoder.UseExtnBuf(Buffer);
-  gw.begin();
+  gw.begin(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("IR Sensor", "1.0");
 
   // Register a sensors to gw. Use binary light for test purposes.
-  gw.sendSensorPresentation(CHILD_1, S_LIGHT);
+  gw.present(CHILD_1, S_LIGHT);
 }
 
 
 void loop() 
 {
-  if (gw.messageAvailable()) {
-    message_s message = gw.getMessage(); 
-
-     int incomingRelayStatus = atoi(message.data);
-     if (incomingRelayStatus == 1) {
-      irsend.send(NEC, 0x1EE17887, 32); // Vol up yamaha ysp-900
-     } else {
-      irsend.send(NEC, 0x1EE1F807, 32); // Vol down yamaha ysp-900
-     }
-     // Start receiving ir again...
-    irrecv.enableIRIn(); 
-  }
-  
- 
+  gw.process();
   if (irrecv.GetResults(&decoder)) {
     irrecv.resume(); 
     decoder.decode();
@@ -61,11 +46,26 @@ void loop()
     char buffer[10];
     sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
-    gw.sendVariable(CHILD_1, V_VAR1, buffer);
+    gw.send(msg.set(buffer));
   }
 }
 
 
+
+void incomingMessage(const MyMessage &message) {
+  // We only expect one type of message from controller. But we better check anyway.
+  if (message.type==V_LIGHT) {
+     int incomingRelayStatus = message.getInt();
+     if (incomingRelayStatus == 1) {
+      irsend.send(NEC, 0x1EE17887, 32); // Vol up yamaha ysp-900
+     } else {
+      irsend.send(NEC, 0x1EE1F807, 32); // Vol down yamaha ysp-900
+     }
+     // Start receiving ir again...
+    irrecv.enableIRIn(); 
+  }
+}
+    
 // Dumps out the decode_results structure.
 // Call this after IRrecv::decode()
 // void * to work around compiler issue
