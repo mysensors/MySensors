@@ -450,21 +450,6 @@ uint8_t MySensor::getChildRoute(uint8_t childId) {
 }
 
 
-int MySensor::getInternalTemp(void)
-{
-  long result;
-  // Read internal temp sensor against 1.1V reference
-  ADMUX = _BV(REFS1) | _BV(REFS0) | _BV(MUX3);
-  delay(20); // Wait until Vref has settled
-  ADCSRA |= _BV(ADSC);
-  while (bit_is_set(ADCSRA,ADSC));
-  result = ADCL;
-  result |= ADCH<<8;
-  result = (result - 125) * 1075  + 500; // add 500 to round to nearest full degree
-
-  return result/10000;
-}
-
 int continueTimer = true;
 void wakeUp()	 //place to send the interrupts
 {
