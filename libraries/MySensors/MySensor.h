@@ -219,7 +219,20 @@ class MySensor : public RF24
 	 * @param ms Number of milliseconds to sleep or 0 to sleep forever
 	 * @return true if wake up was triggered by pin change and false means timer woke it up.
 	 */
-	bool sleep(int interrupt, int mode, unsigned long ms=0);
+	bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
+
+	/**
+	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer or pin change for two separate interrupts.
+	 * See: http://arduino.cc/en/Reference/attachInterrupt for details on modes and which pin
+	 * is assigned to what interrupt. On Nano/Pro Mini: 0=Pin2, 1=Pin3
+	 * @param interrupt1 First interrupt that should trigger the wakeup
+	 * @param mode1 Mode for first interrupt (RISING, FALLING, CHANGE)
+	 * @param interrupt2 Second interrupt that should trigger the wakeup
+	 * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
+	 * @param ms Number of milliseconds to sleep or 0 to sleep forever
+	 * @return Interrupt number wake up was triggered by pin change and negative if timer woke it up.
+	 */
+	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
 	/**
 	 * getInternalTemp
