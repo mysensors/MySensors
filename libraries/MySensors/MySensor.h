@@ -219,7 +219,7 @@ class MySensor : public RF24
 	 * @param ms Number of milliseconds to sleep or 0 to sleep forever
 	 * @return true if wake up was triggered by pin change and false means timer woke it up.
 	 */
-	bool sleep(int interrupt, int mode, unsigned long ms=0);
+	bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 
 	/**
 	 * getInternalTemp
