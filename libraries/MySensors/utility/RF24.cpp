@@ -270,6 +270,7 @@ uint8_t RF24::get_status(void)
 }
 
 /****************************************************************************/
+#if !defined (MINIMAL)
 
 void RF24::print_status(uint8_t status)
 {
@@ -325,7 +326,7 @@ void RF24::print_address_register(const char* name, uint8_t reg, uint8_t qty)
 
   printf_P(PSTR("\r\n"));
 }
-
+#endif
 /****************************************************************************/
 
 RF24::RF24(uint8_t _cepin, uint8_t _cspin):
