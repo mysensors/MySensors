@@ -87,13 +87,7 @@ char* MyMessage::getString(char *buffer) const {
 }
 
 uint8_t MyMessage::getByte() const {
-	if (miGetPayloadType() == P_BYTE) {
-		return data[0];
-	} else if (miGetPayloadType() == P_STRING) {
-		return atoi(data);
-	} else {
-		return 0;
-	}
+	return data[0];
 }
 
 bool MyMessage::getBool() const {
