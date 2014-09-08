@@ -169,8 +169,10 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 			}
 		} else {
 			value = str;
-			// Remove newline character
-			value[strlen(value)-1] = 0;
+			// Remove ending carriage return character (if it exists)
+			uint8_t lastCharacter = strlen(value)-1;
+			if (value[lastCharacter] == '\r')
+				value[lastCharacter] = 0;
 		}
 		break;
 	  }
