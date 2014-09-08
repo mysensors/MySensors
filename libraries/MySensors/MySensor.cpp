@@ -332,7 +332,7 @@ boolean MySensor::process() {
 					for (;;);
 				} else if (type == I_ID_RESPONSE) {
 					if (nc.nodeId == AUTO) {
-						nc.nodeId = msg.getByte();
+						nc.nodeId = msg.getInt();
 						// Write id to EEPROM
 						if (nc.nodeId == AUTO) {
 							// sensor net gateway will return max id if all sensor id are taken
