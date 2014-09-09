@@ -43,11 +43,15 @@
  * ----------------------------------------------------------------------------------------------------------- 
  * Powering: both NRF24l01 radio and Ethernet(ENC28J60) uses 3.3V
  */
+#define NO_PORTB_PINCHANGES 
 
 #include <SPI.h>  
-#include <MySensor.h>
-#include <MyGateway.h>  
+#include <MySensor.h>  
 #include <stdarg.h>
+#include <MsTimer2.h>
+#include <PinChangeInt.h>
+#include "GatewayUtil.h"
+
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
 //#include <UIPEthernet.h>  
@@ -61,9 +65,14 @@
 
 #define RADIO_CE_PIN        5  // radio chip enable
 #define RADIO_SPI_SS_PIN    6  // radio SPI serial select
+
 #define RADIO_ERROR_LED_PIN 7  // Error led pin
 #define RADIO_RX_LED_PIN    8  // Receive led pin
 #define RADIO_TX_LED_PIN    9  // the PCB, on board LED
+
+
+MySensor gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN);
+
 
 #define IP_PORT 5003        // The port you want to open 
 IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here
@@ -76,22 +85,37 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // DEAD BEEF FEED
 // a R/W server on the port
 EthernetServer server = EthernetServer(IP_PORT);
 
-// No blink or button functionality. Use the vanilla constructor.
-MyGateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
-
-// Uncomment this constructor if you have leds and include button attached to your gateway 
-//MyGateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
 
+
+void output(const char *fmt, ... ) {
+   va_list args;
+   va_start (args, fmt );
+   vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
+   va_end (args);
+   Serial.print(serialBuffer);
+   server.write(serialBuffer);
+}
+
+
 void setup()  
 { 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet);
+  gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
  
   Ethernet.begin(mac, myIp);
+  setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
+
+
+  // Add led timer interrupt
+  MsTimer2::set(300, ledTimersInterrupt);
+  MsTimer2::start();
+
+  // Add interrupt for inclusion button to pin
+  PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
+
 
   // give the Ethernet interface a second to initialize
   delay(1000);
@@ -100,14 +124,15 @@ void setup()
   server.begin();
 }
 
-// This will be called when data should be written to ethernet 
-void writeEthernet(char *writeBuffer) {
-  server.write(writeBuffer);
-}
-
 
 void loop()
 {
+  gw.process();  
+  
+  
+  checkButtonTriggeredInclusion();
+  checkInclusionFinished();
+  
   // if an incoming client connects, there will be
   // bytes available to read via the client object
   EthernetClient client = server.available();
@@ -128,7 +153,7 @@ void loop()
               // echo the string to the serial port
               Serial.print(inputString);
 
-              gw.parseAndSend(inputString);
+              parseAndSend(gw, inputString);
 
               // clear the string:
               inputPos = 0;
@@ -143,7 +168,8 @@ void loop()
         }
       }
    }  
-   gw.processRadioMessage();    
 }
+
+
 
 

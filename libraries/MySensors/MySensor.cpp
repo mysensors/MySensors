@@ -34,9 +34,11 @@ MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
 	Serial.begin(BAUD_RATE);
-	isGateway = false;
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
+	// Only gateway should use node id 0
+	isGateway = _nodeId == 0;
+
 
 	if (repeaterMode) {
 		setupRepeaterMode();
@@ -47,6 +49,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	eeprom_read_block((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+
+	if (isGateway) {
+		nc.distance = 0;
+	}
+
 	if (cc.isMetric == 0xff) {
 		// Eeprom empty, set default to metric
 		cc.isMetric = 0x01;
