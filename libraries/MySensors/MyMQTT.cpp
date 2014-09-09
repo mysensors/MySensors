@@ -12,6 +12,7 @@ version 2 as published by the Free Software Foundation.
 #include "MyMQTT.h"
 #include "utility/MsTimer2.h"
 
+#ifdef MQTT_TRANSLATE_TYPES
 char V_0[] PROGMEM = "TEMP";		//V_TEMP
 char V_1[] PROGMEM = "HUM";		//V_HUM
 char V_2[] PROGMEM = "LIGHT";		//V_LIGHT
@@ -72,7 +73,7 @@ char V_56[] PROGMEM = "";		//
 char V_57[] PROGMEM = "";		//
 char V_58[] PROGMEM = "";		//
 char V_59[] PROGMEM = "";		//
-char V_60[] PROGMEM = "Started!\n";	//Custom for MQTTGateway
+char V_60[] PROGMEM = "DEFAULT";	//Custom for MQTTGateway
 char V_61[] PROGMEM = "SKETCH_NAME";	//Custom for MQTTGateway
 char V_62[] PROGMEM = "SKETCH_VERSION"; //Custom for MQTTGateway
 char V_63[] PROGMEM = "UNKNOWN"; 	//Custom for MQTTGateway
@@ -89,12 +90,15 @@ PROGMEM const char *vType[] = {
 	V_61, V_62, V_63
 };
 
-
-char broker[] PROGMEM = MQTT_BROKER_PREFIX;
-
-#define S_FIRSTCUSTOM 60
 #define TYPEMAXLEN 20
 #define V_TOTAL (sizeof(vType)/sizeof(char *))-1
+
+#endif
+
+#define S_FIRSTCUSTOM 60
+#define V_UNKNOWN 63
+
+char broker[] PROGMEM = MQTT_BROKER_PREFIX;
 
 extern volatile uint8_t countRx;
 extern volatile uint8_t countTx;
@@ -108,11 +112,11 @@ MySensor(_cepin, _cspin) {
 
 }
 
-inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
+inline MyMessage& build (MyMessage &msg, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
 	msg.destination = destination;
-	msg.sender = sender;
 	msg.sensor = sensor;
 	msg.type = type;
+	msg.sender = GATEWAY_ADDRESS;
 	mSetCommand(msg,command);
 	mSetRequestAck(msg,enableAck);
 	mSetAck(msg,false);
@@ -156,7 +160,7 @@ void MyMQTT::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataR
 	MsTimer2::set(200, ledTimersInterrupt);
 	MsTimer2::start();
 
-	Serial.print(getType(convBuf, &vType[S_FIRSTCUSTOM]));
+	Serial.println("Ok!");
 }
 
 void MyMQTT::processRadioMessage() {
@@ -217,7 +221,9 @@ void MyMQTT::processMQTTMessage(char *inputString, uint8_t inputPos) {
 		} else {
 			strncat(buffer,inputString+4,inputString[3]);
 		}
-
+#ifdef DEBUG
+		Serial.println(buffer);
+#endif
 		// TODO: Check if we should send ack or not.
 		for (str = strtok_r(buffer,"/",&p) ; str && i<4 ; str = strtok_r(NULL,"/",&p)) {
 			if (i == 0) {
@@ -229,19 +235,25 @@ void MyMQTT::processMQTTMessage(char *inputString, uint8_t inputPos) {
 			} else if (i==2) {
 				msg.sensor = atoi(str);		//SensorID
 			} else if (i==3) {
-				char match=0;			//SensorType
-				//strcpy(str,(char*)&str[2]);  //Strip V_
+				uint8_t match=255;		//SensorType
 
+#ifdef MQTT_TRANSLATE_TYPES
 				for (uint8_t j=0; strcpy_P(convBuf, (char*)pgm_read_word(&(vType[j]))) ; j++) {
 					if (strcmp((char*)&str[2],convBuf)==0) { //Strip V_ and compare
 						match=j;
 						break;
 					}
-					if (j >= V_TOTAL) {	// No match found!
-						match=V_TOTAL;	// last item.
-						break;
-					}
+					if (j >= V_TOTAL) break;// No match found!
 				}
+#endif
+				if ( atoi(str)!=0 || str=="0" ) {
+					match=atoi(str);
+				}
+
+				if (match==255) {
+					match=V_UNKNOWN;
+				}
+
 				msg.type = match;
 			}
 			i++;
@@ -253,7 +265,7 @@ void MyMQTT::processMQTTMessage(char *inputString, uint8_t inputPos) {
 			msg.set("");				//No payload
 		}
 		txBlink(1);
-		if (!sendRoute(build(msg, GATEWAY_ADDRESS, msg.destination, msg.sensor, C_SET, msg.type, 0))) errBlink(1);
+		if (!sendRoute(build(msg, msg.destination, msg.sensor, C_SET, msg.type, 0))) errBlink(1);
 
 	}
 }
@@ -262,11 +274,10 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 	buffsize = 0;
 	if (!MQTTClientConnected) return;			//We have no connections - return
 	if (msg.isAck()) {
-		Serial.println("msg is ack!");
-		if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
-			// TODO: sending ACK request on id_response fucks node up. doesn't work.
-			// The idea was to confirm id and save to EEPROM_LATEST_NODE_ADDRESS.
-		}
+//		if (msg.sender==255 && mGetCommand(msg)==C_INTERNAL && msg.type==I_ID_REQUEST) {
+// TODO: sending ACK request on id_response fucks node up. doesn't work.
+// The idea was to confirm id and save to EEPROM_LATEST_NODE_ADDRESS.
+//		}
 	} else {
 		// we have to check every message if its a newly assigned id or not.
 		// Ack on I_ID_RESPONSE does not work, and checking on C_PRESENTATION isn't reliable.
@@ -278,25 +289,32 @@ void MyMQTT::SendMQTT(MyMessage &msg) {
 		if (mGetCommand(msg)==C_INTERNAL) {
 			if (msg.type==I_CONFIG) {
 				txBlink(1);
-				if (!sendRoute(build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL, I_CONFIG, 0).set("M"))) errBlink(1);
+				if (!sendRoute(build(msg, msg.sender, 255, C_INTERNAL, I_CONFIG, 0).set(MQTT_UNIT))) errBlink(1);
+				return;
 			} else if (msg.type==I_ID_REQUEST && msg.sender==255) {
 				uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
 				if (newNodeID <= MQTT_FIRST_SENSORID) newNodeID = MQTT_FIRST_SENSORID;
 				if (newNodeID >= MQTT_LAST_SENSORID) return; // Sorry no more id's left :(
 				txBlink(1);
-				if (!sendRoute(build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL, I_ID_RESPONSE, 0).set(newNodeID))) errBlink(1);
+				if (!sendRoute(build(msg, msg.sender, 255, C_INTERNAL, I_ID_RESPONSE, 0).set(newNodeID))) errBlink(1);
+				return;
 			}
-		} else if (mGetCommand(msg)!=0) {
-			if (mGetCommand(msg)==3) msg.type=msg.type+(S_FIRSTCUSTOM-10);	//Special message
+		}
+		if (mGetCommand(msg)!=C_PRESENTATION) {
+			if (mGetCommand(msg)==C_INTERNAL) msg.type=msg.type+(S_FIRSTCUSTOM-10);	//Special message
 
 			buffer[buffsize++] = MQTTPUBLISH << 4;	// 0:
 			buffer[buffsize++] = 0x09;		// 1: Remaining length with no payload, we'll set this later to correct value, buffsize -2
 			buffer[buffsize++] = 0x00;		// 2: Length MSB (Remaing length can never exceed ff,so MSB must be 0!)
 			buffer[buffsize++] = 0x08;		// 3: Length LSB (ADDR), We'll set this later
-			if (msg.type > V_TOTAL) msg.type=V_TOTAL;// If type > defined types set to unknown.
 			strcpy_P(buffer+4, broker);
 			buffsize+=strlen_P(broker);
+#ifdef MQTT_TRANSLATE_TYPES
+			if (msg.type > V_TOTAL) msg.type=V_UNKNOWN;// If type > defined types set to unknown.
 			buffsize+=sprintf(&buffer[buffsize],"/%i/%i/V_%s",msg.sender,msg.sensor,getType(convBuf, &vType[msg.type]));
+#else
+			buffsize+=sprintf(&buffer[buffsize],"/%i/%i/%i",msg.sender,msg.sensor,msg.type);
+#endif
 			buffer[3]=buffsize-4;			// Set correct address length on byte 4.
 #ifdef DEBUG
 			Serial.println((char*)&buffer[4]);
