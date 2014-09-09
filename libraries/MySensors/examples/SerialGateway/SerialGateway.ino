@@ -63,8 +63,6 @@ void setup()
   gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
   gw.startListening();
 
-  Serial.begin(BAUD_RATE);
-
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);  
 
   // Add led timer interrupt

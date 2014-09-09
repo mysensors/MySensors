@@ -1,7 +1,6 @@
 #ifndef __GATEWAYUTIL_H__
 #define __GATEWAYUTIL_H__
 
-#include <stdarg.h>
 
 #ifdef ARDUINO
 
@@ -47,6 +46,7 @@ void setupGateway(uint8_t _rx, uint8_t _tx, uint8_t _er, uint8_t _inc, uint8_t _
   countRx = 0;
   countTx = 0;
   countErr = 0;
+
 
   // Setup led pins
   pinMode(pinRx, OUTPUT);
@@ -240,7 +240,6 @@ void ledTimersInterrupt() {
      digitalWrite(pinEr, HIGH);
    }
    if(countErr != 255) { countErr--; }
-
 }
 
 void rxBlink(uint8_t cnt) {

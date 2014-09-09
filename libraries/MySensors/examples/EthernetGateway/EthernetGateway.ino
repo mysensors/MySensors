@@ -104,10 +104,13 @@ void setup()
 { 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
   gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
- 
+   // Setup pipes for radio library
+  gw.openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
+  gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
+  gw.startListening();
+  
   Ethernet.begin(mac, myIp);
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
-
 
   // Add led timer interrupt
   MsTimer2::set(300, ledTimersInterrupt);
@@ -116,12 +119,14 @@ void setup()
   // Add interrupt for inclusion button to pin
   PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
 
-
   // give the Ethernet interface a second to initialize
   delay(1000);
-
+  
   // start listening for clients
   server.begin();
+
+  //output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
+
 }
 
 
@@ -132,20 +137,21 @@ void loop()
   
   checkButtonTriggeredInclusion();
   checkInclusionFinished();
-  
+
   // if an incoming client connects, there will be
   // bytes available to read via the client object
   EthernetClient client = server.available();
 
   if (client) {
-      // if got 1 or more bytes
+
+    // if got 1 or more bytes
       if (client.available()) {
          // read the bytes incoming from the client
          char inChar = client.read();
-
          if (inputPos<MAX_RECEIVE_LENGTH-1) { 
            // if newline then command is complete
            if (inChar == '\n') {  
+             Serial.println("Finished");
               // a command was issued by the client
               // we will now try to send it to the actuator
               inputString[inputPos] = 0;
@@ -167,7 +173,7 @@ void loop()
            inputPos = 0;
         }
       }
-   }  
+   } 
 }
 
 

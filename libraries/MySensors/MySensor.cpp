@@ -81,7 +81,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		requestNodeId();
 	}
 
-	debug(PSTR("%s started, id %d\n"), repeaterMode?"repeater":"sensor", nc.nodeId);
+	if (!isGateway) {
+		debug(PSTR("%s started, id %d\n"), repeaterMode?"repeater":"sensor", nc.nodeId);
+	}
 
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));

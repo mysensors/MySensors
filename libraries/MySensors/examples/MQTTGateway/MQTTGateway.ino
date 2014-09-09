@@ -144,7 +144,11 @@ void setup()
 { 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
   gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
- 
+  // Setup pipes for radio library
+  gw.openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
+  gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
+  gw.startListening();
+  
   Ethernet.begin(TCP_MAC, TCP_IP);
 
   
