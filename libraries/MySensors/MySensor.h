@@ -66,7 +66,7 @@
 #define BROADCAST_PIPE ((uint8_t)2)
 
 // Search for a new parent node after this many transmission failures
-#define SEARCH_FAILURES  2
+#define SEARCH_FAILURES  5
 
 struct NodeConfig
 {
@@ -254,7 +254,7 @@ class MySensor : public RF24
 	void setupRepeaterMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
 	boolean sendRoute(MyMessage &message);
-	boolean sendWrite(uint8_t dest, MyMessage &message, const bool allowFindParent = true );
+	boolean sendWrite(uint8_t dest, MyMessage &message, bool broadcast=false);
 
   private:
 #ifdef DEBUG
