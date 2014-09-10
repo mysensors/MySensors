@@ -81,7 +81,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		requestNodeId();
 	}
 
-	debug(PSTR("%s started, id %d\n"), repeaterMode?"repeater":"sensor", nc.nodeId);
+	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), repeaterMode?"repeater":"sensor", nc.nodeId, nc.parentNodeId, nc.distance);
 
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
@@ -148,7 +148,8 @@ void MySensor::findParentNode() {
 	debug(PSTR("find parent\n"));
 
 	build(msg, nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set("");
-	sendWrite(BROADCAST_ADDRESS, msg);
+	// Write msg, but suppress recursive parent search
+	sendWrite(BROADCAST_ADDRESS, msg, false);
 
 	// Wait for ping response.
 	waitForReply();
@@ -195,12 +196,16 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	return false;
 }
 
-boolean MySensor::sendWrite(uint8_t next, MyMessage &message) {
+boolean MySensor::sendWrite(uint8_t next, MyMessage &message, const bool allowFindParent) {
 	bool ok = true;
 	const bool broadcast = next == BROADCAST_ADDRESS;
-	const bool toParent  = !broadcast && (next == nc.parentNodeId);
+	const bool toParent  = next == nc.parentNodeId;
+	// With current implementation parent node Id can equal the broadcast address when
+	// starting with empty eeprom and AUTO node Id is active.
+	// This behavior is undesired, as possible parents will report back to broadcast address.
+//	debug(PSTR("sendWrite next=%d, parent=%d, distance=%d\n"), next, nc.parentNodeId, nc.distance);
 	// If sending directly to parent node and distance is not set, then try to find parent now.
-	if ( toParent && !isValidDistance(nc.distance) ) {
+	if ( allowFindParent && toParent && !isValidDistance(nc.distance) ) {
 		findParentNode();
 		// Known distance indicates parent has been found
 		ok = isValidDistance(nc.distance);
@@ -219,7 +224,8 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message) {
 		RF24::startListening();
 
 		debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
-				message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type, mGetPayloadType(message), mGetLength(message), ok?"ok":"fail", message.getString(convBuf));
+				message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type,
+				mGetPayloadType(message), mGetLength(message), broadcast ? "bc" : (ok ? "ok":"fail"), message.getString(convBuf));
 
 		// If many successive transmissions to parent failed, the parent node might be down and we
 		// need to find another route to gateway.
