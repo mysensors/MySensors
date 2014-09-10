@@ -14,9 +14,11 @@
 #include "utility/RF24.h"
 #include "utility/RF24_config.h"
 
+#define DISTANCE_INVALID (0xFF)
+
 
 // Inline function and macros
-inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
+static inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
 	msg.sender = sender;
 	msg.destination = destination;
 	msg.sensor = sensor;
@@ -25,6 +27,13 @@ inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, ui
 	mSetRequestAck(msg,enableAck);
 	mSetAck(msg,false);
 	return msg;
+}
+
+static inline bool isValidParent( const uint8_t parent ) {
+	return parent != AUTO;
+}
+static inline bool isValidDistance( const uint8_t distance ) {
+	return distance != DISTANCE_INVALID;
 }
 
 
@@ -37,6 +46,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	isGateway = false;
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
+	failedTransmissions = 0;
 
 	if (repeaterMode) {
 		setupRepeaterMode();
@@ -52,11 +62,13 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		cc.isMetric = 0x01;
 	}
 
-	if (_parentNodeId != AUTO) {
+	autoFindParent = _parentNodeId == AUTO;
+	if (!autoFindParent) {
 		nc.parentNodeId = _parentNodeId;
-		autoFindParent = false;
-	} else {
-		autoFindParent = true;
+		nc.distance = 0;
+	} else if (!isValidParent(nc.parentNodeId)) {
+		// Auto find parent, but parent in eeprom is invalid. Force parent search on first transmit.
+		nc.distance = DISTANCE_INVALID;
 	}
 
 	if (_nodeId != AUTO) {
@@ -64,17 +76,12 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		nc.nodeId = _nodeId;
 	}
 
-	// If no parent was found in eeprom. Try to find one.
-	if (autoFindParent && nc.parentNodeId == 0xff) {
-		findParentNode();
-	}
-
 	// Try to fetch node-id from gateway
 	if (nc.nodeId == AUTO) {
 		requestNodeId();
 	}
 
-	debug(PSTR("%s started, id %d\n"), repeaterMode?"repeater":"sensor", nc.nodeId);
+	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), repeaterMode?"repeater":"sensor", nc.nodeId, nc.parentNodeId, nc.distance);
 
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
@@ -93,8 +100,6 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 }
 
 void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
-	failedTransmissions = 0;
-
 	// Start up the radio library
 	RF24::begin();
 
@@ -104,13 +109,13 @@ void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_
 	}
 	RF24::setAutoAck(1);
 	RF24::setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
-	RF24::enableAckPayload();
 	RF24::setChannel(channel);
 	RF24::setPALevel(paLevel);
 	RF24::setDataRate(dataRate);
 	RF24::setRetries(5,15);
 	RF24::setCRCLength(RF24_CRC_16);
 	RF24::enableDynamicPayloads();
+	RF24::enableDynamicAck();// Required to disable ack-sending for broadcast messages
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	RF24::openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
@@ -139,14 +144,12 @@ void MySensor::requestNodeId() {
 
 
 void MySensor::findParentNode() {
-	failedTransmissions = 0;
-
-	// Set distance to max
-	nc.distance = 255;
-
 	// Send ping message to BROADCAST_ADDRESS (to which all relaying nodes and gateway listens and should reply to)
+	debug(PSTR("find parent\n"));
+
 	build(msg, nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set("");
-	sendWrite(BROADCAST_ADDRESS, msg, true);
+	// Write msg, but suppress recursive parent search
+	sendWrite(BROADCAST_ADDRESS, msg, false);
 
 	// Wait for ping response.
 	waitForReply();
@@ -182,44 +185,64 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		} else if (isInternal && message.type == I_ID_RESPONSE && dest==BROADCAST_ADDRESS) {
 			// Node has not yet received any id. We need to send it
 			// by doing a broadcast sending,
-			return sendWrite(BROADCAST_ADDRESS, message, true);
+			return sendWrite(BROADCAST_ADDRESS, message);
 		}
 	}
 
 	if (!isGateway) {
-		// --- debug(PSTR("route parent\n"));
 		// Should be routed back to gateway.
-		bool ok = sendWrite(nc.parentNodeId, message);
-
-		if (!ok) {
-			// Failure when sending to parent node. The parent node might be down and we
-			// need to find another route to gateway.
-			if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
-				findParentNode();
-			}
-			failedTransmissions++;
-		} else {
-			failedTransmissions = 0;
-		}
-		return ok;
+		return sendWrite(nc.parentNodeId, message);
 	}
 	return false;
 }
 
-boolean MySensor::sendWrite(uint8_t next, MyMessage &message, bool broadcast) {
-	uint8_t length = mGetLength(message);
-	message.last = nc.nodeId;
-	mSetVersion(message, PROTOCOL_VERSION);
-	// Make sure radio has powered up
-	RF24::powerUp();
-	RF24::stopListening();
-	RF24::openWritingPipe(TO_ADDR(next));
-	bool ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length), broadcast);
-	RF24::startListening();
+boolean MySensor::sendWrite(uint8_t next, MyMessage &message, const bool allowFindParent) {
+	bool ok = true;
+	const bool broadcast = next == BROADCAST_ADDRESS;
+	const bool toParent  = next == nc.parentNodeId;
+	// With current implementation parent node Id can equal the broadcast address when
+	// starting with empty eeprom and AUTO node Id is active.
+	// This behavior is undesired, as possible parents will report back to broadcast address.
+//	debug(PSTR("sendWrite next=%d, parent=%d, distance=%d\n"), next, nc.parentNodeId, nc.distance);
+	// If sending directly to parent node and distance is not set, then try to find parent now.
+	if ( allowFindParent && toParent && !isValidDistance(nc.distance) ) {
+		findParentNode();
+		// Known distance indicates parent has been found
+		ok = isValidDistance(nc.distance);
+	}
 
-	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
-			message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type, mGetPayloadType(message), mGetLength(message), ok?"ok":"fail", message.getString(convBuf));
+	if (ok) {
+		uint8_t length = mGetLength(message);
+		message.last = nc.nodeId;
+		mSetVersion(message, PROTOCOL_VERSION);
+		// Make sure radio has powered up
+		RF24::powerUp();
+		RF24::stopListening();
+		RF24::openWritingPipe(TO_ADDR(next));
+		// Send message. Disable auto-ack for broadcasts.
+		ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length), broadcast);
+		RF24::startListening();
 
+		debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
+				message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type,
+				mGetPayloadType(message), mGetLength(message), broadcast ? "bc" : (ok ? "ok":"fail"), message.getString(convBuf));
+
+		// If many successive transmissions to parent failed, the parent node might be down and we
+		// need to find another route to gateway.
+		if (toParent) {
+			if (ok) {
+				failedTransmissions = 0;
+			} else {
+				failedTransmissions++;
+				if ( autoFindParent && (failedTransmissions >= SEARCH_FAILURES)) {
+					debug(PSTR("lost parent\n"));
+					// Set distance invalid to trigger parent search on next write.
+					nc.distance = DISTANCE_INVALID;
+					failedTransmissions = 0;
+				}
+			}
+		}
+	}
 	return ok;
 }
 
@@ -267,7 +290,7 @@ boolean MySensor::process() {
 
 	uint8_t len = RF24::getDynamicPayloadSize();
 	RF24::read(&msg, len);
-	RF24::writeAckPayload(pipe,&pipe, 1 );
+//	RF24::writeAckPayload(pipe,&pipe, 1 );
 
 	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
@@ -287,10 +310,10 @@ boolean MySensor::process() {
 
 	if (repeaterMode && command == C_INTERNAL && type == I_FIND_PARENT) {
 		// Relaying nodes should always answer ping messages
-		// Wait a random delay of 0-2 seconds to minimize collision
+		// Wait a random delay of 0-1.023 seconds to minimize collision
 		// between ping ack messages from other relaying nodes
 		delay(millis() & 0x3ff);
-		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
+		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
 		return false;
 	} else if (destination == nc.nodeId) {
 		// Check if sender requests an ack back.
@@ -315,13 +338,18 @@ boolean MySensor::process() {
 				// We've received a reply to a FIND_PARENT message. Check if the distance is
 				// shorter than we already have.
 				uint8_t distance = msg.getByte();
-				if (distance<nc.distance-1) {
-					// Found a neighbor closer to GW than previously found
-					nc.distance = distance + 1;
-					nc.parentNodeId = msg.sender;
-					eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
-					eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
-					debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+				if (isValidDistance(distance))
+				{
+					// Distance to gateway is one more for us w.r.t. parent
+					distance++;
+					if (isValidDistance(distance) && (distance < nc.distance)) {
+						// Found a neighbor closer to GW than previously found
+						nc.distance = distance;
+						nc.parentNodeId = msg.sender;
+						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
+						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
+						debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+					}
 				}
 				return false;
 			} else if (sender == GATEWAY_ADDRESS) {
