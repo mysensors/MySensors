@@ -1,0 +1,332 @@
+******************************************************************************
+
+	PinChangeInt
+	---- RELEASE NOTES --- 
+
+Version 2.19 (beta) Tue Nov 20 07:33:37 CST 2012
+SANGUINO SUPPORT!  ...And Mioduino! 
+...The ATmega644 chip is so cool, how can I not? 4 full ports of Pin Change Interrupt bliss! 32 i/o pins! 64k Flash! 4k RAM! Well I wish I had one. That said, Sanguino users, PLEASE send in your bug or bliss reports! Your interrupt-loving brethren and sistren are depending on you, so I can assure everyone that my changes work on that platform. Thanks.
+
+Modified the addPin() method to save 12 bytes; thanks again robtilllart!
+    if (firstPin != NULL) {
+        tmp=firstPin;
+        do {
+            if (tmp->arduinoPin == arduinoPin) { enable(tmp, userFunc, mode); return(0); }
+            if (tmp->next == NULL) break;
+            tmp=tmp->next;
+        } while (true);
+    }
+Also changed the goto in the PCint() loop to be a while/break combination. No change to
+code speed, but it looks better and passes the cleanliness "gut check".
+
+Includes PinChangeIntTest 1.5 sketch.
+
+...Ooops!  Forgot the GetPSTR library, needed for the PinChangeIntTest code!  Now it's included.
+******************************************************************************
+Version 2.17 (beta) Sat Nov 17 09:46:50 CST 2012
+Another bugfix in the PCINT_MULTI_SERVICE section.  I was using sbi(PCIFR, PCICRbit); 
+I didn't realize that was for I/O ports, and not ATmega registers.
+But according to "deprecated.h", 
+"These macros became obsolete, as reading and writing IO ports can
+ be done by simply using the IO port name in an expression, and all
+ bit manipulation (including those on IO ports) can be done using
+ generic C bit manipulation operators."
+So now I do:
+      PCIFR |= PCICRbit;
+******************************************************************************
+Version 2.15 (beta) Sat Nov 17 01:17:44 CST 2012
+Fixed it so that attachInterrupt() will now follow your changes to the user function,
+as well as the mode. detachInterrupt() still does not delete the PCintPin object but
+at least you can detach and reattach at will, using different modes (RISING, FALLING,
+CHANGE) and different functions as you wish.
+
+******************************************************************************
+Version 2.13 (beta) Mon Nov 12 09:33:06 CST 2012
+SIGNIFICANT BUGFIX release! Significant changes:
+1. PCintPort::curr bug. Interrupts that occur rapidly will likely not get serviced properly by PCint().
+2. PCint() interrupt handler optimization.
+3. PCIFR port bit set bug fix.
+4. Many static variables added for debugging; used only when #define PINMODE is on.
+5. detachInterrupt() no longer does a delete(), since that wasn't working anyway. When you detachInterrupt(), the PORT just disables interrupts for that pin; the PCintPin object remains in memory and in the linked list of pins (possibly slowing down your interrupts a couple of micros).  You can reenable a detached interrupt- but you must do it within the PinChangeInt library (would anyone ever enable an interrupt on a pin, then disable it, then have need to reenable it but not using the library?).
+6. attachInterrupt() now returns a uint8_t value:  1 on successful attach, 0 on successful attach but using an already-enabled pin, and -1 if the new() operator failed to create a PCintPin object.
+Also, modified these release notes.
+
+Details:
+
+Uncovered a nasty bug, thanks to robtillaart on the Arduino Forums and Andre' Franken who posted to the PinChangeInt groups. This bug was introduced by me when I assigned PCintPort::curr early in the interrupt handler:
+ISR(PCINT0_vect) {
+    PCintPort::curr = portB.portInputReg;
+    portB.PCint();
+}
+Later, in the interrupt handler PCint(), we loop as long as PCIFR indicates a new interrupt wants to be triggered, provided DISABLE_PCINT_MULTI_SERVICE is not defined (it is not by default):
+#ifndef DISABLE_PCINT_MULTI_SERVICE
+	pcifr = PCIFR & PCICRbit;
+	PCIFR = pcifr;  // clear the interrupt if we will process it (no effect if bit is zero)
+} while(pcifr);
+#endif
+...Well. Problem is, if a pin pops up and causes the PCIFR to change, we have to reread the port and look at how it is now! I wasn't doing that before, so if a new interrupt appeared while I was still servicing the old one, odd behavior would take place. For example, an interrupt would register but then the userFunc would not be called upon to service it.  The code needs to be:
+	pcifr = PCIFR & PCICRbit;
+	PCIFR = pcifr;  // clear the interrupt if we will process it (no effect if bit is zero)
+    	PCintPort::curr=portInputReg; // ...Fixed in 2.11beta.
+} while(pcifr);
+
+Also, made the interrupt handler even faster with an optimization from robtillaart to take out the checks for changed pins from the while() loop that steps through the pins:
+uint8_t changedPins = (PCintPort::curr ^ lastPinView) &
+                      ((portRisingPins & PCintPort::curr ) | ( portFallingPins & ~PCintPort::curr ));
+
+...This speedup is offset by more changes in the PCint() handler, which now looks like the following; there are two bug fixes:
+----------------------------
+FIX 1: sbi(PCIFR, PCICRbit);
+FIX 2: ...the aforementioned PCintPort::curr=portInputReg;
+Here's the new code:
+----------------------------
+    #ifndef DISABLE_PCINT_MULTI_SERVICE
+        pcifr = PCIFR & PCICRbit;
+        if (pcifr) {
+        //if (PCIFR & PCICRbit) { // believe it or not, this adds .6 micros
+            sbi(PCIFR, PCICRbit); // This was a BUG: PCIFR = pcifr  ...And here is the fix.
+            #ifdef PINMODE
+            PCintPort::pcint_multi++;
+            if (PCIFR & PCICRbit) PCintPort::PCIFRbug=1; // PCIFR & PCICRbit should ALWAYS be 0 here!
+            #endif
+            PCintPort::curr=portInputReg; // ...Fixed in 2.11beta.
+            goto loop;  // A goto!!! Don't want to look at the portInputReg gratuitously, so the while() will not do.
+        }
+    #endif
+
+Also I added a lot of variables for debugging when PINMODE is defined, for routing out nasty bugs. I may need them in the future... :-(
+
+Finally, I am not putting newlines in this commentary so I can make it easier to paste online.
+
+******************************************************************************
+Version 2.11 (beta) Mon Nov 12 09:33:06 CST 2012
+See version 2.13 (beta) above. No change other than tidying up the release notes.
+******************************************************************************
+	Version 2.01 (beta) Thu Jun 28 12:35:48 CDT 2012
+	...Wow, Version 2!  What?  Why?
+	Modified the way that the pin is tested inside the interrupt subroutine (ISR) PCintPort::PCint(),
+	to make the interrupt quicker and slightly reduce the memory footprint.  The interrupt's time is
+	reduced by 2 microseconds or about 7%.  Instead of using the mode variable, two bitmasks are maintained
+	for each port.  One bitmask contains all the pins that are configured to work on RISING signals, the other
+	on FALLING signals.  A pin configured to work on CHANGE signals will appear in both bitmasks of the port.
+   	Then, the test for a change goes like this:
+		if (thisChangedPin) {
+     		if ((thisChangedPin & portRisingPins & PCintPort::curr ) ||
+         		(thisChangedPin & portFallingPins & ~PCintPort::curr )) {
+	where portRisingPins is the bitmask for the pins configured to interrupt on RISING signals, and
+	portFallingPins is the bitmask for the pins configured to interrupt on FALLING signals.  Each port includes
+	these two bitmask variables.
+
+	This is a significant change to some core functionality to the library, and it saves an appreciable amount
+	of time (2 out of 36 or so micros).  Hence, the 2.00 designation.
+
+	Tue Jun 26 12:42:20 CDT 2012
+	I was officially given permission to use the PCint library:
+
+	Re: PCint library
+	« Sent to: GreyGnome on: Today at 08:10:33 AM »
+	« You have forwarded or responded to this message. »
+	Quote  Reply  Remove  
+	HI,
+  	Yeah, I wrote the original PCint library. It was a bit of a hack and the new one has better features. 
+	I intended the code to be freely usable.  Didn't really think about a license.  Feel free to use it in
+	your code: I hereby grant you permission.
+	
+  	I'll investigate the MIT license, and see if it is appropriate.
+	Chris J. Kiick
+	Robot builder and all around geek.
+
+	Version 1.81 (beta) Tue Jun 19 07:29:08 CDT 2012
+	Created the getPCIntVersion function, and its associated GET_PCINT_VERSION preprocessor macro.  The version
+	is a 16-bit int, therefore versions are represented as a 4-digit integer.  1810, then, is the first beta
+	release of 1.81x series.  1811 would be a bugfix of 1.810. 1820 would be the production release.
+
+	Reversed the order of this list, so the most recent notes come first.
+
+	Made some variables "volatile", because they are changed in the interrupt code.  Thanks, Tony Cappellini!
+
+	Added support for the Arduino Mega!  Thanks to cserveny...@gmail.com!
+	NOTE:  I don't have a Mega, so I rely on you to give me error (or working) reports!
+	To sum it up for the Mega:  No Port C, no Port D.  Instead, you get Port J and Port K.  Port B remains.
+	Port J, however, is practically useless because there is only 1 pin available for interrupts.
+	Most of the Port J pins are not even connected to a header connector.  Caveat Programmer.
+
+	Created a function to report the version of this code.  Put this #define ahead of the #include of this file,
+	in your sketch:
+		#define GET_PCINT_VERSION
+	Then you can call
+		uint16_t getPCIntVersion ();
+	and it will return a 16-bit integer representation of the version of this library.  That is, version 1.73beta
+	will be reported as "1730".  1.74, then, will return "1740". And so on, for whatever version of the library
+	this happens to be.  The odd number in the 10's position will indicate a beta version, as per usual, and the
+	number in the 1s place will indicate the beta revision (bugs may necessitate a 1.731, 1.732, etc.).
+
+   	Here are some of his notes based on his changes:
+	Mega and friends are using port B, J and K for interrupts.  B is working without any modifications.
+
+	J is mostly useless, because of the hardware UART. I was not able to get pin change notifications from
+	the TX pin (14), so only 15 left. All other (PORT J) pins are not connected on the Arduino boards.
+
+	K controls Arduino pin A8-A15, working fine.
+
+	328/168 boards use C and D.  So in case the lib is compiled with Mega target, the C and D will be
+	disabled.  Also you cannot see port J/K with other targets.  For J and K new flags introduced:
+	NO_PORTJ_PINCHANGES and NO_PORTK_PINCHANGES.
+	Maybe we should have PORTJ_PINCHANGES to enable PJ, because they will be most likely unused.
+
+	Enjoy!
+
+	Note:  To remain consistent, I have not included PORTJ_PINCHANGES.  All ports behave the same,
+	no matter how trivial those ports may seem... no surprises...
+
+	Version 1.72 Wed Mar 14 18:57:55 CDT 2012
+	Release.
+
+	Version 1.71beta Sat Mar 10 12:57:05 CST 2012
+	Code reordering: Starting in version 1.3 of this library, I put the code that enables
+	interrupts for the given pin, and the code that enables Pin Change Interrupts, ahead of actually
+	setting the user's function for the pin.  Thus in the small interval between turning on the
+	interrupts and actually creating a valid link to an interrupt handler, it is possible to get an
+	interrupt.  At that point the value of the pointer is 0, so this means that the Arduino
+	will start over again from memory location 0- just as if you'd pressed the reset button.  Oops!
+
+	I corrected it so the code now operates in the proper order.
+	(EDITORIAL NOTE:  If you want to really learn something, teach it!)
+
+	Minor code clean-up:  All references to PCintPort::curr are now explicit.  This changes the compiled
+	hex code not one whit.  I just sleep better at night.
+
+	Numbering:  Changed the numbering scheme.  Beta versions will end with an odd number in the hundredths
+	place- because they may be odd- and continue to be marked "beta".  I'll just sleep better at night. :-)
+
+	Version 1.70beta Mon Feb 27 07:20:42 CST 2012
+	Happy Birthday to me!  Happy Birthday tooooo meee!  Happy Birthday, Dear Meeeeee-eeeee!
+	Happy Birthday to me!
+
+	Yes, it is on this auspicious occasion of mine (and Elizabeth Taylor's [R.I.P.]) birthday that I
+	humbly submit to you, gracious Arduino PinChangeInt user, version 1.70beta of the PinChangeInt
+	library.  I hope you enjoy it.
+
+	New in this release:
+    The PinChangeIntTest sketch was created, which can be found in the Examples directory.  It exercises:
+	* Two interrupting pins, one on each of the Arduino's PORTs.
+	* detachInterrupt() (and subsequent attachInterrupt()s).
+	Hopefully this will help avoid the embarrassing bugs that I have heretofore missed.
+
+	As well, it has come to this author's (GreyGnome) attention that the Serial class in Arduino 1.0
+	uses an interrupt that, if you attempt to print from an interrupt (which is what I was doing in my
+	tests) can easily lock up the Arduino.  So I have taken SigurðurOrn's excellent ByteBuffer library
+	and modified it for my own nefarious purposes.  (see http://siggiorn.com/?p=460).  The zipfile
+        comes complete with the ByteBuffer library; see the ByteBuffer/ByteBuffer.h file for a list of
+	changes, and see the PinChangeIntTest sketch for a usage scenario.  Now the (interrupt-less and)
+	relatively fast operation of filling a circular buffer is used in the interrupt routines.  The buffer
+	is then printed from loop().
+
+	The library has been modified so it can be used in other libraries, such as my AdaEncoder library
+	(http://code.google.com/p/adaencoder/).  When #include'd by another library you should #define
+	the LIBCALL_PINCHANGEINT macro.  For example:
+	#ifndef PinChangeInt_h
+	#define LIBCALL_PINCHANGEINT
+	#include "../PinChangeInt/PinChangeInt.h"
+	#endif
+	This is necessary because the IDE compiles both your sketch and the .cpp file of your library, and
+	the .h file is included in both places.  But since the .h file actually contains the code, any variable
+	or function definitions would occur twice and cause compilation errors- unless #ifdef'ed out.
+
+	Version 1.6beta Fri Feb 10 08:48:35 CST 2012
+	Set the value of the current register settings, first thing in each ISR; e.g.,
+	ISR(PCINT0_vect) {
+		PCintPort::curr = portB.portInputReg; // version 1.6
+		...
+	...instead of at the beginning of the PCintPort::PCint() static method.  This means that the port is read
+	closer to the beginning of the interrupt, and may be slightly more accurate- only by a couple of microseconds,
+	really, but it's a cheap win.
+
+	Fixed a bug- a BUG!- in the attachInterrupt() and detachInterrupt() methods.  I didn't have breaks in my
+	switch statements!  Augh!  What am I, a (UNIX) shell programmer?  ...Uh, generally, yes...
+
+	Added the PINMODE define and the PCintPort::pinmode variable.
+
+	Version 1.51 Sun Feb  5 23:28:02 CST 2012
+	Crap, a bug!  Changed line 392 from this:
+	PCintPort::pinState=curr & changedPins ? HIGH : LOW;
+	to this:
+	PCintPort::pinState=curr & p->mask ? HIGH : LOW;
+	Also added a few lines of (commented-out) debug code.
+
+	Version 1.5 Thu Feb  2 18:09:49 CST 2012
+	Added the PCintPort::pinState static variable to allow the programmer to query the state of the pin
+	at the time of interrupt.
+	Added two new #defines, NO_PIN_STATE and NO_PIN_NUMBER so as to reduce the code size by 20-50 bytes,
+	and to speed up the interrupt routine slightly by declaring that you don't care if the static variables
+	PCintPort::pinState and/or PCintPort::arduinoPin are set and made available to your interrupt routine.
+	// #define NO_PIN_STATE        // to indicate that you don't need the pinState
+	// #define NO_PIN_NUMBER       // to indicate that you don't need the arduinoPin
+
+	Version 1.4 Tue Jan 10 09:41:14 CST 2012
+	All the code has been moved into this .h file, so as to allow #define's to work from the user's
+	sketch.  Thanks to Paul Stoffregen from pjrc.com for the inspiration! (Check out his website for
+	some nice [lots more memory] Arduino-like boards at really good prices.  ...This has been an unsolicited
+	plug. Now back to our regular programming.  ...Hehe, "programming", get it?)
+
+	As a result, we no longer use the PinChangeIntConfig.h file.  The user must #define things in his/her
+	sketch.  Which is better anyway.
+
+	Removed the pcIntPorts[] array, which created all the ports by default no matter what.  Now, only
+	those ports (PCintPort objects) that you need will get created if you use the NO_PORTx_PINCHANGES #defines.
+   	This saves flash memory, and actually we get a bit of a memory savings anyway even if all the ports are
+	left enabled.
+
+	The attachInterrupt and detachInterrupt routines were modified to handle the new PCintPort objects.
+
+	Version 1.3 Sat Dec  3 22:56:20 CST 2011
+	Significant internal changes:
+	Tested and modified to work with Arduino 1.0.
+
+	Modified to use the new() operator and symbolic links instead of creating a pre-populated
+	PCintPins[].  Renamed some variables to simplify or make their meaning more obvious (IMHO anyway).
+	Modified the PCintPort::PCint() code (ie, the interrupt code) to loop over a linked-list.  For
+	those who love arrays, I have left some code in there that should work to loop over an array
+	instead.  But it is commented out in the release version.
+
+	For Arduino versions prior to 1.0: The new() operator requires the cppfix.h library, which is
+	included with this package.  For Arduino 1.0 and above: new.h comes with the distribution, and
+	that is #included.
+
+	Version 1.2 Sat Dec  3 Sat Dec  3 09:15:52 CST 2011
+	Modified Thu Sep  8 07:33:17 CDT 2011 by GreyGnome.  Fixes a bug with the initial port
+	value.  Now it sets the initial value to be the state of the port at the time of
+	attachInterrupt().  The line is port.PCintLast=port.portInputReg; in attachInterrupt().
+	See GreyGnome comment, below.
+
+	Added the "arduinoPin" variable, so the user's function will know exactly which pin on
+	the Arduino was triggered.
+
+	Version 1.1 Sat Dec  3 00:06:03 CST 2011
+	...updated to fix the "delPin" function as per "pekka"'s bug report.  Thanks!
+
+	---- ^^^ VERSIONS ^^^ (NOTE TO SELF: Update the PCINT_VERSION define, below) -------------
+
+	See google code project for latest, bugs and info http://code.google.com/p/arduino-pinchangeint/
+	For more information Refer to avr-gcc header files, arduino source and atmega datasheet.
+
+	This library was inspired by and derived from "johnboiles" (it seems) 
+	PCInt Arduino Playground example here: http://www.arduino.cc/playground/Main/PcInt
+	If you are the original author, please let us know at the google code page
+	
+	It provides an extension to the interrupt support for arduino by
+	adding pin change interrupts, giving a way for users to have
+	interrupts drive off of any pin.
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
