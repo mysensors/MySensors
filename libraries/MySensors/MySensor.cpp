@@ -56,7 +56,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	// Read settings from EEPROM
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
-	eeprom_read_block((void*)&cc, (void*)EEPROM_LOCAL_CONFIG_ADDRESS, sizeof(ControllerConfig));
+	eeprom_read_block((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 	if (cc.isMetric == 0xff) {
 		// Eeprom empty, set default to metric
 		cc.isMetric = 0x01;
@@ -355,6 +355,7 @@ boolean MySensor::process() {
 				bool isMetric;
 
 				if (type == I_REBOOT) {
+					// Requires MySensors or other bootloader with watchdogs enabled
 					wdt_enable(WDTO_15MS);
 					for (;;);
 				} else if (type == I_ID_RESPONSE) {
@@ -374,14 +375,13 @@ boolean MySensor::process() {
 				} else if (type == I_CONFIG) {
 					// Pick up configuration from controller (currently only metric/imperial)
 					// and store it in eeprom if changed
-					isMetric = msg.getByte() == 'M' ;
+					isMetric = msg.getString()[0] == 'M' ;
 					if (cc.isMetric != isMetric) {
 						cc.isMetric = isMetric;
 						eeprom_write_byte((uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
-						//eeprom_write_block((const void*)&cc, (uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 					}
 				} else if (type == I_CHILDREN) {
-					if (repeaterMode && msg.getByte() == 'C') {
+					if (repeaterMode && msg.getString()[0] == 'C') {
 						// Clears child relay data for this node
 						debug(PSTR("rd=clear\n"));
 						for (uint8_t i=0;i< sizeof(childNodeTable); i++) {
@@ -476,21 +476,6 @@ uint8_t MySensor::getChildRoute(uint8_t childId) {
 	return childNodeTable[childId];
 }
 
-
-int MySensor::getInternalTemp(void)
-{
-  long result;
-  // Read internal temp sensor against 1.1V reference
-  ADMUX = _BV(REFS1) | _BV(REFS0) | _BV(MUX3);
-  delay(20); // Wait until Vref has settled
-  ADCSRA |= _BV(ADSC);
-  while (bit_is_set(ADCSRA,ADSC));
-  result = ADCL;
-  result |= ADCH<<8;
-  result = (result - 125) * 1075  + 500; // add 500 to round to nearest full degree
-
-  return result/10000;
-}
 
 int8_t pinIntTrigger = 0;
 void wakeUp()	 //place to send the interrupts

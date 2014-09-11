@@ -234,16 +234,6 @@ class MySensor : public RF24
 	 */
 	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
-	/**
-	 * getInternalTemp
-	 *
-	 * Read temp from internal (ATMEGA328 only) temperature sensor. This reading is very
-	 * inaccurate so we round the result to full degrees celsius.
-	 * http://playground.arduino.cc/Main/InternalTemperatureSensor
-	 *
-	 * @return Temperature in full degrees Celsius.
-	 */
-	int getInternalTemp(void);
 
 
 

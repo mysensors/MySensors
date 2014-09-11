@@ -169,6 +169,10 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 			}
 		} else {
 			value = str;
+			// Remove ending carriage return character (if it exists)
+			uint8_t lastCharacter = strlen(value)-1;
+			if (value[lastCharacter] == '\r')
+				value[lastCharacter] = 0;
 		}
 		break;
 	  }
@@ -193,7 +197,6 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	mSetCommand(msg,command);
 	mSetRequestAck(msg,ack?1:0);
 	mSetAck(msg,false);
-	msg.set(value);
 	if (command == C_STREAM)
 		msg.set(bvalue, blen);
 	else
