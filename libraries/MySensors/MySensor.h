@@ -264,7 +264,7 @@ class MySensor : public RF24
 	void setupRepeaterMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
 	boolean sendRoute(MyMessage &message);
-	boolean sendWrite(uint8_t dest, MyMessage &message, bool broadcast=false);
+	boolean sendWrite(uint8_t dest, MyMessage &message, const bool allowFindParent = true );
 
   private:
 #ifdef DEBUG
