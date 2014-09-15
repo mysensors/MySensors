@@ -30,7 +30,7 @@ typedef enum {
 	C_REQ = 2,
 	C_INTERNAL = 3,
 	C_STREAM = 4 // For Firmware and other larger chunks of data that need to be divided into pieces.
-} command;
+} mysensor_command;
 
 // Type of sensor data (for set/req/ack messages)
 typedef enum {
@@ -40,7 +40,7 @@ typedef enum {
 	V_HEATER, V_HEATER_SW, V_LIGHT_LEVEL, V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5,
 	V_UP, V_DOWN, V_STOP, V_IR_SEND, V_IR_RECEIVE, V_FLOW, V_VOLUME, V_LOCK_STATUS,
 	V_DUST_LEVEL, V_VOLTAGE, V_CURRENT
-} data;
+} mysensor_data;
 
 // Type of internal messages (for internal messages)
 typedef enum {
@@ -48,7 +48,7 @@ typedef enum {
 	I_INCLUSION_MODE, I_CONFIG, I_FIND_PARENT, I_FIND_PARENT_RESPONSE,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
 	I_REBOOT, I_GATEWAY_READY
-} internal;
+} mysensor_internal;
 
 // Type of sensor  (for presentation message)
 typedef enum {
@@ -56,17 +56,17 @@ typedef enum {
 	S_RAIN, S_UV, S_WEIGHT, S_POWER, S_HEATER, S_DISTANCE, S_LIGHT_LEVEL, S_ARDUINO_NODE,
 	S_ARDUINO_REPEATER_NODE, S_LOCK, S_IR, S_WATER, S_AIR_QUALITY, S_CUSTOM, S_DUST,
 	S_SCENE_CONTROLLER
-} sensor;
+} mysensor_sensor;
 
 // Type of data stream  (for streamed message)
 typedef enum {
 	ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE, ST_FIRMWARE_REQUEST, ST_FIRMWARE_RESPONSE,
 	ST_SOUND, ST_IMAGE
-} stream;
+} mysensor_stream;
 
 typedef enum {
 	P_STRING, P_BYTE, P_INT16, P_UINT16, P_LONG32, P_ULONG32, P_CUSTOM, P_FLOAT32
-} payload;
+} mysensor_payload;
 
 
 
