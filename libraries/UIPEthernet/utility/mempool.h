@@ -1,5 +1,5 @@
 /*
- UIPServer.h - Arduino implementation of a uIP wrapper class.
+ mempool.h - sleek implementation of a memory pool
  Copyright (c) 2013 Norbert Truchsess <norbert.truchsess@t-online.de>
  All rights reserved.
 
@@ -15,26 +15,40 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
-#ifndef UIPSERVER_H
-#define UIPSERVER_H
+ */
 
-#include "ethernet_comp.h"
-#import "Server.h"
-#import "UIPClient.h"
+#ifndef MEMPOOL_H
+#define MEMPOOL_H
 
-class UIPServer : Server {
+#include <inttypes.h>
 
-public:
-  UIPServer(uint16_t);
-  UIPClient available();
-  void begin();
-  size_t write(uint8_t);
-  size_t write(const uint8_t *buf, size_t size);
-  using Print::write;
+#define POOLSTART 0
+#define NOBLOCK 0
 
-private:
-  uint16_t _port;
+#include "mempool_conf.h"
+
+struct memblock
+{
+  memaddress begin;
+  memaddress size;
+  memhandle nextblock;
 };
 
+class MemoryPool
+{
+#ifdef MEMPOOLTEST_H
+  friend class MemoryPoolTest;
+#endif
+
+protected:
+  static struct memblock blocks[MEMPOOL_NUM_MEMBLOCKS+1];
+
+public:
+  static void init();
+  static memhandle allocBlock(memaddress);
+  static void freeBlock(memhandle);
+  static void resizeBlock(memhandle handle, memaddress position);
+  static void resizeBlock(memhandle handle, memaddress position, memaddress size);
+  static memaddress blockSize(memhandle);
+};
 #endif

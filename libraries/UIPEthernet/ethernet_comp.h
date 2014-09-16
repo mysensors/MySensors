@@ -4,6 +4,6 @@
 #define Ethernet UIPEthernet
 #define EthernetClient UIPClient
 #define EthernetServer UIPServer
-//#define EthernetUDP UIPUDP
+#define EthernetUDP UIPUDP
 
 #endif

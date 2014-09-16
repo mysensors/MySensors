@@ -20,6 +20,11 @@
 #ifndef UIPETHERNET_H
 #define UIPETHERNET_H
 
+//#define UIPETHERNET_DEBUG
+//#define UIPETHERNET_DEBUG_CHKSUM
+//#define UIPETHERNET_DEBUG_UDP
+//#define UIPETHERNET_DEBUG_CLIENT
+
 #include "ethernet_comp.h"
 #include <Arduino.h>
 #include "Dhcp.h"
@@ -34,11 +39,6 @@ extern "C"
 #include "utility/uip_timer.h"
 #include "utility/uip.h"
 }
-
-//#define UIPETHERNET_DEBUG
-//#define UIPETHERNET_DEBUG_CHKSUM
-//#define UIPETHERNET_DEBUG_UDP
-//#define UIPETHERNET_DEBUG_CLIENT
 
 #define UIPETHERNET_FREEPACKET 1
 #define UIPETHERNET_SENDPACKET 2
@@ -82,24 +82,22 @@ public:
   IPAddress dnsServerIP();
 
 private:
-  IPAddress _dnsServerAddress;
-  DhcpClass* _dhcp;
+  static memhandle in_packet;
+  static memhandle uip_packet;
+  static uint8_t uip_hdrlen;
+  static uint8_t packetstate;
+  
+  static IPAddress _dnsServerAddress;
+  static DhcpClass* _dhcp;
 
-  struct uip_timer periodic_timer;
+  static struct uip_timer periodic_timer;
 
-  memhandle in_packet;
-  memhandle uip_packet;
-  uint8_t uip_hdrlen;
-  uint8_t packetstate;
+  static void init(const uint8_t* mac);
+  static void configure(IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet);
 
-  Enc28J60Network network;
+  static void tick();
 
-  void init(const uint8_t* mac);
-  void configure(IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet);
-
-  void tick();
-
-  boolean network_send();
+  static boolean network_send();
 
   friend class UIPServer;
 
@@ -109,11 +107,15 @@ private:
 
   static uint16_t chksum(uint16_t sum, const uint8_t* data, uint16_t len);
   static uint16_t ipchksum(void);
-  uint16_t upper_layer_chksum(uint8_t proto);
-
+#if UIP_UDP
+  static uint16_t upper_layer_chksum(uint8_t proto);
+#endif
   friend uint16_t uip_ipchksum(void);
   friend uint16_t uip_tcpchksum(void);
   friend uint16_t uip_udpchksum(void);
+
+  friend void uipclient_appcall(void);
+  friend void uipudp_appcall(void);
 
 #if UIP_CONF_IPV6
   uint16_t uip_icmp6chksum(void);

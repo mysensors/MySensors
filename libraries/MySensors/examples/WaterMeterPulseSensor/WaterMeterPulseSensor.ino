@@ -97,9 +97,10 @@ void loop()
       } 
     }
     lastSend = currentTime;
-  } else if (sendTime) {
+  } else if (sendTime && !pcReceived) {
    // No count received. Try requesting it again
     gw.request(CHILD_ID, V_VAR1);
+    lastSend=currentTime;
   }
   
   if (SLEEP_MODE) {

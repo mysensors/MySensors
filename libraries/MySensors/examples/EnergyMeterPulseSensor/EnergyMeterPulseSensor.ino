@@ -83,6 +83,7 @@ void loop()
   } else if (sendTime && !pcReceived) {
     // No count received. Try requesting it again
     gw.request(CHILD_ID, V_VAR1);
+    lastSend=now;
   }
   
   if (SLEEP_MODE) {

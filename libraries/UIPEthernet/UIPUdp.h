@@ -25,15 +25,20 @@
 #include <Udp.h>
 #include "utility/mempool.h"
 extern "C" {
-  #include "utility/uip.h";
+  #include "utility/uip.h"
 }
 
 #define UIP_UDP_MAXDATALEN 1500
 #define UIP_UDP_PHYH_LEN UIP_LLH_LEN+UIP_IPUDPH_LEN
 #define UIP_UDP_MAXPACKETSIZE UIP_UDP_MAXDATALEN+UIP_UDP_PHYH_LEN
-#ifndef UIP_UDP_NUMPACKETS
-#define UIP_UDP_NUMPACKETS 5
-#endif
+
+typedef struct {
+  memaddress out_pos;
+  memhandle packet_next;
+  memhandle packet_in;
+  memhandle packet_out;
+  boolean send;
+} uip_udp_userdata_t;
 
 class UIPUDP : public UDP
 {
@@ -41,14 +46,7 @@ class UIPUDP : public UDP
 private:
   struct uip_udp_conn *_uip_udp_conn;
 
-  struct appdata_t
-  {
-    memaddress out_pos;
-    memhandle packets_in[UIP_UDP_NUMPACKETS];
-    memhandle packet_in;
-    memhandle packet_out;
-    boolean send;
-  } appdata;
+  uip_udp_userdata_t appdata;
 
 public:
   UIPUDP();  // Constructor
@@ -120,7 +118,9 @@ private:
 
   friend void uipudp_appcall(void);
 
-  static void uip_callback();
+  friend class UIPEthernetClass;
+  static void _send(uip_udp_userdata_t *data);
+
 };
 
 #endif

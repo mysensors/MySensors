@@ -23,7 +23,7 @@
 #import "Server.h"
 #import "UIPClient.h"
 
-class UIPServer : Server {
+class UIPServer : public Server {
 
 public:
   UIPServer(uint16_t);
