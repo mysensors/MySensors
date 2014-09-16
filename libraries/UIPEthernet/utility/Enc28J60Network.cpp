@@ -1,5 +1,5 @@
 /*
- Enc28J60Network.h
+ Enc28J60NetworkClass.h
  UIPEthernet network driver for Microchip ENC28J60 Ethernet Interface.
 
  Copyright (c) 2013 Norbert Truchsess <norbert.truchsess@t-online.de>
@@ -25,19 +25,8 @@
 #include "Enc28J60Network.h"
 #include "Arduino.h"
 
-#if ENC28J60_USE_SPILIB
-#include <SPI.h>
-#endif
-
 extern "C" {
-  #if defined(ARDUINO_ARCH_AVR)
-  // AVR-specific code
-  #include <avr/io.h>
-  #elif defined(ARDUINO_ARCH_SAM)
-  // SAM-specific code
-  #else
-  // generic, non-platform specific code
-  #endif
+#include <avr/io.h>
 #include "enc28j60.h"
 #include "uip.h"
 }
@@ -51,57 +40,40 @@ extern "C" {
 // set CS to 1 = passive
 #define CSPASSIVE digitalWrite(ENC28J60_CONTROL_CS, HIGH)
 //
-#if defined(ARDUINO_ARCH_AVR)
 #define waitspi() while(!(SPSR&(1<<SPIF)))
-#elif defined(ARDUINO_ARCH_SAM)
-#if ENC28J60_CONTROL_CS==BOARD_SPI_SS0 or ENC28J60_CONTROL_CS==BOARD_SPI_SS1 or ENC28J60_CONTROL_CS==BOARD_SPI_SS2 or ENC28J60_CONTROL_CS==BOARD_SPI_SS3
-#define ENC28J60_USE_SPILIB_EXT 1
-#endif
-#endif
 
+uint16_t Enc28J60Network::nextPacketPtr;
+uint8_t Enc28J60Network::bank=0xff;
 
-
-Enc28J60Network::Enc28J60Network() :
-    MemoryPool(TXSTART_INIT+1, TXSTOP_INIT-TXSTART_INIT), // 1 byte in between RX_STOP_INIT and pool to allow prepending of controlbyte
-    bank(0xff)
-{
-}
+struct memblock Enc28J60Network::receivePkt;
 
 void Enc28J60Network::init(uint8_t* macaddr)
 {
+  MemoryPool::init(); // 1 byte in between RX_STOP_INIT and pool to allow prepending of controlbyte
   // initialize I/O
   // ss as output:
   pinMode(ENC28J60_CONTROL_CS, OUTPUT);
   CSPASSIVE; // ss=0
   //
-
-#if ENC28J60_USE_SPILIB
-  SPI.begin();
-#if defined(ARDUINO_ARCH_AVR)
-  // AVR-specific code
-  SPI.setClockDivider(SPI_CLOCK_DIV2); //results in 8MHZ at 16MHZ system clock.
-#elif defined(ARDUINO_ARCH_SAM)
-  // SAM-specific code
-  SPI.setClockDivider(10); //defaults to 21 which results in aprox. 4MHZ. A 10 should result in a little more than 8MHZ.
-#else
-// generic, non-platform specific code
-#endif
-#else
   pinMode(SPI_MOSI, OUTPUT);
   pinMode(SPI_SCK, OUTPUT);
   pinMode(SPI_MISO, INPUT);
-  //Hardware SS must be configured as OUTPUT to enable SPI-master (regardless of which pin is configured as ENC28J60_CONTROL_CS)
   pinMode(SPI_SS, OUTPUT);
 
   digitalWrite(SPI_MOSI, LOW);
   digitalWrite(SPI_SCK, LOW);
 
+  /*DDRB  |= 1<<PB3 | 1<<PB5; // mosi, sck output
+  cbi(DDRB,PINB4); // MISO is input
+  //
+  cbi(PORTB,PB3); // MOSI low
+  cbi(PORTB,PB5); // SCK low
+  */
+  //
   // initialize SPI interface
   // master mode and Fosc/2 clock:
   SPCR = (1<<SPE)|(1<<MSTR);
   SPSR |= (1<<SPI2X);
-#endif
-
   // perform system reset
   writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
   delay(50);
@@ -176,7 +148,7 @@ void Enc28J60Network::init(uint8_t* macaddr)
 memhandle
 Enc28J60Network::receivePacket()
 {
-  uint16_t rxstat;
+  uint8_t rxstat;
   uint16_t len;
   // check if a packet has been received and buffered
   //if( !(readReg(EIR) & EIR_PKTIF) ){
@@ -195,7 +167,7 @@ Enc28J60Network::receivePacket()
       len -= 4; //remove the CRC count
       // read the receive status (see datasheet page 43)
       rxstat = readOp(ENC28J60_READ_BUF_MEM, 0);
-      rxstat |= readOp(ENC28J60_READ_BUF_MEM, 0) << 8;
+      //rxstat |= readOp(ENC28J60_READ_BUF_MEM, 0) << 8;
       // decrement the packet counter indicate we are done with this packet
       writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
       // check CRC and symbol errors (see datasheet page 44, table 7-3):
@@ -223,7 +195,7 @@ Enc28J60Network::setERXRDPT()
 memaddress
 Enc28J60Network::blockSize(memhandle handle)
 {
-  return handle == UIP_RECEIVEBUFFERHANDLE ? receivePkt.size : blocks[handle].size;
+  return handle == NOBLOCK ? 0 : handle == UIP_RECEIVEBUFFERHANDLE ? receivePkt.size : blocks[handle].size;
 }
 
 void
@@ -312,14 +284,6 @@ uint8_t Enc28J60Network::readByte(uint16_t addr)
   writeRegPair(ERDPTL, addr);
 
   CSACTIVE;
-#if ENC28J60_USE_SPILIB
-  // issue read command
-  SPI.transfer(ENC28J60_READ_BUF_MEM);
-  // read data
-  uint8_t c = SPI.transfer(0x00);
-  CSPASSIVE;
-  return (c);
-#else
   // issue read command
   SPDR = ENC28J60_READ_BUF_MEM;
   waitspi();
@@ -328,7 +292,6 @@ uint8_t Enc28J60Network::readByte(uint16_t addr)
   waitspi();
   CSPASSIVE;
   return (SPDR);
-#endif  
 }
 
 void Enc28J60Network::writeByte(uint16_t addr, uint8_t data)
@@ -336,19 +299,12 @@ void Enc28J60Network::writeByte(uint16_t addr, uint8_t data)
   writeRegPair(EWRPTL, addr);
 
   CSACTIVE;
-#if ENC28J60_USE_SPILIB
-  // issue write command
-  SPI.transfer(ENC28J60_WRITE_BUF_MEM);
-  // write data
-  SPI.transfer(data);
-#else
   // issue write command
   SPDR = ENC28J60_WRITE_BUF_MEM;
   waitspi();
   // write data
   SPDR = data;
   waitspi();
-#endif
   CSPASSIVE;
 }
 
@@ -357,19 +313,22 @@ Enc28J60Network::copyPacket(memhandle dest_pkt, memaddress dest_pos, memhandle s
 {
   memblock *dest = &blocks[dest_pkt];
   memblock *src = src_pkt == UIP_RECEIVEBUFFERHANDLE ? &receivePkt : &blocks[src_pkt];
-  memblock_mv_cb(dest->begin+dest_pos,src->begin+src_pos,len);
+  enc28J60_mempool_block_move_callback(dest->begin+dest_pos,src->begin+src_pos,len);
   // Move the RX read pointer to the start of the next received packet
   // This frees the memory we just read out
   setERXRDPT();
 }
 
 void
-Enc28J60Network::memblock_mv_cb(uint16_t dest, uint16_t src, uint16_t len)
+enc28J60_mempool_block_move_callback(memaddress dest, memaddress src, memaddress len)
 {
+//void
+//Enc28J60Network::memblock_mv_cb(uint16_t dest, uint16_t src, uint16_t len)
+//{
   //as ENC28J60 DMA is unable to copy single bytes:
   if (len == 1)
     {
-      writeByte(dest,readByte(src));
+      Enc28J60Network::writeByte(dest,Enc28J60Network::readByte(src));
     }
   else
     {
@@ -390,11 +349,11 @@ Enc28J60Network::memblock_mv_cb(uint16_t dest, uint16_t src, uint16_t len)
        prevent a never ending DMA operation which
        would overwrite the entire 8-Kbyte buffer.
        */
-      writeRegPair(EDMASTL, src);
-      writeRegPair(EDMADSTL, dest);
+      Enc28J60Network::writeRegPair(EDMASTL, src);
+      Enc28J60Network::writeRegPair(EDMADSTL, dest);
 
       if ((src <= RXSTOP_INIT)&& (len > RXSTOP_INIT))len -= (RXSTOP_INIT-RXSTART_INIT);
-      writeRegPair(EDMANDL, len);
+      Enc28J60Network::writeRegPair(EDMANDL, len);
 
       /*
        2. If an interrupt at the end of the copy process is
@@ -402,13 +361,13 @@ Enc28J60Network::memblock_mv_cb(uint16_t dest, uint16_t src, uint16_t len)
        clear EIR.DMAIF.
 
        3. Verify that ECON1.CSUMEN is clear. */
-      writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_CSUMEN);
+      Enc28J60Network::writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_CSUMEN);
 
       /* 4. Start the DMA copy by setting ECON1.DMAST. */
-      writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_DMAST);
+      Enc28J60Network::writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_DMAST);
 
       // wait until runnig DMA is completed
-      while (readOp(ENC28J60_READ_CTRL_REG, ECON1) & ECON1_DMAST);
+      while (Enc28J60Network::readOp(ENC28J60_READ_CTRL_REG, ECON1) & ECON1_DMAST);
     }
 }
 
@@ -422,20 +381,6 @@ uint8_t
 Enc28J60Network::readOp(uint8_t op, uint8_t address)
 {
   CSACTIVE;
-  // issue read command
-#if ENC28J60_USE_SPILIB
-  SPI.transfer(op | (address & ADDR_MASK));
-  // read data
-  if(address & 0x80)
-  {
-  // do dummy read if needed (for mac and mii, see datasheet page 29)
-    SPI.transfer(0x00);
-  }
-  uint8_t c = SPI.transfer(0x00);
-  // release CS
-  CSPASSIVE;
-  return(c);
-#else
   // issue read command
   SPDR = op | (address & ADDR_MASK);
   waitspi();
@@ -451,7 +396,6 @@ Enc28J60Network::readOp(uint8_t op, uint8_t address)
   // release CS
   CSPASSIVE;
   return(SPDR);
-#endif
 }
 
 void
@@ -459,18 +403,11 @@ Enc28J60Network::writeOp(uint8_t op, uint8_t address, uint8_t data)
 {
   CSACTIVE;
   // issue write command
-#if ENC28J60_USE_SPILIB
-  SPI.transfer(op | (address & ADDR_MASK));
-  // write data
-  SPI.transfer(data);
-#else
-  // issue write command
   SPDR = op | (address & ADDR_MASK);
   waitspi();
   // write data
   SPDR = data;
   waitspi();
-#endif
   CSPASSIVE;
 }
 
@@ -479,23 +416,15 @@ Enc28J60Network::readBuffer(uint16_t len, uint8_t* data)
 {
   CSACTIVE;
   // issue read command
-#if ENC28J60_USE_SPILIB  
-  SPI.transfer(ENC28J60_READ_BUF_MEM);
-#else
   SPDR = ENC28J60_READ_BUF_MEM;
   waitspi();
-#endif
   while(len)
   {
     len--;
     // read data
-#if ENC28J60_USE_SPILIB    
-    *data = SPI.transfer(0x00);
-#else
     SPDR = 0x00;
     waitspi();
     *data = SPDR;
-#endif    
     data++;
   }
   //*data='\0';
@@ -507,24 +436,15 @@ Enc28J60Network::writeBuffer(uint16_t len, uint8_t* data)
 {
   CSACTIVE;
   // issue write command
-#if ENC28J60_USE_SPILIB  
-  SPI.transfer(ENC28J60_WRITE_BUF_MEM);
-#else
   SPDR = ENC28J60_WRITE_BUF_MEM;
   waitspi();
-#endif
   while(len)
   {
     len--;
     // write data
-#if ENC28J60_USE_SPILIB  
-    SPI.transfer(*data);
-    data++;
-#else
     SPDR = *data;
     data++;
     waitspi();
-#endif
   }
   CSPASSIVE;
 }
@@ -583,6 +503,19 @@ Enc28J60Network::phyWrite(uint8_t address, uint16_t data)
   }
 }
 
+uint16_t
+Enc28J60Network::phyRead(uint8_t address)
+{
+  writeReg(MIREGADR,address);
+  writeReg(MICMD, MICMD_MIIRD);
+  // wait until the PHY read completes
+  while(readReg(MISTAT) & MISTAT_BUSY){
+    delayMicroseconds(15);
+  }  //and MIRDH
+  writeReg(MICMD, 0);
+  return (readReg(MIRDL) | readReg(MIRDH) << 8);
+}
+
 void
 Enc28J60Network::clkout(uint8_t clk)
 {
@@ -604,40 +537,27 @@ Enc28J60Network::chksum(uint16_t sum, memhandle handle, memaddress pos, uint16_t
   len = setReadPtr(handle, pos, len)-1;
   CSACTIVE;
   // issue read command
-#if ENC28J60_USE_SPILIB
-  SPI.transfer(ENC28J60_READ_BUF_MEM);
-#else
   SPDR = ENC28J60_READ_BUF_MEM;
   waitspi();
-#endif
   uint16_t i;
   for (i = 0; i < len; i+=2)
   {
     // read data
-#if ENC28J60_USE_SPILIB
-    t = SPI.transfer(0x00) << 8;
-    t += SPI.transfer(0x00);
-#else
     SPDR = 0x00;
     waitspi();
     t = SPDR << 8;
     SPDR = 0x00;
     waitspi();
     t += SPDR;
-#endif
     sum += t;
     if(sum < t) {
       sum++;            /* carry */
     }
   }
   if(i == len) {
-#if ENC28J60_USE_SPILIB  
-    t = (SPI.transfer(0x00) << 8) + 0;
-#else
     SPDR = 0x00;
     waitspi();
     t = (SPDR << 8) + 0;
-#endif    
     sum += t;
     if(sum < t) {
       sum++;            /* carry */
@@ -648,3 +568,30 @@ Enc28J60Network::chksum(uint16_t sum, memhandle handle, memaddress pos, uint16_t
   /* Return sum in host byte order. */
   return sum;
 }
+
+void
+Enc28J60Network::powerOff()
+{
+  writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_RXEN);
+  delay(50);
+  writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_VRPS);
+  delay(50);
+  writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PWRSV);
+}
+
+void
+Enc28J60Network::powerOn()
+{
+  writeOp(ENC28J60_BIT_FIELD_CLR, ECON2, ECON2_PWRSV);
+  delay(50);
+  writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
+  delay(50);
+}
+
+bool
+Enc28J60Network::linkStatus()
+{
+  return (phyRead(PHSTAT2) & 0x0400) > 0;
+}
+
+Enc28J60Network Enc28J60;
