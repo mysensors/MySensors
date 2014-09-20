@@ -42,8 +42,8 @@
  *  7   Radio error LED                   (optional)  +5V -> LED -> 270-330 Ohm resistor -> pin 7.
  *  6   Radio SPI Slave Select
  *  5   Radio Chip Enable
- *  3   Inclusion mode button             (optional), 10K pull down to GND, button to VCC)
- *  2   Radio IRQ pin                     (optional), W5100 Int, if linked to pin 2) 
+ *  3   Inclusion mode button             (optional) GND-> Button -> Pin3
+ *  2   Radio IRQ pin                     (optional) 
  * ----------------------------------------------------------------------------------------------------------- 
  * Powering: both NRF24l01 radio and Ethernet(ENC28J60) uses 3.3V
  */
@@ -58,10 +58,10 @@
 
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
-#include <UIPEthernet.h>  
+//#include <UIPEthernet.h>  
 
 // Use this fo WizNET module and Arduino Ethernet Shield 
-//#include <Ethernet.h>   
+#include <Ethernet.h>   
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
