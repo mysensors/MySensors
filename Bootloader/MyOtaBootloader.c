@@ -56,9 +56,9 @@ static uint8_t sendAndWait(uint8_t reqType, uint8_t resType) {
 	msg.type = reqType;
 	for (uint8_t i = 0; i < 10; i++) {
 		sendWrite(msg);
-		for (uint16_t j = 0; j < 20; j++) {
+		for (uint8_t j = 0; j < 20; j++) {
 			wdt_reset();
-			for (uint16_t j = 0; j < 100; j++) {
+			for (uint8_t j = 0; j < 100; j++) {
 				wdt_reset();
 				uint8_t pipe;
 				boolean avail = available(&pipe);
