@@ -25,8 +25,6 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "utility/LowPower.h"
-#include "utility/RF24.h"
-#include "utility/RF24_config.h"
 #endif
 
 #ifdef DEBUG
@@ -36,9 +34,6 @@
 #endif
 
 #define BAUD_RATE 115200
-
-#define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
-#define NODE_SENSOR_ID 0xFF // Node child id is always created for when a node
 
 // EEPROM start address for mysensors library data
 #define EEPROM_START 0
@@ -56,15 +51,6 @@
 #define EEPROM_FIRMWARE_CRC_ADDRESS (EEPROM_FIRMWARE_BLOCKS_ADDRESS+2)
 #define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_FIRMWARE_CRC_ADDRESS+2) // First free address for sketch static configuration
 
-// This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
-#define GATEWAY_ADDRESS ((uint8_t)0)
-#define BROADCAST_ADDRESS ((uint8_t)0xFF)
-#define TO_ADDR(x) (BASE_RADIO_ID + x)
-
-#define WRITE_PIPE ((uint8_t)0)
-#define CURRENT_NODE_PIPE ((uint8_t)1)
-#define BROADCAST_PIPE ((uint8_t)2)
-
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5
 
@@ -80,7 +66,7 @@ struct ControllerConfig {
 };
 
 #ifdef __cplusplus
-class MySensor : public RF24
+class MySensor
 {
   public:
 	/**
@@ -88,10 +74,8 @@ class MySensor : public RF24
 	*
 	* Creates a new instance of Sensor class.
 	*
-	* @param _cepin The pin attached to RF24 Chip Enable on the RF module (default 9)
-	* @param _cspin The pin attached to RF24 Chip Select (default 10)
 	*/
-	MySensor(uint8_t _cepin=DEFAULT_CE_PIN, uint8_t _cspin=DEFAULT_CS_PIN);
+	MySensor();
 
 	/**
 	* Begin operation of the MySensors library
@@ -101,12 +85,9 @@ class MySensor : public RF24
 	* @param nodeId The unique id (1-254) for this sensor. Default is AUTO(255) which means sensor tries to fetch an id from controller.
 	* @param repeaterMode Activate repeater mode. This node will forward messages to other nodes in the radio network. Make sure to call process() regularly. Default in false
 	* @param parentNodeId Use this to force node to always communicate with a certain parent node. Default is AUTO which means node automatically tries to find a parent.
-	* @param paLevel Radio PA Level for this sensor. Default RF24_PA_MAX
-	* @param channel Radio channel. Default is channel 76
-	* @param dataRate Radio transmission speed. Default RF24_1MBPS
 	*/
 
-	void begin(void (* msgCallback)(const MyMessage &)=NULL, uint8_t nodeId=AUTO, boolean repeaterMode=false, uint8_t parentNodeId=AUTO, rf24_pa_dbm_e paLevel=RF24_PA_LEVEL, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE);
+	void begin(void (* msgCallback)(const MyMessage &)=NULL, uint8_t nodeId=AUTO, boolean repeaterMode=false, uint8_t parentNodeId=AUTO);
 
 	/**
 	 * Return the nodes nodeId.
@@ -140,6 +121,8 @@ class MySensor : public RF24
 	* @return true Returns true if message reached the first stop on its way to destination.
 	*/
 	bool send(MyMessage &msg, bool ack=false);
+
+	boolean sendRoute(MyMessage &message);
 
 	/**
 	 * Send this nodes battery level to gateway.
@@ -234,10 +217,6 @@ class MySensor : public RF24
 	 */
 	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
-
-
-	boolean sendRoute(MyMessage &message);
-
 #ifdef DEBUG
 	void debugPrint(const char *fmt, ... );
 	int freeRam();
@@ -252,8 +231,10 @@ class MySensor : public RF24
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage ack;  // Buffer for ack messages.
 
+	MyDriver *driver;
+	
 	void setupRepeaterMode();
-	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
+	void setupRadio();
 	boolean sendWrite(uint8_t dest, MyMessage &message, const bool allowFindParent = true );
 
   private:

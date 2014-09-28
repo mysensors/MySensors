@@ -10,9 +10,6 @@
  */
 
 #include "MySensor.h"
-#include "utility/LowPower.h"
-#include "utility/RF24.h"
-#include "utility/RF24_config.h"
 
 #define DISTANCE_INVALID (0xFF)
 
@@ -36,12 +33,12 @@ static inline bool isValidDistance( const uint8_t distance ) {
 	return distance != DISTANCE_INVALID;
 }
 
+	MySensor::MySensor() {
+		driver = (MyDriver*) new MyDriverClass();
+	}
 
-MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
-}
 
-
-void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
+void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
 	Serial.begin(BAUD_RATE);
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
@@ -52,7 +49,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	if (repeaterMode) {
 		setupRepeaterMode();
 	}
-	setupRadio(paLevel, channel, dataRate);
+	setupRadio();
 
 	// Read settings from EEPROM
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
@@ -92,8 +89,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 
 	// Open reading pipe for messages directed to this node (set write pipe to same)
-	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
-	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
+	driver->setAddress(nc.nodeId);
 
 	// Send presentation for this radio node (attach
 	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
@@ -107,26 +103,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	waitForReply();
 }
 
-void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
-	// Start up the radio library
-	RF24::begin();
-
-	if (!RF24::isPVariant()) {
-		debug(PSTR("check wires\n"));
-		while(1);
-	}
-	RF24::setAutoAck(1);
-	RF24::setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
-	RF24::setChannel(channel);
-	RF24::setPALevel(paLevel);
-	RF24::setDataRate(dataRate);
-	RF24::setRetries(5,15);
-	RF24::setCRCLength(RF24_CRC_16);
-	RF24::enableDynamicPayloads();
-	RF24::enableDynamicAck();				// Required to disable ack-sending for broadcast messages
-
-	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
-	RF24::openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+void MySensor::setupRadio() {
+	failedTransmissions = 0;
+	driver->init();
 }
 
 void MySensor::setupRepeaterMode(){
@@ -145,7 +124,7 @@ ControllerConfig MySensor::getConfig() {
 
 void MySensor::requestNodeId() {
 	debug(PSTR("req node id\n"));
-	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
+	driver->setAddress(nc.nodeId);
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
 	waitForReply();
 }
@@ -223,13 +202,7 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, const bool allowFi
 		uint8_t length = mGetLength(message);
 		message.last = nc.nodeId;
 		mSetVersion(message, PROTOCOL_VERSION);
-		// Make sure radio has powered up
-		RF24::powerUp();
-		RF24::stopListening();
-		RF24::openWritingPipe(TO_ADDR(next));
-		// Send message. Disable auto-ack for broadcasts.
-		ok = RF24::write(&message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length), broadcast);
-		RF24::startListening();
+		bool ok = driver->send(next, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 		debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
 				message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type,
@@ -290,14 +263,11 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 
 
 boolean MySensor::process() {
-	uint8_t pipe;
-	boolean available = RF24::available(&pipe);
-
-	if (!available || pipe>6)
+	uint8_t to = 0;
+	if (!driver->available(&to))
 		return false;
 
-	uint8_t len = RF24::getDynamicPayloadSize();
-	RF24::read(&msg, len);
+	uint8_t len = driver->receive((uint8_t *)&msg);
 
 	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
@@ -380,7 +350,7 @@ boolean MySensor::process() {
 							debug(PSTR("full\n"));
 							while (1); // Wait here. Nothing else we can do...
 						} else {
-							RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
+							driver->setAddress(nc.nodeId);
 							eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						}
 						debug(PSTR("id=%d\n"), nc.nodeId);
@@ -412,7 +382,7 @@ boolean MySensor::process() {
 		}
 		// Return true if message was addressed for this node...
 		return true;
-	} else if (repeaterMode && pipe == CURRENT_NODE_PIPE) {
+	} else if (repeaterMode && to == nc.nodeId) {
 		// We should try to relay this message to another node
 
 		uint8_t route = getChildRoute(msg.destination);
@@ -511,7 +481,7 @@ void MySensor::internalSleep(unsigned long ms) {
 void MySensor::sleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
-	RF24::powerDown();
+	driver->powerDown();
 	pinIntTrigger = 0;
 	internalSleep(ms);
 }
@@ -520,7 +490,7 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
 	Serial.flush();
-	RF24::powerDown();
+	driver->powerDown();
 	attachInterrupt(interrupt, wakeUp, mode);
 	if (ms>0) {
 		pinIntTrigger = 0;
@@ -539,7 +509,7 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	int8_t retVal = 1;
 	Serial.flush(); // Let serial prints finish (debug, log etc)
-	RF24::powerDown();
+	driver->powerDown();
 	attachInterrupt(interrupt1, wakeUp, mode1);
 	attachInterrupt(interrupt2, wakeUp2, mode2);
 	if (ms>0) {

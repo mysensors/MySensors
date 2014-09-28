@@ -58,10 +58,10 @@
 
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
-//#include <UIPEthernet.h>  
+#include <UIPEthernet.h>  
 
 // Use this fo WizNET module and Arduino Ethernet Shield 
-#include <Ethernet.h>   
+//#include <Ethernet.h>   
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
@@ -75,7 +75,7 @@
 #define RADIO_TX_LED_PIN    9  // the PCB, on board LED
 
 
-MySensor gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN);
+MySensor gw;
 
 
 #define IP_PORT 5003        // The port you want to open 
@@ -107,11 +107,7 @@ void output(const char *fmt, ... ) {
 void setup()  
 { 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
-   // Setup pipes for radio library
-  gw.openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
-  gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
-  gw.startListening();
+  gw.begin(incomingMessage, 0, true, 0);
   
   Ethernet.begin(mac, myIp);
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);

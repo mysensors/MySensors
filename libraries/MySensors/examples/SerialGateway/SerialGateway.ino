@@ -38,7 +38,7 @@
 #define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 
-MySensor gw(DEFAULT_CE_PIN, DEFAULT_CS_PIN);
+MySensor gw;
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
@@ -57,11 +57,7 @@ void output(const char *fmt, ... ) {
   
 void setup()  
 { 
-  gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
-  // Stetup pipes for radio library
-  gw.openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
-  gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
-  gw.startListening();
+  gw.begin(incomingMessage, 0, true, 0);
 
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);  
 
