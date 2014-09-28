@@ -322,6 +322,11 @@ boolean MySensor::process() {
 		delay(millis() & 0x3ff);
 		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
 		return false;
+	} else if (command == C_INTERNAL && type == I_TIME) {
+		if (timeCallback != NULL) {
+			// Deliver time to callback
+			timeCallback(msg.getULong());
+		}
 	} else if (destination == nc.nodeId) {
 		// Check if sender requests an ack back.
 		if (mGetRequestAck(msg)) {
@@ -396,11 +401,6 @@ boolean MySensor::process() {
 							removeChildRoute(i);
 						}
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
-					}
-				} else if (type == I_TIME) {
-					if (timeCallback != NULL) {
-						// Deliver time to callback
-						timeCallback(msg.getULong());
 					}
 				}
 				return false;
