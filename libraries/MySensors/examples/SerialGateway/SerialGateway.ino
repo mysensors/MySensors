@@ -20,7 +20,7 @@
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error  
  */
- 
+
 #define NO_PORTB_PINCHANGES  
 
 #include <SPI.h>  
@@ -30,6 +30,9 @@
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
 
+#ifndef MYSENSORS_SERIAL_GATEWAY
+#error Please switch to MYSENSORS_SERIAL_GATEWAY in MyConfig.h
+#endif
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button

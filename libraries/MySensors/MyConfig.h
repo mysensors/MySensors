@@ -4,17 +4,39 @@
 /***
  * Configure Sensor Network
  */
-#define COMMDRIVER_NRF24
+ 
+// pick ONE of these - other board layouts can be easily added this way
+#define MYSENSORS_SENSOR
+//#define MYSENSORS_SERIAL_GATEWAY
+//#define MYSENSORS_ETHERNET_MQTT_GATEWAY
+ 
+#ifdef MYSENSORS_SENSOR
+#define MYSENSORS_RF_NRF24
+#define RF24_CE_PIN		   9
+#define RF24_CS_PIN		   10
+#define RF24_PA_LEVEL 	   RF24_PA_MAX
+#endif
 
-#ifdef COMMDRIVER_NRF24
+#ifdef MYSENSORS_SERIAL_GATEWAY
+#define MYSENSORS_RF_NRF24
+#define RF24_CE_PIN		   9
+#define RF24_CS_PIN		   10
+#define RF24_PA_LEVEL 	   RF24_PA_LOW
+#endif
+
+#ifdef MYSENSORS_ETHERNET_MQTT_GATEWAY
+#define MYSENSORS_RF_NRF24
+#define RF24_CE_PIN		   5
+#define RF24_CS_PIN		   6
+#define RF24_PA_LEVEL 	   RF24_PA_LOW
+#endif
+
+#ifdef MYSENSORS_RF_NRF24
 #include "MyDriverNRF24.h"
 typedef class MyDriverNRF24 MyDriverClass;
 #define RF24_CHANNEL	   76             //RF channel for the sensor net, 0-127
 #define RF24_DATARATE 	   RF24_250KBPS   //RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
-#define RF24_PA_LEVEL 	   RF24_PA_MAX    //Sensor PA Level == RF24_PA_MIN=-18dBm, RF24_PA_LOW=-12dBm, RF24_PA_HIGH=-6dBM, and RF24_PA_MAX=0dBm
 #define RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL) // This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
-#define RF24_CE_PIN		   9
-#define RF24_CS_PIN		   10
 #endif
 
 /***
