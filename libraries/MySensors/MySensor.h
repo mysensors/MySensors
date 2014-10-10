@@ -234,18 +234,9 @@ class MySensor : public RF24
 	 */
 	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
-	/**
-	 * getInternalTemp
-	 *
-	 * Read temp from internal (ATMEGA328 only) temperature sensor. This reading is very
-	 * inaccurate so we round the result to full degrees celsius.
-	 * http://playground.arduino.cc/Main/InternalTemperatureSensor
-	 *
-	 * @return Temperature in full degrees Celsius.
-	 */
-	int getInternalTemp(void);
 
 
+	boolean sendRoute(MyMessage &message);
 
 #ifdef DEBUG
 	void debugPrint(const char *fmt, ... );
@@ -263,8 +254,7 @@ class MySensor : public RF24
 
 	void setupRepeaterMode();
 	void setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate);
-	boolean sendRoute(MyMessage &message);
-	boolean sendWrite(uint8_t dest, MyMessage &message, bool broadcast=false);
+	boolean sendWrite(uint8_t dest, MyMessage &message, const bool allowFindParent = true );
 
   private:
 #ifdef DEBUG

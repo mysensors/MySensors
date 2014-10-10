@@ -14,11 +14,15 @@
  *
  * The GW code is designed for Arduino 328p / 16MHz.  ATmega168 does not have enough memory to run this program.
  * 
- * COMPILING
- * You must make sure to disable DEBUG in Sensor.h before compiling this sketch. Othervise the sketch won't fit in program space when downloading. 
- * For UIPEthernet(ENC28J60) usage: Note that I had to disable UDP and DHCP support in uipethernet-conf.h to reduce space. (which meas you ave to choose a static IP)
- * For WizNET usage: Do *not* install the provided UIPEthernet-library. Remove UIPEthernet-include below and uncomment the Ethernet.h.  
+ * COMPILING ENC28J60
+ * > Use Arduino IDE 1.5.7 (or later) 
+ * > Disable DEBUG in Sensor.h before compiling this sketch. Othervise the sketch will probably not fit in program space when downloading. 
+ * > Remove Ethernet.h include below and inlcude UIPEthernet.h 
+ * COMPILING WizNET (W5100)
+ * > Remove UIPEthernet include below and include Ethernet.h.  
  *
+ * Note that I had to disable UDP and DHCP support in uipethernet-conf.h to reduce space. (which meas you ave to choose a static IP for that module)
+
  * VERA CONFIGURATION:
  * Enter "ip-number:port" in the ip-field of the Arduino GW device. This will temporarily override any serial configuration for the Vera plugin. 
  * E.g. If you want to use the defualt values in this sketch enter: 192.168.178.66:5003
@@ -39,16 +43,20 @@
  *  6   Radio SPI Slave Select
  *  5   Radio Chip Enable
  *  4   Ethernet SPI Enable               (optional if using a shield/module that manages SPI_EN signal)
- *  3   Inclusion mode button             (optional), 10K pull down to GND, button to VCC)
- *  2   Radio IRQ pin                     (optional), W5100 Int, if linked to pin 2) 
+ *  3   Inclusion mode button             (optional) GND-> Button -> Pin3
+ *  2   Radio IRQ pin                     (optional) 
  * ----------------------------------------------------------------------------------------------------------- 
  * Powering: both NRF24l01 radio and Ethernet(ENC28J60) uses 3.3V
  */
+#define NO_PORTB_PINCHANGES 
 
 #include <SPI.h>  
-#include <MySensor.h>
-#include <MyGateway.h>  
+#include <MySensor.h>  
 #include <stdarg.h>
+#include <MsTimer2.h>
+#include <PinChangeInt.h>
+#include "GatewayUtil.h"
+
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
 //#include <UIPEthernet.h>  
@@ -63,12 +71,17 @@
 #define W5100_SPI_EN        4  // Ethernet SPI enable
 #define RADIO_CE_PIN        5  // radio chip enable
 #define RADIO_SPI_SS_PIN    6  // radio SPI serial select
+
 #define RADIO_ERROR_LED_PIN 7  // Error led pin
 #define RADIO_RX_LED_PIN    8  // Receive led pin
 #define RADIO_TX_LED_PIN    9  // the PCB, on board LED
 
+
+MySensor gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN);
+
+
 #define IP_PORT 5003        // The port you want to open 
-IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here
+IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!
 
 // The MAC address can be anything you want but should be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
@@ -77,12 +90,6 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // DEAD BEEF FEED
 
 // a R/W server on the port
 EthernetServer server = EthernetServer(IP_PORT);
-
-// No blink or button functionality. Use the vanilla constructor.
-MyGateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
-
-// Uncomment this constructor if you have leds and include button attached to your gateway 
-//MyGateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME, INCLUSION_MODE_PIN, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
 
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
@@ -106,47 +113,72 @@ void w5100_spi_en(boolean enable)
 #endif
 }
 
+void output(const char *fmt, ... ) {
+   va_list args;
+   va_start (args, fmt );
+   vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
+   va_end (args);
+   Serial.print(serialBuffer);
+   w5100_spi_en(true);
+   server.write(serialBuffer);
+   w5100_spi_en(false);
+}
+
 void setup()  
 { 
+  w5100_spi_en(false);
+  gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
+   // Setup pipes for radio library
+  gw.openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
+  gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
+  gw.startListening();
+ 
   w5100_spi_en(true);
-  Ethernet.begin(mac);
   Ethernet.begin(mac, myIp);
+  setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
+
+  // Add led timer interrupt
+  MsTimer2::set(300, ledTimersInterrupt);
+  MsTimer2::start();
+
+  // Add interrupt for inclusion button to pin
+  PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
 
   // give the Ethernet interface a second to initialize
   delay(1000);
-
-  // Initialize gateway at generic GW PA level, channel 70 and callback for write operations 
-  w5100_spi_en(false);
-  gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet);
-
+  
   // start listening for clients
   server.begin();
-}
-
-// This will be called when data should be written to ethernet 
-void writeEthernet(char *writeBuffer) {
-  w5100_spi_en(true);
-  server.write(writeBuffer);
   w5100_spi_en(false);
+
+  //output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
+
 }
 
 
 void loop()
 {
+  gw.process();  
+  
+  
+  checkButtonTriggeredInclusion();
+  checkInclusionFinished();
+
   // if an incoming client connects, there will be
   // bytes available to read via the client object
   w5100_spi_en(true);
   EthernetClient client = server.available();
 
   if (client) {
-      // if got 1 or more bytes
+
+    // if got 1 or more bytes
       if (client.available()) {
          // read the bytes incoming from the client
          char inChar = client.read();
-
          if (inputPos<MAX_RECEIVE_LENGTH-1) { 
            // if newline then command is complete
            if (inChar == '\n') {  
+             Serial.println("Finished");
               // a command was issued by the client
               // we will now try to send it to the actuator
               inputString[inputPos] = 0;
@@ -155,8 +187,7 @@ void loop()
               Serial.print(inputString);
 
               w5100_spi_en(false);
-              gw.parseAndSend(inputString);
-              w5100_spi_en(true);
+              parseAndSend(gw, inputString);
 
               // clear the string:
               inputPos = 0;
@@ -170,9 +201,8 @@ void loop()
            inputPos = 0;
         }
       }
-   }  
-   w5100_spi_en(false);
-   gw.processRadioMessage();    
+   } 
+  w5100_spi_en(false);
 }
 
 
