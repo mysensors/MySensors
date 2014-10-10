@@ -1,5 +1,6 @@
 
-// Example sketch showing how to request time from controller
+// Example sketch showing how to request time from controller. 
+// Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
 
 #include <SPI.h>
 #include <MySensor.h>  
@@ -7,6 +8,7 @@
 
 MySensor gw;
 boolean timeReceived = false;
+unsigned long lastUpdate=0, lastRequest=0;
 
 void setup()  
 {  
@@ -28,9 +30,21 @@ void receiveTime(unsigned long time) {
  
 void loop()     
 {     
+  unsigned long now = millis();
   gw.process();
-  // Print time
-  if (timeReceived) {
+  
+   // If no time has been received yet, request it every 10 second from controller
+  // When time has been received, request update every hour
+  if ((!timeReceived && now-lastRequest > 10*1000)
+    || (timeReceived && now-lastRequest > 60*1000*60)) {
+    // Request time from controller. 
+    Serial.println("requesting time");
+    gw.requestTime(receiveTime);  
+    lastRequest = now;
+  }
+  
+  // Print time every second
+  if (timeReceived && now-lastUpdate > 1000) {
     Serial.print(hour());
     printDigits(minute());
     printDigits(second());
@@ -41,6 +55,7 @@ void loop()
     Serial.print(" ");
     Serial.print(year()); 
     Serial.println(); 
+    lastUpdate = now;
   }
 }
 
