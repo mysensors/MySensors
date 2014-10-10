@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2013 Henrik Ekblad <henrik.ekblad@gmail.com>
  * 
- * Contribution by a-lurker
+ * Contribution by a-lurker and Anticimex
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,6 +38,7 @@
  *  7   Radio error LED                   (optional)  +5V -> LED -> 270-330 Ohm resistor -> pin 7.
  *  6   Radio SPI Slave Select
  *  5   Radio Chip Enable
+ *  4   Ethernet SPI Enable               (optional if using a shield/module that manages SPI_EN signal)
  *  3   Inclusion mode button             (optional), 10K pull down to GND, button to VCC)
  *  2   Radio IRQ pin                     (optional), W5100 Int, if linked to pin 2) 
  * ----------------------------------------------------------------------------------------------------------- 
@@ -59,6 +60,7 @@
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
 
+#define W5100_SPI_EN        4  // Ethernet SPI enable
 #define RADIO_CE_PIN        5  // radio chip enable
 #define RADIO_SPI_SS_PIN    6  // radio SPI serial select
 #define RADIO_ERROR_LED_PIN 7  // Error led pin
@@ -86,15 +88,36 @@ MyGateway gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN, INCLUSION_MODE_TIME);
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
 
+void w5100_spi_en(boolean enable)
+{
+#ifdef W5100_SPI_EN
+  if (enable)
+  {
+    // Pull up pin
+    pinMode(W5100_SPI_EN, INPUT);
+    digitalWrite(W5100_SPI_EN, HIGH);
+  }
+  else
+  {
+    // Ground pin
+    pinMode(W5100_SPI_EN, OUTPUT);
+    digitalWrite(W5100_SPI_EN, LOW);
+  }
+#endif
+}
+
 void setup()  
 { 
-  // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet);
- 
+  w5100_spi_en(true);
+  Ethernet.begin(mac);
   Ethernet.begin(mac, myIp);
 
   // give the Ethernet interface a second to initialize
   delay(1000);
+
+  // Initialize gateway at generic GW PA level, channel 70 and callback for write operations 
+  w5100_spi_en(false);
+  gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet);
 
   // start listening for clients
   server.begin();
@@ -102,7 +125,9 @@ void setup()
 
 // This will be called when data should be written to ethernet 
 void writeEthernet(char *writeBuffer) {
+  w5100_spi_en(true);
   server.write(writeBuffer);
+  w5100_spi_en(false);
 }
 
 
@@ -110,6 +135,7 @@ void loop()
 {
   // if an incoming client connects, there will be
   // bytes available to read via the client object
+  w5100_spi_en(true);
   EthernetClient client = server.available();
 
   if (client) {
@@ -128,7 +154,9 @@ void loop()
               // echo the string to the serial port
               Serial.print(inputString);
 
+              w5100_spi_en(false);
               gw.parseAndSend(inputString);
+              w5100_spi_en(true);
 
               // clear the string:
               inputPos = 0;
@@ -143,6 +171,7 @@ void loop()
         }
       }
    }  
+   w5100_spi_en(false);
    gw.processRadioMessage();    
 }
 
