@@ -15,7 +15,7 @@
 #ifndef __RF24_H__
 #define __RF24_H__
 
-#include <RF24_config.h>
+#include "RF24_config.h"
 #if defined SOFTSPI
 #include <DigitalIO.h>
 #endif
