@@ -1,0 +1,18 @@
+Version:
+	1.0	 1 Dec 2012  -  initial release
+	1.1	23 May 2013  -  added support for more display modules
+				modified calibration to try to compensate for slight flaws in some (larger) touchscreens
+				changed license to CC BY-NC-SA 3.0
+	1.2	22 Sep 2013  -  general optimization
+				fixed some issues with calibration
+				made modifications to reduce erroneous readings
+				added support for more display modules
+				added UTouch_QuickPaint example
+	1.21	06 Dec 2013  -  added support for ElecFreaks TFT01-4.3
+				added support for Coldtears 3.5" and 4.0" modules
+	1.22	18 Feb 2014  -  added support for Teensy 3.x Boards
+				added support for three display modules from ElecHouse
+				made some modifications to improve accuracy when precision is set to medium or higher
+	1.23	16 Mar 2014  -  fixed a bug that were introduced in v1.22
+	1.24	05 May 2014  -  added support for DisplayModule DM-TFT24-104 and DM-TFT28-103
+				added support for Coldtears 5" and 7" CPLD modules
