@@ -90,7 +90,7 @@ private:
   static IPAddress _dnsServerAddress;
   static DhcpClass* _dhcp;
 
-  static struct uip_timer periodic_timer;
+  static unsigned long periodic_timer;
 
   static void init(const uint8_t* mac);
   static void configure(IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet);

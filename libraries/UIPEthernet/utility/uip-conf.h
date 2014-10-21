@@ -87,7 +87,7 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#define UIP_CONF_MAX_LISTENPORTS 4
+#define UIP_CONF_MAX_LISTENPORTS 1
 
 /**
  * uIP buffer size.
@@ -131,12 +131,13 @@ typedef unsigned short uip_stats_t;
  */
 #define UIP_CONF_LOGGING         0
 
+#define UIP_CONF_UDP             0
 /**
  * UDP support on or off
  * (see uipethernet-conf.h)
  * \hideinitializer
  *
- * #define UIP_CONF_UDP             1
+
  *
  * #define UIP_CONF_UDP_CONNS       4
  */
