@@ -55,6 +55,9 @@ typedef struct {
   memhandle packets_in[UIP_SOCKET_NUMPACKETS];
   memhandle packets_out[UIP_SOCKET_NUMPACKETS];
   memaddress out_pos;
+#if UIP_CLIENT_TIMER >= 0
+  unsigned long timer;
+#endif
 } uip_userdata_t;
 
 class UIPClient : public Client {
