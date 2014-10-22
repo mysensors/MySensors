@@ -4,6 +4,7 @@ It handles radio network routing, relaying and ids.
 
 Created by Henrik Ekblad <henrik.ekblad@gmail.com>
 Modified by Daniel Wiegert
+Modified by Norbert Truchsess <norbert.truchsess@t-online.de>
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 version 2 as published by the Free Software Foundation.

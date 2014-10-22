@@ -1,6 +1,8 @@
-/* 				MyMQTT Broker Gateway 0.1b
+/* 				MyMQTT Client Gateway 0.1b
 
- Created by Daniel Wiegert <daniel.wiegert@gmail.com>
+ Created by Norbert Truchsess <norbert.truchsess@t-online.de>
+
+ Based on MyMQTT-broker gateway created by Daniel Wiegert <daniel.wiegert@gmail.com>
  Based on MySensors Ethernet Gateway by Henrik Ekblad <henrik.ekblad@gmail.com>
  http://www.mysensors.org
 
