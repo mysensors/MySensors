@@ -32,8 +32,9 @@ static void delayu() {
 	asm("nop"); 
 }
 
-static void delaym(uint16_t t) {
-	uint16_t d, a;
+static void delaym(uint8_t t) {
+	uint8_t d;
+	uint16_t a;
 	for (d = 0; d < t; d++)
 		for (a = 0; a < DELAY_M; a++)
 			asm("nop"); 
