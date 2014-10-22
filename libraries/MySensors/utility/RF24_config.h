@@ -20,27 +20,65 @@
 
   #include <stddef.h>
 
-  //TMRh20:
-  #define MINIMAL // saves 432 bytes!
-
+  /*** USER DEFINES:  ***/  
+  //#define FAILURE_HANDLING
+  //#define SERIAL_DEBUG  
+  #define MINIMAL
+  //#define SPI_UART  // Requires library from https://github.com/TMRh20/Sketches/tree/master/SPI_UART
+  //#define SOFTSPI   // Requires library from https://github.com/greiman/DigitalIO
+  /**********************/
+  
   // Define _BV for non-Arduino platforms and for Arduino DUE
-#if defined (ARDUINO)
-	#include <SPI.h>
+#if defined (ARDUINO) && !defined (__arm__)
+	#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+		#define RF24_TINY
+		#define _SPI SPI
+	#else
+      #if defined SPI_UART
+		#include <SPI_UART.h>
+		#define _SPI uspi
+	  #elif defined SOFTSPI
+	  // change these pins to your liking
+      //
+      const uint8_t SOFT_SPI_MISO_PIN = 16; 
+      const uint8_t SOFT_SPI_MOSI_PIN = 15; 
+      const uint8_t SOFT_SPI_SCK_PIN = 14;  
+      const uint8_t SPI_MODE = 0;
+      #define _SPI spi
+      
+	  #else	    
+		#include <SPI.h>
+		#define _SPI SPI
+	  #endif
+	#endif
 #else
-	#include <stdint.h>
-	#include <stdio.h>
-	#include <string.h>
-	extern HardwareSPI SPI;
-	#define _BV(x) (1<<(x))
-  #endif
+  #include <stdint.h>
+  #include <stdio.h>
+  #include <string.h>
 
 
-  #undef SERIAL_DEBUG
+ #if defined(__arm__) || defined (CORE_TEENSY)
+   #include <SPI.h>
+ #endif
+
+ #if !defined(CORE_TEENSY)
+   #define _BV(x) (1<<(x))
+   #if !defined(__arm__)
+     extern HardwareSPI SPI;
+   #endif
+ #else
+    #define printf Serial.printf
+ #endif
+
+  #define _SPI SPI
+#endif
+
+  
   #ifdef SERIAL_DEBUG
 	#define IF_SERIAL_DEBUG(x) ({x;})
   #else
 	#define IF_SERIAL_DEBUG(x)
-	#if defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny85__)
+	#if defined(RF24_TINY)
 	#define printf_P(...)
     #endif
   #endif
@@ -48,7 +86,7 @@
 // Avoid spurious warnings
 // Arduino DUE is arm and uses traditional PROGMEM constructs
 #if 1
-#if ! defined( NATIVE ) && defined( ARDUINO ) && ! defined(__arm__)
+#if ! defined( NATIVE ) && defined( ARDUINO ) && ! defined(__arm__)  && ! defined( CORE_TEENSY3 )
 #undef PROGMEM
 #define PROGMEM __attribute__(( section(".progmem.data") ))
 #undef PSTR
@@ -68,20 +106,25 @@
 	#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
 #endif
 
+
+#if !defined ( CORE_TEENSY )
 	typedef uint16_t prog_uint16_t;
 	#define PSTR(x) (x)
 	#define printf_P printf
 	#define strlen_P strlen
 	#define PROGMEM
 	#define pgm_read_word(p) (*(p))
+#endif
+
 	#define PRIPSTR "%s"
+
 #endif
 
 
 
 // ATTiny support code is from https://github.com/jscrane/RF24
 
-#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+#if defined(RF24_TINY)
 #include <stdio.h>
 #include <Arduino.h>
 #include <avr/pgmspace.h>

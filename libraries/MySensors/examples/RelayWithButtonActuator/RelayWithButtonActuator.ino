@@ -70,7 +70,7 @@ void incomingMessage(const MyMessage &message) {
      Serial.println("This is an ack from gateway");
   }
 
-  if (message.type == V_LIGHT && strlen(msg.getString()) != 0) {
+  if (message.type == V_LIGHT) {
      // Change relay state
      state = message.getBool();
      digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
