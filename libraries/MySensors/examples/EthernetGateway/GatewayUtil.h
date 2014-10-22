@@ -1,6 +1,8 @@
 #ifndef __GATEWAYUTIL_H__
 #define __GATEWAYUTIL_H__
 
+#include <MyDriver.h>  
+
 
 #ifdef ARDUINO
 

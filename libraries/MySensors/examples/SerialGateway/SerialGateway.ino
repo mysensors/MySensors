@@ -20,7 +20,7 @@
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error  
  */
- 
+
 #define NO_PORTB_PINCHANGES  
 
 #include <SPI.h>  
@@ -30,6 +30,9 @@
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
 
+#ifndef MYSENSORS_SERIAL_GATEWAY
+#error Please switch to MYSENSORS_SERIAL_GATEWAY in MyConfig.h
+#endif
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
@@ -38,7 +41,7 @@
 #define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 
-MySensor gw(DEFAULT_CE_PIN, DEFAULT_CS_PIN);
+MySensor gw;
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
@@ -57,11 +60,7 @@ void output(const char *fmt, ... ) {
   
 void setup()  
 { 
-  gw.begin(incomingMessage, 0, true, 0, RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE);
-  // Stetup pipes for radio library
-  gw.openReadingPipe(WRITE_PIPE, BASE_RADIO_ID);
-  gw.openReadingPipe(CURRENT_NODE_PIPE, BASE_RADIO_ID);
-  gw.startListening();
+  gw.begin(incomingMessage, 0, true, 0);
 
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);  
 
