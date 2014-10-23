@@ -62,10 +62,10 @@
 #endif
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
-#include <UIPEthernet.h>  
+//#include <UIPEthernet.h>  
 
 // Use this fo WizNET module and Arduino Ethernet Shield 
-//#include <Ethernet.h>   
+#include <Ethernet.h>   
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
@@ -97,6 +97,7 @@ EthernetServer server = EthernetServer(IP_PORT);
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
+bool sentReady = false;
 
 void w5100_spi_en(boolean enable)
 {
@@ -151,7 +152,7 @@ void setup()
   server.begin();
   w5100_spi_en(false);
 
-  //output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
+  output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
 
 }
 
@@ -170,7 +171,12 @@ void loop()
   EthernetClient client = server.available();
 
   if (client) {
-
+    if (!sentReady) {
+      // Send gateway startup message when first client connects
+      output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
+      sentReady = true;
+    }
+    
     // if got 1 or more bytes
       if (client.available()) {
          // read the bytes incoming from the client
