@@ -4,7 +4,7 @@
 #include "MyConfig.h"
 #include "MyDriver.h"
 #include <stdint.h>
-#include "RFM69.h"
+#include "utility/RFM69.h"
 #include <SPI.h>
 
 #define NODEID        2    //unique for each node on same network

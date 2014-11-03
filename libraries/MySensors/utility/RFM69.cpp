@@ -29,8 +29,8 @@
 // Please maintain this license information along with authorship
 // and copyright notices in any redistribution of this code
 // **********************************************************************************
-#include <RFM69.h>
-#include <RFM69registers.h>
+#include "RFM69.h"
+#include "RFM69registers.h"
 #include <SPI.h>
 
 volatile byte RFM69::DATA[RF69_MAX_DATA_LEN];
