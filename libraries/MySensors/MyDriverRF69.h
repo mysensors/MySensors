@@ -4,14 +4,26 @@
 #include "MyConfig.h"
 #include "MyDriver.h"
 #include <stdint.h>
-#include <RH_RF69.h>
-#include <RHReliableDatagram.h>
+#include "RFM69.h"
+#include <SPI.h>
 
-#define RF69_FREQUENCY	868;
-#define RF69_TRANSMIT_POWER	14;
-#define RF69_MODEM_CONFIG   RH_RF69::GFSK_Rb250Fd250;
-#define RF69_INTERRUPT_PIN	2;
-#define RF69_CS_PIN	10;
+#define NODEID        2    //unique for each node on same network
+#define NETWORKID     100  //the same on all nodes that talk to each other
+#define GATEWAYID     1
+//Match frequency to the hardware version of the radio on your Moteino (uncomment one):
+// #define FREQUENCY   RF69_433MHZ
+#define FREQUENCY   RF69_868MHZ
+//#define FREQUENCY     RF69_915MHZ
+#define ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
+//#define IS_RFM69HW    //uncomment only for RFM69HW! Leave out if you have RFM69W!
+#define ACK_TIME      30 // max # of ms to wait for an ack
+#ifdef __AVR_ATmega1284P__
+  #define LED           15 // Moteino MEGAs have LEDs on D15
+  #define FLASH_SS      23 // and FLASH SS on D23
+#else
+  #define LED           9 // Moteinos have LEDs on D9
+  #define FLASH_SS      8 // and FLASH SS on D8
+#endif
 
 class MyDriverRF69 : public MyDriver
 { 
@@ -25,8 +37,7 @@ public:
 	uint8_t receive(void* data);
 	void powerDown();
 private:
-	RH_RF69 *driver = NULL;
-	RHReliableDatagram *manager = NULL;
+	RFM69 *radio = NULL;
 	uint8_t _address;
 };
 
