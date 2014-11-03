@@ -15,13 +15,13 @@ void MyDriverNRF24::init() {
 	}
 	rf24->setAutoAck(1);
 	rf24->setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
-	rf24->enableAckPayload();
 	rf24->setChannel(RF24_CHANNEL);
 	rf24->setPALevel(RF24_PA_LEVEL);
 	rf24->setDataRate(RF24_DATARATE);
 	rf24->setRetries(5,15);
 	rf24->setCRCLength(RF24_CRC_16);
 	rf24->enableDynamicPayloads();
+	rf24->enableDynamicAck();
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	rf24->openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
