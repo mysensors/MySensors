@@ -267,7 +267,6 @@ boolean MySensor::process() {
 
 	uint8_t len = RF24::getDynamicPayloadSize();
 	RF24::read(&msg, len);
-	RF24::writeAckPayload(pipe,&pipe, 1 );
 
 	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
