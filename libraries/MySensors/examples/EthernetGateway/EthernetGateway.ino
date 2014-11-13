@@ -14,15 +14,17 @@
  *
  * The GW code is designed for Arduino 328p / 16MHz.  ATmega168 does not have enough memory to run this program.
  * 
- * COMPILING ENC28J60
+ *
+ * COMPILING WIZNET (W5100) ETHERNET MODULE
+ * > Edit RF24_config.h in (libraries\MySensors\utility) to enable softspi (remove // before "#define SOFTSPI").
+ *
+ * COMPILING ENC28J60 ETHERNET MODULE
  * > Use Arduino IDE 1.5.7 (or later) 
  * > Disable DEBUG in Sensor.h before compiling this sketch. Othervise the sketch will probably not fit in program space when downloading. 
- * > Remove Ethernet.h include below and inlcude UIPEthernet.h 
- * COMPILING WizNET (W5100)
- * > Remove UIPEthernet include below and include Ethernet.h.  
+ * > Remove Ethernet.h include below and include UIPEthernet.h 
+ * > Remove DigitalIO include 
+ * Note that I had to disable UDP and DHCP support in uipethernet-conf.h to reduce space. (which means you have to choose a static IP for that module)
  *
- * Note that I had to disable UDP and DHCP support in uipethernet-conf.h to reduce space. (which meas you ave to choose a static IP for that module)
-
  * VERA CONFIGURATION:
  * Enter "ip-number:port" in the ip-field of the Arduino GW device. This will temporarily override any serial configuration for the Vera plugin. 
  * E.g. If you want to use the defualt values in this sketch enter: 192.168.178.66:5003
@@ -32,32 +34,21 @@
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error  
  * 
- *  ----------- Connection guide ---------------------------------------------------------------------------
- *  13  Radio & Ethernet SPI SCK          
- *  12  Radio & Ethernet SPI MISO (SO)
- *  11  Radio & Ethernet SPI MOSI (SI)
- *  10  Ethernet SPI Slave Select (CS)    Pin 10, the SS pin, must be an o/p to put SPI in master mode
- *  9   Radio TX LED using on board LED   (optional)  +5V -> LED -> 270-330 Ohm resistor -> pin 9.
- *  8   Radio RX LED                      (optional)  +5V -> LED -> 270-330 Ohm resistor -> pin 8.
- *  7   Radio error LED                   (optional)  +5V -> LED -> 270-330 Ohm resistor -> pin 7.
- *  6   Radio SPI Slave Select
- *  5   Radio Chip Enable
- *  3   Inclusion mode button             (optional), 10K pull down to GND, button to VCC)
- *  2   Radio IRQ pin                     (optional), W5100 Int, if linked to pin 2) 
- * ----------------------------------------------------------------------------------------------------------- 
- * Powering: both NRF24l01 radio and Ethernet(ENC28J60) uses 3.3V
+ * See http://www.mysensors.org/build/ethernet_gateway for wiring instructions.
+ *
  */
 
+#include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
 #include <SPI.h>  
 #include <MySensor.h>
 #include <MyGateway.h>  
 #include <stdarg.h>
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
-#include <UIPEthernet.h>  
+//#include <UIPEthernet.h>  
 
-// Use this fo WizNET module and Arduino Ethernet Shield 
-//#include <Ethernet.h>   
+// Use this fo WizNET W5100 module and Arduino Ethernet Shield 
+#include <Ethernet.h>   
 
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
