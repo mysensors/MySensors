@@ -6,8 +6,8 @@
  */
  
 // pick ONE of these - other board layouts can be easily added this way
-// #define MYSENSORS_SENSOR
-#define MYSENSORS_SERIAL_GATEWAY
+#define MYSENSORS_SENSOR
+//#define MYSENSORS_SERIAL_GATEWAY
 //#define MYSENSORS_ETHERNET_MQTT_GATEWAY
 
 // Choose radio type by enabling one of the following
