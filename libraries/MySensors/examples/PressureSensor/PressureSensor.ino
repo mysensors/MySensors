@@ -44,7 +44,7 @@ void setup() {
 }
 
 void loop() {
-  float pressure = bmp.readPressure()/100;
+  float pressure = bmp.readSealevelPressure(205)/100; // 205 meters above sealevel
   float temperature = bmp.readTemperature();
   
   if (!metric) {
@@ -95,7 +95,7 @@ void loop() {
 int sample(float pressure) {
 	// Algorithm found here
 	// http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
-	if (minuteCount > 180)
+	if (minuteCount == 180)
 		minuteCount = 5;
 
 	pressureSamples[minuteCount] = pressure;

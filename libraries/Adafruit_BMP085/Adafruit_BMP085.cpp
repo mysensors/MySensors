@@ -1,8 +1,9 @@
 /*************************************************** 
-  This is a library for the BMP085 Barometric Pressure & Temp Sensor
+  This is a library for the Adafruit BMP085/BMP180 Barometric Pressure + Temp sensor
 
-  Designed specifically to work with the Adafruit BMP085 Breakout 
-  ----> https://www.adafruit.com/products/391
+  Designed specifically to work with the Adafruit BMP085 or BMP180 Breakout 
+  ----> http://www.adafruit.com/products/391
+  ----> http://www.adafruit.com/products/1603
 
   These displays use I2C to communicate, 2 pins are required to  
   interface
@@ -15,7 +16,6 @@
  ****************************************************/
 
 #include "Adafruit_BMP085.h"
-#include <util/delay.h>
 
 Adafruit_BMP085::Adafruit_BMP085() {
 }
@@ -59,11 +59,19 @@ boolean Adafruit_BMP085::begin(uint8_t mode) {
   Serial.print("mc = "); Serial.println(mc, DEC);
   Serial.print("md = "); Serial.println(md, DEC);
 #endif
+
+  return true;
+}
+
+int32_t Adafruit_BMP085::computeB5(int32_t UT) {
+  int32_t X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) >> 15;
+  int32_t X2 = ((int32_t)mc << 11) / (X1+(int32_t)md);
+  return X1 + X2;
 }
 
 uint16_t Adafruit_BMP085::readRawTemperature(void) {
   write8(BMP085_CONTROL, BMP085_READTEMPCMD);
-  _delay_ms(5);
+  delay(5);
 #if BMP085_DEBUG == 1
   Serial.print("Raw temp: "); Serial.println(read16(BMP085_TEMPDATA));
 #endif
@@ -76,13 +84,13 @@ uint32_t Adafruit_BMP085::readRawPressure(void) {
   write8(BMP085_CONTROL, BMP085_READPRESSURECMD + (oversampling << 6));
 
   if (oversampling == BMP085_ULTRALOWPOWER) 
-    _delay_ms(5);
+    delay(5);
   else if (oversampling == BMP085_STANDARD) 
-    _delay_ms(8);
+    delay(8);
   else if (oversampling == BMP085_HIGHRES) 
-    _delay_ms(14);
+    delay(14);
   else 
-    _delay_ms(26);
+    delay(26);
 
   raw = read16(BMP085_PRESSUREDATA);
 
@@ -129,10 +137,7 @@ int32_t Adafruit_BMP085::readPressure(void) {
   oversampling = 0;
 #endif
 
-  // do temperature calculations
-  X1=(UT-(int32_t)(ac6))*((int32_t)(ac5))/pow(2,15);
-  X2=((int32_t)mc*pow(2,11))/(X1+(int32_t)md);
-  B5=X1 + X2;
+  B5 = computeB5(UT);
 
 #if BMP085_DEBUG == 1
   Serial.print("X1 = "); Serial.println(X1);
@@ -189,9 +194,13 @@ int32_t Adafruit_BMP085::readPressure(void) {
   return p;
 }
 
+int32_t Adafruit_BMP085::readSealevelPressure(float altitude_meters) {
+  float pressure = readPressure();
+  return (int32_t)(pressure / pow(1.0-altitude_meters/44330, 5.255));
+}
 
 float Adafruit_BMP085::readTemperature(void) {
-  int32_t UT, X1, X2, B5;     // following ds convention
+  int32_t UT, B5;     // following ds convention
   float temp;
 
   UT = readRawTemperature();
@@ -205,11 +214,8 @@ float Adafruit_BMP085::readTemperature(void) {
   md = 2868;
 #endif
 
-  // step 1
-  X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2,15);
-  X2 = ((int32_t)mc * pow(2,11)) / (X1+(int32_t)md);
-  B5 = X1 + X2;
-  temp = (B5+8)/pow(2,4);
+  B5 = computeB5(UT);
+  temp = (B5+8) >> 4;
   temp /= 10;
   
   return temp;
