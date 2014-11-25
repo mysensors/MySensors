@@ -96,15 +96,15 @@ int sample(float pressure) {
 	// Algorithm found here
 	// http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
 	if (minuteCount > 180)
-		minuteCount = 6;
+		minuteCount = 5;
 
 	pressureSamples[minuteCount] = pressure;
 	minuteCount++;
 
 	if (minuteCount == 5) {
 		// Avg pressure in first 5 min, value averaged from 0 to 5 min.
-		pressureAvg[0] = ((pressureSamples[1] + pressureSamples[2]
-				+ pressureSamples[3] + pressureSamples[4] + pressureSamples[5])
+		pressureAvg[0] = ((pressureSamples[0] + pressureSamples[1]
+				+ pressureSamples[2] + pressureSamples[3] + pressureSamples[4])
 				/ 5);
 	} else if (minuteCount == 35) {
 		// Avg pressure in 30 min, value averaged from 0 to 5 min.
