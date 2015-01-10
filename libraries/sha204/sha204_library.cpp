@@ -50,6 +50,33 @@ uint8_t atsha204Class::getSerialNumber(uint8_t * response)
 	return returnCode;
 }
 
+/*  Calculates CRC16 value of provided data (and optionally including provided existing CRC16 data) 
+  returns the calculated CRC16 value */
+uint16_t atsha204Class::calculateAndUpdateCrc(uint8_t length, uint8_t *data, uint16_t current_crc)
+{
+  uint8_t counter;
+  uint16_t crc_register = current_crc;
+  uint16_t polynom = 0x8005;
+  uint8_t shift_register;
+  uint8_t data_bit, crc_bit;
+
+  for (counter = 0; counter < length; counter++)
+  {
+    for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1) 
+    {
+      data_bit = (data[counter] & shift_register) ? 1 : 0;
+      crc_bit = crc_register >> 15;
+
+      // Shift CRC to the left by 1.
+      crc_register <<= 1;
+
+      if ((data_bit ^ crc_bit) != 0)
+        crc_register ^= polynom;
+    }
+  }
+  return crc_register;
+}
+
 /* SWI bit bang functions */
 
 void atsha204Class::swi_set_signal_pin(uint8_t is_high)
@@ -772,26 +799,9 @@ uint8_t atsha204Class::sha204m_check_parameters(uint8_t op_code, uint8_t param1,
 
 void atsha204Class::sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc) 
 {
-  uint8_t counter;
   uint16_t crc_register = 0;
-  uint16_t polynom = 0x8005;
-  uint8_t shift_register;
-  uint8_t data_bit, crc_bit;
 
-  for (counter = 0; counter < length; counter++)
-  {
-    for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1) 
-    {
-      data_bit = (data[counter] & shift_register) ? 1 : 0;
-      crc_bit = crc_register >> 15;
-
-      // Shift CRC to the left by 1.
-      crc_register <<= 1;
-
-      if ((data_bit ^ crc_bit) != 0)
-        crc_register ^= polynom;
-    }
-  }
+  crc_register = calculateAndUpdateCrc(length, data, crc_register);
   crc[0] = (uint8_t) (crc_register & 0x00FF);
   crc[1] = (uint8_t) (crc_register >> 8);
 }

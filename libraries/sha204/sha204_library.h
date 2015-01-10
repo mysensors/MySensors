@@ -314,6 +314,7 @@ public:
 			uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
 
 	uint8_t getSerialNumber(uint8_t *response);
+	uint16_t calculateAndUpdateCrc(uint8_t length, uint8_t *data, uint16_t current_crc);
 	
 };
 
