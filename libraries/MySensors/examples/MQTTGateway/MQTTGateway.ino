@@ -145,8 +145,6 @@ void incomingMessage(const MyMessage &message) {
 
 void setup()  
 { 
-  // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(incomingMessage, 0, true, 0);  
   Ethernet.begin(TCP_MAC, TCP_IP);
 
   
@@ -176,6 +174,10 @@ void setup()
 
   // give the Ethernet interface a second to initialize
   delay(1000);
+
+
+  // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
+  gw.begin(incomingMessage, 0, true, 0);  
 
   // start listening for clients
   server.begin();

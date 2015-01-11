@@ -101,8 +101,6 @@ void output(const char *fmt, ... ) {
 
 void setup()  
 { 
-  // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(incomingMessage, 0, true, 0);
 
   Ethernet.begin(mac, myIp);
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
@@ -116,6 +114,10 @@ void setup()
 
   // give the Ethernet interface a second to initialize
   delay(1000);
+
+  // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
+  gw.begin(incomingMessage, 0, true, 0);
+
   
   // start listening for clients
   server.begin();
