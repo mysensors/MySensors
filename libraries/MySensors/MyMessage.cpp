@@ -177,10 +177,10 @@ MyMessage& MyMessage::set(void* value, uint8_t length) {
 
 
 MyMessage& MyMessage::set(const char* value) {
-	uint8_t length = strlen(value);
+	uint8_t length = min(strlen(value), MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
-	strncpy(data, value, min(length, MAX_PAYLOAD));
+	strncpy(data, value, length);
 	return *this;
 }
 
