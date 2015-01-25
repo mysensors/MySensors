@@ -20,4 +20,9 @@
  */
 #define DEBUG
 
+/**
+ * Enable/Disable Dynamic controller discovery functions in GW
+ */
+//#define GATEWAY_CONTROLLER_DISCOVERY
+
 #endif

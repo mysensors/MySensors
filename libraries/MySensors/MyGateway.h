@@ -17,6 +17,11 @@
 #define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from controller
 #define MAX_SEND_LENGTH 120 // Max buffersize needed for messages destined for controller
 
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+#include <IPAddress.h>
+#define CONTROLLER_PORT 5003
+#endif
+
 class MyGateway : public MySensor
 {
 	public:
@@ -44,6 +49,17 @@ class MyGateway : public MySensor
 		void processRadioMessage();
 	    void parseAndSend(char *inputString);
 
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+        /* Get the remote Controller IP address */
+        IPAddress getControllerIP();
+        /* Get the remote Controller Port */
+        uint16_t getControllerPort();
+        /* Set the remote Controller IP address and Port */
+        void setControllerIPPort(const IPAddress& addr, const uint16_t port=0);
+        /* send a Controller Discovery request using the dataCallback */
+        void requestControllerDiscovery();
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
+
 	private:
 	    char convBuf[MAX_PAYLOAD*2+1];
 	    char serialBuffer[MAX_SEND_LENGTH]; // Buffer for building string when sending data to vera
@@ -52,6 +68,13 @@ class MyGateway : public MySensor
 	    void (*dataCallback)(char *);
 	    uint8_t pinInclusion;
 	    uint8_t inclusionTime;
+
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+        IPAddress controller_IP;
+        uint16_t controller_port;
+        /* handle the Controller Discovery response */
+        void handleControllerDiscoveryResponse(char *value);
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
 
 		uint8_t h2i(char c);
 
@@ -65,6 +88,13 @@ class MyGateway : public MySensor
 	    void txBlink(uint8_t cnt);
 	    void errBlink(uint8_t cnt);
 };
+
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+/**
+ * Get the Network broadcast IPAddress based on client Address and Subnet Mask
+ */
+IPAddress getBroadcastIP(const IPAddress& addr, const IPAddress& netmask);
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
 
 void ledTimersInterrupt();
 void startInclusionInterrupt();

@@ -30,6 +30,11 @@ MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, ui
 	pinRx = _rx;
 	pinTx = _tx;
 	pinEr = _er;
+
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+	controller_IP = INADDR_NONE;    // 0.0.0.0 from IPAddress.h
+	controller_port = CONTROLLER_PORT;  // set in MyGateway.h
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
 }
 
 
@@ -87,6 +92,10 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	// Add interrupt for inclusion button to pin
 	PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
 
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+	requestControllerDiscovery();
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
+
 	// Send startup log message on serial
 	serial(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
 }
@@ -125,6 +134,67 @@ uint8_t MyGateway::h2i(char c) {
 		i += c - 'A' + 10;
 	return i;
 }
+
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+
+IPAddress MyGateway::getControllerIP() {
+    return controller_IP;
+}
+
+uint16_t MyGateway::getControllerPort() {
+    return controller_port;
+}
+
+void MyGateway::setControllerIPPort(const IPAddress& addr, const uint16_t port) {
+    controller_IP = addr;
+
+    /* set the port if some legal value passed */
+    if (port > 0)
+        controller_port = port;
+}
+
+void MyGateway::requestControllerDiscovery() {
+    // Send Controller Discovery message on serial
+    serial(PSTR("0;0;%d;0;%d;Gateway Controller Discovery\n"),  C_INTERNAL, I_CONTROLLER_DISCOVERY);
+}
+
+void MyGateway::handleControllerDiscoveryResponse(char *value) {
+    /* parse the IP address and (possibly) port number */
+    char *ip_p, *port_p, *tmp_p = NULL;
+    uint8_t ip[4], port = 0;
+
+    /* split the IP and port */
+    ip_p = strtok_r(value, ":", &tmp_p);
+    port_p = strtok_r(NULL, ":", &tmp_p);
+
+    if (ip_p != NULL) {
+        /* split IP octets */
+        for (uint8_t i = 0; i < 4; ++i) {
+            ip_p = strtok_r(i == 0 ? ip_p : NULL, ".", &tmp_p);
+            if (ip_p == NULL)
+                return; /* Unexpected Error */
+
+            ip[i] = atoi(ip_p);
+        }
+
+        /* parse port */
+        if (port_p != NULL) {
+            /*remove trailing '\n' */
+            tmp_p = strchr(port_p, '\n');
+            if (tmp_p != NULL)
+                *tmp_p = '\0';
+            port = atoi(port_p);
+        }
+
+        setControllerIPPort(IPAddress(ip), port);
+    }
+}
+
+IPAddress getBroadcastIP(const IPAddress& addr, const IPAddress& netmask) {
+    return IPAddress(addr[0] | ~netmask[0], addr[1] | ~netmask[1], addr[2] | ~netmask[2], addr[3] | ~netmask[3]);
+}
+
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
 
 void MyGateway::parseAndSend(char *commandBuffer) {
   boolean ok = false;
@@ -193,6 +263,12 @@ void MyGateway::parseAndSend(char *commandBuffer) {
       // Request to change inclusion mode
       setInclusionMode(atoi(value) == 1);
     }
+#ifdef GATEWAY_CONTROLLER_DISCOVERY
+    /* handle the response from Controller */
+    else if (type == I_CONTROLLER_DISCOVERY) {
+        handleControllerDiscoveryResponse(value);
+    }
+#endif /* GATEWAY_CONTROLLER_DISCOVERY */
   } else {
     txBlink(1);
     msg.sender = GATEWAY_ADDRESS;
