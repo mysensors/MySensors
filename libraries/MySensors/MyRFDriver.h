@@ -1,5 +1,5 @@
-#ifndef MyDriver_h
-#define MyDriver_h
+#ifndef MyRFDriver_h
+#define MyRFDriver_h
 
 #include <stdint.h>
 
@@ -16,13 +16,13 @@
 #define GATEWAY_ADDRESS ((uint8_t)0)
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
 
-class MyDriver
+class MyRFDriver
 { 
 public:
-	// MyDriver constructor
+	// MyRFDriver constructor
 	// different parameters would be needed depending on radio module (e.g. pins connected etc.)
 	// keeping these parameters as #define's in MyConfig to streamline the driver interface
-	MyDriver();
+	MyRFDriver();
 	// init()
 	// different parameters would be needed depending on radio module (e.g. channel, power, crc, etc.)
 	// keeping these parameters as #define's in MyConfig to streamline the driver interface

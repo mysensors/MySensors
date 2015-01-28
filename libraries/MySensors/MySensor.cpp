@@ -34,7 +34,7 @@ static inline bool isValidDistance( const uint8_t distance ) {
 }
 
 	MySensor::MySensor() {
-		driver = (MyDriver*) new MyDriverClass();
+		radio = (MyRFDriver*) new MyRFDriverClass();
 	}
 
 
@@ -89,7 +89,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 
 	// Open reading pipe for messages directed to this node (set write pipe to same)
-	driver->setAddress(nc.nodeId);
+	radio->setAddress(nc.nodeId);
 
 	// Send presentation for this radio node (attach
 	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
@@ -105,7 +105,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 void MySensor::setupRadio() {
 	failedTransmissions = 0;
-	driver->init();
+	radio->init();
 }
 
 void MySensor::setupRepeaterMode(){
@@ -124,7 +124,7 @@ ControllerConfig MySensor::getConfig() {
 
 void MySensor::requestNodeId() {
 	debug(PSTR("req node id\n"));
-	driver->setAddress(nc.nodeId);
+	radio->setAddress(nc.nodeId);
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
 	waitForReply();
 }
@@ -202,7 +202,7 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, const bool allowFi
 		uint8_t length = mGetLength(message);
 		message.last = nc.nodeId;
 		mSetVersion(message, PROTOCOL_VERSION);
-		bool ok = driver->send(next, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
+		bool ok = radio->send(next, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 		debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
 				message.sender,message.last, next, message.destination, message.sensor, mGetCommand(message), message.type,
@@ -264,10 +264,10 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 
 boolean MySensor::process() {
 	uint8_t to = 0;
-	if (!driver->available(&to))
+	if (!radio->available(&to))
 		return false;
 
-	uint8_t len = driver->receive((uint8_t *)&msg);
+	uint8_t len = radio->receive((uint8_t *)&msg);
 
 	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
@@ -351,7 +351,7 @@ boolean MySensor::process() {
 							debug(PSTR("full\n"));
 							while (1); // Wait here. Nothing else we can do...
 						} else {
-							driver->setAddress(nc.nodeId);
+							radio->setAddress(nc.nodeId);
 							eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						}
 						debug(PSTR("id=%d\n"), nc.nodeId);
@@ -482,7 +482,7 @@ void MySensor::internalSleep(unsigned long ms) {
 void MySensor::sleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
-	driver->powerDown();
+	radio->powerDown();
 	pinIntTrigger = 0;
 	internalSleep(ms);
 }
@@ -491,7 +491,7 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
 	Serial.flush();
-	driver->powerDown();
+	radio->powerDown();
 	attachInterrupt(interrupt, wakeUp, mode);
 	if (ms>0) {
 		pinIntTrigger = 0;
@@ -510,7 +510,7 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	int8_t retVal = 1;
 	Serial.flush(); // Let serial prints finish (debug, log etc)
-	driver->powerDown();
+	radio->powerDown();
 	attachInterrupt(interrupt1, wakeUp, mode1);
 	attachInterrupt(interrupt2, wakeUp2, mode2);
 	if (ms>0) {

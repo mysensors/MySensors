@@ -19,13 +19,13 @@
 
 
 #ifdef MYSENSORS_RF_NRF24
-#include "MyDriverNRF24.h"
-typedef class MyDriverNRF24 MyDriverClass;
+#include "MyRFDriverNRF24.h"
+typedef class MyRFDriverNRF24 MyRFDriverClass;
 #endif
 
 #ifdef MYSENSORS_RF_RF69
-#include "MyDriverRF69.h"
-typedef class MyDriverRF69 MyDriverClass;
+#include "MyRFDriverRF69.h"
+typedef class MyRFDriverRF69 MyRFDriverClass;
 #endif
 
 /***

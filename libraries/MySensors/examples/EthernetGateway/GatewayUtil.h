@@ -1,7 +1,7 @@
 #ifndef __GATEWAYUTIL_H__
 #define __GATEWAYUTIL_H__
 
-#include <MyDriver.h>  
+#include <MyRFDriver.h>
 
 
 #ifdef ARDUINO

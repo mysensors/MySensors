@@ -1,8 +1,8 @@
-#ifndef MyCommDriver_h
-#define MyCommDriver_h
+#ifndef MyRFDriverNRF24_h
+#define MyRFDriverNRF24_h
 
 #include "MyConfig.h"
-#include "MyDriver.h"
+#include "MyRFDriver.h"
 #include <stdint.h>
 #include "utility/RF24.h"
 #include "utility/RF24_config.h"
@@ -37,10 +37,10 @@
 #define CURRENT_NODE_PIPE ((uint8_t)1)
 #define BROADCAST_PIPE ((uint8_t)2)
 
-class MyDriverNRF24 : public MyDriver
+class MyRFDriverNRF24 : public MyRFDriver
 { 
 public:
-	MyDriverNRF24();
+	MyRFDriverNRF24();
 	void init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
