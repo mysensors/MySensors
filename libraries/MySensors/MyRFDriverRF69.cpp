@@ -1,11 +1,11 @@
-#include "MyDriver.h"
-#include "MyDriverRF69.h"
+#include "MyRFDriver.h"
+#include "MyRFDriverRF69.h"
 
-MyDriverRF69::MyDriverRF69() : MyDriver() {
+MyRFDriverRF69::MyRFDriverRF69() : MyRFDriver() {
 	radio = new RFM69();
 }
 
-void MyDriverRF69::init() {
+void MyRFDriverRF69::init() {
 	// Start up the radio library
 	radio->initialize(FREQUENCY,_address,NETWORKID);
 #ifdef IS_RFM69HW
@@ -15,25 +15,25 @@ void MyDriverRF69::init() {
 	
 }
 
-void MyDriverRF69::setAddress(uint8_t address) {
+void MyRFDriverRF69::setAddress(uint8_t address) {
 	_address = address;
 	radio->setAddress(address);
 }
 
-uint8_t MyDriverRF69::getAddress() {
+uint8_t MyRFDriverRF69::getAddress() {
 	return _address;
 }
 
-bool MyDriverRF69::send(uint8_t to, const void* data, uint8_t len) {
+bool MyRFDriverRF69::send(uint8_t to, const void* data, uint8_t len) {
 	// Make sure radio has powered up
 	return radio->sendWithRetry(to,data,len);
 }
 
-bool MyDriverRF69::available(uint8_t *to) {
+bool MyRFDriverRF69::available(uint8_t *to) {
 	return radio->receiveDone();
 }
 
-uint8_t MyDriverRF69::receive(void* data) {
+uint8_t MyRFDriverRF69::receive(void* data) {
 	// for (byte i = 0; i < radio->DATALEN; i++){
 		// data[i]= (void)radio->DATA[i];
 	// }
@@ -44,6 +44,6 @@ uint8_t MyDriverRF69::receive(void* data) {
     }
 }	
 
-void MyDriverRF69::powerDown() {
+void MyRFDriverRF69::powerDown() {
 	radio->sleep();
 }
