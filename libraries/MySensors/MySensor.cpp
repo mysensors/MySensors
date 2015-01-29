@@ -285,11 +285,15 @@ boolean MySensor::process() {
 	uint8_t destination = msg.destination;
 
 	if (repeaterMode && command == C_INTERNAL && type == I_FIND_PARENT) {
-		// Relaying nodes should always answer ping messages
-		// Wait a random delay of 0-2 seconds to minimize collision
-		// between ping ack messages from other relaying nodes
-		delay(millis() & 0x3ff);
-		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
+		if (nc.distance == 255) {
+			findParentNode();
+		} else {
+			// Relaying nodes should always answer ping messages
+			// Wait a random delay of 0-2 seconds to minimize collision
+			// between ping ack messages from other relaying nodes
+			delay(millis() & 0x3ff);
+			sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
+		}
 		return false;
 	} else if (destination == nc.nodeId) {
 		// Check if sender requests an ack back.
