@@ -28,7 +28,7 @@
 #define LED_PIN 3      // Arduino pin attached to MOSFET Gate pin
 #define FADE_DELAY 10  // Delay in ms for each percentage fade up/down (10ms = 1s full-range dim)
 
-MySensor gw(9,10);
+MySensor gw;
 
 static int currentLevel = 0;  // Current dim level...
 MyMessage dimmerMsg(0, V_DIMMER);
