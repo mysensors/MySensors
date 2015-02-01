@@ -289,7 +289,7 @@ boolean MySensor::process() {
 	if (repeaterMode && command == C_INTERNAL && type == I_FIND_PARENT) {
 		if (nc.distance == 255) {
 			findParentNode();
-		} else {
+		} else if (sender != nc.parentNodeId) {
 			// Relaying nodes should always answer ping messages
 			// Wait a random delay of 0-2 seconds to minimize collision
 			// between ping ack messages from other relaying nodes
