@@ -198,8 +198,9 @@ boolean MySensor::sendRoute(MyMessage &message) {
 			// need to find another route to gateway.
 			if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
 				findParentNode();
+			} else {
+				failedTransmissions++;
 			}
-			failedTransmissions++;
 		} else {
 			failedTransmissions = 0;
 		}
