@@ -74,9 +74,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		nc.distance = DISTANCE_INVALID;
 	}
 
-	if (_nodeId != AUTO) {
-		// Set static id
-		nc.nodeId = _nodeId;
+	if ( (_nodeId != AUTO) && (nc.nodeId != _nodeId) ) {
+	    // Set static id
+	    nc.nodeId = _nodeId;
+	    // Save static id in eeprom
+	    eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, _nodeId);
 	}
 
 	// Try to fetch node-id from gateway
@@ -253,12 +255,12 @@ void MySensor::sendSketchInfo(const char *name, const char *version, bool enable
 }
 
 void MySensor::request(uint8_t childSensorId, uint8_t variableType, uint8_t destination) {
-	sendRoute(build(msg, nc.nodeId, destination, childSensorId, C_REQ, variableType, false));
+	sendRoute(build(msg, nc.nodeId, destination, childSensorId, C_REQ, variableType, false).set(""));
 }
 
 void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 	timeCallback = _timeCallback;
-	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false));
+	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
 
@@ -287,11 +289,15 @@ boolean MySensor::process() {
 	uint8_t destination = msg.destination;
 
 	if (repeaterMode && command == C_INTERNAL && type == I_FIND_PARENT) {
-		// Relaying nodes should always answer ping messages
-		// Wait a random delay of 0-1.023 seconds to minimize collision
-		// between ping ack messages from other relaying nodes
-		delay(millis() & 0x3ff);
-		sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+		if (nc.distance == 255) {
+			findParentNode();
+		} else if (sender != nc.parentNodeId) {
+			// Relaying nodes should always answer ping messages
+			// Wait a random delay of 0-2 seconds to minimize collision
+			// between ping ack messages from other relaying nodes
+			delay(millis() & 0x3ff);
+			sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
+		}
 		return false;
 	} else if (command == C_INTERNAL && type == I_TIME) {
 		if (timeCallback != NULL) {
@@ -400,6 +406,10 @@ boolean MySensor::process() {
 			//
 			// lookup route in table and send message there
 			sendWrite(route, msg);
+		} else if (sender == GATEWAY_ADDRESS && destination == BROADCAST_ADDRESS) {
+			// A net gateway reply to a message previously sent by us from a 255 node
+			// We should broadcast this back to the node
+			sendWrite(destination, msg, true);
 		} else  {
 			// A message comes from a child node and we have no
 			// route for it.
@@ -485,6 +495,23 @@ void MySensor::sleep(unsigned long ms) {
 	radio->powerDown();
 	pinIntTrigger = 0;
 	internalSleep(ms);
+}
+
+void MySensor::wait(unsigned long ms) {
+	bool slept_enough = false;
+	unsigned long start = millis();
+	unsigned long now;
+
+	// Let serial prints finish (debug, log etc)
+	Serial.flush();
+
+	while (!slept_enough) {
+		MySensor::process();
+		now = millis();
+		if (now - start > ms) {
+			slept_enough = true;
+		}
+	}
 }
 
 bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {

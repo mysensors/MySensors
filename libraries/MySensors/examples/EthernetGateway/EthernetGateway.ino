@@ -101,7 +101,6 @@ void output(const char *fmt, ... ) {
 
 void setup()  
 { 
-
   Ethernet.begin(mac, myIp);
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
 

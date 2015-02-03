@@ -195,6 +195,15 @@ class MySensor
 	void sleep(unsigned long ms);
 
 	/**
+	 * Wait for a specified amount of time to pass.  Keeps process()ing.
+	 * This does not power-down the radio nor the Arduino.
+	 * Because this calls process() in a loop, it is a good way to wait
+	 * in your loop() on a repeater node or sensor that listens to messages.
+	 * @param ms Number of milliseconds to sleep.
+	 */
+	void wait(unsigned long ms);
+
+	/**
 	 * Sleep (PowerDownMode) the Arduino and radio. Wake up on timer or pin change.
 	 * See: http://arduino.cc/en/Reference/attachInterrupt for details on modes and which pin
 	 * is assigned to what interrupt. On Nano/Pro Mini: 0=Pin2, 1=Pin3

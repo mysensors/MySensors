@@ -14,9 +14,9 @@ MySensor gw;
 float lastPressure = -1;
 float lastTemp = -1;
 int lastForecast = -1;
-char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
+const char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
 int minutes;
-float pressureSamples[180];
+float pressureSamples[7][6];
 int minuteCount = 0;
 bool firstRound = true;
 float pressureAvg[7];
@@ -97,20 +97,49 @@ int sample(float pressure) {
 	// http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
 	if (minuteCount == 180)
 		minuteCount = 5;
+        
+        //From 0 to 5 min.
+        if (minuteCount <= 5){
+          pressureSamples[0][minuteCount] = pressure;
+        }
+        //From 30 to 35 min.
+        if ((minuteCount <= 30) && (minuteCount >= 35)){
+          pressureSamples[1][minuteCount - 30] = pressure;  
+        }
+        //From 55 to 60 min.
+        if ((minuteCount <= 55) && (minuteCount >= 60)){
+          pressureSamples[2][minuteCount - 55] = pressure;  
+        }
+        //From 90 to 95 min.
+        if ((minuteCount <= 90) && (minuteCount >= 95)){
+          pressureSamples[3][minuteCount - 90] = pressure;  
+        }
+        //From 115 to 119 min.
+        if ((minuteCount <= 115) && (minuteCount >= 120)){
+          pressureSamples[4][minuteCount - 115] = pressure;  
+        }
+        //From 150 to 155 min.
+        if ((minuteCount <= 150) && (minuteCount >= 155)){
+          pressureSamples[5][minuteCount - 150] = pressure;  
+        }
+        //From 175 to 180 min.
+        if ((minuteCount <= 175) && (minuteCount >= 180)){
+          pressureSamples[6][minuteCount - 175] = pressure;  
+        }
+        
 
-	pressureSamples[minuteCount] = pressure;
 	minuteCount++;
 
 	if (minuteCount == 5) {
 		// Avg pressure in first 5 min, value averaged from 0 to 5 min.
-		pressureAvg[0] = ((pressureSamples[0] + pressureSamples[1]
-				+ pressureSamples[2] + pressureSamples[3] + pressureSamples[4])
-				/ 5);
+		pressureAvg[0] = ((pressureSamples[0][0] + pressureSamples[0][1] 
+                                  + pressureSamples[0][2] + pressureSamples[0][3]
+                                  + pressureSamples[0][4] + pressureSamples[0][5]) / 6);
 	} else if (minuteCount == 35) {
 		// Avg pressure in 30 min, value averaged from 0 to 5 min.
-		pressureAvg[1] = ((pressureSamples[30] + pressureSamples[31]
-				+ pressureSamples[32] + pressureSamples[33]
-				+ pressureSamples[34]) / 5);
+		pressureAvg[1] = ((pressureSamples[1][0] + pressureSamples[1][1] 
+                                  + pressureSamples[1][2] + pressureSamples[1][3]
+                                  + pressureSamples[1][4] + pressureSamples[1][5]) / 6);
 		float change = (pressureAvg[1] - pressureAvg[0]);
 		if (firstRound) // first time initial 3 hour
 			dP_dt = ((65.0 / 1023.0) * 2 * change); // note this is for t = 0.5hour
@@ -118,9 +147,9 @@ int sample(float pressure) {
 			dP_dt = (((65.0 / 1023.0) * change) / 1.5); // divide by 1.5 as this is the difference in time from 0 value.
 	} else if (minuteCount == 60) {
 		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[2] = ((pressureSamples[55] + pressureSamples[56]
-				+ pressureSamples[57] + pressureSamples[58]
-				+ pressureSamples[59]) / 5);
+		pressureAvg[2] = ((pressureSamples[2][0] + pressureSamples[2][1] 
+                                  + pressureSamples[2][2] + pressureSamples[2][3]
+                                  + pressureSamples[2][4] + pressureSamples[2][5]) / 6);
 		float change = (pressureAvg[2] - pressureAvg[0]);
 		if (firstRound) //first time initial 3 hour
 			dP_dt = ((65.0 / 1023.0) * change); //note this is for t = 1 hour
@@ -128,9 +157,9 @@ int sample(float pressure) {
 			dP_dt = (((65.0 / 1023.0) * change) / 2); //divide by 2 as this is the difference in time from 0 value
 	} else if (minuteCount == 95) {
 		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[3] = ((pressureSamples[90] + pressureSamples[91]
-				+ pressureSamples[92] + pressureSamples[93]
-				+ pressureSamples[94]) / 5);
+		pressureAvg[3] = ((pressureSamples[3][0] + pressureSamples[3][1] 
+                                  + pressureSamples[3][2] + pressureSamples[3][3]
+                                  + pressureSamples[3][4] + pressureSamples[3][5]) / 6);
 		float change = (pressureAvg[3] - pressureAvg[0]);
 		if (firstRound) // first time initial 3 hour
 			dP_dt = (((65.0 / 1023.0) * change) / 1.5); // note this is for t = 1.5 hour
@@ -138,9 +167,9 @@ int sample(float pressure) {
 			dP_dt = (((65.0 / 1023.0) * change) / 2.5); // divide by 2.5 as this is the difference in time from 0 value
 	} else if (minuteCount == 120) {
 		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[4] = ((pressureSamples[115] + pressureSamples[116]
-				+ pressureSamples[117] + pressureSamples[118]
-				+ pressureSamples[119]) / 5);
+		pressureAvg[4] = ((pressureSamples[4][0] + pressureSamples[4][1] 
+                                  + pressureSamples[4][2] + pressureSamples[4][3]
+                                  + pressureSamples[4][4] + pressureSamples[4][5]) / 6);
 		float change = (pressureAvg[4] - pressureAvg[0]);
 		if (firstRound) // first time initial 3 hour
 			dP_dt = (((65.0 / 1023.0) * change) / 2); // note this is for t = 2 hour
@@ -148,9 +177,9 @@ int sample(float pressure) {
 			dP_dt = (((65.0 / 1023.0) * change) / 3); // divide by 3 as this is the difference in time from 0 value
 	} else if (minuteCount == 155) {
 		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[5] = ((pressureSamples[150] + pressureSamples[151]
-				+ pressureSamples[152] + pressureSamples[153]
-				+ pressureSamples[154]) / 5);
+		pressureAvg[5] = ((pressureSamples[5][0] + pressureSamples[5][1] 
+                                  + pressureSamples[5][2] + pressureSamples[5][3]
+                                  + pressureSamples[5][4] + pressureSamples[5][5]) / 6);
 		float change = (pressureAvg[5] - pressureAvg[0]);
 		if (firstRound) // first time initial 3 hour
 			dP_dt = (((65.0 / 1023.0) * change) / 2.5); // note this is for t = 2.5 hour
@@ -158,9 +187,9 @@ int sample(float pressure) {
 			dP_dt = (((65.0 / 1023.0) * change) / 3.5); // divide by 3.5 as this is the difference in time from 0 value
 	} else if (minuteCount == 180) {
 		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[6] = ((pressureSamples[175] + pressureSamples[176]
-				+ pressureSamples[177] + pressureSamples[178]
-				+ pressureSamples[179]) / 5);
+		pressureAvg[6] = ((pressureSamples[6][0] + pressureSamples[6][1] 
+                                  + pressureSamples[6][2] + pressureSamples[6][3]
+                                  + pressureSamples[6][4] + pressureSamples[6][5]) / 6);
 		float change = (pressureAvg[6] - pressureAvg[0]);
 		if (firstRound) // first time initial 3 hour
 			dP_dt = (((65.0 / 1023.0) * change) / 3); // note this is for t = 3 hour
