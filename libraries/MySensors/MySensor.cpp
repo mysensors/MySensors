@@ -399,6 +399,10 @@ boolean MySensor::process() {
 			//
 			// lookup route in table and send message there
 			sendWrite(route, msg);
+		} else if (sender == GATEWAY_ADDRESS && destination == BROADCAST_ADDRESS) {
+			// A net gateway reply to a message previously sent by us from a 255 node
+			// We should broadcast this back to the node
+			sendWrite(destination, msg, true);
 		} else  {
 			// A message comes from a child node and we have no
 			// route for it.
