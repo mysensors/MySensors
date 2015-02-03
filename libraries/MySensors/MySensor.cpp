@@ -490,6 +490,23 @@ void MySensor::sleep(unsigned long ms) {
 	internalSleep(ms);
 }
 
+void MySensor::wait(unsigned long ms) {
+	bool slept_enough = false;
+	unsigned long start = millis();
+	unsigned long now;
+
+	// Let serial prints finish (debug, log etc)
+	Serial.flush();
+
+	while (!slept_enough) {
+		MySensor::process();
+		now = millis();
+		if (now - start > ms) {
+			slept_enough = true;
+		}
+	}
+}
+
 bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
