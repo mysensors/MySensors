@@ -18,6 +18,8 @@ uint8_t pinRx;
 uint8_t pinTx;
 uint8_t pinEr;
 boolean buttonTriggeredInclusion;
+uint8_t ledOn = HIGH;
+uint8_t ledOff = LOW;
 volatile uint8_t countRx;
 volatile uint8_t countTx;
 volatile uint8_t countErr;
@@ -58,18 +60,18 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	pinMode(pinRx, OUTPUT);
 	pinMode(pinTx, OUTPUT);
 	pinMode(pinEr, OUTPUT);
-	digitalWrite(pinRx, LOW);
-	digitalWrite(pinTx, LOW);
-	digitalWrite(pinEr, LOW);
+	digitalWrite(pinRx, ledOff);
+	digitalWrite(pinTx, ledOff);
+	digitalWrite(pinEr, ledOff);
 
 	// Setup digital in that triggers inclusion mode
 	pinMode(pinInclusion, INPUT);
 	digitalWrite(pinInclusion, HIGH);
 
 	// Set initial state of leds
-	digitalWrite(pinRx, HIGH);
-	digitalWrite(pinTx, HIGH);
-	digitalWrite(pinEr, HIGH);
+	digitalWrite(pinRx, ledOn);
+	digitalWrite(pinTx, ledOn);
+	digitalWrite(pinEr, ledOn);
 
 
 	// Start up the radio library
@@ -94,7 +96,11 @@ void startInclusionInterrupt() {
 	  buttonTriggeredInclusion = true;
 }
 
-
+void MyGateway::invertLEDs() {
+    int swap = ledOn;
+    ledOn = ledOff;
+    ledOff = swap;
+}
 
 void MyGateway::checkButtonTriggeredInclusion() {
    if (buttonTriggeredInclusion) {
@@ -257,29 +263,29 @@ void MyGateway::serial(MyMessage &msg) {
 void ledTimersInterrupt() {
   if(countRx && countRx != 255) {
     // switch led on
-    digitalWrite(pinRx, LOW);
+    digitalWrite(pinRx, ledOff);
   } else if(!countRx) {
      // switching off
-     digitalWrite(pinRx, HIGH);
+     digitalWrite(pinRx, ledOn);
    }
    if(countRx != 255) { countRx--; }
 
   if(countTx && countTx != 255) {
     // switch led on
-    digitalWrite(pinTx, LOW);
+    digitalWrite(pinTx, ledOff);
   } else if(!countTx) {
      // switching off
-     digitalWrite(pinTx, HIGH);
+     digitalWrite(pinTx, ledOn);
    }
    if(countTx != 255) { countTx--; }
    else if(inclusionMode) { countTx = 8; }
 
   if(countErr && countErr != 255) {
     // switch led on
-    digitalWrite(pinEr, LOW);
+    digitalWrite(pinEr, ledOff);
   } else if(!countErr) {
      // switching off
-     digitalWrite(pinEr, HIGH);
+     digitalWrite(pinEr, ledOn);
    }
    if(countErr != 255) { countErr--; }
 

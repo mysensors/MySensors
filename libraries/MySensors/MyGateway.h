@@ -43,6 +43,7 @@ class MyGateway : public MySensor
 
 		void processRadioMessage();
 	    void parseAndSend(char *inputString);
+	    void invertLEDs();
 
 	private:
 	    char convBuf[MAX_PAYLOAD*2+1];
