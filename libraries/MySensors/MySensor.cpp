@@ -43,7 +43,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 	setupRadio(paLevel, channel, dataRate);
 
-	// Read settings from EEPROM
+	// Read settings from eeprom
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	eeprom_read_block((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
@@ -54,6 +54,8 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	if (_parentNodeId != AUTO) {
 		nc.parentNodeId = _parentNodeId;
+		// Save static parent id in eeprom
+		eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
 		autoFindParent = false;
 	} else {
 		autoFindParent = true;
