@@ -61,6 +61,7 @@ bool MyRFDriverNRF24::available(uint8_t *to) {
 uint8_t MyRFDriverNRF24::receive(void* data) {
 	uint8_t len = rf24->getDynamicPayloadSize();
 	rf24->read(data, len);
+	return len;
 }
 
 void MyRFDriverNRF24::powerDown() {

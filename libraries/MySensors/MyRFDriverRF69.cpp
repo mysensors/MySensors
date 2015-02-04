@@ -42,6 +42,7 @@ uint8_t MyRFDriverRF69::receive(void* data) {
     {
       radio->sendACK();
     }
+	return radio->DATALEN;
 }	
 
 void MyRFDriverRF69::powerDown() {
