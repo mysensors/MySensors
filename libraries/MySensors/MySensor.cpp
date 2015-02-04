@@ -51,7 +51,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 	setupRadio();
 
-	// Read settings from EEPROM
+	// Read settings from eeprom
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	eeprom_read_block((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
@@ -68,7 +68,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	autoFindParent = _parentNodeId == AUTO;
 	if (!autoFindParent) {
 		nc.parentNodeId = _parentNodeId;
-		nc.distance = 0;
+		// Save static parent id in eeprom (used by bootloader)
+		eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		// We don't actually know the distance to gw here. Let's pretend it is 1.
+		// If the current node is also repeater, be aware of this.
+		nc.distance = 1;
 	} else if (!isValidParent(nc.parentNodeId)) {
 		// Auto find parent, but parent in eeprom is invalid. Force parent search on first transmit.
 		nc.distance = DISTANCE_INVALID;
@@ -377,6 +381,11 @@ boolean MySensor::process() {
 						for (uint8_t i=0;i< sizeof(childNodeTable); i++) {
 							removeChildRoute(i);
 						}
+						// Clear parent node id & distance to gw
+						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
+						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, 0xFF);
+						// Find parent node
+						findParentNode();
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
 					}
 				}
