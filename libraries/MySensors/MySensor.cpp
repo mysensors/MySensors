@@ -200,8 +200,9 @@ boolean MySensor::sendRoute(MyMessage &message) {
 			// need to find another route to gateway.
 			if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
 				findParentNode();
+			} else {
+				failedTransmissions++;
 			}
-			failedTransmissions++;
 		} else {
 			failedTransmissions = 0;
 		}
@@ -367,6 +368,11 @@ boolean MySensor::process() {
 						for (uint8_t i=0;i< sizeof(childNodeTable); i++) {
 							removeChildRoute(i);
 						}
+						// Clear parent node id & distance to gw
+						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
+						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, 0xFF);
+						// Find parent node
+						findParentNode();
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
 					}
 				} else if (type == I_TIME) {
