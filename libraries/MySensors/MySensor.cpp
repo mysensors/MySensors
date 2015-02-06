@@ -80,20 +80,22 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	debug(PSTR("%s started, id %d\n"), repeaterMode?"repeater":"sensor", nc.nodeId);
 
-	// Open reading pipe for messages directed to this node (set write pipe to same)
-	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
-	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
+	if (nc.nodeId != AUTO) {
+		// Open reading pipe for messages directed to this node (set write pipe to same)
+		RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
+		RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
 
-	// Send presentation for this radio node (attach
-	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
+		// Send presentation for this radio node (attach
+		present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
 
-	// Send a configuration exchange request to controller
-	// Node sends parent node. Controller answers with latest node configuration
-	// which is picked up in process()
-	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
+		// Send a configuration exchange request to controller
+		// Node sends parent node. Controller answers with latest node configuration
+		// which is picked up in process()
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
 
-	// Wait configuration reply.
-	waitForReply();
+		// Wait configuration reply.
+		waitForReply();
+	}
 }
 
 void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
@@ -348,10 +350,13 @@ boolean MySensor::process() {
 							debug(PSTR("full\n"));
 							while (1); // Wait here. Nothing else we can do...
 						} else {
+							RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
 							RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
 							eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						}
 						debug(PSTR("id=%d\n"), nc.nodeId);
+						present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
+						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
 					}
 				} else if (type == I_CONFIG) {
 					// Pick up configuration from controller (currently only metric/imperial)
