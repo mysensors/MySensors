@@ -27,10 +27,8 @@ inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, ui
 	return msg;
 }
 
-
 MySensor::MySensor(uint8_t _cepin, uint8_t _cspin) : RF24(_cepin, _cspin) {
 }
-
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId, rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
 	Serial.begin(BAUD_RATE);
@@ -125,7 +123,6 @@ void MySensor::setupRepeaterMode(){
 	eeprom_read_block((void*)childNodeTable, (void*)EEPROM_ROUTES_ADDRESS, 256);
 }
 
-
 uint8_t MySensor::getNodeId() {
 	return nc.nodeId;
 }
@@ -140,7 +137,6 @@ void MySensor::requestNodeId() {
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
 	waitForReply();
 }
-
 
 void MySensor::findParentNode() {
 	failedTransmissions = 0;
@@ -228,7 +224,6 @@ boolean MySensor::sendWrite(uint8_t next, MyMessage &message, bool broadcast) {
 	return ok;
 }
 
-
 bool MySensor::send(MyMessage &message, bool enableAck) {
 	message.sender = nc.nodeId;
 	mSetCommand(message,C_SET);
@@ -262,7 +257,6 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
-
 boolean MySensor::process() {
 	uint8_t pipe;
 	boolean available = RF24::available(&pipe);
@@ -289,18 +283,7 @@ boolean MySensor::process() {
 	uint8_t last = msg.last;
 	uint8_t destination = msg.destination;
 
-	if (repeaterMode && command == C_INTERNAL && type == I_FIND_PARENT) {
-		if (nc.distance == 255) {
-			findParentNode();
-		} else if (sender != nc.parentNodeId) {
-			// Relaying nodes should always answer ping messages
-			// Wait a random delay of 0-2 seconds to minimize collision
-			// between ping ack messages from other relaying nodes
-			delay(millis() & 0x3ff);
-			sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
-		}
-		return false;
-	} else if (destination == nc.nodeId) {
+	if (destination == nc.nodeId) {
 		// Check if sender requests an ack back.
 		if (mGetRequestAck(msg)) {
 			// Copy message
@@ -390,53 +373,65 @@ boolean MySensor::process() {
 		}
 		// Return true if message was addressed for this node...
 		return true;
-	} else if (repeaterMode && pipe == CURRENT_NODE_PIPE) {
-		// We should try to relay this message to another node
+	} else if (repeaterMode && nc.nodeId != AUTO) {
+		// Relaying nodes should answer only after set an id
 
-		uint8_t route = getChildRoute(msg.destination);
-		if (route>0 && route<255) {
-			// This message should be forwarded to a child node. If we send message
-			// to this nodes pipe then all children will receive it because the are
-			// all listening to this nodes pipe.
-			//
-			//    +----B
-			//  -A
-			//    +----C------D
-			//
-			//  We're node C, Message comes from A and has destination D
-			//
-			// lookup route in table and send message there
-			sendWrite(route, msg);
-		} else if (sender == GATEWAY_ADDRESS && destination == BROADCAST_ADDRESS) {
-			// A net gateway reply to a message previously sent by us from a 255 node
-			// We should broadcast this back to the node
-			sendWrite(destination, msg, true);
-		} else  {
-			// A message comes from a child node and we have no
-			// route for it.
-			//
-			//    +----B
-			//  -A
-			//    +----C------D    <-- Message comes from D
-			//
-			//     We're node C
-			//
-			// Message should be passed to node A (this nodes relay)
+		if (command == C_INTERNAL && type == I_FIND_PARENT) {
+			if (nc.distance == 255) {
+				findParentNode();
+			} else if (sender != nc.parentNodeId) {
+				// Relaying nodes should always answer ping messages
+				// Wait a random delay of 0-2 seconds to minimize collision
+				// between ping ack messages from other relaying nodes
+				delay(millis() & 0x3ff);
+				sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance), true);
+			}
+		} else if (pipe == CURRENT_NODE_PIPE) {
+			// We should try to relay this message to another node
 
-			// This message should be routed back towards sensor net gateway
-			sendWrite(nc.parentNodeId, msg);
-			// Add this child to our "routing table" if it not already exist
-			addChildRoute(sender, last);
+			uint8_t route = getChildRoute(msg.destination);
+			if (route>0 && route<255) {
+				// This message should be forwarded to a child node. If we send message
+				// to this nodes pipe then all children will receive it because the are
+				// all listening to this nodes pipe.
+				//
+				//    +----B
+				//  -A
+				//    +----C------D
+				//
+				//  We're node C, Message comes from A and has destination D
+				//
+				// lookup route in table and send message there
+				sendWrite(route, msg);
+			} else if (sender == GATEWAY_ADDRESS && destination == BROADCAST_ADDRESS) {
+				// A net gateway reply to a message previously sent by us from a 255 node
+				// We should broadcast this back to the node
+				sendWrite(destination, msg, true);
+			} else  {
+				// A message comes from a child node and we have no
+				// route for it.
+				//
+				//    +----B
+				//  -A
+				//    +----C------D    <-- Message comes from D
+				//
+				//     We're node C
+				//
+				// Message should be passed to node A (this nodes relay)
+
+				// This message should be routed back towards sensor net gateway
+				sendWrite(nc.parentNodeId, msg);
+				// Add this child to our "routing table" if it not already exist
+				addChildRoute(sender, last);
+			}
 		}
 	}
 	return false;
 }
 
-
 MyMessage& MySensor::getLastMessage() {
 	return msg;
 }
-
 
 void MySensor::saveState(uint8_t pos, uint8_t value) {
 	if (loadState(pos) != value) {
@@ -446,7 +441,6 @@ void MySensor::saveState(uint8_t pos, uint8_t value) {
 uint8_t MySensor::loadState(uint8_t pos) {
 	return eeprom_read_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos));
 }
-
 
 void MySensor::addChildRoute(uint8_t childId, uint8_t route) {
 	if (childNodeTable[childId] != route) {
@@ -465,7 +459,6 @@ void MySensor::removeChildRoute(uint8_t childId) {
 uint8_t MySensor::getChildRoute(uint8_t childId) {
 	return childNodeTable[childId];
 }
-
 
 int8_t pinIntTrigger = 0;
 void wakeUp()	 //place to send the interrupts
@@ -588,7 +581,6 @@ void MySensor::debugPrint(const char *fmt, ... ) {
 	//Serial.write(freeRam());
 }
 #endif
-
 
 #ifdef DEBUG
 int MySensor::freeRam (void) {
