@@ -365,7 +365,7 @@ boolean MySensor::process() {
 					if (repeaterMode && msg.getString()[0] == 'C') {
 						// Clears child relay data for this node
 						debug(PSTR("rd=clear\n"));
-						for (uint8_t i=0;i< sizeof(childNodeTable); i++) {
+						for (uint8_t i=0;i< 256; i++) {
 							removeChildRoute(i);
 						}
 						// Clear parent node id & distance to gw
