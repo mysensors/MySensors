@@ -276,6 +276,7 @@ class MySensor : public RF24
 
     void waitForReply();
     void requestNodeId();
+	void setupNode();
 	void findParentNode();
 	uint8_t crc8Message(MyMessage &message);
 	uint8_t getChildRoute(uint8_t childId);
