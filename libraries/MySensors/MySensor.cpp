@@ -353,9 +353,10 @@ boolean MySensor::process() {
 					if (repeaterMode && msg.getString()[0] == 'C') {
 						// Clears child relay data for this node
 						debug(PSTR("rd=clear\n"));
-						for (uint8_t i=0;i< 256; i++) {
+						uint8_t i = 255;
+						do {
 							removeChildRoute(i);
-						}
+						} while (i--);
 						// Clear parent node id & distance to gw
 						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
 						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, 0xFF);
