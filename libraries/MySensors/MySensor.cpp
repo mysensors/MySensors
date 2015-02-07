@@ -78,20 +78,12 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	debug(PSTR("%s started, id %d\n"), repeaterMode?"repeater":"sensor", nc.nodeId);
 
-	// Open reading pipe for messages directed to this node (set write pipe to same)
-	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
-	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-
-	// Send presentation for this radio node (attach
-	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
-
-	// Send a configuration exchange request to controller
-	// Node sends parent node. Controller answers with latest node configuration
-	// which is picked up in process()
-	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
-
-	// Wait configuration reply.
-	waitForReply();
+	// If we got an id, set this node to use it
+	if (nc.nodeId != AUTO) { 
+		setupNode();
+		// Wait configuration reply.
+		waitForReply();
+	}
 }
 
 void MySensor::setupRadio(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e dataRate) {
@@ -136,6 +128,20 @@ void MySensor::requestNodeId() {
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
 	waitForReply();
+}
+
+void MySensor::setupNode() {
+	// Open reading pipe for messages directed to this node (set write pipe to same)
+	RF24::openReadingPipe(WRITE_PIPE, TO_ADDR(nc.nodeId));
+	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
+
+	// Send presentation for this radio node (attach
+	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
+
+	// Send a configuration exchange request to controller
+	// Node sends parent node. Controller answers with latest node configuration
+	// which is picked up in process()
+	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
 }
 
 void MySensor::findParentNode() {
@@ -325,15 +331,14 @@ boolean MySensor::process() {
 				} else if (type == I_ID_RESPONSE) {
 					if (nc.nodeId == AUTO) {
 						nc.nodeId = msg.getByte();
-						// Write id to EEPROM
 						if (nc.nodeId == AUTO) {
 							// sensor net gateway will return max id if all sensor id are taken
 							debug(PSTR("full\n"));
 							while (1); // Wait here. Nothing else we can do...
-						} else {
-							RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
-							eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						}
+						setupNode();
+						// Write id to EEPROM
+						eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						debug(PSTR("id=%d\n"), nc.nodeId);
 					}
 				} else if (type == I_CONFIG) {
