@@ -13,6 +13,10 @@
 
 #define DISTANCE_INVALID (0xFF)
 
+// Macros for manipulating signing requirement table
+#define DO_SIGN(node) (doSign[node>>4]&(node%16))
+#define SET_SIGN(node) (doSign[node>>4]|=(node%16))
+#define CLEAR_SIGN(node) (doSign[node>>4]&=~(node%16))
 
 // Inline function and macros
 static inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
@@ -35,14 +39,17 @@ static inline bool isValidDistance( const uint8_t distance ) {
 
 MySensor::MySensor() {
 	radio = (MyRFDriver*) new MyRFDriverClass();
+	signer = (MySigningDriver*) new MySigningDriverClass();
 }
 
 
-void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
+void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId, bool requestSignatures) {
 	Serial.begin(BAUD_RATE);
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;
+	requireSigning = requestSignatures;
+
 	// Only gateway should use node id 0
 	isGateway = _nodeId == 0;
 
@@ -55,6 +62,8 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	eeprom_read_block((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+	// Read out the signing requirements from EEPROM
+	eeprom_read_block((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
 
 	if (isGateway) {
 		nc.distance = 0;
@@ -137,6 +146,9 @@ void MySensor::setupNode() {
 	// Send presentation for this radio node (attach
 	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
 
+	// Notify gateway (and possibly controller) about the signing preferences of this node
+	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(requireSigning));
+
 	// Send a configuration exchange request to controller
 	// Node sends parent node. Controller answers with latest node configuration
 	// which is picked up in process()
@@ -177,6 +189,19 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		requestNodeId();
 		return false;
 	}
+
+	mSetVersion(message, PROTOCOL_VERSION);
+
+	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a signing handshake message
+	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(msg) &&
+		(mGetCommand(message) != C_INTERNAL || (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING))) {
+		if (!sign(message)) {
+			debug(PSTR("Message signing failed\n"));
+			return false;
+		}
+		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
+		// or signature will become invalid and the message rejected by the receiver
+	} else mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
 
 	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
 		// If destination is the gateway or if we aren't a repeater, let
@@ -240,14 +265,13 @@ boolean MySensor::sendRoute(MyMessage &message) {
 }
 
 boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
-	uint8_t length = mGetLength(message);
+	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
-	mSetVersion(message, PROTOCOL_VERSION);
 	bool ok = radio->send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
-	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,st=%s:%s\n"),
+	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
 			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
-			mGetPayloadType(message), mGetLength(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(convBuf));
+			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(convBuf));
 
 	return ok;
 }
@@ -290,12 +314,26 @@ boolean MySensor::process() {
 	if (!radio->available(&to))
 		return false;
 
+	(void)signer->checkTimer(); // Manage signing timeout
+	
 	uint8_t len = radio->receive((uint8_t *)&msg);
+
+	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
+	// Note that we do not care at all about any signature found if we do not require signing
+	if (requireSigning && msg.destination == nc.nodeId && mGetLength(msg) &&
+		(mGetCommand(msg) != C_INTERNAL || (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING))) {
+		if (!mGetSigned(msg)) return false; // Received an unsigned message but we do require signing. This message gets nowhere!
+		else if (!signer->verifyMsg(msg)) {
+			debug(PSTR("Message verification failed\n"));
+			return false; // This signed message has been tampered with!
+		}
+	}
 
 	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
-	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d:%s\n"),
-				msg.sender, msg.last, msg.destination,  msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), msg.getString(convBuf));
+	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+				msg.sender, msg.last, msg.destination, msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), mGetSigned(msg), msg.getString(convBuf));
+	mSetSigned(msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("version: %d\n"),mGetVersion(msg));
@@ -349,6 +387,32 @@ boolean MySensor::process() {
 					}
 				}
 				return false;
+			} else if (type == I_GET_NONCE) {
+				if (signer->getNonce(msg)) {
+					sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
+				} else {
+					return false;
+				}
+			} else if (type == I_REQUEST_SIGNING) {
+				if (msg.getBool()) {
+					// We received an indicator that the sender require us to sign all messages we send to it
+					SET_SIGN(msg.sender);
+				} else {
+					// We received an indicator that the sender does not require us to sign all messages we send to it
+					CLEAR_SIGN(msg.sender);
+				}
+				// Save updated table
+				eeprom_write_block((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
+
+				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
+				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
+				// to sign it's messages
+				if (isGateway) {
+					if (requireSigning)
+						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(requireSigning));
+					else
+						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+				}
 			} else if (sender == GATEWAY_ADDRESS) {
 				bool isMetric;
 
@@ -541,6 +605,27 @@ int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, ui
 		retVal = (int8_t)interrupt2;
 	}
 	return retVal;
+}
+
+bool MySensor::sign(MyMessage &message) {
+	MyMessage msgNonce;
+	if (!sendRoute(build(msgNonce, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
+		return false;
+	} else {
+		// We have to wait for the nonce to arrive before we can sign our original message
+		// Other messages could come in-between. We trust process() takes care of them
+		unsigned long enter = millis();
+		while (millis() - enter < 5000) {
+			if (process()) {
+				if (getLastMessage().type == I_GET_NONCE_RESPONSE) {
+					// Proceed with signing if nonce has been received
+					if (signer->putNonce(getLastMessage()) && signer->signMsg(message)) return true;
+					break;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 #ifdef DEBUG
