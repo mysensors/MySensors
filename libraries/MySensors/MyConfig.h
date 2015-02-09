@@ -17,6 +17,7 @@
 
 // Choose signing backend by enabling one of the following
 #define MYSENSORS_SIGNING_DUMMY
+//#define MYSENSORS_SIGNING_ATSHA204
 
 // Define a suitable timeout for a signature verification session
 // Consider the turnaround from a nonce being generated to a signed message being received
@@ -37,6 +38,24 @@ typedef class MyRFDriverRF69 MyRFDriverClass;
 #include "MySigningDriverDummy.h"
 #define SIGNING_IDENTIFIER (0) // Reserved for dummy implementation, will not work with other backends
 typedef class MySigningDriverDummy MySigningDriverClass;
+#endif
+
+#ifdef MYSENSORS_SIGNING_ATSHA204
+#ifdef MYSENSORS_SENSOR
+#define ATSHA204_PIN 17 //A3
+#endif
+
+#ifdef MYSENSORS_SERIAL_GATEWAY
+#define ATSHA204_PIN 17 //A3
+#endif
+
+#ifdef MYSENSORS_ETHERNET_MQTT_GATEWAY
+#define ATSHA204_PIN 17 //A3
+#endif
+
+#include "MySigningDriverAtsha204.h"
+#define SIGNING_IDENTIFIER (1) // SHA256-based HMAC (ATSHA204 specific)
+typedef class MySigningDriverAtsha204 MySigningDriverClass;
 #endif
 
 /***
