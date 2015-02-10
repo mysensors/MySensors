@@ -82,7 +82,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	if (nc.nodeId != AUTO) { 
 		setupNode();
 		// Wait configuration reply.
-		waitForReply();
+		wait(2000);
 	}
 }
 
@@ -127,7 +127,7 @@ void MySensor::requestNodeId() {
 	debug(PSTR("req node id\n"));
 	RF24::openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(nc.nodeId));
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
-	waitForReply();
+	wait(2000);
 }
 
 void MySensor::setupNode() {
@@ -155,13 +155,15 @@ void MySensor::findParentNode() {
 	sendWrite(BROADCAST_ADDRESS, msg, true);
 
 	// Wait for ping response.
-	waitForReply();
+	wait(2000);
 }
 
 void MySensor::waitForReply() {
 	unsigned long enter = millis();
 	// Wait a couple of seconds for response
 	while (millis() - enter < 2000) {
+		// reset watchdog
+		wdt_reset();
 		process();
 	}
 }
@@ -498,19 +500,13 @@ void MySensor::sleep(unsigned long ms) {
 }
 
 void MySensor::wait(unsigned long ms) {
-	bool slept_enough = false;
-	unsigned long start = millis();
-	unsigned long now;
-
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
-
-	while (!slept_enough) {
-		MySensor::process();
-		now = millis();
-		if (now - start > ms) {
-			slept_enough = true;
-		}
+	unsigned long enter = millis();
+	while (millis() - enter < ms) {
+		// reset watchdog
+		wdt_reset();
+		process();
 	}
 }
 
