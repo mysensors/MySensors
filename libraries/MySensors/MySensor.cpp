@@ -158,16 +158,6 @@ void MySensor::findParentNode() {
 	wait(2000);
 }
 
-void MySensor::waitForReply() {
-	unsigned long enter = millis();
-	// Wait a couple of seconds for response
-	while (millis() - enter < 2000) {
-		// reset watchdog
-		wdt_reset();
-		process();
-	}
-}
-
 boolean MySensor::sendRoute(MyMessage &message) {
 	// Make sure to process any incoming messages before sending (could this end up in recursive loop?)
 	// process();

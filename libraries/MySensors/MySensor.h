@@ -274,7 +274,6 @@ class MySensor : public RF24
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
-    void waitForReply();
     void requestNodeId();
 	void setupNode();
 	void findParentNode();
