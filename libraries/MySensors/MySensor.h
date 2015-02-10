@@ -245,7 +245,7 @@ class MySensor
 	
 	void setupRepeaterMode();
 	void setupRadio();
-	boolean sendWrite(uint8_t dest, MyMessage &message, const bool allowFindParent = true );
+	boolean sendWrite(uint8_t dest, MyMessage &message);
 
   private:
 #ifdef DEBUG
@@ -256,8 +256,8 @@ class MySensor
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
-    void waitForReply();
     void requestNodeId();
+	void setupNode();
 	void findParentNode();
 	uint8_t crc8Message(MyMessage &message);
 	uint8_t getChildRoute(uint8_t childId);

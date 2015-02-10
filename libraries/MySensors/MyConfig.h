@@ -11,8 +11,8 @@
 //#define MYSENSORS_ETHERNET_MQTT_GATEWAY
 
 // Choose radio type by enabling one of the following
-//#define MYSENSORS_RF_NRF24
-#define MYSENSORS_RF_RF69
+#define MYSENSORS_RF_NRF24
+//#define MYSENSORS_RF_RF69
 
 
 
