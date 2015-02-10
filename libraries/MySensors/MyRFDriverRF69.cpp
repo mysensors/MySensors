@@ -30,6 +30,10 @@ bool MyRFDriverRF69::send(uint8_t to, const void* data, uint8_t len) {
 }
 
 bool MyRFDriverRF69::available(uint8_t *to) {
+	if (radio->TARGETID == BROADCAST_ADDRESS)
+		*to = BROADCAST_ADDRESS;
+	else
+		*to = _address;
 	return radio->receiveDone();
 }
 
