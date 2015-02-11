@@ -51,9 +51,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 
 	if (_parentNodeId != AUTO) {
-		nc.parentNodeId = _parentNodeId;
-		// Save static parent id in eeprom
-		eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		if (_parentNodeId != nc.parentNodeId) {
+			nc.parentNodeId = _parentNodeId;
+			// Save static parent id in eeprom
+			eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		}
 		autoFindParent = false;
 	} else {
 		autoFindParent = true;
