@@ -37,6 +37,7 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	Serial.begin(BAUD_RATE);
 	repeaterMode = true;
 	isGateway = true;
+	autoFindParent = false;
 	setupRepeaterMode();
 
 	if (inDataCallback != NULL) {

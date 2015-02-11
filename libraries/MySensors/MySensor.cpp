@@ -300,17 +300,19 @@ boolean MySensor::process() {
 		}
 
 		if (command == C_INTERNAL) {
-			if (type == I_FIND_PARENT_RESPONSE && !isGateway) {
-				// We've received a reply to a FIND_PARENT message. Check if the distance is
-				// shorter than we already have.
-				uint8_t distance = msg.getByte();
-				if (distance<nc.distance-1) {
-					// Found a neighbor closer to GW than previously found
-					nc.distance = distance + 1;
-					nc.parentNodeId = msg.sender;
-					eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
-					eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
-					debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+			if (type == I_FIND_PARENT_RESPONSE) {
+				if (autoFindParent) {
+					// We've received a reply to a FIND_PARENT message. Check if the distance is
+					// shorter than we already have.
+					uint8_t distance = msg.getByte();
+					if (distance<nc.distance-1) {
+						// Found a neighbor closer to GW than previously found
+						nc.distance = distance + 1;
+						nc.parentNodeId = msg.sender;
+						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
+						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
+						debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+					}
 				}
 				return false;
 			} else if (sender == GATEWAY_ADDRESS) {
