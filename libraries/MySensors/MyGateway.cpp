@@ -179,6 +179,9 @@ void MyGateway::parseAndSend(char *commandBuffer) {
 	  }
 	  i++;
   }
+  // Check for invalid input
+  if (i != 6)
+    return;
 
   if (destination==GATEWAY_ADDRESS && command==C_INTERNAL) {
     // Handle messages directed to gateway
