@@ -282,6 +282,13 @@ boolean MySensor::process() {
 	uint8_t destination = msg.destination;
 
 	if (destination == nc.nodeId) {
+		// This message is addressed to this node
+
+		if (repeaterMode && last != nc.parentNodeId) {
+			// Message is from one of the child nodes. Add it to routing table.
+			addChildRoute(sender, last);
+		}
+
 		// Check if sender requests an ack back.
 		if (mGetRequestAck(msg)) {
 			// Copy message
@@ -291,12 +298,6 @@ boolean MySensor::process() {
 			ack.sender = nc.nodeId;
 			ack.destination = msg.sender;
 			sendRoute(ack);
-		}
-
-		// This message is addressed to this node
-		if (repeaterMode && last != nc.parentNodeId) {
-			// Message is from one of the child nodes. Add it to routing table.
-			addChildRoute(sender, last);
 		}
 
 		if (command == C_INTERNAL) {
