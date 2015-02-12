@@ -74,8 +74,8 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		// If the current node is also repeater, be aware of this.
 		nc.distance = 1;
 	} else if (!isValidParent(nc.parentNodeId)) {
-		// Auto find parent, but parent in eeprom is invalid. Force parent search on first transmit.
-		nc.distance = DISTANCE_INVALID;
+		// Auto find parent, but parent in eeprom is invalid. Try find one.
+		findParentNode();
 	}
 
 	if ( (_nodeId != AUTO) && (nc.nodeId != _nodeId) ) {
