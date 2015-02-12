@@ -67,9 +67,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	autoFindParent = _parentNodeId == AUTO;
 	if (!autoFindParent) {
-		nc.parentNodeId = _parentNodeId;
-		// Save static parent id in eeprom (used by bootloader)
-		eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		if (_parentNodeId != nc.parentNodeId) {
+			nc.parentNodeId = _parentNodeId;
+			// Save static parent id in eeprom (used by bootloader)
+			eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		}
 		// We don't actually know the distance to gw here. Let's pretend it is 1.
 		// If the current node is also repeater, be aware of this.
 		nc.distance = 1;
@@ -293,21 +295,23 @@ boolean MySensor::process() {
 		}
 
 		if (command == C_INTERNAL) {
-			if (type == I_FIND_PARENT_RESPONSE && !isGateway) {
-				// We've received a reply to a FIND_PARENT message. Check if the distance is
-				// shorter than we already have.
-				uint8_t distance = msg.getByte();
-				if (isValidDistance(distance))
-				{
-					// Distance to gateway is one more for us w.r.t. parent
-					distance++;
-					if (isValidDistance(distance) && (distance < nc.distance)) {
-						// Found a neighbor closer to GW than previously found
-						nc.distance = distance;
-						nc.parentNodeId = msg.sender;
-						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
-						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
-						debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+			if (type == I_FIND_PARENT_RESPONSE) {
+				if (autoFindParent) {
+					// We've received a reply to a FIND_PARENT message. Check if the distance is
+					// shorter than we already have.
+					uint8_t distance = msg.getByte();
+					if (isValidDistance(distance))
+					{
+						// Distance to gateway is one more for us w.r.t. parent
+						distance++;
+						if (isValidDistance(distance) && (distance < nc.distance)) {
+							// Found a neighbor closer to GW than previously found
+							nc.distance = distance;
+							nc.parentNodeId = msg.sender;
+							eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
+							eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
+							debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+						}
 					}
 				}
 				return false;
