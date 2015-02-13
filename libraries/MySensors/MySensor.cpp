@@ -125,7 +125,8 @@ ControllerConfig MySensor::getConfig() {
 void MySensor::requestNodeId() {
 	debug(PSTR("req node id\n"));
 	radio->setAddress(nc.nodeId);
-	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
+	build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
+	sendWrite(nc.parentNodeId, msg);
 	wait(2000);
 }
 
@@ -160,49 +161,79 @@ void MySensor::findParentNode() {
 }
 
 boolean MySensor::sendRoute(MyMessage &message) {
-	// Make sure to process any incoming messages before sending (could this end up in recursive loop?)
-	// process();
-	bool isInternal = mGetCommand(message) == C_INTERNAL;
+	uint8_t sender = message.sender;
+
+	// If we still don't have any parent id, re-request and skip this message.
+	if (nc.parentNodeId == AUTO) {
+		findParentNode();
+		return false;
+	}
 
 	// If we still don't have any node id, re-request and skip this message.
-	if (nc.nodeId == AUTO && !(isInternal && message.type == I_ID_REQUEST)) {
+	if (nc.nodeId == AUTO) {
 		requestNodeId();
 		return false;
 	}
 
-	if (repeaterMode) {
-		uint8_t dest = message.destination;
+	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
+		// If destination is the gateway or if we aren't a repeater, let
+		// our parent take care of the message
+		ok = sendWrite(nc.parentNodeId, message);
+	} else {
+		// Relay the message
 		uint8_t route = getChildRoute(dest);
-		if (route>GATEWAY_ADDRESS && route<BROADCAST_ADDRESS && dest != GATEWAY_ADDRESS) {
-			// --- debug(PSTR("route %d.\n"), route);
+		if (route > GATEWAY_ADDRESS && route < BROADCAST_ADDRESS) {
+			// This message should be forwarded to a child node. If we send message
+			// to this nodes pipe then all children will receive it because the are
+			// all listening to this nodes pipe.
+			//
+			//    +----B
+			//  -A
+			//    +----C------D
+			//
+			//  We're node C, Message comes from A and has destination D
+			//
 			// Message destination is not gateway and is in routing table for this node.
 			// Send it downstream
 			return sendWrite(route, message);
-		} else if (isInternal && message.type == I_ID_RESPONSE && dest==BROADCAST_ADDRESS) {
+		} else if (sender == GATEWAY_ADDRESS && dest == BROADCAST_ADDRESS) {
 			// Node has not yet received any id. We need to send it
 			// by doing a broadcast sending,
 			return sendWrite(BROADCAST_ADDRESS, message);
+		} else if (isGateway) {
+			// Destination isn't in our routing table and isn't a broadcast address
+			// Nothing to do here
+			return false;
+		} else  {
+			// A message comes from a child node and we have no
+			// route for it.
+			//
+			//    +----B
+			//  -A
+			//    +----C------D    <-- Message comes from D
+			//
+			//     We're node C
+			//
+			// Message should be passed to node A (this nodes relay)
+
+			// This message should be routed back towards sensor net gateway
+			ok = sendWrite(nc.parentNodeId, message);
+			// Add this child to our "routing table" if it not already exist
+			addChildRoute(sender, last);
 		}
 	}
 
-	if (!isGateway) {
-		// Should be routed back to gateway.
-		bool ok = sendWrite(nc.parentNodeId, message);
-
-		if (!ok) {
-			// Failure when sending to parent node. The parent node might be down and we
-			// need to find another route to gateway.
-			if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
-				findParentNode();
-			} else {
-				failedTransmissions++;
-			}
-		} else {
-			failedTransmissions = 0;
+	if (!ok) {
+		// Failure when sending to parent node. The parent node might be down and we
+		// need to find another route to gateway.
+		failedTransmissions++;
+		if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
+			findParentNode();
 		}
-		return ok;
+	} else {
+		failedTransmissions = 0;
 	}
-	return false;
+	return ok;
 }
 
 boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
@@ -369,10 +400,10 @@ boolean MySensor::process() {
 		// Return true if message was addressed for this node...
 		return true;
 	} else if (repeaterMode && nc.nodeId != AUTO) {
-		// Relaying nodes should answer only after set an id
+		// If this node have an id, relay the message
 
 		if (command == C_INTERNAL && type == I_FIND_PARENT) {
-			if (nc.distance == 255) {
+			if (nc.distance == DISTANCE_INVALID) {
 				findParentNode();
 			} else if (sender != nc.parentNodeId) {
 				// Relaying nodes should always answer ping messages
@@ -383,42 +414,7 @@ boolean MySensor::process() {
 			}
 		} else if (to == nc.nodeId) {
 			// We should try to relay this message to another node
-
-			uint8_t route = getChildRoute(msg.destination);
-			if (route>0 && route<255) {
-				// This message should be forwarded to a child node. If we send message
-				// to this nodes pipe then all children will receive it because the are
-				// all listening to this nodes pipe.
-				//
-				//    +----B
-				//  -A
-				//    +----C------D
-				//
-				//  We're node C, Message comes from A and has destination D
-				//
-				// lookup route in table and send message there
-				sendWrite(route, msg);
-			} else if (sender == GATEWAY_ADDRESS && destination == BROADCAST_ADDRESS) {
-				// A net gateway reply to a message previously sent by us from a 255 node
-				// We should broadcast this back to the node
-				sendWrite(BROADCAST_ADDRESS, msg);
-			} else  {
-				// A message comes from a child node and we have no
-				// route for it.
-				//
-				//    +----B
-				//  -A
-				//    +----C------D    <-- Message comes from D
-				//
-				//     We're node C
-				//
-				// Message should be passed to node A (this nodes relay)
-
-				// This message should be routed back towards sensor net gateway
-				sendWrite(nc.parentNodeId, msg);
-				// Add this child to our "routing table" if it not already exist
-				addChildRoute(sender, last);
-			}
+			sendRoute(msg);
 		}
 	}
 	return false;
