@@ -51,9 +51,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 
 	if (_parentNodeId != AUTO) {
-		nc.parentNodeId = _parentNodeId;
-		// Save static parent id in eeprom
-		eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		if (_parentNodeId != nc.parentNodeId) {
+			nc.parentNodeId = _parentNodeId;
+			// Save static parent id in eeprom
+			eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		}
 		autoFindParent = false;
 	} else {
 		autoFindParent = true;
@@ -282,6 +284,13 @@ boolean MySensor::process() {
 	uint8_t destination = msg.destination;
 
 	if (destination == nc.nodeId) {
+		// This message is addressed to this node
+
+		if (repeaterMode && last != nc.parentNodeId) {
+			// Message is from one of the child nodes. Add it to routing table.
+			addChildRoute(sender, last);
+		}
+
 		// Check if sender requests an ack back.
 		if (mGetRequestAck(msg)) {
 			// Copy message
@@ -293,24 +302,20 @@ boolean MySensor::process() {
 			sendRoute(ack);
 		}
 
-		// This message is addressed to this node
-		if (repeaterMode && last != nc.parentNodeId) {
-			// Message is from one of the child nodes. Add it to routing table.
-			addChildRoute(sender, last);
-		}
-
 		if (command == C_INTERNAL) {
-			if (type == I_FIND_PARENT_RESPONSE && !isGateway) {
-				// We've received a reply to a FIND_PARENT message. Check if the distance is
-				// shorter than we already have.
-				uint8_t distance = msg.getByte();
-				if (distance<nc.distance-1) {
-					// Found a neighbor closer to GW than previously found
-					nc.distance = distance + 1;
-					nc.parentNodeId = msg.sender;
-					eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
-					eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
-					debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+			if (type == I_FIND_PARENT_RESPONSE) {
+				if (autoFindParent) {
+					// We've received a reply to a FIND_PARENT message. Check if the distance is
+					// shorter than we already have.
+					uint8_t distance = msg.getByte();
+					if (distance<nc.distance-1) {
+						// Found a neighbor closer to GW than previously found
+						nc.distance = distance + 1;
+						nc.parentNodeId = msg.sender;
+						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
+						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
+						debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+					}
 				}
 				return false;
 			} else if (sender == GATEWAY_ADDRESS) {
