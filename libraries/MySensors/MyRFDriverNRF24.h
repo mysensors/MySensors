@@ -21,7 +21,7 @@
 #define RF24_PA_LEVEL 	   RF24_PA_LOW
 #endif
 
-#ifdef MYSENSORS_ETHERNET_MQTT_GATEWAY
+#if defined(MYSENSORS_ETHERNET_GATEWAY) || defined(MYSENSORS_MQTT_GATEWAY)
 #define RF24_CE_PIN		   5
 #define RF24_CS_PIN		   6
 #define RF24_PA_LEVEL 	   RF24_PA_LOW
