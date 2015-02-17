@@ -15,14 +15,15 @@
 
    By default, no locking is performed. User have to manually enable the flags that
    turn on the locking. Furthermore, user have to send a SPACE character on serial
-   console when prompted to do any locking.
-   Default settings use ATSHA204 on pin 7.
+   console when prompted to do any locking. On boards that does not provide UART
+   input it is possible to configure the sketch to skip this confirmation.
+   Default settings use ATSHA204 on pin 17 (A3).
 */
 #include <sha204_library.h>
 #include <sha204_lib_return_codes.h>
 
 // The pin the ATSHA204 is connected on
-#define ATSHA204_PIN 7
+#define ATSHA204_PIN 17 // A3
 
 // Uncomment this to enable locking the configuration zone.
 // *** BE AWARE THAT THIS PREVENTS ANY FUTURE CONFIGURATION CHANGE TO THE CHIP ***
@@ -44,11 +45,24 @@
 // Uncomment this to skip key generation and use 'user_key_data' as key instead.
 //#define USER_KEY_DATA
 
+// Uncomment this for boards that lack UART
+// IMPORTANT: No confirmation will be required for locking any zones with this
+// configuration!
+// Also, key generation is not permitted in this mode as there is no way of
+// presenting the generated key.
+//#define SKIP_UART_CONFIRMATION
+
+#if defined(SKIP_UART_CONFIRMATION) && !defined(USER_KEY_DATA)
+#error You have to define USER_KEY_DATA for boards that does not have UART
+#endif
+
 #ifdef USER_KEY_DATA
-const uint8_t user_key_data[32] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const uint8_t user_key_data[32] = {
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+};
 #endif
 
 const int sha204Pin = ATSHA204_PIN;
@@ -727,6 +741,7 @@ void setup()
 
 #ifdef LOCK_CONFIGURATION
     // Purge serial input buffer
+#ifndef SKIP_UART_CONFIRMATION
     while (Serial.available())
     {
       Serial.read();
@@ -735,6 +750,7 @@ void setup()
 
     while (Serial.available() == 0);
     if (Serial.read() == ' ')
+#endif //not SKIP_UART_CONFIRMATION
     {
       Serial.println(F("Locking configuration..."));
 
@@ -773,10 +789,12 @@ void setup()
         }
       }
     }
+#ifndef SKIP_UART_CONFIRMATION
     else
     {
       Serial.println(F("Unexpected answer. Skipping lock."));
     }
+#endif //not SKIP_UART_CONFIRMATION
 #else //LOCK_CONFIGURATION
     Serial.println(F("Dry-run. Configuration not locked. Define LOCK_CONFIGURATION to lock for real."));
 #endif
@@ -793,7 +811,7 @@ void setup()
 #else
 #ifdef USER_KEY_DATA
   memcpy(key, user_key_data, 32);
-  Serial.print(F("Using this user supplied key: "));
+  Serial.println(F("Using this user supplied key:"));
 #else
   // Retrieve random value to use as key
   ret_code = sha204.sha204m_random(tx_buffer, rx_buffer, RANDOM_SEED_UPDATE);
@@ -817,11 +835,14 @@ void setup()
 #endif
   for (int i=0; i<32; i++)
   {
+    Serial.print("0x");
     if (key[i] < 0x10)
     {
       Serial.print('0'); // Because Serial.print does not 0-pad HEX
     }
     Serial.print(key[i], HEX);
+    if (i < 31) Serial.print(',');
+    if (!((i+1) % 8)) Serial.println();
   }
   Serial.println();
 
@@ -842,6 +863,7 @@ void setup()
   if (lockValue != 0x00)
   {
 #ifdef LOCK_DATA
+#ifndef SKIP_UART_CONFIRMATION
     while (Serial.available())
     {
       Serial.read();
@@ -849,6 +871,7 @@ void setup()
     Serial.println(F("Send SPACE character to lock data..."));
     while (Serial.available() == 0);
     if (Serial.read() == ' ')
+#endif //not SKIP_UART_CONFIRMATION
     {
       // Correct sequence, resync chip
       ret_code = sha204.sha204c_resync(SHA204_RSP_SIZE_MAX, rx_buffer);
@@ -907,10 +930,12 @@ void setup()
         }
       }
     }
+#ifndef SKIP_UART_CONFIRMATION
     else
     {
       Serial.println(F("Unexpected answer. Skipping lock."));
     }
+#endif //not SKIP_UART_CONFIRMATION
 #else //LOCK_DATA
     Serial.println(F("Dry-run. Data not locked. Define LOCK_DATA to lock for real."));
 #endif
