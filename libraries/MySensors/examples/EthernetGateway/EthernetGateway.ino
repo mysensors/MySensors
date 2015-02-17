@@ -48,8 +48,8 @@
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
 
-#ifndef MYSENSORS_ETHERNET_MQTT_GATEWAY
-#error Please switch to MYSENSORS_ETHERNET_MQTT_GATEWAY in MyConfig.h
+#ifndef MYSENSORS_ETHERNET_GATEWAY
+#error Please switch to MYSENSORS_ETHERNET_GATEWAY in MyConfig.h
 #endif
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
