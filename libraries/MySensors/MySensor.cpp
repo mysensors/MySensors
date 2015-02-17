@@ -413,7 +413,7 @@ boolean MySensor::process() {
 				// Wait a random delay of 0-2 seconds to minimize collision
 				// between ping ack messages from other relaying nodes
 				delay(millis() & 0x3ff);
-				sendWrite(BROADCAST_ADDRESS, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+				sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
 			}
 		} else if (to == nc.nodeId) {
 			// We should try to relay this message to another node
