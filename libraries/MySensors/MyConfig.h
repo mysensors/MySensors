@@ -50,7 +50,7 @@ typedef class MySigningDriverDummy MySigningDriverClass;
 #define ATSHA204_PIN 17 //A3
 #endif
 
-#ifdef MYSENSORS_ETHERNET_MQTT_GATEWAY
+#if defined(MYSENSORS_ETHERNET_GATEWAY) || defined(MYSENSORS_MQTT_GATEWAY)
 #define ATSHA204_PIN 17 //A3
 #endif
 
@@ -77,7 +77,7 @@ static uint8_t hmacKey[32] = {
 #define RANDOMSEED_PIN 7 //A7
 #endif
 
-#ifdef MYSENSORS_ETHERNET_MQTT_GATEWAY
+#if defined(MYSENSORS_ETHERNET_GATEWAY) || defined(MYSENSORS_MQTT_GATEWAY)
 #define RANDOMSEED_PIN 7 //A7
 #endif
 
