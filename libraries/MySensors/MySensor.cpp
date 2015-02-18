@@ -49,7 +49,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	if (repeaterMode) {
 		setupRepeaterMode();
 	}
-	setupRadio();
+
+	// Setup radio
+	radio->init();
 
 	// Read settings from eeprom
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
@@ -92,21 +94,10 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		requestNodeId();
 	}
 
-	if (!isGateway) {
-		debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), repeaterMode?"repeater":"sensor", nc.nodeId, nc.parentNodeId, nc.distance);
-	}
+	setupNode();
 
-	// If we got an id, set this node to use it
-	if (nc.nodeId != AUTO) { 
-		setupNode();
-		// Wait configuration reply.
-		wait(2000);
-	}
-}
+	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), isGateway?"gateway":(repeaterMode?"repeater":"sensor"), nc.nodeId, nc.parentNodeId, nc.distance);
 
-void MySensor::setupRadio() {
-	failedTransmissions = 0;
-	radio->init();
 }
 
 void MySensor::setupRepeaterMode(){
@@ -134,13 +125,20 @@ void MySensor::setupNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	radio->setAddress(nc.nodeId);
 
-	// Send presentation for this radio node (attach
-	present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
+	// Present node and request config
+	if (!isGateway && nc.nodeId != AUTO) {
+		// Send presentation for this radio node (attach
+		present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
 
-	// Send a configuration exchange request to controller
-	// Node sends parent node. Controller answers with latest node configuration
-	// which is picked up in process()
-	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
+		// Send a configuration exchange request to controller
+		// Node sends parent node. Controller answers with latest node configuration
+		// which is picked up in process()
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(nc.parentNodeId));
+
+		// Wait configuration reply.
+		wait(2000);
+	}
+
 }
 
 void MySensor::findParentNode() {

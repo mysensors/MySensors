@@ -244,7 +244,6 @@ class MySensor
 	MyRFDriver *radio;
 	
 	void setupRepeaterMode();
-	void setupRadio();
 	boolean sendWrite(uint8_t dest, MyMessage &message);
 
   private:
