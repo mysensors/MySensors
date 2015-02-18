@@ -152,6 +152,12 @@ int main () {
 		address(nc.nodeId);
 	}
 	
+	// Inform gateway that bootloader does not accept signed messages
+	msg.type = I_REQUEST_SIGNING;
+	mSetLength(msg, 1);
+	msg.data[0] = 0;
+	sendWrite(msg);
+
 	// Read settings from EEPROM
 	eeprom_read_block((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(struct FirmwareConfig));
 
