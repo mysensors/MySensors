@@ -47,7 +47,7 @@ typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_FIND_PARENT, I_FIND_PARENT_RESPONSE,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
-	I_REBOOT, I_GATEWAY_READY
+	I_REBOOT, I_GATEWAY_READY, I_REQUEST_SIGNING, I_GET_NONCE, I_GET_NONCE_RESPONSE
 } mysensor_internal;
 
 // Type of sensor  (for presentation message)
@@ -84,8 +84,11 @@ typedef enum {
 #define BF_SET(y, x, start, len)    ( y= ((y) &~ BF_MASK(start, len)) | BF_PREP(x, start, len) )
 
 // Getters/setters for special bit fields in header
-#define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 3)
-#define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
+#define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 2)
+#define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 2)
+
+#define mSetSigned(_msg,_signed) BF_SET(_msg.version_length, _signed, 2, 1)
+#define mGetSigned(_msg) BF_GET(_msg.version_length, 2, 1)
 
 #define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
 #define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
@@ -179,7 +182,8 @@ struct
 	uint8_t sender;          	 // 8 bit - Id of sender node (origin)
 	uint8_t destination;     	 // 8 bit - Id of destination node
 
-	uint8_t version_length;      // 3 bit - Protocol version
+	uint8_t version_length;		 // 2 bit - Protocol version
+			                     // 1 bit - Signed flag
 			                     // 5 bit - Length of payload
 	uint8_t command_ack_payload; // 3 bit - Command type
 	                             // 1 bit - Request an ack - Indicator that receiver should send an ack back.
