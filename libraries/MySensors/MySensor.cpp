@@ -76,11 +76,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	autoFindParent = _parentNodeId == AUTO;
 	if (!autoFindParent) {
-		if (_parentNodeId != nc.parentNodeId) {
-			nc.parentNodeId = _parentNodeId;
-			// Save static parent id in eeprom (used by bootloader)
-			eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
-		}
+		nc.parentNodeId = _parentNodeId;
+		// Save static parent id in eeprom (used by bootloader)
+		eeprom_update_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
 		// We don't actually know the distance to gw here. Let's pretend it is 1.
 		// If the current node is also repeater, be aware of this.
 		nc.distance = 1;
@@ -93,7 +91,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	    // Set static id
 	    nc.nodeId = _nodeId;
 	    // Save static id in eeprom
-	    eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, _nodeId);
+	    eeprom_update_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, _nodeId);
 	}
 
 	// Try to fetch node-id from gateway
@@ -375,8 +373,8 @@ boolean MySensor::process() {
 							// Found a neighbor closer to GW than previously found
 							nc.distance = distance;
 							nc.parentNodeId = msg.sender;
-							eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
-							eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
+							eeprom_update_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
+							eeprom_update_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
 							debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
 						}
 					}
@@ -397,7 +395,7 @@ boolean MySensor::process() {
 					CLEAR_SIGN(msg.sender);
 				}
 				// Save updated table
-				eeprom_write_block((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
+				eeprom_update_block((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
 
 				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
@@ -425,17 +423,15 @@ boolean MySensor::process() {
 						}
 						setupNode();
 						// Write id to EEPROM
-						eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
+						eeprom_update_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						debug(PSTR("id=%d\n"), nc.nodeId);
 					}
 				} else if (type == I_CONFIG) {
 					// Pick up configuration from controller (currently only metric/imperial)
 					// and store it in eeprom if changed
 					isMetric = msg.getString()[0] == 'M' ;
-					if (cc.isMetric != isMetric) {
-						cc.isMetric = isMetric;
-						eeprom_write_byte((uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
-					}
+					cc.isMetric = isMetric;
+					eeprom_update_byte((uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
 				} else if (type == I_CHILDREN) {
 					if (repeaterMode && msg.getString()[0] == 'C') {
 						// Clears child relay data for this node
@@ -445,8 +441,8 @@ boolean MySensor::process() {
 							removeChildRoute(i);
 						} while (i--);
 						// Clear parent node id & distance to gw
-						eeprom_write_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
-						eeprom_write_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, 0xFF);
+						eeprom_update_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
+						eeprom_update_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, 0xFF);
 						// Find parent node
 						findParentNode();
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
@@ -487,26 +483,20 @@ MyMessage& MySensor::getLastMessage() {
 }
 
 void MySensor::saveState(uint8_t pos, uint8_t value) {
-	if (loadState(pos) != value) {
-		eeprom_write_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos), value);
-	}
+	eeprom_update_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos), value);
 }
 uint8_t MySensor::loadState(uint8_t pos) {
 	return eeprom_read_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos));
 }
 
 void MySensor::addChildRoute(uint8_t childId, uint8_t route) {
-	if (childNodeTable[childId] != route) {
-		childNodeTable[childId] = route;
-		eeprom_write_byte((uint8_t*)EEPROM_ROUTES_ADDRESS+childId, route);
-	}
+	childNodeTable[childId] = route;
+	eeprom_update_byte((uint8_t*)EEPROM_ROUTES_ADDRESS+childId, route);
 }
 
 void MySensor::removeChildRoute(uint8_t childId) {
-	if (childNodeTable[childId] != 0xff) {
-		childNodeTable[childId] = 0xff;
-		eeprom_write_byte((uint8_t*)EEPROM_ROUTES_ADDRESS+childId, 0xff);
-	}
+	childNodeTable[childId] = 0xff;
+	eeprom_update_byte((uint8_t*)EEPROM_ROUTES_ADDRESS+childId, 0xff);
 }
 
 uint8_t MySensor::getChildRoute(uint8_t childId) {
