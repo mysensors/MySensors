@@ -258,6 +258,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 }
 
 boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
+	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
 	bool ok = radio.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
