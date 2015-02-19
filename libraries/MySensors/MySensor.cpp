@@ -38,8 +38,6 @@ static inline bool isValidDistance( const uint8_t distance ) {
 }
 
 MySensor::MySensor() {
-	radio = (MyRFDriver*) new MyRFDriverClass();
-	signer = (MySigningDriver*) new MySigningDriverClass();
 }
 
 
@@ -58,7 +56,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	}
 
 	// Setup radio
-	radio->init();
+	radio.init();
 
 	// Read settings from eeprom
 	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
@@ -124,7 +122,7 @@ ControllerConfig MySensor::getConfig() {
 
 void MySensor::requestNodeId() {
 	debug(PSTR("req node id\n"));
-	radio->setAddress(nc.nodeId);
+	radio.setAddress(nc.nodeId);
 	build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
 	sendWrite(nc.parentNodeId, msg);
 	wait(2000);
@@ -132,7 +130,7 @@ void MySensor::requestNodeId() {
 
 void MySensor::setupNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
-	radio->setAddress(nc.nodeId);
+	radio.setAddress(nc.nodeId);
 
 	// Present node and request config
 	if (!isGateway && nc.nodeId != AUTO) {
@@ -264,7 +262,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
-	bool ok = radio->send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
+	bool ok = radio.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
 			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
@@ -308,19 +306,19 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 
 boolean MySensor::process() {
 	uint8_t to = 0;
-	if (!radio->available(&to))
+	if (!radio.available(&to))
 		return false;
 
-	(void)signer->checkTimer(); // Manage signing timeout
+	(void)signer.checkTimer(); // Manage signing timeout
 	
-	uint8_t len = radio->receive((uint8_t *)&msg);
+	uint8_t len = radio.receive((uint8_t *)&msg);
 
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 	// Note that we do not care at all about any signature found if we do not require signing
 	if (requireSigning && msg.destination == nc.nodeId && mGetLength(msg) &&
 		(mGetCommand(msg) != C_INTERNAL || (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING))) {
 		if (!mGetSigned(msg)) return false; // Received an unsigned message but we do require signing. This message gets nowhere!
-		else if (!signer->verifyMsg(msg)) {
+		else if (!signer.verifyMsg(msg)) {
 			debug(PSTR("Message verification failed\n"));
 			return false; // This signed message has been tampered with!
 		}
@@ -385,7 +383,7 @@ boolean MySensor::process() {
 				}
 				return false;
 			} else if (type == I_GET_NONCE) {
-				if (signer->getNonce(msg)) {
+				if (signer.getNonce(msg)) {
 					sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
 				} else {
 					return false;
@@ -541,7 +539,7 @@ void MySensor::internalSleep(unsigned long ms) {
 void MySensor::sleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
-	radio->powerDown();
+	radio.powerDown();
 	pinIntTrigger = 0;
 	internalSleep(ms);
 }
@@ -561,7 +559,7 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
 	Serial.flush();
-	radio->powerDown();
+	radio.powerDown();
 	attachInterrupt(interrupt, wakeUp, mode);
 	if (ms>0) {
 		pinIntTrigger = 0;
@@ -580,7 +578,7 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	int8_t retVal = 1;
 	Serial.flush(); // Let serial prints finish (debug, log etc)
-	radio->powerDown();
+	radio.powerDown();
 	attachInterrupt(interrupt1, wakeUp, mode1);
 	attachInterrupt(interrupt2, wakeUp2, mode2);
 	if (ms>0) {
@@ -616,7 +614,7 @@ bool MySensor::sign(MyMessage &message) {
 			if (process()) {
 				if (getLastMessage().type == I_GET_NONCE_RESPONSE) {
 					// Proceed with signing if nonce has been received
-					if (signer->putNonce(getLastMessage()) && signer->signMsg(message)) return true;
+					if (signer.putNonce(getLastMessage()) && signer.signMsg(message)) return true;
 					break;
 				}
 			}

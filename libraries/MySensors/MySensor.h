@@ -247,9 +247,9 @@ class MySensor
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage ack;  // Buffer for ack messages.
 
-	MyRFDriver *radio;
+	MyRFDriverClass radio;
 
-	MySigningDriver *signer;
+	MySigningDriverClass signer;
 	
 	void setupRepeaterMode();
 	boolean sendWrite(uint8_t dest, MyMessage &message);
