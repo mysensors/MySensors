@@ -35,6 +35,11 @@ typedef class MyRFDriverNRF24 MyRFDriverClass;
 typedef class MyRFDriverRF69 MyRFDriverClass;
 #endif
 
+#if defined(MYSENSORS_SERIAL_GATEWAY) || defined(MYSENSORS_ETHERNET_GATEWAY)
+#include "MyParserSerial.h"
+typedef class MyParserSerial MyParserClass;
+#endif
+
 #ifdef MYSENSORS_SIGNING_DUMMY
 #include "MySigningDriverDummy.h"
 #define SIGNING_IDENTIFIER (0) // Reserved for dummy implementation, will not work with other backends
