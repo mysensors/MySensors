@@ -62,8 +62,16 @@
 #include <MySensor.h>
 #include "MyMQTTClient.h"
 #include "PubSubClient.h"
-
 #include <Ethernet.h>
+#include <DigitalIO.h>
+#include <Time.h>
+
+#define DSRTC
+#ifdef DSRTC
+#include <Wire.h>
+#include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
+#endif
+
 
 /*
  * To configure MQTTClientGateway.ino to use an ENC28J60 based board include
@@ -99,16 +107,16 @@
 
 //replace with ip of server you want to connect to, comment out if using 'remote_host'
 uint8_t remote_ip[] =
-  { 192, 168, 0, 1 };
+{ 192, 168, 92, 4 };
 //replace with hostname of server you want to connect to, comment out if using 'remote_ip'
 //char* remote_ip = "server.local";
 //replace with the port that your server is listening on
 #define remote_port 1883
 //replace with arduinos ip-address. Comment out if Ethernet-startup should use dhcp. Is ignored on Yun
-uint8_t local_ip[] = {192,168,0,6};
+uint8_t local_ip[] = {192, 168, 92, 19};
 //replace with ethernet shield mac. It's mandatory every device is assigned a unique mac. Is ignored on Yun
 uint8_t mac[] =
-  { 0x90, 0xA2, 0xDA, 0x0D, 0x07, 0x02 };
+{ 0x90, 0xA2, 0xDA, 0x0D, 0x07, 0x02 };
 
 //////////////////////////////////////////////////////////////////
 
@@ -126,25 +134,29 @@ void
 processMQTTMessages(char* topic, byte* payload, unsigned int length);
 
 PubSubClient client(remote_ip, remote_port, processMQTTMessages, ethClient);
-MyMQTTClient gw(client,RADIO_CE_PIN, RADIO_SPI_SS_PIN);
+MyMQTTClient gw(client, RADIO_CE_PIN, RADIO_SPI_SS_PIN);
 
 void
 setup()
 {
+  
+
+
   Ethernet.begin(mac, local_ip);
+  //Bridge.begin();
   delay(1000);   // Wait for Ethernet to get configured.
   gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE,
-  RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+           RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
 }
 
 void
 loop()
 {
   if (!client.connected())
-    {
-      client.connect("MySensor");
-      client.subscribe("MyMQTT/#");
-    }
+  {
+    client.connect("MySensor");
+    client.subscribe("MyMQTT/#");
+  }
   client.loop();
   gw.processRadioMessage();
 }

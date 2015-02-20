@@ -13,6 +13,13 @@
 #include "PubSubClient.h"
 #include "MyMQTTClient.h"
 #include "utility/MsTimer2.h"
+#include <Time.h>
+
+
+#ifdef DSRTC
+#include <Wire.h>
+#include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
+#endif
 
 char VAR_0[] PROGMEM = "TEMP";		//V_TEMP
 char VAR_1[] PROGMEM = "HUM";		//V_HUM
@@ -82,12 +89,13 @@ char VAR_63[] PROGMEM = "UNKNOWN"; 	//Custom for MQTTGateway
 //////////////////////////////////////////////////////////////////
 
 PROGMEM const char *VAR_Type[] =
-  { VAR_0, VAR_1, VAR_2, VAR_3, VAR_4, VAR_5, VAR_6, VAR_7, VAR_8, VAR_9, VAR_10, VAR_11, VAR_12, VAR_13,
-      VAR_14, VAR_15, VAR_16, VAR_17, VAR_18, VAR_19, VAR_20, VAR_21, VAR_22, VAR_23, VAR_24, VAR_25,
-      VAR_26, VAR_27, VAR_28, VAR_29, VAR_30, VAR_31, VAR_32, VAR_33, VAR_34, VAR_35, VAR_36, VAR_37,
-      VAR_38, VAR_39, VAR_40, VAR_41, VAR_42, VAR_43, VAR_44, VAR_45, VAR_46, VAR_47, VAR_48, VAR_49,
-      VAR_50, VAR_51, VAR_52, VAR_53, VAR_54, VAR_55, VAR_56, VAR_57, VAR_58, VAR_59, VAR_60, VAR_61,
-      VAR_62, VAR_63 };
+{ VAR_0, VAR_1, VAR_2, VAR_3, VAR_4, VAR_5, VAR_6, VAR_7, VAR_8, VAR_9, VAR_10, VAR_11, VAR_12, VAR_13,
+  VAR_14, VAR_15, VAR_16, VAR_17, VAR_18, VAR_19, VAR_20, VAR_21, VAR_22, VAR_23, VAR_24, VAR_25,
+  VAR_26, VAR_27, VAR_28, VAR_29, VAR_30, VAR_31, VAR_32, VAR_33, VAR_34, VAR_35, VAR_36, VAR_37,
+  VAR_38, VAR_39, VAR_40, VAR_41, VAR_42, VAR_43, VAR_44, VAR_45, VAR_46, VAR_47, VAR_48, VAR_49,
+  VAR_50, VAR_51, VAR_52, VAR_53, VAR_54, VAR_55, VAR_56, VAR_57, VAR_58, VAR_59, VAR_60, VAR_61,
+  VAR_62, VAR_63
+};
 
 char mqtt_prefix[] PROGMEM = MQTT_PREFIX;
 
@@ -103,15 +111,15 @@ extern uint8_t pinTx;
 extern uint8_t pinEr;
 
 MyMQTTClient::MyMQTTClient(PubSubClient inClient, uint8_t _cepin,
-    uint8_t _cspin) :
-    MySensor(_cepin, _cspin), buffsize(0)
+                           uint8_t _cspin) :
+  MySensor(_cepin, _cspin), buffsize(0)
 {
   client = inClient;
 }
 
 inline MyMessage&
 build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor,
-    uint8_t command, uint8_t type, bool enableAck)
+      uint8_t command, uint8_t type, bool enableAck)
 {
   msg.destination = destination;
   msg.sender = sender;
@@ -136,11 +144,17 @@ MyMQTTClient::getType(char *b, const char **index)
 
 void
 MyMQTTClient::begin(rf24_pa_dbm_e paLevel, uint8_t channel,
-    rf24_datarate_e dataRate, uint8_t _rx, uint8_t _tx, uint8_t _er)
+                    rf24_datarate_e dataRate, uint8_t _rx, uint8_t _tx, uint8_t _er)
 {
 #ifdef DEBUG
   Serial.begin(BAUD_RATE);
 #endif
+#ifdef DSRTC
+  // Attach RTC
+  setSyncProvider(RTC.get);   // the function to get the time from the RTC
+  setSyncInterval(60);
+#endif
+
   repeaterMode = true;
   isGateway = true;
 
@@ -174,19 +188,19 @@ void
 MyMQTTClient::processRadioMessage()
 {
   if (process())
-    {
-      // A new message was received from one of the sensors
-      MyMessage message = getLastMessage();
-      // Pass along the message from sensors to serial line
-      rxBlink(1);
-      SendMQTT(message);
-    }
+  {
+    // A new message was received from one of the sensors
+    MyMessage message = getLastMessage();
+    // Pass along the message from sensors to serial line
+    rxBlink(1);
+    SendMQTT(message);
+  }
 
 }
 
 void
 MyMQTTClient::processMQTTMessage(char* topic, byte* payload,
-    unsigned int length)
+                                 unsigned int length)
 {
   char *str, *p;
   uint8_t i = 0;
@@ -194,16 +208,16 @@ MyMQTTClient::processMQTTMessage(char* topic, byte* payload,
   buffsize = 0;
 
   for (str = strtok_r(topic, "/", &p); str && i < 4;
-      str = strtok_r(NULL, "/", &p))
+       str = strtok_r(NULL, "/", &p))
+  {
+    switch (i)
     {
-      switch (i)
-        {
       case 0:
         {
           if (strcmp_P(str, mqtt_prefix) != 0)
-            {	//look for MQTT_PREFIX
-              return;			//Message not for us or malformatted!
-            }
+          { //look for MQTT_PREFIX
+            return;			//Message not for us or malformatted!
+          }
           break;
         }
       case 1:
@@ -222,30 +236,53 @@ MyMQTTClient::processMQTTMessage(char* topic, byte* payload,
           //strcpy(str,(char*)&str[2]);  //Strip VAR_
 
           for (uint8_t j = 0;
-              strcpy_P(convBuf, (char*) pgm_read_word(&(VAR_Type[j]))); j++)
-            {
-              if (strcmp((char*) &str[2], convBuf) == 0)
-                { //Strip VAR_ and compare
-                  match = j;
-                  break;
-                }
-              if (j >= VAR_TOTAL)
-                {	// No match found!
-                  match = VAR_TOTAL;	// last item.
-                  break;
-                }
+               strcpy_P(convBuf, (char*) pgm_read_word(&(VAR_Type[j]))); j++)
+          {
+            if (strcmp((char*) &str[2], convBuf) == 0)
+            { //Strip VAR_ and compare
+              match = j;
+              break;
             }
+            if (j >= VAR_TOTAL)
+            { // No match found!
+              match = VAR_TOTAL;	// last item.
+              break;
+            }
+          }
           msg.type = match;
           break;
         }
-        }
-      i++;
-    }						//Check if packge has payload
-  msg.set((const char*) payload);			//Payload
+    }
+    i++;
+  }						//Check if packge has payload
+
+  char* ca;
+  ca = (char *)payload;
+  ca += length;
+  *ca = '\0';
+
+  msg.set((const char*)payload);			//Payload
+
   txBlink(1);
+  // inject time
+  if ((msg.destination == 0) && (msg.sensor == 199)) {
+    unsigned long epoch = atol((char*)payload);
+    if (epoch > 10000) {
+#ifdef DSRTC
+      RTC.set(epoch); // this sets the RTC to the time from controller - which we do want periodically
+#endif
+      setTime(epoch);
+
+    }
+#ifdef DEBUG
+    Serial.print("Time recieved ");
+    Serial.println(epoch);
+#endif
+  }
+  //
   if (!sendRoute(
-      build(msg, GATEWAY_ADDRESS, msg.destination, msg.sensor, C_SET, msg.type,
-          0)))
+        build(msg, GATEWAY_ADDRESS, msg.destination, msg.sensor, C_SET, msg.type,
+              0)))
     errBlink(1);
 
 }
@@ -253,103 +290,158 @@ MyMQTTClient::processMQTTMessage(char* topic, byte* payload,
 void
 MyMQTTClient::SendMQTT(MyMessage &msg)
 {
+
   buffsize = 0;
   if (!client.connected())
     return;			//We have no connections - return
   if (msg.isAck())
-    {
+  {
 #ifdef DEBUG
-      Serial.println("msg is ack!");
+    Serial.println("msg is ack!");
 #endif
-      if (msg.sender == 255 && mGetCommand(msg) == C_INTERNAL
-          && msg.type == I_ID_REQUEST)
-        {
-          // TODO: sending ACK request on id_response fucks node up. doesn't work.
-          // The idea was to confirm id and save to EEPROM_LATEST_NODE_ADDRESS.
-        }
+    if (msg.sender == 255 && mGetCommand(msg) == C_INTERNAL
+        && msg.type == I_ID_REQUEST)
+    {
+      // TODO: sending ACK request on id_response fucks node up. doesn't work.
+      // The idea was to confirm id and save to EEPROM_LATEST_NODE_ADDRESS.
     }
+  }
   else
+  {
+    // we have to check every message if its a newly assigned id or not.
+    // Ack on I_ID_RESPONSE does not work, and checking on C_PRESENTATION isn't reliable.
+    uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS) + 1;
+    if (newNodeID <= MQTT_FIRST_SENSORID)
+      newNodeID = MQTT_FIRST_SENSORID;
+    if (msg.sender == newNodeID)
     {
-      // we have to check every message if its a newly assigned id or not.
-      // Ack on I_ID_RESPONSE does not work, and checking on C_PRESENTATION isn't reliable.
-      uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS) + 1;
-      if (newNodeID <= MQTT_FIRST_SENSORID)
-        newNodeID = MQTT_FIRST_SENSORID;
-      if (msg.sender == newNodeID)
-        {
-          saveState(EEPROM_LATEST_NODE_ADDRESS, newNodeID);
-        }
-      if (mGetCommand(msg) == C_INTERNAL)
-        {
-          if (msg.type == I_CONFIG)
-            {
-              txBlink(1);
-              if (!sendRoute(
-                  build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL,
-                      I_CONFIG, 0).set("M")))
-                errBlink(1);
-            }
-          else if (msg.type == I_ID_REQUEST && msg.sender == 255)
-            {
-              uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS) + 1;
-              if (newNodeID <= MQTT_FIRST_SENSORID)
-                newNodeID = MQTT_FIRST_SENSORID;
-              if (newNodeID >= MQTT_LAST_SENSORID)
-                return; // Sorry no more id's left :(
-              txBlink(1);
-              if (!sendRoute(
-                  build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL,
-                      I_ID_RESPONSE, 0).set(newNodeID)))
-                errBlink(1);
-            }
-        }
-      else if (mGetCommand(msg) != 0)
-        {
-          if (mGetCommand(msg) == 3)
-            msg.type = msg.type + (S_FIRSTCUSTOM - 10);	//Special message
-
-          if (msg.type > VAR_TOTAL)
-            msg.type = VAR_TOTAL;		// If type > defined types set to unknown.
-          strcpy_P(buffer, mqtt_prefix);
-          buffsize += strlen_P(mqtt_prefix);
-          buffsize += sprintf(&buffer[buffsize], "/%i/%i/V_%s\0", msg.sender,
-              msg.sensor, getType(convBuf, &VAR_Type[msg.type]));
-          msg.getString(convBuf);
-#ifdef DEBUG
-          Serial.print("publish: ");
-          Serial.print((char*) buffer);
-          Serial.print(" ");
-          Serial.println((char*) convBuf);
-#endif
-          client.publish(buffer, convBuf);
-        }
+      saveState(EEPROM_LATEST_NODE_ADDRESS, newNodeID);
     }
+    if (mGetCommand(msg) == C_INTERNAL)
+    {
+      if (msg.type == I_CONFIG)
+      {
+        txBlink(1);
+        if (!sendRoute(
+              build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL,
+                    I_CONFIG, 0).set("M")))
+          errBlink(1);
+      }
+      else if (msg.type == I_TIME)
+      {
+#ifdef DEBUG
+        Serial.println("I_TIME requested!");
+#endif
+        txBlink(1);
+        if (!sendRoute(
+              build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL,
+                    I_TIME, 0).set(now())))
+          errBlink(1);
+      }
+      else if (msg.type == I_ID_REQUEST && msg.sender == 255)
+      {
+        uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS) + 1;
+        if (newNodeID <= MQTT_FIRST_SENSORID)
+          newNodeID = MQTT_FIRST_SENSORID;
+        if (newNodeID >= MQTT_LAST_SENSORID)
+          return; // Sorry no more id's left :(
+        txBlink(1);
+        if (!sendRoute(
+              build(msg, GATEWAY_ADDRESS, msg.sender, 255, C_INTERNAL,
+                    I_ID_RESPONSE, 0).set(newNodeID)))
+          errBlink(1);
+      }
+      else if (msg.type == I_BATTERY_LEVEL)
+      {
+        strcpy_P(buffer, mqtt_prefix);
+        buffsize += strlen_P(mqtt_prefix);
+        buffsize += sprintf(&buffer[buffsize], "/%i/255/BATTERY_LEVEL\0", msg.sender );
+        msg.getString(convBuf);
+#ifdef DEBUG
+        Serial.print("publish: ");
+        Serial.print((char*) buffer);
+        Serial.print(" ");
+        Serial.println((char*) convBuf);
+#endif
+        client.publish(buffer, convBuf);
+      }
+      else if (msg.type == I_SKETCH_NAME)
+      {
+        strcpy_P(buffer, mqtt_prefix);
+        buffsize += strlen_P(mqtt_prefix);
+        buffsize += sprintf(&buffer[buffsize], "/%i/255/SKETCH_NAME\0", msg.sender );
+        msg.getString(convBuf);
+#ifdef DEBUG
+        Serial.print("publish: ");
+        Serial.print((char*) buffer);
+        Serial.print(" ");
+        Serial.println((char*) convBuf);
+#endif
+        client.publish(buffer, convBuf);
+      }
+      else if (msg.type == I_SKETCH_VERSION)
+      {
+        strcpy_P(buffer, mqtt_prefix);
+        buffsize += strlen_P(mqtt_prefix);
+        buffsize += sprintf(&buffer[buffsize], "/%i/255/SKETCH_VERSION\0", msg.sender );
+        msg.getString(convBuf);
+#ifdef DEBUG
+        Serial.print("publish: ");
+        Serial.print((char*) buffer);
+        Serial.print(" ");
+        Serial.println((char*) convBuf);
+#endif
+        client.publish(buffer, convBuf);
+      }
+
+    }
+    else if (mGetCommand(msg) != 0)
+    {
+      if (mGetCommand(msg) == 3)
+        msg.type = msg.type + (S_FIRSTCUSTOM - 10);	//Special message
+
+      if (msg.type > VAR_TOTAL)
+        msg.type = VAR_TOTAL;		// If type > defined types set to unknown.
+      strcpy_P(buffer, mqtt_prefix);
+      buffsize += strlen_P(mqtt_prefix);
+      buffsize += sprintf(&buffer[buffsize], "/%i/%i/V_%s\0", msg.sender,
+                          msg.sensor, getType(convBuf, &VAR_Type[msg.type]));
+      msg.getString(convBuf);
+#ifdef DEBUG
+      Serial.print("publish: ");
+      Serial.print((char*) buffer);
+      Serial.print(" ");
+      Serial.println((char*) convBuf);
+#endif
+      client.publish(buffer, convBuf);
+    }
+  }
 }
 
 void
 MyMQTTClient::rxBlink(uint8_t cnt)
 {
   if (countRx == 255)
-    {
-      countRx = cnt;
-    }
+  {
+    countRx = cnt;
+  }
 }
 
 void
 MyMQTTClient::txBlink(uint8_t cnt)
 {
   if (countTx == 255)
-    {
-      countTx = cnt;
-    }
+  {
+    countTx = cnt;
+  }
 }
 
 void
 MyMQTTClient::errBlink(uint8_t cnt)
 {
   if (countErr == 255)
-    {
-      countErr = cnt;
-    }
+  {
+    countErr = cnt;
+  }
 }
 

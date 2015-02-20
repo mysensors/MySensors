@@ -10,11 +10,15 @@ modify it under the terms of the GNU General Public License
 version 2 as published by the Free Software Foundation.
 */
 
+
 #ifndef MyMQTTClient_h
 #define MyMQTTClient_h
 
 #include "MySensor.h"
 #include "PubSubClient.h"
+
+
+#define DSRTC // RTC Dallas support -> disable debug and use isp programmer to free memory
 
 
 //////////////////////////////////////////////////////////////////
