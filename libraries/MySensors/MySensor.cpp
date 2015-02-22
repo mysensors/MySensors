@@ -87,22 +87,19 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		findParentNode();
 	}
 
-	if ( (_nodeId != AUTO) && (nc.nodeId != _nodeId) ) {
-	    // Set static id
-	    nc.nodeId = _nodeId;
-	    // Save static id in eeprom
-	    eeprom_update_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, _nodeId);
-	}
-
-	// Try to fetch node-id from gateway
-	if (nc.nodeId == AUTO) {
+	if (_nodeId != AUTO) {
+		// Set static id
+		nc.nodeId = _nodeId;
+		// Save static id in eeprom
+		eeprom_update_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, _nodeId);
+	} else if (isValidParent(nc.parentNodeId)) {
+		// Try to fetch node-id from gateway
 		requestNodeId();
 	}
 
 	setupNode();
 
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), isGateway?"gateway":(repeaterMode?"repeater":"sensor"), nc.nodeId, nc.parentNodeId, nc.distance);
-
 }
 
 void MySensor::setupRepeaterMode(){
