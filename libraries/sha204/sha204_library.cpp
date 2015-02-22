@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "sha204_library.h"
-#include "sha204_includes/sha204_lib_return_codes.h"
+#include "sha204_lib_return_codes.h"
 
 
 // atsha204Class Constructor
