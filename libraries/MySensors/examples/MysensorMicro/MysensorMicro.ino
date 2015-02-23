@@ -26,6 +26,9 @@
 
 #define MEASURE_INTERVAL 60000
 
+// FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
+#define FORCE_TRANSMIT_INTERVAL 30 
+
 SI7021 humiditySensor;
 MySensor gw;
 
@@ -45,7 +48,6 @@ long lastBattery = -100;
 
 void setup() {
 
-  Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
@@ -73,6 +75,7 @@ void setup() {
   gw.present(CHILD_ID_HUM,S_HUM);
   
   gw.present(CHILD_ID_BATT, S_POWER);
+  switchClock(1<<CLKPS2);
 }
 
 
@@ -81,7 +84,8 @@ void loop() {
   measureCount ++;
   bool forceTransmit = false;
   
-  if (measureCount > 30) {// Every 60th time we wake up, force a transmission on all sensors.
+  if (measureCount > FORCE_TRANSMIT_INTERVAL
+  ) {// Every 60th time we wake up, force a transmission on all sensors.
     forceTransmit = true; 
     measureCount = 0;
   }
@@ -106,23 +110,19 @@ void sendTempHumidityMeasurements(bool force)
     lastTemperature = -100;
   }
   
-  float temperature = humiditySensor.getCelsiusHundredths()/10;
+  si7021_env data = humiditySensor.getHumidityAndTemperature();
   
-  temperature = temperature / 10;
-  
-  int humidity = humiditySensor.getHumidityPercent();
+  float temperature = data.celsiusHundredths/100;
+    
+  int humidity = data.humidityPercent;
 
   if (lastTemperature != temperature) {
     gw.send(msgTemp.set(temperature,1));
     lastTemperature = temperature;
-    Serial.print("temperature ");
-    Serial.println(temperature);
   }
   if (lastHumidity != humidity) {    
     gw.send(msgHum.set(humidity));
     lastHumidity = humidity;
-    Serial.print("Humidity   ");
-    Serial.println(humidity);
   }
 }
 
@@ -155,7 +155,7 @@ long readVcc() {
   #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
     ADMUX = _BV(MUX5) | _BV(MUX0);
   #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-    ADMUX = _BV(MUX3) | _BV(MUX2);
+    ADcdMUX = _BV(MUX3) | _BV(MUX2);
   #else
     ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
   #endif  
@@ -188,4 +188,11 @@ void resetEEP()
   }
 }
 
-
+void switchClock(unsigned char clk)
+{
+  cli();
+  
+  CLKPR = 1<<CLKPCE; // Set CLKPCE to enable clk switching
+  CLKPR = clk;  
+  sei();
+}
