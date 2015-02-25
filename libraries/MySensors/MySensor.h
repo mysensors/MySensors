@@ -246,7 +246,8 @@ class MySensor
 	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
 
 	MyMessage msg;  // Buffer for incoming messages.
-	MyMessage ack;  // Buffer for ack messages.
+	MyMessage tmpMsg ;  // Buffer for temporary messages (acks and nonces among others).
+	MyMessage msgSign;  // Buffer for message to sign.
 
 	MyRFDriverClass radio;
 
