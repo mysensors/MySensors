@@ -16,7 +16,7 @@
 //#define MYSENSORS_RF_RF69
 
 // Choose signing backend by enabling one of the following
-#define MYSENSORS_SIGNING_DUMMY
+#define MYSENSORS_SIGNING_NONE
 //#define MYSENSORS_SIGNING_ATSHA204
 //#define MYSENSORS_SIGNING_ATSHA204SOFT
 
@@ -40,10 +40,10 @@ typedef class MyRFDriverRF69 MyRFDriverClass;
 typedef class MyParserSerial MyParserClass;
 #endif
 
-#ifdef MYSENSORS_SIGNING_DUMMY
-#include "MySigningDriverDummy.h"
+#ifdef MYSENSORS_SIGNING_NONE
+#include "MySigningDriverNone.h"
 #define SIGNING_IDENTIFIER (0) // Reserved for dummy implementation, will not work with other backends
-typedef class MySigningDriverDummy MySigningDriverClass;
+typedef class MySigningDriverNone MySigningDriverClass;
 #endif
 
 #ifdef MYSENSORS_SIGNING_ATSHA204
