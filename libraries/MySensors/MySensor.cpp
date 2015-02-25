@@ -349,12 +349,12 @@ boolean MySensor::process() {
 		// Check if sender requests an ack back.
 		if (mGetRequestAck(msg)) {
 			// Copy message
-			ack = msg;
-			mSetRequestAck(ack,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
-			mSetAck(ack,true);
-			ack.sender = nc.nodeId;
-			ack.destination = msg.sender;
-			sendRoute(ack);
+			tmpMsg = msg;
+			mSetRequestAck(tmpMsg,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+			mSetAck(tmpMsg,true);
+			tmpMsg.sender = nc.nodeId;
+			tmpMsg.destination = msg.sender;
+			sendRoute(tmpMsg);
 		}
 
 		if (command == C_INTERNAL) {
@@ -591,18 +591,21 @@ int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, ui
 }
 
 bool MySensor::sign(MyMessage &message) {
-	MyMessage msgNonce;
-	if (!sendRoute(build(msgNonce, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
+	if (!sendRoute(build(tmpMsg, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
 		return false;
 	} else {
 		// We have to wait for the nonce to arrive before we can sign our original message
 		// Other messages could come in-between. We trust process() takes care of them
 		unsigned long enter = millis();
+		msgSign = message; // Copy the message to sign since message buffer might be touched in process()
 		while (millis() - enter < 5000) {
 			if (process()) {
-				if (getLastMessage().type == I_GET_NONCE_RESPONSE) {
+				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
 					// Proceed with signing if nonce has been received
-					if (signer.putNonce(getLastMessage()) && signer.signMsg(message)) return true;
+					if (signer.putNonce(getLastMessage()) && signer.signMsg(msgSign)) {
+						message = msgSign; // Write the signed message back
+						return true;
+					}
 					break;
 				}
 			}
