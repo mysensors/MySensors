@@ -37,7 +37,11 @@ static inline bool isValidDistance( const uint8_t distance ) {
 	return distance != DISTANCE_INVALID;
 }
 
-MySensor::MySensor() {
+MySensor::MySensor(MyRFDriver &_radio, MySigningDriver &_signer)
+	:
+	radio(_radio),
+	signer(_signer)
+{
 }
 
 

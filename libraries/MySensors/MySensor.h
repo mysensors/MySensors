@@ -79,7 +79,7 @@ class MySensor
 	* Creates a new instance of Sensor class.
 	*
 	*/
-	MySensor();
+	MySensor(MyRFDriver &radio, MySigningDriver &signer);
 
 	/**
 	* Begin operation of the MySensors library
@@ -249,9 +249,8 @@ class MySensor
 	MyMessage tmpMsg ;  // Buffer for temporary messages (acks and nonces among others).
 	MyMessage msgSign;  // Buffer for message to sign.
 
-	MyRFDriverClass radio;
-
-	MySigningDriverClass signer;
+	MyRFDriver& radio;
+	MySigningDriver& signer;
 	
 	void setupRepeaterMode();
 	boolean sendWrite(uint8_t dest, MyMessage &message);

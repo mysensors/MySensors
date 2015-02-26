@@ -7,7 +7,6 @@
 #include "MySigningDriver.h"
 #include "MySigningDriverAtsha204.h"
 
-#ifdef MYSENSORS_SIGNING_ATSHA204
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_ATSHA_SIGNING
 
@@ -36,11 +35,13 @@ static void DEBUG_ATSHA_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #define DEBUG_ATSHA_PRINTBUF(str, buf, sz)
 #endif
 
-static atsha204Class atsha204(ATSHA204_PIN);
 
-MySigningDriverAtsha204::MySigningDriverAtsha204() : MySigningDriver() {
-	verification_ongoing = false;
-
+MySigningDriverAtsha204::MySigningDriverAtsha204()
+	:
+	MySigningDriver(),
+	atsha204(MY_ATSHA204_PIN),
+	verification_ongoing(false)
+{
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 	memset(current_nonce, 0xAA, sizeof(current_nonce));
 }
@@ -73,13 +74,13 @@ bool MySigningDriverAtsha204::getNonce(MyMessage &msg) {
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
 	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
 	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (timestamp + VERIFICATION_TIMEOUT_MS < millis()) timestamp = 0;
+	if (timestamp + MY_VERIFICATION_TIMEOUT_MS < millis()) timestamp = 0;
 	return true;
 }
 
 bool MySigningDriverAtsha204::checkTimer() {
 	if (verification_ongoing) {
-		if (millis() < timestamp || millis() > timestamp + VERIFICATION_TIMEOUT_MS) {
+		if (millis() < timestamp || millis() > timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_ATSHA_PRINTLN("Verification timeout");
 			// Purge nonce
 			memset(current_nonce, 0xAA, NONCE_NUMIN_SIZE_PASSTHROUGH);
@@ -214,4 +215,3 @@ bool MySigningDriverAtsha204::calculateSignature(MyMessage &msg) {
 	DEBUG_ATSHA_PRINTBUF("HMAC:", &rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 	return true; // We return with the signature in rx_buffer[SHA204_BUFFER_POS_DATA]
 }
-#endif

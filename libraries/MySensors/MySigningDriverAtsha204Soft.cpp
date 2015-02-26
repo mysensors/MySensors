@@ -7,11 +7,11 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
+#include "MyConfig.h"
 #include "MySigningDriver.h"
 #include "MySigningDriverAtsha204Soft.h"
-#include "sha256.h"
+#include "utility/sha256.h"
 
-#ifdef MYSENSORS_SIGNING_ATSHA204SOFT
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_ATSHASOFT_SIGNING
 
@@ -42,16 +42,15 @@ static void DEBUG_ATSHASOFT_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 
 static Sha256Class Sha256;
 
-MySigningDriverAtsha204Soft::MySigningDriverAtsha204Soft() : MySigningDriver() {
+MySigningDriverAtsha204Soft::MySigningDriverAtsha204Soft() : MySigningDriver(), hmacKey({MY_HMAC_KEY}) {
 	verification_ongoing = false;
-
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 	memset(current_nonce, 0xAA, sizeof(current_nonce));
 }
 
 bool MySigningDriverAtsha204Soft::getNonce(MyMessage &msg) {
 	// Set randomseed
-	randomSeed(analogRead(RANDOMSEED_PIN));
+	randomSeed(analogRead(MY_RANDOMSEED_PIN));
 	for (int i = 0; i < MAX_PAYLOAD; i++)
 	{
 		current_nonce[i] = random(255);
@@ -65,13 +64,13 @@ bool MySigningDriverAtsha204Soft::getNonce(MyMessage &msg) {
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
 	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
 	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (timestamp + VERIFICATION_TIMEOUT_MS < millis()) timestamp = 0;
+	if (timestamp + MY_VERIFICATION_TIMEOUT_MS < millis()) timestamp = 0;
 	return true;
 }
 
 bool MySigningDriverAtsha204Soft::checkTimer() {
 	if (verification_ongoing) {
-		if (millis() < timestamp || millis() > timestamp + VERIFICATION_TIMEOUT_MS) {
+		if (millis() < timestamp || millis() > timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_ATSHASOFT_PRINTLN("Verification timeout");
 			// Purge nonce
 			memset(current_nonce, 0xAA, 32);
@@ -222,4 +221,3 @@ bool MySigningDriverAtsha204Soft::calculateSignature(MyMessage &msg) {
 	DEBUG_ATSHASOFT_PRINTBUF("HMAC:", hmac, 32);
 	return true;
 }
-#endif

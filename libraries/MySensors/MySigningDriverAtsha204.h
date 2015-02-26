@@ -12,6 +12,8 @@
 #include "utility/ATSHA204.h"
 #include <stdint.h>
 
+#define SIGNING_IDENTIFIER (1)
+
 // The ATSHA204 is capable of generating proper random numbers for nonce
 // and can calculate HMAC-SHA256 signatures. This is enterprise-
 // level of security and ought to implement the signing needs for anybody.
@@ -25,6 +27,7 @@ public:
 	bool signMsg(MyMessage &msg);
 	bool verifyMsg(MyMessage &msg);
 private:
+	atsha204Class atsha204;
 	unsigned long timestamp;
 	bool verification_ongoing;
 	uint8_t current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];

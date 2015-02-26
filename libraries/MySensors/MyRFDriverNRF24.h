@@ -7,26 +7,6 @@
 #include "utility/RF24.h"
 #include "utility/RF24_config.h"
 
-
-
-#ifdef MYSENSORS_SENSOR
-#define RF24_CE_PIN		   9
-#define RF24_CS_PIN		   10
-#define RF24_PA_LEVEL 	   RF24_PA_MAX
-#endif
-
-#ifdef MYSENSORS_SERIAL_GATEWAY
-#define RF24_CE_PIN		   9
-#define RF24_CS_PIN		   10
-#define RF24_PA_LEVEL 	   RF24_PA_LOW
-#endif
-
-#if defined(MYSENSORS_ETHERNET_GATEWAY) || defined(MYSENSORS_MQTT_GATEWAY)
-#define RF24_CE_PIN		   5
-#define RF24_CS_PIN		   6
-#define RF24_PA_LEVEL 	   RF24_PA_LOW
-#endif
-
 #define RF24_CHANNEL	   76             //RF channel for the sensor net, 0-127
 #define RF24_DATARATE 	   RF24_250KBPS   //RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
 #define RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL) // This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
@@ -40,7 +20,7 @@
 class MyRFDriverNRF24 : public MyRFDriver
 { 
 public:
-	MyRFDriverNRF24();
+	MyRFDriverNRF24(uint8_t ce=RF24_CE_PIN, uint8_t cs=RF24_CS_PIN, uint8_t paLevel=RF24_PA_LEVEL);
 	void init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
@@ -49,8 +29,9 @@ public:
 	uint8_t receive(void* data);
 	void powerDown();
 private:
-	RF24 *rf24;
+	RF24 rf24;
 	uint8_t _address;
+	uint8_t _paLevel;
 };
 
 #endif

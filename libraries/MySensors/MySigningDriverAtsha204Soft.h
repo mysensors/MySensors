@@ -15,6 +15,8 @@
 #include "utility/ATSHA204.h"
 #include <stdint.h>
 
+#define SIGNING_IDENTIFIER (1)
+
 // This implementation is the pure software variant of the ATSHA204.
 // It is designed to work fully compliant with nodes using ATSHA204 in the network
 // and therefore uses the same signing identifier as ATSHA204.
@@ -36,6 +38,7 @@ private:
 	bool verification_ongoing;
 	uint8_t current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];
 	uint8_t temp_message[32];
+	uint8_t hmacKey[32];
 	uint8_t* hmac;
 	bool calculateSignature(MyMessage &msg);
 };

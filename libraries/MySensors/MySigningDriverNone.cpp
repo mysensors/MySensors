@@ -6,7 +6,6 @@
 #include "MySigningDriver.h"
 #include "MySigningDriverNone.h"
 
-#ifdef MYSENSORS_SIGNING_NONE
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_NONE_SIGNING
 
@@ -67,4 +66,3 @@ bool MySigningDriverNone::verifyMsg(MyMessage &msg) {
 	else
 		return true;
 }
-#endif
