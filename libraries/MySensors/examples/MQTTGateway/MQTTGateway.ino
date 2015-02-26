@@ -61,14 +61,14 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 #include <MyMQTT.h>
 #include <Ethernet.h>
 
-
 // * Use this for IBOARD modded to use standard MISO/MOSI/SCK, see note *1 above!
 /*
 #define RADIO_CE_PIN        3			// radio chip enable
 #define RADIO_SPI_SS_PIN    8			// radio SPI serial select
 #define RADIO_ERROR_LED_PIN A2  		// Error led pin
 #define RADIO_RX_LED_PIN    A1  		// Receive led pin
-#define RADIO_TX_LED_PIN    A0  		// the PCB, on board LED*/
+#define RADIO_TX_LED_PIN    A0  		// the PCB, on board LED
+*/
 
 // * Use this for default configured pro mini / nano etc :
 ///*
@@ -88,42 +88,57 @@ EthernetServer server = EthernetServer(TCP_PORT);
 MyMQTT gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN);
 
 void processEthernetMessages() {
-	char inputString[MQTT_MAX_PACKET_SIZE] = "";
-	uint8_t inputSize = 0;
-	EthernetClient client = server.available();
-	if (client) {
-		while (client.available()) {
-			char inChar = client.read();
-			inputString[inputSize] = inChar;
-			inputSize++;
-		}
+  char inputString[MQTT_MAX_PACKET_SIZE] = "";
+  uint8_t inputSize = 0;
+  uint8_t readCnt = 0;
+  uint8_t length = 0;
+
+  EthernetClient client = server.available();
+  if (client) {
+    while (client.available()) {
+      uint8_t inChar = client.read();
+      readCnt++;
+
+      if (inputSize < MQTT_MAX_PACKET_SIZE-1) {
+        inputString[inputSize] = (char)inChar;
+        inputSize++;
+      }
+
+      if (readCnt == 2) {
+        length = (inChar & 127) * 1;
+      }
+      if (readCnt == (length+2)) {
+        break;
+      }
+    }
+    inputString[inputSize] = 0;
 #ifdef TCPDUMP
-		Serial.print("<<");
-		char buf[4];
-		for (uint8_t a=0; a<inputSize; a++) { sprintf(buf,"%02X ", (uint8_t)inputString[a]); Serial.print(buf); } Serial.println("");
+    Serial.print("<<");
+    char buf[4];
+    for (uint8_t a=0; a<inputSize; a++) { sprintf(buf, "%02X ", (uint8_t)inputString[a]); Serial.print(buf); } Serial.println();
 #endif
-		gw.processMQTTMessage(inputString, inputSize);
-	}
+    gw.processMQTTMessage(inputString, inputSize);
+  }
 }
 
 void writeEthernet(const char *writeBuffer, uint8_t *writeSize) {
 #ifdef TCPDUMP
-	Serial.print(">>");
-	char buf[4];
-	for (uint8_t a=0; a<*writeSize; a++) { sprintf(buf,"%02X ",(uint8_t)writeBuffer[a]);  Serial.print(buf); } Serial.println("");
+  Serial.print(">>");
+  char buf[4];
+  for (uint8_t a=0; a<*writeSize; a++) { sprintf(buf,"%02X ",(uint8_t)writeBuffer[a]); Serial.print(buf); } Serial.println();
 #endif
-	server.write((const uint8_t *)writeBuffer, *writeSize);
+  server.write((const uint8_t *)writeBuffer, *writeSize);
 }
 
 
 int main(void) {
-	init();
-	Ethernet.begin(TCP_MAC, TCP_IP);
-	delay(1000);   // Wait for Ethernet to get configured.
-	gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-	server.begin();
-	while (1) {
-		processEthernetMessages();
-		gw.processRadioMessage();
-	}
+  init();
+  Ethernet.begin(TCP_MAC, TCP_IP);
+  delay(1000);   // Wait for Ethernet to get configured.
+  gw.begin(RF24_PA_LEVEL_GW, RF24_CHANNEL, RF24_DATARATE, writeEthernet, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+  server.begin();
+  while (1) {
+    processEthernetMessages();
+    gw.processRadioMessage();
+  }
 }
