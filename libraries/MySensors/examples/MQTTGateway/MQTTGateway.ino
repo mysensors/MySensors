@@ -56,6 +56,7 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 
 */
 
+#include <DigitalIO.h>
 #include <SPI.h>
 #include <MySensor.h>
 #include <MyMQTT.h>
@@ -129,7 +130,6 @@ void writeEthernet(const char *writeBuffer, uint8_t *writeSize) {
 #endif
   server.write((const uint8_t *)writeBuffer, *writeSize);
 }
-
 
 int main(void) {
   init();
