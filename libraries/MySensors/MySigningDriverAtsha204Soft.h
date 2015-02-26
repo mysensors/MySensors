@@ -13,6 +13,7 @@
 #include "MyConfig.h"
 #include "MySigningDriver.h"
 #include "utility/ATSHA204.h"
+#include "utility/sha256.h"
 #include <stdint.h>
 
 #define SIGNING_IDENTIFIER (1)
@@ -34,6 +35,7 @@ public:
 	bool signMsg(MyMessage &msg);
 	bool verifyMsg(MyMessage &msg);
 private:
+	Sha256Class Sha256;
 	unsigned long timestamp;
 	bool verification_ongoing;
 	uint8_t current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];
