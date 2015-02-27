@@ -71,7 +71,7 @@ private:
 	void txBlink(uint8_t cnt);
 	void errBlink(uint8_t cnt);
 
-	bool MQTTClientConnected;
+	uint8_t MQTTClients;
 	char buffer[MQTT_MAX_PACKET_SIZE];
 	char convBuf[MAX_PAYLOAD*2+1];
 	uint8_t buffsize;

@@ -99,7 +99,7 @@ void processEthernetMessages() {
       uint8_t inChar = client.read();
       readCnt++;
 
-      if (inputSize < MQTT_MAX_PACKET_SIZE-1) {
+      if (inputSize < MQTT_MAX_PACKET_SIZE) {
         inputString[inputSize] = (char)inChar;
         inputSize++;
       }
@@ -111,7 +111,6 @@ void processEthernetMessages() {
         break;
       }
     }
-    inputString[inputSize] = 0;
 #ifdef TCPDUMP
     Serial.print("<<");
     char buf[4];
