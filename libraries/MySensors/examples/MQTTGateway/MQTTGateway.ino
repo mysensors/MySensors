@@ -81,32 +81,35 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 
 #define TCP_PORT 1883						// Set your MQTT Broker Listening port.
 IPAddress TCP_IP ( 192, 168, 0, 234 );				// Configure your static ip-address here
-uint8_t TCP_MAC[] = { 0x02, 0xDE, 0xAD, 0x00, 0x00, 0x42 };	// Mac-address - You should change this! see note *2 above!
+byte TCP_MAC[] = { 0x02, 0xDE, 0xAD, 0x00, 0x00, 0x42 };	// Mac-address - You should change this! see note *2 above!
 
 //////////////////////////////////////////////////////////////////
 
 EthernetServer server = EthernetServer(TCP_PORT);
+EthernetClient *currentClient = NULL;
 MyMQTT gw(RADIO_CE_PIN, RADIO_SPI_SS_PIN);
 
 void processEthernetMessages() {
   char inputString[MQTT_MAX_PACKET_SIZE] = "";
-  uint8_t inputSize = 0;
-  uint8_t readCnt = 0;
-  uint8_t length = 0;
+  byte inputSize = 0;
+  byte readCnt = 0;
+  byte length = 0;
 
   EthernetClient client = server.available();
   if (client) {
     while (client.available()) {
-      uint8_t inChar = client.read();
+      // Save the current client we are talking with
+      currentClient = &client;
+      byte inByte = client.read();
       readCnt++;
 
       if (inputSize < MQTT_MAX_PACKET_SIZE) {
-        inputString[inputSize] = (char)inChar;
+        inputString[inputSize] = (char)inByte;
         inputSize++;
       }
 
       if (readCnt == 2) {
-        length = (inChar & 127) * 1;
+        length = (inByte & 127) * 1;
       }
       if (readCnt == (length+2)) {
         break;
@@ -115,19 +118,24 @@ void processEthernetMessages() {
 #ifdef TCPDUMP
     Serial.print("<<");
     char buf[4];
-    for (uint8_t a=0; a<inputSize; a++) { sprintf(buf, "%02X ", (uint8_t)inputString[a]); Serial.print(buf); } Serial.println();
+    for (byte a=0; a<inputSize; a++) { sprintf(buf, "%02X ", (byte)inputString[a]); Serial.print(buf); } Serial.println();
 #endif
     gw.processMQTTMessage(inputString, inputSize);
+    currentClient = NULL;
   }
 }
 
-void writeEthernet(const char *writeBuffer, uint8_t *writeSize) {
+void writeEthernet(const char *writeBuffer, byte *writeSize) {
 #ifdef TCPDUMP
   Serial.print(">>");
   char buf[4];
-  for (uint8_t a=0; a<*writeSize; a++) { sprintf(buf,"%02X ",(uint8_t)writeBuffer[a]); Serial.print(buf); } Serial.println();
+  for (byte a=0; a<*writeSize; a++) { sprintf(buf,"%02X ",(byte)writeBuffer[a]); Serial.print(buf); } Serial.println();
 #endif
-  server.write((const uint8_t *)writeBuffer, *writeSize);
+  // Check whether to respond to a single client or write to all
+  if (currentClient != NULL)
+    currentClient->write((const byte *)writeBuffer, *writeSize);
+  else
+    server.write((const byte *)writeBuffer, *writeSize);
 }
 
 int main(void) {
