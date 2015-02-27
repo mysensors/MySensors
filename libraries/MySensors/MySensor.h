@@ -260,7 +260,7 @@ class MySensor
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
 	uint8_t failedTransmissions;
-	uint8_t *childNodeTable; // In memory buffer for routing information to other nodes. also stored in EEPROM
+	uint8_t childNodeTable[256]; // In memory buffer for routing information to other nodes. also stored in EEPROM
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 

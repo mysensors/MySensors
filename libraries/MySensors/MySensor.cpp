@@ -107,7 +107,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 }
 
 void MySensor::setupRepeaterMode(){
-	childNodeTable = new uint8_t[256];
+//	childNodeTable = new uint8_t[256];
 	eeprom_read_block((void*)childNodeTable, (void*)EEPROM_ROUTES_ADDRESS, 256);
 }
 

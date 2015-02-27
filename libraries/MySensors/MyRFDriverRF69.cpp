@@ -1,8 +1,11 @@
 #include "MyRFDriver.h"
 #include "MyRFDriverRF69.h"
 
-MyRFDriverRF69::MyRFDriverRF69() : MyRFDriver() {
-	radio = new RFM69();
+MyRFDriverRF69::MyRFDriverRF69()
+	:
+	MyRFDriver(),
+	radio()
+{
 }
 
 void MyRFDriverRF69::init() {
