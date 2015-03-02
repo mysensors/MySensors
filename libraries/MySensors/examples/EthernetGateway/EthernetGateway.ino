@@ -43,14 +43,16 @@
 #include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
 #include <SPI.h>  
 
-#include <MySigningNone.h>
 #include <MyTransportNRF24.h>
+#include <MyHwATMega328.h>
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
 #include <MsTimer2.h>
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
+#include <MySigningAtsha204.h>
+#include <MyTransportNRF24.h>
 
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
@@ -63,6 +65,7 @@
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
 
+#define W5100_SPI_EN        4  // W5100 Ethernet module SPI enable (optional if using a shield/module that manages SPI_EN signal)
 #define RADIO_CE_PIN        5  // radio chip enable
 #define RADIO_SPI_SS_PIN    6  // radio SPI serial select
 
@@ -72,19 +75,29 @@
 
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
-// Message signing driver (none default)
-MySigningNone signer;
+MyTransportNRF24 radio(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
+MyHwATMega328 hw; // Select AtMega328 hardware profile
+#ifdef MY_SECURE_NODE_WHITELISTING
+// We do not expect any node to send us signed data since we do not request it
+// Provide and populate this whitelist with proper values in case we change our mind
+whitelist_entry_t node_whitelist[] = {
+  { .nodeId = 101, // Just some value, this need to be changed 
+    .serial = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09} }
+};
+MySigningAtsha204 signer(false, 1, node_whitelist);  // Message signing driver
+#else
+MySigningAtsha204 signer(false);  // Message signing driver
+#endif
 // Construct MySensors library
-MySensor gw(radio, signer);
+MySensor gw(radio, hw, signer);
 
 #define IP_PORT 5003        // The port you want to open 
-IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!
+IPAddress myIp (192, 168, 10, 5);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!
 
 // The MAC address can be anything you want but should be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
 // Note that most of the Ardunio examples use  "DEAD BEEF FEED" for the MAC address.
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // DEAD BEEF FEED
+byte mac[] = { 0x00, 0x10, 0x20, 0x30, 0x40, 0x50 };
 
 // a R/W server on the port
 EthernetServer server = EthernetServer(IP_PORT);
@@ -95,18 +108,41 @@ char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming comma
 int inputPos = 0;
 bool sentReady = false;
 
+void w5100_spi_en(boolean enable)
+{
+#ifdef W5100_SPI_EN
+  if (enable)
+  {
+    // Pull up pin
+    pinMode(W5100_SPI_EN, INPUT);
+    digitalWrite(W5100_SPI_EN, HIGH);
+  }
+  else
+  {
+    // Ground pin
+    pinMode(W5100_SPI_EN, OUTPUT);
+    digitalWrite(W5100_SPI_EN, LOW);
+  }
+#endif
+}
+
 void output(const char *fmt, ... ) {
    va_list args;
    va_start (args, fmt );
    vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
    va_end (args);
    Serial.print(serialBuffer);
+   w5100_spi_en(true);
    client.write(serialBuffer);
+   w5100_spi_en(false);
 }
 
 void setup()  
 { 
+
+  w5100_spi_en(true);
   Ethernet.begin(mac, myIp);
+  w5100_spi_en(false);
   setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
 
   // Add led timer interrupt
@@ -134,6 +170,7 @@ void loop() {
   
   checkButtonTriggeredInclusion();
   checkInclusionFinished();
+  w5100_spi_en(true);
   
   // if an incoming client connects, there will be
   // bytes available to read via the client object
@@ -156,7 +193,6 @@ void loop() {
        if (inputPos<MAX_RECEIVE_LENGTH-1) { 
          // if newline then command is complete
          if (inChar == '\n') {  
-           Serial.println("Finished");
             // a command was issued by the client
             // we will now try to send it to the actuator
             inputString[inputPos] = 0;
@@ -164,6 +200,7 @@ void loop() {
             // echo the string to the serial port
             Serial.print(inputString);
       
+            w5100_spi_en(false);
             parseAndSend(gw, inputString);
       
             // clear the string:
@@ -179,6 +216,7 @@ void loop() {
       }
     }
   }
+  w5100_spi_en(false);
 }
 
 
