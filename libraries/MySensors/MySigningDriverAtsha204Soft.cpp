@@ -40,9 +40,10 @@ static void DEBUG_ATSHASOFT_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #define DEBUG_ATSHASOFT_PRINTBUF(str, buf, sz)
 #endif
 
-MySigningDriverAtsha204Soft::MySigningDriverAtsha204Soft()
+MySigningDriverAtsha204Soft::MySigningDriverAtsha204Soft(bool requestSignatures, uint8_t randomseedPin)
 	:
-	MySigningDriver(),
+	MySigningDriver(requestSignatures),
+	rndPin(randomseedPin),
 	hmacKey({MY_HMAC_KEY}),
 	verification_ongoing(false),
 	Sha256()
@@ -54,7 +55,7 @@ MySigningDriverAtsha204Soft::MySigningDriverAtsha204Soft()
 
 bool MySigningDriverAtsha204Soft::getNonce(MyMessage &msg) {
 	// Set randomseed
-	randomSeed(analogRead(MY_RANDOMSEED_PIN));
+	randomSeed(analogRead(rndPin));
 	for (int i = 0; i < MAX_PAYLOAD; i++)
 	{
 		current_nonce[i] = random(255);

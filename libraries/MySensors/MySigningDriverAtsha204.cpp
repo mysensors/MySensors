@@ -36,10 +36,10 @@ static void DEBUG_ATSHA_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #endif
 
 
-MySigningDriverAtsha204::MySigningDriverAtsha204()
+MySigningDriverAtsha204::MySigningDriverAtsha204(bool requestSignatures, uint8_t atshaPin)
 	:
-	MySigningDriver(),
-	atsha204(MY_ATSHA204_PIN),
+	MySigningDriver(requestSignatures),
+	atsha204(atshaPin),
 	verification_ongoing(false)
 {
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA

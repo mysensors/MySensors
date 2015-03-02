@@ -62,9 +62,6 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 #include <Ethernet.h>
 #include "MyMQTT.h"
 
-#ifndef MYSENSORS_MQTT_GATEWAY
-#error Please switch to MYSENSORS_MQTT_GATEWAY in MyConfig.h
-#endif
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button

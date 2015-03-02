@@ -17,7 +17,7 @@
  * 
  *
  * COMPILING WIZNET (W5100) ETHERNET MODULE
- * > Edit RF24_config.h in (libraries\MySensors\utility) to enable softspi (remove // before "#define SOFTSPI").
+ * > Edit MyConfig.h in (libraries\MySensors\) to enable softspi (remove // before "#define SOFTSPI").
  *
  * COMPILING ENC28J60 ETHERNET MODULE
  * > Use Arduino IDE 1.5.7 (or later) 
@@ -42,18 +42,17 @@
 
 #include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
 #include <SPI.h>  
+
+#include <MyParserSerial.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
 #include <MsTimer2.h>
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
 
-#ifndef MYSENSORS_ETHERNET_GATEWAY
-#error Please switch to MYSENSORS_ETHERNET_GATEWAY in MyConfig.h
-#endif
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
-//#include <UIPEthernet.h>  
+// #include <UIPEthernet.h>  
 
 // Use this for WizNET W5100 module and Arduino Ethernet Shield 
 #include <Ethernet.h>   

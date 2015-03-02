@@ -1,8 +1,6 @@
 // Example sketch showing how to control physical relays. 
 // This example will remember relay state even after power failure.
 
-#include <MySigningDriverNone.h>
-#include <MyRFDriverNRF24.h>
 #include <MySensor.h>
 #include <SPI.h>
 
@@ -11,9 +9,7 @@
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
-MyRFDriverNRF24 radio;  // NRFRF24L01 radio driver
-MySigningDriverNone signer;  // Message signing disabled
-MySensor gw(radio, signer);
+MySensor gw;
 
 void setup()  
 {   

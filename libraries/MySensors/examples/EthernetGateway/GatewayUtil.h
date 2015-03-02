@@ -23,7 +23,7 @@ volatile uint8_t countErr;
 boolean inclusionMode; // Keeps track on inclusion mode
 void (*serial)(const char *fmt, ... );
 
-MyParserClass parser;
+MyParserSerial parser;
 
 void setInclusionMode(boolean newMode);
 void txBlink(uint8_t cnt);

@@ -20,7 +20,7 @@
 class MySigningDriverAtsha204 : public MySigningDriver
 { 
 public:
-	MySigningDriverAtsha204();
+	MySigningDriverAtsha204(bool requestSignatures=true, uint8_t atshaPin = MY_ATSHA204_PIN);
 	bool getNonce(MyMessage &msg);
 	bool checkTimer(void);
 	bool putNonce(MyMessage &msg);

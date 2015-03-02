@@ -45,12 +45,11 @@ MySensor::MySensor(MyRFDriver &_radio, MySigningDriver &_signer)
 }
 
 
-void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId, bool requestSignatures) {
+void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
 	Serial.begin(BAUD_RATE);
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;
-	requireSigning = requestSignatures;
 
 	// Only gateway should use node id 0
 	isGateway = _nodeId == 0;
@@ -137,7 +136,7 @@ void MySensor::setupNode() {
 		present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
 
 		// Notify gateway (and possibly controller) about the signing preferences of this node
-		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(requireSigning));
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(signer.requestSignatures()));
 
 		// Send a configuration exchange request to controller
 		// Node sends parent node. Controller answers with latest node configuration
@@ -315,7 +314,7 @@ boolean MySensor::process() {
 
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 	// Note that we do not care at all about any signature found if we do not require signing
-	if (requireSigning && msg.destination == nc.nodeId && mGetLength(msg) &&
+	if (signer.requestSignatures() && msg.destination == nc.nodeId && mGetLength(msg) &&
 		(mGetCommand(msg) != C_INTERNAL || (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING))) {
 		if (!mGetSigned(msg)) return false; // Received an unsigned message but we do require signing. This message gets nowhere!
 		else if (!signer.verifyMsg(msg)) {
@@ -403,7 +402,7 @@ boolean MySensor::process() {
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
 				// to sign it's messages
 				if (isGateway) {
-					if (requireSigning && DO_SIGN(msg.sender))
+					if (signer.requestSignatures() && DO_SIGN(msg.sender))
 						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
 					else
 						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));

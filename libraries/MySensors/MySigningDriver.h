@@ -16,7 +16,11 @@ public:
 	// MySigningDriver constructor.
 	// Different parameters would be needed depending on signing backend (e.g. pins connected etc.).
 	// Keeping these parameters as #define's in MyConfig to streamline the driver interface.
-	MySigningDriver();
+	// @param requestSignatures Set this to true if you want destination node to sign all messages sent to this node. Default is not to require signing.
+	MySigningDriver(bool requestSignatures=false);
+
+	// Returns the current requestSignature setting
+	bool requestSignatures();
 
 	// Stores signing identifier and a new nonce in provided message for signing operations.
 	// All space in message payload buffer is used for signing identifier and nonce.
@@ -55,6 +59,9 @@ public:
 	// This ends a signing operation at the receiving side so implementation is expected to do any
 	// deinitializations and enter a power saving state within this call.
 	virtual bool verifyMsg(MyMessage &msg) = 0;
+
+	public:
+		bool _requestSignatures;
 };
 
 #endif

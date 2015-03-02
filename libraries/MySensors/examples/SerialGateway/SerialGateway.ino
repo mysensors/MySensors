@@ -24,15 +24,12 @@
 #define NO_PORTB_PINCHANGES  
 
 #include <SPI.h>  
+#include <MyParserSerial.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
 #include <MsTimer2.h>
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
-
-#ifndef MYSENSORS_SERIAL_GATEWAY
-#error Please switch to MYSENSORS_SERIAL_GATEWAY in MyConfig.h
-#endif
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button

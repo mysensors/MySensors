@@ -1,24 +1,24 @@
 // Example sketch showing how to securely control locks. 
 // This example will remember lock state even after power failure.
 
+#include <MySigningDriverAtsha204Soft.h>
+#include <MyRFDriverNRF24.h>
 #include <MySensor.h>
 #include <SPI.h>
-
-#ifndef MYSENSORS_SENSOR
-#error Please switch to MYSENSORS_SENSOR in MyConfig.h
-#endif
 
 #define LOCK_1  3  // Arduino Digital I/O pin number for first lock (second on pin+1 etc)
 #define NOF_LOCKS 1 // Total number of attached locks
 #define LOCK_LOCK 1  // GPIO value to write to lock attached lock
 #define LOCK_UNLOCK 0 // GPIO value to write to unlock attached lock
 
-MySensor gw;
+MyRFDriverNRF24 radio;  // NRFRF24L01 radio driver
+MySigningDriverAtsha204Soft signer;  // Message signing driver
+MySensor gw(radio, signer);
 
 void setup()  
 {   
   // Initialize library and add callback for incoming messages (signing is required)
-  gw.begin(incomingMessage, AUTO, true, AUTO, true);
+  gw.begin(incomingMessage, AUTO, true, AUTO);
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Secure Lock", "1.0");
 

@@ -4,10 +4,6 @@
 #include <DallasTemperature.h>
 #include <OneWire.h>
 
-#ifndef MYSENSORS_SENSOR
-#error Please switch to MYSENSORS_SENSOR in MyConfig.h
-#endif
-
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
 #define MAX_ATTACHED_DS18B20 16
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)

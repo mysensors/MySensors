@@ -7,10 +7,6 @@
 #include "utility/RF24.h"
 #include "utility/RF24_config.h"
 
-#define RF24_CHANNEL	   76             //RF channel for the sensor net, 0-127
-#define RF24_DATARATE 	   RF24_250KBPS   //RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
-#define RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL) // This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
-
 #define TO_ADDR(x) (RF24_BASE_RADIO_ID + x)
 
 #define WRITE_PIPE ((uint8_t)0)

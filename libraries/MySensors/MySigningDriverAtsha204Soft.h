@@ -24,11 +24,11 @@
 // Because it is completly software based, the quality of the generated random numbers
 // is weaker though. Random numbers are generated using the Arduino library and seed
 // is sampled from an analog pin. This pin should unconnected in the hardware.
-// The pin is selected using RANDOMSEED_PIN in MyConfig.h.
+// The pin is selected using MY_RANDOMSEED_PIN in MyConfig.h.
 class MySigningDriverAtsha204Soft : public MySigningDriver
 { 
 public:
-	MySigningDriverAtsha204Soft();
+	MySigningDriverAtsha204Soft(bool requestSignatures=true, uint8_t randomseedPin = MY_RANDOMSEED_PIN);
 	bool getNonce(MyMessage &msg);
 	bool checkTimer(void);
 	bool putNonce(MyMessage &msg);
@@ -41,6 +41,7 @@ private:
 	uint8_t current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];
 	uint8_t temp_message[32];
 	uint8_t hmacKey[32];
+	uint8_t rndPin;
 	uint8_t* hmac;
 	bool calculateSignature(MyMessage &msg);
 };
