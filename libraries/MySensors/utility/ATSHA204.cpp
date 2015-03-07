@@ -447,11 +447,18 @@ uint8_t atsha204Class::sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t
 			response_size = RANDOM_RSP_SIZE;
 			break;
 
-		case SHA204_WRITE:
-			poll_delay = WRITE_DELAY;
-			poll_timeout = WRITE_EXEC_MAX - WRITE_DELAY;
-			response_size = WRITE_RSP_SIZE;
+		case SHA204_SHA:
+			poll_delay = SHA_DELAY;
+			poll_timeout = SHA_EXEC_MAX - SHA_DELAY;
+      response_size = param1 == SHA_INIT
+                ? SHA_RSP_SIZE_SHORT : SHA_RSP_SIZE_LONG;
 			break;
+
+    case SHA204_WRITE:
+      poll_delay = WRITE_DELAY;
+      poll_timeout = WRITE_EXEC_MAX - WRITE_DELAY;
+      response_size = WRITE_RSP_SIZE;
+      break;
 
 		default:
 			poll_delay = 0;

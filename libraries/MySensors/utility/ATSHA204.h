@@ -59,6 +59,7 @@
 #define SHA204_HMAC                     ((uint8_t) 0x11)       //!< HMAC command op-code
 #define SHA204_NONCE                    ((uint8_t) 0x16)       //!< Nonce command op-code
 #define SHA204_RANDOM                   ((uint8_t) 0x1B)       //!< Random command op-code
+#define SHA204_SHA                      ((uint8_t) 0x47)       //!< SHA command op-code
 #define SHA204_WRITE                    ((uint8_t) 0x12)       //!< Write command op-code
 
 // packet size definitions
@@ -122,6 +123,15 @@
 #define RANDOM_SEED_UPDATE              ((uint8_t) 0x00)       //!< Random mode for automatic seed update
 #define RANDOM_NO_SEED_UPDATE           ((uint8_t) 0x01)       //!< Random mode for no seed update
 
+// SHA command definitions
+#define SHA_MODE_IDX                    SHA204_PARAM1_IDX      //!< SHA command index for mode
+#define SHA_PARAM2_IDX                  SHA204_PARAM2_IDX      //!< SHA command index for 2. parameter
+#define SHA_COUNT_SHORT                 SHA204_CMD_SIZE_MIN    //!< SHA command packet size for init
+#define SHA_COUNT_LONG                  (71)                   //!< SHA command packet size for calculation
+#define SHA_MSG_SIZE                    (64)                   //!< SHA message data size
+#define SHA_INIT                        ((uint8_t) 0x00)       //!< SHA mode for init
+#define SHA_CALC                        ((uint8_t) 0x01)       //!< SHA mode for calculation
+
 // Write command definitions
 #define WRITE_ZONE_IDX                  SHA204_PARAM1_IDX      //!< Write command index for zone
 #define WRITE_ADDR_IDX                  SHA204_PARAM2_IDX      //!< Write command index for address
@@ -142,6 +152,8 @@
 #define NONCE_RSP_SIZE_SHORT            SHA204_RSP_SIZE_MIN    //!< response size of Nonce command with mode[0:1] = 3
 #define NONCE_RSP_SIZE_LONG             SHA204_RSP_SIZE_MAX    //!< response size of Nonce command
 #define RANDOM_RSP_SIZE                 SHA204_RSP_SIZE_MAX    //!< response size of Random command
+#define SHA_RSP_SIZE_SHORT              SHA204_RSP_SIZE_MIN    //!< response size of SHA command with mode[0:1] = 0
+#define SHA_RSP_SIZE_LONG               SHA204_RSP_SIZE_MAX    //!< response size of SHA command
 #define WRITE_RSP_SIZE                  SHA204_RSP_SIZE_MIN    //!< response size of Write command
 
 // command timing definitions for minimum execution times (ms)
@@ -149,6 +161,7 @@
 #define HMAC_DELAY                      ((uint8_t) (27.0 * CPU_CLOCK_DEVIATION_NEGATIVE - 0.5))
 #define NONCE_DELAY                     ((uint8_t) (22.0 * CPU_CLOCK_DEVIATION_NEGATIVE - 0.5))
 #define RANDOM_DELAY                    ((uint8_t) (11.0 * CPU_CLOCK_DEVIATION_NEGATIVE - 0.5))
+#define SHA_DELAY                       ((uint8_t) (11.0 * CPU_CLOCK_DEVIATION_NEGATIVE - 0.5))
 #define WRITE_DELAY                     ((uint8_t) ( 4.0 * CPU_CLOCK_DEVIATION_NEGATIVE - 0.5))
 
 // command timing definitions for maximum execution times (ms)
@@ -156,6 +169,7 @@
 #define HMAC_EXEC_MAX                    ((uint8_t) (69.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))
 #define NONCE_EXEC_MAX                   ((uint8_t) (60.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))
 #define RANDOM_EXEC_MAX                  ((uint8_t) (50.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))
+#define SHA_EXEC_MAX                     ((uint8_t) (22.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))
 #define WRITE_EXEC_MAX                   ((uint8_t) (42.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))
 
 /* from sha204_config.h */
@@ -172,7 +186,7 @@
 
 #define SHA204_COMMAND_EXEC_MAX      ((uint8_t) (69.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))  //! maximum command delay
 #define SHA204_CMD_SIZE_MIN          ((uint8_t)  7)  //! minimum number of bytes in command (from count byte to second CRC byte)
-#define SHA204_CMD_SIZE_MAX          ((uint8_t) NONCE_COUNT_LONG)  //! maximum size of command packet (Nonce)
+#define SHA204_CMD_SIZE_MAX          ((uint8_t) SHA_COUNT_LONG)  //! maximum size of command packet (SHA)
 #define SHA204_CRC_SIZE              ((uint8_t)  2)  //! number of CRC bytes
 #define SHA204_BUFFER_POS_STATUS     (1)  //! buffer index of status byte in status response
 #define SHA204_BUFFER_POS_DATA       (1)  //! buffer index of first data byte in data response

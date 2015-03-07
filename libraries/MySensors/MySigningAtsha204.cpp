@@ -215,3 +215,29 @@ bool MySigningAtsha204::calculateSignature(MyMessage &msg) {
 	DEBUG_ATSHA_PRINTBUF("HMAC:", &rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 	return true; // We return with the signature in rx_buffer[SHA204_BUFFER_POS_DATA]
 }
+
+// Helper to calculate a generic SHA256 digest of provided buffer (returned in rx_buffer[SHA204_BUFFER_POS_DATA]) (only supports one block)
+uint8_t* MySigningAtsha204::sha256(const uint8_t* data, size_t sz) {
+	// Initiate SHA256 calculator
+	if (atsha204.sha204m_execute(SHA204_SHA, SHA_INIT, 0, 0, NULL,
+									SHA_COUNT_SHORT, tx_buffer, SHA_RSP_SIZE_SHORT, rx_buffer) != SHA204_SUCCESS) {
+		DEBUG_ATSHA_PRINTLN("Failed to initiate sha256");
+		return NULL;
+	}
+
+	// Calculate a hash
+	memset(temp_message, 0x00, SHA_MSG_SIZE);
+	memcpy(temp_message, data, sz);
+	temp_message[sz] = 0x80;
+	// Write length data to the last bytes
+	temp_message[SHA_MSG_SIZE-2] = (sz >> 5);
+	temp_message[SHA_MSG_SIZE-1] = (sz << 3);
+	DEBUG_ATSHA_PRINTBUF("Data to hash (padded):", temp_message, SHA_MSG_SIZE);
+	if (atsha204.sha204m_execute(SHA204_SHA, SHA_CALC, 0, SHA_MSG_SIZE, temp_message,
+									SHA_COUNT_LONG, tx_buffer, SHA_RSP_SIZE_LONG, rx_buffer) != SHA204_SUCCESS) {
+		DEBUG_ATSHA_PRINTLN("Failed to calculate sha256");
+		return NULL;
+	}
+	DEBUG_ATSHA_PRINTBUF("SHA:", &rx_buffer[SHA204_BUFFER_POS_DATA], 32);
+	return &rx_buffer[SHA204_BUFFER_POS_DATA];
+}
