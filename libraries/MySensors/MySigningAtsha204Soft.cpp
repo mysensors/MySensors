@@ -49,17 +49,24 @@ MySigningAtsha204Soft::MySigningAtsha204Soft(bool requestSignatures, uint8_t ran
 	Sha256()
 
 {
-	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
-	memset(current_nonce, 0xAA, sizeof(current_nonce));
 }
 
 bool MySigningAtsha204Soft::getNonce(MyMessage &msg) {
 	// Set randomseed
 	randomSeed(analogRead(rndPin));
-	for (int i = 0; i < MAX_PAYLOAD; i++)
-	{
-		current_nonce[i] = random(255);
+
+	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
+	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	Sha256.init();
+	for (int i = 0; i < 32; i++) {
+		Sha256.write(random(255));
 	}
+	memcpy(current_nonce, Sha256.result(), MAX_PAYLOAD);
+
+	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
+	memset(&current_nonce[MAX_PAYLOAD], 0xAA, sizeof(current_nonce)-MAX_PAYLOAD);
+
+	// Replace the first byte in the nonce with our signing identifier
 	current_nonce[0] = SIGNING_IDENTIFIER;
 	
 	// Transfer the first part of the nonce to the message

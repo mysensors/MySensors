@@ -42,31 +42,43 @@ MySigningAtsha204::MySigningAtsha204(bool requestSignatures, uint8_t atshaPin)
 	atsha204(atshaPin),
 	verification_ongoing(false)
 {
-	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
-	memset(current_nonce, 0xAA, sizeof(current_nonce));
 }
 
 bool MySigningAtsha204::getNonce(MyMessage &msg) {
-	// Wake device before starting operations
-	if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) {
-		DEBUG_ATSHA_PRINTLN("Failed to wake device");
-		return false; 
-	}
-
 	// Generate random number for use as nonce
-	if (atsha204.sha204m_execute(SHA204_RANDOM, RANDOM_NO_SEED_UPDATE, 0, 0, NULL,
-									RANDOM_COUNT, tx_buffer, RANDOM_RSP_SIZE, rx_buffer) != SHA204_SUCCESS) {
-		DEBUG_ATSHA_PRINTLN("Failed to generate nonce");
-		return false; 
+	uint8_t* pRnd = NULL;
+	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
+	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	for (int i = 0; i < 32; i++) {
+		// Wake device before starting operations
+		if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) {
+			DEBUG_ATSHA_PRINTLN("Failed to wake device");
+			return false;
+		}
+		if (atsha204.sha204m_execute(SHA204_RANDOM, RANDOM_NO_SEED_UPDATE, 0, 0, NULL,
+											RANDOM_COUNT, tx_buffer, RANDOM_RSP_SIZE, rx_buffer) != SHA204_SUCCESS) {
+			DEBUG_ATSHA_PRINTLN("Failed to generate nonce");
+			return false;
+		}
+		atsha204.sha204c_sleep();
+		current_nonce[i] = rx_buffer[SHA204_BUFFER_POS_DATA];
 	}
-
-	// We can put the device back to sleep as we will program the nonce once we do the verification
+	pRnd = sha256(current_nonce, 32);
 	atsha204.sha204c_sleep();
 
-	// Store nonce and replace the first byte in the nonce with our signing identifier
-	memcpy(current_nonce, &rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD);
+	if (!pRnd) {
+		DEBUG_ATSHA_PRINTLN("Failed to hash random value");
+		return false;
+	}
+
+	memcpy(current_nonce, pRnd, MAX_PAYLOAD);
+
+	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
+	memset(&current_nonce[MAX_PAYLOAD], 0xAA, sizeof(current_nonce)-MAX_PAYLOAD);
+
+	// Replace the first byte in the nonce with our signing identifier
 	current_nonce[0] = SIGNING_IDENTIFIER;
-	
+
 	// Transfer the first part of the nonce to the message
 	msg.set(current_nonce, MAX_PAYLOAD);
 	verification_ongoing = true;
@@ -218,6 +230,12 @@ bool MySigningAtsha204::calculateSignature(MyMessage &msg) {
 
 // Helper to calculate a generic SHA256 digest of provided buffer (returned in rx_buffer[SHA204_BUFFER_POS_DATA]) (only supports one block)
 uint8_t* MySigningAtsha204::sha256(const uint8_t* data, size_t sz) {
+	// Wake device before starting operations
+	if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) {
+		DEBUG_ATSHA_PRINTLN("Failed to wake device");
+		return NULL; 
+	}
+
 	// Initiate SHA256 calculator
 	if (atsha204.sha204m_execute(SHA204_SHA, SHA_INIT, 0, 0, NULL,
 									SHA_COUNT_SHORT, tx_buffer, SHA_RSP_SIZE_SHORT, rx_buffer) != SHA204_SUCCESS) {
