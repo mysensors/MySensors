@@ -57,12 +57,9 @@
 #endif
 
 #ifdef USER_KEY_DATA
-const uint8_t user_key_data[32] = {
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-};
+#define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+const uint8_t user_key_data[32] = {MY_HMAC_KEY};
 #endif
 
 const int sha204Pin = ATSHA204_PIN;
@@ -796,7 +793,7 @@ void setup()
     }
 #endif //not SKIP_UART_CONFIRMATION
 #else //LOCK_CONFIGURATION
-    Serial.println(F("Dry-run. Configuration not locked. Define LOCK_CONFIGURATION to lock for real."));
+    Serial.println(F("Configuration not locked. Define LOCK_CONFIGURATION to lock for real."));
 #endif
   }
   else
@@ -833,6 +830,7 @@ void setup()
     Serial.println(F("Key is not randomized (configuration not locked):"));
   }
 #endif
+  Serial.print("#define MY_HMAC_KEY ");
   for (int i=0; i<32; i++)
   {
     Serial.print("0x");
@@ -842,7 +840,7 @@ void setup()
     }
     Serial.print(key[i], HEX);
     if (i < 31) Serial.print(',');
-    if (!((i+1) % 8)) Serial.println();
+    if (i+1 == 16) Serial.print("\\\n                    ");
   }
   Serial.println();
 
@@ -937,7 +935,7 @@ void setup()
     }
 #endif //not SKIP_UART_CONFIRMATION
 #else //LOCK_DATA
-    Serial.println(F("Dry-run. Data not locked. Define LOCK_DATA to lock for real."));
+    Serial.println(F("Data not locked. Define LOCK_DATA to lock for real."));
 #endif
   }
   else
