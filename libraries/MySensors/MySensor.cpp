@@ -14,9 +14,9 @@
 #define DISTANCE_INVALID (0xFF)
 
 // Macros for manipulating signing requirement table
-#define DO_SIGN(node) (doSign[node>>4]&(node%16))
-#define SET_SIGN(node) (doSign[node>>4]|=(node%16))
-#define CLEAR_SIGN(node) (doSign[node>>4]&=~(node%16))
+#define DO_SIGN(node) (node == 0 ? (~doSign[0]&1) : (~doSign[node>>4]&(node%16)))
+#define SET_SIGN(node) (node == 0 ? (doSign[0]&=~1) : (doSign[node>>4]&=~(node%16)))
+#define CLEAR_SIGN(node) (node == 0 ? (doSign[0]|=1) : (doSign[node>>4]|=(node%16)))
 
 // Inline function and macros
 static inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
@@ -132,11 +132,16 @@ void MySensor::setupNode() {
 
 	// Present node and request config
 	if (!isGateway && nc.nodeId != AUTO) {
-		// Send presentation for this radio node (attach
-		present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
-
 		// Notify gateway (and possibly controller) about the signing preferences of this node
 		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(signer.requestSignatures()));
+
+		// If we do require signing, wait for the gateway to tell us how it perfer us to transmit our messages
+		if (signer.requestSignatures()) {
+			wait(2000);
+		}
+
+		// Send presentation for this radio node (attach
+		present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
 
 		// Send a configuration exchange request to controller
 		// Node sends parent node. Controller answers with latest node configuration
@@ -185,9 +190,12 @@ boolean MySensor::sendRoute(MyMessage &message) {
 
 	mSetVersion(message, PROTOCOL_VERSION);
 
-	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a signing handshake message
+	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
 	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(msg) &&
-		(mGetCommand(message) != C_INTERNAL || (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING))) {
+		(mGetCommand(message) != C_INTERNAL ||
+		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
+		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
+		  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
 		if (!sign(message)) {
 			debug(PSTR("Message signing failed\n"));
 			return false;
@@ -313,10 +321,16 @@ boolean MySensor::process() {
 	uint8_t len = radio.receive((uint8_t *)&msg);
 
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
-	// Note that we do not care at all about any signature found if we do not require signing
-	if (signer.requestSignatures() && msg.destination == nc.nodeId && mGetLength(msg) &&
-		(mGetCommand(msg) != C_INTERNAL || (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING))) {
-		if (!mGetSigned(msg)) return false; // Received an unsigned message but we do require signing. This message gets nowhere!
+	// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
+	if (signer.requestSignatures() && msg.destination == nc.nodeId && mGetLength(msg) && !mGetAck(msg) &&
+		(mGetCommand(msg) != C_INTERNAL ||
+		 (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING &&
+		  msg.type != I_ID_REQUEST && msg.type != I_ID_RESPONSE &&
+		  msg.type != I_FIND_PARENT && msg.type != I_FIND_PARENT_RESPONSE))) {
+		if (!mGetSigned(msg)) {
+			debug(PSTR("Got unsigned message that should have been signed\n"));
+			return false;
+		}
 		else if (!signer.verifyMsg(msg)) {
 			debug(PSTR("Message verification failed\n"));
 			return false; // This signed message has been tampered with!
@@ -383,10 +397,9 @@ boolean MySensor::process() {
 				return false;
 			} else if (type == I_GET_NONCE) {
 				if (signer.getNonce(msg)) {
-					sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
-				} else {
-					return false;
+					sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
 				}
+				return false; // Nonce exchange is an internal MySensor protocol message, no need to inform caller about this
 			} else if (type == I_REQUEST_SIGNING) {
 				if (msg.getBool()) {
 					// We received an indicator that the sender require us to sign all messages we send to it
@@ -407,6 +420,9 @@ boolean MySensor::process() {
 					else
 						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 				}
+				return false; // Signing request is an internal MySensor protocol message, no need to inform caller about this
+			} else if (type == I_GET_NONCE_RESPONSE) {
+				return true; // Just pass along nonce silently (no need to call callback for these)
 			} else if (sender == GATEWAY_ADDRESS) {
 				bool isMetric;
 
