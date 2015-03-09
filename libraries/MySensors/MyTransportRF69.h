@@ -1,8 +1,8 @@
-#ifndef MyRFDriverRF69_h
-#define MyRFDriverRF69_h
+#ifndef MyTransportRF69_h
+#define MyTransportRF69_h
 
 #include "MyConfig.h"
-#include "MyRFDriver.h"
+#include "MyTransport.h"
 #include <stdint.h>
 #include "utility/RFM69.h"
 #include <SPI.h>
@@ -25,10 +25,10 @@
   #define FLASH_SS      8 // and FLASH SS on D8
 #endif
 
-class MyRFDriverRF69 : public MyRFDriver
+class MyTransportRF69 : public MyTransport
 { 
 public:
-	MyRFDriverRF69();
+	MyTransportRF69();
 	void init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();

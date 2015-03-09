@@ -24,7 +24,7 @@
 #define NO_PORTB_PINCHANGES  
 
 #include <MySigningDriverNone.h>
-#include <MyRFDriverNRF24.h>
+#include <MyTransportNRF24.h>
 #include <SPI.h>  
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
@@ -41,7 +41,7 @@
 
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyRFDriverNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
 // Message signing driver (none default)
 MySigningDriverNone signer;
 // Construct MySensors library

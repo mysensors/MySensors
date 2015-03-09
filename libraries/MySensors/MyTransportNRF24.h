@@ -1,8 +1,8 @@
-#ifndef MyRFDriverNRF24_h
-#define MyRFDriverNRF24_h
+#ifndef MyTransportNRF24_h
+#define MyTransportNRF24_h
 
 #include "MyConfig.h"
-#include "MyRFDriver.h"
+#include "MyTransport.h"
 #include <stdint.h>
 #include "utility/RF24.h"
 #include "utility/RF24_config.h"
@@ -13,10 +13,10 @@
 #define CURRENT_NODE_PIPE ((uint8_t)1)
 #define BROADCAST_PIPE ((uint8_t)2)
 
-class MyRFDriverNRF24 : public MyRFDriver
+class MyTransportNRF24 : public MyTransport
 { 
 public:
-	MyRFDriverNRF24(uint8_t ce=RF24_CE_PIN, uint8_t cs=RF24_CS_PIN, uint8_t paLevel=RF24_PA_LEVEL);
+	MyTransportNRF24(uint8_t ce=RF24_CE_PIN, uint8_t cs=RF24_CS_PIN, uint8_t paLevel=RF24_PA_LEVEL);
 	void init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();

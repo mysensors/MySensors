@@ -1,15 +1,15 @@
-#include "MyRFDriver.h"
-#include "MyRFDriverNRF24.h"
+#include "MyTransport.h"
+#include "MyTransportNRF24.h"
 
-MyRFDriverNRF24::MyRFDriverNRF24(uint8_t ce, uint8_t cs, uint8_t paLevel)
+MyTransportNRF24::MyTransportNRF24(uint8_t ce, uint8_t cs, uint8_t paLevel)
 	:
-	MyRFDriver(),
+	MyTransport(),
 	rf24(ce, cs),
 	_paLevel(paLevel)
 {
 }
 
-void MyRFDriverNRF24::init() {
+void MyTransportNRF24::init() {
 	// Start up the radio library
 	rf24.begin();
 
@@ -31,18 +31,18 @@ void MyRFDriverNRF24::init() {
 	rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
 }
 
-void MyRFDriverNRF24::setAddress(uint8_t address) {
+void MyTransportNRF24::setAddress(uint8_t address) {
 	_address = address;
 	rf24.openReadingPipe(WRITE_PIPE, TO_ADDR(address));
 	rf24.openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(address));
 	rf24.startListening();
 }
 
-uint8_t MyRFDriverNRF24::getAddress() {
+uint8_t MyTransportNRF24::getAddress() {
 	return _address;
 }
 
-bool MyRFDriverNRF24::send(uint8_t to, const void* data, uint8_t len) {
+bool MyTransportNRF24::send(uint8_t to, const void* data, uint8_t len) {
 	// Make sure radio has powered up
 	rf24.powerUp();
 	rf24.stopListening();
@@ -52,7 +52,7 @@ bool MyRFDriverNRF24::send(uint8_t to, const void* data, uint8_t len) {
 	return ok;
 }
 
-bool MyRFDriverNRF24::available(uint8_t *to) {
+bool MyTransportNRF24::available(uint8_t *to) {
 	uint8_t pipe = 255;
 	boolean avail = rf24.available(&pipe);
 	if (pipe == CURRENT_NODE_PIPE)
@@ -62,12 +62,12 @@ bool MyRFDriverNRF24::available(uint8_t *to) {
 	return (rf24.available() && pipe < 6);
 }
 
-uint8_t MyRFDriverNRF24::receive(void* data) {
+uint8_t MyTransportNRF24::receive(void* data) {
 	uint8_t len = rf24.getDynamicPayloadSize();
 	rf24.read(data, len);
 	return len;
 }
 
-void MyRFDriverNRF24::powerDown() {
+void MyTransportNRF24::powerDown() {
 	rf24.powerDown();
 }

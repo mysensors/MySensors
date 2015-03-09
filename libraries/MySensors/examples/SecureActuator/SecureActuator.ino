@@ -2,7 +2,7 @@
 // This example will remember lock state even after power failure.
 
 #include <MySigningDriverAtsha204Soft.h>
-#include <MyRFDriverNRF24.h>
+#include <MyTransportNRF24.h>
 #include <MySensor.h>
 #include <SPI.h>
 
@@ -11,7 +11,7 @@
 #define LOCK_LOCK 1  // GPIO value to write to lock attached lock
 #define LOCK_UNLOCK 0 // GPIO value to write to unlock attached lock
 
-MyRFDriverNRF24 radio;  // NRFRF24L01 radio driver
+MyTransportNRF24 radio;  // NRFRF24L01 radio driver
 MySigningDriverAtsha204Soft signer;  // Message signing driver
 MySensor gw(radio, signer);
 
