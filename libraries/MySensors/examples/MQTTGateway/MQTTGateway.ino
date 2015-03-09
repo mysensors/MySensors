@@ -56,7 +56,7 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 
 */
 
-#include <MySigningDriverNone.h>
+#include <MySigningNone.h>
 #include <MyTransportNRF24.h>
 #include <SPI.h>
 #include <MySensor.h>
@@ -94,7 +94,7 @@ uint8_t TCP_MAC[] = { 0x02, 0xDE, 0xAD, 0x00, 0x00, 0x42 };	// Mac-address - You
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
 // Message signing driver (none default)
-MySigningDriverNone signer;
+MySigningNone signer;
 // Construct MySensors library
 MySensor gw(radio, signer);
 

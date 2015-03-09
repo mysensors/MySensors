@@ -1,7 +1,7 @@
 // Example sketch showing how to securely control locks. 
 // This example will remember lock state even after power failure.
 
-#include <MySigningDriverAtsha204Soft.h>
+#include <MySigningAtsha204Soft.h>
 #include <MyTransportNRF24.h>
 #include <MySensor.h>
 #include <SPI.h>
@@ -12,7 +12,7 @@
 #define LOCK_UNLOCK 0 // GPIO value to write to unlock attached lock
 
 MyTransportNRF24 radio;  // NRFRF24L01 radio driver
-MySigningDriverAtsha204Soft signer;  // Message signing driver
+MySigningAtsha204Soft signer;  // Message signing driver
 MySensor gw(radio, signer);
 
 void setup()  

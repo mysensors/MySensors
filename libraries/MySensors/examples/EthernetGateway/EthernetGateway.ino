@@ -43,7 +43,7 @@
 #include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
 #include <SPI.h>  
 
-#include <MySigningDriverNone.h>
+#include <MySigningNone.h>
 #include <MyTransportNRF24.h>
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
@@ -74,7 +74,7 @@
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
 // Message signing driver (none default)
-MySigningDriverNone signer;
+MySigningNone signer;
 // Construct MySensors library
 MySensor gw(radio, signer);
 

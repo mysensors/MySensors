@@ -3,8 +3,8 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
-#include "MySigningDriver.h"
-#include "MySigningDriverNone.h"
+#include "MySigning.h"
+#include "MySigningNone.h"
 
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_NONE_SIGNING
@@ -34,22 +34,22 @@ static void DEBUG_NONE_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #define DEBUG_NONE_PRINTBUF(str, buf, sz)
 #endif
 
-MySigningDriverNone::MySigningDriverNone() : MySigningDriver() {
+MySigningNone::MySigningNone() : MySigning() {
 }
 
-bool MySigningDriverNone::getNonce(MyMessage &msg) {
+bool MySigningNone::getNonce(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningDriverNone::checkTimer() {
+bool MySigningNone::checkTimer() {
 	return true;
 }
 
-bool MySigningDriverNone::putNonce(MyMessage &msg) {
+bool MySigningNone::putNonce(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningDriverNone::signMsg(MyMessage &msg) {
+bool MySigningNone::signMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_NONE_PRINTLN("Cannot fit any signature to this message");
@@ -60,7 +60,7 @@ bool MySigningDriverNone::signMsg(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningDriverNone::verifyMsg(MyMessage &msg) {
+bool MySigningNone::verifyMsg(MyMessage &msg) {
 	if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER)
 		return false;
 	else

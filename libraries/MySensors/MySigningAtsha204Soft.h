@@ -7,11 +7,11 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
-#ifndef MySigningDriverHmac256Soft_h
-#define MySigningDriverHmac256Soft_h
+#ifndef MySigningHmac256Soft_h
+#define MySigningHmac256Soft_h
 
 #include "MyConfig.h"
-#include "MySigningDriver.h"
+#include "MySigning.h"
 #include "utility/ATSHA204.h"
 #include "utility/sha256.h"
 #include <stdint.h>
@@ -25,10 +25,10 @@
 // is weaker though. Random numbers are generated using the Arduino library and seed
 // is sampled from an analog pin. This pin should unconnected in the hardware.
 // The pin is selected using MY_RANDOMSEED_PIN in MyConfig.h.
-class MySigningDriverAtsha204Soft : public MySigningDriver
+class MySigningAtsha204Soft : public MySigning
 { 
 public:
-	MySigningDriverAtsha204Soft(bool requestSignatures=true, uint8_t randomseedPin = MY_RANDOMSEED_PIN);
+	MySigningAtsha204Soft(bool requestSignatures=true, uint8_t randomseedPin = MY_RANDOMSEED_PIN);
 	bool getNonce(MyMessage &msg);
 	bool checkTimer(void);
 	bool putNonce(MyMessage &msg);

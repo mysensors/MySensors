@@ -15,12 +15,12 @@
 // which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
 #define MY_VERIFICATION_TIMEOUT_MS 5000
 
-// MySigningDriverAtsha204 default setting
+// MySigningAtsha204 default setting
 #define MY_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
 
-// MySigningDriverAtsha204Soft default settings
+// MySigningAtsha204Soft default settings
 #define MY_RANDOMSEED_PIN 7 // A7 - Pin used for random generation (do not connect anything to this)
-// Key to use for HMAC calculation in MySigningDriverAtsha204Soft (32 bytes)
+// Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 

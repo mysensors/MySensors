@@ -4,20 +4,20 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
-#ifndef MySigningDriver_h
-#define MySigningDriver_h
+#ifndef MySigning_h
+#define MySigning_h
 
 #include <stdint.h>
 #include "MyMessage.h"
 
-class MySigningDriver
+class MySigning
 { 
 public:
-	// MySigningDriver constructor.
+	// MySigning constructor.
 	// Different parameters would be needed depending on signing backend (e.g. pins connected etc.).
 	// Keeping these parameters as #define's in MyConfig to streamline the driver interface.
 	// @param requestSignatures Set this to true if you want destination node to sign all messages sent to this node. Default is not to require signing.
-	MySigningDriver(bool requestSignatures=false);
+	MySigning(bool requestSignatures=false);
 
 	// Returns the current requestSignature setting
 	bool requestSignatures();

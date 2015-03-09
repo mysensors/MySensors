@@ -4,11 +4,11 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
-#ifndef MySigningDriverAtsha204_h
-#define MySigningDriverAtsha204_h
+#ifndef MySigningAtsha204_h
+#define MySigningAtsha204_h
 
 #include "MyConfig.h"
-#include "MySigningDriver.h"
+#include "MySigning.h"
 #include "utility/ATSHA204.h"
 #include <stdint.h>
 
@@ -17,10 +17,10 @@
 // The ATSHA204 is capable of generating proper random numbers for nonce
 // and can calculate HMAC-SHA256 signatures. This is enterprise-
 // level of security and ought to implement the signing needs for anybody.
-class MySigningDriverAtsha204 : public MySigningDriver
+class MySigningAtsha204 : public MySigning
 { 
 public:
-	MySigningDriverAtsha204(bool requestSignatures=true, uint8_t atshaPin = MY_ATSHA204_PIN);
+	MySigningAtsha204(bool requestSignatures=true, uint8_t atshaPin = MY_ATSHA204_PIN);
 	bool getNonce(MyMessage &msg);
 	bool checkTimer(void);
 	bool putNonce(MyMessage &msg);

@@ -4,8 +4,8 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
-#include "MySigningDriver.h"
-#include "MySigningDriverAtsha204.h"
+#include "MySigning.h"
+#include "MySigningAtsha204.h"
 
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_ATSHA_SIGNING
@@ -36,9 +36,9 @@ static void DEBUG_ATSHA_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #endif
 
 
-MySigningDriverAtsha204::MySigningDriverAtsha204(bool requestSignatures, uint8_t atshaPin)
+MySigningAtsha204::MySigningAtsha204(bool requestSignatures, uint8_t atshaPin)
 	:
-	MySigningDriver(requestSignatures),
+	MySigning(requestSignatures),
 	atsha204(atshaPin),
 	verification_ongoing(false)
 {
@@ -46,7 +46,7 @@ MySigningDriverAtsha204::MySigningDriverAtsha204(bool requestSignatures, uint8_t
 	memset(current_nonce, 0xAA, sizeof(current_nonce));
 }
 
-bool MySigningDriverAtsha204::getNonce(MyMessage &msg) {
+bool MySigningAtsha204::getNonce(MyMessage &msg) {
 	// Wake device before starting operations
 	if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) {
 		DEBUG_ATSHA_PRINTLN("Failed to wake device");
@@ -78,7 +78,7 @@ bool MySigningDriverAtsha204::getNonce(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningDriverAtsha204::checkTimer() {
+bool MySigningAtsha204::checkTimer() {
 	if (verification_ongoing) {
 		if (millis() < timestamp || millis() > timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_ATSHA_PRINTLN("Verification timeout");
@@ -91,7 +91,7 @@ bool MySigningDriverAtsha204::checkTimer() {
 	return true;
 }
 
-bool MySigningDriverAtsha204::putNonce(MyMessage &msg) {
+bool MySigningAtsha204::putNonce(MyMessage &msg) {
 	if (mGetLength(msg) != MAX_PAYLOAD) {
 		DEBUG_ATSHA_PRINTLN("Incoming nonce with incorrect size");
 		return false; // We require as big nonce as possible
@@ -106,7 +106,7 @@ bool MySigningDriverAtsha204::putNonce(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningDriverAtsha204::signMsg(MyMessage &msg) {
+bool MySigningAtsha204::signMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_ATSHA_PRINTLN("Cannot fit any signature to this message");
@@ -128,7 +128,7 @@ bool MySigningDriverAtsha204::signMsg(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningDriverAtsha204::verifyMsg(MyMessage &msg) {
+bool MySigningAtsha204::verifyMsg(MyMessage &msg) {
 	if (!verification_ongoing) {
 		DEBUG_ATSHA_PRINTLN("No active verification session");
 		return false; 
@@ -166,7 +166,7 @@ bool MySigningDriverAtsha204::verifyMsg(MyMessage &msg) {
 }
 
 // Helper to calculate signature of msg (returned in rx_buffer[SHA204_BUFFER_POS_DATA])
-bool MySigningDriverAtsha204::calculateSignature(MyMessage &msg) {
+bool MySigningAtsha204::calculateSignature(MyMessage &msg) {
 	memset(temp_message, 0, 32);
 	memcpy(temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
 

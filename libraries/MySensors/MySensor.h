@@ -16,8 +16,8 @@
 #include "MyTransport.h"
 #include "MyTransportNRF24.h"
 #include "MyParser.h"
-#include "MySigningDriver.h"
-#include "MySigningDriverNone.h"
+#include "MySigning.h"
+#include "MySigningNone.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
 #include <stddef.h>
@@ -81,7 +81,7 @@ class MySensor
 	* Creates a new instance of Sensor class.
 	*
 	*/
-	MySensor(MyTransport &radio =*new MyTransportNRF24(), MySigningDriver &signer=*new MySigningDriverNone());
+	MySensor(MyTransport &radio =*new MyTransportNRF24(), MySigning &signer=*new MySigningNone());
 
 	/**
 	* Begin operation of the MySensors library
@@ -250,7 +250,7 @@ class MySensor
 	MyMessage msgSign;  // Buffer for message to sign.
 
 	MyTransport& radio;
-	MySigningDriver& signer;
+	MySigning& signer;
 	
 	void setupRepeaterMode();
 	boolean sendWrite(uint8_t dest, MyMessage &message);
