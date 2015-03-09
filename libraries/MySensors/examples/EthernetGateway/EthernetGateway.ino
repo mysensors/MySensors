@@ -43,6 +43,8 @@
 #include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
 #include <SPI.h>  
 
+#include <MySigningDriverNone.h>
+#include <MyRFDriverNRF24.h>
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
@@ -69,8 +71,12 @@
 #define RADIO_TX_LED_PIN    9  // the PCB, on board LED
 
 
-MySensor gw;
-
+// NRFRF24L01 radio driver (set low transmit power by default) 
+MyRFDriverNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+// Message signing driver (none default)
+MySigningDriverNone signer;
+// Construct MySensors library
+MySensor gw(radio, signer);
 
 #define IP_PORT 5003        // The port you want to open 
 IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!

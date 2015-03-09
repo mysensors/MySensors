@@ -23,6 +23,8 @@
 
 #define NO_PORTB_PINCHANGES  
 
+#include <MySigningDriverNone.h>
+#include <MyRFDriverNRF24.h>
 #include <SPI.h>  
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
@@ -38,7 +40,12 @@
 #define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 
-MySensor gw;
+// NRFRF24L01 radio driver (set low transmit power by default) 
+MyRFDriverNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+// Message signing driver (none default)
+MySigningDriverNone signer;
+// Construct MySensors library
+MySensor gw(radio, signer);
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
