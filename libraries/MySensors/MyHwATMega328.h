@@ -5,8 +5,10 @@
 #include "MyMessage.h"
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#include <avr/sleep.h>
+#include <avr/power.h>
+#include <avr/interrupt.h>
 #include <avr/wdt.h>
-#include "utility/LowPower.h"
 
 #include "MyHw.h"
 
@@ -15,6 +17,20 @@
 #include <SPI.h>
 #endif
 
+enum period_t
+{
+	SLEEP_15Ms,
+	SLEEP_30MS,
+	SLEEP_60MS,
+	SLEEP_120MS,
+	SLEEP_250MS,
+	SLEEP_500MS,
+	SLEEP_1S,
+	SLEEP_2S,
+	SLEEP_4S,
+	SLEEP_8S,
+	SLEEP_FOREVER
+};
 
 class MyHwATMega328 : public MyHw
 { 

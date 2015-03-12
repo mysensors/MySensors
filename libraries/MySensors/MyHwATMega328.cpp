@@ -34,26 +34,69 @@ unsigned long MyHwATMega328::millisec() {
 }
 
 
+
+#define	bodOn(mode)	\
+do { 						\
+      set_sleep_mode(mode); \
+      cli();				\
+      sleep_enable();		\
+      sei();				\
+      sleep_cpu();			\
+      sleep_disable();		\
+      sei();				\
+} while (0);
+
+#if defined __AVR_ATmega328P__
+#define	bodOff(mode)\
+do { 						\
+      set_sleep_mode(mode); \
+      cli();				\
+      sleep_enable();		\
+			sleep_bod_disable(); \
+      sei();				\
+      sleep_cpu();			\
+      sleep_disable();		\
+      sei();				\
+} while (0);
+#endif
+
+void powerDown(period_t period) {
+
+	ADCSRA &= ~(1 << ADEN);
+
+	if (period != SLEEP_FOREVER)
+	{
+		wdt_enable(period);
+		WDTCSR |= (1 << WDIE);
+	}
+	#if defined __AVR_ATmega328P__
+		bodOff(SLEEP_MODE_PWR_DOWN);
+	#else
+		bodOn(SLEEP_MODE_PWR_DOWN);
+	#endif
+
+	ADCSRA |= (1 << ADEN);
+}
+
 void MyHwATMega328::sleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
 	pinIntTrigger = 0;
-	while (!pinIntTrigger && ms >= 8000) { LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); ms -= 8000; }
-	if (!pinIntTrigger && ms >= 4000)    { LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); ms -= 4000; }
-	if (!pinIntTrigger && ms >= 2000)    { LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); ms -= 2000; }
-	if (!pinIntTrigger && ms >= 1000)    { LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); ms -= 1000; }
-	if (!pinIntTrigger && ms >= 500)     { LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); ms -= 500; }
-	if (!pinIntTrigger && ms >= 250)     { LowPower.powerDown(SLEEP_250MS, ADC_OFF, BOD_OFF); ms -= 250; }
-	if (!pinIntTrigger && ms >= 125)     { LowPower.powerDown(SLEEP_120MS, ADC_OFF, BOD_OFF); ms -= 120; }
-	if (!pinIntTrigger && ms >= 64)      { LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF); ms -= 60; }
-	if (!pinIntTrigger && ms >= 32)      { LowPower.powerDown(SLEEP_30MS, ADC_OFF, BOD_OFF); ms -= 30; }
-	if (!pinIntTrigger && ms >= 16)      { LowPower.powerDown(SLEEP_15Ms, ADC_OFF, BOD_OFF); ms -= 15; }
+	while (!pinIntTrigger && ms >= 8000) { powerDown(SLEEP_8S); ms -= 8000; }
+	if (!pinIntTrigger && ms >= 4000)    { powerDown(SLEEP_4S); ms -= 4000; }
+	if (!pinIntTrigger && ms >= 2000)    { powerDown(SLEEP_2S); ms -= 2000; }
+	if (!pinIntTrigger && ms >= 1000)    { powerDown(SLEEP_1S); ms -= 1000; }
+	if (!pinIntTrigger && ms >= 500)     { powerDown(SLEEP_500MS); ms -= 500; }
+	if (!pinIntTrigger && ms >= 250)     { powerDown(SLEEP_250MS); ms -= 250; }
+	if (!pinIntTrigger && ms >= 125)     { powerDown(SLEEP_120MS); ms -= 120; }
+	if (!pinIntTrigger && ms >= 64)      { powerDown(SLEEP_60MS); ms -= 60; }
+	if (!pinIntTrigger && ms >= 32)      { powerDown(SLEEP_30MS); ms -= 30; }
+	if (!pinIntTrigger && ms >= 16)      { powerDown(SLEEP_15Ms); ms -= 15; }
 }
 
 bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
-	Serial.flush();
 	attachInterrupt(interrupt, wakeUp, mode);
 	if (ms>0) {
 		pinIntTrigger = 0;
@@ -63,7 +106,7 @@ bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 		}
 	} else {
 		Serial.flush();
-		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
+		powerDown(SLEEP_FOREVER);
 	}
 	detachInterrupt(interrupt);
 	return pinTriggeredWakeup;
@@ -71,7 +114,6 @@ bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 
 uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	int8_t retVal = 1;
-	Serial.flush(); // Let serial prints finish (debug, log etc)
 	attachInterrupt(interrupt1, wakeUp, mode1);
 	attachInterrupt(interrupt2, wakeUp2, mode2);
 	if (ms>0) {
@@ -82,7 +124,7 @@ uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrup
 		}
 	} else {
 		Serial.flush();
-		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
+		powerDown(SLEEP_FOREVER);
 	}
 	detachInterrupt(interrupt1);
 	detachInterrupt(interrupt2);
