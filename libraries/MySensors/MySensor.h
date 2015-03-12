@@ -244,7 +244,6 @@ class MySensor
 	MySigning& signer;
 	MyHw& hw;
 	
-	void setupRepeaterMode();
 	boolean sendWrite(uint8_t dest, MyMessage &message);
 
   private:
@@ -252,7 +251,6 @@ class MySensor
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
 	uint8_t failedTransmissions;
-	uint8_t childNodeTable[256]; // In memory buffer for routing information to other nodes. also stored in EEPROM
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
@@ -260,10 +258,6 @@ class MySensor
 	void setupNode();
 	void findParentNode();
 	uint8_t crc8Message(MyMessage &message);
-	uint8_t getChildRoute(uint8_t childId);
-	void addChildRoute(uint8_t childId, uint8_t route);
-	void removeChildRoute(uint8_t childId);
-	void internalSleep(unsigned long ms);
 	bool sign(MyMessage &message);
 };
 #endif

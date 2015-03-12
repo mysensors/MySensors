@@ -37,6 +37,7 @@ static inline bool isValidDistance( const uint8_t distance ) {
 	return distance != DISTANCE_INVALID;
 }
 
+
 MySensor::MySensor(MyTransport &_radio, MySigning &_signer, MyHw &_hw)
 	:
 	radio(_radio),
@@ -54,10 +55,6 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	// Only gateway should use node id 0
 	isGateway = _nodeId == 0;
-
-	if (repeaterMode) {
-		setupRepeaterMode();
-	}
 
 	// Setup radio
 	radio.init();
@@ -108,10 +105,6 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), isGateway?"gateway":(repeaterMode?"repeater":"sensor"), nc.nodeId, nc.parentNodeId, nc.distance);
 }
 
-void MySensor::setupRepeaterMode(){
-//	childNodeTable = new uint8_t[256];
-	hw.readConfigBlock((void*)childNodeTable, (void *)EEPROM_ROUTES_ADDRESS, 256);
-}
 
 uint8_t MySensor::getNodeId() {
 	return nc.nodeId;
@@ -213,7 +206,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		ok = sendWrite(nc.parentNodeId, message);
 	} else {
 		// Relay the message
-		uint8_t route = getChildRoute(dest);
+		uint8_t route = hw.readConfigByte(EEPROM_ROUTES_ADDRESS+dest);
 		if (route > GATEWAY_ADDRESS && route < BROADCAST_ADDRESS) {
 			// This message should be forwarded to a child node. If we send message
 			// to this nodes pipe then all children will receive it because the are
@@ -251,7 +244,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 			// This message should be routed back towards sensor net gateway
 			ok = sendWrite(nc.parentNodeId, message);
 			// Add this child to our "routing table" if it not already exist
-			addChildRoute(sender, last);
+			hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+sender, last);
 		}
 	}
 
@@ -364,7 +357,7 @@ boolean MySensor::process() {
 
 		if (repeaterMode && last != nc.parentNodeId) {
 			// Message is from one of the child nodes. Add it to routing table.
-			addChildRoute(sender, last);
+			hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+sender, last);
 		}
 
 		// Check if sender requests an ack back.
@@ -458,7 +451,7 @@ boolean MySensor::process() {
 						debug(PSTR("clear\n"));
 						uint8_t i = 255;
 						do {
-							removeChildRoute(i);
+							hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+i, 0xff);
 						} while (i--);
 						// Clear parent node id & distance to gw
 						hw.writeConfigByte(EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
@@ -508,22 +501,6 @@ void MySensor::saveState(uint8_t pos, uint8_t value) {
 uint8_t MySensor::loadState(uint8_t pos) {
 	return hw.readConfigByte(EEPROM_LOCAL_CONFIG_ADDRESS+pos);
 }
-
-void MySensor::addChildRoute(uint8_t childId, uint8_t route) {
-	childNodeTable[childId] = route;
-	hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+childId, route);
-}
-
-void MySensor::removeChildRoute(uint8_t childId) {
-	childNodeTable[childId] = 0xff;
-	hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+childId, 0xff);
-}
-
-uint8_t MySensor::getChildRoute(uint8_t childId) {
-	return childNodeTable[childId];
-}
-
-
 
 void MySensor::wait(unsigned long ms) {
 	unsigned long enter = hw.millisec();
