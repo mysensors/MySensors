@@ -1,6 +1,9 @@
 // Example sketch showing how to control physical relays. 
 // This example will remember relay state even after power failure.
 
+#include <MySigningNone.h>
+#include <MyTransportNRF24.h>
+#include <MyHwATMega328.h>
 #include <MySensor.h>
 #include <SPI.h>
 
@@ -9,7 +12,14 @@
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
-MySensor gw;
+// NRFRF24L01 radio driver (set low transmit power by default) 
+MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+// Message signing driver (none default)
+MySigningNone signer;
+// Select AtMega328 hardware profile
+MyHwATMega328 hw;
+// Construct MySensors library
+MySensor gw(radio, signer, hw);
 
 void setup()  
 {   

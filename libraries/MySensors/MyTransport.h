@@ -17,7 +17,7 @@
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
 
 class MyTransport
-{ 
+{
 public:
 	// MyTransport constructor
 	// different parameters would be needed depending on radio module (e.g. pins connected etc.)

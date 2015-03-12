@@ -37,16 +37,17 @@ static inline bool isValidDistance( const uint8_t distance ) {
 	return distance != DISTANCE_INVALID;
 }
 
-MySensor::MySensor(MyTransport &_radio, MySigning &_signer)
+MySensor::MySensor(MyTransport &_radio, MySigning &_signer, MyHw &_hw)
 	:
 	radio(_radio),
-	signer(_signer)
+	signer(_signer),
+	hw(_hw)
 {
 }
 
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
-	Serial.begin(BAUD_RATE);
+	hw.init();
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;
@@ -62,11 +63,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	radio.init();
 
 	// Read settings from eeprom
-	eeprom_read_block((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
+	hw.readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
-	eeprom_read_block((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+	hw.readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 	// Read out the signing requirements from EEPROM
-	eeprom_read_block((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
+	hw.readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
 
 	if (isGateway) {
 		nc.distance = 0;
@@ -81,7 +82,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	if (!autoFindParent) {
 		nc.parentNodeId = _parentNodeId;
 		// Save static parent id in eeprom (used by bootloader)
-		eeprom_update_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+		hw.writeConfigByte(EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
 		// We don't actually know the distance to gw here. Let's pretend it is 1.
 		// If the current node is also repeater, be aware of this.
 		nc.distance = 1;
@@ -90,24 +91,26 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 		findParentNode();
 	}
 
-	if (_nodeId != AUTO) {
-		// Set static id
-		nc.nodeId = _nodeId;
-		// Save static id in eeprom
-		eeprom_update_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, _nodeId);
-	} else if (isValidParent(nc.parentNodeId)) {
-		// Try to fetch node-id from gateway
-		requestNodeId();
+	if (!isGateway) {
+		if (_nodeId != AUTO) {
+			// Set static id
+			nc.nodeId = _nodeId;
+			// Save static id in eeprom
+			if (_nodeId > 0)
+				hw.writeConfigByte(EEPROM_NODE_ID_ADDRESS, _nodeId);
+		} else if (isValidParent(nc.parentNodeId)) {
+			// Try to fetch node-id from gateway
+			requestNodeId();
+		}
 	}
 
 	setupNode();
-
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), isGateway?"gateway":(repeaterMode?"repeater":"sensor"), nc.nodeId, nc.parentNodeId, nc.distance);
 }
 
 void MySensor::setupRepeaterMode(){
 //	childNodeTable = new uint8_t[256];
-	eeprom_read_block((void*)childNodeTable, (void*)EEPROM_ROUTES_ADDRESS, 256);
+	hw.readConfigBlock((void*)childNodeTable, (void *)EEPROM_ROUTES_ADDRESS, 256);
 }
 
 uint8_t MySensor::getNodeId() {
@@ -119,7 +122,7 @@ ControllerConfig MySensor::getConfig() {
 }
 
 void MySensor::requestNodeId() {
-	debug(PSTR("req node id\n"));
+	debug(PSTR("req id\n"));
 	radio.setAddress(nc.nodeId);
 	build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
 	sendWrite(nc.parentNodeId, msg);
@@ -135,7 +138,7 @@ void MySensor::setupNode() {
 		// Notify gateway (and possibly controller) about the signing preferences of this node
 		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(signer.requestSignatures()));
 
-		// If we do require signing, wait for the gateway to tell us how it perfer us to transmit our messages
+		// If we do require signing, wait for the gateway to tell us how it prefer us to transmit our messages
 		if (signer.requestSignatures()) {
 			wait(2000);
 		}
@@ -197,7 +200,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
 		  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
 		if (!sign(message)) {
-			debug(PSTR("Message signing failed\n"));
+			debug(PSTR("sign fail\n"));
 			return false;
 		}
 		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
@@ -312,6 +315,7 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 }
 
 boolean MySensor::process() {
+	hw.watchdogReset();
 	uint8_t to = 0;
 	if (!radio.available(&to))
 		return false;
@@ -328,11 +332,12 @@ boolean MySensor::process() {
 		  msg.type != I_ID_REQUEST && msg.type != I_ID_RESPONSE &&
 		  msg.type != I_FIND_PARENT && msg.type != I_FIND_PARENT_RESPONSE))) {
 		if (!mGetSigned(msg)) {
-			debug(PSTR("Got unsigned message that should have been signed\n"));
+			// Got unsigned message that should have been signed
+			debug(PSTR("no sign\n"));
 			return false;
 		}
 		else if (!signer.verifyMsg(msg)) {
-			debug(PSTR("Message verification failed\n"));
+			debug(PSTR("verify fail\n"));
 			return false; // This signed message has been tampered with!
 		}
 	}
@@ -344,8 +349,7 @@ boolean MySensor::process() {
 	mSetSigned(msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
-		debug(PSTR("version: %d\n"),mGetVersion(msg));
-		debug(PSTR("version mismatch\n"));
+		debug(PSTR("ver mismatch\n"));
 		return false;
 	}
 
@@ -388,9 +392,9 @@ boolean MySensor::process() {
 							// Found a neighbor closer to GW than previously found
 							nc.distance = distance;
 							nc.parentNodeId = msg.sender;
-							eeprom_update_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
-							eeprom_update_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, nc.distance);
-							debug(PSTR("new parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
+							hw.writeConfigByte(EEPROM_PARENT_NODE_ID_ADDRESS, nc.parentNodeId);
+							hw.writeConfigByte(EEPROM_DISTANCE_ADDRESS, nc.distance);
+							debug(PSTR("parent=%d, d=%d\n"), nc.parentNodeId, nc.distance);
 						}
 					}
 				}
@@ -409,7 +413,7 @@ boolean MySensor::process() {
 					CLEAR_SIGN(msg.sender);
 				}
 				// Save updated table
-				eeprom_update_block((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
+				hw.writeConfigBlock((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
 
 				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
@@ -428,8 +432,7 @@ boolean MySensor::process() {
 
 				if (type == I_REBOOT) {
 					// Requires MySensors or other bootloader with watchdogs enabled
-					wdt_enable(WDTO_15MS);
-					for (;;);
+					hw.reboot();
 				} else if (type == I_ID_RESPONSE) {
 					if (nc.nodeId == AUTO) {
 						nc.nodeId = msg.getByte();
@@ -440,7 +443,7 @@ boolean MySensor::process() {
 						}
 						setupNode();
 						// Write id to EEPROM
-						eeprom_update_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, nc.nodeId);
+						hw.writeConfigByte(EEPROM_NODE_ID_ADDRESS, nc.nodeId);
 						debug(PSTR("id=%d\n"), nc.nodeId);
 					}
 				} else if (type == I_CONFIG) {
@@ -448,18 +451,18 @@ boolean MySensor::process() {
 					// and store it in eeprom if changed
 					isMetric = msg.getString()[0] == 'M' ;
 					cc.isMetric = isMetric;
-					eeprom_update_byte((uint8_t*)EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
+					hw.writeConfigByte(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
 				} else if (type == I_CHILDREN) {
 					if (repeaterMode && msg.getString()[0] == 'C') {
 						// Clears child relay data for this node
-						debug(PSTR("rd=clear\n"));
+						debug(PSTR("clear\n"));
 						uint8_t i = 255;
 						do {
 							removeChildRoute(i);
 						} while (i--);
 						// Clear parent node id & distance to gw
-						eeprom_update_byte((uint8_t*)EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
-						eeprom_update_byte((uint8_t*)EEPROM_DISTANCE_ADDRESS, 0xFF);
+						hw.writeConfigByte(EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
+						hw.writeConfigByte(EEPROM_DISTANCE_ADDRESS, 0xFF);
 						// Find parent node
 						findParentNode();
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
@@ -484,7 +487,7 @@ boolean MySensor::process() {
 				// Relaying nodes should always answer ping messages
 				// Wait a random delay of 0-2 seconds to minimize collision
 				// between ping ack messages from other relaying nodes
-				delay(millis() & 0x3ff);
+				wait(hw.millisec() & 0x3ff);
 				sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
 			}
 		} else if (to == nc.nodeId) {
@@ -500,113 +503,48 @@ MyMessage& MySensor::getLastMessage() {
 }
 
 void MySensor::saveState(uint8_t pos, uint8_t value) {
-	eeprom_update_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos), value);
+	hw.writeConfigByte(EEPROM_LOCAL_CONFIG_ADDRESS+pos, value);
 }
 uint8_t MySensor::loadState(uint8_t pos) {
-	return eeprom_read_byte((uint8_t*)(EEPROM_LOCAL_CONFIG_ADDRESS+pos));
+	return hw.readConfigByte(EEPROM_LOCAL_CONFIG_ADDRESS+pos);
 }
 
 void MySensor::addChildRoute(uint8_t childId, uint8_t route) {
 	childNodeTable[childId] = route;
-	eeprom_update_byte((uint8_t*)EEPROM_ROUTES_ADDRESS+childId, route);
+	hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+childId, route);
 }
 
 void MySensor::removeChildRoute(uint8_t childId) {
 	childNodeTable[childId] = 0xff;
-	eeprom_update_byte((uint8_t*)EEPROM_ROUTES_ADDRESS+childId, 0xff);
+	hw.writeConfigByte(EEPROM_ROUTES_ADDRESS+childId, 0xff);
 }
 
 uint8_t MySensor::getChildRoute(uint8_t childId) {
 	return childNodeTable[childId];
 }
 
-int8_t pinIntTrigger = 0;
-void wakeUp()	 //place to send the interrupts
-{
-	pinIntTrigger = 1;
-}
-void wakeUp2()	 //place to send the second interrupts
-{
-	pinIntTrigger = 2;
-}
 
-void MySensor::internalSleep(unsigned long ms) {
-	while (!pinIntTrigger && ms >= 8000) { LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); ms -= 8000; }
-	if (!pinIntTrigger && ms >= 4000)    { LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); ms -= 4000; }
-	if (!pinIntTrigger && ms >= 2000)    { LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); ms -= 2000; }
-	if (!pinIntTrigger && ms >= 1000)    { LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); ms -= 1000; }
-	if (!pinIntTrigger && ms >= 500)     { LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF); ms -= 500; }
-	if (!pinIntTrigger && ms >= 250)     { LowPower.powerDown(SLEEP_250MS, ADC_OFF, BOD_OFF); ms -= 250; }
-	if (!pinIntTrigger && ms >= 125)     { LowPower.powerDown(SLEEP_120MS, ADC_OFF, BOD_OFF); ms -= 120; }
-	if (!pinIntTrigger && ms >= 64)      { LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF); ms -= 60; }
-	if (!pinIntTrigger && ms >= 32)      { LowPower.powerDown(SLEEP_30MS, ADC_OFF, BOD_OFF); ms -= 30; }
-	if (!pinIntTrigger && ms >= 16)      { LowPower.powerDown(SLEEP_15Ms, ADC_OFF, BOD_OFF); ms -= 15; }
-}
-
-void MySensor::sleep(unsigned long ms) {
-	// Let serial prints finish (debug, log etc)
-	Serial.flush();
-	radio.powerDown();
-	pinIntTrigger = 0;
-	internalSleep(ms);
-}
 
 void MySensor::wait(unsigned long ms) {
-	// Let serial prints finish (debug, log etc)
-	Serial.flush();
-	unsigned long enter = millis();
-	while (millis() - enter < ms) {
-		// reset watchdog
-		wdt_reset();
+	unsigned long enter = hw.millisec();
+	while (hw.millisec() - enter < ms) {
 		process();
 	}
 }
 
-bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	// Let serial prints finish (debug, log etc)
-	bool pinTriggeredWakeup = true;
-	Serial.flush();
+void MySensor::sleep(unsigned long ms) {
 	radio.powerDown();
-	attachInterrupt(interrupt, wakeUp, mode);
-	if (ms>0) {
-		pinIntTrigger = 0;
-		sleep(ms);
-		if (0 == pinIntTrigger) {
-			pinTriggeredWakeup = false;
-		}
-	} else {
-		Serial.flush();
-		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
-	}
-	detachInterrupt(interrupt);
-	return pinTriggeredWakeup;
+	hw.sleep(ms);
+}
+
+bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+	radio.powerDown();
+	return hw.sleep(interrupt, mode, ms) ;
 }
 
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	int8_t retVal = 1;
-	Serial.flush(); // Let serial prints finish (debug, log etc)
 	radio.powerDown();
-	attachInterrupt(interrupt1, wakeUp, mode1);
-	attachInterrupt(interrupt2, wakeUp2, mode2);
-	if (ms>0) {
-		pinIntTrigger = 0;
-		sleep(ms);
-		if (0 == pinIntTrigger) {
-			retVal = -1;
-		}
-	} else {
-		Serial.flush();
-		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
-	}
-	detachInterrupt(interrupt1);
-	detachInterrupt(interrupt2);
-
-	if (1 == pinIntTrigger) {
-		retVal = (int8_t)interrupt1;
-	} else if (2 == pinIntTrigger) {
-		retVal = (int8_t)interrupt2;
-	}
-	return retVal;
+	return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
 }
 
 bool MySensor::sign(MyMessage &message) {
@@ -615,9 +553,9 @@ bool MySensor::sign(MyMessage &message) {
 	} else {
 		// We have to wait for the nonce to arrive before we can sign our original message
 		// Other messages could come in-between. We trust process() takes care of them
-		unsigned long enter = millis();
+		unsigned long enter = hw.millisec();
 		msgSign = message; // Copy the message to sign since message buffer might be touched in process()
-		while (millis() - enter < 5000) {
+		while (hw.millisec() - enter < 5000) {
 			if (process()) {
 				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
 					// Proceed with signing if nonce has been received
@@ -633,37 +571,3 @@ bool MySensor::sign(MyMessage &message) {
 	return false;
 }
 
-#ifdef DEBUG
-void MySensor::debugPrint(const char *fmt, ... ) {
-	char fmtBuffer[300];
-	if (isGateway) {
-		// prepend debug message to be handled correctly by gw (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf_P(fmtBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
-		Serial.print(fmtBuffer);
-	}
-	va_list args;
-	va_start (args, fmt );
-	va_end (args);
-	if (isGateway) {
-		// Truncate message if this is gateway node
-		vsnprintf_P(fmtBuffer, 60, fmt, args);
-		fmtBuffer[59] = '\n';
-		fmtBuffer[60] = '\0';
-	} else {
-		vsnprintf_P(fmtBuffer, 299, fmt, args);
-	}
-	va_end (args);
-	Serial.print(fmtBuffer);
-	Serial.flush();
-
-	//Serial.write(freeRam());
-}
-#endif
-
-#ifdef DEBUG
-int MySensor::freeRam (void) {
-  extern int __heap_start, *__brkval;
-  int v;
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
-#endif

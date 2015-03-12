@@ -6,6 +6,8 @@
 ***********************************/
 #define DEBUG
 
+#define BAUD_RATE 115200
+
 
 /**********************************
 *  Message Signing Settings
