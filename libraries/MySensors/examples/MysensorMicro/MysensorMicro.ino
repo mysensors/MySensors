@@ -10,6 +10,7 @@
 #include <Wire.h>
 #include <SI7021.h>
 #include <SPI.h>
+#include <SPIFlash.h>
 #include <EEPROM.h>  
 
 // Define a static node address, remove if you want auto address assignment
@@ -21,6 +22,7 @@
 #define CHILD_ID_BATT  199
 
 //Pin definitions
+#define TEST_PIN       A0
 #define RESET_CFG_PIN  A1
 #define LED_PIN        A2
 
@@ -30,6 +32,8 @@
 #define FORCE_TRANSMIT_INTERVAL 30 
 
 SI7021 humiditySensor;
+SPIFlash flash(8, 0xEF30);
+
 MySensor gw;
 
 // Sensor messages
@@ -53,10 +57,13 @@ void setup() {
 
   // First check if we should boot into clear eeprom mode
   pinMode(RESET_CFG_PIN, INPUT);
+  pinMode(TEST_PIN,INPUT);
   digitalWrite(RESET_CFG_PIN, HIGH); // Enable pullup
+  digitalWrite(TEST_PIN, HIGH);
+  if (!digitalRead(TEST_PIN)) testMode();
   if (!digitalRead(RESET_CFG_PIN)) resetEEP();
   digitalWrite(RESET_CFG_PIN, LOW);
-  
+  digitalWrite(TEST_PIN,LOW);
   digitalWrite(LED_PIN, HIGH); 
   
 #ifdef NODE_ADDRESS
@@ -195,4 +202,29 @@ void switchClock(unsigned char clk)
   CLKPR = 1<<CLKPCE; // Set CLKPCE to enable clk switching
   CLKPR = clk;  
   sei();
+}
+
+void testMode()
+{
+  if (humiditySensor.begin())
+  if (flash.initialize())
+  {
+    while (1)
+    {
+      digitalWrite(LED_PIN, HIGH);
+      delay(800);
+      digitalWrite(LED_PIN, LOW);
+      delay(200);
+    }
+  }
+  else 
+  {
+    while (1)
+    {
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+      digitalWrite(LED_PIN, LOW);
+      delay(200);
+    }
+  }  
 }
