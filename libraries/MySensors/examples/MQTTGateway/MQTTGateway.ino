@@ -56,9 +56,11 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 
 */
 
+#include <DigitalIO.h>
+#include <SPI.h>
+
 #include <MySigningNone.h>
 #include <MyTransportNRF24.h>
-#include <SPI.h>
 #include <MySensor.h>
 #include <MsTimer2.h>
 #include <Ethernet.h>
