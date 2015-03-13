@@ -20,7 +20,7 @@ void setup()
   gw.sendSketchInfo("Relay", "1.0");
   //Clearing EEPROM values to start with a blank state(Considering Arduino Uno(ATMEGA328) with 1KB EEPROM)
   //Change 1024 to actual size of the board being used
-  for (i = 0; i < 1024 ; i++) {
+  for (int i = 0; i < 1024 ; i++) {
     EEPROM.write(i,0);
   }
 
