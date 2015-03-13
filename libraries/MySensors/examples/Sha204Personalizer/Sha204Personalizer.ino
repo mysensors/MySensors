@@ -41,7 +41,7 @@
 //#define SKIP_KEY_STORAGE
 
 // Uncomment this to skip key data storage (once configuration is locked, key
-// will aways randomize )
+// will aways randomize)
 // Uncomment this to skip key generation and use 'user_key_data' as key instead.
 //#define USER_KEY_DATA
 
@@ -703,6 +703,19 @@ void setup()
   else
   {
     Serial.print(F("Device serial:   "));
+    Serial.print('{');
+    for (int i=0; i<9; i++)
+    {
+      Serial.print(F("0x"));
+      if (rx_buffer[i] < 0x10)
+      {
+        Serial.print('0'); // Because Serial.print does not 0-pad HEX
+      }
+      Serial.print(rx_buffer[i], HEX);
+      if (i < 8) Serial.print(',');
+    }
+    Serial.print('}');
+    Serial.println();
     for (int i=0; i<9; i++)
     {
       if (rx_buffer[i] < 0x10)
