@@ -16,49 +16,23 @@ MyHwATMega328::MyHwATMega328() : MyHw()
 }
 
 
-void MyHwATMega328::init() {
+inline void MyHwATMega328::init() {
 	Serial.begin(BAUD_RATE);
 }
 
-void MyHwATMega328::watchdogReset() {
+inline void MyHwATMega328::watchdogReset() {
 	wdt_reset();
 }
 
-void MyHwATMega328::reboot() {
+inline void MyHwATMega328::reboot() {
 	wdt_enable(WDTO_15MS);
 	for (;;);
 }
 
-unsigned long MyHwATMega328::millisec() {
+inline unsigned long MyHwATMega328::millisec() {
 	return millis();
 }
 
-
-
-#define	bodOn(mode)	\
-do { 						\
-      set_sleep_mode(mode); \
-      cli();				\
-      sleep_enable();		\
-      sei();				\
-      sleep_cpu();			\
-      sleep_disable();		\
-      sei();				\
-} while (0);
-
-#if defined __AVR_ATmega328P__
-#define	bodOff(mode)\
-do { 						\
-      set_sleep_mode(mode); \
-      cli();				\
-      sleep_enable();		\
-			sleep_bod_disable(); \
-      sei();				\
-      sleep_cpu();			\
-      sleep_disable();		\
-      sei();				\
-} while (0);
-#endif
 
 void powerDown(period_t period) {
 
@@ -70,15 +44,32 @@ void powerDown(period_t period) {
 		WDTCSR |= (1 << WDIE);
 	}
 	#if defined __AVR_ATmega328P__
-		bodOff(SLEEP_MODE_PWR_DOWN);
+		do {
+			set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+			cli();
+			sleep_enable();
+			sleep_bod_disable();
+			sei();
+			sleep_cpu();
+			sleep_disable();
+			sei();
+		} while (0);
 	#else
-		bodOn(SLEEP_MODE_PWR_DOWN);
+		do {
+			set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+			cli();
+			sleep_enable();
+			sei();
+			sleep_cpu();
+			sleep_disable();
+			sei();
+		} while (0);
 	#endif
 
 	ADCSRA |= (1 << ADEN);
 }
 
-void MyHwATMega328::sleep(unsigned long ms) {
+inline void MyHwATMega328::sleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
 	pinIntTrigger = 0;
@@ -112,7 +103,7 @@ bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	return pinTriggeredWakeup;
 }
 
-uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+inline uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	int8_t retVal = 1;
 	attachInterrupt(interrupt1, wakeUp, mode1);
 	attachInterrupt(interrupt2, wakeUp2, mode2);
@@ -137,19 +128,19 @@ uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrup
 	return retVal;
 }
 
-uint8_t MyHwATMega328::readConfigByte(uint8_t pos) {
+inline uint8_t MyHwATMega328::readConfigByte(uint8_t pos) {
 	return eeprom_read_byte((uint8_t*)pos);
 }
 
-void MyHwATMega328::writeConfigByte(uint8_t pos, uint8_t value) {
+inline void MyHwATMega328::writeConfigByte(uint8_t pos, uint8_t value) {
 	eeprom_update_byte((uint8_t*)pos, value);
 }
 
-void MyHwATMega328::readConfigBlock(void* buf, void * pos, size_t length) {
+inline void MyHwATMega328::readConfigBlock(void* buf, void * pos, size_t length) {
 	eeprom_read_block(buf, (void*)pos, length);
 }
 
-void MyHwATMega328::writeConfigBlock(void* pos, void* buf, size_t length) {
+inline void MyHwATMega328::writeConfigBlock(void* pos, void* buf, size_t length) {
 	eeprom_write_block((void*)pos, (void*)buf, length);
 }
 
