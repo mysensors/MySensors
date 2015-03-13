@@ -3,6 +3,7 @@
 
 #include <MySensor.h>
 #include <SPI.h>
+#include <EEPROM.h>
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
@@ -17,6 +18,11 @@ void setup()
   gw.begin(incomingMessage, AUTO, true);
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Relay", "1.0");
+  //Clearing EEPROM values to start with a blank state(Considering Arduino Uno(ATMEGA328) with 1KB EEPROM)
+  //Change 1024 to actual size of the board being used
+  for (int i = 0; i < 1024 ; i++) {
+    EEPROM.write(i,0);
+  }
 
   // Fetch relay status
   for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
