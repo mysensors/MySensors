@@ -218,6 +218,8 @@
 #define ADDRESS_OTPMODE     18  // Sets the One-time-programmable mode
 #define ADDRESS_SELECTOR    19  // Controls writability of Selector
 
+#define SHA204_SERIAL_SZ    9   // The number of bytes the serial number consists of
+
 class atsha204Class
 {
 private:

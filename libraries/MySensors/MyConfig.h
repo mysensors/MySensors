@@ -21,11 +21,23 @@ typedef MyHwATMega328 MyHwDriver;
 // which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
 #define MY_VERIFICATION_TIMEOUT_MS 5000
 
+// Enable to turn on whitelisting
+// When enabled, a signing node will salt the signature with it's unique signature and nodeId.
+// The verifying node will look up the sender in a local table of trusted nodes and
+// do the corresponding salting in order to verify the signature.
+// For this reason, if whitelisting is enabled on one of the nodes in a sign-verify pair, both
+// nodes have to implement whitelisting for this to work.
+// Note that a node can still transmit a non-salted message (i.e. have whitelisting disabled)
+// to a node that has whitelisting enabled (assuming the receiver does not have a matching entry
+// for the sender in it's whitelist)
+//#define MY_SECURE_NODE_WHITELISTING
+
 // MySigningAtsha204 default setting
 #define MY_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
 
 // MySigningAtsha204Soft default settings
 #define MY_RANDOMSEED_PIN 7 // A7 - Pin used for random generation (do not connect anything to this)
+
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00

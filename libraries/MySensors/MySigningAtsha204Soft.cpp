@@ -40,11 +40,21 @@ static void DEBUG_ATSHASOFT_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #define DEBUG_ATSHASOFT_PRINTBUF(str, buf, sz)
 #endif
 
-MySigningAtsha204Soft::MySigningAtsha204Soft(bool requestSignatures, uint8_t randomseedPin)
+MySigningAtsha204Soft::MySigningAtsha204Soft(bool requestSignatures,
+#ifdef MY_SECURE_NODE_WHITELISTING
+	uint8_t nof_whitelist_entries, const whitelist_entry_t* the_whitelist,
+	const uint8_t* the_serial,
+#endif
+	uint8_t randomseedPin)
 	:
 	MySigning(requestSignatures),
 	rndPin(randomseedPin),
 	hmacKey({MY_HMAC_KEY}),
+#ifdef MY_SECURE_NODE_WHITELISTING
+	whitlist_sz(nof_whitelist_entries),
+	whitelist(the_whitelist),
+	node_serial_info(the_serial),
+#endif
 	verification_ongoing(false),
 	Sha256()
 
@@ -124,6 +134,19 @@ bool MySigningAtsha204Soft::signMsg(MyMessage &msg) {
 		return false;
 	}
 
+#ifdef MY_SECURE_NODE_WHITELISTING
+	// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has provided
+	Sha256.init();
+	for (int i=0; i<32; i++) Sha256.write(hmac[i]);
+	Sha256.write(msg.sender);
+	for (int i=0; i<SHA204_SERIAL_SZ; i++) Sha256.write(node_serial_info[i]);
+	memcpy(hmac, Sha256.result(), 32);
+	DEBUG_ATSHASOFT_PRINTLN("Signature salted for whitelisting");
+#endif
+
+	// Overwrite the first byte in the signature with the signing identifier
+	hmac[0] = SIGNING_IDENTIFIER;
+
 	// Transfer as much signature data as the remaining space in the message permits
 	memcpy(&msg.data[mGetLength(msg)], hmac, MAX_PAYLOAD-mGetLength(msg));
 
@@ -156,9 +179,30 @@ bool MySigningAtsha204Soft::verifyMsg(MyMessage &msg) {
 			return false; 
 		}
 
+#ifdef MY_SECURE_NODE_WHITELISTING
+		// Look up the senders nodeId in our whitelist and salt the signature with that data
+		for (int j=0; j < whitlist_sz; j++) {
+			if (whitelist[j].nodeId == msg.sender) {
+				DEBUG_ATSHASOFT_PRINTLN("Sender found in whitelist");
+				Sha256.init();
+				for (int i=0; i<32; i++) Sha256.write(hmac[i]);
+				Sha256.write(msg.sender);
+				for (int i=0; i<SHA204_SERIAL_SZ; i++) Sha256.write(whitelist[j].serial[i]);
+				memcpy(hmac, Sha256.result(), 32);
+				break;
+			}
+		}
+#endif
+
+		// Overwrite the first byte in the signature with the signing identifier
+		hmac[0] = SIGNING_IDENTIFIER;
+
 		// Compare the caluclated signature with the provided signature
 		if (memcmp(&msg.data[mGetLength(msg)], hmac, MAX_PAYLOAD-mGetLength(msg))) {
 			DEBUG_ATSHASOFT_PRINTBUF("Signature bad. Calculated signature:", hmac, MAX_PAYLOAD-mGetLength(msg));
+#ifdef MY_SECURE_NODE_WHITELISTING
+			DEBUG_ATSHASOFT_PRINTLN("Is the sender whitelisted?");
+#endif
 			return false; 
 		} else {
 			DEBUG_ATSHASOFT_PRINTLN("Signature ok");
@@ -167,7 +211,7 @@ bool MySigningAtsha204Soft::verifyMsg(MyMessage &msg) {
 	}
 }
 
-// Helper to calculate signature of msg (returned in rx_buffer[SHA204_BUFFER_POS_DATA])
+// Helper to calculate signature of msg (returned in hmac)
 bool MySigningAtsha204Soft::calculateSignature(MyMessage &msg) {
 	memset(temp_message, 0, 32);
 	memcpy(temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
@@ -225,10 +269,7 @@ bool MySigningAtsha204Soft::calculateSignature(MyMessage &msg) {
 	Sha256.write(0x23); // SN[1]
 	for (int i=0; i<2; i++) Sha256.write(0x00); // 2 bytes zeroes
 
-	hmac = Sha256.resultHmac();
-
-	// Overwrite the first byte in the signature with the signing identifier
-	hmac[0] = SIGNING_IDENTIFIER;
+	memcpy(hmac, Sha256.resultHmac(), 32);
 
 	DEBUG_ATSHASOFT_PRINTBUF("HMAC:", hmac, 32);
 	return true;

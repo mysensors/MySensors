@@ -36,10 +36,18 @@ static void DEBUG_ATSHA_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 #endif
 
 
-MySigningAtsha204::MySigningAtsha204(bool requestSignatures, uint8_t atshaPin)
+MySigningAtsha204::MySigningAtsha204(bool requestSignatures,
+#ifdef MY_SECURE_NODE_WHITELISTING
+	uint8_t nof_whitelist_entries, const whitelist_entry_t* the_whitelist,
+#endif
+	uint8_t atshaPin)
 	:
 	MySigning(requestSignatures),
 	atsha204(atshaPin),
+#ifdef MY_SECURE_NODE_WHITELISTING
+	whitelist(the_whitelist),
+	whitlist_sz(nof_whitelist_entries),
+#endif
 	verification_ongoing(false)
 {
 }
@@ -50,21 +58,14 @@ bool MySigningAtsha204::getNonce(MyMessage &msg) {
 	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
 	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
 	for (int i = 0; i < 32; i++) {
-		// Wake device before starting operations
-		if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) {
-			DEBUG_ATSHA_PRINTLN("Failed to wake device");
-			return false;
-		}
 		if (atsha204.sha204m_execute(SHA204_RANDOM, RANDOM_NO_SEED_UPDATE, 0, 0, NULL,
 											RANDOM_COUNT, tx_buffer, RANDOM_RSP_SIZE, rx_buffer) != SHA204_SUCCESS) {
 			DEBUG_ATSHA_PRINTLN("Failed to generate nonce");
 			return false;
 		}
-		atsha204.sha204c_sleep();
 		current_nonce[i] = rx_buffer[SHA204_BUFFER_POS_DATA];
 	}
 	pRnd = sha256(current_nonce, 32);
-	atsha204.sha204c_sleep();
 
 	if (!pRnd) {
 		DEBUG_ATSHA_PRINTLN("Failed to hash random value");
@@ -134,6 +135,19 @@ bool MySigningAtsha204::signMsg(MyMessage &msg) {
 		return false;
 	}
 
+#ifdef MY_SECURE_NODE_WHITELISTING
+	// Salt the signature with the senders nodeId and the unique serial of the ATSHA device
+	memcpy(current_nonce, &rx_buffer[SHA204_BUFFER_POS_DATA], 32); // We can reuse the nonce buffer now since it is no longer needed
+	current_nonce[32] = msg.sender;
+	(void)atsha204.getSerialNumber(&current_nonce[33]);
+	(void)sha256(current_nonce, 32+1+SHA204_SERIAL_SZ); // we can 'void' sha256 because the hash is already put in the correct place
+	memset(current_nonce, 0xAA, NONCE_NUMIN_SIZE_PASSTHROUGH);
+	DEBUG_ATSHA_PRINTLN("Signature salted");
+#endif
+
+	// Overwrite the first byte in the signature with the signing identifier
+	rx_buffer[SHA204_BUFFER_POS_DATA] = SIGNING_IDENTIFIER;
+
 	// Transfer as much signature data as the remaining space in the message permits
 	memcpy(&msg.data[mGetLength(msg)], &rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg));
 
@@ -166,9 +180,29 @@ bool MySigningAtsha204::verifyMsg(MyMessage &msg) {
 			return false; 
 		}
 
+#ifdef MY_SECURE_NODE_WHITELISTING
+		// Look up the senders nodeId in our whitelist and salt the signature with that data
+		for (int j=0; j < whitlist_sz; j++) {
+			if (whitelist[j].nodeId == msg.sender) {
+				DEBUG_ATSHA_PRINTLN("Sender found in whitelist");
+				memcpy(current_nonce, &rx_buffer[SHA204_BUFFER_POS_DATA], 32); // We can reuse the nonce buffer now since it is no longer needed
+				current_nonce[32] = msg.sender;
+				memcpy(&current_nonce[33], whitelist[j].serial, SHA204_SERIAL_SZ);
+				(void)sha256(current_nonce, 32+1+SHA204_SERIAL_SZ); // we can 'void' sha256 because the hash is already put in the correct place
+				break;
+			}
+		}
+#endif
+
+		// Overwrite the first byte in the signature with the signing identifier
+		rx_buffer[SHA204_BUFFER_POS_DATA] = SIGNING_IDENTIFIER;
+
 		// Compare the caluclated signature with the provided signature
 		if (memcmp(&msg.data[mGetLength(msg)], &rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg))) {
 			DEBUG_ATSHA_PRINTBUF("Signature bad. Calculated signature:", &rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg));
+#ifdef MY_SECURE_NODE_WHITELISTING
+			DEBUG_ATSHA_PRINTLN("Is the sender whitelisted?");
+#endif
 			return false; 
 		} else {
 			DEBUG_ATSHA_PRINTLN("Signature ok");
@@ -181,9 +215,6 @@ bool MySigningAtsha204::verifyMsg(MyMessage &msg) {
 bool MySigningAtsha204::calculateSignature(MyMessage &msg) {
 	memset(temp_message, 0, 32);
 	memcpy(temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
-
-	// Wake device before starting operations
-	if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) return false;
 
 	// Program the data to sign into the ATSHA204
 	if (atsha204.sha204m_execute(SHA204_WRITE, SHA204_ZONE_DATA | SHA204_ZONE_COUNT_FLAG, 8 << 3, 32, temp_message,
@@ -221,21 +252,12 @@ bool MySigningAtsha204::calculateSignature(MyMessage &msg) {
 	// Put device back to sleep
 	atsha204.sha204c_sleep();
 
-	// Overwrite the first byte in the signature with the signing identifier
-	rx_buffer[SHA204_BUFFER_POS_DATA] = SIGNING_IDENTIFIER;
-
 	DEBUG_ATSHA_PRINTBUF("HMAC:", &rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 	return true; // We return with the signature in rx_buffer[SHA204_BUFFER_POS_DATA]
 }
 
 // Helper to calculate a generic SHA256 digest of provided buffer (returned in rx_buffer[SHA204_BUFFER_POS_DATA]) (only supports one block)
 uint8_t* MySigningAtsha204::sha256(const uint8_t* data, size_t sz) {
-	// Wake device before starting operations
-	if (atsha204.sha204c_wakeup(rx_buffer) != SHA204_SUCCESS) {
-		DEBUG_ATSHA_PRINTLN("Failed to wake device");
-		return NULL; 
-	}
-
 	// Initiate SHA256 calculator
 	if (atsha204.sha204m_execute(SHA204_SHA, SHA_INIT, 0, 0, NULL,
 									SHA_COUNT_SHORT, tx_buffer, SHA_RSP_SIZE_SHORT, rx_buffer) != SHA204_SUCCESS) {
@@ -250,12 +272,16 @@ uint8_t* MySigningAtsha204::sha256(const uint8_t* data, size_t sz) {
 	// Write length data to the last bytes
 	temp_message[SHA_MSG_SIZE-2] = (sz >> 5);
 	temp_message[SHA_MSG_SIZE-1] = (sz << 3);
-	DEBUG_ATSHA_PRINTBUF("Data to hash (padded):", temp_message, SHA_MSG_SIZE);
+	DEBUG_ATSHA_PRINTBUF("Data to hash:", temp_message, SHA_MSG_SIZE);
 	if (atsha204.sha204m_execute(SHA204_SHA, SHA_CALC, 0, SHA_MSG_SIZE, temp_message,
 									SHA_COUNT_LONG, tx_buffer, SHA_RSP_SIZE_LONG, rx_buffer) != SHA204_SUCCESS) {
 		DEBUG_ATSHA_PRINTLN("Failed to calculate sha256");
 		return NULL;
 	}
+
+	// Put device back to sleep
+	atsha204.sha204c_sleep();
+
 	DEBUG_ATSHA_PRINTBUF("SHA:", &rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 	return &rx_buffer[SHA204_BUFFER_POS_DATA];
 }
