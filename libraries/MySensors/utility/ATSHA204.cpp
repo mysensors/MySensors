@@ -18,14 +18,14 @@ atsha204Class::atsha204Class(uint8_t pin)
 	device_port_IN = portInputRegister(port);
 }
 
-uint8_t atsha204Class::getSerialNumber(uint8_t * response)
+void atsha204Class::getSerialNumber(uint8_t * response)
 {
   uint8_t readCommand[READ_COUNT];
   uint8_t readResponse[READ_4_RSP_SIZE];
 
   /* read from bytes 0->3 of config zone */
   uint8_t returnCode = sha204m_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN03);
-  if (!returnCode)  // should return 0 if successful
+  if (!returnCode)
   {
     for (int i=0; i<4; i++) // store bytes 0-3 into respones array
     response[i] = readResponse[SHA204_BUFFER_POS_DATA+i];
@@ -43,7 +43,7 @@ uint8_t atsha204Class::getSerialNumber(uint8_t * response)
     }
   }
 
-  return returnCode;
+  return;
 }
 
 /* SWI bit bang functions */
@@ -212,9 +212,9 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
 
 /* Physical functions */
 
-uint8_t atsha204Class::sha204c_sleep()
+void atsha204Class::sha204c_sleep()
 {
-  return swi_send_byte(SHA204_SWI_FLAG_SLEEP);
+  swi_send_byte(SHA204_SWI_FLAG_SLEEP);
 }
 
 uint8_t atsha204Class::sha204p_receive_response(uint8_t size, uint8_t *response)
@@ -289,7 +289,7 @@ uint8_t atsha204Class::sha204c_resync(uint8_t size, uint8_t *response)
   // We lost communication. Send a Wake pulse and try
   // to receive a response (steps 2 and 3 of the
   // re-synchronization process).
-  (void) sha204c_sleep();
+  sha204c_sleep();
   ret_code = sha204c_wakeup(response);
 
   // Translate a return value of success into one

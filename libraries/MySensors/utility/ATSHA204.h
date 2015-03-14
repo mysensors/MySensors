@@ -233,15 +233,15 @@ private:
 	uint8_t swi_send_byte(uint8_t value);
 	uint8_t sha204p_receive_response(uint8_t size, uint8_t *response);
 	uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
+	uint8_t sha204c_wakeup(uint8_t *response);
+	uint8_t sha204c_resync(uint8_t size, uint8_t *response);	
+	uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
 public:
 	atsha204Class(uint8_t pin);	// Constructor
-	uint8_t sha204c_wakeup(uint8_t *response);
-	uint8_t sha204c_sleep();
-	uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
-	uint8_t sha204c_resync(uint8_t size, uint8_t *response);	
+	void sha204c_sleep();
 	uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 			uint8_t datalen1, uint8_t *data1, uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
-	uint8_t getSerialNumber(uint8_t *response);
+	void getSerialNumber(uint8_t *response);
 };
 
 #endif

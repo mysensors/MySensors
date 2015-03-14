@@ -55,7 +55,7 @@ private:
 	uint8_t hmacKey[32];
 	uint8_t rndPin;
 	uint8_t hmac[32];
-	bool calculateSignature(MyMessage &msg);
+	void calculateSignature(MyMessage &msg);
 #ifdef MY_SECURE_NODE_WHITELISTING
 	uint8_t whitlist_sz;
 	const whitelist_entry_t* whitelist;

@@ -45,7 +45,7 @@ private:
 	uint8_t temp_message[SHA_MSG_SIZE];
 	uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
 	uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
-	bool calculateSignature(MyMessage &msg);
+	void calculateSignature(MyMessage &msg);
 	uint8_t* sha256(const uint8_t* data, size_t sz);
 #ifdef MY_SECURE_NODE_WHITELISTING
 	uint8_t whitlist_sz;

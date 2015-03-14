@@ -13,16 +13,16 @@
 #include "utility/sha256.h"
 
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
-//#define DEBUG_ATSHASOFT_SIGNING
+//#define DEBUG_SIGNING
 
-#ifdef DEBUG_ATSHASOFT_SIGNING
-#define DEBUG_ATSHASOFT_PRINTLN(args) Serial.println(args)
+#ifdef DEBUG_SIGNING
+#define DEBUG_SIGNING_PRINTLN(args) Serial.println(args)
 #else
-#define DEBUG_ATSHASOFT_PRINTLN(args)
+#define DEBUG_SIGNING_PRINTLN(args)
 #endif
 
-#ifdef DEBUG_ATSHASOFT_SIGNING
-static void DEBUG_ATSHASOFT_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
+#ifdef DEBUG_SIGNING
+static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
 {
 	int i;
 	Serial.println(str);
@@ -37,7 +37,7 @@ static void DEBUG_ATSHASOFT_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
 	Serial.println();
 }
 #else
-#define DEBUG_ATSHASOFT_PRINTBUF(str, buf, sz)
+#define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif
 
 MySigningAtsha204Soft::MySigningAtsha204Soft(bool requestSignatures,
@@ -93,7 +93,7 @@ bool MySigningAtsha204Soft::getNonce(MyMessage &msg) {
 bool MySigningAtsha204Soft::checkTimer() {
 	if (verification_ongoing) {
 		if (millis() < timestamp || millis() > timestamp + MY_VERIFICATION_TIMEOUT_MS) {
-			DEBUG_ATSHASOFT_PRINTLN("Verification timeout");
+			DEBUG_SIGNING_PRINTLN(F("VT")); // VT = Verification timeout
 			// Purge nonce
 			memset(current_nonce, 0xAA, 32);
 			verification_ongoing = false;
@@ -104,13 +104,8 @@ bool MySigningAtsha204Soft::checkTimer() {
 }
 
 bool MySigningAtsha204Soft::putNonce(MyMessage &msg) {
-	if (mGetLength(msg) != MAX_PAYLOAD) {
-		DEBUG_ATSHASOFT_PRINTLN("Incoming nonce with incorrect size");
-		return false; // We require as big nonce as possible
-	}
-
 	if (((uint8_t*)msg.getCustom())[0] != SIGNING_IDENTIFIER) {
-		DEBUG_ATSHASOFT_PRINTLN("Incorrect signing identifier");
+		DEBUG_SIGNING_PRINTLN(F("ISI")); // ISI = Incorrect signing identifier
 		return false; 
 	}
 
@@ -121,18 +116,13 @@ bool MySigningAtsha204Soft::putNonce(MyMessage &msg) {
 bool MySigningAtsha204Soft::signMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
-		DEBUG_ATSHASOFT_PRINTLN("Cannot fit any signature to this message");
+		DEBUG_SIGNING_PRINTLN(F("MTOL")); // Message too large for signature to fit
 		return false; 
 	}
 
 	// Calculate signature of message
 	mSetSigned(msg, 1); // make sure signing flag is set before signature is calculated
-	DEBUG_ATSHASOFT_PRINTBUF("Message to sign:", (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
-	if (!calculateSignature(msg)) {
-		DEBUG_ATSHASOFT_PRINTLN("Failed to calculate signature");
-		mSetSigned(msg, 0); // make sure signing flag is truthful
-		return false;
-	}
+	calculateSignature(msg);
 
 #ifdef MY_SECURE_NODE_WHITELISTING
 	// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has provided
@@ -141,7 +131,7 @@ bool MySigningAtsha204Soft::signMsg(MyMessage &msg) {
 	Sha256.write(msg.sender);
 	for (int i=0; i<SHA204_SERIAL_SZ; i++) Sha256.write(node_serial_info[i]);
 	memcpy(hmac, Sha256.result(), 32);
-	DEBUG_ATSHASOFT_PRINTLN("Signature salted for whitelisting");
+	DEBUG_SIGNING_PRINTLN(F("SWS")); // SWS = Signature whitelist salted
 #endif
 
 	// Overwrite the first byte in the signature with the signing identifier
@@ -155,7 +145,7 @@ bool MySigningAtsha204Soft::signMsg(MyMessage &msg) {
 
 bool MySigningAtsha204Soft::verifyMsg(MyMessage &msg) {
 	if (!verification_ongoing) {
-		DEBUG_ATSHASOFT_PRINTLN("No active verification session");
+		DEBUG_SIGNING_PRINTLN(F("NAVS")); // NAVS = No active verification session
 		return false; 
 	} else {
 		// Make sure we have not expired
@@ -166,24 +156,19 @@ bool MySigningAtsha204Soft::verifyMsg(MyMessage &msg) {
 		verification_ongoing = false;
 
 		if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER) {
-			DEBUG_ATSHASOFT_PRINTLN("Incorrect signing identifier");
+			DEBUG_SIGNING_PRINTLN(F("ISI")); // ISI = Incorrect signing identifier
 			return false; 
 		}
-
-		DEBUG_ATSHASOFT_PRINTBUF("Message to verify:", (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
-		DEBUG_ATSHASOFT_PRINTBUF("Signature in message:", (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg));
 
 		// Get signature of message
-		if (!calculateSignature(msg)) {
-			DEBUG_ATSHASOFT_PRINTLN("Failed to calculate signature");
-			return false; 
-		}
+		DEBUG_SIGNING_PRINTBUF(F("SIM:"), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg)); // SIM = Signature in message
+		calculateSignature(msg);
 
 #ifdef MY_SECURE_NODE_WHITELISTING
 		// Look up the senders nodeId in our whitelist and salt the signature with that data
 		for (int j=0; j < whitlist_sz; j++) {
 			if (whitelist[j].nodeId == msg.sender) {
-				DEBUG_ATSHASOFT_PRINTLN("Sender found in whitelist");
+				DEBUG_SIGNING_PRINTLN(F("SIW")); // SIW = Sender found in whitelist
 				Sha256.init();
 				for (int i=0; i<32; i++) Sha256.write(hmac[i]);
 				Sha256.write(msg.sender);
@@ -199,22 +184,24 @@ bool MySigningAtsha204Soft::verifyMsg(MyMessage &msg) {
 
 		// Compare the caluclated signature with the provided signature
 		if (memcmp(&msg.data[mGetLength(msg)], hmac, MAX_PAYLOAD-mGetLength(msg))) {
-			DEBUG_ATSHASOFT_PRINTBUF("Signature bad. Calculated signature:", hmac, MAX_PAYLOAD-mGetLength(msg));
+			DEBUG_SIGNING_PRINTBUF(F("SNOK:"), hmac, MAX_PAYLOAD-mGetLength(msg)); // SNOK = Signature bad
 #ifdef MY_SECURE_NODE_WHITELISTING
-			DEBUG_ATSHASOFT_PRINTLN("Is the sender whitelisted?");
+			DEBUG_SIGNING_PRINTLN(F("W?")); // W? = Is the sender whitelisted?
 #endif
 			return false; 
 		} else {
-			DEBUG_ATSHASOFT_PRINTLN("Signature ok");
+			DEBUG_SIGNING_PRINTLN(F("SOK")); // SOK = Signature OK
 			return true;
 		}
 	}
 }
 
 // Helper to calculate signature of msg (returned in hmac)
-bool MySigningAtsha204Soft::calculateSignature(MyMessage &msg) {
+void MySigningAtsha204Soft::calculateSignature(MyMessage &msg) {
 	memset(temp_message, 0, 32);
 	memcpy(temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
+	DEBUG_SIGNING_PRINTBUF(F("MSG:"), (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg))); // MSG = Message to sign
+	DEBUG_SIGNING_PRINTBUF(F("CNC:"), current_nonce, 32); // CNC = Current nonce
 
 	// ATSHA204 calculates the HMAC with a PSK and a SHA256 digest of the following data:
 	// 32 bytes zeroes
@@ -271,6 +258,5 @@ bool MySigningAtsha204Soft::calculateSignature(MyMessage &msg) {
 
 	memcpy(hmac, Sha256.resultHmac(), 32);
 
-	DEBUG_ATSHASOFT_PRINTBUF("HMAC:", hmac, 32);
-	return true;
+	DEBUG_SIGNING_PRINTBUF(F("HMAC:"), hmac, 32);
 }
