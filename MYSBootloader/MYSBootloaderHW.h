@@ -5,18 +5,10 @@
 
 // hardware
 
-
-
-#ifdef USE_PRESCALER
 #define F_CPU_DIV	clock_div_4
-#else
-#define F_CPU_DIV	clock_div_1
-#endif
-
-#define F_CPU_REAL	F_CPU / (1 << F_CPU_DIV)
-#define DELAY_M		125 * (1 << F_CPU_DIV)
-#define BAUD_SETTING (( (F_CPU + BAUD_RATE * 4L) / ((BAUD_RATE * 8L))) - 1 )
-#define BAUD_ACTUAL (F_CPU/(8 * ((BAUD_SETTING)+1)))
+#define F_CPU_REAL	F_CPU / (F_CPU_DIV)
+#define BAUD_SETTING (( (F_CPU_REAL + BAUD_RATE * 4L) / ((BAUD_RATE * 8L))) - 1 )
+#define BAUD_ACTUAL (F_CPU_REAL/(8 * ((BAUD_SETTING)+1)))
 #define BAUD_ERROR (( 100*(BAUD_RATE - BAUD_ACTUAL) ) / BAUD_RATE)
 #define UART_SRA UCSR0A
 #define UART_SRB UCSR0B
@@ -56,20 +48,6 @@ void watchdogConfig(uint8_t x) {
 	WDTCSR = x;
 }
 
-// delay procedures
-
-inline static void delayu() {
-	asm volatile ("nop");
-}
-
-static void delaym(uint8_t value) {
-	for (uint8_t outer = 0; outer < value; outer++) {
-		for (uint16_t inner = 0; inner < DELAY_M; inner++) {
-				delayu();	
-		}
-	}			
-}
-
 // SPI communication
 
 #define SPI_DDR		DDRB
@@ -80,10 +58,12 @@ static void delaym(uint8_t value) {
 #define	SPI_MOSI	3		// Arduino Pin 11 <-> Bit 3 of port B
 #define	SPI_CSN		2		// Arduino Pin 10 <-> Bit 2 of port B
 #define	SPI_CE		1		// Arduino Pin  9 <-> Bit 1 of port B
-#define csnlow() SPI_PORT &= ~_BV(SPI_CSN)//;delaym(1)			// not necessary
-#define csnhigh() SPI_PORT |= _BV(SPI_CSN)//;delaym(1)			// not necessary
-#define celow() SPI_PORT &= ~_BV(SPI_CE)//;delaym(1)			// not necessary
-#define cehigh() SPI_PORT |= _BV(SPI_CE)//;delaym(1)			// minimum puls width 10us
+#define CE_PULSE_LENGTH	20	// IMPORTANT: minimum CE pulse width 10us, see nRF24L01 specs. Set 20us to be on the safe side
+
+#define csnlow() SPI_PORT &= ~_BV(SPI_CSN)
+#define csnhigh() SPI_PORT |= _BV(SPI_CSN)
+#define celow() SPI_PORT &= ~_BV(SPI_CE)
+#define cehigh() SPI_PORT |= _BV(SPI_CE)
 
 static void SPIinit() {
 	// set pin mode: MOSI,SCLK,CE = OUTPUT, MISO = INPUT
@@ -91,15 +71,16 @@ static void SPIinit() {
 }
 
 static uint8_t SPItransfer(uint8_t value) {
-	for(uint8_t i = 0 ;i < 8;i++) {
+	// bit bang SPI
+	for(uint8_t i = 0; i<8; i++) {
 		if (value & 0x80) SPI_PORT |= _BV(SPI_MOSI); else SPI_PORT &= ~_BV(SPI_MOSI);
-		delayu();
+		//_delay_us(1);
 		value <<= 1;
 		SPI_PORT |= _BV(SPI_SCLK);
-		delayu();
+		//_delay_us(1);
 		value |= ((SPI_PIN >> SPI_MISO) & 0x01);
 		SPI_PORT &= ~_BV(SPI_SCLK);
-		delayu();
+		//_delay_us(1);
 	}
 	return value;	
 }

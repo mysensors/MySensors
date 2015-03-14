@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <util/crc16.h>
+#include <util/delay.h>
 
 #include "MyMessage.h"
 #include "MySensor.h"
@@ -13,11 +14,17 @@
 
 
 #define FIRMWARE_BLOCK_SIZE	16
+#define EEPROM_SIZE 1024			// 1024 bytes for ATMEGA328
 
-// FW config structure, stored in eeprom
 typedef struct {
-	uint16_t type;
-	uint16_t version;
+	union {
+		uint16_t type;
+		uint16_t bl_command;
+	};
+	union {
+		uint16_t version;
+		uint16_t bl_data
+	};
 	uint16_t blocks;
 	uint16_t crc;
 } __attribute__((packed)) NodeFirmwareConfig;
@@ -48,9 +55,10 @@ static NodeFirmwareConfig fc;
 static MyMessage outMsg;
 static MyMessage inMsg;
 
-#ifdef PRESCALE
-static clock_div_t orgClockDiv = 0;
-#endif
+static boolean configuredParentFound = false;
+static uint8_t configuredParentID = 0xFF;
+
+//static clock_div_t orgClockDiv = 0;
 
 static uint8_t progBuf[SPM_PAGESIZE];
 
