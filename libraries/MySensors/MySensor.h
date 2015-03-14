@@ -257,7 +257,6 @@ class MySensor
 	void setupNode();
 	void findParentNode();
 	uint8_t crc8Message(MyMessage &message);
-	bool sign(MyMessage &message);
 };
 #endif
 

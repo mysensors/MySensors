@@ -192,7 +192,33 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
 		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
 		  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
-		if (!sign(message)) {
+		bool signOk = false;
+		// Send nonce-request
+		if (!sendRoute(build(tmpMsg, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
+			debug(PSTR("nonce tr err\n"));
+			return false;
+		}
+		// We have to wait for the nonce to arrive before we can sign our original message
+		// Other messages could come in-between. We trust process() takes care of them
+		unsigned long enter = hw_millis();
+		msgSign = message; // Copy the message to sign since message buffer might be touched in process()
+		while (hw_millis() - enter < MY_VERIFICATION_TIMEOUT_MS) {
+			if (process()) {
+				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
+					// Proceed with signing if nonce has been received
+					if (signer.putNonce(getLastMessage()) && signer.signMsg(msgSign)) {
+						message = msgSign; // Write the signed message back
+						signOk = true;
+					}
+					break;
+				}
+			}
+		}
+		if (hw_millis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
+			debug(PSTR("nonce tmo\n"));
+			return false;
+		}
+		if (!signOk) {
 			debug(PSTR("sign fail\n"));
 			return false;
 		}
@@ -522,29 +548,5 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	radio.powerDown();
 	return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
-}
-
-bool MySensor::sign(MyMessage &message) {
-	if (!sendRoute(build(tmpMsg, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
-		return false;
-	} else {
-		// We have to wait for the nonce to arrive before we can sign our original message
-		// Other messages could come in-between. We trust process() takes care of them
-		unsigned long enter = hw_millis();
-		msgSign = message; // Copy the message to sign since message buffer might be touched in process()
-		while (hw_millis() - enter < 5000) {
-			if (process()) {
-				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
-					// Proceed with signing if nonce has been received
-					if (signer.putNonce(getLastMessage()) && signer.signMsg(msgSign)) {
-						message = msgSign; // Write the signed message back
-						return true;
-					}
-					break;
-				}
-			}
-		}
-	}
-	return false;
 }
 
