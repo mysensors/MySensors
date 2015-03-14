@@ -406,7 +406,7 @@ boolean MySensor::process() {
 					CLEAR_SIGN(msg.sender);
 				}
 				// Save updated table
-				hw_writeConfigBlock((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
+				hw_writeConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
 
 				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
