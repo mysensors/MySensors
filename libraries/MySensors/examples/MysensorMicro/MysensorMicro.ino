@@ -12,6 +12,8 @@
 #include <SPI.h>
 #include <SPIFlash.h>
 #include <EEPROM.h>  
+//#include <sha204_library.h>
+
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
@@ -23,8 +25,8 @@
 
 //Pin definitions
 #define TEST_PIN       A0
-#define RESET_CFG_PIN  A1
 #define LED_PIN        A2
+#define ATSHA204_PIN   17 // A3
 
 #define MEASURE_INTERVAL 60000
 
@@ -56,13 +58,9 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   // First check if we should boot into clear eeprom mode
-  pinMode(RESET_CFG_PIN, INPUT);
   pinMode(TEST_PIN,INPUT);
-  digitalWrite(RESET_CFG_PIN, HIGH); // Enable pullup
   digitalWrite(TEST_PIN, HIGH);
   if (!digitalRead(TEST_PIN)) testMode();
-  if (!digitalRead(RESET_CFG_PIN)) resetEEP();
-  digitalWrite(RESET_CFG_PIN, LOW);
   digitalWrite(TEST_PIN,LOW);
   digitalWrite(LED_PIN, HIGH); 
   
@@ -82,7 +80,7 @@ void setup() {
   gw.present(CHILD_ID_HUM,S_HUM);
   
   gw.present(CHILD_ID_BATT, S_POWER);
-  switchClock(1<<CLKPS2);
+  switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
 }
 
 
@@ -180,21 +178,6 @@ long readVcc() {
   return result; // Vcc in millivolts
 }
 
-
-/*
- * Resets eeprom to default value (while blinking LED_PIN)
- */
-void resetEEP()
-{
-  for (int i=0;i<512;i++) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(100);
-    EEPROM.write(i, 0xff);
-  }
-}
-
 void switchClock(unsigned char clk)
 {
   cli();
@@ -204,12 +187,40 @@ void switchClock(unsigned char clk)
   sei();
 }
 
+
+// Verify all peripherals, and signal via the LED if any problems.
 void testMode()
 {
-  if (humiditySensor.begin())
+  byte tests = 0;
+  
+  Serial.println("Testing peripherals!");
+  
+  if (humiditySensor.begin()) 
+  {
+    Serial.println("Si7021 ok!");
+    tests ++;
+  }
+  else
+  {
+    Serial.println("---> Si7021 FAILED!");
+  }
+  
   if (flash.initialize())
   {
-    while (1)
+    Serial.println("flash OK!");
+    tests ++;
+  }
+  else
+  {
+    Serial.println("---> flash failed!");
+  }
+
+  Serial.println("Test finished");
+  
+  if (tests == 2) 
+  {
+    Serial.println("Selftest ok!");
+    while (1) // Blink OK pattern!
     {
       digitalWrite(LED_PIN, HIGH);
       delay(800);
@@ -219,7 +230,8 @@ void testMode()
   }
   else 
   {
-    while (1)
+    Serial.println("----> Selftest failed!");
+    while (1) // Blink FAILED pattern! Rappidly blinking..
     {
       digitalWrite(LED_PIN, HIGH);
       delay(200);
