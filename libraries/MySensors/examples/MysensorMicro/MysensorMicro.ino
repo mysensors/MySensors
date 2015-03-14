@@ -1,7 +1,7 @@
 // Default sensor sketch for MySensor Micro module
 // Act as a temperature / humidity sensor by default.
 //
-// If A1 is held low while powering on, it will clear eeprom (and thereby the stored nodeid)
+// If A0 is held low while powering on, it will enter testmode, which verifies all on-board peripherals
 // 
 // Battery voltage is repported as child sensorId 199, as well as battery percentage
 
@@ -193,16 +193,16 @@ void testMode()
 {
   byte tests = 0;
   
-  Serial.println("Testing peripherals!");
+  Serial.println(F("Testing peripherals!"));
   
   if (humiditySensor.begin()) 
   {
-    Serial.println("Si7021 ok!");
+    Serial.println(F("Si7021 ok!"));
     tests ++;
   }
   else
   {
-    Serial.println("---> Si7021 FAILED!");
+    Serial.println(F("---> Si7021 FAILED!"));
   }
   
   if (flash.initialize())
@@ -212,14 +212,14 @@ void testMode()
   }
   else
   {
-    Serial.println("---> flash failed!");
+    Serial.println(F("---> flash failed!"));
   }
 
-  Serial.println("Test finished");
+  Serial.println(F("Test finished"));
   
   if (tests == 2) 
   {
-    Serial.println("Selftest ok!");
+    Serial.println(F("Selftest ok!"));
     while (1) // Blink OK pattern!
     {
       digitalWrite(LED_PIN, HIGH);
@@ -230,7 +230,7 @@ void testMode()
   }
   else 
   {
-    Serial.println("----> Selftest failed!");
+    Serial.println(F("----> Selftest failed!"));
     while (1) // Blink FAILED pattern! Rappidly blinking..
     {
       digitalWrite(LED_PIN, HIGH);
