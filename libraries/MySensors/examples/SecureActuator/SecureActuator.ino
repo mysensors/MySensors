@@ -20,6 +20,7 @@
 
 MyTransportNRF24 radio;  // NRFRF24L01 radio driver
 MyHwATMega328 hw; // Select AtMega328 hardware profile
+#ifdef MY_SIGNING_FEATURE
 #ifdef MY_SECURE_NODE_WHITELISTING
 #ifdef USE_SOFTWARE_ATSHA
 // Change the soft_serial value to an arbitrary value for proper security
@@ -43,6 +44,10 @@ MySigningAtsha204 signer;
 #endif
 #endif
 MySensor gw(radio, hw, signer);
+#else
+#error SecureActuator cannot possibly be secure without signing enabled
+MySensor gw(radio, hw);
+#endif
 
 void setup()  
 {
