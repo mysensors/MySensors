@@ -1,13 +1,17 @@
 #ifndef MyConfig_h
 #define MyConfig_h
 #include <stdint.h>
-/**********************************
-*  Enable/Disable debug logging
-***********************************/
+
+// Enable debug flag for debug prints. This will add a lot to the size of the final sketch but good
+// to see what is actually is happening when developing
 #define DEBUG
 
+// Serial output baud rate
 #define BAUD_RATE 115200
 
+// Set the hardware driver to use (initialized by MySensor-class)
+#include "MyHwATMega328.h"
+typedef MyHwATMega328 MyHwDriver;
 
 /**********************************
 *  Message Signing Settings

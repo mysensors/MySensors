@@ -16,6 +16,27 @@ MyHwATMega328::MyHwATMega328() : MyHw()
 }
 
 
+/*
+
+// The following was redifined as macros to save space
+
+inline uint8_t MyHwATMega328::readConfig(uint8_t pos) {
+	return eeprom_read_byte((uint8_t*)pos);
+}
+
+inline void MyHwATMega328::writeConfig(uint8_t pos, uint8_t value) {
+	eeprom_update_byte((uint8_t*)pos, value);
+}
+
+inline void MyHwATMega328::readConfigBlock(void* buf, void * pos, size_t length) {
+	eeprom_read_block(buf, (void*)pos, length);
+}
+
+inline void MyHwATMega328::writeConfigBlock(void* pos, void* buf, size_t length) {
+	eeprom_write_block((void*)pos, (void*)buf, length);
+}
+
+
 inline void MyHwATMega328::init() {
 	Serial.begin(BAUD_RATE);
 }
@@ -25,13 +46,13 @@ inline void MyHwATMega328::watchdogReset() {
 }
 
 inline void MyHwATMega328::reboot() {
-	wdt_enable(WDTO_15MS);
-	for (;;);
+	wdt_enable(WDTO_15MS); for (;;);
 }
 
-inline unsigned long MyHwATMega328::millisec() {
-	return millis();
+inline unsigned long MyHwATMega328::millis() {
+	return ::millis();
 }
+*/
 
 
 void powerDown(period_t period) {
@@ -128,21 +149,6 @@ inline uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t i
 	return retVal;
 }
 
-inline uint8_t MyHwATMega328::readConfigByte(uint8_t pos) {
-	return eeprom_read_byte((uint8_t*)pos);
-}
-
-inline void MyHwATMega328::writeConfigByte(uint8_t pos, uint8_t value) {
-	eeprom_update_byte((uint8_t*)pos, value);
-}
-
-inline void MyHwATMega328::readConfigBlock(void* buf, void * pos, size_t length) {
-	eeprom_read_block(buf, (void*)pos, length);
-}
-
-inline void MyHwATMega328::writeConfigBlock(void* pos, void* buf, size_t length) {
-	eeprom_write_block((void*)pos, (void*)buf, length);
-}
 
 
 #ifdef DEBUG
