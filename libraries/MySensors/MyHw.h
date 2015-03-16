@@ -3,9 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "MyConfig.h"
 
-//#include "MySensor.h"
 /**
  * The Hw contains all hardware specific details of the platform
  */

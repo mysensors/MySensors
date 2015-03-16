@@ -1,7 +1,8 @@
 #ifndef MyHwATMega328_h
 #define MyHwATMega328_h
 
-#include "MyConfig.h"
+#include "MyHw.h"
+//#include "MyConfig.h"
 #include "MyMessage.h"
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
@@ -10,7 +11,6 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 
-#include "MyHw.h"
 
 #ifdef __cplusplus
 #include <Arduino.h>
@@ -20,12 +20,12 @@
 // Define these as macros to save valuable space
 #define hw_init() Serial.begin(BAUD_RATE)
 #define hw_watchdogReset() wdt_reset()
-#define hw_reboot() wdt_enable(WDTO_15MS); for (;;)
+#define hw_reboot() wdt_enable(WDTO_15MS); while (1)
 #define hw_millis() millis()
-#define hw_readConfig(__pos) eeprom_read_byte((uint8_t*)__pos)
-#define hw_writeConfig(__pos, __value) eeprom_update_byte((uint8_t*)__pos, __value)
-#define hw_readConfigBlock(__buf, __pos, __length) eeprom_read_block(buf, (void*)__pos, __length)
-#define hw_writeConfigBlock(__pos, __buf, __length) eeprom_write_block((void*)__pos, (void*)__buf, __length)
+#define hw_readConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
+#define hw_writeConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
+#define hw_readConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
+#define hw_writeConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
 
 
 
