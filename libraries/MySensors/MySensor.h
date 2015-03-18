@@ -18,8 +18,10 @@
 #include "MyTransport.h"
 #include "MyTransportNRF24.h"
 #include "MyParser.h"
+#ifdef MY_SIGNING_FEATURE
 #include "MySigning.h"
 #include "MySigningNone.h"
+#endif
 #include "MyMessage.h"
 #include <stddef.h>
 #include <stdarg.h>
@@ -73,7 +75,11 @@ class MySensor
 	* Creates a new instance of Sensor class.
 	*
 	*/
-	MySensor(MyTransport &radio =*new MyTransportNRF24(), MySigning &signer=*new MySigningNone(), MyHw &hw=*new MyHwDriver());
+	MySensor(MyTransport &radio =*new MyTransportNRF24(), MyHw &hw=*new MyHwDriver()
+#ifdef MY_SIGNING_FEATURE
+		, MySigning &signer=*new MySigningNone()
+#endif
+		);
 
 	/**
 	* Begin operation of the MySensors library
@@ -233,14 +239,16 @@ class MySensor
 	bool repeaterMode;
 	bool autoFindParent;
 	bool isGateway;
-	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
 
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage tmpMsg ;  // Buffer for temporary messages (acks and nonces among others).
+#ifdef MY_SIGNING_FEATURE
+	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
 	MyMessage msgSign;  // Buffer for message to sign.
+	MySigning& signer;
+#endif
 
 	MyTransport& radio;
-	MySigning& signer;
 	MyHw& hw;
 	
 	boolean sendWrite(uint8_t dest, MyMessage &message);
@@ -257,7 +265,6 @@ class MySensor
 	void setupNode();
 	void findParentNode();
 	uint8_t crc8Message(MyMessage &message);
-	bool sign(MyMessage &message);
 };
 #endif
 

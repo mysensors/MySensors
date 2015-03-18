@@ -91,7 +91,9 @@ void checkButtonTriggeredInclusion() {
    if (buttonTriggeredInclusion) {
     // Ok, someone pressed the inclusion button on the gateway
     // start inclusion mode for 1 munute.
+#ifdef DEBUG
     serial(PSTR("0;0;%d;0;%d;Inclusion started by button.\n"),  C_INTERNAL, I_LOG_MESSAGE);
+#endif
     buttonTriggeredInclusion = false;
     setInclusionMode(true);
   }

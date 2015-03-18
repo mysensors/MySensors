@@ -13,10 +13,12 @@
 
 #define DISTANCE_INVALID (0xFF)
 
+#ifdef MY_SIGNING_FEATURE
 // Macros for manipulating signing requirement table
 #define DO_SIGN(node) (node == 0 ? (~doSign[0]&1) : (~doSign[node>>4]&(node%16)))
 #define SET_SIGN(node) (node == 0 ? (doSign[0]&=~1) : (doSign[node>>4]&=~(node%16)))
 #define CLEAR_SIGN(node) (node == 0 ? (doSign[0]|=1) : (doSign[node>>4]|=(node%16)))
+#endif
 
 // Inline function and macros
 static inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
@@ -38,10 +40,16 @@ static inline bool isValidDistance( const uint8_t distance ) {
 }
 
 
-MySensor::MySensor(MyTransport &_radio, MySigning &_signer, MyHw &_hw)
+MySensor::MySensor(MyTransport &_radio, MyHw &_hw
+#ifdef MY_SIGNING_FEATURE
+	, MySigning &_signer
+#endif
+	)
 	:
 	radio(_radio),
+#ifdef MY_SIGNING_FEATURE
 	signer(_signer),
+#endif
 	hw(_hw)
 {
 }
@@ -63,8 +71,10 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+#ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
 	hw_readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
+#endif
 
 	if (isGateway) {
 		nc.distance = 0;
@@ -128,6 +138,7 @@ void MySensor::setupNode() {
 
 	// Present node and request config
 	if (!isGateway && nc.nodeId != AUTO) {
+#ifdef MY_SIGNING_FEATURE
 		// Notify gateway (and possibly controller) about the signing preferences of this node
 		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(signer.requestSignatures()));
 
@@ -135,6 +146,7 @@ void MySensor::setupNode() {
 		if (signer.requestSignatures()) {
 			wait(2000);
 		}
+#endif
 
 		// Send presentation for this radio node (attach
 		present(NODE_SENSOR_ID, repeaterMode? S_ARDUINO_REPEATER_NODE : S_ARDUINO_NODE);
@@ -186,19 +198,47 @@ boolean MySensor::sendRoute(MyMessage &message) {
 
 	mSetVersion(message, PROTOCOL_VERSION);
 
+#ifdef MY_SIGNING_FEATURE
 	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
 	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(msg) &&
 		(mGetCommand(message) != C_INTERNAL ||
 		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
 		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
 		  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
-		if (!sign(message)) {
+		bool signOk = false;
+		// Send nonce-request
+		if (!sendRoute(build(tmpMsg, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
+			debug(PSTR("nonce tr err\n"));
+			return false;
+		}
+		// We have to wait for the nonce to arrive before we can sign our original message
+		// Other messages could come in-between. We trust process() takes care of them
+		unsigned long enter = hw_millis();
+		msgSign = message; // Copy the message to sign since message buffer might be touched in process()
+		while (hw_millis() - enter < MY_VERIFICATION_TIMEOUT_MS) {
+			if (process()) {
+				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
+					// Proceed with signing if nonce has been received
+					if (signer.putNonce(getLastMessage()) && signer.signMsg(msgSign)) {
+						message = msgSign; // Write the signed message back
+						signOk = true;
+					}
+					break;
+				}
+			}
+		}
+		if (hw_millis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
+			debug(PSTR("nonce tmo\n"));
+			return false;
+		}
+		if (!signOk) {
 			debug(PSTR("sign fail\n"));
 			return false;
 		}
 		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
 		// or signature will become invalid and the message rejected by the receiver
 	} else mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
+#endif
 
 	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
 		// If destination is the gateway or if we aren't a repeater, let
@@ -313,10 +353,13 @@ boolean MySensor::process() {
 	if (!radio.available(&to))
 		return false;
 
+#ifdef MY_SIGNING_FEATURE
 	(void)signer.checkTimer(); // Manage signing timeout
-	
+#endif
+
 	uint8_t len = radio.receive((uint8_t *)&msg);
 
+#ifdef MY_SIGNING_FEATURE
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 	// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
 	if (signer.requestSignatures() && msg.destination == nc.nodeId && mGetLength(msg) && !mGetAck(msg) &&
@@ -334,6 +377,7 @@ boolean MySensor::process() {
 			return false; // This signed message has been tampered with!
 		}
 	}
+#endif
 
 	// Add string termination, good if we later would want to print it.
 	msg.data[mGetLength(msg)] = '\0';
@@ -392,6 +436,7 @@ boolean MySensor::process() {
 					}
 				}
 				return false;
+#ifdef MY_SIGNING_FEATURE
 			} else if (type == I_GET_NONCE) {
 				if (signer.getNonce(msg)) {
 					sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
@@ -406,7 +451,7 @@ boolean MySensor::process() {
 					CLEAR_SIGN(msg.sender);
 				}
 				// Save updated table
-				hw_writeConfigBlock((void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, (void*)doSign, sizeof(doSign));
+				hw_writeConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
 
 				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
@@ -420,6 +465,7 @@ boolean MySensor::process() {
 				return false; // Signing request is an internal MySensor protocol message, no need to inform caller about this
 			} else if (type == I_GET_NONCE_RESPONSE) {
 				return true; // Just pass along nonce silently (no need to call callback for these)
+#endif
 			} else if (sender == GATEWAY_ADDRESS) {
 				bool isMetric;
 
@@ -522,29 +568,5 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
 	radio.powerDown();
 	return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
-}
-
-bool MySensor::sign(MyMessage &message) {
-	if (!sendRoute(build(tmpMsg, nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
-		return false;
-	} else {
-		// We have to wait for the nonce to arrive before we can sign our original message
-		// Other messages could come in-between. We trust process() takes care of them
-		unsigned long enter = hw_millis();
-		msgSign = message; // Copy the message to sign since message buffer might be touched in process()
-		while (hw_millis() - enter < 5000) {
-			if (process()) {
-				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
-					// Proceed with signing if nonce has been received
-					if (signer.putNonce(getLastMessage()) && signer.signMsg(msgSign)) {
-						message = msgSign; // Write the signed message back
-						return true;
-					}
-					break;
-				}
-			}
-		}
-	}
-	return false;
 }
 

@@ -3,20 +3,21 @@
  
  Created by Patrick "Anticimex" Fallberg <patrick@fallberg.net>
 */
+#include "MyConfig.h"
 #include "MySigning.h"
 #include "MySigningNone.h"
 
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
-//#define DEBUG_NONE_SIGNING
+//#define DEBUG_SIGNING
 
-#ifdef DEBUG_NONE_SIGNING
-#define DEBUG_NONE_PRINTLN(args) Serial.println(args)
+#ifdef DEBUG_SIGNING
+#define DEBUG_SIGNING_PRINTLN(args) Serial.println(args)
 #else
-#define DEBUG_NONE_PRINTLN(args)
+#define DEBUG_SIGNING_PRINTLN(args)
 #endif
 
-#ifdef DEBUG_NONE_SIGNING
-static void DEBUG_NONE_PRINTBUF(char* str, uint8_t* buf, uint8_t sz)
+#ifdef DEBUG_SIGNING
+static void DEBUG_NONE_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
 {
 	int i;
 	Serial.println(str);
@@ -52,7 +53,7 @@ bool MySigningNone::putNonce(MyMessage &msg) {
 bool MySigningNone::signMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
-		DEBUG_NONE_PRINTLN("Cannot fit any signature to this message");
+		DEBUG_SIGNING_PRINTLN(F("MTOL")); // Message too large for signature to fit
 		return false; 
 	}
 	mSetSigned(msg, 1); // make sure signing flag is set before signature is calculated
