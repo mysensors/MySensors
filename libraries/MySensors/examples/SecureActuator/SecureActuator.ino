@@ -32,7 +32,7 @@ whitelist_entry_t node_whitelist[] = {
     .serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01} }
 };
 #ifdef USE_SOFTWARE_ATSHA
-MySigningAtsha204Soft signer;  // Message signing driver
+MySigningAtsha204Soft signer(true, 1, node_whitelist, soft_serial);  // Message signing driver
 #else
 MySigningAtsha204 signer(true, 1, node_whitelist);
 #endif
