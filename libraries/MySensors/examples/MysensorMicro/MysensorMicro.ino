@@ -12,8 +12,8 @@
 #include <SPI.h>
 #include <SPIFlash.h>
 #include <EEPROM.h>  
-//#include <sha204_library.h>
-
+#include <sha204_lib_return_codes.h>
+#include <sha204_library.h>
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
@@ -27,6 +27,10 @@
 #define TEST_PIN       A0
 #define LED_PIN        A2
 #define ATSHA204_PIN   17 // A3
+
+const int sha204Pin = ATSHA204_PIN;
+atsha204Class sha204(sha204Pin);
+
 
 #define MEASURE_INTERVAL 60000
 
@@ -194,11 +198,13 @@ void switchClock(unsigned char clk)
 // Verify all peripherals, and signal via the LED if any problems.
 void testMode()
 {
+  uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
+  uint8_t ret_code;
   byte tests = 0;
   
   Serial.println(F("Testing peripherals!"));
   Serial.print(F("-> SI7021 : ")); 
-  delay(500);
+  delay(100);
   
   if (humiditySensor.begin()) 
   {
@@ -209,10 +215,10 @@ void testMode()
   {
     Serial.println(F("failed!"));
   }
-  delay(500);
+  delay(100);
 
   Serial.print(F("-> Flash : "));
-delay(500);
+delay(100);
   if (flash.initialize())
   {
     Serial.println(F("ok!"));
@@ -222,10 +228,43 @@ delay(500);
   {
     Serial.println(F("failed!"));
   }
-delay(500);
+delay(100);
+  
+  Serial.println(F("-> SHA204 : "));
+  ret_code = sha204.sha204c_wakeup(rx_buffer);
+  if (ret_code != SHA204_SUCCESS)
+  {
+    Serial.print(F("Failed to wake device. Response: ")); Serial.println(ret_code, HEX);
+  }
+  
+  if (ret_code == SHA204_SUCCESS)
+  {
+    ret_code = sha204.getSerialNumber(rx_buffer);
+    if (ret_code != SHA204_SUCCESS)
+    {
+      Serial.print(F("Failed to obtain device serial number. Response: ")); Serial.println(ret_code, HEX);
+    }
+    else
+    {
+      Serial.print(F("Device serial:   "));
+      for (int i=0; i<9; i++)
+      {
+        if (rx_buffer[i] < 0x10)
+        {
+          Serial.print('0'); // Because Serial.print does not 0-pad HEX
+        }
+        Serial.print(rx_buffer[i], HEX);
+      }
+      Serial.println();
+      tests ++;
+    }
+
+  }
+ 
+
   Serial.println(F("Test finished"));
   
-  if (tests == 2) 
+  if (tests == 3) 
   {
     Serial.println(F("Selftest ok!"));
     while (1) // Blink OK pattern!
