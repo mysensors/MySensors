@@ -34,7 +34,7 @@
 #define FORCE_TRANSMIT_INTERVAL 30 
 
 SI7021 humiditySensor;
-SPIFlash flash(8, 0xEF30);
+SPIFlash flash(8, 0x1F65);
 
 MySensor gw;
 
@@ -57,10 +57,13 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  // First check if we should boot into clear eeprom mode
+  Serial.begin(115200);
+  // First check if we should boot into test mode
+  testMode();
   pinMode(TEST_PIN,INPUT);
   digitalWrite(TEST_PIN, HIGH);
   if (!digitalRead(TEST_PIN)) testMode();
+  
   digitalWrite(TEST_PIN,LOW);
   digitalWrite(LED_PIN, HIGH); 
   
@@ -194,27 +197,32 @@ void testMode()
   byte tests = 0;
   
   Serial.println(F("Testing peripherals!"));
+  Serial.print(F("-> SI7021 : ")); 
+  delay(500);
   
   if (humiditySensor.begin()) 
   {
-    Serial.println(F("Si7021 ok!"));
+    Serial.println(F("ok!"));
     tests ++;
   }
   else
   {
-    Serial.println(F("---> Si7021 FAILED!"));
+    Serial.println(F("failed!"));
   }
-  
+  delay(500);
+
+  Serial.print(F("-> Flash : "));
+delay(500);
   if (flash.initialize())
   {
-    Serial.println("flash OK!");
+    Serial.println(F("ok!"));
     tests ++;
   }
   else
   {
-    Serial.println(F("---> flash failed!"));
+    Serial.println(F("failed!"));
   }
-
+delay(500);
   Serial.println(F("Test finished"));
   
   if (tests == 2) 
@@ -234,9 +242,9 @@ void testMode()
     while (1) // Blink FAILED pattern! Rappidly blinking..
     {
       digitalWrite(LED_PIN, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(LED_PIN, LOW);
-      delay(200);
+      delay(100);
     }
   }  
 }
