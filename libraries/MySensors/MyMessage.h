@@ -39,7 +39,10 @@ typedef enum {
 	V_IMPEDANCE, V_ARMED, V_TRIPPED, V_WATT, V_KWH, V_SCENE_ON, V_SCENE_OFF,
 	V_HEATER, V_HEATER_SW, V_LIGHT_LEVEL, V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5,
 	V_UP, V_DOWN, V_STOP, V_IR_SEND, V_IR_RECEIVE, V_FLOW, V_VOLUME, V_LOCK_STATUS,
-	V_DUST_LEVEL, V_VOLTAGE, V_CURRENT, V_RGB, V_RGBW
+	V_DUST_LEVEL, V_VOLTAGE, V_CURRENT, 
+	V_RGB, 	// Used for sending/receiving color information. Sent as ascii hex. RRGGBB (RR=red, GG=green, BB=blue component)
+	V_RGBW, // Used for sending/receiving color information. Sent as ascii hex. RRGGBBWW (WW=while component)
+	V_ID    // Can be used for reporting ids for sensors such as DS1820b. 
 } mysensor_data;
 
 // Type of internal messages (for internal messages)
