@@ -27,6 +27,13 @@
 #include <stdarg.h>
 
 
+// Set the hardware driver to use (initialized by MySensor-class)
+#if defined __AVR_ATmega328P__
+#include "MyHwATMega328.h"
+typedef MyHwATMega328 MyHwDriver;
+#endif
+
+
 #ifdef DEBUG
 #define debug(x,...) hw.debugPrint(isGateway, x, ##__VA_ARGS__)
 #else

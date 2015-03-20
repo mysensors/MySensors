@@ -9,15 +9,13 @@
 // Serial output baud rate
 #define BAUD_RATE 115200
 
-// Set the hardware driver to use (initialized by MySensor-class)
-#include "MyHwATMega328.h"
-typedef MyHwATMega328 MyHwDriver;
+
 
 /**********************************
 *  Message Signing Settings
 ***********************************/
 // Disable to completly disable signing functionality in library
-#define MY_SIGNING_FEATURE
+//#define MY_SIGNING_FEATURE
 
 // Define a suitable timeout for a signature verification session
 // Consider the turnaround from a nonce being generated to a signed message being received

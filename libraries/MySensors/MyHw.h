@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "MyConfig.h"
 
 /**
  * The Hw contains all hardware specific details of the platform

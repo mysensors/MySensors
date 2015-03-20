@@ -2,7 +2,7 @@
 #define MyHwATMega328_h
 
 #include "MyHw.h"
-//#include "MyConfig.h"
+#include "MyConfig.h"
 #include "MyMessage.h"
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
