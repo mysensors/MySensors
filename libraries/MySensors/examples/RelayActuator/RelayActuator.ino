@@ -15,11 +15,11 @@
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
 // Message signing driver (none default)
-MySigningNone signer;
+// MySigningNone signer;
 // Select AtMega328 hardware profile
 MyHwATMega328 hw;
 // Construct MySensors library
-MySensor gw(radio, signer, hw);
+MySensor gw(radio, hw);
 
 void setup()  
 {   
