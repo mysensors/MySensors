@@ -63,9 +63,9 @@ void setup() {
 
   Serial.begin(115200);
   // First check if we should boot into test mode
-  testMode();
+
   pinMode(TEST_PIN,INPUT);
-  digitalWrite(TEST_PIN, HIGH);
+  digitalWrite(TEST_PIN, HIGH); // Enable pullup
   if (!digitalRead(TEST_PIN)) testMode();
   
   digitalWrite(TEST_PIN,LOW);
@@ -201,6 +201,8 @@ void testMode()
   uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
   uint8_t ret_code;
   byte tests = 0;
+  
+  digitalWrite(LED_PIN, HIGH); // Turn on LED.
   
   Serial.println(F("Testing peripherals!"));
   Serial.print(F("-> SI7021 : ")); 
