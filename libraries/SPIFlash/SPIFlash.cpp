@@ -6,6 +6,9 @@
  * Minimal modifications should allow chips that have different page size but modifications
  * DEPENDS ON: Arduino SPI library
  *
+ * Updated Jan. 5, 2015, TomWS1, modified writeBytes to allow blocks > 256 bytes and handle page misalignment.
+ * Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
+ *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
  * or the GNU Lesser General Public License version 2.1, both as
@@ -32,15 +35,22 @@ SPIFlash::SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID) {
 
 /// Select the flash chip
 void SPIFlash::select() {
-  noInterrupts();
   //save current SPI settings
+#ifndef SPI_HAS_TRANSACTION
+  _SREG = SREG;
+  noInterrupts();
+#endif
   _SPCR = SPCR;
   _SPSR = SPSR;
-  //set FLASH chip SPI settings
+
+#ifdef SPI_HAS_TRANSACTION
+  SPI.beginTransaction(_settings);
+#else
+  // set FLASH SPI settings
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV4); //decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
-  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV4); // decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
+#endif
   digitalWrite(_slaveSelectPin, LOW);
 }
 
@@ -48,9 +58,13 @@ void SPIFlash::select() {
 void SPIFlash::unselect() {
   digitalWrite(_slaveSelectPin, HIGH);
   //restore SPI settings to what they were before talking to the FLASH chip
+#ifdef SPI_HAS_TRANSACTION
+  SPI.endTransaction();
+#else  
+  SREG = _SREG;  // restore interrupts IFF they were enabled
+#endif
   SPCR = _SPCR;
   SPSR = _SPSR;
-  interrupts();
 }
 
 /// setup SPI, read device ID etc...
@@ -58,7 +72,10 @@ boolean SPIFlash::initialize()
 {
   _SPCR = SPCR;
   _SPSR = SPSR;
+  digitalWrite(_slaveSelectPin, HIGH);
   pinMode(_slaveSelectPin, OUTPUT);
+  SPI.begin();
+  _settings = SPISettings(4000000, MSBFIRST, SPI_MODE0);
   unselect();
   wakeup();
   
@@ -185,21 +202,32 @@ void SPIFlash::writeByte(long addr, uint8_t byt) {
   unselect();
 }
 
-/// write 1-256 bytes to flash memory
+/// write multiple bytes to flash memory (up to 64K)
 /// WARNING: you can only write to previously erased memory locations (see datasheet)
 ///          use the block erase commands to first clear memory (write 0xFFs)
-/// WARNING: if you write beyond a page boundary (or more than 256bytes),
-///          the bytes will wrap around and start overwriting at the beginning of that same page
-///          see datasheet for more details
+/// This version handles both page alignment and data blocks larger than 256 bytes.
+///
 void SPIFlash::writeBytes(long addr, const void* buf, uint16_t len) {
-  command(SPIFLASH_BYTEPAGEPROGRAM, true);  // Byte/Page Program
-  SPI.transfer(addr >> 16);
-  SPI.transfer(addr >> 8);
-  SPI.transfer(addr);
-  for (uint16_t i = 0; i < len; i++)
-    SPI.transfer(((byte*) buf)[i]);
-  unselect();
+  uint16_t n;
+  uint16_t maxBytes = 256-(addr%256); // force the first set of bytes to stay within the first page
+  uint16_t offset = 0;
+  while (len>0)
+  {
+    n = (len<=maxBytes) ? len : maxBytes;
+    command(SPIFLASH_BYTEPAGEPROGRAM, true); // Byte/Page Program
+    SPI.transfer(addr >> 16);
+    SPI.transfer(addr >> 8);
+    SPI.transfer(addr);
+    for (uint16_t i = 0; i < n; i++)
+      SPI.transfer(((byte*) buf)[offset + i]);
+    unselect();
+    addr+=n; // adjust the addresses and remaining bytes by what we've just transferred.
+    offset +=n;
+    len -= n;
+    maxBytes = 256; // now we can do up to 256 bytes per loop
+  }
 }
+
 
 /// erase entire flash memory array
 /// may take several seconds depending on size, but is non blocking
