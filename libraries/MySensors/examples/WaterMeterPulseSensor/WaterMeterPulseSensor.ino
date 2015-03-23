@@ -1,7 +1,7 @@
 //
 // Use this sensor to measure volume and flow of your house watermeter.
 // You need to set the correct pulsefactor of your meter (pulses per m3).
-// The sensor starts by reading the pulse count reading from the eprom.
+// The sensor starts by fetching current volume reading from gateway (VAR 1).
 // Reports both volume and flow back to gateway.
 //
 // Unfortunately millis() won't increment when the Arduino is in 
