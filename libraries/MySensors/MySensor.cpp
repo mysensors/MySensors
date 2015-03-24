@@ -55,6 +55,30 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 }
 
 
+#ifdef MY_OTA_FRIMWARE_FEATURE
+// do a crc16 on the whole received firmware
+static uint8_t MySensor::isValidFirmware() {
+	void* ptr = 0;
+	uint16_t crc = ~0;
+    int j;
+
+	for (uint16_t i = 0; i < fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
+		uint8_t a = pgm_read_byte((uint16_t) ptr + i);
+		crc ^= a;
+	    for (j = 0; j < 8; ++j)
+	    {
+	        if (crc & 1)
+	            crc = (crc >> 1) ^ 0xA001;
+	        else
+	            crc = (crc >> 1);
+	    }
+	}
+	return crc == fc.crc;
+}
+
+#endif
+
+
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
 	hw_init();
 	repeaterMode = _repeaterMode;
@@ -71,6 +95,12 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+#ifdef MY_OTA_FRIMWARE_FEATURE
+	// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
+	hw_readConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+#endif
+
+
 #ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
 	hw_readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));

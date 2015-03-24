@@ -61,6 +61,7 @@ typedef MyHwATMega328 MyHwDriver;
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5
 
+
 struct NodeConfig
 {
 	uint8_t nodeId; // Current node id
@@ -71,6 +72,42 @@ struct NodeConfig
 struct ControllerConfig {
 	uint8_t isMetric;
 };
+
+
+// Size of each firmware block
+#define FIRMWARE_BLOCK_SIZE	16
+// Number of times a firmware block should be requested before giving up
+#define FIRMWARE_MAX_REQUESTS 5
+
+// FW config structure, stored in eeprom
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t blocks;
+	uint16_t crc;
+} __attribute__((packed)) NodeFirmwareConfig;
+
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t blocks;
+	uint16_t crc;
+	uint16_t BLVersion;
+} __attribute__((packed)) RequestFirmwareConfig;
+
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t block;
+} __attribute__((packed)) RequestFWBlock;
+
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t block;
+	uint8_t data[FIRMWARE_BLOCK_SIZE];
+} __attribute__((packed)) ReplyFWBlock;
+
 
 #ifdef __cplusplus
 class MySensor
@@ -243,6 +280,10 @@ class MySensor
   protected:
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	NodeFirmwareConfig fc;
+#endif
+
 	bool repeaterMode;
 	bool autoFindParent;
 	bool isGateway;
