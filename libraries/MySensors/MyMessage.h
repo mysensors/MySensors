@@ -42,7 +42,8 @@ typedef enum {
 	V_DUST_LEVEL, V_VOLTAGE, V_CURRENT, 
 	V_RGB, 	// Used for sending/receiving color information. Sent as ascii hex. RRGGBB (RR=red, GG=green, BB=blue component)
 	V_RGBW, // Used for sending/receiving color information. Sent as ascii hex. RRGGBBWW (WW=while component)
-	V_ID    // Can be used for reporting ids for sensors such as DS1820b. 
+	V_ID,    // Can be used for reporting ids for sensors such as DS1820b. 
+	V_LIGHT_LEVEL_LUX  // Light level in lux
 } mysensor_data;
 
 // Type of internal messages (for internal messages)
