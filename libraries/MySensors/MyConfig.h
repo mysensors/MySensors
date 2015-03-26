@@ -19,9 +19,16 @@
 // Note: You can still have OTA FW updates without external flash but it
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
 #define MY_OTA_FIRMWARE_FEATURE
-
 // Slave select pin for external flash
 #define MY_OTA_FLASH_SS 8
+// Number of times to request a fw block before giving up
+#define MY_OTA_RETRY 5
+// Number of millisecons before re-request a fw block
+#define MY_OTA_RETRY_DELAY 500
+// Bootloader version
+#define MY_OTA_BOOTLOADER_MAJOR_VERSION 2
+#define MY_OTA_BOOTLOADER_MINOR_VERSION 0
+#define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)
 
 
 /**********************************

@@ -57,7 +57,7 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 
 #ifdef MY_OTA_FRIMWARE_FEATURE
 // do a crc16 on the whole received firmware
-static uint8_t MySensor::isValidFirmware() {
+bool MySensor::isValidFirmware() {
 	void* ptr = 0;
 	uint16_t crc = ~0;
     int j;
@@ -188,6 +188,33 @@ void MySensor::setupNode() {
 
 		// Wait configuration reply.
 		wait(2000);
+
+#ifdef MY_OTA_FRIMWARE_FEATURE
+		RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)msg.data;
+		mSetLength(msg, sizeof(RequestFirmwareConfig));
+		mSetCommand(msg, C_STREAM);
+		mSetPayloadType(msg,P_CUSTOM);
+		// copy node settings to reqFWConfig
+		memcpy(reqFWConfig,&fc,sizeof(NodeFirmwareConfig));
+		// add bootloader information
+		reqFWConfig->BLVersion = MYSBOOTLOADER_VERSION;
+
+		// send node config and request FW config from controller
+		if (!sendAndWait(ST_FIRMWARE_CONFIG_REQUEST, ST_FIRMWARE_CONFIG_RESPONSE)) {
+			startup();
+		}
+
+		NodeFirmwareConfig *firmwareConfigResponse = (NodeFirmwareConfig *)inMsg.data;
+
+		// compare with current node configuration, if equal startup
+		if (!memcmp(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
+			startup();
+		}
+
+
+#endif
+
+
 	}
 }
 

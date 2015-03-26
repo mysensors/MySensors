@@ -309,6 +309,12 @@ class MySensor
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
+#ifdef MY_OTA_FRIMWARE_FEATURE
+// do a crc16 on the whole received firmware
+    bool isValidFirmware();
+#endif
+
+
     void requestNodeId();
 	void setupNode();
 	void findParentNode();
