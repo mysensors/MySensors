@@ -1,0 +1,22 @@
+
+SenseBenderMicro.name=SenseBender Micro
+
+SenseBenderMicro.upload.tool=arduino:avrdude
+SenseBenderMicro.upload.protocol=arduino
+SenseBenderMicro.upload.maximum_size=30720
+SenseBenderMicro.upload.maximum_data_size=2048
+SenseBenderMicro.upload.speed=57600
+
+SenseBenderMicro.bootloader.tool=arduino:avrdude
+SenseBenderMicro.bootloader.unlock_bits=0x3F
+SenseBenderMicro.bootloader.lock_bits=0x0F
+SenseBenderMicro.bootloader.low_fuses=0xFF
+SenseBenderMicro.bootloader.high_fuses=0xDA
+SenseBenderMicro.bootloader.extended_fuses=0x05
+SenseBenderMicro.bootloader.file=DualOptiboot/optiboot_atmega328p-pro8.hex
+
+SenseBenderMicro.build.board=AVR_MICRO8
+SenseBenderMicro.build.core=arduino:arduino
+SenseBenderMicro.build.variant=micro
+SenseBenderMicro.build.mcu=atmega328p
+SenseBenderMicro.build.f_cpu=8000000L
