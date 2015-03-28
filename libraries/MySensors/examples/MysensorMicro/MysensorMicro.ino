@@ -81,7 +81,7 @@ void setup() {
 
   humiditySensor.begin();
   
-  gw.sendSketchInfo("EnvironmentSensor", "1.0");
+  gw.sendSketchInfo("MysensorMicro", "1.0");
   
   gw.present(CHILD_ID_TEMP,S_TEMP);
   gw.present(CHILD_ID_HUM,S_HUM);
@@ -205,8 +205,9 @@ void testMode()
   digitalWrite(LED_PIN, HIGH); // Turn on LED.
   
   Serial.println(F("Testing peripherals!"));
+  Serial.flush();
   Serial.print(F("-> SI7021 : ")); 
-  delay(100);
+  Serial.flush();
   
   if (humiditySensor.begin()) 
   {
@@ -217,10 +218,10 @@ void testMode()
   {
     Serial.println(F("failed!"));
   }
-  delay(100);
+  Serial.flush();
 
   Serial.print(F("-> Flash : "));
-delay(100);
+  Serial.flush();
   if (flash.initialize())
   {
     Serial.println(F("ok!"));
@@ -230,15 +231,17 @@ delay(100);
   {
     Serial.println(F("failed!"));
   }
-delay(100);
+  Serial.flush();
+
   
-  Serial.println(F("-> SHA204 : "));
+  Serial.print(F("-> SHA204 : "));
   ret_code = sha204.sha204c_wakeup(rx_buffer);
+  Serial.flush();
   if (ret_code != SHA204_SUCCESS)
   {
     Serial.print(F("Failed to wake device. Response: ")); Serial.println(ret_code, HEX);
   }
-  
+  Serial.flush();
   if (ret_code == SHA204_SUCCESS)
   {
     ret_code = sha204.getSerialNumber(rx_buffer);
@@ -248,7 +251,7 @@ delay(100);
     }
     else
     {
-      Serial.print(F("Device serial:   "));
+      Serial.print(F("Ok (serial : "));
       for (int i=0; i<9; i++)
       {
         if (rx_buffer[i] < 0x10)
@@ -257,12 +260,12 @@ delay(100);
         }
         Serial.print(rx_buffer[i], HEX);
       }
-      Serial.println();
+      Serial.println(")");
       tests ++;
     }
 
   }
- 
+  Serial.flush();
 
   Serial.println(F("Test finished"));
   
