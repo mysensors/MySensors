@@ -23,6 +23,9 @@
 #include "MySigningNone.h"
 #endif
 #include "MyMessage.h"
+#ifdef MY_OTA_FIRMWARE_FEATURE
+#include "utility/SPIFlash.h"
+#endif
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -78,6 +81,17 @@ struct ControllerConfig {
 #define FIRMWARE_BLOCK_SIZE	16
 // Number of times a firmware block should be requested before giving up
 #define FIRMWARE_MAX_REQUESTS 5
+// Number of times to request a fw block before giving up
+#define MY_OTA_RETRY 5
+// Number of millisecons before re-request a fw block
+#define MY_OTA_RETRY_DELAY 500
+// Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
+#define FIRMWARE_START_OFFSET 10
+// Bootloader version
+#define MY_OTA_BOOTLOADER_MAJOR_VERSION 3
+#define MY_OTA_BOOTLOADER_MINOR_VERSION 0
+#define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)
+
 
 // FW config structure, stored in eeprom
 typedef struct {
@@ -282,6 +296,11 @@ class MySensor
 	ControllerConfig cc; // Configuration coming from controller
 #ifdef MY_OTA_FIRMWARE_FEATURE
 	NodeFirmwareConfig fc;
+	bool fwUpdateOngoing;
+	unsigned long fwLastRequestTime;
+	uint16_t fwBlock;
+	uint8_t fwRetry;
+	SPIFlash flash;
 #endif
 
 	bool repeaterMode;
@@ -309,7 +328,7 @@ class MySensor
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
-#ifdef MY_OTA_FRIMWARE_FEATURE
+#ifdef MY_OTA_FIRMWARE_FEATURE
 // do a crc16 on the whole received firmware
     bool isValidFirmware();
 #endif

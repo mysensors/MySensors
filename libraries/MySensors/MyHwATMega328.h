@@ -10,7 +10,6 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
-#include <util/crc16.h>
 
 
 
