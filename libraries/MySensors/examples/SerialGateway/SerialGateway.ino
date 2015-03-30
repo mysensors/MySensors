@@ -23,8 +23,12 @@
 
 #define NO_PORTB_PINCHANGES  
 
+#include <MySigningNone.h>
+#include <MyTransportRF69.h>
 #include <MyTransportNRF24.h>
 #include <MyHwATMega328.h>
+#include <MySigningAtsha204Soft.h>
+#include <MySigningAtsha204.h>
 
 #include <SPI.h>  
 #include <MyParserSerial.h>  
@@ -40,15 +44,20 @@
 #define RADIO_RX_LED_PIN    6  // Receive led pin
 #define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
-
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
-// Message signing driver (none default)
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+//MyTransportRF69 transport;
+
+// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 //MySigningNone signer;
-// Construct MySensors library
+//MySigningAtsha204Soft signer;
+//MySigningAtsha204 signer;
+
+// Hardware profile 
 MyHwATMega328 hw;
 
-MySensor gw(radio, hw);
+// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+MySensor gw(transport, hw /*, signer*/);
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;

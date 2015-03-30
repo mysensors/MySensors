@@ -18,7 +18,7 @@
 // which requires external flash and the DualOptiBoot bootloader.
 // Note: You can still have OTA FW updates without external flash but it
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
-#define MY_OTA_FIRMWARE_FEATURE
+//#define MY_OTA_FIRMWARE_FEATURE
 // Slave select pin for external flash
 #define MY_OTA_FLASH_SS 8
 // Flash jdecid

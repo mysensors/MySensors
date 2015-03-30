@@ -44,7 +44,12 @@
 #include <SPI.h>  
 
 #include <MySigningNone.h>
+#include <MyTransportRF69.h>
 #include <MyTransportNRF24.h>
+#include <MyHwATMega328.h>
+#include <MySigningAtsha204Soft.h>
+#include <MySigningAtsha204.h>
+
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
@@ -72,11 +77,20 @@
 
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
-// Message signing driver (none default)
-MySigningNone signer;
-// Construct MySensors library
-MySensor gw(radio, signer);
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+//MyTransportRF69 transport;
+
+// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+//MySigningNone signer;
+//MySigningAtsha204Soft signer;
+//MySigningAtsha204 signer;
+
+// Hardware profile 
+MyHwATMega328 hw;
+
+// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+MySensor gw(transport, hw /*, signer*/);
+
 
 #define IP_PORT 5003        // The port you want to open 
 IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!

@@ -31,10 +31,10 @@
 
 
 // Set the hardware driver to use (initialized by MySensor-class)
-#if defined __AVR_ATmega328P__
+//#if defined __AVR_ATmega328P__
 #include "MyHwATMega328.h"
 typedef MyHwATMega328 MyHwDriver;
-#endif
+//#endif
 
 
 #ifdef DEBUG
