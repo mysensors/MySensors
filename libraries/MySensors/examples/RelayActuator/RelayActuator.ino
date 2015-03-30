@@ -3,6 +3,7 @@
 
 #include <MySigningNone.h>
 #include <MyTransportNRF24.h>
+//#include <MyTransportRF69.h>
 #include <MyHwATMega328.h>
 #include <MySensor.h>
 #include <SPI.h>
@@ -14,8 +15,9 @@
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+//MyTransportRF69 radio;
 // Message signing driver (none default)
-// MySigningNone signer;
+//MySigningNone signer;
 // Select AtMega328 hardware profile
 MyHwATMega328 hw;
 // Construct MySensors library

@@ -6,9 +6,23 @@
 // to see what is actually is happening when developing
 #define DEBUG
 
-// Serial output baud rate
+// Serial output baud rate (for debug prints and serial gateway)
 #define BAUD_RATE 115200
 
+
+/**********************************
+*  Over the air firmware updates
+***********************************/
+
+// The following define enables the safe over-the-air firmware update feature
+// which requires external flash and the DualOptiBoot bootloader.
+// Note: You can still have OTA FW updates without external flash but it
+// requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
+#define MY_OTA_FIRMWARE_FEATURE
+// Slave select pin for external flash
+#define MY_OTA_FLASH_SS 8
+// Flash jdecid
+#define MY_OTA_FLASH_JDECID 0x1F65
 
 
 /**********************************

@@ -50,9 +50,36 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 #ifdef MY_SIGNING_FEATURE
 	signer(_signer),
 #endif
+#ifdef MY_OTA_FIRMWARE_FEATURE
+ 	flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID),
+#endif
 	hw(_hw)
 {
 }
+
+
+#ifdef MY_OTA_FIRMWARE_FEATURE
+// do a crc16 on the whole received firmware
+bool MySensor::isValidFirmware() {
+	void* ptr = 0;
+	uint16_t crc = ~0;
+    int j;
+
+	for (uint16_t i = 0; i < fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
+		uint8_t a = flash.readByte((uint16_t) ptr + i + FIRMWARE_START_OFFSET);
+		crc ^= a;
+	    for (j = 0; j < 8; ++j)
+	    {
+	        if (crc & 1)
+	            crc = (crc >> 1) ^ 0xA001;
+	        else
+	            crc = (crc >> 1);
+	    }
+	}
+	return crc == fc.crc;
+}
+
+#endif
 
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
@@ -71,6 +98,12 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 	// Read latest received controller configuration from EEPROM
 	hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
+	hw_readConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+#endif
+
+
 #ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
 	hw_readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
@@ -158,6 +191,21 @@ void MySensor::setupNode() {
 
 		// Wait configuration reply.
 		wait(2000);
+
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)msg.data;
+		mSetLength(msg, sizeof(RequestFirmwareConfig));
+		mSetCommand(msg, C_STREAM);
+		mSetPayloadType(msg,P_CUSTOM);
+		// copy node settings to reqFWConfig
+		memcpy(reqFWConfig,&fc,sizeof(NodeFirmwareConfig));
+		// add bootloader information
+		reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
+		fwUpdateOngoing = false;
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
+#endif
+
+
 	}
 }
 
@@ -351,7 +399,29 @@ boolean MySensor::process() {
 	hw_watchdogReset();
 	uint8_t to = 0;
 	if (!radio.available(&to))
+	{
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		unsigned long enter = hw_millis();
+		if (fwUpdateOngoing && (enter - fwLastRequestTime > MY_OTA_RETRY_DELAY)) {
+			if (fwRetry == 0) {
+				debug(PSTR("fw upd fail\n"));
+				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
+				fwUpdateOngoing = false;
+				return false;
+			}
+			fwRetry--;
+			fwLastRequestTime = enter;
+			// Time to (re-)request firmware block from controller
+			RequestFWBlock *firmwareRequest = (RequestFWBlock *)msg.data;
+			mSetLength(msg, sizeof(RequestFWBlock));
+			firmwareRequest->type = fc.type;
+			firmwareRequest->version = fc.version;
+			firmwareRequest->block = (fwBlock - 1);
+			sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
+		}
+#endif
 		return false;
+	}
 
 #ifdef MY_SIGNING_FEATURE
 	(void)signer.checkTimer(); // Manage signing timeout
@@ -515,6 +585,55 @@ boolean MySensor::process() {
 				return false;
 			}
 		}
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		else if (command == C_STREAM) {
+			if (type == ST_FIRMWARE_CONFIG_RESPONSE) {
+				NodeFirmwareConfig *firmwareConfigResponse = (NodeFirmwareConfig *)msg.data;
+				// compare with current node configuration, if they differ, start fw fetch process
+				if (memcmp(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
+					debug(PSTR("fw update\n"));
+					fwUpdateOngoing = true;
+					fwBlock =  fc.blocks;
+					// copy new FW config
+					memcpy(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
+					// Init flash
+					if (!flash.initialize()) {
+						debug(PSTR("flash init fail\n"));
+					}
+
+				}
+			} else if (type == ST_FIRMWARE_RESPONSE) {
+				// Save block to eeprom
+				debug(PSTR("fw block %d\n"), fwBlock);
+
+				ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)msg.data;
+				// write to flash
+				flash.writeBytes(((fwBlock-1)*FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+				fwBlock--;
+				if (fwBlock == 0) {
+					// We're finished! Do a checksum and reboot.
+					if (isValidFirmware()) {
+						debug(PSTR("fw checksum ok\n"));
+						// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)
+						uint16_t fwsize = FIRMWARE_BLOCK_SIZE*fc.blocks;
+						flash.writeBytes(0, "FLXIMG:", 7);
+						flash.writeByte(7, fwsize >> 8);
+						flash.writeByte(8, fwsize);
+						flash.writeByte(9, ':');
+						// Write the new firmware config to eeprom
+						hw_writeConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+						hw_reboot();
+					} else {
+						debug(PSTR("fw checksum fail\n"));
+					}
+				}
+			}
+			// Make sure packet request occurs next time process() is called by timing out requestTime.
+			fwRetry = MY_OTA_RETRY+1;
+			fwLastRequestTime = 0;
+			return false;
+		}
+#endif
 		// Call incoming message callback if available
 		if (msgCallback != NULL) {
 			msgCallback(msg);
@@ -561,17 +680,46 @@ void MySensor::wait(unsigned long ms) {
 }
 
 void MySensor::sleep(unsigned long ms) {
-	radio.powerDown();
-	hw.sleep(ms);
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	if (fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		process();
+	} else {
+#endif
+		radio.powerDown();
+		hw.sleep(ms);
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	}
+#endif
 }
 
 bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	if (fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		process();
+		return false;
+	} else {
+#endif
 	radio.powerDown();
 	return hw.sleep(interrupt, mode, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	}
+#endif
 }
 
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	radio.powerDown();
-	return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	if (fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		process();
+		return -1;
+	} else {
+#endif
+		radio.powerDown();
+		return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	}
+#endif
 }
 
