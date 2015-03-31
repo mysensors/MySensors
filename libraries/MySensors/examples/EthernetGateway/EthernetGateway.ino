@@ -44,7 +44,7 @@
 #include <SPI.h>  
 
 #include <MySigningNone.h>
-#include <MyTransportRF69.h>
+#include <MyTransportRFM69.h>
 #include <MyTransportNRF24.h>
 #include <MyHwATMega328.h>
 #include <MySigningAtsha204Soft.h>
@@ -78,7 +78,7 @@
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
-//MyTransportRF69 transport;
+//MyTransportRFM69 transport;
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 //MySigningNone signer;

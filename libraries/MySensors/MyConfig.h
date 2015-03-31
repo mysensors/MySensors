@@ -65,11 +65,14 @@
 #define RF24_CS_PIN		   10
 #define RF24_PA_LEVEL 	   RF24_PA_MAX
 #define RF24_PA_LEVEL_GW   RF24_PA_LOW
-#define RF24_CHANNEL	   76             //RF channel for the sensor net, 0-127
-#define RF24_DATARATE 	   RF24_250KBPS   //RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
-#define RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL) // This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+// RF channel for the sensor net, 0-127
+#define RF24_CHANNEL	   76
+//RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
+#define RF24_DATARATE 	   RF24_250KBPS
+// This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+#define RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
 
-// Enable SOFTSPI for the W5100 Ethernet module
+// Enable SOFTSPI for NRF24L01 when using the W5100 Ethernet module
 //#define SOFTSPI
 #ifdef SOFTSPI
 	// Define the soft SPI pins used for NRF radio
@@ -77,6 +80,24 @@
     const uint8_t SOFT_SPI_MOSI_PIN = 15;
     const uint8_t SOFT_SPI_SCK_PIN = 14;
 #endif
+
+
+/**********************************
+*  RFM69 Driver Defaults
+***********************************/
+// Default network id. Use the same for all nodes that will talk to each other
+#define RFM69_NETWORKID     100
+
+// Default frequency to use. This must match the hardware version of the RFM69 radio (uncomment one):
+// #define RFM69_FREQUENCY   RF69_433MHZ
+#define RFM69_FREQUENCY   RF69_868MHZ
+//#define FREQUENCY     RF69_915MHZ
+
+// Enable this for encryption of packets
+//#define RFM69_ENABLE_ENCRYPTION
+#define RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
+
+
 
 
 #endif
