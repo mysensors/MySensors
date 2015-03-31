@@ -10,9 +10,9 @@ MysensorsMicro.upload.speed=57600
 MysensorsMicro.bootloader.tool=arduino:avrdude
 MysensorsMicro.bootloader.unlock_bits=0x3F
 MysensorsMicro.bootloader.lock_bits=0x0F
-MysensorsMicro.bootloader.low_fuses=0xFF
-MysensorsMicro.bootloader.high_fuses=0xDA
-MysensorsMicro.bootloader.extended_fuses=0x05
+MysensorsMicro.bootloader.low_fuses=0xE2
+MysensorsMicro.bootloader.high_fuses=0xD2
+MysensorsMicro.bootloader.extended_fuses=0xFE
 MysensorsMicro.bootloader.file=DualOptiboot/optiboot_atmega328p-pro8.hex
 
 MysensorsMicro.build.board=AVR_MICRO8

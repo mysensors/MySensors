@@ -23,6 +23,15 @@
 #define CHILD_ID_HUM   2
 #define CHILD_ID_BATT  199
 
+// How many milli seconds between each measurement
+#define MEASURE_INTERVAL 60000
+
+// FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
+#define FORCE_TRANSMIT_INTERVAL 30 
+
+// When MEASURE_INTERVAL is 60000 and FORCE_TRANSMIT_INTERVAL is 30, we force a transmission every 30 minutes.
+// Between the forced transmissions a tranmission will only occur if the measured value differs from the previous measurement
+
 //Pin definitions
 #define TEST_PIN       A0
 #define LED_PIN        A2
@@ -30,12 +39,6 @@
 
 const int sha204Pin = ATSHA204_PIN;
 atsha204Class sha204(sha204Pin);
-
-
-#define MEASURE_INTERVAL 60000
-
-// FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
-#define FORCE_TRANSMIT_INTERVAL 30 
 
 SI7021 humiditySensor;
 SPIFlash flash(8, 0x1F65);
@@ -97,7 +100,7 @@ void loop() {
   bool forceTransmit = false;
   
   if (measureCount > FORCE_TRANSMIT_INTERVAL
-  ) {// Every 60th time we wake up, force a transmission on all sensors.
+  ) { // force a transmission
     forceTransmit = true; 
     measureCount = 0;
   }
