@@ -81,7 +81,8 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 #define RADIO_SPI_SS_PIN    8			// radio SPI serial select
 #define RADIO_ERROR_LED_PIN A2  		// Error led pin
 #define RADIO_RX_LED_PIN    A1  		// Receive led pin
-#define RADIO_TX_LED_PIN    A0  		// the PCB, on board LED*/
+#define RADIO_TX_LED_PIN    A0  		// the PCB, on board LED
+*/
 
 // * Use this for default configured pro mini / nano etc :
 ///*
@@ -94,7 +95,7 @@ http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 
 #define TCP_PORT 1883						// Set your MQTT Broker Listening port.
 IPAddress TCP_IP ( 192, 168, 0, 234 );				// Configure your static ip-address here
-uint8_t TCP_MAC[] = { 0x02, 0xDE, 0xAD, 0x00, 0x00, 0x42 };	// Mac-address - You should change this! see note *2 above!
+byte TCP_MAC[] = { 0x02, 0xDE, 0xAD, 0x00, 0x00, 0x42 };	// Mac-address - You should change this! see note *2 above!
 
 //////////////////////////////////////////////////////////////////
 
@@ -115,6 +116,7 @@ MySensor gw(transport, hw /*, signer*/);
 
 
 EthernetServer server = EthernetServer(TCP_PORT);
+EthernetClient *currentClient = NULL;
 MyMessage msg;
 char convBuf[MAX_PAYLOAD*2+1];
 char broker[] PROGMEM = MQTT_BROKER_PREFIX;
@@ -137,23 +139,41 @@ void writeEthernet(const char *writeBuffer, uint8_t *writeSize) {
 
 
 void processEthernetMessages() {
-	char inputString[MQTT_MAX_PACKET_SIZE] = "";
-	uint8_t inputSize = 0;
-	EthernetClient client = server.available();
-	if (client) {
-		while (client.available()) {
-			char inChar = client.read();
-			inputString[inputSize] = inChar;
-			inputSize++;
-		}
+  char inputString[MQTT_MAX_PACKET_SIZE] = "";
+  byte inputSize = 0;
+  byte readCnt = 0;
+  byte length = 0;
+
+  EthernetClient client = server.available();
+  if (client) {
+    while (client.available()) {
+      // Save the current client we are talking with
+      currentClient = &client;
+      byte inByte = client.read();
+      readCnt++;
+
+      if (inputSize < MQTT_MAX_PACKET_SIZE) {
+        inputString[inputSize] = (char)inByte;
+        inputSize++;
+      }
+
+      if (readCnt == 2) {
+        length = (inByte & 127) * 1;
+      }
+      if (readCnt == (length+2)) {
+        break;
+      }
+    }
 #ifdef TCPDUMP
-		Serial.print("<<");
-		char buf[4];
-		for (uint8_t a=0; a<inputSize; a++) { sprintf(buf,"%02X ", (uint8_t)inputString[a]); Serial.print(buf); } Serial.println("");
+    Serial.print("<<");
+    char buf[4];
+    for (byte a=0; a<inputSize; a++) { sprintf(buf, "%02X ", (byte)inputString[a]); Serial.print(buf); } Serial.println();
 #endif
-		processMQTTMessage(inputString, inputSize);
-	}
+    processMQTTMessage(inputString, inputSize);
+    currentClient = NULL;
+  }
 }
+
 
 
 

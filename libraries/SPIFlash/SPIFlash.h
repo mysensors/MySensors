@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2013 by Felix Rusu <felix@lowpowerlab.com>
  * SPI Flash memory library for arduino/moteino.
- * This works with 256byte/page SPI flash memory
- * For instance a 4MBit (512Kbyte) flash chip will have 2048 pages: 256*2048 = 524288 bytes (512Kbytes)
+ * This works with 256uint8_t/page SPI flash memory
+ * For instance a 4MBit (512Kuint8_t) flash chip will have 2048 pages: 256*2048 = 524288 uint8_ts (512Kuint8_ts)
  * Minimal modifications should allow chips that have different page size but modifications
  * DEPENDS ON: Arduino SPI library
+ *
+ * Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -56,34 +58,34 @@
                                               // but no actual need to wait for completion (instead need to check the status register BUSY bit)
 #define SPIFLASH_STATUSREAD       0x05        // read status register
 #define SPIFLASH_STATUSWRITE      0x01        // write status register
-#define SPIFLASH_ARRAYREAD        0x0B        // read array (fast, need to add 1 dummy byte after 3 address bytes)
+#define SPIFLASH_ARRAYREAD        0x0B        // read array (fast, need to add 1 dummy uint8_t after 3 address uint8_ts)
 #define SPIFLASH_ARRAYREADLOWFREQ 0x03        // read array (low frequency)
 
 #define SPIFLASH_SLEEP            0xB9        // deep power down
 #define SPIFLASH_WAKE             0xAB        // deep power wake up
-#define SPIFLASH_BYTEPAGEPROGRAM  0x02        // write (1 to 256bytes)
-#define SPIFLASH_IDREAD           0x9F        // read JEDEC manufacturer and device ID (2 bytes, specific bytes for each manufacturer and device)
+#define SPIFLASH_BYTEPAGEPROGRAM  0x02        // write (1 to 256uint8_ts)
+#define SPIFLASH_IDREAD           0x9F        // read JEDEC manufacturer and device ID (2 uint8_ts, specific uint8_ts for each manufacturer and device)
                                               // Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
                                               // Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
 #define SPIFLASH_MACREAD          0x4B        // read unique ID number (MAC)
                                               
 class SPIFlash {
 public:
-  static byte UNIQUEID[8];
-  SPIFlash(byte slaveSelectPin, uint16_t jedecID=0);
+  static uint8_t UNIQUEID[8];
+  SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0);
   boolean initialize();
-  void command(byte cmd, boolean isWrite=false);
-  byte readStatus();
-  byte readByte(long addr);
+  void command(uint8_t cmd, boolean isWrite=false);
+  uint8_t readStatus();
+  uint8_t readByte(long addr);
   void readBytes(long addr, void* buf, word len);
-  void writeByte(long addr, byte byt);
+  void writeByte(long addr, uint8_t byt);
   void writeBytes(long addr, const void* buf, uint16_t len);
   boolean busy();
   void chipErase();
   void blockErase4K(long address);
   void blockErase32K(long address);
   word readDeviceId();
-  byte* readUniqueId();
+  uint8_t* readUniqueId();
   
   void sleep();
   void wakeup();
@@ -91,10 +93,16 @@ public:
 protected:
   void select();
   void unselect();
-  byte _slaveSelectPin;
+  uint8_t _slaveSelectPin;
   uint16_t _jedecID;
-  byte _SPCR;
-  byte _SPSR;
+  uint8_t _SPCR;
+  uint8_t _SPSR;
+  uint8_t _SREG;
+  
+#ifdef SPI_HAS_TRANSACTION
+  SPISettings _settings;
+#endif
+
 };
 
 #endif

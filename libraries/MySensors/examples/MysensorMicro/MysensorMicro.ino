@@ -1,7 +1,7 @@
 // Default sensor sketch for MySensor Micro module
 // Act as a temperature / humidity sensor by default.
 //
-// If A1 is held low while powering on, it will clear eeprom (and thereby the stored nodeid)
+// If A0 is held low while powering on, it will enter testmode, which verifies all on-board peripherals
 // 
 // Battery voltage is repported as child sensorId 199, as well as battery percentage
 
@@ -10,7 +10,10 @@
 #include <Wire.h>
 #include <SI7021.h>
 #include <SPI.h>
+#include <SPIFlash.h>
 #include <EEPROM.h>  
+#include <sha204_lib_return_codes.h>
+#include <sha204_library.h>
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
@@ -20,13 +23,26 @@
 #define CHILD_ID_HUM   2
 #define CHILD_ID_BATT  199
 
-//Pin definitions
-#define RESET_CFG_PIN  A1
-#define LED_PIN        A2
-
+// How many milli seconds between each measurement
 #define MEASURE_INTERVAL 60000
 
+// FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
+#define FORCE_TRANSMIT_INTERVAL 30 
+
+// When MEASURE_INTERVAL is 60000 and FORCE_TRANSMIT_INTERVAL is 30, we force a transmission every 30 minutes.
+// Between the forced transmissions a tranmission will only occur if the measured value differs from the previous measurement
+
+//Pin definitions
+#define TEST_PIN       A0
+#define LED_PIN        A2
+#define ATSHA204_PIN   17 // A3
+
+const int sha204Pin = ATSHA204_PIN;
+atsha204Class sha204(sha204Pin);
+
 SI7021 humiditySensor;
+SPIFlash flash(8, 0x1F65);
+
 MySensor gw;
 
 // Sensor messages
@@ -45,16 +61,17 @@ long lastBattery = -100;
 
 void setup() {
 
-  Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  // First check if we should boot into clear eeprom mode
-  pinMode(RESET_CFG_PIN, INPUT);
-  digitalWrite(RESET_CFG_PIN, HIGH); // Enable pullup
-  if (!digitalRead(RESET_CFG_PIN)) resetEEP();
-  digitalWrite(RESET_CFG_PIN, LOW);
+  Serial.begin(115200);
+  // First check if we should boot into test mode
+
+  pinMode(TEST_PIN,INPUT);
+  digitalWrite(TEST_PIN, HIGH); // Enable pullup
+  if (!digitalRead(TEST_PIN)) testMode();
   
+  digitalWrite(TEST_PIN,LOW);
   digitalWrite(LED_PIN, HIGH); 
   
 #ifdef NODE_ADDRESS
@@ -67,12 +84,13 @@ void setup() {
 
   humiditySensor.begin();
   
-  gw.sendSketchInfo("EnvironmentSensor", "1.0");
+  gw.sendSketchInfo("MysensorMicro", "1.0");
   
   gw.present(CHILD_ID_TEMP,S_TEMP);
   gw.present(CHILD_ID_HUM,S_HUM);
   
   gw.present(CHILD_ID_BATT, S_POWER);
+  switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
 }
 
 
@@ -81,7 +99,8 @@ void loop() {
   measureCount ++;
   bool forceTransmit = false;
   
-  if (measureCount > 30) {// Every 60th time we wake up, force a transmission on all sensors.
+  if (measureCount > FORCE_TRANSMIT_INTERVAL
+  ) { // force a transmission
     forceTransmit = true; 
     measureCount = 0;
   }
@@ -106,23 +125,19 @@ void sendTempHumidityMeasurements(bool force)
     lastTemperature = -100;
   }
   
-  float temperature = humiditySensor.getCelsiusHundredths()/10;
+  si7021_env data = humiditySensor.getHumidityAndTemperature();
   
-  temperature = temperature / 10;
-  
-  int humidity = humiditySensor.getHumidityPercent();
+  float temperature = data.celsiusHundredths/100;
+    
+  int humidity = data.humidityPercent;
 
   if (lastTemperature != temperature) {
     gw.send(msgTemp.set(temperature,1));
     lastTemperature = temperature;
-    Serial.print("temperature ");
-    Serial.println(temperature);
   }
   if (lastHumidity != humidity) {    
     gw.send(msgHum.set(humidity));
     lastHumidity = humidity;
-    Serial.print("Humidity   ");
-    Serial.println(humidity);
   }
 }
 
@@ -155,7 +170,7 @@ long readVcc() {
   #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
     ADMUX = _BV(MUX5) | _BV(MUX0);
   #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-    ADMUX = _BV(MUX3) | _BV(MUX2);
+    ADcdMUX = _BV(MUX3) | _BV(MUX2);
   #else
     ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
   #endif  
@@ -173,19 +188,110 @@ long readVcc() {
   return result; // Vcc in millivolts
 }
 
-
-/*
- * Resets eeprom to default value (while blinking LED_PIN)
- */
-void resetEEP()
+void switchClock(unsigned char clk)
 {
-  for (int i=0;i<512;i++) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(100);
-    EEPROM.write(i, 0xff);
-  }
+  cli();
+  
+  CLKPR = 1<<CLKPCE; // Set CLKPCE to enable clk switching
+  CLKPR = clk;  
+  sei();
 }
 
 
+// Verify all peripherals, and signal via the LED if any problems.
+void testMode()
+{
+  uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
+  uint8_t ret_code;
+  byte tests = 0;
+  
+  digitalWrite(LED_PIN, HIGH); // Turn on LED.
+  
+  Serial.println(F("Testing peripherals!"));
+  Serial.flush();
+  Serial.print(F("-> SI7021 : ")); 
+  Serial.flush();
+  
+  if (humiditySensor.begin()) 
+  {
+    Serial.println(F("ok!"));
+    tests ++;
+  }
+  else
+  {
+    Serial.println(F("failed!"));
+  }
+  Serial.flush();
+
+  Serial.print(F("-> Flash : "));
+  Serial.flush();
+  if (flash.initialize())
+  {
+    Serial.println(F("ok!"));
+    tests ++;
+  }
+  else
+  {
+    Serial.println(F("failed!"));
+  }
+  Serial.flush();
+
+  
+  Serial.print(F("-> SHA204 : "));
+  ret_code = sha204.sha204c_wakeup(rx_buffer);
+  Serial.flush();
+  if (ret_code != SHA204_SUCCESS)
+  {
+    Serial.print(F("Failed to wake device. Response: ")); Serial.println(ret_code, HEX);
+  }
+  Serial.flush();
+  if (ret_code == SHA204_SUCCESS)
+  {
+    ret_code = sha204.getSerialNumber(rx_buffer);
+    if (ret_code != SHA204_SUCCESS)
+    {
+      Serial.print(F("Failed to obtain device serial number. Response: ")); Serial.println(ret_code, HEX);
+    }
+    else
+    {
+      Serial.print(F("Ok (serial : "));
+      for (int i=0; i<9; i++)
+      {
+        if (rx_buffer[i] < 0x10)
+        {
+          Serial.print('0'); // Because Serial.print does not 0-pad HEX
+        }
+        Serial.print(rx_buffer[i], HEX);
+      }
+      Serial.println(")");
+      tests ++;
+    }
+
+  }
+  Serial.flush();
+
+  Serial.println(F("Test finished"));
+  
+  if (tests == 3) 
+  {
+    Serial.println(F("Selftest ok!"));
+    while (1) // Blink OK pattern!
+    {
+      digitalWrite(LED_PIN, HIGH);
+      delay(800);
+      digitalWrite(LED_PIN, LOW);
+      delay(200);
+    }
+  }
+  else 
+  {
+    Serial.println(F("----> Selftest failed!"));
+    while (1) // Blink FAILED pattern! Rappidly blinking..
+    {
+      digitalWrite(LED_PIN, HIGH);
+      delay(100);
+      digitalWrite(LED_PIN, LOW);
+      delay(100);
+    }
+  }  
+}
