@@ -88,21 +88,11 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;
 
-	// Only gateway should use node id 0
-	isGateway = _nodeId == 0;
+	// Only gateway should use node id 0!
+	isGateway = _nodeId == GATEWAY_ADDRESS;
 
 	// Setup radio
 	radio.init();
-
-	// Read settings from eeprom
-	hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
-	// Read latest received controller configuration from EEPROM
-	hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
-#ifdef MY_OTA_FIRMWARE_FEATURE
-	// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
-	hw_readConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
-#endif
-
 
 #ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
@@ -110,34 +100,43 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 #endif
 
 	if (isGateway) {
+		// Set configuration for gateway
+		nc.parentNodeId = 0;
 		nc.distance = 0;
-	}
+		nc.nodeId = 0;
+	} else {
+		// Read settings from eeprom
+		hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
+		// Read latest received controller configuration from EEPROM
+		hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
+		hw_readConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+#endif
 
-	if (cc.isMetric == 0xff) {
-		// Eeprom empty, set default to metric
-		cc.isMetric = 0x01;
-	}
+		if (cc.isMetric == 0xff) {
+			// Eeprom empty, set default to metric
+			cc.isMetric = 0x01;
+		}
 
-	autoFindParent = _parentNodeId == AUTO;
-	if (!autoFindParent) {
-		nc.parentNodeId = _parentNodeId;
-		// Save static parent id in eeprom (used by bootloader)
-		hw_writeConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
-		// We don't actually know the distance to gw here. Let's pretend it is 1.
-		// If the current node is also repeater, be aware of this.
-		nc.distance = 1;
-	} else if (!isValidParent(nc.parentNodeId)) {
-		// Auto find parent, but parent in eeprom is invalid. Try find one.
-		findParentNode();
-	}
+		autoFindParent = _parentNodeId == AUTO;
+		if (!autoFindParent) {
+			nc.parentNodeId = _parentNodeId;
+			// Save static parent id in eeprom (used by bootloader)
+			hw_writeConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+			// We don't actually know the distance to gw here. Let's pretend it is 1.
+			// If the current node is also repeater, be aware of this.
+			nc.distance = 1;
+		} else if (!isValidParent(nc.parentNodeId)) {
+			// Auto find parent, but parent in eeprom is invalid. Try find one.
+			findParentNode();
+		}
 
-	if (!isGateway) {
 		if (_nodeId != AUTO) {
 			// Set static id
 			nc.nodeId = _nodeId;
 			// Save static id in eeprom
-			if (_nodeId > 0)
-				hw_writeConfig(EEPROM_NODE_ID_ADDRESS, _nodeId);
+			hw_writeConfig(EEPROM_NODE_ID_ADDRESS, _nodeId);
 		} else if (isValidParent(nc.parentNodeId)) {
 			// Try to fetch node-id from gateway
 			requestNodeId();
