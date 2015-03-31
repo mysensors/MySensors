@@ -34,16 +34,54 @@ typedef enum {
 
 // Type of sensor data (for set/req/ack messages)
 typedef enum {
-	V_TEMP,V_HUM, V_LIGHT, V_DIMMER, V_PRESSURE, V_FORECAST, V_RAIN,
-	V_RAINRATE, V_WIND, V_GUST, V_DIRECTION, V_UV, V_WEIGHT, V_DISTANCE,
-	V_IMPEDANCE, V_ARMED, V_TRIPPED, V_WATT, V_KWH, V_SCENE_ON, V_SCENE_OFF,
-	V_HEATER, V_HEATER_SW, V_LIGHT_LEVEL, V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5,
-	V_UP, V_DOWN, V_STOP, V_IR_SEND, V_IR_RECEIVE, V_FLOW, V_VOLUME, V_LOCK_STATUS,
-	V_DUST_LEVEL, V_VOLTAGE, V_CURRENT, 
-	V_RGB, 	// Used for sending/receiving color information. Sent as ascii hex. RRGGBB (RR=red, GG=green, BB=blue component)
-	V_RGBW, // Used for sending/receiving color information. Sent as ascii hex. RRGGBBWW (WW=while component)
-	V_ID,    // Can be used for reporting ids for sensors such as DS1820b. 
-	V_LIGHT_LEVEL_LUX  // Light level in lux
+	V_TEMP, // S_TEMP
+	V_HUM, // S_HUM
+	V_LIGHT, // S_LIGHT (Light level in uncalibrated percentage)
+	V_DIMMER, // S_DIMMER
+	V_PRESSURE, // S_BARO
+	V_FORECAST, // S_BARO
+	V_RAIN, // S_RAIN
+	V_RAINRATE, // S_RAIN
+	V_WIND, // S_WIND
+	V_GUST,  // S_WIND
+	V_DIRECTION, // S_WIND 
+	V_UV, // S_UV
+	V_WEIGHT, // S_WEIGHT
+	V_DISTANCE, // S_DISTANCE
+	V_IMPEDANCE, // S_MULTIMETER, S_WEIGHT
+	V_ARMED, // S_DOOR, S_MOTION, S_SMOKE,
+	V_TRIPPED, // S_DOOR, S_MOTION, S_SMOKE,
+	V_WATT, // S_POWER
+	V_KWH, // S_POWER
+	V_SCENE_ON, // S_SCENE_CONTROLLER
+	V_SCENE_OFF, // S_SCENE_CONTROLLER
+	V_HEATER, // S_HEATER
+	V_HEATER_SW,  // S_HEATER
+	V_LIGHT_LEVEL, // S_LIGHT_LEVEL
+	V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5,
+	V_UP, // S_COVER
+	V_DOWN, // S_COVER
+	V_STOP, // S_COVER
+	V_IR_SEND, // S_IR
+	V_IR_RECEIVE, // S_IR
+	V_FLOW, // S_WATER
+	V_VOLUME, // S_WATER
+	V_LOCK_STATUS, // S_LOCK
+	V_DUST_LEVEL, // S_DUST
+	V_VOLTAGE, // S_MULTIMETER 
+	V_CURRENT, // S_MULTIMETER
+	V_RGB, 	// S_RGB_LIGHT, S_COLOR_SENSOR. 
+					// Used for sending color information for led lighting or color sensors. 
+					// Sent as ascii hex. RRGGBB (RR=red, GG=green, BB=blue component)
+	V_RGBW, // S_RGB_LIGHT
+					// Used for sending color information to led lighting. 
+					// Sent as ascii hex. RRGGBBWW (WW=while component)
+	V_ID,   // S_TEMP
+					// Used for reporting the sensor internal ids (E.g. DS1820b). 
+	V_LIGHT_LEVEL_LUX,  // S_LIGHT, Light level in lux
+	V_UNIT_PREFIX // Allows sensors to send in a string representing the 
+								// unit prefix to be displayed in GUI, not parsed! E.g. cm, m, km, inch.
+								// Can be used for S_DISTANCE 
 } mysensor_data;
 
 // Type of internal messages (for internal messages)
@@ -56,10 +94,35 @@ typedef enum {
 
 // Type of sensor  (for presentation message)
 typedef enum {
-	S_DOOR, S_MOTION, S_SMOKE, S_LIGHT, S_DIMMER, S_COVER, S_TEMP, S_HUM, S_BARO, S_WIND,
-	S_RAIN, S_UV, S_WEIGHT, S_POWER, S_HEATER, S_DISTANCE, S_LIGHT_LEVEL, S_ARDUINO_NODE,
-	S_ARDUINO_REPEATER_NODE, S_LOCK, S_IR, S_WATER, S_AIR_QUALITY, S_CUSTOM, S_DUST,
-	S_SCENE_CONTROLLER,S_COLOR, S_MULTIMETER
+	S_DOOR, 
+	S_MOTION, 
+	S_SMOKE, 
+	S_LIGHT, 
+	S_DIMMER, 
+	S_COVER, 
+	S_TEMP, 
+	S_HUM, 
+	S_BARO, 
+	S_WIND,
+	S_RAIN, 
+	S_UV, 
+	S_WEIGHT, 
+	S_POWER, 
+	S_HEATER, 
+	S_DISTANCE, 
+	S_LIGHT_LEVEL, 
+	S_ARDUINO_NODE,
+	S_ARDUINO_REPEATER_NODE, 
+	S_LOCK, 
+	S_IR, 
+	S_WATER, 
+	S_AIR_QUALITY, // V_VAR1 
+	S_CUSTOM, 
+	S_DUST, // V_DUST_LEVEL
+	S_SCENE_CONTROLLER, // V_SCENE_ON, V_SCENE_OFF. 
+	S_RGB_LIGHT, // Send data using V_RGB or V_RGBW 
+	S_COLOR_SENSOR,  // Send data using V_RGB
+	S_MULTIMETER // V_VOLTAGE, V_CURRENT, V_IMPEDANCE 
 } mysensor_sensor;
 
 // Type of data stream  (for streamed message)
