@@ -137,7 +137,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 			nc.nodeId = _nodeId;
 			// Save static id in eeprom
 			hw_writeConfig(EEPROM_NODE_ID_ADDRESS, _nodeId);
-		} else if (isValidParent(nc.parentNodeId)) {
+		} else if (nc.nodeId == AUTO && isValidParent(nc.parentNodeId)) {
 			// Try to fetch node-id from gateway
 			requestNodeId();
 		}
