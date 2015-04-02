@@ -11,6 +11,14 @@ void wakeUp2()	 //place to send the second interrupts
 	pinIntTrigger = 2;
 }
 
+// Watchdog Timer interrupt service routine. This routine is required
+// to allow automatic WDIF and WDIE bit clearance in hardware.
+ISR (WDT_vect)
+{
+	// WDIE & WDIF is cleared in hardware upon entering this ISR
+	wdt_disable();
+}
+
 MyHwATMega328::MyHwATMega328() : MyHw()
 {
 }
