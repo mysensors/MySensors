@@ -1,60 +1,78 @@
-/* 				MyMQTT Broker Gateway 0.1b
-
-Created by Daniel Wiegert <daniel.wiegert@gmail.com>
-Based on MySensors Ethernet Gateway by Henrik Ekblad <henrik.ekblad@gmail.com>
-http://www.mysensors.org
-
-Requires MySensors lib 1.4b
-
-* Change below; TCP_IP, TCP_PORT, TCP_MAC
-This will listen on your selected TCP_IP:TCP_PORT below, Please change TCP_MAC your liking also.
-*1 -> NOTE: Keep first byte at x2, x6, xA or xE (replace x with any hex value) for using Local Ranges.
-
-*2 You can use standard pin set-up as MySensors recommends or if you own a IBOARD you may change
-	the radio-pins below if you hardware mod your iBoard. see [URL BELOW] for more details.
-	http://forum.mysensors.org/topic/224/iboard-cheap-single-board-ethernet-arduino-with-radio/5
-
-* Don't forget to look at the definitions in libraries\MySensors\MyMQTT.h!
-
-	define TCPDUMP and connect serial interface if you have problems, please write on
-	http://forum.mysensors.org/ and explain your problem, include serial output. Don't forget to
-	turn on DEBUG in libraries\MySensors\MyConfig.h also.
-
-	MQTT_FIRST_SENSORID is for 'DHCP' server in MyMQTT. You may limit the ID's with FIRST and LAST definition.
-	If you want your manually configured below 20 set MQTT_FIRST_SENSORID to 20.
-	To disable: set MQTT_FIRST_SENSORID to 255.
-
-	MQTT_BROKER_PREFIX is the leading prefix for your nodes. This can be only one char if like.
-
-	MQTT_SEND_SUBSCRIPTION is if you want the MyMQTT to send a empty payload message to your nodes.
-	This can be useful if you want to send latest state back to the MQTT client. Just check if incoming
-	message has any length or not.
-	Example: if (msg.type==V_LIGHT && strlen(msg.getString())>0) otherwise the code might do strange things.
-
-* Address-layout is : [MQTT_BROKER_PREFIX]/[NodeID]/[SensorID]/V_[SensorType]
-	NodeID and SensorID is uint8 (0-255) number.
-	Last segment is translation of the sensor type, look inside MyMQTT.cpp for the definitions.
-	User can change this to their needs. We have also left some space for custom types.
-
-Special: (sensor 255 reserved for special commands)
-You can receive a node sketch name with MyMQTT/20/255/V_Sketch_name (or version with _version)
-
-To-do:
-Special commands : clear or set EEPROM Values, Send REBOOT and Receive reboot for MyMQTT itself.
-Be able to send ACK so client returns the data being sent.
-... Please come with ideas!
-What to do with publish messages.
-
-Test in more MQTT clients, So far tested in openhab and MyMQTT for Android (Not my creation)
-- http://www.openhab.org/
-- https://play.google.com/store/apps/details?id=at.tripwire.mqtt.client&hl=en
-... Please notify me if you use this broker with other software.
-
-
-* How to set-up Openhab and MQTTGateway:
-http://forum.mysensors.org/topic/303/mqtt-broker-gateway
-
-*/
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Created by Daniel Wiegert <daniel.wiegert@gmail.com>
+ * 
+ * DESCRIPTION
+ * MyMQTT Broker Gateway 0.1b
+ * Latest instructions found here:
+ * http://www.mysensors.org/build/mqtt_gateway
+ * http://www.mysensors.org/build/ethernet_gateway
+ * 
+ * Change below; TCP_IP, TCP_PORT, TCP_MAC
+ * This will listen on your selected TCP_IP:TCP_PORT below, Please change TCP_MAC your liking also.
+ * 1 -> NOTE: Keep first byte at x2, x6, xA or xE (replace x with any hex value) for using Local Ranges.
+ * 2 You can use standard pin set-up as MySensors recommends or if you own a IBOARD you may change
+ *	the radio-pins below if you hardware mod your iBoard. see [URL BELOW] for more details.
+ *	http://forum.mysensors.org/topic/224/iboard-cheap-single-board-ethernet-arduino-with-radio/5
+ *
+ * Don't forget to look at the definitions in MyMQTT.h!
+ *
+ *	define TCPDUMP and connect serial interface if you have problems, please write on
+ *	http://forum.mysensors.org/ and explain your problem, include serial output. Don't forget to
+ *	turn on DEBUG in libraries\MySensors\MyConfig.h also.
+ *
+ *	MQTT_FIRST_SENSORID is for 'DHCP' server in MyMQTT. You may limit the ID's with FIRST and LAST definition.
+ *	If you want your manually configured below 20 set MQTT_FIRST_SENSORID to 20.
+ *	To disable: set MQTT_FIRST_SENSORID to 255.
+ *
+ *	MQTT_BROKER_PREFIX is the leading prefix for your nodes. This can be only one char if like.
+ *
+ *	MQTT_SEND_SUBSCRIPTION is if you want the MyMQTT to send a empty payload message to your nodes.
+ *	This can be useful if you want to send latest state back to the MQTT client. Just check if incoming
+ *	message has any length or not.
+ *	Example: if (msg.type==V_LIGHT && strlen(msg.getString())>0) otherwise the code might do strange things.
+ *
+ * (*) Address-layout is : [MQTT_BROKER_PREFIX]/[NodeID]/[SensorID]/V_[SensorType]
+ *	NodeID and SensorID is uint8 (0-255) number.
+ *	Last segment is translation of the sensor type, look inside MyMQTT.cpp for the definitions.
+ *	User can change this to their needs. We have also left some space for custom types.
+ *
+ * Special: (sensor 255 reserved for special commands)
+ * You can receive a node sketch name with MyMQTT/20/255/V_Sketch_name (or version with _version)
+ *
+ * To-do:
+ * Special commands : clear or set EEPROM Values, Send REBOOT and Receive reboot for MyMQTT itself.
+ * Be able to send ACK so client returns the data being sent.
+ * ... Please come with ideas!
+ * What to do with publish messages.
+ *
+ * Test in more MQTT clients, So far tested in openhab and MyMQTT for Android (Not my creation)
+ * - http://www.openhab.org/
+ * - https://play.google.com/store/apps/details?id=at.tripwire.mqtt.client&hl=en
+ * ... Please notify me if you use this broker with other software.
+ * 
+ *  How to set-up Openhab and MQTTGateway:
+ * http://forum.mysensors.org/topic/303/mqtt-broker-gateway
+ */
 
 #include <DigitalIO.h>
 #include <SPI.h>

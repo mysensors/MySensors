@@ -133,7 +133,7 @@ void parseAndSend(MySensor gw, char *commandBuffer) {
 }
 
 void setInclusionMode(boolean newMode) {
-  if (newMode != inclusionMode)
+  if (newMode != inclusionMode) {
     inclusionMode = newMode;
     // Send back mode change on serial line to ack command
     serial(PSTR("0;0;%d;0;%d;%d\n"), C_INTERNAL, I_INCLUSION_MODE, inclusionMode?1:0);
@@ -141,6 +141,7 @@ void setInclusionMode(boolean newMode) {
     if (inclusionMode) {
       inclusionStartTime = millis();
     }
+  }
 }
 
 
