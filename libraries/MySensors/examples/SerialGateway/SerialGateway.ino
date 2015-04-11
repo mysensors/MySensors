@@ -38,8 +38,7 @@
 #define NO_PORTB_PINCHANGES  
 
 #include <MySigningNone.h>
-//#include <MyTransportRFM69.h>
-#include <MyTransportRFM12.h>
+#include <MyTransportRFM69.h>
 #include <MyTransportNRF24.h>
 #include <MyHwATMega328.h>
 #include <MySigningAtsha204Soft.h>
@@ -60,9 +59,8 @@
 #define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-//MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
 //MyTransportRFM69 transport;
-MyTransportRFM12 transport(RFM12_FREQUENCY, RFM12_NETWORKID, RF12_SPI_CS, RF12_IRQ_PIN, true, RF12_IRQ_NUM);
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 //MySigningNone signer;
