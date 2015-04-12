@@ -101,7 +101,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	isGateway = _nodeId == GATEWAY_ADDRESS;
 
 	// Setup radio
-	radio.init();
+	if (!radio.init()) {
+		debug(PSTR("radio initialization failed!"));
+	}
 
 #ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
