@@ -29,13 +29,13 @@ MyTransportRFM69::MyTransportRFM69(uint8_t freqBand, uint8_t networkId, uint8_t 
 {
 }
 
-void MyTransportRFM69::init() {
+bool MyTransportRFM69::init() {
 	// Start up the radio library (_address will be set later by the MySensors library)
 	radio.initialize(_freqBand, _address, _networkId);
 #ifdef RFM69_ENABLE_ENCRYPTION
     radio.encrypt(ENCRYPTKEY);
 #endif
-	
+	return true;
 }
 
 void MyTransportRFM69::setAddress(uint8_t address) {

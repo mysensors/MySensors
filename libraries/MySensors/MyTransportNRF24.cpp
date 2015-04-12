@@ -28,13 +28,12 @@ MyTransportNRF24::MyTransportNRF24(uint8_t ce, uint8_t cs, uint8_t paLevel)
 {
 }
 
-void MyTransportNRF24::init() {
+bool MyTransportNRF24::init() {
 	// Start up the radio library
 	rf24.begin();
 
 	if (!rf24.isPVariant()) {
-		debug(PSTR("check wires\n"));
-		while(1);
+		return false;
 	}
 	rf24.setAutoAck(1);
 	rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
@@ -48,6 +47,7 @@ void MyTransportNRF24::init() {
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+	return true;
 }
 
 void MyTransportNRF24::setAddress(uint8_t address) {

@@ -31,7 +31,7 @@ class MyTransportRFM69 : public MyTransport
 { 
 public:
 	MyTransportRFM69(uint8_t freqBand=RFM69_FREQUENCY, uint8_t networkId=RFM69_NETWORKID, uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false, uint8_t interruptNum=RF69_IRQ_NUM);
-	void init();
+	bool init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
 	bool send(uint8_t to, const void* data, uint8_t len);

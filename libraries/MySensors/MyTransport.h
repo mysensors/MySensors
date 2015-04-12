@@ -22,12 +22,6 @@
 
 #include <stdint.h>
 
-#ifdef DEBUG
-#define debug(x,...) debugPrint(x, ##__VA_ARGS__)
-#else
-#define debug(x,...)
-#endif
-
 #define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
 #define NODE_SENSOR_ID 0xFF // Node child id is always created for when a node
 
@@ -45,7 +39,7 @@ public:
 	// init()
 	// different parameters would be needed depending on radio module (e.g. channel, power, crc, etc.)
 	// keeping these parameters as #define's in MyConfig to streamline the driver interface
-	virtual void init() = 0;
+	virtual bool init() = 0;
 	// setAddress(address)
 	// set the node address and start listening to that address (and the broadcast address)
 	virtual void setAddress(uint8_t address) = 0;
