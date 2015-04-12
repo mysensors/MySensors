@@ -58,8 +58,8 @@ typedef enum {
 	V_WEIGHT, // S_WEIGHT
 	V_DISTANCE, // S_DISTANCE
 	V_IMPEDANCE, // S_MULTIMETER, S_WEIGHT
-	V_ARMED, // S_DOOR, S_MOTION, S_SMOKE,
-	V_TRIPPED, // S_DOOR, S_MOTION, S_SMOKE,
+	V_ARMED, // S_DOOR, S_MOTION, S_SMOKE, S_SPRINKLER
+	V_TRIPPED, // S_DOOR, S_MOTION, S_SMOKE, S_SPRINKLER
 	V_WATT, // S_POWER
 	V_KWH, // S_POWER
 	V_SCENE_ON, // S_SCENE_CONTROLLER
@@ -88,9 +88,13 @@ typedef enum {
 	V_ID,   // S_TEMP
 					// Used for reporting the sensor internal ids (E.g. DS1820b). 
 	V_LIGHT_LEVEL_LUX,  // S_LIGHT, Light level in lux
-	V_UNIT_PREFIX // Allows sensors to send in a string representing the 
-								// unit prefix to be displayed in GUI, not parsed! E.g. cm, m, km, inch.
-								// Can be used for S_DISTANCE 
+	V_UNIT_PREFIX, // Allows sensors to send in a string representing the 
+								 // unit prefix to be displayed in GUI, not parsed! E.g. cm, m, km, inch.
+								 // Can be used for S_DISTANCE 
+	V_SOUND_DB, // S_SOUND sound level in db
+	V_VIBRATION_HZ, // S_VIBRATION vibration i Hz
+	V_ENCODER_VALUE, // S_ROTARY_ENCODER. Rotary encoder value.
+	
 } mysensor_data;
 
 // Type of internal messages (for internal messages)
@@ -103,35 +107,40 @@ typedef enum {
 
 // Type of sensor  (for presentation message)
 typedef enum {
-	S_DOOR, 
-	S_MOTION, 
-	S_SMOKE, 
-	S_LIGHT, 
-	S_DIMMER, 
-	S_COVER, 
-	S_TEMP, 
-	S_HUM, 
-	S_BARO, 
-	S_WIND,
-	S_RAIN, 
-	S_UV, 
-	S_WEIGHT, 
-	S_POWER, 
-	S_HEATER, 
-	S_DISTANCE, 
-	S_LIGHT_LEVEL, 
+	S_DOOR, // V_TRIPPED, V_ARMED
+	S_MOTION,  // V_TRIPPED, V_ARMED 
+	S_SMOKE,  // V_TRIPPED, V_ARMED 
+	S_LIGHT, // V_LIGHT, V_WATT
+	S_DIMMER, // V_DIMMER, V_WATT
+	S_COVER, // V_UP, V_DOWN, V_STOP
+	S_TEMP, // V_TEMP
+	S_HUM, // V_HUM
+	S_BARO, // V_PRESSURE, V_FORECAST
+	S_WIND, // V_WIND, V_GUST
+	S_RAIN, // V_RAIN, V_RAINRATE
+	S_UV, // V_UV
+	S_WEIGHT, // V_WEIGHT, V_IMPEDANCE
+	S_POWER, // V_WATT, V_KWH
+	S_HEATER, // V_HEATER, V_HEATER_SW
+	S_DISTANCE, // V_DISTANCE
+	S_LIGHT_LEVEL, // V_LIGHT
 	S_ARDUINO_NODE,
 	S_ARDUINO_REPEATER_NODE, 
-	S_LOCK, 
-	S_IR, 
-	S_WATER, 
+	S_LOCK, // V_LOCK_STATUS
+	S_IR, // V_IR_SEND, V_IR_RECEIVE
+	S_WATER, // V_FLOW, V_VOLUME
 	S_AIR_QUALITY, // V_VAR1 
 	S_CUSTOM, 
 	S_DUST, // V_DUST_LEVEL
 	S_SCENE_CONTROLLER, // V_SCENE_ON, V_SCENE_OFF. 
 	S_RGB_LIGHT, // Send data using V_RGB or V_RGBW 
 	S_COLOR_SENSOR,  // Send data using V_RGB
-	S_MULTIMETER // V_VOLTAGE, V_CURRENT, V_IMPEDANCE 
+	S_MULTIMETER, // V_VOLTAGE, V_CURRENT, V_IMPEDANCE 
+	S_SPRINKLER,  // V_TRIPPED, V_ARMED
+	S_WATER_LEAK, // V_TRIPPED, V_ARMED
+	S_SOUND, // V_TRIPPED, V_ARMED, V_SOUND_DB
+	S_VIBRATION, // V_TRIPPED, V_ARMED, V_VIBRATION_HZ 
+	S_ROTARY_ENCODER, // V_ENCODER_VALUE
 } mysensor_sensor;
 
 // Type of data stream  (for streamed message)
