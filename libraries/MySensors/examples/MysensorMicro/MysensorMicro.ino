@@ -1,9 +1,9 @@
-// Default sensor sketch for MySensor Micro module
+// Default sensor sketch for Sensebender Micro module
 // Act as a temperature / humidity sensor by default.
 //
 // If A0 is held low while powering on, it will enter testmode, which verifies all on-board peripherals
 // 
-// Battery voltage is repported as child sensorId 199, as well as battery percentage
+// Battery voltage is repported as child sensorId 199, as well as battery percentage (Internal message)
 
 
 #include <MySensor.h>
@@ -52,6 +52,7 @@ MyMessage msgBattery(CHILD_ID_BATT, V_VOLTAGE);
 
 // Global settings
 int measureCount = 0;
+boolean isMetric = true;
 
 // Storage of old measurements
 float lastTemperature = -100;
@@ -70,7 +71,7 @@ void setup() {
   pinMode(TEST_PIN,INPUT);
   digitalWrite(TEST_PIN, HIGH); // Enable pullup
   if (!digitalRead(TEST_PIN)) testMode();
-  
+
   digitalWrite(TEST_PIN,LOW);
   digitalWrite(LED_PIN, HIGH); 
   
@@ -84,13 +85,14 @@ void setup() {
 
   humiditySensor.begin();
   
-  gw.sendSketchInfo("MysensorMicro", "1.0");
+  gw.sendSketchInfo("Sensebender Micro", "1.0");
   
   gw.present(CHILD_ID_TEMP,S_TEMP);
   gw.present(CHILD_ID_HUM,S_HUM);
   
-  gw.present(CHILD_ID_BATT, S_POWER);
-  switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
+  isMetric = gw.getConfig().isMetric;
+  Serial.print("isMetric: "); Serial.println(isMetric);
+
 }
 
 
@@ -98,13 +100,17 @@ void setup() {
 void loop() {
   measureCount ++;
   bool forceTransmit = false;
+
+  // When we wake up the 5th time after power on, switch to 1Mhz clock
+  // This allows us to print debug messages on startup (as serial port is dependend on oscilator settings).
+  if (measureCount == 5) switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
   
   if (measureCount > FORCE_TRANSMIT_INTERVAL
   ) { // force a transmission
     forceTransmit = true; 
     measureCount = 0;
   }
-  
+    
   gw.process();
   sendBattLevel(forceTransmit);
   sendTempHumidityMeasurements(forceTransmit);
@@ -127,16 +133,17 @@ void sendTempHumidityMeasurements(bool force)
   
   si7021_env data = humiditySensor.getHumidityAndTemperature();
   
-  float temperature = data.celsiusHundredths/100;
+  float temperature = (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths) / 100.0;
     
   int humidity = data.humidityPercent;
 
-  if (lastTemperature != temperature) {
+  if ((lastTemperature != temperature) | (lastHumidity != humidity)) {
+    Serial.print("T: ");Serial.println(temperature);
+    Serial.print("H: ");Serial.println(humidity);
+    
     gw.send(msgTemp.set(temperature,1));
-    lastTemperature = temperature;
-  }
-  if (lastHumidity != humidity) {    
     gw.send(msgHum.set(humidity));
+    lastTemperature = temperature;
     lastHumidity = humidity;
   }
 }
@@ -154,10 +161,10 @@ void sendBattLevel(bool force)
   if (vcc != lastBattery) {
     lastBattery = vcc;
     // Calculate percentage
-    gw.send(msgBattery.set(vcc));
+
     vcc = vcc - 1900; // subtract 1.9V from vcc, as this is the lowest voltage we will operate at
     
-    long percent = vcc / 14;
+    long percent = vcc / 14.0;
     gw.sendBatteryLevel(percent);
   }
 }
@@ -278,7 +285,7 @@ void testMode()
     while (1) // Blink OK pattern!
     {
       digitalWrite(LED_PIN, HIGH);
-      delay(800);
+      delay(200);
       digitalWrite(LED_PIN, LOW);
       delay(200);
     }
@@ -288,10 +295,7 @@ void testMode()
     Serial.println(F("----> Selftest failed!"));
     while (1) // Blink FAILED pattern! Rappidly blinking..
     {
-      digitalWrite(LED_PIN, HIGH);
-      delay(100);
-      digitalWrite(LED_PIN, LOW);
-      delay(100);
     }
   }  
 }
+
