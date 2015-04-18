@@ -17,6 +17,14 @@
 #define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from controller
 #define MAX_SEND_LENGTH 120 // Max buffersize needed for messages destined for controller
 
+/**
+  * support for auto ID
+  */
+#define EEPROM_LATEST_NODE_ADDRESS ((uint8_t)EEPROM_LOCAL_CONFIG_ADDRESS)
+#define MYSENSOR_FIRST_SENSORID	1  		// If you want manually configured nodes below this value. 255 = Disable
+#define MYSENSOR_LAST_SENSORID	254 		// 254 is max! 255 reserved.
+
+
 class MyGateway : public MySensor
 {
 	public:

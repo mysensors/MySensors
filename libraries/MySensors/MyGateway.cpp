@@ -222,6 +222,17 @@ void MyGateway::setInclusionMode(boolean newMode) {
     }
 }
 
+inline MyMessage& build (MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
+	msg.destination = destination;
+	msg.sender = sender;
+	msg.sensor = sensor;
+	msg.type = type;
+	mSetCommand(msg,command);
+	mSetRequestAck(msg,enableAck);
+	mSetAck(msg,false);
+	return msg;
+}
+
 void MyGateway::processRadioMessage() {
 	if (process()) {
 	  // A new message was received from one of the sensors
@@ -231,6 +242,25 @@ void MyGateway::processRadioMessage() {
 	  } else {
 		rxBlink(1);
 	  }
+	  if (mGetCommand(message) == C_INTERNAL){
+      if (msg.type==I_ID_REQUEST && message.sender == 255){
+        /** this sub process is the place where we respond to ID Request for sensor that have auto configuration **/
+        uint8_t newNodeID = loadState(EEPROM_LATEST_NODE_ADDRESS)+1;
+        serial(PSTR("New Node ID : %d\n"),newNodeID);
+        if (newNodeID <= MYSENSOR_FIRST_SENSORID) newNodeID = MYSENSOR_FIRST_SENSORID;
+        if (newNodeID >= MYSENSOR_LAST_SENSORID) {
+          serial(PSTR("DEBUG: ID Full\n"),10,newNodeID);
+          if (!sendRoute(build(message, GATEWAY_ADDRESS, message.sender, 255, C_INTERNAL, I_ID_RESPONSE, 0).set((byte)255))) 
+            errBlink(1);
+          return;
+        }
+        if (!sendRoute(build(message, GATEWAY_ADDRESS, message.sender, 255, C_INTERNAL, I_ID_RESPONSE, 0).set((byte)newNodeID))){ 
+          errBlink(1);
+          //return;
+        }
+        saveState(EEPROM_LATEST_NODE_ADDRESS,newNodeID);
+      }
+    }
 	  // Pass along the message from sensors to serial line
 	  serial(message);
 	}
