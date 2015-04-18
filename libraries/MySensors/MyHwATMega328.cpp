@@ -117,7 +117,7 @@ void powerDown(period_t period) {
 	ADCSRA |= (1 << ADEN);
 }
 
-inline void MyHwATMega328::sleep(unsigned long ms) {
+void MyHwATMega328::internalSleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	Serial.flush();
 	pinIntTrigger = 0;
@@ -133,13 +133,17 @@ inline void MyHwATMega328::sleep(unsigned long ms) {
 	if (!pinIntTrigger && ms >= 16)      { powerDown(SLEEP_15Ms); ms -= 15; }
 }
 
+void MyHwATMega328::sleep(unsigned long ms) {
+	internalSleep(ms);
+}
+
 bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
 	attachInterrupt(interrupt, wakeUp, mode);
 	if (ms>0) {
 		pinIntTrigger = 0;
-		sleep(ms);
+		internalSleep(ms);
 		if (0 == pinIntTrigger) {
 			pinTriggeredWakeup = false;
 		}
@@ -157,7 +161,7 @@ inline uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t i
 	attachInterrupt(interrupt2, wakeUp2, mode2);
 	if (ms>0) {
 		pinIntTrigger = 0;
-		sleep(ms);
+		internalSleep(ms);
 		if (0 == pinIntTrigger) {
 			retVal = -1;
 		}

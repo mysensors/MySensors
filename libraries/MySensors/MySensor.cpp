@@ -711,8 +711,8 @@ bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 		return false;
 	} else {
 #endif
-	radio.powerDown();
-	return hw.sleep(interrupt, mode, ms) ;
+		radio.powerDown();
+		return hw.sleep(interrupt, mode, ms) ;
 #ifdef MY_OTA_FIRMWARE_FEATURE
 	}
 #endif

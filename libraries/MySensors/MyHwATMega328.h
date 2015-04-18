@@ -85,5 +85,6 @@ public:
 	void debugPrint(bool isGW, const char *fmt, ... );
 #endif
 private:
+	void internalSleep(unsigned long ms);
 };
 #endif
