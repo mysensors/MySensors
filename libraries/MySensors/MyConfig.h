@@ -46,6 +46,26 @@
 
 
 /**********************************
+*  Information LEDs blinking
+***********************************/
+// This feature enables LEDs blinking on message receive, transmit
+// or if some error occured. This was commonly used only in gateways,
+// but now can be used in any sensor node. Also the LEDs can now be
+// disabled in the gateway.
+
+// #define WITH_LEDS_BLINKING
+
+// default LEDs blinking period in milliseconds
+#define DEFAULT_LED_BLINK_PERIOD 300
+// The RX LED default pin
+#define DEFAULT_RX_LED_PIN 8
+// The TX LED default pin
+#define DEFAULT_TX_LED_PIN 9
+// The Error LED default pin
+#define DEFAULT_ERR_LED_PIN 7
+
+
+/**********************************
 *  Message Signing Settings
 ***********************************/
 // Disable to completly disable signing functionality in library

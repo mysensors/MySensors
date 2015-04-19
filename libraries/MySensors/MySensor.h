@@ -146,6 +146,12 @@ class MySensor
 #ifdef MY_SIGNING_FEATURE
 		, MySigning &signer=*new MySigningNone()
 #endif
+#ifdef WITH_LEDS_BLINKING
+		, uint8_t _rx=DEFAULT_RX_LED_PIN,
+		uint8_t _tx=DEFAULT_TX_LED_PIN,
+		uint8_t _er=DEFAULT_ERR_LED_PIN,
+		unsigned long _blink_period=DEFAULT_LED_BLINK_PERIOD
+#endif
 		);
 
 	/**
@@ -299,6 +305,15 @@ class MySensor
 	 */
 	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
+#ifdef WITH_LEDS_BLINKING
+	/**
+	 * Blink with LEDs
+	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
+	 */
+	void rxBlink(uint8_t cnt);
+	void txBlink(uint8_t cnt);
+	void errBlink(uint8_t cnt);
+#endif
 
   protected:
 	NodeConfig nc; // Essential settings for node to work
@@ -322,6 +337,20 @@ class MySensor
 	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
 	MyMessage msgSign;  // Buffer for message to sign.
 	MySigning& signer;
+#endif
+
+#ifdef WITH_LEDS_BLINKING
+	uint8_t pinRx; // Rx led pin
+	uint8_t pinTx; // Tx led pin
+	uint8_t pinEr; // Err led pin
+
+	// these variables don't need to be volatile, since we are not using interrupts
+	uint8_t countRx;
+	uint8_t countTx;
+	uint8_t countErr;
+
+	unsigned long ledBlinkPeriod;
+	void handleLedsBlinking(); // do the actual blinking
 #endif
 
 	MyTransport& radio;
