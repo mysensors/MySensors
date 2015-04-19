@@ -23,18 +23,14 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 #include <stdint.h>
-#include "utility/RFM12B.h"
 #include <SPI.h>
 
-#define RF12_SPI_CS SPI_SS
-#define RF12_IRQ_PIN RFM_IRQ
-#define RF12_IRQ_NUM 0
-
+#define RFM12_BROADCAST_ADDRESS 31
 
 class MyTransportRFM12 : public MyTransport
 { 
 public:
-	MyTransportRFM12(uint8_t freqBand=RFM12_FREQUENCY, uint8_t networkId=RFM12_NETWORKID, uint8_t slaveSelectPin=RF12_SPI_CS, uint8_t interruptPin=RF12_IRQ_PIN, bool isRFM12HW=false, uint8_t interruptNum=RF12_IRQ_NUM);
+	MyTransportRFM12(uint8_t freqBand=RFM12_FREQUENCY, uint8_t networkId=RFM12_NETWORKID);
 	void init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
@@ -43,7 +39,6 @@ public:
 	uint8_t receive(void* data);
 	void powerDown();
 private:
-	RFM12B radio;
 	uint8_t _address;
 	uint8_t _freqBand;
 	uint8_t _networkId;

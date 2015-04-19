@@ -17,13 +17,13 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#include <JeeLib.h>
 #include "MyTransport.h"
 #include "MyTransportRFM12.h"
 
-MyTransportRFM12::MyTransportRFM12(uint8_t freqBand, uint8_t networkId, uint8_t slaveSelectPin, uint8_t interruptPin, bool isRFM12HW, uint8_t interruptNum)
+MyTransportRFM12::MyTransportRFM12(uint8_t freqBand, uint8_t networkId)
 	:
 	MyTransport(),
-	radio(),
 	_freqBand(freqBand),
 	_networkId(networkId)
 {
@@ -31,44 +31,54 @@ MyTransportRFM12::MyTransportRFM12(uint8_t freqBand, uint8_t networkId, uint8_t 
 
 void MyTransportRFM12::init() {
 	// Start up the radio library (_address will be set later by the MySensors library)
-	radio.Initialize(_address, _freqBand, _networkId);
+   rf12_initialize(_address, _freqBand, _networkId);
+   
 #ifdef RFM12_ENABLE_ENCRYPTION
-    radio.Encrypt(ENCRYPTKEY);
+    // radio.Encrypt(ENCRYPTKEY);
 #endif
 	
 }
 
 void MyTransportRFM12::setAddress(uint8_t address) {
+   if(address == 0) 
+      address = RFM12_BROADCAST_ADDRESS; // set adress to jeelib broadcast addr (31)
 	_address = address;
-	//radio.setAddress(address);
+   rf12_initialize(_address, _freqBand, _networkId);
 }
 
 uint8_t MyTransportRFM12::getAddress() {
+   //if(_address == 0) 
+   //   return RFM12_BROADCAST_ADDRESS; // set adress to jeelib broadcast addr (31)
 	return _address;
 }
 
 bool MyTransportRFM12::send(uint8_t to, const void* data, uint8_t len) {
-   radio.Send(to, data, len, true);
+
+   rf12_sendStart(to, data, len);
+
+   return true;
 }
 
 bool MyTransportRFM12::available(uint8_t *to) {
-	if (radio.GetSender() == BROADCAST_ADDRESS)
+   if ((uint8_t)rf12_data[0] == BROADCAST_ADDRESS){
 		*to = BROADCAST_ADDRESS;
-	else
-		*to = _address;
-	return radio.ReceiveComplete();
+	} 
+   else {
+      *to = _address;
+   }
+   return rf12_recvDone();
 }
 
 uint8_t MyTransportRFM12::receive(void* data) {
-	memcpy(data,(const void *)radio.Data, (unsigned int)radio.DataLen);
-	// Send ack back if this message wasn't a broadcast
-	if (radio.GetSender() != BROADCAST_ADDRESS)
-		radio.ACKRequested();
-    radio.SendACK();
-   volatile uint8_t len = (volatile uint8_t)*radio.DataLen;
-	return len;
+   memcpy(data,(const void *)rf12_data, (unsigned int)rf12_len);
+
+	if (RF12_WANTS_ACK && (uint8_t)rf12_data[0] != RFM12_BROADCAST_ADDRESS){
+      rf12_sendStart(RF12_ACK_REPLY, 0, 0);
+   }
+
+	return rf12_len;
 }	
 
 void MyTransportRFM12::powerDown() {
-	radio.Sleep();
+	rf12_sleep(RF12_SLEEP);
 }
