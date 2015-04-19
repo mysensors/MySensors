@@ -102,7 +102,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 	// Setup radio
 	if (!radio.init()) {
-		debug(PSTR("radio initialization failed!"));
+		debug(PSTR("radio initialization failed!\n"));
 	}
 
 #ifdef MY_SIGNING_FEATURE

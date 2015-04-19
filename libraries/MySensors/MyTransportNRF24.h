@@ -45,6 +45,7 @@ public:
 	void powerDown();
 private:
 	RF24 rf24;
+	bool _initialized;
 	uint8_t _address;
 	uint8_t _paLevel;
 };
