@@ -327,12 +327,18 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	// If we still don't have any parent id, re-request and skip this message.
 	if (nc.parentNodeId == AUTO) {
 		findParentNode();
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
 	// If we still don't have any node id, re-request and skip this message.
 	if (nc.nodeId == AUTO) {
 		requestNodeId();
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
@@ -369,10 +375,16 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		}
 		if (hw_millis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
 			debug(PSTR("nonce tmo\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		if (!signOk) {
 			debug(PSTR("sign fail\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
@@ -431,6 +443,9 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		failedTransmissions++;
 		if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
 			findParentNode();
@@ -445,6 +460,9 @@ boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
+#ifdef WITH_LEDS_BLINKING
+	txBlink(1);
+#endif
 	bool ok = radio.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
@@ -504,6 +522,9 @@ boolean MySensor::process() {
 				debug(PSTR("fw upd fail\n"));
 				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 				fwUpdateOngoing = false;
+#ifdef WITH_LEDS_BLINKING
+				errBlink(1);
+#endif
 				return false;
 			}
 			fwRetry--;
@@ -525,6 +546,9 @@ boolean MySensor::process() {
 #endif
 
 	uint8_t len = radio.receive((uint8_t *)&msg);
+#ifdef WITH_LEDS_BLINKING
+	rxBlink(1);
+#endif
 
 #ifdef MY_SIGNING_FEATURE
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
@@ -537,10 +561,16 @@ boolean MySensor::process() {
 		if (!mGetSigned(msg)) {
 			// Got unsigned message that should have been signed
 			debug(PSTR("no sign\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		else if (!signer.verifyMsg(msg)) {
 			debug(PSTR("verify fail\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false; // This signed message has been tampered with!
 		}
 	}
@@ -554,6 +584,9 @@ boolean MySensor::process() {
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("ver mismatch\n"));
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
