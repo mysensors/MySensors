@@ -37,6 +37,7 @@
 #include <Bounce2.h>
 #include <EEPROM.h>
 
+#define NODE_ID 22
 #define CHILD_ID 3
 #define BUTTON_PIN  3  // Arduino Digital I/O pin for button/reed switch
 
@@ -52,16 +53,9 @@ MyMessage msg(CHILD_ID,V_TRIPPED);
 
 void setup()  
 {  
-  gw.begin();
+  gw.begin(NULL, 22);
 
-  Serial.println("Started clearing. Please wait...");
-  for (int i=0;i<512;i++) {
-    EEPROM.write(i, 0xff);
-  }
-  Serial.println("Clering done. You're ready to go!");
-  
-  
- // Setup the button
+  // Setup the button
   pinMode(BUTTON_PIN,INPUT);
   // Activate internal pull-up
   digitalWrite(BUTTON_PIN,HIGH);

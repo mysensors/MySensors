@@ -121,7 +121,7 @@
 *  RFM12 Driver Defaults
 ***********************************/
 // Default network id. Use the same for all nodes that will talk to each other
-#define RFM12_NETWORKID     110
+#define RFM12_NETWORKID     99
 
 // Default frequency to use. This must match the hardware version of the RFM69 radio (uncomment one):
 #define RFM12_FREQUENCY   RF12_433MHZ
@@ -129,7 +129,7 @@
 //#define FREQUENCY     RF12_915MHZ
 
 // Enable this for encryption of packets
-#define RFM12_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
+#define RFM12_ENCRYPTKEY    "ABCDABCDABCDABCD" //exactly the same 16 characters/bytes on all nodes!
 
 
 

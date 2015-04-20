@@ -34,7 +34,7 @@ void MyTransportRFM12::init() {
    rf12_initialize(_address, _freqBand, _networkId);
    
 #ifdef RFM12_ENABLE_ENCRYPTION
-    // radio.Encrypt(ENCRYPTKEY);
+    radio.Encrypt(ENCRYPTKEY);
 #endif
 	
 }
