@@ -24,7 +24,8 @@ MyTransportNRF24::MyTransportNRF24(uint8_t ce, uint8_t cs, uint8_t paLevel)
 	:
 	MyTransport(),
 	rf24(ce, cs),
-	_paLevel(paLevel)
+	_paLevel(paLevel),
+	_initialized(false)
 {
 }
 
@@ -47,6 +48,7 @@ bool MyTransportNRF24::init() {
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+	_initialized = true;
 	return true;
 }
 
@@ -72,6 +74,8 @@ bool MyTransportNRF24::send(uint8_t to, const void* data, uint8_t len) {
 }
 
 bool MyTransportNRF24::available(uint8_t *to) {
+	if (!_initialized)
+		return false;
 	uint8_t pipe = 255;
 	boolean avail = rf24.available(&pipe);
 	if (pipe == CURRENT_NODE_PIPE)
