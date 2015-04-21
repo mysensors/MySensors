@@ -47,8 +47,8 @@
 #include <Bounce2.h>
 
 #define LED_PIN 3           // Arduino pin attached to MOSFET Gate pin
-#define KNOB_ENC_PIN_1 A0   // Rotary encoder input pin 1
-#define KNOB_ENC_PIN_2 A1   // Rotary encoder input pin 2
+#define KNOB_ENC_PIN_1 4    // Rotary encoder input pin 1
+#define KNOB_ENC_PIN_2 5    // Rotary encoder input pin 2
 #define KNOB_BUTTON_PIN 6   // Rotary encoder button pin 
 #define FADE_DELAY 10       // Delay in ms for each percentage fade up/down (10ms = 1s full-range dim)
 #define SN "DimmableLED /w button"
