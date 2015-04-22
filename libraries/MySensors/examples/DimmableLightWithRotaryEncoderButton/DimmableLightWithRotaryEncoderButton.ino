@@ -51,6 +51,7 @@
 #define KNOB_ENC_PIN_2 5    // Rotary encoder input pin 2
 #define KNOB_BUTTON_PIN 6   // Rotary encoder button pin 
 #define FADE_DELAY 10       // Delay in ms for each percentage fade up/down (10ms = 1s full-range dim)
+#define SEND_THROTTLE_DELAY 400 // Number of milliseconds before sending after user stops turning knob
 #define SN "DimmableLED /w button"
 #define SV "1.2"
 
@@ -61,11 +62,6 @@
 
 #define LIGHT_OFF 0
 #define LIGHT_ON 1
-
-#define SEND_THROTTLE_DELAY 400 // Number of milliseconds before sending after user stops turning knob
-
-#define SN "Dimmable /w Button"
-#define SV "1.0"
 
 int dimValue;
 int fadeTo;
@@ -98,7 +94,6 @@ void setup()
   gw.begin(incomingMessage, AUTO, false);
 
   // Send the Sketch Version Information to the Gateway
-  gw.sendSketchInfo(SN, SV);
   gw.present(CHILD_ID_LIGHT, S_DIMMER);
   gw.sendSketchInfo(SN, SV);
 
