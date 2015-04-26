@@ -18,6 +18,8 @@
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
 
+#define RELEASE "1.1"
+
 // Child sensor ID's
 #define CHILD_ID_TEMP  1
 #define CHILD_ID_HUM   2
@@ -59,6 +61,7 @@ float lastTemperature = -100;
 int lastHumidity = -100;
 long lastBattery = -100;
 
+bool highfreq = true;
 
 void setup() {
 
@@ -66,6 +69,10 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   Serial.begin(115200);
+  Serial.print(F("Sensebender Micro FW "));
+  Serial.print(RELEASE);
+  Serial.flush();
+
   // First check if we should boot into test mode
 
   pinMode(TEST_PIN,INPUT);
@@ -74,7 +81,7 @@ void setup() {
 
   digitalWrite(TEST_PIN,LOW);
   digitalWrite(LED_PIN, HIGH); 
-  
+
 #ifdef NODE_ADDRESS
   gw.begin(NULL, NODE_ADDRESS, false);
 #else
@@ -84,8 +91,9 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   humiditySensor.begin();
-  
-  gw.sendSketchInfo("Sensebender Micro", "1.0");
+  Serial.flush();
+  Serial.println(F(" - Online!"));
+  gw.sendSketchInfo("Sensebender Micro", RELEASE);
   
   gw.present(CHILD_ID_TEMP,S_TEMP);
   gw.present(CHILD_ID_HUM,S_HUM);
@@ -103,10 +111,9 @@ void loop() {
 
   // When we wake up the 5th time after power on, switch to 1Mhz clock
   // This allows us to print debug messages on startup (as serial port is dependend on oscilator settings).
-  if (measureCount == 5) switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
+  if ((measureCount == 5) && highfreq) switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
   
-  if (measureCount > FORCE_TRANSMIT_INTERVAL
-  ) { // force a transmission
+  if (measureCount > FORCE_TRANSMIT_INTERVAL) { // force a transmission
     forceTransmit = true; 
     measureCount = 0;
   }
@@ -202,6 +209,7 @@ void switchClock(unsigned char clk)
   CLKPR = 1<<CLKPCE; // Set CLKPCE to enable clk switching
   CLKPR = clk;  
   sei();
+  highfreq = false;
 }
 
 
@@ -213,7 +221,7 @@ void testMode()
   byte tests = 0;
   
   digitalWrite(LED_PIN, HIGH); // Turn on LED.
-  
+  Serial.println(F(" - TestMode"));
   Serial.println(F("Testing peripherals!"));
   Serial.flush();
   Serial.print(F("-> SI7021 : ")); 
