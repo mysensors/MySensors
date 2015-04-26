@@ -61,6 +61,7 @@ float lastTemperature = -100;
 int lastHumidity = -100;
 long lastBattery = -100;
 
+bool highfreq = true;
 
 void setup() {
 
@@ -110,7 +111,7 @@ void loop() {
 
   // When we wake up the 5th time after power on, switch to 1Mhz clock
   // This allows us to print debug messages on startup (as serial port is dependend on oscilator settings).
-  if (measureCount == 5) switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
+  if ((measureCount == 5) && highfreq) switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
   
   if (measureCount > FORCE_TRANSMIT_INTERVAL) { // force a transmission
     forceTransmit = true; 
@@ -208,6 +209,7 @@ void switchClock(unsigned char clk)
   CLKPR = 1<<CLKPCE; // Set CLKPCE to enable clk switching
   CLKPR = clk;  
   sei();
+  highfreq = false;
 }
 
 
