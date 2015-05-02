@@ -27,11 +27,6 @@
  */
 
 
-// use JeeLib as RFM12 API
-#include <JeeLib.h>
-// Translate between JeeLib and MyTransport  Modules
-#include <MyTransportRFM12.h>
-
 #include <MySensor.h>
 #include <SPI.h>
 #include <Bounce2.h>
