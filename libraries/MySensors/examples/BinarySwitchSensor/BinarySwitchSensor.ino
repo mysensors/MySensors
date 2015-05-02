@@ -27,6 +27,11 @@
  */
 
 
+// use JeeLib as RFM12 API
+#include <JeeLib.h>
+// Translate between JeeLib and MyTransport  Modules
+#include <MyTransportRFM12.h>
+
 #include <MySensor.h>
 #include <SPI.h>
 #include <Bounce2.h>
@@ -34,7 +39,10 @@
 #define CHILD_ID 3
 #define BUTTON_PIN  3  // Arduino Digital I/O pin for button/reed switch
 
-MySensor gw;
+// Set RFM12 Frequency (default: 433MHz) and NetworkID (default: 99)
+MyTransportRFM12 transport(RFM12_FREQUENCY, RFM12_NETWORKID);
+MySensor gw(transport);
+
 Bounce debouncer = Bounce(); 
 int oldValue=-1;
 

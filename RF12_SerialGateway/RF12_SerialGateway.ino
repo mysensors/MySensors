@@ -89,6 +89,11 @@ void output(const char *fmt, ... ) {
    Serial.print(serialBuffer);
 }
 
+int freeRam () {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
   
 void setup()  
 { 
@@ -106,6 +111,8 @@ void setup()
 
   // Send startup log message on serial
   serial(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
+
+  serial(PSTR("0;0;%d;0;%d;Free: %d.\n"),  C_INTERNAL, I_GATEWAY_READY, freeRam());
 }
 
 void loop()  
@@ -146,6 +153,7 @@ void serialEvent() {
         inputString[inputPos] = inChar;
         inputPos++;
       }
+      serial(PSTR("0;0;%d;0;%d;Free: %d.\n"),  C_INTERNAL, I_GATEWAY_READY, freeRam());
     } else {
        // Incoming message too long. Throw away 
         inputPos = 0;

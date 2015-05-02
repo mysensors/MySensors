@@ -40,6 +40,8 @@ void MyTransportRFM12::init() {
 }
 
 void MyTransportRFM12::setAddress(uint8_t address) {
+  debug(PSTR("setAddress: %d\n"),  address);
+
    if(address == 0) 
       address = RFM12_BROADCAST_ADDRESS; // set adress to jeelib broadcast addr (31)
 	_address = address;
@@ -47,8 +49,9 @@ void MyTransportRFM12::setAddress(uint8_t address) {
 }
 
 uint8_t MyTransportRFM12::getAddress() {
-   //if(_address == 0) 
-   //   return RFM12_BROADCAST_ADDRESS; // set adress to jeelib broadcast addr (31)
+  debug(PSTR("getAddress: %d\n"),  _address);
+   if(_address == RFM12_BROADCAST_ADDRESS) 
+      return 0; // set adress to jeelib broadcast addr (31)
 	return _address;
 }
 
