@@ -61,12 +61,11 @@ char* MyMessage::getStream(char *buffer) const {
 
 char* MyMessage::getString(char *buffer) const {
 	uint8_t payloadType = miGetPayloadType();
-	if (payloadType == P_STRING) {
-		strncpy(buffer, data, miGetLength());
-		buffer[miGetLength()] = 0;
-		return buffer;
-	} else if (buffer != NULL) {
-		if (payloadType == P_BYTE) {
+	if (buffer != NULL) {
+		if (payloadType == P_STRING) {
+			strncpy(buffer, data, miGetLength());
+			buffer[miGetLength()] = 0;
+		} else if (payloadType == P_BYTE) {
 			itoa(bValue, buffer, 10);
 		} else if (payloadType == P_INT16) {
 			itoa(iValue, buffer, 10);
