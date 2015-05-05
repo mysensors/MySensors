@@ -1,5 +1,5 @@
 
-MysensorsMicro.name=Mysensors Micro
+MysensorsMicro.name=Sensebender Micro
 
 MysensorsMicro.upload.tool=arduino:avrdude
 MysensorsMicro.upload.protocol=arduino
