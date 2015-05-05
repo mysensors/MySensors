@@ -13,7 +13,7 @@ MysensorsMicro.bootloader.lock_bits=0x0F
 MysensorsMicro.bootloader.low_fuses=0xE2
 MysensorsMicro.bootloader.high_fuses=0xD2
 MysensorsMicro.bootloader.extended_fuses=0xFE
-MysensorsMicro.bootloader.file=DualOptiboot/optiboot_atmega328p-pro8.hex
+MysensorsMicro.bootloader.file=DualOptiboot/optiboot_atmega328_pro_8MHz.hex
 
 MysensorsMicro.build.board=AVR_MICRO8
 MysensorsMicro.build.core=arduino:arduino
