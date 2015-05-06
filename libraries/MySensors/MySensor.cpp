@@ -53,11 +53,17 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 #ifdef MY_SIGNING_FEATURE
 	, MySigning &_signer
 #endif
+#ifdef WITH_LEDS_BLINKING
+		, uint8_t _rx, uint8_t _tx, uint8_t _er, unsigned long _blink_period
+#endif
 	)
 	:
 	radio(_radio),
 #ifdef MY_SIGNING_FEATURE
 	signer(_signer),
+#endif
+#ifdef WITH_LEDS_BLINKING
+	pinRx(_rx), pinTx(_tx), pinEr(_er), ledBlinkPeriod(_blink_period),
 #endif
 #ifdef MY_OTA_FIRMWARE_FEATURE
  	flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID),
@@ -90,6 +96,64 @@ bool MySensor::isValidFirmware() {
 
 #endif
 
+#ifdef WITH_LEDS_BLINKING
+void MySensor::handleLedsBlinking() {
+	static unsigned long next_time = hw_millis() + ledBlinkPeriod;
+
+	// Just return if it is not the time...
+	// http://playground.arduino.cc/Code/TimingRollover
+	if ((long)(hw_millis() - next_time) < 0)
+		return;
+	else
+		next_time = hw_millis() + ledBlinkPeriod;
+
+	// do the actual blinking
+	if(countRx && countRx != 255) {
+		// switch led on
+		digitalWrite(pinRx, LOW);
+	}
+	else if(!countRx) {
+		// switching off
+		digitalWrite(pinRx, HIGH);
+	}
+	if(countRx != 255)
+		--countRx;
+
+	if(countTx && countTx != 255) {
+		// switch led on
+		digitalWrite(pinTx, LOW);
+	}
+	else if(!countTx) {
+		// switching off
+		digitalWrite(pinTx, HIGH);
+	}
+	if(countTx != 255)
+		--countTx;
+
+	if(countErr && countErr != 255) {
+		// switch led on
+		digitalWrite(pinEr, LOW);
+	}
+	else if(!countErr) {
+		// switching off
+		digitalWrite(pinEr, HIGH);
+	}
+	if(countErr != 255)
+		--countErr;
+}
+
+void MySensor::rxBlink(uint8_t cnt) {
+  if(countRx == 255) { countRx = cnt; }
+}
+
+void MySensor::txBlink(uint8_t cnt) {
+  if(countTx == 255) { countTx = cnt; }
+}
+
+void MySensor::errBlink(uint8_t cnt) {
+  if(countErr == 255) { countErr = cnt; }
+}
+#endif
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
 	hw_init();
@@ -109,6 +173,23 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 #ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
 	hw_readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
+#endif
+
+#ifdef WITH_LEDS_BLINKING
+	// Setup led pins
+	pinMode(pinRx, OUTPUT);
+	pinMode(pinTx, OUTPUT);
+	pinMode(pinEr, OUTPUT);
+
+	// Set initial state of leds
+	digitalWrite(pinRx, HIGH);
+	digitalWrite(pinTx, HIGH);
+	digitalWrite(pinEr, HIGH);
+
+	// initialize counters
+	countRx = 0;
+	countTx = 0;
+	countErr = 0;
 #endif
 
 	if (isGateway) {
@@ -246,12 +327,18 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	// If we still don't have any parent id, re-request and skip this message.
 	if (nc.parentNodeId == AUTO) {
 		findParentNode();
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
 	// If we still don't have any node id, re-request and skip this message.
 	if (nc.nodeId == AUTO) {
 		requestNodeId();
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
@@ -288,10 +375,16 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		}
 		if (hw_millis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
 			debug(PSTR("nonce tmo\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		if (!signOk) {
 			debug(PSTR("sign fail\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
@@ -350,6 +443,9 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		failedTransmissions++;
 		if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
 			findParentNode();
@@ -364,6 +460,9 @@ boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
+#ifdef WITH_LEDS_BLINKING
+	txBlink(1);
+#endif
 	bool ok = radio.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
@@ -408,6 +507,11 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 
 boolean MySensor::process() {
 	hw_watchdogReset();
+
+#ifdef WITH_LEDS_BLINKING
+	handleLedsBlinking();
+#endif
+
 	uint8_t to = 0;
 	if (!radio.available(&to))
 	{
@@ -418,6 +522,9 @@ boolean MySensor::process() {
 				debug(PSTR("fw upd fail\n"));
 				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 				fwUpdateOngoing = false;
+#ifdef WITH_LEDS_BLINKING
+				errBlink(1);
+#endif
 				return false;
 			}
 			fwRetry--;
@@ -439,6 +546,9 @@ boolean MySensor::process() {
 #endif
 
 	uint8_t len = radio.receive((uint8_t *)&msg);
+#ifdef WITH_LEDS_BLINKING
+	rxBlink(1);
+#endif
 
 #ifdef MY_SIGNING_FEATURE
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
@@ -451,10 +561,16 @@ boolean MySensor::process() {
 		if (!mGetSigned(msg)) {
 			// Got unsigned message that should have been signed
 			debug(PSTR("no sign\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		else if (!signer.verifyMsg(msg)) {
 			debug(PSTR("verify fail\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false; // This signed message has been tampered with!
 		}
 	}
@@ -468,6 +584,9 @@ boolean MySensor::process() {
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("ver mismatch\n"));
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
