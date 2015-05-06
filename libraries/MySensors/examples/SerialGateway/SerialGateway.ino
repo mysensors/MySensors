@@ -29,6 +29,7 @@
  * - RX/TX/ERR leds need to be connected between +5V (anode) and digital pin 6/5/4 with resistor 270-330R in a series
  *
  * LEDs (OPTIONAL):
+ * - To use the feature, uncomment WITH_LEDS_BLINKING in MyConfig.h
  * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error 
@@ -48,7 +49,6 @@
 #include <MyParserSerial.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
-#include <MsTimer2.h>
 #include <PinChangeInt.h>
 #include "GatewayUtil.h"
 
@@ -59,7 +59,7 @@
 #define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
 //MyTransportRFM69 transport;
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
@@ -71,7 +71,12 @@ MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
 MyHwATMega328 hw;
 
 // Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+// To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
+#ifdef WITH_LEDS_BLINKING
+MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+#else
 MySensor gw(transport, hw /*, signer*/);
+#endif
 
 char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
 int inputPos = 0;
@@ -92,11 +97,7 @@ void setup()
 { 
   gw.begin(incomingMessage, 0, true, 0);
 
-  setupGateway(RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN, INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);  
-
-  // Add led timer interrupt
-  MsTimer2::set(300, ledTimersInterrupt);
-  MsTimer2::start();
+  setupGateway(INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
 
   // Add interrupt for inclusion button to pin
   PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
