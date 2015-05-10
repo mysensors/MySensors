@@ -1,3 +1,4 @@
+menu.cpu=Processor
 
 MysensorsMicro.name=Sensebender Micro
 
@@ -19,4 +20,10 @@ MysensorsMicro.build.board=AVR_MICRO8
 MysensorsMicro.build.core=arduino:arduino
 MysensorsMicro.build.variant=micro
 MysensorsMicro.build.mcu=atmega328p
-MysensorsMicro.build.f_cpu=8000000L
+#MysensorsMicro.build.f_cpu=8000000L
+
+MysensorsMicro.menu.cpu.8Mhz=Atmega328 8Mhz
+MysensorsMicro.menu.cpu.8Mhz.build.f_cpu=8000000L 
+
+MysensorsMicro.menu.cpu.1Mhz=Atmega328 1Mhz
+MysensorsMicro.menu.cpu.1Mhz.build.f_cpu=1000000L
