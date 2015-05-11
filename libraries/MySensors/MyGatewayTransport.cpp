@@ -17,7 +17,9 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyParser.h"
+#include "MyGatewayTransport.h"
 
-MyParser::MyParser() {
+
+MyGatewayTransport::MyGatewayTransport(MyProtocol &_protocol) : protocol(_protocol) {
+
 }

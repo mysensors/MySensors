@@ -46,7 +46,7 @@
 #include <MySigningAtsha204.h>
 
 #include <SPI.h>  
-#include <MyParserSerial.h>  
+#include <MyProtocolDefault.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
 #include <PinChangeInt.h>

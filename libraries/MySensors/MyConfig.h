@@ -56,13 +56,13 @@
 // #define WITH_LEDS_BLINKING
 
 // default LEDs blinking period in milliseconds
-#define DEFAULT_LED_BLINK_PERIOD 300
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
 // The RX LED default pin
-#define DEFAULT_RX_LED_PIN 8
+#define MY_DEFAULT_RX_LED_PIN 8
 // The TX LED default pin
-#define DEFAULT_TX_LED_PIN 9
+#define MY_DEFAULT_TX_LED_PIN 9
 // The Error LED default pin
-#define DEFAULT_ERR_LED_PIN 7
+#define MY_DEFAULT_ERR_LED_PIN 7
 
 
 /**********************************

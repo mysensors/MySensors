@@ -667,50 +667,19 @@ boolean MySensor::process() {
 				return true; // Just pass along nonce silently (no need to call callback for these)
 #endif
 			} else if (sender == GATEWAY_ADDRESS) {
-				bool isMetric;
-
-				if (type == I_REBOOT) {
-					// Requires MySensors or other bootloader with watchdogs enabled
-					hw_reboot();
-				} else if (type == I_ID_RESPONSE) {
+				if (type == I_ID_RESPONSE && nc.nodeId == AUTO) {
+					nc.nodeId = msg.getByte();
 					if (nc.nodeId == AUTO) {
-						nc.nodeId = msg.getByte();
-						if (nc.nodeId == AUTO) {
-							// sensor net gateway will return max id if all sensor id are taken
-							debug(PSTR("full\n"));
-							while (1); // Wait here. Nothing else we can do...
-						}
-						setupNode();
-						// Write id to EEPROM
-						hw_writeConfig(EEPROM_NODE_ID_ADDRESS, nc.nodeId);
-						debug(PSTR("id=%d\n"), nc.nodeId);
+						// sensor net gateway will return max id if all sensor id are taken
+						debug(PSTR("full\n"));
+						while (1); // Wait here. Nothing else we can do...
 					}
-				} else if (type == I_CONFIG) {
-					// Pick up configuration from controller (currently only metric/imperial)
-					// and store it in eeprom if changed
-					isMetric = msg.getString()[0] == 'M' ;
-					cc.isMetric = isMetric;
-					hw_writeConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
-				} else if (type == I_CHILDREN) {
-					if (repeaterMode && msg.getString()[0] == 'C') {
-						// Clears child relay data for this node
-						debug(PSTR("clear\n"));
-						uint8_t i = 255;
-						do {
-							hw_writeConfig(EEPROM_ROUTES_ADDRESS+i, 0xff);
-						} while (i--);
-						// Clear parent node id & distance to gw
-						hw_writeConfig(EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
-						hw_writeConfig(EEPROM_DISTANCE_ADDRESS, 0xFF);
-						// Find parent node
-						findParentNode();
-						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
-					}
-				} else if (type == I_TIME) {
-					if (timeCallback != NULL) {
-						// Deliver time to callback
-						timeCallback(msg.getULong());
-					}
+					setupNode();
+					// Write id to EEPROM
+					hw_writeConfig(EEPROM_NODE_ID_ADDRESS, nc.nodeId);
+					debug(PSTR("id=%d\n"), nc.nodeId);
+				} else {
+					processInternalMessages(msg);
 				}
 				return false;
 			}
@@ -790,6 +759,44 @@ boolean MySensor::process() {
 	}
 	return false;
 }
+
+
+void MySensor::processInternalMessages(MyMessage &msg) {
+	bool isMetric;
+	uint8_t type = msg.type;
+
+	if (type == I_REBOOT) {
+		// Requires MySensors or other bootloader with watchdogs enabled
+		hw_reboot();
+	} else if (type == I_CONFIG) {
+		// Pick up configuration from controller (currently only metric/imperial)
+		// and store it in eeprom if changed
+		isMetric = msg.getString()[0] == 'M' ;
+		cc.isMetric = isMetric;
+		hw_writeConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
+	} else if (type == I_CHILDREN) {
+		if (repeaterMode && msg.getString()[0] == 'C') {
+			// Clears child relay data for this node
+			debug(PSTR("clear\n"));
+			uint8_t i = 255;
+			do {
+				hw_writeConfig(EEPROM_ROUTES_ADDRESS+i, 0xff);
+			} while (i--);
+			// Clear parent node id & distance to gw
+			hw_writeConfig(EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
+			hw_writeConfig(EEPROM_DISTANCE_ADDRESS, 0xFF);
+			// Find parent node
+			findParentNode();
+			sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
+		}
+	} else if (type == I_TIME) {
+		if (timeCallback != NULL) {
+			// Deliver time to callback
+			timeCallback(msg.getULong());
+		}
+	}
+}
+
 
 MyMessage& MySensor::getLastMessage() {
 	return msg;

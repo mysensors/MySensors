@@ -17,19 +17,23 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyParser_h
-#define MyParser_h
+#ifndef MyProtocol_h
+#define MyProtocol_h
 
 #include "MyMessage.h"
 
-class MyParser
+class MyProtocol
 {
 public:
-	// MyParser constructor
-	MyParser();
+	// MyProtocol constructor
+	MyProtocol();
 	// parse(message, inputString)
 	// parse a string into a message element
 	// returns true if successfully parsed the input string
 	virtual bool parse(MyMessage &message, char *inputString) = 0;
+
+	// Format MyMessage to the protocol represenataion
+	virtual char *format(MyMessage &message) = 0;
+
 };
 #endif

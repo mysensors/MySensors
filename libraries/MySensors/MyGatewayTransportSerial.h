@@ -17,18 +17,34 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyParserSerial_h
-#define MyParserSerial_h
+#ifndef MyGatewayTransportSerial_h
+#define MyGatewayTransportSerial_h
 
-#include "MyConfig.h"
-#include "MyParser.h"
+#include "MyMessage.h"
+#include "MyProtocol.h"
+#include "MyGatewayTransport.h"
+#include "MyProtocolDefault.h"
 
-class MyParserSerial : public MyParser
-{ 
+#define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller
+
+class MyGatewayTransportSerial : public MyGatewayTransport
+{
 public:
-	MyParserSerial();
-	bool parse(MyMessage &message, char *inputString);
+	// MyGateway constructor
+	MyGatewayTransportSerial(MyProtocol &protocol = *new MyProtocolDefault());
+
+	// Send message to controller
+	bool send(MyMessage &message);
+
+	// Check if a new message is available from controller
+	bool available();
+
+	// Pick up last message received from controller
+	MyMessage& receive();
 private:
-	uint8_t h2i(char c);
+	char inputString[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
+	int inputPos;
+	MyMessage msg;
 };
+
 #endif

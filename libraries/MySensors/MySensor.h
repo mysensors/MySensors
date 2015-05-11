@@ -26,7 +26,6 @@
 #include "MyHw.h"
 #include "MyTransport.h"
 #include "MyTransportNRF24.h"
-#include "MyParser.h"
 #ifdef MY_SIGNING_FEATURE
 #include "MySigning.h"
 #include "MySigningNone.h"
@@ -147,10 +146,10 @@ class MySensor
 		, MySigning &signer=*new MySigningNone()
 #endif
 #ifdef WITH_LEDS_BLINKING
-		, uint8_t _rx=DEFAULT_RX_LED_PIN,
-		uint8_t _tx=DEFAULT_TX_LED_PIN,
-		uint8_t _er=DEFAULT_ERR_LED_PIN,
-		unsigned long _blink_period=DEFAULT_LED_BLINK_PERIOD
+		, uint8_t _rx=MY_DEFAULT_RX_LED_PIN,
+		uint8_t _tx=MY_DEFAULT_TX_LED_PIN,
+		uint8_t _er=MY_DEFAULT_ERR_LED_PIN,
+		unsigned long _blink_period=MY_DEFAULT_LED_BLINK_PERIOD
 #endif
 		);
 
@@ -199,7 +198,6 @@ class MySensor
 	*/
 	bool send(MyMessage &msg, bool ack=false);
 
-	boolean sendRoute(MyMessage &message);
 
 	/**
 	 * Send this nodes battery level to gateway.
@@ -315,6 +313,8 @@ class MySensor
 	void errBlink(uint8_t cnt);
 #endif
 
+	boolean sendRoute(MyMessage &message);
+
   protected:
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
@@ -357,8 +357,7 @@ class MySensor
 	MyHw& hw;
 	
 	boolean sendWrite(uint8_t dest, MyMessage &message);
-
-  private:
+	void processInternalMessages(MyMessage &msg);
 #ifdef DEBUG
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
@@ -371,6 +370,7 @@ class MySensor
     bool isValidFirmware();
 #endif
 
+  private:
 
     void requestNodeId();
 	void setupNode();

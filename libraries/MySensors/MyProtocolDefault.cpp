@@ -17,13 +17,13 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyParser.h"
-#include "MyParserSerial.h"
+#include "MyProtocol.h"
+#include "MyProtocolDefault.h"
 #include "MyTransport.h"
 
-MyParserSerial::MyParserSerial() : MyParser() {}
+MyProtocolDefault::MyProtocolDefault() : MyProtocol() {}
 
-bool MyParserSerial::parse(MyMessage &message, char *inputString) {
+bool MyProtocolDefault::parse(MyMessage &message, char *inputString) {
 	char *str, *p, *value=NULL;
 	uint8_t bvalue[MAX_PAYLOAD];
 	uint8_t blen = 0;
@@ -89,7 +89,13 @@ bool MyParserSerial::parse(MyMessage &message, char *inputString) {
 	return true;
 }
 
-uint8_t MyParserSerial::h2i(char c) {
+char * MyProtocolDefault::format(MyMessage &message) {
+	snprintf_P(fmtBuffer, MAX_FORMAT_BUFFER_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(convBuffer));
+	return fmtBuffer;
+}
+
+
+uint8_t MyProtocolDefault::h2i(char c) {
 	uint8_t i = 0;
 	if (c <= '9')
 		i += c - '0';

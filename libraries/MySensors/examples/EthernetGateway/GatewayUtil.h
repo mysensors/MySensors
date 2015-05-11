@@ -17,7 +17,7 @@ volatile boolean buttonTriggeredInclusion;
 boolean inclusionMode; // Keeps track on inclusion mode
 void (*serial)(const char *fmt, ... );
 
-MyParserSerial parser;
+MyProtocolDefault protocol;
 
 void setInclusionMode(boolean newMode);
 
@@ -79,7 +79,7 @@ void parseAndSend(MySensor &gw, char *commandBuffer) {
   boolean ok;
   MyMessage &msg = gw.getLastMessage();
 
-  if (parser.parse(msg, commandBuffer)) {
+  if (protocol.parse(msg, commandBuffer)) {
     uint8_t command = mGetCommand(msg);
 
     if (msg.destination==GATEWAY_ADDRESS && command==C_INTERNAL) {
