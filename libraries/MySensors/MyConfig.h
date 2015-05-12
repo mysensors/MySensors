@@ -49,21 +49,35 @@
 *  Information LEDs blinking
 ***********************************/
 // This feature enables LEDs blinking on message receive, transmit
-// or if some error occured. This was commonly used only in gateways,
+// or if some error occurred. This was commonly used only in gateways,
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-// #define WITH_LEDS_BLINKING
+// #define MY_LEDS_BLINKING_FEATURE
 
 // default LEDs blinking period in milliseconds
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 // The RX LED default pin
-#define MY_DEFAULT_RX_LED_PIN 8
+#define MY_DEFAULT_RX_LED_PIN 6
 // The TX LED default pin
-#define MY_DEFAULT_TX_LED_PIN 9
+#define MY_DEFAULT_TX_LED_PIN 5
 // The Error LED default pin
-#define MY_DEFAULT_ERR_LED_PIN 7
+#define MY_DEFAULT_ERR_LED_PIN 4
 
+
+/**********************************************
+*  Gateway inclusion button/mode configuration
+**********************************************/
+// Enabled inclusion mode feature
+#define MY_INCLUSION_MODE_FEATURE
+
+// Enables inclusion-mode button feature on the gateway device
+#define MY_INCLUSION_BUTTON_FEATURE
+
+// The default input pin used for the inclusion mode button
+#define MY_INCLUSION_MODE_BUTTON_PIN 3
+// Number of seconds (default one minute) inclusion mode should be enabled
+#define MY_INCLUSION_MODE_DURATION 60
 
 /**********************************
 *  Message Signing Settings

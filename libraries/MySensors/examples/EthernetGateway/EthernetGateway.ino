@@ -104,8 +104,8 @@ MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
 MyHwATMega328 hw;
 
 // Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-// To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
-#ifdef WITH_LEDS_BLINKING
+// To use LEDs blinking, uncomment MY_LEDS_BLINKING_FEATURE in MyConfig.h
+#ifdef MY_WITH_LEDS_BLINKING
 MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
 #else
 MySensor gw(transport, hw /*, signer*/);

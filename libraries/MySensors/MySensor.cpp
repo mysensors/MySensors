@@ -53,7 +53,7 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 #ifdef MY_SIGNING_FEATURE
 	, MySigning &_signer
 #endif
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		, uint8_t _rx, uint8_t _tx, uint8_t _er, unsigned long _blink_period
 #endif
 	)
@@ -62,7 +62,7 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 #ifdef MY_SIGNING_FEATURE
 	signer(_signer),
 #endif
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	pinRx(_rx), pinTx(_tx), pinEr(_er), ledBlinkPeriod(_blink_period),
 #endif
 #ifdef MY_OTA_FIRMWARE_FEATURE
@@ -96,7 +96,7 @@ bool MySensor::isValidFirmware() {
 
 #endif
 
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 void MySensor::handleLedsBlinking() {
 	static unsigned long next_time = hw_millis() + ledBlinkPeriod;
 
@@ -175,7 +175,7 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	hw_readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
 #endif
 
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	// Setup led pins
 	pinMode(pinRx, OUTPUT);
 	pinMode(pinTx, OUTPUT);
@@ -327,7 +327,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	// If we still don't have any parent id, re-request and skip this message.
 	if (nc.parentNodeId == AUTO) {
 		findParentNode();
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		errBlink(1);
 #endif
 		return false;
@@ -336,7 +336,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	// If we still don't have any node id, re-request and skip this message.
 	if (nc.nodeId == AUTO) {
 		requestNodeId();
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		errBlink(1);
 #endif
 		return false;
@@ -375,14 +375,14 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		}
 		if (hw_millis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
 			debug(PSTR("nonce tmo\n"));
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 			errBlink(1);
 #endif
 			return false;
 		}
 		if (!signOk) {
 			debug(PSTR("sign fail\n"));
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 			errBlink(1);
 #endif
 			return false;
@@ -443,7 +443,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		errBlink(1);
 #endif
 		failedTransmissions++;
@@ -460,7 +460,7 @@ boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	txBlink(1);
 #endif
 	bool ok = radio.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
@@ -508,7 +508,7 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 boolean MySensor::process() {
 	hw_watchdogReset();
 
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	handleLedsBlinking();
 #endif
 
@@ -522,7 +522,7 @@ boolean MySensor::process() {
 				debug(PSTR("fw upd fail\n"));
 				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 				fwUpdateOngoing = false;
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 				errBlink(1);
 #endif
 				return false;
@@ -546,7 +546,7 @@ boolean MySensor::process() {
 #endif
 
 	uint8_t len = radio.receive((uint8_t *)&msg);
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	rxBlink(1);
 #endif
 
@@ -561,14 +561,14 @@ boolean MySensor::process() {
 		if (!mGetSigned(msg)) {
 			// Got unsigned message that should have been signed
 			debug(PSTR("no sign\n"));
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 			errBlink(1);
 #endif
 			return false;
 		}
 		else if (!signer.verifyMsg(msg)) {
 			debug(PSTR("verify fail\n"));
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 			errBlink(1);
 #endif
 			return false; // This signed message has been tampered with!
@@ -584,7 +584,7 @@ boolean MySensor::process() {
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("ver mismatch\n"));
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		errBlink(1);
 #endif
 		return false;

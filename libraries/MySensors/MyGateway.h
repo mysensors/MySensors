@@ -51,7 +51,7 @@ public:
 #ifdef MY_SIGNING_FEATURE
 		, MySigning &signer=*new MySigningNone()
 #endif
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		, uint8_t _rx=MY_DEFAULT_RX_LED_PIN
 		, uint8_t _tx=MY_DEFAULT_TX_LED_PIN
 		, uint8_t _er=MY_DEFAULT_ERR_LED_PIN
@@ -60,7 +60,24 @@ public:
 		);
 
 
-	void enableInclusionModeFeature(uint8_t inclusionModeButtonPin, uint8_t inclusionModeDuration);
+	/**
+		* Begin operation of the MySensors library
+		*
+		* Call this in setup(), before calling any other sensor net library methods.
+		* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses. Default is NULL.
+		* @param inclusionModeDuration Number of milliseconds inclusion mode should be enabled
+		* @param inclusionModeButtonPin Button pin used for enabling inclusion mode
+		*/
+
+		void begin(void (* msgCallback)(const MyMessage &)=NULL
+#ifdef MY_INCLUSION_MODE_FEATURE
+				, int inclusionModeDuration=MY_INCLUSION_MODE_DURATION
+#ifdef MY_INCLUSION_BUTTON_FEATURE
+				, uint8_t inclusionModeButtonPin=MY_INCLUSION_MODE_BUTTON_PIN
+#endif
+#endif
+		);
+
 
 	/**
 	 * See MySensor.h
@@ -77,7 +94,21 @@ public:
 	boolean process();
 
 private:
+
 	MyGatewayTransport &transport;
+
+#ifdef MY_INCLUSION_MODE_FEATURE
+
+	void setInclusionMode(bool newMode);
+	void checkInclusionMode();
+	unsigned long inclusionStartTime;
+	bool inclusionMode;
+	unsigned long inclusionDuration;
+
+ #ifdef MY_INCLUSION_BUTTON_FEATURE
+	uint8_t inclusionButtonPin;
+ #endif
+#endif
 };
 
 #endif

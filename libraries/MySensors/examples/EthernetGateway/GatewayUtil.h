@@ -92,12 +92,12 @@ void parseAndSend(MySensor &gw, char *commandBuffer) {
         setInclusionMode(atoi(msg.data) == 1);
       }
     } else {
-      #ifdef WITH_LEDS_BLINKING
+      #ifdef MY_LEDS_BLINKING_FEATURE
       gw.txBlink(1);
       #endif
       ok = gw.sendRoute(msg);
       if (!ok) {
-        #ifdef WITH_LEDS_BLINKING
+        #ifdef MY_LEDS_BLINKING_FEATURE
         gw.errBlink(1);
         #endif
       }

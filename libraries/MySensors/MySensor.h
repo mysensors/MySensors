@@ -145,7 +145,7 @@ class MySensor
 #ifdef MY_SIGNING_FEATURE
 		, MySigning &signer=*new MySigningNone()
 #endif
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 		, uint8_t _rx=MY_DEFAULT_RX_LED_PIN,
 		uint8_t _tx=MY_DEFAULT_TX_LED_PIN,
 		uint8_t _er=MY_DEFAULT_ERR_LED_PIN,
@@ -303,7 +303,7 @@ class MySensor
 	 */
 	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	/**
 	 * Blink with LEDs
 	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
@@ -339,7 +339,7 @@ class MySensor
 	MySigning& signer;
 #endif
 
-#ifdef WITH_LEDS_BLINKING
+#ifdef MY_LEDS_BLINKING_FEATURE
 	uint8_t pinRx; // Rx led pin
 	uint8_t pinTx; // Tx led pin
 	uint8_t pinEr; // Err led pin
