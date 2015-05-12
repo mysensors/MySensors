@@ -58,6 +58,7 @@ MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
 int measureCount = 0;
 int sendBattery = 0;
 boolean isMetric = true;
+boolean highfreq = true;
 
 // Storage of old measurements
 float lastTemperature = -100;
@@ -73,12 +74,11 @@ RunningAverage raTemp(AVERAGES);
  *
  ****************************************************/
 void setup() {
-//  clock_prescale_set(clock_div_8); // Switch to 1Mhz right after powerup.
   
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  Serial.begin(19200);
+  Serial.begin(115200);
   Serial.print(F("Sensebender Micro FW "));
   Serial.print(RELEASE);
   Serial.flush();
@@ -130,6 +130,12 @@ void loop() {
   measureCount ++;
   sendBattery ++;
   bool forceTransmit = false;
+  
+  if ((measureCount == 5) && highfreq) 
+  {
+    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+    highfreq = false;
+  } 
   
   if (measureCount > FORCE_TRANSMIT_INTERVAL) { // force a transmission
     forceTransmit = true; 
