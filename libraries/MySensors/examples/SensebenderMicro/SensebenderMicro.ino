@@ -29,7 +29,7 @@
 #define CHILD_ID_HUM   2
 
 // How many milli seconds between each measurement
-#define MEASURE_INTERVAL 1000
+#define MEASURE_INTERVAL 60000
 
 // FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
 #define FORCE_TRANSMIT_INTERVAL 30 
@@ -117,6 +117,7 @@ void setup() {
   raHum.clear();
   raTemp.clear();
   sendTempHumidityMeasurements(false);
+  sendBattLevel(false);
 }
 
 
