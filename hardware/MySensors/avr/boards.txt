@@ -1,5 +1,8 @@
 menu.cpu=Processor
 
+######################################
+## Sensebender Micro
+
 MysensorsMicro.name=Sensebender Micro
 
 MysensorsMicro.upload.tool=arduino:avrdude
@@ -27,3 +30,28 @@ MysensorsMicro.menu.cpu.8Mhz.build.f_cpu=8000000L
 
 MysensorsMicro.menu.cpu.1Mhz=Atmega328 1Mhz
 MysensorsMicro.menu.cpu.1Mhz.build.f_cpu=1000000L
+
+
+########################################
+## Gateway settings
+
+MysensorsGW.name=Sensebender Gateway
+MysensorsGW.build.core=arduino:arduino
+MysensorsGW.build.variant=GW
+MysensorsGW.build.board=AVR_1284
+MysensorsGW.build.mcu=atmega1284p
+MysensorsGW.build.f_cpu=20000000L
+
+MysensorsGW.upload.tool=arduino:avrdude
+MysensorsGW.upload.protocol=arduino
+MysensorsGW.upload.maximum_size=123720
+MysensorsGW.upload.maximum_data_size=16384
+MysensorsGW.upload.speed=115200
+
+MysensorsGW.bootloader.tool=arduino:avrdude
+MysensorsGW.bootloader.unlock_bits=0x3F
+MysensorsGW.bootloader.lock_bits=0x0F
+MysensorsGW.bootloader.low_fuses=0xE2
+MysensorsGW.bootloader.high_fuses=0xD2
+MysensorsGW.bootloader.extended_fuses=0xFE
+MysensorsGW.bootloader.file=DualOptiboot/optiboot_atmega1284.hex
