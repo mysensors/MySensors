@@ -98,7 +98,9 @@ boolean MyGateway::sendRoute(MyMessage &message) {
 }
 
 boolean MyGateway::process() {
+#ifdef MY_INCLUSION_MODE_FEATURE
 	checkInclusionMode();
+#endif
 	bool newMessage = false;
 	if (transport.available()) {
 		MyMessage &gmsg = transport.receive();
