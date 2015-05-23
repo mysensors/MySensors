@@ -136,7 +136,15 @@ boolean MyGateway::process() {
 			}
 		}
 	}
-	return MySensor::process() || newMessage;
+
+	// new message from sensor node
+	if (MySensor::process()) {
+		MyMessage &msg = MySensor::getLastMessage();
+		newMessage = true;
+		transport.send(msg);
+	}
+
+	return newMessage;
 }
 
 #ifdef MY_INCLUSION_MODE_FEATURE
