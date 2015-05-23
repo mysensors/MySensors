@@ -74,6 +74,11 @@
 // Enables inclusion-mode button feature on the gateway device
 #define MY_INCLUSION_BUTTON_FEATURE
 
+// Disable inclusion mode button if inclusion mode feature is not enabled
+#ifndef MY_INCLUSION_MODE_FEATURE
+#undef MY_INCLUSION_BUTTON_FEATURE
+#endif
+
 // The default input pin used for the inclusion mode button
 #define MY_INCLUSION_MODE_BUTTON_PIN 3
 // Number of seconds (default one minute) inclusion mode should be enabled
@@ -152,6 +157,13 @@
 #define RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
 
 
+/**************************************
+*  Gateway Transport Ethernet Defaults
+***************************************/
+// Enable to use DHCP for getting IP address. If not defined, static IP is expected
+//#define IP_ADDRESS_DHCP
 
+// Enable to use UDP instead of plain Ethernet
+#define USE_UDP
 
 #endif

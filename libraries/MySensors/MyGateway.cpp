@@ -73,6 +73,12 @@ void MyGateway::begin(void (*_msgCallback)(const MyMessage &)
 #endif
 #endif
 
+	// initialize the transport driver
+	if (!transport.begin()) {
+		debug(PSTR("transport driver init fail\n"));
+		while(1); // Nothing more we can do
+	}
+
 	// Start MySensors in repeater mode
 	MySensor::begin(_msgCallback, GATEWAY_ADDRESS, true, GATEWAY_ADDRESS);
 
@@ -92,7 +98,9 @@ boolean MyGateway::sendRoute(MyMessage &message) {
 }
 
 boolean MyGateway::process() {
+#ifdef MY_INCLUSION_MODE_FEATURE
 	checkInclusionMode();
+#endif
 	bool newMessage = false;
 	if (transport.available()) {
 		MyMessage &gmsg = transport.receive();
@@ -128,7 +136,15 @@ boolean MyGateway::process() {
 			}
 		}
 	}
-	return MySensor::process() || newMessage;
+
+	// new message from sensor node
+	if (MySensor::process()) {
+		MyMessage &msg = MySensor::getLastMessage();
+		newMessage = true;
+		transport.send(msg);
+	}
+
+	return newMessage;
 }
 
 #ifdef MY_INCLUSION_MODE_FEATURE
