@@ -25,6 +25,10 @@ MyGatewayTransportSerial::MyGatewayTransportSerial(MyProtocol &_protocol) : MyGa
 
 }
 
+bool MyGatewayTransportSerial::begin() {
+	return true;
+}
+
 bool MyGatewayTransportSerial::send(MyMessage &message) {
 	Serial.print(protocol.format(message));
 	// Serial print is always successful

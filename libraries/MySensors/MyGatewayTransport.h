@@ -30,6 +30,9 @@ public:
 	// MyProtocol constructor
 	MyGatewayTransport(MyProtocol &protocol = *new MyProtocolDefault());
 
+	// initialize the transport driver
+	virtual bool begin() = 0;
+
 	// Send message to controller
 	virtual bool send(MyMessage &message) = 0;
 

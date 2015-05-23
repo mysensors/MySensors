@@ -33,6 +33,9 @@ public:
 	// MyGateway constructor
 	MyGatewayTransportSerial(MyProtocol &protocol = *new MyProtocolDefault());
 
+	// initialize the transport driver
+	bool begin();
+
 	// Send message to controller
 	bool send(MyMessage &message);
 

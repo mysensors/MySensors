@@ -73,6 +73,12 @@ void MyGateway::begin(void (*_msgCallback)(const MyMessage &)
 #endif
 #endif
 
+	// initialize the transport driver
+	if (!transport.begin()) {
+		debug(PSTR("transport driver init fail\n"));
+		while(1); // Nothing more we can do
+	}
+
 	// Start MySensors in repeater mode
 	MySensor::begin(_msgCallback, GATEWAY_ADDRESS, true, GATEWAY_ADDRESS);
 
