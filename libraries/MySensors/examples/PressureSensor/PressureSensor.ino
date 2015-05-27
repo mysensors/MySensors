@@ -44,7 +44,7 @@ void setup() {
 }
 
 void loop() {
-  float pressure = bmp.readSealevelPressure(205)/100; // 205 meters above sealevel
+  float pressure = bmp.readSealevelPressure(205)/100.0; // 205 meters above sealevel
   float temperature = bmp.readTemperature();
   
   if (!metric) {
