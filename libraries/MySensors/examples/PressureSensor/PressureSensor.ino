@@ -103,27 +103,27 @@ int sample(float pressure) {
           pressureSamples[0][minuteCount] = pressure;
         }
         //From 30 to 35 min.
-        if ((minuteCount <= 30) && (minuteCount >= 35)){
+        if ((minuteCount >= 30) && (minuteCount <= 35)){
           pressureSamples[1][minuteCount - 30] = pressure;  
         }
         //From 55 to 60 min.
-        if ((minuteCount <= 55) && (minuteCount >= 60)){
+        if ((minuteCount >= 55) && (minuteCount <= 60)){
           pressureSamples[2][minuteCount - 55] = pressure;  
         }
         //From 90 to 95 min.
-        if ((minuteCount <= 90) && (minuteCount >= 95)){
+        if ((minuteCount >= 90) && (minuteCount <= 95)){
           pressureSamples[3][minuteCount - 90] = pressure;  
         }
         //From 115 to 119 min.
-        if ((minuteCount <= 115) && (minuteCount >= 120)){
+        if ((minuteCount >= 115) && (minuteCount <= 120)){
           pressureSamples[4][minuteCount - 115] = pressure;  
         }
         //From 150 to 155 min.
-        if ((minuteCount <= 150) && (minuteCount >= 155)){
+        if ((minuteCount >= 150) && (minuteCount <= 155)){
           pressureSamples[5][minuteCount - 150] = pressure;  
         }
         //From 175 to 180 min.
-        if ((minuteCount <= 175) && (minuteCount >= 180)){
+        if ((minuteCount >= 175) && (minuteCount <= 180)){
           pressureSamples[6][minuteCount - 175] = pressure;  
         }
         
