@@ -95,9 +95,11 @@ void loop() {
 int sample(float pressure) {
 	// Algorithm found here
 	// http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
-	if (minuteCount == 180)
+	if (minuteCount >= 180)
 		minuteCount = 5;
         
+	minuteCount++;
+
         //From 0 to 5 min.
         if (minuteCount <= 5){
           pressureSamples[0][minuteCount] = pressure;
@@ -127,8 +129,6 @@ int sample(float pressure) {
           pressureSamples[6][minuteCount - 175] = pressure;  
         }
         
-
-	minuteCount++;
 
 	if (minuteCount == 5) {
 		// Avg pressure in first 5 min, value averaged from 0 to 5 min.
@@ -201,16 +201,16 @@ int sample(float pressure) {
 
 	if (minuteCount < 35 && firstRound) //if time is less than 35 min on the first 3 hour interval.
 		return 5; // Unknown, more time needed
-	else if (dP_dt < (-0.25))
-		return 4; // Quickly falling LP, Thunderstorm, not stable
-	else if (dP_dt > 0.25)
-		return 3; // Quickly rising HP, not stable weather
-	else if ((dP_dt > (-0.25)) && (dP_dt < (-0.05)))
-		return 2; // Slowly falling Low Pressure System, stable rainy weather
-	else if ((dP_dt > 0.05) && (dP_dt < 0.25))
-		return 1; // Slowly rising HP stable good weather
 	else if ((dP_dt > (-0.05)) && (dP_dt < 0.05))
 		return 0; // Stable weather
+	else if ((dP_dt > 0.05) && (dP_dt < 0.25))
+		return 1; // Slowly rising HP stable good weather
+	else if ((dP_dt > (-0.25)) && (dP_dt < (-0.05)))
+		return 2; // Slowly falling Low Pressure System, stable rainy weather
+	else if (dP_dt > 0.25)
+		return 3; // Quickly rising HP, not stable weather
+	else if (dP_dt < (-0.25))
+		return 4; // Quickly falling LP, Thunderstorm, not stable
 	else
 		return 5; // Unknown
 }
