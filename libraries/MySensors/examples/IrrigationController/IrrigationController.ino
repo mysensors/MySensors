@@ -75,7 +75,7 @@ INSTRUCTIONS:
   on the serial monitor.
 * Your arduino should slow-flash, indicating that it is in ready mode.
 * There are multiple debug serial prints that can be monitored to assure that it is operating properly.
-* https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads for the I2C library, or use yours
+* ***THIS SHOULD NO LONGER BE NEEDED*** The standard MySensors library now works. https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads for the I2C library, or use yours
 
 Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (pete.will@mysensors.org) and is released to the public domain
 */
@@ -84,7 +84,10 @@ Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (p
 #include <Time.h>
 #include <MySensor.h>
 #include <SPI.h>
+#include <LiquidCrystal.h>
 #include <LiquidCrystal_I2C.h>
+
+
 //
 #define NUMBER_OF_VALVES 8  // Change this to set your valve count up to 16.
 #define VALVE_RESET_TIME 7500UL   // Change this (in milliseconds) for the time you need your valves to hydraulically reset and change state
