@@ -3,7 +3,7 @@
 //
 // If A0 is held low while powering on, it will enter testmode, which verifies all on-board peripherals
 // 
-// Battery voltage is repported as child sensorId 199, as well as battery percentage (Internal message)
+// Battery voltage is as battery percentage (Internal message), and optionally as a sensor value (See defines below)
 
 
 #include <MySensor.h>
@@ -19,6 +19,9 @@
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
+
+// Uncomment the line below, to transmit battery voltage as a normal sensor value
+//#define BATT_SENSOR    199
 
 #define RELEASE "1.2"
 
@@ -53,6 +56,10 @@ MySensor gw;
 // Sensor messages
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
+
+#ifdef BATT_SENSOR
+MyMessage msgBatt(BATT_SENSOR, V_VOLTAGE);
+#endif
 
 // Global settings
 int measureCount = 0;
@@ -112,6 +119,10 @@ void setup() {
   gw.present(CHILD_ID_TEMP,S_TEMP);
   gw.present(CHILD_ID_HUM,S_HUM);
   
+#ifdef BATT_SENSOR
+  gw.present(BATT_SENSOR, S_POWER);
+#endif
+
   isMetric = gw.getConfig().isMetric;
   Serial.print(F("isMetric: ")); Serial.println(isMetric);
   raHum.clear();
@@ -171,18 +182,18 @@ void sendTempHumidityMeasurements(bool force)
   float oldAvgTemp = raTemp.getAverage();
   float oldAvgHum = raHum.getAverage();
   
-  raTemp.addValue(data.celsiusHundredths / 100);
+  raTemp.addValue(data.celsiusHundredths);
   raHum.addValue(data.humidityPercent);
   
-  float diffTemp = abs(oldAvgTemp - raTemp.getAverage());
+  float diffTemp = abs(lastTemperature - data.celsiusHundredths/100);
   float diffHum = abs(oldAvgHum - raHum.getAverage());
 
-  Serial.println(diffTemp);
-  Serial.println(diffHum); 
+  Serial.print(F("TempDiff :"));Serial.println(diffTemp);
+  Serial.print(F("HumDiff  :"));Serial.println(diffHum); 
 
   if (isnan(diffTemp)) tx = true; 
-  if (diffTemp > 0.2) tx = true;
-  if (diffHum > 0.5) tx = true;
+  if (diffTemp > 0.3) tx = true;
+  if (diffHum >= 0.5) tx = true;
 
   if (tx) {
     measureCount = 0;
@@ -213,6 +224,11 @@ void sendBattLevel(bool force)
   long vcc = readVcc();
   if (vcc != lastBattery) {
     lastBattery = vcc;
+
+#ifdef BATT_SENSOR
+    gw.send(msgBatt.set(vcc));
+#endif
+
     // Calculate percentage
 
     vcc = vcc - 1900; // subtract 1.9V from vcc, as this is the lowest voltage we will operate at
