@@ -178,8 +178,9 @@ class MySensor
 	* @param sensorId Select a unique sensor id for this sensor. Choose a number between 0-254.
 	* @param sensorType The sensor type. See sensor typedef in MyMessage.h.
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+	* @param description A textual description of the sensor. Defaults to library version.
 	*/
-	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false);
+	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false, const char *description=LIBRARY_VERSION);
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
