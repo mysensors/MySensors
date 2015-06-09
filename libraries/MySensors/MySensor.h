@@ -180,7 +180,7 @@ class MySensor
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 	* @param description A textual description of the sensor. Defaults to library version.
 	*/
-	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false, const char *description=LIBRARY_VERSION);
+	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false, const char *description="");
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
