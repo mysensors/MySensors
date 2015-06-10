@@ -122,7 +122,7 @@ class MySensor : public RF24
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 	* @param description A textual description of the sensor.
 	*/
-	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false, const char *description="");
+	void present(uint8_t sensorId, uint8_t sensorType, const char *description="", bool ack=false);
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
