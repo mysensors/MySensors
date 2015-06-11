@@ -59,7 +59,7 @@ public:
 	bool signMsg(MyMessage &msg);
 	bool verifyMsg(MyMessage &msg);
 private:
-	atsha204Class atsha204;
+	ATSHA204Class atsha204;
 	unsigned long timestamp;
 	bool verification_ongoing;
 	uint8_t current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH+SHA204_SERIAL_SZ+1];

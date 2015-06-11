@@ -220,7 +220,7 @@
 
 #define SHA204_SERIAL_SZ    9   // The number of bytes the serial number consists of
 
-class atsha204Class
+class ATSHA204Class
 {
 private:
 	uint8_t device_pin;
@@ -237,7 +237,7 @@ private:
 	uint8_t sha204c_resync(uint8_t size, uint8_t *response);	
 	uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
 public:
-	atsha204Class(uint8_t pin);	// Constructor
+	ATSHA204Class(uint8_t pin);	// Constructor
 	void sha204c_sleep();
 	uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 			uint8_t datalen1, uint8_t *data1, uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);

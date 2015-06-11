@@ -179,6 +179,7 @@ class MySensor
 	* @param sensorType The sensor type. See sensor typedef in MyMessage.h.
 	* @param description A textual description of the sensor.
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+	* @param description A textual description of the sensor.
 	*/
 	void present(uint8_t sensorId, uint8_t sensorType, const char *description="", bool ack=false);
 
