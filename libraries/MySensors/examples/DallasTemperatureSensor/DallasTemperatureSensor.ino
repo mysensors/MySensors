@@ -29,6 +29,8 @@
 #include <DallasTemperature.h>
 #include <OneWire.h>
 
+#define COMPARE_TEMP 1 // Send temperature only if changed? 1 = Yes 0 = No
+
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
 #define MAX_ATTACHED_DS18B20 16
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
@@ -51,7 +53,7 @@ void setup()
   gw.begin();
 
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Temperature Sensor", "1.0");
+  gw.sendSketchInfo("Temperature Sensor", "1.1");
 
   // Fetch the number of attached temperature sensors  
   numSensors = sensors.getDeviceCount();
@@ -78,7 +80,11 @@ void loop()
     float temperature = static_cast<float>(static_cast<int>((gw.getConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
  
     // Only send data if temperature has changed and no error
+    #if COMPARE_TEMP == 1
     if (lastTemperature[i] != temperature && temperature != -127.00 && temperature != 85.00) {
+    #else
+    if (temperature != -127.00 && temperature != 85.00) {
+    #endif
  
       // Send in the new temperature
       gw.send(msg.setSensor(i).set(temperature,1));
