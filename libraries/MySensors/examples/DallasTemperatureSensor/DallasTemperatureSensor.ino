@@ -33,7 +33,7 @@
 #define MAX_ATTACHED_DS18B20 16
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire); // Pass the oneWire reference to Dallas Temperature. 
 MySensor gw;
 float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
@@ -45,10 +45,10 @@ MyMessage msg(0,V_TEMP);
 void setup()  
 { 
   // Startup up the OneWire library
-  sensors.begin(); 
+  sensors.begin();
 
   // Startup and initialize MySensors library. Set callback for incoming messages. 
-  gw.begin(); 
+  gw.begin();
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Temperature Sensor", "1.0");
