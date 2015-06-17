@@ -32,8 +32,8 @@
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
 #define MAX_ATTACHED_DS18B20 16
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature sensors(&oneWire);
+OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature. 
 MySensor gw;
 float lastTemperature[MAX_ATTACHED_DS18B20];
 int numSensors=0;
@@ -44,8 +44,8 @@ MyMessage msg(0,V_TEMP);
 
 void setup()  
 { 
-  // Startup OneWire 
-  sensors.begin();
+  // Startup up the OneWire library
+  sensors.begin(); 
 
   // Startup and initialize MySensors library. Set callback for incoming messages. 
   gw.begin(); 
@@ -78,10 +78,11 @@ void loop()
     float temperature = static_cast<float>(static_cast<int>((gw.getConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
  
     // Only send data if temperature has changed and no error
-    if (lastTemperature[i] != temperature && temperature != -127.00) {
+    if (lastTemperature[i] != temperature && temperature != -127.00 && temperature != 85.00) {
  
       // Send in the new temperature
       gw.send(msg.setSensor(i).set(temperature,1));
+      // Save new temperatures for next compare
       lastTemperature[i]=temperature;
     }
   }
