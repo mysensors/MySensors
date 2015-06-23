@@ -201,13 +201,13 @@ void sendTempHumidityMeasurements(bool force)
   
   raHum.addValue(data.humidityPercent);
   
-  float diffTemp = abs(lastTemperature - data.celsiusHundredths/100);
+  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
   float diffHum = abs(oldAvgHum - raHum.getAverage());
 
   Serial.print(F("TempDiff :"));Serial.println(diffTemp);
   Serial.print(F("HumDiff  :"));Serial.println(diffHum); 
 
-  if (isnan(diffTemp)) tx = true; 
+  if (isnan(diffHum)) tx = true; 
   if (diffTemp > TEMP_TRANSMIT_THRESHOLD) tx = true;
   if (diffHum >= HUMI_TRANSMIT_THRESHOLD) tx = true;
 
