@@ -113,23 +113,10 @@ void setup() {
   gw.begin(NULL,AUTO,false);
 #endif
 
-// --- following code will heat up the sensor element, and wait until the temperature is
-// within 0.3 degrees celcius of the initial temperature (measured at startup). 
-// This is to try and burn away residue humidity from manufacturing process.
-  int temperature = humiditySensor.getCelsiusHundredths();
-  
-  humiditySensor.setHeater(true);
-  delay(500);
-  humiditySensor.setHeater(false);
-  
-  int t = 0;
-  do {
-    t = humiditySensor.getCelsiusHundredths() - temperature;
-  } while (abs(t) >30);
-// ---
+  humiditySensor.begin();
+
   digitalWrite(LED_PIN, LOW);
 
-  humiditySensor.begin();
   Serial.flush();
   Serial.println(F(" - Online!"));
   gw.sendSketchInfo("Sensebender Micro", RELEASE);
