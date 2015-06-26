@@ -56,6 +56,7 @@ void SPIFlash::unselect() {
 /// setup SPI, read device ID etc...
 boolean SPIFlash::initialize()
 {
+  SPI.begin();
   _SPCR = SPCR;
   _SPSR = SPSR;
   pinMode(_slaveSelectPin, OUTPUT);
