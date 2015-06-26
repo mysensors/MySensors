@@ -22,7 +22,6 @@
 #include <Wire.h> 
 
 #define CHILD_ID_LIGHT 0
-#define LIGHT_SENSOR_ANALOG_PIN 0
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
 BH1750 lightSensor;
