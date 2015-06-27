@@ -116,7 +116,10 @@ class DallasTemperature
   
   // sends command for all devices on the bus to perform a temperature conversion 
   void requestTemperatures(void);
-   
+
+  // returns time to wait for a temperature conversion based on given resolution 
+  int16_t millisToWaitForConversion(uint8_t);
+
   // sends command for one device to perform a temperature conversion by address
   bool requestTemperaturesByAddress(const uint8_t*);
 
@@ -233,8 +236,6 @@ class DallasTemperature
   // reads scratchpad and returns the raw temperature
   int16_t calculateTemperature(const uint8_t*, uint8_t*);
   
-  int16_t millisToWaitForConversion(uint8_t);
-
   void	blockTillConversionComplete(uint8_t, const uint8_t*);
   
   #if REQUIRESALARMS
