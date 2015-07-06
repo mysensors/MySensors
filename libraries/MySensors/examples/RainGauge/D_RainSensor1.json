@@ -1,0 +1,523 @@
+{
+    "flashicon": "icons/Humidity_Sensor.swf",
+    "imgIconBody": "",
+    "imgIconDimmable": "",
+    "imgIconTurnable": "",
+    "imgIconMin": "",
+    "imgIconMax": "",
+    "halloIconsDir": "pics\/hallo",
+    "inScene": "0",
+    "DisplayStatus": {},
+    "doc_url": {
+        "doc_language": 1,
+        "doc_manual": 1,
+        "doc_version": 1,
+        "doc_platform": 0,
+        "doc_page": "sensors" 
+    },
+    
+    "Tabs": [
+        {
+            "Label": {
+                "lang_tag": "tabname_control",
+                "text": "Information" 
+            },
+            "Position": "0",
+            "TabType": "flash",
+            "SceneGroup": [
+                {
+                    "id": "1",
+                    "top": "1.5",
+                    "left": "0",
+                    "x": "2",
+                    "y": "2"
+                }
+            ],
+            "ControlGroup": [
+                {
+                    "id": "1",
+                    "scenegroup": "1",
+                    "type": "info"
+                },
+                {
+                    "id": "2",
+                    "scenegroup": "1",
+                    "type": "info"
+                }
+            ],
+            "Control": [
+              {
+                "ControlGroup":"1",
+                "ControlPair": "1",
+                "ControlHeader": "1",
+                "top": "1",
+                "left": "0",
+                "x": "1.25",
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_rate",
+                    "text": "Rate of Rain" 
+                },
+                "Display": {
+                    "Top": 20,
+                    "Left": 50,
+                    "Width": 75,
+                    "Height": 20 
+                } 
+              },             
+              {
+                "ControlGroup":"1",
+                "ControlPair": "1",
+                "ControlHeader": "1",
+                "top": "1",
+                "left": "1.25",
+                "x": "0.75",
+             "ControlType": "variable",
+                "Display": {
+                    "Service": "urn:upnp-org:serviceId:RainSensor1",
+                    "Variable": "CurrentRain",
+                    "Top": 20,
+                    "Left": 150,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "total_rain_unit",
+                    "text": "mm/hr" 
+                },
+                "Display": {
+                    "Top": 20,
+                    "Left": 200,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlGroup":"2",
+                "ControlPair": "2",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "0",
+                "x": "1.25",
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "total_rain",
+                    "text": "Rain Today:",
+                },
+                "Display": {
+                    "Top": 55,
+                    "Left": 50,
+                    "Width": 75,
+                    "Height": 20 
+                } 
+              },             
+              {
+                "ControlGroup":"2",
+                "ControlPair": "2",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "1.25",
+                "x": "0.75",
+             "ControlType": "variable",
+                "Display": {
+                    "Service": "urn:upnp-org:serviceId:RainSensor1",
+                    "Variable": "CurrentTRain",
+                    "Top": 55,
+                    "Left": 150,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_rate_unit",
+                    "text": "mm" 
+                },
+                "Display": {
+                    "Top": 55,
+                    "Left": 200,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlGroup":"3",
+                "ControlPair": "3",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "0",
+                "x": "1.25",
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_forty",
+                    "text": "Yesterday:" 
+                },
+                "Display": {
+                    "Top": 80,
+                    "Left": 50,
+                    "Width": 75,
+                    "Height": 20 
+                } 
+              },             
+              {
+                "ControlGroup":"3",
+                "ControlPair": "3",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "1.25",
+                "x": "0.75",
+             "ControlType": "variable",
+                "Display": {
+                    "Service": "urn:upnp-org:serviceId:VContainer1",
+                    "Variable": "Variable2",
+                    "Top": 80,
+                    "Left": 150,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_unit",
+                    "text": "mm" 
+                },
+                "Display": {
+                    "Top": 80,
+                    "Left": 200,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlGroup":"4",
+                "ControlPair": "4",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "0",
+                "x": "1.25",
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_seventy",
+                    "text": "3 Days Ago:" 
+                },
+                "Display": {
+                    "Top": 105,
+                    "Left": 50,
+                    "Width": 75,
+                    "Height": 20 
+                } 
+              },             
+              {
+                "ControlGroup":"4",
+                "ControlPair": "4",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "1.25",
+                "x": "0.75",
+             "ControlType": "variable",
+                "Display": {
+                    "Service": "urn:upnp-org:serviceId:VContainer1",
+                    "Variable": "Variable3",
+                    "Top": 105,
+                    "Left": 150,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_unit1",
+                    "text": "mm" 
+                },
+                "Display": {
+                    "Top": 105,
+                    "Left": 200,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlGroup":"5",
+                "ControlPair": "5",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "0",
+                "x": "1.25",
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_forty",
+                    "text": "4 Days Ago:" 
+                },
+                "Display": {
+                    "Top": 130,
+                    "Left": 50,
+                    "Width": 75,
+                    "Height": 20 
+                } 
+              },             
+              {
+                "ControlGroup":"5",
+                "ControlPair": "5",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "1.25",
+                "x": "0.75",
+             "ControlType": "variable",
+                "Display": {
+                    "Service": "urn:upnp-org:serviceId:VContainer1",
+                    "Variable": "Variable4",
+                    "Top": 130,
+                    "Left": 150,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_unit2",
+                    "text": "mm" 
+                },
+                "Display": {
+                    "Top": 130,
+                    "Left": 200,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlGroup":"6",
+                "ControlPair": "6",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "0",
+                "x": "1.25",
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_hundred",
+                    "text": "5 Days Ago:" 
+                },
+                "Display": {
+                    "Top": 155,
+                    "Left": 50,
+                    "Width": 75,
+                    "Height": 20 
+                } 
+              },             
+              {
+                "ControlGroup":"6",
+                "ControlPair": "6",
+                "ControlHeader": "1",
+                "top": "0",
+                "left": "1.25",
+                "x": "0.75",
+             "ControlType": "variable",
+                "Display": {
+                    "Service": "urn:upnp-org:serviceId:VContainer1",
+                    "Variable": "Variable5",
+                    "Top": 155,
+                    "Left": 150,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              },
+              {
+                "ControlType": "label",
+                "Label": {
+                    "lang_tag": "rain_unit3",
+                    "text": "mm" 
+                },
+                "Display": {
+                    "Top": 155,
+                    "Left": 200,
+                    "Width": 25,
+                    "Height": 20 
+                } 
+              }
+          ]
+         },
+        {
+            "Label": {
+                "lang_tag": "advanced",
+                "text": "Advanced" 
+            },
+            "Position": "1",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "advanced_device" 
+        },
+        {
+            "Label": {
+                "lang_tag": "logs",
+                "text": "Logs"
+            },
+            "Position": "2",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_logs"
+        },
+        {
+            "Label": {
+                "lang_tag": "notifications",
+                "text": "Notifications"
+            },
+            "Position": "3",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_notifications"
+        }
+    ],
+    "eventList2": [
+        {
+            "id": 1,
+            "label": {
+                "lang_tag": "total_rain_goes_above",
+                "text": "Total rain goes above"
+            },
+            "serviceId": "urn:upnp-org:serviceId:RainSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "r8",
+                    "name": "CurrentTRain",
+                    "comparisson": ">",
+                    "prefix": {
+                        "lang_tag": "total_rain",
+                        "text": "Total rain"
+                    },
+                    "suffix": {
+                        "lang_tag": "total_rain_unit",
+                        "text": "mm"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_total_rain_goes_above",
+                        "text": "Total rain for _DEVICE_NAME_ goes above _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "label": {
+                "lang_tag": "total_rain_goes_below",
+                "text": "Total rain goes below"
+            },
+            "serviceId": "urn:upnp-org:serviceId:RainSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "r8",
+                    "name": "CurrentTRain",
+                    "comparisson": "<",
+                    "prefix": {
+                        "lang_tag": "total_rain",
+                        "text": "Total rain"
+                    },
+                    "suffix": {
+                        "lang_tag": "total_rain_unit",
+                        "text": "mm"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_total_rain_goes_below",
+                        "text": "Total rain for _DEVICE_NAME_ goes below _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "label": {
+                "lang_tag": "rain_rate_goes_above",
+                "text": "Current rain goes above"
+            },
+            "serviceId": "urn:upnp-org:serviceId:RainSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "r8",
+                    "name": "CurrentRain",
+                    "comparisson": ">",
+                    "prefix": {
+                        "lang_tag": "rain_rate",
+                        "text": "Current rain"
+                    },
+                    "suffix": {
+                        "lang_tag": "rain_rate_unit",
+                        "text": "mm/hr"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_rain_rate_goes_above",
+                        "text": "Current rain for _DEVICE_NAME_ goes above _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "label": {
+                "lang_tag": "rain_rate_goes_below",
+                "text": "Current rain goes below"
+            },
+            "serviceId": "urn:upnp-org:serviceId:RainSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "r8",
+                    "name": "CurrentRain",
+                    "comparisson": "<",
+                    "prefix": {
+                        "lang_tag": "rain_rate",
+                        "text": "Current rain"
+                    },
+                    "suffix": {
+                        "lang_tag": "rain_rate_unit",
+                        "text": "mm/hr"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_rain_rate_goes_below",
+                        "text": "Current rain for _DEVICE_NAME_ goes below _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "label": {
+                "lang_tag": "battery_level_goes_below",
+                "text": "Battery level goes below"
+            },
+            "serviceId": "urn:micasaverde-com:serviceId:HaDevice1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "prefix": {
+                        "lang_tag": "Level",
+                        "text": "Level"
+                    },
+                    "dataType": "i4",
+                    "name": "BatteryLevel",
+                    "comparisson": "<",
+                    "suffix": {
+                        "lang_tag": "percent_sign",
+                        "text": "%"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_battery_level_goes_below",
+                        "text": "Battery level for _DEVICE_NAME_ go below _ARGUMENT_VALUE_%"
+                    }
+                }
+            ]
+        }
+    ],
+    "DeviceType": "urn:schemas-micasaverde-com:device:RainSensor:1"
+}
