@@ -302,6 +302,12 @@ void MySensor::setupNode() {
 }
 
 void MySensor::findParentNode() {
+	static boolean findingParentNode = false;
+
+	if (findingParentNode)
+		return;
+	findingParentNode = true;
+
 	failedTransmissions = 0;
 
 	// Set distance to max
@@ -316,6 +322,7 @@ void MySensor::findParentNode() {
 
 	// Wait for ping response.
 	wait(2000);
+	findingParentNode = false;
 }
 
 boolean MySensor::sendRoute(MyMessage &message) {
