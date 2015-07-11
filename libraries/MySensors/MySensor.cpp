@@ -110,33 +110,33 @@ void MySensor::handleLedsBlinking() {
 	// do the actual blinking
 	if(countRx && countRx != 255) {
 		// switch led on
-		digitalWrite(pinRx, LOW);
+		digitalWrite(pinRx, HIGH);
 	}
 	else if(!countRx) {
 		// switching off
-		digitalWrite(pinRx, HIGH);
+		digitalWrite(pinRx, LOW);
 	}
 	if(countRx != 255)
 		--countRx;
 
 	if(countTx && countTx != 255) {
 		// switch led on
-		digitalWrite(pinTx, LOW);
+		digitalWrite(pinTx, HIGH);
 	}
 	else if(!countTx) {
 		// switching off
-		digitalWrite(pinTx, HIGH);
+		digitalWrite(pinTx, LOW);
 	}
 	if(countTx != 255)
 		--countTx;
 
 	if(countErr && countErr != 255) {
 		// switch led on
-		digitalWrite(pinEr, LOW);
+		digitalWrite(pinEr, HIGH);
 	}
 	else if(!countErr) {
 		// switching off
-		digitalWrite(pinEr, HIGH);
+		digitalWrite(pinEr, LOW);
 	}
 	if(countErr != 255)
 		--countErr;
@@ -182,9 +182,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	pinMode(pinEr, OUTPUT);
 
 	// Set initial state of leds
-	digitalWrite(pinRx, HIGH);
-	digitalWrite(pinTx, HIGH);
-	digitalWrite(pinEr, HIGH);
+	digitalWrite(pinRx, LOW);
+	digitalWrite(pinTx, LOW);
+	digitalWrite(pinEr, LOW);
 
 	// initialize counters
 	countRx = 0;
