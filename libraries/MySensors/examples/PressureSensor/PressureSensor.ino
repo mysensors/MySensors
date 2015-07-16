@@ -38,7 +38,10 @@ float lastPressureSamples[LAST_SAMPLES_COUNT];
 
 int minuteCount = 0;
 bool firstRound = true;
-float pressureAvg[7];
+// average value is used in forecast algorithm.
+float pressureAvg;
+// average after 2 hours is used as reference value for the next iteration.
+float pressureAvg2;
 
 float dP_dt;
 boolean metric;
@@ -122,6 +125,8 @@ float getLastPressureSamplesAverage()
 	return lastPressureSamplesAverage;
 }
 
+
+
 // Algorithm found here
 // http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
 // Pressure in hPa -->  forecast done by calculating kPa/h
@@ -139,12 +144,12 @@ int sample(float pressure)
 
 	if (minuteCount == 5)
 	{
-		pressureAvg[0] = getLastPressureSamplesAverage();
+		pressureAvg = getLastPressureSamplesAverage();
 	}
 	else if (minuteCount == 35)
 	{
-		pressureAvg[1] = getLastPressureSamplesAverage();
-		float change = (pressureAvg[1] - pressureAvg[0]) * CONVERSION_FACTOR;
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
 		{
 			dP_dt = change * 2; // note this is for t = 0.5hour
@@ -156,8 +161,8 @@ int sample(float pressure)
 	}
 	else if (minuteCount == 65)
 	{
-		pressureAvg[2] = getLastPressureSamplesAverage();
-		float change = (pressureAvg[2] - pressureAvg[0]) * CONVERSION_FACTOR;
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) //first time initial 3 hour
 		{
 			dP_dt = change; //note this is for t = 1 hour
@@ -169,8 +174,8 @@ int sample(float pressure)
 	}
 	else if (minuteCount == 95)
 	{
-		pressureAvg[3] = getLastPressureSamplesAverage();
-		float change = (pressureAvg[3] - pressureAvg[0]) * CONVERSION_FACTOR;
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
 		{
 			dP_dt = change / 1.5; // note this is for t = 1.5 hour
@@ -182,8 +187,9 @@ int sample(float pressure)
 	}
 	else if (minuteCount == 125)
 	{
-		pressureAvg[4] = getLastPressureSamplesAverage();
-		float change = (pressureAvg[4] - pressureAvg[0]) * CONVERSION_FACTOR;
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		pressureAvg2 = lastPressureAvg; // store for later use.
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
 		{
 			dP_dt = change / 2; // note this is for t = 2 hour
@@ -195,8 +201,8 @@ int sample(float pressure)
 	}
 	else if (minuteCount == 155)
 	{
-		pressureAvg[5] = getLastPressureSamplesAverage();
-		float change = (pressureAvg[5] - pressureAvg[0]) * CONVERSION_FACTOR;
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
 		{
 			dP_dt = change / 2.5; // note this is for t = 2.5 hour
@@ -208,8 +214,8 @@ int sample(float pressure)
 	}
 	else if (minuteCount == 185)
 	{
-		pressureAvg[6] = getLastPressureSamplesAverage();
-		float change = (pressureAvg[6] - pressureAvg[0]) * CONVERSION_FACTOR;
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
 		{
 			dP_dt = change / 3; // note this is for t = 3 hour
@@ -218,7 +224,7 @@ int sample(float pressure)
 		{
 			dP_dt = change / 4; // divide by 4 as this is the difference in time from 0 value
 		}
-		pressureAvg[0] = pressureAvg[5]; // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
+		pressureAvg = pressureAvg2; // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
 		firstRound = false; // flag to let you know that this is on the past 3 hour mark. Initialized to 0 outside main loop.
 	}
 
@@ -251,6 +257,14 @@ int sample(float pressure)
 	{
 		forecast = UNKNOWN;
 	}
+
+	// uncomment when debugging
+	//Serial.print(F("Forecast at minute "));
+	//Serial.print(minuteCount);
+	//Serial.print(F(" dP/dt = "));
+	//Serial.print(dP_dt);
+	//Serial.print(F("kPa/h --> "));
+	//Serial.println(weather[forecast]);
 
 	return forecast;
 }
