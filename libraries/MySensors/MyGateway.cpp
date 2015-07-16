@@ -14,17 +14,20 @@
 #include "utility/PinChangeInt.h"
 
 
-uint8_t pinRx;
-uint8_t pinTx;
-uint8_t pinEr;
+int8_t pinRx;
+int8_t pinTx;
+int8_t pinEr;
 boolean buttonTriggeredInclusion;
 volatile uint8_t countRx;
 volatile uint8_t countTx;
 volatile uint8_t countErr;
 boolean inclusionMode; // Keeps track on inclusion mode
 
+#define LED_ON  (LOW)
+#define LED_OFF (HIGH)
 
-MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, uint8_t _inclusion_pin, uint8_t _rx, uint8_t _tx, uint8_t _er) : MySensor(_cepin, _cspin) {
+
+MyGateway::MyGateway(uint8_t _cepin, uint8_t _cspin, uint8_t _inclusion_time, int8_t _inclusion_pin, int8_t _rx, int8_t _tx, int8_t _er) : MySensor(_cepin, _cspin) {
 	pinInclusion = _inclusion_pin;
 	inclusionTime = _inclusion_time;
 	pinRx = _rx;
@@ -56,23 +59,29 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	countTx = 0;
 	countErr = 0;
 
-	// Setup led pins
-	pinMode(pinRx, OUTPUT);
-	pinMode(pinTx, OUTPUT);
-	pinMode(pinEr, OUTPUT);
-	digitalWrite(pinRx, LOW);
-	digitalWrite(pinTx, LOW);
-	digitalWrite(pinEr, LOW);
-
+	// Setup led pins & set initial state of leds
+	if (pinRx >= 0)
+	{
+		digitalWrite(pinRx, LED_OFF);
+		pinMode(pinRx, OUTPUT);
+	}
+	if (pinTx >= 0)
+	{
+		digitalWrite(pinTx, LED_OFF);
+		pinMode(pinTx, OUTPUT);
+	}
+	if (pinEr >= 0)
+	{
+		digitalWrite(pinEr, LED_OFF);
+		pinMode(pinEr, OUTPUT);
+	}
 	// Setup digital in that triggers inclusion mode
-	pinMode(pinInclusion, INPUT);
-	digitalWrite(pinInclusion, HIGH);
-
-	// Set initial state of leds
-	digitalWrite(pinRx, HIGH);
-	digitalWrite(pinTx, HIGH);
-	digitalWrite(pinEr, HIGH);
-
+	if (pinInclusion >= 0)
+	{
+		pinMode(pinInclusion, INPUT);
+		// Add interrupt for inclusion button to pin
+		PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
+	}
 
 	// Start up the radio library
 	setupRadio(paLevel, channel, dataRate);
@@ -83,9 +92,6 @@ void MyGateway::begin(rf24_pa_dbm_e paLevel, uint8_t channel, rf24_datarate_e da
 	// Add led timer interrupt
     MsTimer2::set(300, ledTimersInterrupt);
     MsTimer2::start();
-
-	// Add interrupt for inclusion button to pin
-	PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
 
 	// Send startup log message on serial
 	serial(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
@@ -257,34 +263,42 @@ void MyGateway::serial(MyMessage &msg) {
 
 
 void ledTimersInterrupt() {
-  if(countRx && countRx != 255) {
-    // switch led on
-    digitalWrite(pinRx, LOW);
-  } else if(!countRx) {
-     // switching off
-     digitalWrite(pinRx, HIGH);
-   }
-   if(countRx != 255) { countRx--; }
+  if (pinRx >= 0)
+  {
+    if(countRx && countRx != 255) {
+	  // switch led on
+	  digitalWrite(pinRx, LED_ON);
+	} else if(!countRx) {
+      // switching off
+      digitalWrite(pinRx, LED_OFF);
+    }
+  }
+  if(countRx != 255) { countRx--; }
 
-  if(countTx && countTx != 255) {
-    // switch led on
-    digitalWrite(pinTx, LOW);
-  } else if(!countTx) {
-     // switching off
-     digitalWrite(pinTx, HIGH);
-   }
-   if(countTx != 255) { countTx--; }
-   else if(inclusionMode) { countTx = 8; }
+  if (pinTx >= 0)
+  {
+    if(countTx && countTx != 255) {
+      // switch led on
+      digitalWrite(pinTx, LED_ON);
+    } else if(!countTx) {
+       // switching off
+       digitalWrite(pinTx, LED_OFF);
+    }
+  }
+  if(countTx != 255) { countTx--; }
+  else if(inclusionMode) { countTx = 8; }
 
-  if(countErr && countErr != 255) {
-    // switch led on
-    digitalWrite(pinEr, LOW);
-  } else if(!countErr) {
-     // switching off
-     digitalWrite(pinEr, HIGH);
-   }
-   if(countErr != 255) { countErr--; }
-
+  if (pinEr >= 0)
+  {
+    if(countErr && countErr != 255) {
+      // switch led on
+      digitalWrite(pinEr, LED_ON);
+    } else if(!countErr) {
+      // switching off
+      digitalWrite(pinEr, LED_OFF);
+    }
+  }
+  if(countErr != 255) { countErr--; }
 }
 
 void MyGateway::rxBlink(uint8_t cnt) {
@@ -296,4 +310,3 @@ void MyGateway::txBlink(uint8_t cnt) {
 void MyGateway::errBlink(uint8_t cnt) {
   if(countErr == 255) { countErr = cnt; }
 }
-
