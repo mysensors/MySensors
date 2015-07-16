@@ -48,6 +48,8 @@ void setup()
 { 
   // Startup up the OneWire library
   sensors.begin();
+  // requestTemperatures() will not block current thread
+  sensors.setWaitForConversion(false);
 
   // Startup and initialize MySensors library. Set callback for incoming messages. 
   gw.begin();
@@ -71,7 +73,12 @@ void loop()
   gw.process(); 
 
   // Fetch temperatures from Dallas sensors
-  sensors.requestTemperatures(); 
+  sensors.requestTemperatures();
+
+  // query conversion time and sleep until conversion completed
+  int16_t conversionTime = sensors.millisToWaitForConversion(sensors.getResolution());
+  // sleep() call can be replaced by wait() call if node need to process incoming messages (or if node is repeater)
+  gw.sleep(conversionTime);
 
   // Read temperatures and send them to controller 
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {
@@ -94,6 +101,3 @@ void loop()
   }
   gw.sleep(SLEEP_TIME);
 }
-
-
-
