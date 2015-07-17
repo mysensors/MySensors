@@ -30,13 +30,13 @@ class MyGateway : public MySensor
 		* @param _cepin The pin attached to RF24 Chip Enable on the RF module (default 9)
 		* @param _cspin The pin attached to RF24 Chip Select (defualt 10)
 		* @param _inclusion_time Time of inclusion mode (in minutes, default 1)
-		* @param _inclusion_pin Digital pin that triggers inclusion mode
-		* @param _rx Digital pin for receive led
-		* @param _tx Digital pin for transfer led
-		* @param _er Digital pin for error led
+		* @param _inclusion_pin Digital pin that triggers inclusion mode, negative value disables functionality.
+		* @param _rx Digital pin for receive led, negative value disables functionality.
+		* @param _tx Digital pin for transfer led, negative value disables functionality.
+		* @param _er Digital pin for error led, negative value disables functionality.
 		*
 		*/
-		MyGateway(uint8_t _cepin=DEFAULT_CE_PIN, uint8_t _cspin=DEFAULT_CS_PIN, uint8_t _inclusion_time = 1, uint8_t _inclusion_pin = 3, uint8_t _rx=6, uint8_t _tx=5, uint8_t _er=4);
+		MyGateway(uint8_t _cepin=DEFAULT_CE_PIN, uint8_t _cspin=DEFAULT_CS_PIN, uint8_t _inclusion_time = 1, int8_t _inclusion_pin=-1, int8_t _rx=-1, int8_t _tx=-1, int8_t _er=-1);
 
 		/* Use this and pass a function that should be called when you want to process commands that arrive from radio network */
 		void begin(rf24_pa_dbm_e paLevel=RF24_PA_LEVEL_GW, uint8_t channel=RF24_CHANNEL, rf24_datarate_e dataRate=RF24_DATARATE, void (*dataCallback)(char *)=NULL);
@@ -50,7 +50,7 @@ class MyGateway : public MySensor
 	    unsigned long inclusionStartTime;
 	    boolean useWriteCallback;
 	    void (*dataCallback)(char *);
-	    uint8_t pinInclusion;
+	    int8_t pinInclusion;
 	    uint8_t inclusionTime;
 
 		uint8_t h2i(char c);
