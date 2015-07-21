@@ -1,16 +1,36 @@
-/*
- * Copyright (c) 2013 by Felix Rusu <felix@lowpowerlab.com>
- * SPI Flash memory library for arduino/moteino.
- * This works with 256byte/page SPI flash memory
- * For instance a 4MBit (512Kbyte) flash chip will have 2048 pages: 256*2048 = 524288 bytes (512Kbytes)
- * Minimal modifications should allow chips that have different page size but modifications
- * DEPENDS ON: Arduino SPI library
- *
- * This file is free software; you can redistribute it and/or modify
- * it under the terms of either the GNU General Public License version 2
- * or the GNU Lesser General Public License version 2.1, both as
- * published by the Free Software Foundation.
- */
+// Copyright (c) 2013-2015 by Felix Rusu, LowPowerLab.com
+// SPI Flash memory library for arduino/moteino.
+// This works with 256byte/page SPI flash memory
+// For instance a 4MBit (512Kbyte) flash chip will have 2048 pages: 256*2048 = 524288 bytes (512Kbytes)
+// Minimal modifications should allow chips that have different page size but modifications
+// DEPENDS ON: Arduino SPI library
+// > Updated Jan. 5, 2015, TomWS1, modified writeBytes to allow blocks > 256 bytes and handle page misalignment.
+// > Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
+// > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
+// **********************************************************************************
+// License
+// **********************************************************************************
+// This program is free software; you can redistribute it 
+// and/or modify it under the terms of the GNU General    
+// Public License as published by the Free Software       
+// Foundation; either version 3 of the License, or        
+// (at your option) any later version.                    
+//                                                        
+// This program is distributed in the hope that it will   
+// be useful, but WITHOUT ANY WARRANTY; without even the  
+// implied warranty of MERCHANTABILITY or FITNESS FOR A   
+// PARTICULAR PURPOSE. See the GNU General Public        
+// License for more details.                              
+//                                                        
+// You should have received a copy of the GNU General    
+// Public License along with this program.
+// If not, see <http://www.gnu.org/licenses/>.
+//                                                        
+// Licence can be viewed at                               
+// http://www.gnu.org/licenses/gpl-3.0.txt
+//
+// Please maintain this license information along with authorship
+// and copyright notices in any redistribution of this code
 
 #ifndef _SPIFLASH_H_
 #define _SPIFLASH_H_
@@ -33,19 +53,19 @@
 /// Assuming the WP pin is pulled up (to disable hardware write protection)
 /// To use any write commands the WEL bit in the status register must be set to 1.
 /// This is accomplished by sending a 0x06 command before any such write/erase command.
-/// The WEL bit in the status register resets to the logical “0” state after a
-/// device power-up or reset. In addition, the WEL bit will be reset to the logical “0” state automatically under the following conditions:
-/// • Write Disable operation completes successfully
-/// • Write Status Register operation completes successfully or aborts
-/// • Protect Sector operation completes successfully or aborts
-/// • Unprotect Sector operation completes successfully or aborts
-/// • Byte/Page Program operation completes successfully or aborts
-/// • Sequential Program Mode reaches highest unprotected memory location
-/// • Sequential Program Mode reaches the end of the memory array
-/// • Sequential Program Mode aborts
-/// • Block Erase operation completes successfully or aborts
-/// • Chip Erase operation completes successfully or aborts
-/// • Hold condition aborts
+/// The WEL bit in the status register resets to the logical ?0? state after a
+/// device power-up or reset. In addition, the WEL bit will be reset to the logical ?0? state automatically under the following conditions:
+/// ? Write Disable operation completes successfully
+/// ? Write Status Register operation completes successfully or aborts
+/// ? Protect Sector operation completes successfully or aborts
+/// ? Unprotect Sector operation completes successfully or aborts
+/// ? Byte/Page Program operation completes successfully or aborts
+/// ? Sequential Program Mode reaches highest unprotected memory location
+/// ? Sequential Program Mode reaches the end of the memory array
+/// ? Sequential Program Mode aborts
+/// ? Block Erase operation completes successfully or aborts
+/// ? Chip Erase operation completes successfully or aborts
+/// ? Hold condition aborts
 #define SPIFLASH_WRITEENABLE      0x06        // write enable
 #define SPIFLASH_WRITEDISABLE     0x04        // write disable
 
@@ -69,21 +89,21 @@
                                               
 class SPIFlash {
 public:
-  static byte UNIQUEID[8];
-  SPIFlash(byte slaveSelectPin, uint16_t jedecID=0);
+  static uint8_t UNIQUEID[8];
+  SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0);
   boolean initialize();
-  void command(byte cmd, boolean isWrite=false);
-  byte readStatus();
-  byte readByte(long addr);
-  void readBytes(long addr, void* buf, word len);
-  void writeByte(long addr, byte byt);
-  void writeBytes(long addr, const void* buf, uint16_t len);
+  void command(uint8_t cmd, boolean isWrite=false);
+  uint8_t readStatus();
+  uint8_t readByte(uint32_t addr);
+  void readBytes(uint32_t addr, void* buf, uint16_t len);
+  void writeByte(uint32_t addr, uint8_t byt);
+  void writeBytes(uint32_t addr, const void* buf, uint16_t len);
   boolean busy();
   void chipErase();
-  void blockErase4K(long address);
-  void blockErase32K(long address);
-  word readDeviceId();
-  byte* readUniqueId();
+  void blockErase4K(uint32_t address);
+  void blockErase32K(uint32_t address);
+  uint16_t readDeviceId();
+  uint8_t* readUniqueId();
   
   void sleep();
   void wakeup();
@@ -91,10 +111,13 @@ public:
 protected:
   void select();
   void unselect();
-  byte _slaveSelectPin;
+  uint8_t _slaveSelectPin;
   uint16_t _jedecID;
-  byte _SPCR;
-  byte _SPSR;
+  uint8_t _SPCR;
+  uint8_t _SPSR;
+#ifdef SPI_HAS_TRANSACTION
+  SPISettings _settings;
+#endif
 };
 
 #endif
