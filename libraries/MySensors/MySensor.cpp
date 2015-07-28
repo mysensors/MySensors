@@ -781,14 +781,17 @@ boolean MySensor::process() {
 		// If this node have an id, relay the message
 
 		if (command == C_INTERNAL && type == I_FIND_PARENT) {
-			if (nc.distance == DISTANCE_INVALID) {
-				findParentNode();
-			} else if (sender != nc.parentNodeId) {
-				// Relaying nodes should always answer ping messages
-				// Wait a random delay of 0-2 seconds to minimize collision
-				// between ping ack messages from other relaying nodes
-				wait(hw_millis() & 0x3ff);
-				sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+			if (sender != nc.parentNodeId) {
+				if (nc.distance == DISTANCE_INVALID)
+					findParentNode();
+
+				if (nc.distance != DISTANCE_INVALID) {
+					// Relaying nodes should always answer ping messages
+					// Wait a random delay of 0-2 seconds to minimize collision
+					// between ping ack messages from other relaying nodes
+					wait(hw_millis() & 0x3ff);
+					sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+				}
 			}
 		} else if (to == nc.nodeId) {
 			// We should try to relay this message to another node
