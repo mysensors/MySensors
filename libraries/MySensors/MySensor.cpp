@@ -343,7 +343,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 
 #ifdef MY_SIGNING_FEATURE
 	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(msg) &&
+	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(message) &&
 		(mGetCommand(message) != C_INTERNAL ||
 		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
 		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
