@@ -10,7 +10,7 @@
 #include <Wire.h>
 #include <SI7021.h>
 #include <SPI.h>
-#include <SPIFlash.h>
+#include "utility/SPIFlash.h"
 #include <EEPROM.h>  
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>

@@ -1,18 +1,43 @@
-
-// Example sketch showing how to request time from controller which is stored in RTC module
-// The time and temperature (DS3231/DS3232) is shown on an attached Crystal LCD display
-// 
-// Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-// Inspired by Gregl
-
-// Wiring (radio wiring on www.mysensors.org)
-// ------------------------------------
-// Arduino   RTC-Module     I2C Display 
-// ------------------------------------
-// GND       GND            GND
-// +5V       VCC            VCC
-// A4        SDA            SDA
-// A5        SCL            SCL
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik Ekblad
+ * 
+ * DESCRIPTION
+ * Example sketch showing how to request time from controller which is stored in RTC module
+ * The time and temperature (DS3231/DS3232) is shown on an attached Crystal LCD display
+ * 
+ *
+ * Wiring (radio wiring on www.mysensors.org)
+ * ------------------------------------
+ * Arduino   RTC-Module     I2C Display 
+ * ------------------------------------
+ * GND       GND            GND
+ * +5V       VCC            VCC
+ * A4        SDA            SDA
+ * A5        SCL            SCL
+ *
+ * http://www.mysensors.org/build/display
+ *
+ */
 
 
 #include <SPI.h>

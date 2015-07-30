@@ -706,5 +706,8 @@ dbc.connect('mongodb://' + dbAddress + ':' + dbPort + '/' + dbName, function(err
 	} else {
 		throw new Error('unknown Gateway type');
 	}
+	setInterval(function() {
+		sendTime(BROADCAST_ADDRESS, NODE_SENSOR_ID, gw);
+	}, 5*60*1000);
 });
 
