@@ -15,7 +15,7 @@
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>
 #include <RunningAverage.h>
-#include <avr/power.h>
+//#include <avr/power.h>
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
@@ -149,7 +149,7 @@ void loop() {
   
   if ((measureCount == 5) && highfreq) 
   {
-    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+//    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
     highfreq = false;
   } 
   
@@ -182,21 +182,20 @@ void loop() {
 void sendTempHumidityMeasurements(bool force)
 {
   bool tx = force;
-  
+
   si7021_env data = humiditySensor.getHumidityAndTemperature();
-  float oldAvgHum = raHum.getAverage();
   
   raHum.addValue(data.humidityPercent);
   
   float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
-  float diffHum = abs(oldAvgHum - raHum.getAverage());
+  float diffHum = abs(lastHumidity - raHum.getAverage());
 
   Serial.print(F("TempDiff :"));Serial.println(diffTemp);
   Serial.print(F("HumDiff  :"));Serial.println(diffHum); 
 
   if (isnan(diffHum)) tx = true; 
   if (diffTemp > TEMP_TRANSMIT_THRESHOLD) tx = true;
-  if (diffHum >= HUMI_TRANSMIT_THRESHOLD) tx = true;
+  if (diffHum > HUMI_TRANSMIT_THRESHOLD) tx = true;
 
   if (tx) {
     measureCount = 0;
@@ -246,7 +245,7 @@ void sendBattLevel(bool force)
  * Internal battery ADC measuring 
  *
  *******************************************/
-long readVcc() {
+long readVcc() {/*
   // Read 1.1V reference against AVcc
   // set the reference to Vcc and the measurement to the internal 1.1V reference
   #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -270,6 +269,7 @@ long readVcc() {
  
   result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
   return result; // Vcc in millivolts
+  */
 }
 
 /****************************************************
