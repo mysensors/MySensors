@@ -1,0 +1,85 @@
+
+This file contains the change history of the Dallas Temperature Control Library.
+
+VERSION 3.7.2 BETA
+===================
+DATE: 6 DEC  2011
+
+- Jordan Hochenbaum [jhochenbaum@gmail.com] updated library for compatibility with Arduino 1.0.
+
+VERSION 3.7.0 BETA
+===================
+DATE: 11 JAN  2011
+
+- Rob Tillaart [rob.tillaart@gmail.com] added async modus (v3.7.0)
+  The library is backwards compatible with version 3.6.0
+
+  MAJOR: async modus
+  ------------------
+- Added - private bool waitForConversion. 
+This boolean is default set to true in the Constructor to keep the library backwards compatible. If this flag is true calls to requestTemperatures(), requestTemperaturesByAddress() et al, will be blocking with the appropiate time specified (in datasheet) for the resolution used. If the flag is set to false, requestTemperatures() et al, will return immediately after the conversion command is send over the 1-wire interface. The programmer is responsible to wait long enough before reading the temperature values. This enables the application to do other things while waiting for a new reading, like calculations, update LCD, read/write other IO lines etc. See examples.
+
+- Added - void setWaitForConversion(bool); 
+To set the flag to true or false, depending on the modus needed.
+
+- Added - bool getWaitForConversion(void); 
+To get the current value of the flag.
+
+- Changed - void requestTemperatures(void);
+Added a test (false == waitForConversion) to return immediately after the conversion command instead of waiting until the conversion is ready.
+ 
+- Changed - bool requestTemperaturesByAddress(uint8_t*); 
+Added a test (false == waitForConversion) to return immediately after the conversion command instead of waiting until the conversion is ready.
+
+
+  MINOR version number
+  --------------------
+- Added - #define DALLASTEMPLIBVERSION "3.7.0" 
+To indicate the version number in .h file 
+  
+  
+  MINOR internal var bitResolution
+  ----------------------------
+- Changed - private int conversionDelay - is renamed to - private int bitResolution
+As this variable holds the resolution. The delay for the conversion is derived from it.
+
+- Changed - uint8_t getResolution(uint8_t* deviceAddress);
+If the device is not connected, it returns 0, otherwise it returns the resolution of the device.
+
+- Changed - bool setResolution(uint8_t* deviceAddress, uint8_t newResolution);
+If the device is not connected, it returns FALSE (fail), otherwise it returns TRUE (succes).
+
+- Added - uint8_t getResolution();
+Returns bitResolution.
+
+- Added - void setResolution(uint8_t newResolution)
+Sets the internal variable bitResolution, and all devices to this value
+
+
+  MINOR check connected state
+  ----------------------------
+- Changed - bool requestTemperaturesByIndex(deviceIndex) 
+Changed return type from void to bool. The function returns false if the device identified with [deviceIndex] is not found on the bus and true otherwise.
+
+- Changed - bool requestTemperaturesByAddress(deviceAddress)
+Changed return type from void to bool. The function returns false if the device identified with [deviceAddress] is not found on the bus and true otherwise.
+Added code to handle the DS18S20 which has a 9 bit resolution separately.
+Changed code so the blocking delay matches the bitResolution set in the device with deviceAddress.
+
+- Changed - bool requestTemperaturesByIndex(uint8_t deviceIndex)
+Changed return type from void to bool. The function returns false if the device identified with [deviceIndex] is not found on the bus and true otherwise.
+
+
+
+VERSION 3.6.0
+==============
+DATE: 2010-10-10
+
+- no detailed change history known except:
+
+- The OneWire code has been derived from
+http://www.arduino.cc/playground/Learning/OneWire.
+- Miles Burton <miles@mnetcs.com> originally developed this library.
+- Tim Newsome <nuisance@casualhacker.net> added support for multiple sensors on
+the same bus.
+- Guil Barros [gfbarros@bappos.com] added getTempByAddress (v3.5)

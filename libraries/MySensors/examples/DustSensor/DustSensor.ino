@@ -57,7 +57,7 @@ float calcVoltage = 0;
 float dustDensity = 0;
 
 MySensor gw;
-MyMessage dustMsg(CHILD_ID_DUST, V_DUST_LEVEL);
+MyMessage dustMsg(CHILD_ID_DUST, V_LEVEL);
 
 void setup()  
 {
