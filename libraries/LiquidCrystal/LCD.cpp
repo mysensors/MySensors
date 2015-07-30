@@ -304,7 +304,7 @@ void LCD::createChar(uint8_t location, uint8_t charmap[])
 }
 
 #ifdef __AVR__
-void LCD::createChar(uint8_t location,  const unsigned char charmap[])
+void LCD::createChar(uint8_t location, const unsigned char charmap[])
 {
    location &= 0x7;   // we only have 8 memory locations 0-7
    

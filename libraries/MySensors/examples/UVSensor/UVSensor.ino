@@ -1,22 +1,43 @@
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - epierre
+ * Contribution: bulldoglowell, gizmocuz
+ * 
+ * DESCRIPTION
+ * Arduino UVM-30A
+ * Index table taken from: http://www.elecrow.com/sensors-c-111/environment-c-111_112/uv-sensor-moduleuvm30a-p-716.html
+ * Because this table is pretty lineair, we can calculate a UVI with one decimal 
+ *
+ * Connect sensor:
+ *
+ *   +   >>> 5V
+ *   -   >>> GND
+ *   out >>> A0     
+ * 
+ * License: Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)
+ */
+
 #include <SPI.h>
 #include <MySensor.h>  
-/*
-  Arduino UVM-30A
-
-  connect the sensor as follows :
-
-  +   >>> 5V
-  -   >>> GND
-  out >>> A0     
-  
-  Contribution: epierre, bulldoglowell, gizmocuz
-
-  Index table taken from: http://www.elecrow.com/sensors-c-111/environment-c-111_112/uv-sensor-moduleuvm30a-p-716.html
-  Because this table is pretty lineair, we can calculate a UVI with one decimal 
-
-  License: Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)
-*/
-
 #include <MySensor.h>  
 #include <SPI.h>
 

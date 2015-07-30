@@ -1,13 +1,22 @@
-/*
- The MySensors library adds a new layer on top of the RF24 library.
- It handles radio network routing, relaying and ids.
-
- Created by Henrik Ekblad <henrik.ekblad@gmail.com>
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
  */
+
 
 #ifndef MyMessage_h
 #define MyMessage_h
@@ -77,8 +86,8 @@ typedef enum {
 typedef enum {
 	V_TEMP, // S_TEMP
 	V_HUM, // S_HUM
-	V_STATUS, //  S_LIGHT, S_DIMMER, S_SPRINKLER, Used for setting binary (on/off) status. 1=on, 0=off  
-	V_LIGHT=2, // S_LIGHT, S_DIMMER. Same as V_STATUS
+	V_STATUS, //  S_LIGHT, S_DIMMER, S_SPRINKLER, S_HVAC, S_HEATER. Used for setting binary (on/off) status. 1=on, 0=off  
+	V_LIGHT=2, // Same as V_STATUS
 	V_PERCENTAGE, // S_DIMMER. Used for sending a percentage value (0-100). 
 	V_DIMMER=3, // S_DIMMER. Same as V_PERCENTAGE.  
 	V_PRESSURE, // S_BARO
@@ -101,7 +110,7 @@ typedef enum {
 	V_HEATER, // Deprecated. Use V_HVAC_FLOW_STATE instead.
 	V_HVAC_FLOW_STATE=21,  // HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver"). S_HEATER, S_HVAC 
 	V_HVAC_SPEED, // HVAC/Heater fan speed ("Min", "Normal", "Max", "Auto") 
-	V_LIGHT_LEVEL, // S_LIGHT_LEVEL (light level in uncalibrated percentage) or S_LEVEL (light level in lux)
+	V_LIGHT_LEVEL, // Used for sending light level in uncalibrated percentage. See also V_LEVEL (light level in lux). S_LIGHT_LEVEL
 	V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5,
 	V_UP, // S_COVER
 	V_DOWN, // S_COVER
@@ -125,7 +134,7 @@ typedef enum {
 	V_UNIT_PREFIX, // Allows sensors to send in a string representing the 
 								 // unit prefix to be displayed in GUI, not parsed by controller! E.g. cm, m, km, inch.
 								 // Can be used for S_DISTANCE or gas concentration (S_DUST, S_AIR_QUALITY)
-	V_HVAC_SETPOINT_COLD, // HVAC cold setpoint (Integer between 0-100). S_HVAC
+	V_HVAC_SETPOINT_COOL, // HVAC cool setpoint (Integer between 0-100). S_HVAC
 	V_HVAC_SETPOINT_HEAT, // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
 	V_HVAC_FLOW_MODE, // Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn"). S_HVAC
 	
@@ -137,7 +146,7 @@ typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_FIND_PARENT, I_FIND_PARENT_RESPONSE,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
-	I_REBOOT, I_GATEWAY_READY
+	I_REBOOT, I_GATEWAY_READY, I_REQUEST_SIGNING, I_GET_NONCE, I_GET_NONCE_RESPONSE
 } mysensor_internal;
 
 
@@ -167,8 +176,11 @@ typedef enum {
 #define BF_SET(y, x, start, len)    ( y= ((y) &~ BF_MASK(start, len)) | BF_PREP(x, start, len) )
 
 // Getters/setters for special bit fields in header
-#define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 3)
-#define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 3)
+#define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 2)
+#define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 2)
+
+#define mSetSigned(_msg,_signed) BF_SET(_msg.version_length, _signed, 2, 1)
+#define mGetSigned(_msg) BF_GET(_msg.version_length, 2, 1)
 
 #define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5)
 #define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5)
@@ -262,7 +274,8 @@ struct
 	uint8_t sender;          	 // 8 bit - Id of sender node (origin)
 	uint8_t destination;     	 // 8 bit - Id of destination node
 
-	uint8_t version_length;      // 3 bit - Protocol version
+	uint8_t version_length;		 // 2 bit - Protocol version
+			                     // 1 bit - Signed flag
 			                     // 5 bit - Length of payload
 	uint8_t command_ack_payload; // 3 bit - Command type
 	                             // 1 bit - Request an ack - Indicator that receiver should send an ack back.
