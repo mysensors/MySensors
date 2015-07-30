@@ -59,7 +59,7 @@ float           SmokeCurve[3] ={2.3,0.53,-0.44};    //two points are taken from 
 
 
 MySensor gw;
-MyMessage msg(CHILD_ID_MQ, V_VAR1);
+MyMessage msg(CHILD_ID_MQ, V_LEVEL);
 
 
 void setup()  
