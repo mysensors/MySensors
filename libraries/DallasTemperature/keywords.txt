@@ -7,8 +7,8 @@
 #######################################
 DallasTemperature	KEYWORD1
 OneWire	KEYWORD1
-AlarmHandler KEYWORD1
-DeviceAddress KEYWORD1
+AlarmHandler	KEYWORD1
+DeviceAddress	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -20,12 +20,14 @@ getTempC	KEYWORD2
 toFahrenheit	KEYWORD2
 getTempF	KEYWORD2
 getTempCByIndex 	KEYWORD2
-getTempFByIndex	KEYWORD2
+getTempFByIndex		KEYWORD2
+setWaitForConversion	KEYWORD2
+getWaitForConversion	KEYWORD2
 requestTemperatures	KEYWORD2
-requestTemperaturesByAddress KEYWORD2
-requestTemperaturesByIndex KEYWORD2
+requestTemperaturesByAddress	KEYWORD2
+requestTemperaturesByIndex	KEYWORD2
 isParasitePowerMode	KEYWORD2
-begin KEYWORD2
+begin	KEYWORD2
 getDeviceCount	KEYWORD2
 getAddress	KEYWORD2
 validAddress	KEYWORD2
@@ -45,6 +47,7 @@ processAlarmss	KEYWORD2
 setAlarmHandlers	KEYWORD2
 defaultAlarmHandler	KEYWORD2
 calculateTemperature	KEYWORD2
+millisToWaitForConversion	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

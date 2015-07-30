@@ -74,24 +74,21 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 
 
 #ifdef MY_OTA_FIRMWARE_FEATURE
-// do a crc16 on the whole received firmware
-bool MySensor::isValidFirmware() {
-	void* ptr = 0;
-	uint16_t crc = ~0;
-    int j;
 
+// do a crc16 on the whole received firmware
+bool MySensor::isValidFirmware() {		
+	// init crc
+	uint16_t crc = ~0;
 	for (uint16_t i = 0; i < fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
-		uint8_t a = flash.readByte((uint16_t) ptr + i + FIRMWARE_START_OFFSET);
-		crc ^= a;
-	    for (j = 0; j < 8; ++j)
-	    {
+		crc ^= flash.readByte(i + FIRMWARE_START_OFFSET);
+	    for (int8_t j = 0; j < 8; ++j) {
 	        if (crc & 1)
 	            crc = (crc >> 1) ^ 0xA001;
 	        else
 	            crc = (crc >> 1);
 	    }
-	}
-	return crc == fc.crc;
+	}	
+	return crc == fc.crc; 
 }
 
 #endif
@@ -302,6 +299,12 @@ void MySensor::setupNode() {
 }
 
 void MySensor::findParentNode() {
+	static boolean findingParentNode = false;
+
+	if (findingParentNode)
+		return;
+	findingParentNode = true;
+
 	failedTransmissions = 0;
 
 	// Set distance to max
@@ -316,6 +319,7 @@ void MySensor::findParentNode() {
 
 	// Wait for ping response.
 	wait(2000);
+	findingParentNode = false;
 }
 
 boolean MySensor::sendRoute(MyMessage &message) {
@@ -346,7 +350,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 
 #ifdef MY_SIGNING_FEATURE
 	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(msg) &&
+	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(message) &&
 		(mGetCommand(message) != C_INTERNAL ||
 		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
 		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
@@ -722,46 +726,61 @@ boolean MySensor::process() {
 				// compare with current node configuration, if they differ, start fw fetch process
 				if (memcmp(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
 					debug(PSTR("fw update\n"));
-					fwUpdateOngoing = true;
-					fwBlock =  fc.blocks;
 					// copy new FW config
 					memcpy(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
 					// Init flash
 					if (!flash.initialize()) {
 						debug(PSTR("flash init fail\n"));
+						fwUpdateOngoing = false;
+					} else {
+						// erase lower 32K -> max flash size for ATMEGA328
+						flash.blockErase32K(0);
+						// wait until flash erased
+						while ( flash.busy() );
+						fwBlock = fc.blocks;
+						fwUpdateOngoing = true;
+						// reset flags
+						fwRetry = MY_OTA_RETRY+1;
+						fwLastRequestTime = 0;
 					}
-
-				}
+					return false;
+				} else debug(PSTR("fw update skipped\n"));
 			} else if (type == ST_FIRMWARE_RESPONSE) {
-				// Save block to eeprom
+				// Save block to flash
 				debug(PSTR("fw block %d\n"), fwBlock);
-
+				// extract FW block
 				ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)msg.data;
 				// write to flash
-				flash.writeBytes(((fwBlock-1)*FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+				flash.writeBytes( ((fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+				// wait until flash written
+				while ( flash.busy() );
 				fwBlock--;
-				if (fwBlock == 0) {
+				if (!fwBlock) {
 					// We're finished! Do a checksum and reboot.
 					if (isValidFirmware()) {
 						debug(PSTR("fw checksum ok\n"));
 						// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)
-						uint16_t fwsize = FIRMWARE_BLOCK_SIZE*fc.blocks;
 						flash.writeBytes(0, "FLXIMG:", 7);
+						// FW size in flash
+						uint16_t fwsize = FIRMWARE_BLOCK_SIZE * fc.blocks;
 						flash.writeByte(7, fwsize >> 8);
 						flash.writeByte(8, fwsize);
+						// end of header
 						flash.writeByte(9, ':');
 						// Write the new firmware config to eeprom
 						hw_writeConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
 						hw_reboot();
 					} else {
 						debug(PSTR("fw checksum fail\n"));
+						fwUpdateOngoing = false;
 					}
 				}
+				// reset flags
+				fwRetry = MY_OTA_RETRY+1;
+				fwLastRequestTime = 0;
+				return false;
 			}
-			// Make sure packet request occurs next time process() is called by timing out requestTime.
-			fwRetry = MY_OTA_RETRY+1;
-			fwLastRequestTime = 0;
-			return false;
+
 		}
 #endif
 		// Call incoming message callback if available
@@ -774,14 +793,17 @@ boolean MySensor::process() {
 		// If this node have an id, relay the message
 
 		if (command == C_INTERNAL && type == I_FIND_PARENT) {
-			if (nc.distance == DISTANCE_INVALID) {
-				findParentNode();
-			} else if (sender != nc.parentNodeId) {
-				// Relaying nodes should always answer ping messages
-				// Wait a random delay of 0-2 seconds to minimize collision
-				// between ping ack messages from other relaying nodes
-				wait(hw_millis() & 0x3ff);
-				sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+			if (sender != nc.parentNodeId) {
+				if (nc.distance == DISTANCE_INVALID)
+					findParentNode();
+
+				if (nc.distance != DISTANCE_INVALID) {
+					// Relaying nodes should always answer ping messages
+					// Wait a random delay of 0-2 seconds to minimize collision
+					// between ping ack messages from other relaying nodes
+					wait(hw_millis() & 0x3ff);
+					sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+				}
 			}
 		} else if (to == nc.nodeId) {
 			// We should try to relay this message to another node

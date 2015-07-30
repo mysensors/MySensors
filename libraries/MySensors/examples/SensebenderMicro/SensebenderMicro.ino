@@ -40,6 +40,11 @@
 // When MEASURE_INTERVAL is 60000 and FORCE_TRANSMIT_INTERVAL is 30, we force a transmission every 30 minutes.
 // Between the forced transmissions a tranmission will only occur if the measured value differs from the previous measurement
 
+// HUMI_TRANSMIT_THRESHOLD tells how much the humidity should have changed since last time it was transmitted. Likewise with
+// TEMP_TRANSMIT_THRESHOLD for temperature threshold.
+#define HUMI_TRANSMIT_THRESHOLD 0.5
+#define TEMP_TRANSMIT_THRESHOLD 0.5
+
 // Pin definitions
 #define TEST_PIN       A0
 #define LED_PIN        A2
@@ -73,7 +78,6 @@ int lastHumidity = -100;
 long lastBattery = -100;
 
 RunningAverage raHum(AVERAGES);
-RunningAverage raTemp(AVERAGES);
 
 /****************************************************
  *
@@ -109,9 +113,10 @@ void setup() {
   gw.begin(NULL,AUTO,false);
 #endif
 
+  humiditySensor.begin();
+
   digitalWrite(LED_PIN, LOW);
 
-  humiditySensor.begin();
   Serial.flush();
   Serial.println(F(" - Online!"));
   gw.sendSketchInfo("Sensebender Micro", RELEASE);
@@ -123,10 +128,10 @@ void setup() {
   gw.present(BATT_SENSOR, S_POWER);
 #endif
 
+  
   isMetric = gw.getConfig().isMetric;
   Serial.print(F("isMetric: ")); Serial.println(isMetric);
   raHum.clear();
-  raTemp.clear();
   sendTempHumidityMeasurements(false);
   sendBattLevel(false);
 }
@@ -179,21 +184,19 @@ void sendTempHumidityMeasurements(bool force)
   bool tx = force;
   
   si7021_env data = humiditySensor.getHumidityAndTemperature();
-  float oldAvgTemp = raTemp.getAverage();
   float oldAvgHum = raHum.getAverage();
   
-  raTemp.addValue(data.celsiusHundredths);
   raHum.addValue(data.humidityPercent);
   
-  float diffTemp = abs(lastTemperature - data.celsiusHundredths/100);
+  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
   float diffHum = abs(oldAvgHum - raHum.getAverage());
 
   Serial.print(F("TempDiff :"));Serial.println(diffTemp);
   Serial.print(F("HumDiff  :"));Serial.println(diffHum); 
 
-  if (isnan(diffTemp)) tx = true; 
-  if (diffTemp > 0.3) tx = true;
-  if (diffHum >= 0.5) tx = true;
+  if (isnan(diffHum)) tx = true; 
+  if (diffTemp > TEMP_TRANSMIT_THRESHOLD) tx = true;
+  if (diffHum >= HUMI_TRANSMIT_THRESHOLD) tx = true;
 
   if (tx) {
     measureCount = 0;
