@@ -86,8 +86,8 @@ typedef enum {
 typedef enum {
 	V_TEMP, // S_TEMP
 	V_HUM, // S_HUM
-	V_STATUS, //  S_LIGHT, S_DIMMER, S_SPRINKLER, Used for setting binary (on/off) status. 1=on, 0=off  
-	V_LIGHT=2, // S_LIGHT, S_DIMMER. Same as V_STATUS
+	V_STATUS, //  S_LIGHT, S_DIMMER, S_SPRINKLER, S_HVAC, S_HEATER. Used for setting binary (on/off) status. 1=on, 0=off  
+	V_LIGHT=2, // Same as V_STATUS
 	V_PERCENTAGE, // S_DIMMER. Used for sending a percentage value (0-100). 
 	V_DIMMER=3, // S_DIMMER. Same as V_PERCENTAGE.  
 	V_PRESSURE, // S_BARO
@@ -110,7 +110,7 @@ typedef enum {
 	V_HEATER, // Deprecated. Use V_HVAC_FLOW_STATE instead.
 	V_HVAC_FLOW_STATE=21,  // HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver"). S_HEATER, S_HVAC 
 	V_HVAC_SPEED, // HVAC/Heater fan speed ("Min", "Normal", "Max", "Auto") 
-	V_LIGHT_LEVEL, // S_LIGHT_LEVEL (light level in uncalibrated percentage) or S_LEVEL (light level in lux)
+	V_LIGHT_LEVEL, // Used for sending light level in uncalibrated percentage. See also V_LEVEL (light level in lux). S_LIGHT_LEVEL
 	V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5,
 	V_UP, // S_COVER
 	V_DOWN, // S_COVER
@@ -134,7 +134,7 @@ typedef enum {
 	V_UNIT_PREFIX, // Allows sensors to send in a string representing the 
 								 // unit prefix to be displayed in GUI, not parsed by controller! E.g. cm, m, km, inch.
 								 // Can be used for S_DISTANCE or gas concentration (S_DUST, S_AIR_QUALITY)
-	V_HVAC_SETPOINT_COLD, // HVAC cold setpoint (Integer between 0-100). S_HVAC
+	V_HVAC_SETPOINT_COOL, // HVAC cool setpoint (Integer between 0-100). S_HVAC
 	V_HVAC_SETPOINT_HEAT, // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
 	V_HVAC_FLOW_MODE, // Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn"). S_HVAC
 	
