@@ -474,7 +474,8 @@ void PCintPort::detachInterrupt(uint8_t arduinoPin)
 // there isn't really a good way to back-map ports and masks to pins.
 void PCintPort::PCint() {
 	uint8_t thisChangedPin; //MIKE
-
+	(void)thisChangedPin;
+	
 	#ifdef FLASH
 	if (*led_port & led_mask) *led_port&=not_led_mask;
 	else *led_port|=led_mask;

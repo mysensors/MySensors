@@ -41,7 +41,7 @@ void RF24::csn(bool mode)
 			delayMicroseconds(11);  // allow csn to settle
 		}
 	}		
-#else if !defined  (__arm__) || defined (CORE_TEENSY)
+#elif !defined  (__arm__) || defined (CORE_TEENSY)
 	digitalWrite(csn_pin,mode);		
 #endif
 

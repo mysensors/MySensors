@@ -38,7 +38,7 @@
 LiquidCrystal_I2C_ByVac::LiquidCrystal_I2C_ByVac( uint8_t lcd_Addr )
 {
    _Addr = lcd_Addr;
-   _polarity == NEGATIVE;
+   _polarity = NEGATIVE;
 }
 
 // PUBLIC METHODS

@@ -47,6 +47,8 @@ LiquidCrystal_SR2W::LiquidCrystal_SR2W (uint8_t srdata, uint8_t srclock, t_backl
 // init
 void LiquidCrystal_SR2W::init(uint8_t srdata, uint8_t srclock, t_backlighPol blpol, uint8_t lines, uint8_t font)
 {
+	(void)lines;
+	(void)font;
 	_srDataRegister = fio_pinToOutputRegister(srdata);
 	_srDataMask = fio_pinToBit(srdata);
 	_srClockRegister = fio_pinToOutputRegister(srclock);

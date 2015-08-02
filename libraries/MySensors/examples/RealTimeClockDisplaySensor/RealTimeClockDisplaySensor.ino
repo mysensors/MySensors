@@ -88,8 +88,8 @@ void loop()
   
   // If no time has been received yet, request it every 10 second from controller
   // When time has been received, request update every hour
-  if ((!timeReceived && now-lastRequest > 10*1000)
-    || (timeReceived && now-lastRequest > 60*1000*60)) {
+  if ((!timeReceived && now-lastRequest > (unsigned long)(10*1000))
+    || (timeReceived && now-lastRequest > (unsigned long)(60*1000*60))) {
     // Request time from controller. 
     Serial.println("requesting time");
     gw.requestTime(receiveTime);  
