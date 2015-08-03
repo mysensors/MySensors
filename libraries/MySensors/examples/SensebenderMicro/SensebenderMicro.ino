@@ -67,7 +67,7 @@
 #define MEASURE_INTERVAL 60000
 
 // How many milli seconds should we wait for OTA?
-#define OTA_WAIT_PERIOD 1000
+#define OTA_WAIT_PERIOD 300
 
 // FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
 #define FORCE_TRANSMIT_INTERVAL 30 
@@ -140,7 +140,9 @@ void setup() {
 
   pinMode(OTA_ENABLE, INPUT);
   digitalWrite(OTA_ENABLE, HIGH);
-  if (!digitalRead(OTA_ENABLE)) ota_enabled = true;
+  if (!digitalRead(OTA_ENABLE)) {
+    ota_enabled = true;
+  }
 
   // Make sure that ATSHA204 is not floating
   pinMode(ATSHA204_PIN, INPUT);
@@ -178,6 +180,8 @@ void setup() {
   raHum.clear();
   sendTempHumidityMeasurements(false);
   sendBattLevel(false);
+  if (ota_enabled) Serial.println("OTA FW update enabled");
+
 }
 
 
