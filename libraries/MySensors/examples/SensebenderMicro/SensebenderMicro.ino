@@ -29,6 +29,12 @@
  *  
  * Battery voltage is as battery percentage (Internal message), and optionally as a sensor value (See defines below)
  *
+ *
+ * Version 1.3 - Thomas Bowman Mørch
+ * Improved transmission logic, eliminating spurious transmissions (when temperatuere / humidity fluctuates 1 up and down between measurements)
+ * 
+ * Added OTA boot mode, need to hold A1 low while applying power. (uses slightly more power as it's waiting for bootloader messages)
+ * 
  */
 
 
@@ -41,7 +47,7 @@
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>
 #include <RunningAverage.h>
-#include <avr/power.h>
+//#include <avr/power.h>
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
@@ -49,7 +55,7 @@
 // Uncomment the line below, to transmit battery voltage as a normal sensor value
 //#define BATT_SENSOR    199
 
-#define RELEASE "1.2"
+#define RELEASE "1.3"
 
 #define AVERAGES 2
 
@@ -59,6 +65,9 @@
 
 // How many milli seconds between each measurement
 #define MEASURE_INTERVAL 60000
+
+// How many milli seconds should we wait for OTA?
+#define OTA_WAIT_PERIOD 300
 
 // FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
 #define FORCE_TRANSMIT_INTERVAL 30 
@@ -73,6 +82,7 @@
 
 // Pin definitions
 #define TEST_PIN       A0
+#define OTA_ENABLE     A1
 #define LED_PIN        A2
 #define ATSHA204_PIN   17 // A3
 
@@ -97,6 +107,8 @@ int measureCount = 0;
 int sendBattery = 0;
 boolean isMetric = true;
 boolean highfreq = true;
+boolean ota_enabled = false; 
+boolean transmission_occured = false;
 
 // Storage of old measurements
 float lastTemperature = -100;
@@ -126,11 +138,19 @@ void setup() {
   digitalWrite(TEST_PIN, HIGH); // Enable pullup
   if (!digitalRead(TEST_PIN)) testMode();
 
+  pinMode(OTA_ENABLE, INPUT);
+  digitalWrite(OTA_ENABLE, HIGH);
+  if (!digitalRead(OTA_ENABLE)) {
+    ota_enabled = true;
+  }
+
   // Make sure that ATSHA204 is not floating
   pinMode(ATSHA204_PIN, INPUT);
   digitalWrite(ATSHA204_PIN, HIGH);
   
   digitalWrite(TEST_PIN,LOW);
+  digitalWrite(OTA_ENABLE, LOW); // remove pullup, save some power.
+  
   digitalWrite(LED_PIN, HIGH); 
 
 #ifdef NODE_ADDRESS
@@ -160,6 +180,8 @@ void setup() {
   raHum.clear();
   sendTempHumidityMeasurements(false);
   sendBattLevel(false);
+  if (ota_enabled) Serial.println("OTA FW update enabled");
+
 }
 
 
@@ -169,13 +191,14 @@ void setup() {
  *
  ***********************************************/
 void loop() {
+  
   measureCount ++;
   sendBattery ++;
   bool forceTransmit = false;
-  
+  transmission_occured = false;
   if ((measureCount == 5) && highfreq) 
   {
-    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+    if (!ota_enabled) clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
     highfreq = false;
   } 
   
@@ -192,7 +215,11 @@ void loop() {
      sendBattLevel(forceTransmit); // Not needed to send battery info that often
      sendBattery = 0;
   }
-  
+
+  if (ota_enabled & transmission_occured) {
+      gw.wait(OTA_WAIT_PERIOD);
+  }
+
   gw.sleep(MEASURE_INTERVAL);  
 }
 
@@ -208,21 +235,20 @@ void loop() {
 void sendTempHumidityMeasurements(bool force)
 {
   bool tx = force;
-  
+
   si7021_env data = humiditySensor.getHumidityAndTemperature();
-  float oldAvgHum = raHum.getAverage();
   
   raHum.addValue(data.humidityPercent);
   
   float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
-  float diffHum = abs(oldAvgHum - raHum.getAverage());
+  float diffHum = abs(lastHumidity - raHum.getAverage());
 
   Serial.print(F("TempDiff :"));Serial.println(diffTemp);
   Serial.print(F("HumDiff  :"));Serial.println(diffHum); 
 
   if (isnan(diffHum)) tx = true; 
   if (diffTemp > TEMP_TRANSMIT_THRESHOLD) tx = true;
-  if (diffHum >= HUMI_TRANSMIT_THRESHOLD) tx = true;
+  if (diffHum > HUMI_TRANSMIT_THRESHOLD) tx = true;
 
   if (tx) {
     measureCount = 0;
@@ -236,6 +262,7 @@ void sendTempHumidityMeasurements(bool force)
     gw.send(msgHum.set(humidity));
     lastTemperature = temperature;
     lastHumidity = humidity;
+    transmission_occured = true;
   }
 }
 
@@ -264,6 +291,7 @@ void sendBattLevel(bool force)
     
     long percent = vcc / 14.0;
     gw.sendBatteryLevel(percent);
+    transmission_occured = true;
   }
 }
 
@@ -296,6 +324,7 @@ long readVcc() {
  
   result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
   return result; // Vcc in millivolts
+ 
 }
 
 /****************************************************
