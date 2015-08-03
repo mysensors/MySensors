@@ -198,7 +198,7 @@ void loop() {
   transmission_occured = false;
   if ((measureCount == 5) && highfreq) 
   {
-    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+    if (!ota_enabled) clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
     highfreq = false;
   } 
   
