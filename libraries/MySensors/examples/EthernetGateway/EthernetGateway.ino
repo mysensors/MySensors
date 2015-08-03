@@ -135,7 +135,7 @@ void output(const char *fmt, ... ) {
    vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
    va_end (args);
    Serial.print(serialBuffer);
-   client.write(serialBuffer);
+   server.write(serialBuffer);
 }
 
 void setup()  
