@@ -52,6 +52,14 @@ typedef MyHwATMega328 MyHwDriver;
 #define debug(x,...)
 #endif
 
+#ifdef WITH_LEDS_BLINKING_INVERSE
+#define LED_ON 0x1
+#define LED_OFF 0x0
+#else
+#define LED_ON 0x0
+#define LED_OFF 0x1
+#endif
+
 
 // EEPROM start address for mysensors library data
 #define EEPROM_START 0
