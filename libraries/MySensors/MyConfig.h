@@ -53,7 +53,14 @@
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-// #define WITH_LEDS_BLINKING
+//#define WITH_LEDS_BLINKING
+
+// The following setting allows you to inverse the blinking feature WITH_LEDS_BLINKING
+// When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
+// off when blinking
+
+//#define WITH_LEDS_BLINKING_INVERSE
+
 
 // default LEDs blinking period in milliseconds
 #define DEFAULT_LED_BLINK_PERIOD 300
@@ -135,8 +142,6 @@
 // Enable this for encryption of packets
 //#define RFM69_ENABLE_ENCRYPTION
 #define RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
-
-
 
 
 #endif
