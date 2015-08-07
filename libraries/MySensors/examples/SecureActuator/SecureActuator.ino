@@ -71,7 +71,7 @@ MySigningAtsha204 signer;
 #endif
 MySensor gw(radio, hw, signer);
 #else
-#error SecureActuator cannot possibly be secure without signing enabled
+#warning SecureActuator cannot possibly be secure without signing enabled
 MySensor gw(radio, hw);
 #endif
 
