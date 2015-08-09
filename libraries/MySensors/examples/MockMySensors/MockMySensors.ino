@@ -6,12 +6,20 @@
 * Barduino 2015
 */
 
+#include <MySigningNone.h>
+#include <MyTransportRFM69.h>
+#include <MyTransportNRF24.h>
+#include <MyHwATMega328.h>
+#include <MySigningAtsha204Soft.h>
+#include <MySigningAtsha204.h>
+
 #include <SPI.h>
 #include <MySensor.h>  
+#include <MyMessage.h>
 
-// SPI Pins
-#define CE_PIN 9
-#define CS_PIN 10
+#define RADIO_ERROR_LED_PIN 4  // Error led pin
+#define RADIO_RX_LED_PIN    6  // Receive led pin
+#define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 // Wait times
 #define LONG_WAIT 500
@@ -30,7 +38,10 @@
 ////#define ID_S_ARDUINO_NODE            //auto defined in initialization
 ////#define ID_S_ARDUINO_REPEATER_NODE   //auto defined in initialization 
 
-//#define ID_S_DOOR                     1
+// Some of these ID's have not been updated for v1.5.  Uncommenting too many of them
+// will make the sketch too large for a pro mini's memory so it's probably best to try
+// one at a time.
+#define ID_S_DOOR                     1
 //#define ID_S_MOTION                   2
 //#define ID_S_SMOKE                    3
 //#define ID_S_LIGHT                    4
@@ -43,18 +54,17 @@
 //#define ID_S_RAIN                    11
 //#define ID_S_UV                      12
 //#define ID_S_WEIGHT                  13 
-#define ID_S_POWER                   14
-#define ID_S_HEATER                  15
-#define ID_S_DISTANCE                16
-#define ID_S_LIGHT_LEVEL             17 
-#define ID_S_LOCK                    18
-#define ID_S_IR                      19
-#define ID_S_WATER                   20 
-#define ID_S_AIR_QUALITY             21 
-#define ID_S_DUST                    22
-#define ID_S_SCENE_CONTROLLER        23
-
-#define ID_S_CUSTOM                  24
+//#define ID_S_POWER                   14
+//#define ID_S_HEATER                  15
+//#define ID_S_DISTANCE                16
+//#define ID_S_LIGHT_LEVEL             17 
+//#define ID_S_LOCK                    18
+//#define ID_S_IR                      19
+//#define ID_S_WATER                   20 
+//#define ID_S_AIR_QUALITY             21 
+//#define ID_S_DUST                    22
+//#define ID_S_SCENE_CONTROLLER        23
+//#define ID_S_CUSTOM                  24
 
 // Global Vars
 unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in milliseconds)
@@ -62,7 +72,24 @@ boolean metric = true;
 long randNumber;
 
 // Instanciate MySersors Gateway
-MySensor gw(CE_PIN,CS_PIN);
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
+//MyTransportRFM69 transport;
+
+// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+//MySigningNone signer;
+//MySigningAtsha204Soft signer;
+//MySigningAtsha204 signer;
+
+// Hardware profile 
+MyHwATMega328 hw;
+
+// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+// To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
+#ifdef WITH_LEDS_BLINKING
+MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+#else
+MySensor gw(transport, hw /*, signer*/);
+#endif
 
 //Instanciate Messages objects
 
