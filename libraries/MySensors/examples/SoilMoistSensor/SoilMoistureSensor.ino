@@ -75,7 +75,7 @@ void setup() {
   Serial.begin(115200);
   gw.begin();
   gw.sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
-  gw.present(CHILD_ID, S_HUM);  
+  gw.present(CHILD_ID, S_MOISTURE);  
   // initialize the digital pins as an output.
   // Pin 6,7 is for sensor 1
   // initialize the digital pin as an output.
