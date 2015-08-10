@@ -76,7 +76,7 @@ void setup()
   
   pinMode(DUST_SENSOR_DIGITAL_PIN_PM10,INPUT);
   pinMode(DUST_SENSOR_DIGITAL_PIN_PM25,INPUT);
-  Serial.begin(115200);  
+  
 }
 
 void loop()      
