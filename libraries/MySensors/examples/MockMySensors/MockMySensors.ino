@@ -1,5 +1,5 @@
 /*
-* MockMySensors
+* FakeMySensors
 *
 * This skecth is intended to crate fake sensors which register and respond to the controller
 * 
@@ -17,8 +17,8 @@
 #define LONG_WAIT 500
 #define SHORT_WAIT 50
 
-#define SKETCH_NAME "FakeMySensors "
-#define SKETCH_VERSION "v0.2"
+#define SKETCH_NAME "MockMySensors "
+#define SKETCH_VERSION "v0.3"
 
 // Define Sensors ids
 /*      S_DOOR, S_MOTION, S_SMOKE, S_LIGHT, S_DIMMER, S_COVER, S_TEMP, S_HUM, S_BARO, S_WIND,
@@ -30,19 +30,19 @@
 ////#define ID_S_ARDUINO_NODE            //auto defined in initialization
 ////#define ID_S_ARDUINO_REPEATER_NODE   //auto defined in initialization 
 
-//#define ID_S_DOOR                     1
-//#define ID_S_MOTION                   2
-//#define ID_S_SMOKE                    3
-//#define ID_S_LIGHT                    4
-//#define ID_S_DIMMER                   5
-//#define ID_S_COVER                    6
-//#define ID_S_TEMP                     7
-//#define ID_S_HUM                      8
-//#define ID_S_BARO                     9
-//#define ID_S_WIND                     10
-//#define ID_S_RAIN                    11
-//#define ID_S_UV                      12
-//#define ID_S_WEIGHT                  13 
+#define ID_S_DOOR                     1
+#define ID_S_MOTION                   2
+#define ID_S_SMOKE                    3
+#define ID_S_LIGHT                    4
+#define ID_S_DIMMER                   5
+#define ID_S_COVER                    6
+#define ID_S_TEMP                     7
+#define ID_S_HUM                      8
+#define ID_S_BARO                     9
+#define ID_S_WIND                     10
+#define ID_S_RAIN                    11
+#define ID_S_UV                      12
+#define ID_S_WEIGHT                  13 
 #define ID_S_POWER                   14
 #define ID_S_HEATER                  15
 #define ID_S_DISTANCE                16
@@ -57,7 +57,7 @@
 #define ID_S_CUSTOM                  24
 
 // Global Vars
-unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 500000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
@@ -189,7 +189,7 @@ void setup()
   randomSeed(analogRead(0));
   
   // Start the gateway
-  gw.begin(incomingMessage,254);
+  gw.begin(incomingMessage,254,true);
   gw.wait(LONG_WAIT);
   Serial.println("GW Started");
   
@@ -241,7 +241,7 @@ void setup()
   #endif
   
   #ifdef ID_S_COVER
-    Serial.println("  S_COVER";
+    Serial.println("  S_COVER");
     gw.present(ID_S_COVER,S_COVER);
     gw.wait(SHORT_WAIT);
   #endif
@@ -283,7 +283,7 @@ void setup()
   #endif
   
   #ifdef ID_S_WEIGHT
-    Serial.println("  S_WEIGHT"):
+    Serial.println("  S_WEIGHT");
     gw.present(ID_S_WEIGHT,S_WEIGHT);
     gw.wait(SHORT_WAIT);
   #endif
@@ -380,6 +380,9 @@ void loop()
   gw.requestTime(receiveTime);
   gw.wait(LONG_WAIT);
   
+//  gw.process();
+//  gw.wait(LONG_WAIT);
+   Serial.println("#########################"); 
   //Read Sensors
   #ifdef S_ID_DOOR 
     door(); 
@@ -477,10 +480,12 @@ void loop()
     custom();
   #endif
   
-  gw.sendBatteryLevel(randNumber);
-  gw.wait(SHORT_WAIT);
-  gw.process();
   Serial.println("#########################");
+  
+  gw.process();
+  gw.wait(SHORT_WAIT);
+  
+  
   gw.wait(SLEEP_TIME); //sleep a bit
 }
 
