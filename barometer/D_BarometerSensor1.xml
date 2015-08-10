@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <device>
+    <deviceType>urn:schemas-micasaverde-com:device:BarometerSensor:1</deviceType>
+    <Category_Num>12</Category_Num>
+	<staticJson>D_BarometerSensor1.json</staticJson>
+    <serviceList>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:BarometerSensor:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:BarometerSensor1</serviceId>
+        <SCPDURL>S_BarometerSensor1.xml</SCPDURL>
+      </service>
+      <service>
+        <serviceType>urn:schemas-micasaverde-com:service:HaDevice:1</serviceType>
+        <serviceId>urn:micasaverde-com:serviceId:HaDevice1</serviceId>
+        <SCPDURL>S_HaDevice1.xml</SCPDURL>
+      </service>
+    </serviceList>
+  </device>
+</root>

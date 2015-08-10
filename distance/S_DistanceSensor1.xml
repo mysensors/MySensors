@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <serviceStateTable>
+      <stateVariable>
+         <name>CurrentDistance</name>
+         <sendEventsAttribute>yes</sendEventsAttribute>
+         <dataType>i2</dataType>
+        <shortCode>dist</shortCode>
+      </stateVariable>
+  </serviceStateTable>
+  <actionList>
+  	<action>
+  		<name>GetCurrentDistance</name>
+  		<argumentList>
+  			<argument>
+  				<name>DistanceValue</name>
+  				<direction>out</direction>
+  				<relatedStateVariable>CurrentDistance</relatedStateVariable></argument></argumentList></action>
+  	  	</actionList>
+</scpd>

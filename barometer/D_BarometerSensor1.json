@@ -1,0 +1,285 @@
+{
+    "flashicon": "icons\/generic_sensor.swf",
+    "imgIconBody": "",
+    "imgIconDimmable": "",
+    "imgIconTurnable": "",
+    "imgIconMin": "",
+    "imgIconMax": "",
+    "halloIconsDir": "pics/hallo",
+    "inScene": "0",
+    "DisplayStatus": {},
+    "doc_url": {
+        "doc_language": 1,
+        "doc_manual": 1,
+        "doc_version": 1,
+        "doc_platform": 0,
+        "doc_page": "sensors"
+    },
+    "Tabs": [
+        {
+            "Label": {
+                "lang_tag": "tabname_control",
+                "text": "Information"
+            },
+            "Position": "0",
+            "TabType": "flash",
+            "SceneGroup": [
+                {
+                    "id": "1",
+                    "top": "1.5",
+                    "left": "0",
+                    "x": "2",
+                    "y": "2"
+                }
+            ],
+            "ControlGroup": [
+                {
+                    "id": "1",
+                    "scenegroup": "1",
+                    "type": "info"
+                },
+                {
+                    "id": "2",
+                    "scenegroup": "1",
+                    "type": "info"
+                }
+            ],
+            "Control": [
+                {
+                    "ControlGroup": "1",
+                    "ControlPair": "1",
+                    "ControlHeader": "1",
+                    "top": "0",
+                    "left": "0",
+                    "x": "1.25",
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "pressure",
+                        "text": "Pressure"
+                    },
+                    "Display": {
+                        "Top": 30,
+                        "Left": 50,
+                        "Width": 75,
+                        "Height": 20 
+                    }
+                },
+                {
+                    "ControlGroup": "1",
+                    "ControlPair": "1",
+                    "ControlHeader": "1",
+                    "top": "0",
+                    "left": "1.25",
+                    "x": "0.75",
+                    "ControlType": "variable",
+                    "Display": {
+                        "Service": "urn:upnp-org:serviceId:BarometerSensor1",
+                        "Variable": "CurrentPressure",
+                        "Top": 30,
+                        "Left": 150,
+                        "Width": 25,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "pressure_unit",
+                        "text": "hPa"
+                    },
+                    "Display": {
+                        "Top": 30,
+                        "Left": 200,
+                        "Width": 25,
+                        "Height": 20 
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "forecast",
+                        "text": "Forecast"
+                    },
+                    "Display": {
+                        "Top": 55,
+                        "Left": 50,
+                        "Width": 75,
+                        "Height": 20 
+                    }
+                },
+                {
+                    "ControlGroup": "2",
+                    "top": "1",
+                    "left": "0",
+                    "x": "2",
+                    "ControlType": "variable",
+                    "Display": {
+                        "Service": "urn:upnp-org:serviceId:BarometerSensor1",
+                        "Variable": "Forecast",
+                        "Top": 55,
+                        "Left": 150,
+                        "Width": 100,
+                        "Height": 20 
+                    }
+                }
+            ]
+        },
+        {
+            "Label": {
+                "lang_tag": "advanced",
+                "text": "Advanced"
+            },
+            "Position": "1",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "advanced_device"
+        },
+        {
+            "Label": {
+                "lang_tag": "logs",
+                "text": "Logs"
+            },
+            "Position": "2",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_logs"
+        },
+        {
+            "Label": {
+                "lang_tag": "notifications",
+                "text": "Notifications"
+            },
+            "Position": "3",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_notifications"
+        }
+    ],
+    "eventList2": [
+        {
+            "id": 1,
+            "label": {
+                "lang_tag": "pressure_goes_above",
+                "text": "Pressure goes above"
+            },
+            "serviceId": "urn:upnp-org:serviceId:BarometerSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "i2",
+                    "name": "CurrentPressure",
+                    "comparisson": ">",
+                    "prefix": {
+                        "lang_tag": "pressure",
+                        "text": "Pressure"
+                    },
+                    "suffix": {
+                        "lang_tag": "pressure_unit",
+                        "text": "hPa"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_pressure_goes_above",
+                        "text": "Pressure for _DEVICE_NAME_ goes above _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "label": {
+                "lang_tag": "pressure_goes_below",
+                "text": "Pressure goes below"
+            },
+            "serviceId": "urn:upnp-org:serviceId:BarometerSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "i2",
+                    "name": "CurrentPressure",
+                    "comparisson": "<",
+                    "prefix": {
+                        "lang_tag": "pressure",
+                        "text": "Pressure"
+                    },
+                    "suffix": {
+                        "lang_tag": "pressure_unit",
+                        "text": "hPa"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_pressure_goes_below",
+                        "text": "Pressure for _DEVICE_NAME_ goes below _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "label": {
+                "lang_tag": "forecast_reaches",
+                "text": "Forecast is"
+            },
+            "serviceId": "urn:upnp-org:serviceId:BarometerSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "string",
+                    "name": "Forecast",
+                    "allowedValueList" : [
+                       {
+                            "value": "stable",
+                            "HumanFriendlyText": {
+                                "lang_tag": "hft_stable",
+                                "text": "_DEVICE_NAME_: Forecast is 'stable' weather"
+                            }
+                        },
+                         {
+                            "value": "sunny",
+                            "HumanFriendlyText": {
+                                "lang_tag": "hft_sunny",
+                                "text": "_DEVICE_NAME_: Forecast is 'clear/sunny' slowly raising h-pressure"
+                            }
+                        },
+                        {
+                            "value": "cloudy",
+                            "HumanFriendlyText": {
+                                "lang_tag": "hft_cloudy",
+                                "text": "_DEVICE_NAME_: Forecast is 'cloudy/rain' slowly falling l-pressure"
+                            }
+                        },
+                        {
+                            "value": "unstable",
+                            "HumanFriendlyText": {
+                                "lang_tag": "hft_unstable",
+                                "text": "_DEVICE_NAME_: Forecast is 'not stable' quickly rising h-pressure"
+                            }
+                        },
+                        {
+                            "value": "thunderstorm",
+                            "HumanFriendlyText": {
+                                "lang_tag": "hft_thunderstorm",
+                                "text": "_DEVICE_NAME_: Forecast is 'thunderstorm' quickly falling l-pressure"
+                            }
+                        },
+                        {
+                            "value": "unknown",
+                            "HumanFriendlyText": {
+                                "lang_tag": "hft_unknown",
+                                "text": "_DEVICE_NAME_: Forecast is 'unknown'"
+                            }
+                        }
+                    ],
+                    "prefix": {
+                        "lang_tag": "forecast",
+                        "text": "Forecast"
+                    },
+                    "suffix": {
+                    }
+                }
+            ]
+        }
+    ],
+    "DeviceType": "urn:schemas-micasaverde-com:device:BarometerSensor:1"
+}

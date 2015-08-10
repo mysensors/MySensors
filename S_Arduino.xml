@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <serviceStateTable>
+    <stateVariable>
+    	<name>InclusionMode</name>
+    	<sendEventsAttribute>no</sendEventsAttribute>
+    	<dataType>string</dataType>
+    </stateVariable>
+    <stateVariable>
+    	<name>InclusionFoundCount</name>
+    	<sendEventsAttribute>no</sendEventsAttribute>
+    	<dataType>string</dataType>
+    </stateVariable>
+    <stateVariable>
+    	<name>Unit</name>
+    	<sendEventsAttribute>no</sendEventsAttribute>
+    	<dataType>string</dataType>
+    </stateVariable>
+    <stateVariable>
+    	<name>PluginVersion</name>
+    	<sendEventsAttribute>no</sendEventsAttribute>
+    	<dataType>string</dataType>
+    </stateVariable>
+    <stateVariable>
+    	<name>ArduinoLibVersion</name>
+    	<sendEventsAttribute>no</sendEventsAttribute>
+    	<dataType>string</dataType>
+    </stateVariable>
+ </serviceStateTable>
+ <actionList>
+
+ <action>
+  	<name>SetUnit</name>
+  	<argumentList>
+  		<argument>
+  			<name>unit</name>
+  			<direction>in</direction>
+  			<relatedStateVariable>A_ARG_TYPE_unit</relatedStateVariable>
+     	</argument>
+  	</argumentList>
+  </action>
+
+
+ <action>
+  	<name>SendCommand</name>
+  	<argumentList>
+  		<argument>
+  			<name>radioId</name>
+  			<direction>in</direction>
+  			<relatedStateVariable>A_ARG_TYPE_radioId</relatedStateVariable>
+     	</argument>
+  		<argument>
+  			<name>variableId</name>
+  			<direction>in</direction>
+  			<relatedStateVariable>A_ARG_TYPE_variableId</relatedStateVariable>
+     	</argument>
+  		<argument>
+  			<name>value</name>
+  			<direction>in</direction>
+  			<relatedStateVariable>A_ARG_TYPE_value</relatedStateVariable>
+     	</argument>
+  	</argumentList>
+  </action>
+
+  <action>
+  	<name>StartInclusion</name>
+  	<argumentList>
+  	</argumentList>
+  </action>
+  <action>
+  	<name>StopInclusion</name>
+  	<argumentList>
+  	</argumentList>
+  </action>
+
+
+  </actionList>
+</scpd>

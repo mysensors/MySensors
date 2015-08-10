@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <device>
+    <deviceType>urn:schemas-arduino-cc:device:arduinonode:1</deviceType>
+    <staticJson>D_ArduinoNode1.json</staticJson>
+    <friendlyName>Arduino Node</friendlyName>
+    <manufacturer>Arduino</manufacturer>
+    <manufacturerURL>http://www.arduino.cc</manufacturerURL>
+    <modelDescription>Arduino with nRF24L01 transceiver</modelDescription>
+    <modelName></modelName>
+    <modelNumber>1.0</modelNumber>
+    <serviceList>
+      <service>
+        <serviceType>urn:schemas-arduino-cc:service:arduinonode:1</serviceType>
+        <serviceId>urn:upnp-arduino-cc:serviceId:arduinonode1</serviceId>
+        <SCPDURL>S_ArduinoNode.xml</SCPDURL>
+      </service>
+    </serviceList>
+  </device>
+</root>

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <serviceStateTable>
+    <stateVariable sendEvents="yes">
+      <name>Flow</name>
+      <dataType>ui4</dataType>
+      <shortCode>flow</shortCode>
+    </stateVariable>
+    <stateVariable sendEvents="no">
+      <name>ActualUsage</name>
+      <dataType>boolean</dataType>
+    </stateVariable>
+    <stateVariable sendEvents="no">
+      <name>WholeHouse</name>
+      <dataType>boolean</dataType>
+      <shortCode>wholehouse</shortCode>
+    </stateVariable>
+    <stateVariable sendEvents="no">
+      <name>Pulse</name>
+      <dataType>ui4</dataType>
+      <shortCode>pulse</shortCode>
+    </stateVariable>
+    <stateVariable sendEvents="no">
+      <name>UserSuppliedFlow</name>
+      <dataType>ui4</dataType>
+    </stateVariable>
+    <stateVariable sendEvents="yes">
+      <name>Volume</name>
+      <dataType>ui4</dataType>
+      <shortCode>volume</shortCode>
+    </stateVariable>
+  </serviceStateTable>
+  <actionList>
+    <action>
+      <name>ResetVolume</name>
+    </action>
+  </actionList>
+</scpd>

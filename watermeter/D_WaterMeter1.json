@@ -1,0 +1,289 @@
+{
+	"flashicon": "http://www.mysensors.org/icon/Water.png",
+	"imgIconBody": "",
+	"imgIconDimmable": "",
+	"imgIconTurnable": "",
+	"imgIconMin": "",
+	"imgIconMax": "",
+	"halloIconsDir": "pics/hallo",
+	"x": "2",
+	"y": "3",
+	"inScene": "0",
+	"DisplayStatus": {
+		"Service": "urn:micasaverde-com:serviceId:WaterMetering1",
+		"Variable": "Flow",
+		"MinValue": "0",
+		"MaxValue": "100"
+	},
+	"doc_url": {
+		"doc_language": 1,
+		"doc_manual": 1,
+		"doc_version": 1,
+		"doc_platform": 0,
+		"doc_page": "devices"
+	},
+	"Tabs": [
+		{
+			"Label": {
+				"lang_tag": "tabname_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"ControlGroup": [
+				{
+					"id": "1",
+					"scenegroup": "1"
+				},
+				{
+					"id": "2",
+					"scenegroup": "2"
+				}
+			],
+			"SceneGroup": [
+				{
+					"id": "1",
+					"top": "1",
+					"left": "0",
+					"x": "2",
+					"y": "1"
+				},
+				{
+					"id": "2",
+					"top": "2",
+					"left": "0",
+					"x": "2",
+					"y": "1",
+					"isSingle": "1"
+				}
+			],
+			"Control": [
+				{
+					"ControlGroup": "1",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0",
+					"Label": {
+						"lang_tag": "flow",
+						"text": "Flow:"
+					},
+					"Display": {
+						"Top": 60,
+						"Left": 20,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup": "1",
+					"ControlType": "variable",
+					"top": "0",
+					"left": "0.4",
+					"Display": {
+						"Service": "urn:micasaverde-com:serviceId:WaterMetering1",
+						"Variable": "Flow",
+						"Top": 60,
+						"Left": 80,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"1",
+					"ControlPair": "1",
+					"ControlHeader": "1",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0.8",
+					"Label": {
+						"lang_tag": "flow",
+						"text": "x/min"
+					},
+					"Display": {
+						"Top": 60,
+						"Left": 150,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				
+				
+				{
+					"ControlGroup": "2",
+					"ControlType": "label",
+					"top": "1",
+					"left": "0",
+					"Label": {
+						"lang_tag": "volume",
+						"text": "Volume:"
+					},
+					"Display": {
+						"Top": 90,
+						"Left": 20,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup": "2",
+					"ControlType": "variable",
+					"top": "1",
+					"left": "0.7",
+					"Display": {
+						"Service": "urn:micasaverde-com:serviceId:WaterMetering1",
+						"Variable": "Volume",
+						"Top": 90,
+						"Left": 80,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"2",
+					"ControlPair": "1",
+					"ControlHeader": "1",
+					"ControlType": "label",
+					"top": "1",
+					"left": "1.2",
+					"Label": {
+						"lang_tag": "volume",
+						"text": " m3"
+					},
+					"Display": {
+						"Top": 90,
+						"Left": 150,
+						"Width": 75,
+						"Height": 20
+					}
+				}
+				
+				
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "settings",
+				"text": "Settings"
+			},
+			"Position": "1",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "simple_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "advanced",
+				"text": "Advanced"
+			},
+			"Position": "2",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "device_options",
+				"text": "Device Options"
+			},
+			"Position": "3",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_zwave_options"
+		},
+		{
+			"Label": {
+				"lang_tag": "logs",
+				"text": "Logs"
+			},
+			"Position": "4",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_logs"
+		},
+		{
+			"Label": {
+				"lang_tag": "notifications",
+				"text": "Notifications"
+			},
+			"Position": "5",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_notifications"
+		}
+	],
+	"eventList2": [
+		{
+			"id": 1,
+			"label": {
+				"lang_tag": "waterflow_usage_goes_above",
+				"text": "Waterflow usage goes above"
+			},
+			"serviceId": "urn:micasaverde-com:serviceId:WaterMetering1",
+			"argumentList": [
+				{
+					"id": 1,
+					"dataType": "i4",
+					"name": "l/min",
+					"comparisson": ">",
+					"prefix": "l/min: ",
+					"suffix": "",
+					"HumanFriendlyText": {
+						"lang_tag": "hft_waterflow_usage_goes_above",
+						"text": "Water usage for _DEVICE_NAME_ goes above _ARGUMENT_VALUE_ l/min"
+					}
+				}
+			]
+		},
+		{
+			"id": 2,
+			"label": {
+				"lang_tag": "waterflow_usage_goes_below",
+				"text": "Waterflow usage goes below"
+			},
+			"serviceId": "urn:micasaverde-com:serviceId:WaterMetering1",
+			"argumentList": [
+				{
+					"id": 1,
+					"dataType": "i4",
+					"name": "l/min",
+					"comparisson": "<",
+					"prefix": "l/min: ",
+					"suffix": {},
+					"HumanFriendlyText": {
+						"lang_tag": "hft_waterflow_usage_goes_below",
+						"text": "Water usage for _DEVICE_NAME_ go below _ARGUMENT_VALUE_ l/min"
+					}
+				}
+			]
+		},
+		{
+			"id": 3,
+			"label": {
+				"lang_tag": "battery_level_goes_below",
+				"text": "Battery level goes below"
+			},
+			"serviceId": "urn:micasaverde-com:serviceId:HaDevice1",
+			"argumentList": [
+				{
+					"id": 1,
+					"prefix": {
+						"lang_tag":"Level",
+						"text":"Level"
+					},
+					"dataType": "i4",
+					"name": "BatteryLevel",
+					"comparisson": "<",
+					"suffix": {
+						"lang_tag":"percent_sign",
+						"text":"%"
+					},
+					"HumanFriendlyText": {
+						"lang_tag": "hft_battery_level_goes_below",
+						"text": "Battery level for _DEVICE_NAME_ goes below _ARGUMENT_VALUE_%"
+					}
+				}
+			]
+		}
+	],
+	"DeviceType": "urn:schemas-micasaverde-com:device:WaterMeter:1"
+}

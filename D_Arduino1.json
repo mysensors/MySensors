@@ -1,0 +1,321 @@
+{
+    "flashicon": "http://www.mysensors.org/icon/MySensors.png",
+    "imgIconBody": "", 
+    "imgIconDimmable": "",
+    "imgIconTurnable": "",
+    "imgIconMin": "",
+    "imgIconMax": "",
+    "halloIconsDir": "pics/hallo",
+    "inScene": "0",
+    "DisplayStatus": {
+    },
+    "doc_url": {
+        "doc_language": 1,
+        "doc_manual": 1,
+        "doc_version": 1,
+        "doc_platform": 0,
+        "doc_page": "sensors"
+    },
+    "Tabs": [
+        {
+            "Label": {
+                "lang_tag": "tabname_control",
+                "text": "Settings"
+            },
+            "Position": "0",
+            "TabType": "flash",
+           "ControlGroup": [
+                {
+                    "id": "1",
+                    "scenegroup": "1"
+                },
+                {
+                    "id": "2",
+                    "scenegroup": "2",
+                    "isSingle": "1"
+                    
+               	}
+            ],
+            "SceneGroup": [
+                {
+                    "id": "1",
+                    "top": "0",
+                    "left": "0.1",
+                    "x": "1.5",
+                    "y": "2"
+                },
+                {
+                    "id": "2",
+                    "top": "1",
+                    "left": "0",
+                    "x": "2",
+                    "y": "3"
+                }
+            ],
+            "Control": [
+            
+            {
+                    "ControlGroup": "1",
+                    "ControlType": "label",
+                    "text_align": "right",
+                    "Style": "numeric",
+                    "Label": {
+                        "lang_tag": "plugin_version",
+                        "text": "Plugin Version:"
+                    },
+                    "top": "0.4",
+                    "left": "-0.9",
+	                "x": "1.45",
+                    "y": "1",	
+                    "Display": {
+                        "Top": 25,
+                        "Left": 30,
+                        "Width": 300,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlGroup": "1",
+                    "ControlType": "variable",
+                    "text_align": "left",
+                    "top": "0.4",
+                    "left": "0.6",
+	                "x": "2",
+                    "y": "1",	
+                    "Display": {
+                        "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                        "Variable": "PluginVersion",
+                        "Top": 25,
+                        "Left": 120,
+                        "Width": 300,
+                        "Height": 20
+                    }
+                },
+                
+                {
+                    "ControlGroup": "1", 
+                    "ControlType": "label",
+                    "text_align": "right",
+                    "Label": {
+                        "lang_tag": "gateway_version",
+                        "text": "Lib Version: "
+                    },
+                    "top": "1.1",
+                    "left": "-0.9",
+	                "x": "1.45",
+                    "y": "1",	
+                    "Display": {
+                        "Top": 45,
+                        "Left": 30,
+                        "Width": 300,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlGroup": "1",
+                    "ControlType": "variable",
+                    "text_align": "left",
+                    "top": "1.1",
+                    "left": "0.6",
+	                "x": "2",
+                    "y": "1",	
+                    "Display": {
+                        "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                        "Variable": "ArduinoLibVersion",
+                        "Top": 45,
+                        "Left": 120,
+                        "Width": 300,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlGroup": "1", 
+                    "ControlType": "label",
+                    "text_align": "left",
+                    "Label": {
+                        "lang_tag": "found_count",
+                        "text": "Press start for inclusion"
+                    },
+                    "top": "1.8",
+                    "left": "-0.2",
+	                "x": "2.5",
+                    "y": "1",	
+                    "Display": {
+                        "Top": 65,
+                        "Left": 30,
+                        "Width": 300,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlGroup": "1",
+                    "ControlType": "variable",
+                    "text_align": "left",
+                    "top": "2.4",
+                    "left": "-0.2",
+	                "x": "3",
+                    "y": "1",	
+                    "Display": {
+                        "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                        "Variable": "InclusionFoundCountHR",
+                        "Top": 115,
+                        "Left": 30,
+                        "Width": 300,
+                        "Height": 20
+                    }
+                },
+                {
+                        "ControlGroup": "2",
+                        "ControlType": "button",
+                        "top": "2",
+                        "left": "0",
+                        "Label": {
+                            "lang_tag": "include_start",
+                            "text": "Start"
+                        },
+                        "Display": {
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                            "Variable": "InclusionMode",
+                            "Value": "1",
+                            "Top": 85,
+                            "Left": 30,
+                            "Width": 50,
+                            "Height": 20
+                        },
+                        "Command": { 
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1", 
+                            "Action": "StartInclusion", 
+                            "Parameters": [] 
+                        } 
+                    },
+                    {
+                        "ControlGroup": "2",
+                        "ControlType": "button",
+                        "top": "2",
+                        "left": "1",
+                        "Label": {
+                            "lang_tag": "include_stop",
+                            "text": "Stop"
+                        },
+                        "Display": {
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                            "Variable": "InclusionMode",
+                            "Value": "0",
+                            "Top": 85,
+                            "Left": 90,
+                            "Width": 50,
+                            "Height": 20
+                        },
+                        "Command": { 
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1", 
+                            "Action": "StopInclusion", 
+                            "Parameters": [] 
+                        } 
+                    },
+
+
+
+
+                {
+                    "ControlType": "label",
+                    "text_align": "left",
+                    "Label": {
+                        "lang_tag": "unit",
+                        "text": "Unit:"
+                    },
+                    "top": "0.2",
+                    "left": "-0.2",
+	                "x": "2.5",
+                    "y": "1",	
+                    "Display": {
+                        "Top": 25,
+                        "Left": 200,
+                        "Width": 50,
+                        "Height": 20
+                    }
+                },
+
+
+
+                {
+                        "ControlType": "button",
+                        "top": "2",
+                        "left": "0",
+                        "Label": {
+                            "lang_tag": "metric",
+                            "text": "Metric"
+                        },
+                        "Display": {
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                            "Variable": "Unit",
+                            "Value": "M",
+                            "Top": 20,
+                            "Left": 240,
+                            "Width": 60,
+                            "Height": 20
+                        },
+                        "Command": { 
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1", 
+                            "Action": "SetUnit", 
+                            "Parameters": [{
+                                "Name": "unit",
+                                "Value": "M"
+                            }] 
+                        } 
+                    },
+                    {
+                        "ControlType": "button",
+                        "top": "2",
+                        "left": "1",
+                        "Label": {
+                            "lang_tag": "imperial",
+                            "text": "Imperial"
+                        },
+                        "Display": {
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1",
+                            "Variable": "Unit",
+                            "Value": "I",
+                            "Top": 20,
+                            "Left": 310,
+                            "Width": 60,
+                            "Height": 20
+                        },
+                        "Command": { 
+                            "Service": "urn:upnp-arduino-cc:serviceId:arduino1", 
+                            "Action": "SetUnit", 
+                            "Parameters": [{
+                                "Name": "unit",
+                                "Value": "I"
+                            }] 
+                        } 
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            ]
+        },
+        {
+            "Label": {
+                "lang_tag": "advanced",
+                "text": "Advanced"
+            },
+            "Position": "1",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "advanced_device"
+        }
+    ],
+    "DeviceType": "urn:schemas-arduino-cc:device:arduino:1"
+}
+                

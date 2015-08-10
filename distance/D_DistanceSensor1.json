@@ -1,0 +1,191 @@
+{
+    "flashicon": "http://code.mios.com/trac/mios_arduino-sensor/raw-attachment/wiki/DistanceSensor/tmeasure.png",
+    "imgIconBody": "",
+    "imgIconDimmable": "",
+    "imgIconTurnable": "",
+    "imgIconMin": "",
+    "imgIconMax": "",
+    "halloIconsDir": "pics/hallo",
+    "inScene": "0",
+    "DisplayStatus": {},
+    "doc_url": {
+        "doc_language": 1,
+        "doc_manual": 1,
+        "doc_version": 1,
+        "doc_platform": 0,
+        "doc_page": "sensors"
+    },
+    "Tabs": [
+        {
+            "Label": {
+                "lang_tag": "tabname_control",
+                "text": "Information"
+            },
+            "Position": "0",
+            "TabType": "flash",
+            "SceneGroup": [
+                {
+                    "id": "1",
+                    "top": "1.5",
+                    "left": "0",
+                    "x": "2",
+                    "y": "2"
+                }
+            ],
+            "ControlGroup": [
+                {
+                    "id": "1",
+                    "scenegroup": "1",
+                    "type": "info"
+                },
+                {
+                    "id": "2",
+                    "scenegroup": "1",
+                    "type": "info"
+                }
+            ],
+            "Control": [
+                {
+                    "ControlGroup": "1",
+                    "ControlPair": "1",
+                    "ControlHeader": "1",
+                    "top": "0",
+                    "left": "0",
+                    "x": "1.25",
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "distance",
+                        "text": "Distance"
+                    },
+                    "Display": {
+                        "Top": 30,
+                        "Left": 50,
+                        "Width": 75,
+                        "Height": 20 
+                    }
+                },
+                {
+                    "ControlGroup": "1",
+                    "ControlPair": "1",
+                    "ControlHeader": "1",
+                    "top": "0",
+                    "left": "1.25",
+                    "x": "0.75",
+                    "ControlType": "variable",
+                    "Display": { 
+                        "Service": "urn:micasaverde-com:serviceId:DistanceSensor1",
+                        "Variable": "CurrentDistance",
+                        "Top": 30,
+                        "Left": 150,
+                        "Width": 25,
+                        "Height": 20
+                    }
+                },
+                {
+                    "ControlType": "label",
+                    "Label": {
+                        "lang_tag": "distance_unit",
+                        "text": "cm"
+                    },
+                    "Display": {
+                        "Top": 30,
+                        "Left": 200,
+                        "Width": 25,
+                        "Height": 20 
+                    }
+                }
+            ]
+        },
+        {
+            "Label": {
+                "lang_tag": "advanced",
+                "text": "Advanced"
+            },
+            "Position": "1",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "advanced_device"
+        },
+        {
+            "Label": {
+                "lang_tag": "logs",
+                "text": "Logs"
+            },
+            "Position": "2",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_logs"
+        },
+        {
+            "Label": {
+                "lang_tag": "notifications",
+                "text": "Notifications"
+            },
+            "Position": "3",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_notifications"
+        }
+    ],
+    "eventList2": [
+        {
+            "id": 1,
+            "label": {
+                "lang_tag": "disatance_goes_above",
+                "text": "Distance goes above"
+            },
+            "serviceId": "urn:micasaverde-com:serviceId:DistanceSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "i2",
+                    "name": "CurrentDistance",
+                    "comparisson": ">",
+                    "prefix": {
+                        "lang_tag": "distance",
+                        "text": "Distance"
+                    },
+                    "suffix": {
+                        "lang_tag": "distance_unit",
+                        "text": "cm"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_distance_goes_above",
+                        "text": "Distance for _DEVICE_NAME_ goes above _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "label": {
+                "lang_tag": "distance_goes_below",
+                "text": "Distance goes below"
+            },
+            "serviceId": "urn:micasaverde-com:serviceId:DistanceSensor1",
+            "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "i2",
+                    "name": "CurrentDistance",
+                    "comparisson": "<",
+                    "prefix": {
+                        "lang_tag": "distance",
+                        "text": "Distance"
+                    },
+                    "suffix": {
+                        "lang_tag": "distance_unit",
+                        "text": "cm"
+                    },
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_distance_goes_below",
+                        "text": "Distance for _DEVICE_NAME_ goes below _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        }
+    ],
+    "DeviceType": "urn:schemas-micasaverde-com:device:DistanceSensor:1"
+}
