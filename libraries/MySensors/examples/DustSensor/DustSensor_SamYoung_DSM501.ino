@@ -97,8 +97,13 @@ void loop()
   Serial.print("PM10: ");
   Serial.println(concentrationPM10);
   Serial.print("\n");
+  //ppmv=mg/m3 * (0.08205*Tmp)/Molecular_mass
+  //0.08205   = Universal gas constant in atm·m3/(kmol·K)
+  int temp=20; //external temperature, if you can replace this with a DHT11 or better 
+  long ppmv=(concentrationPM10*0.0283168/100/1000) *  (0.08205*temp)/0.01;
+  
   if ((ceil(concentrationPM10) != lastDUSTPM10)&&((long)concentrationPM10>0)) {
-      gw.send(dustMsgPM10.set((long)ceil(concentrationPM10)));
+      gw.send(dustMsgPM10.set((long)ppmv));
       lastDUSTPM10 = ceil(concentrationPM10);
   }
  
