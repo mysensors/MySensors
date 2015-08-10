@@ -29,6 +29,8 @@
 #include "MySigning.h"
 #include "MySigningNone.h"
 
+#define SIGNING_IDENTIFIER (0)
+
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_SIGNING
 
@@ -61,6 +63,7 @@ MySigningNone::MySigningNone() : MySigning() {
 }
 
 bool MySigningNone::getNonce(MyMessage &msg) {
+	(void)msg;
 	return true;
 }
 
@@ -69,6 +72,7 @@ bool MySigningNone::checkTimer() {
 }
 
 bool MySigningNone::putNonce(MyMessage &msg) {
+	(void)msg;
 	return true;
 }
 

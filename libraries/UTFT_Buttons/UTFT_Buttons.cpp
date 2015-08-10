@@ -194,7 +194,7 @@ void UTFT_Buttons::deleteAllButtons()
 		buttons[i].width=0;
 		buttons[i].height=0;
 		buttons[i].flags=BUTTON_UNUSED;
-		buttons[i].label="";
+		buttons[i].label[0]='\0';
 	}
 }
 
@@ -212,7 +212,7 @@ int UTFT_Buttons::checkButtons()
 		{
 			if (((buttons[i].flags & BUTTON_UNUSED) == 0) and ((buttons[i].flags & BUTTON_DISABLED) == 0) and (result == -1))
 			{
-				if ((touch_x >= buttons[i].pos_x) and (touch_x <= (buttons[i].pos_x + buttons[i].width)) and (touch_y >= buttons[i].pos_y) and (touch_y <= (buttons[i].pos_y + buttons[i].height)))
+				if ((touch_x >= (int)buttons[i].pos_x) and (touch_x <= (int)(buttons[i].pos_x + buttons[i].width)) and (touch_y >= (int)buttons[i].pos_y) and (touch_y <= (int)(buttons[i].pos_y + buttons[i].height)))
 					result = i;
 			}
 		}

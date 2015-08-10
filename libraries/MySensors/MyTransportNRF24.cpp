@@ -74,6 +74,7 @@ bool MyTransportNRF24::send(uint8_t to, const void* data, uint8_t len) {
 bool MyTransportNRF24::available(uint8_t *to) {
 	uint8_t pipe = 255;
 	boolean avail = rf24.available(&pipe);
+	(void)avail; //until somebody makes use of 'avail'
 	if (pipe == CURRENT_NODE_PIPE)
 		*to = _address;
 	else if (pipe == BROADCAST_PIPE)

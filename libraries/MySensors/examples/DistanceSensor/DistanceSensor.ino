@@ -51,7 +51,7 @@ void setup()
 
   // Register all sensors to gw (they will be created as child devices)
   gw.present(CHILD_ID, S_DISTANCE);
-  boolean metric = gw.getConfig().isMetric;
+  metric = gw.getConfig().isMetric;
 }
 
 void loop()      
