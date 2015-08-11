@@ -51,6 +51,14 @@ typedef MyHwATMega328 MyHwDriver;
 #define debug(x,...)
 #endif
 
+#ifdef WITH_LEDS_BLINKING_INVERSE
+#define LED_ON 0x1
+#define LED_OFF 0x0
+#else
+#define LED_ON 0x0
+#define LED_OFF 0x1
+#endif
+
 
 // EEPROM start address for mysensors library data
 #define EEPROM_START 0
@@ -176,9 +184,11 @@ class MySensor
 	*
 	* @param sensorId Select a unique sensor id for this sensor. Choose a number between 0-254.
 	* @param sensorType The sensor type. See sensor typedef in MyMessage.h.
+	* @param description A textual description of the sensor.
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+	* @param description A textual description of the sensor.
 	*/
-	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false);
+	void present(uint8_t sensorId, uint8_t sensorType, const char *description="", bool ack=false);
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
@@ -206,6 +216,12 @@ class MySensor
 	 *
 	 */
 	void sendBatteryLevel(uint8_t level, bool ack=false);
+
+	/**
+	 * Send a heartbeat message (I'm alive!) to the gateway/controller.
+	 * The payload will be an incremental 16 bit integer value starting at 1 when sensor is powered on.
+	 */
+	void sendHeartbeat(void);
 
 	/**
 	* Requests a value from gateway or some other sensor in the radio network.
@@ -362,6 +378,7 @@ class MySensor
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
 	uint8_t failedTransmissions;
+	uint16_t heartbeat;
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 

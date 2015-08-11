@@ -43,12 +43,16 @@
 #include <Wire.h> 
 
 #define CHILD_ID_LIGHT 0
-#define LIGHT_SENSOR_ANALOG_PIN 0
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
 BH1750 lightSensor;
 MySensor gw;
-MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL_LUX);
+
+// V_LIGHT_LEVEL should only be used for uncalibrated light level 0-100%.
+// If your controller supports the new V_LEVEL variable, use this instead for
+// transmitting LUX light level.
+MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL);
+// MyMessage msg(CHILD_ID_LIGHT, V_LEVEL);  
 uint16_t lastlux;
 
 void setup()  

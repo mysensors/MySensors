@@ -27,7 +27,7 @@
 #define DEBUG
 
 // Serial output baud rate (for debug prints and serial gateway)
-#define BAUD_RATE 115200
+#define MY_BAUD_RATE 115200
 
 
 /**********************************
@@ -53,7 +53,14 @@
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-// #define MY_LEDS_BLINKING_FEATURE
+//#define MY_WITH_LEDS_BLINKING
+
+// The following setting allows you to inverse the blinking feature WITH_LEDS_BLINKING
+// When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
+// off when blinking
+
+//#define WITH_LEDS_BLINKING_INVERSE
+
 
 // default LEDs blinking period in milliseconds
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
@@ -113,8 +120,7 @@
 #define MY_RANDOMSEED_PIN 7 // A7 - Pin used for random generation (do not connect anything to this)
 
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
-#define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
-                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+#define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
 
 /**********************************

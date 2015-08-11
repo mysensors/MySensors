@@ -22,36 +22,52 @@
  * Version 1.0 - Thomas Bowman Mørch
  * 
  * DESCRIPTION
- * Default sensor sketch for MySensor Sensebender Micro module
+ * Default sensor sketch for Sensebender Micro module
  * Act as a temperature / humidity sensor by default.
  *
  * If A0 is held low while powering on, it will enter testmode, which verifies all on-board peripherals
- * 
- * Battery voltage is repported as child sensorId 199, as well as battery percentage
+ *  
+ * Battery voltage is as battery percentage (Internal message), and optionally as a sensor value (See defines below)
  *
+ *
+ * Version 1.3 - Thomas Bowman Mørch
+ * Improved transmission logic, eliminating spurious transmissions (when temperatuere / humidity fluctuates 1 up and down between measurements)
+ * 
+ * Added OTA boot mode, need to hold A1 low while applying power. (uses slightly more power as it's waiting for bootloader messages)
+ * 
  */
- 
 
 
 #include <MySensor.h>
 #include <Wire.h>
 #include <SI7021.h>
 #include <SPI.h>
-#include <SPIFlash.h>
+#include "utility/SPIFlash.h"
 #include <EEPROM.h>  
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>
+#include <RunningAverage.h>
+//#include <avr/power.h>
 
 // Define a static node address, remove if you want auto address assignment
 //#define NODE_ADDRESS   3
 
+// Uncomment the line below, to transmit battery voltage as a normal sensor value
+//#define BATT_SENSOR    199
+
+#define RELEASE "1.3"
+
+#define AVERAGES 2
+
 // Child sensor ID's
 #define CHILD_ID_TEMP  1
 #define CHILD_ID_HUM   2
-#define CHILD_ID_BATT  199
 
 // How many milli seconds between each measurement
 #define MEASURE_INTERVAL 60000
+
+// How many milli seconds should we wait for OTA?
+#define OTA_WAIT_PERIOD 300
 
 // FORCE_TRANSMIT_INTERVAL, this number of times of wakeup, the sensor is forced to report all values to the controller
 #define FORCE_TRANSMIT_INTERVAL 30 
@@ -59,8 +75,14 @@
 // When MEASURE_INTERVAL is 60000 and FORCE_TRANSMIT_INTERVAL is 30, we force a transmission every 30 minutes.
 // Between the forced transmissions a tranmission will only occur if the measured value differs from the previous measurement
 
-//Pin definitions
+// HUMI_TRANSMIT_THRESHOLD tells how much the humidity should have changed since last time it was transmitted. Likewise with
+// TEMP_TRANSMIT_THRESHOLD for temperature threshold.
+#define HUMI_TRANSMIT_THRESHOLD 0.5
+#define TEMP_TRANSMIT_THRESHOLD 0.5
+
+// Pin definitions
 #define TEST_PIN       A0
+#define OTA_ENABLE     A1
 #define LED_PIN        A2
 #define ATSHA204_PIN   17 // A3
 
@@ -75,120 +97,209 @@ MySensor gw;
 // Sensor messages
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
-MyMessage msgBattery(CHILD_ID_BATT, V_VOLTAGE);
+
+#ifdef BATT_SENSOR
+MyMessage msgBatt(BATT_SENSOR, V_VOLTAGE);
+#endif
 
 // Global settings
 int measureCount = 0;
+int sendBattery = 0;
+boolean isMetric = true;
+boolean highfreq = true;
+boolean ota_enabled = false; 
+boolean transmission_occured = false;
 
 // Storage of old measurements
 float lastTemperature = -100;
 int lastHumidity = -100;
 long lastBattery = -100;
 
+RunningAverage raHum(AVERAGES);
 
+/****************************************************
+ *
+ * Setup code 
+ *
+ ****************************************************/
 void setup() {
-
+  
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
   Serial.begin(115200);
+  Serial.print(F("Sensebender Micro FW "));
+  Serial.print(RELEASE);
+  Serial.flush();
+
   // First check if we should boot into test mode
 
   pinMode(TEST_PIN,INPUT);
   digitalWrite(TEST_PIN, HIGH); // Enable pullup
   if (!digitalRead(TEST_PIN)) testMode();
+
+  pinMode(OTA_ENABLE, INPUT);
+  digitalWrite(OTA_ENABLE, HIGH);
+  if (!digitalRead(OTA_ENABLE)) {
+    ota_enabled = true;
+  }
+
+  // Make sure that ATSHA204 is not floating
+  pinMode(ATSHA204_PIN, INPUT);
+  digitalWrite(ATSHA204_PIN, HIGH);
   
   digitalWrite(TEST_PIN,LOW);
-  digitalWrite(LED_PIN, HIGH); 
+  digitalWrite(OTA_ENABLE, LOW); // remove pullup, save some power.
   
+  digitalWrite(LED_PIN, HIGH); 
+
 #ifdef NODE_ADDRESS
   gw.begin(NULL, NODE_ADDRESS, false);
 #else
   gw.begin(NULL,AUTO,false);
 #endif
 
+  humiditySensor.begin();
+
   digitalWrite(LED_PIN, LOW);
 
-  humiditySensor.begin();
-  
-  gw.sendSketchInfo("MysensorMicro", "1.0");
+  Serial.flush();
+  Serial.println(F(" - Online!"));
+  gw.sendSketchInfo("Sensebender Micro", RELEASE);
   
   gw.present(CHILD_ID_TEMP,S_TEMP);
   gw.present(CHILD_ID_HUM,S_HUM);
   
-  gw.present(CHILD_ID_BATT, S_POWER);
-  switchClock(1<<CLKPS2); // Switch to 1Mhz for the reminder of the sketch, save power.
+#ifdef BATT_SENSOR
+  gw.present(BATT_SENSOR, S_POWER);
+#endif
+
+  
+  isMetric = gw.getConfig().isMetric;
+  Serial.print(F("isMetric: ")); Serial.println(isMetric);
+  raHum.clear();
+  sendTempHumidityMeasurements(false);
+  sendBattLevel(false);
+  if (ota_enabled) Serial.println("OTA FW update enabled");
+
 }
 
 
-// Main loop function
+/***********************************************
+ *
+ *  Main loop function
+ *
+ ***********************************************/
 void loop() {
-  measureCount ++;
-  bool forceTransmit = false;
   
-  if (measureCount > FORCE_TRANSMIT_INTERVAL
-  ) { // force a transmission
+  measureCount ++;
+  sendBattery ++;
+  bool forceTransmit = false;
+  transmission_occured = false;
+  if ((measureCount == 5) && highfreq) 
+  {
+    if (!ota_enabled) clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+    highfreq = false;
+  } 
+  
+  if (measureCount > FORCE_TRANSMIT_INTERVAL) { // force a transmission
     forceTransmit = true; 
     measureCount = 0;
   }
-  
+    
   gw.process();
-  sendBattLevel(forceTransmit);
+
   sendTempHumidityMeasurements(forceTransmit);
-  
+  if (sendBattery > 60) 
+  {
+     sendBattLevel(forceTransmit); // Not needed to send battery info that often
+     sendBattery = 0;
+  }
+
+  if (ota_enabled & transmission_occured) {
+      gw.wait(OTA_WAIT_PERIOD);
+  }
+
   gw.sleep(MEASURE_INTERVAL);  
 }
 
-/*
+
+/*********************************************
+ *
  * Sends temperature and humidity from Si7021 sensor
  *
  * Parameters
  * - force : Forces transmission of a value (even if it's the same as previous measurement)
- */
+ *
+ *********************************************/
 void sendTempHumidityMeasurements(bool force)
 {
-  if (force) {
-    lastHumidity = -100;
-    lastTemperature = -100;
-  }
-  
+  bool tx = force;
+
   si7021_env data = humiditySensor.getHumidityAndTemperature();
   
-  float temperature = data.celsiusHundredths/100;
-    
-  int humidity = data.humidityPercent;
+  raHum.addValue(data.humidityPercent);
+  
+  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
+  float diffHum = abs(lastHumidity - raHum.getAverage());
 
-  if (lastTemperature != temperature) {
+  Serial.print(F("TempDiff :"));Serial.println(diffTemp);
+  Serial.print(F("HumDiff  :"));Serial.println(diffHum); 
+
+  if (isnan(diffHum)) tx = true; 
+  if (diffTemp > TEMP_TRANSMIT_THRESHOLD) tx = true;
+  if (diffHum > HUMI_TRANSMIT_THRESHOLD) tx = true;
+
+  if (tx) {
+    measureCount = 0;
+    float temperature = (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths) / 100.0;
+     
+    int humidity = data.humidityPercent;
+    Serial.print("T: ");Serial.println(temperature);
+    Serial.print("H: ");Serial.println(humidity);
+    
     gw.send(msgTemp.set(temperature,1));
-    lastTemperature = temperature;
-  }
-  if (lastHumidity != humidity) {    
     gw.send(msgHum.set(humidity));
+    lastTemperature = temperature;
     lastHumidity = humidity;
+    transmission_occured = true;
   }
 }
 
-/*
- * Sends battery information (both voltage, and battery percentage)
+/********************************************
+ *
+ * Sends battery information (battery percentage)
  *
  * Parameters
  * - force : Forces transmission of a value
- */
+ *
+ *******************************************/
 void sendBattLevel(bool force)
 {
   if (force) lastBattery = -1;
   long vcc = readVcc();
   if (vcc != lastBattery) {
     lastBattery = vcc;
+
+#ifdef BATT_SENSOR
+    gw.send(msgBatt.set(vcc));
+#endif
+
     // Calculate percentage
-    gw.send(msgBattery.set(vcc));
+
     vcc = vcc - 1900; // subtract 1.9V from vcc, as this is the lowest voltage we will operate at
     
-    long percent = vcc / 14;
+    long percent = vcc / 14.0;
     gw.sendBatteryLevel(percent);
+    transmission_occured = true;
   }
 }
 
+/*******************************************
+ *
+ * Internal battery ADC measuring 
+ *
+ *******************************************/
 long readVcc() {
   // Read 1.1V reference against AVcc
   // set the reference to Vcc and the measurement to the internal 1.1V reference
@@ -213,19 +324,14 @@ long readVcc() {
  
   result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
   return result; // Vcc in millivolts
+ 
 }
 
-void switchClock(unsigned char clk)
-{
-  cli();
-  
-  CLKPR = 1<<CLKPCE; // Set CLKPCE to enable clk switching
-  CLKPR = clk;  
-  sei();
-}
-
-
-// Verify all peripherals, and signal via the LED if any problems.
+/****************************************************
+ *
+ * Verify all peripherals, and signal via the LED if any problems.
+ *
+ ****************************************************/
 void testMode()
 {
   uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
@@ -233,7 +339,7 @@ void testMode()
   byte tests = 0;
   
   digitalWrite(LED_PIN, HIGH); // Turn on LED.
-  
+  Serial.println(F(" - TestMode"));
   Serial.println(F("Testing peripherals!"));
   Serial.flush();
   Serial.print(F("-> SI7021 : ")); 
@@ -305,7 +411,7 @@ void testMode()
     while (1) // Blink OK pattern!
     {
       digitalWrite(LED_PIN, HIGH);
-      delay(800);
+      delay(200);
       digitalWrite(LED_PIN, LOW);
       delay(200);
     }
@@ -315,10 +421,7 @@ void testMode()
     Serial.println(F("----> Selftest failed!"));
     while (1) // Blink FAILED pattern! Rappidly blinking..
     {
-      digitalWrite(LED_PIN, HIGH);
-      delay(100);
-      digitalWrite(LED_PIN, LOW);
-      delay(100);
     }
   }  
 }
+

@@ -37,13 +37,41 @@
 #include <SPI.h>
 #endif
 
+#if defined __AVR_ATmega328P__
+#ifndef sleep_bod_disable
+#define sleep_bod_disable() 										\
+do { 																\
+  unsigned char tempreg; 													\
+  __asm__ __volatile__("in %[tempreg], %[mcucr]" "\n\t" 			\
+                       "ori %[tempreg], %[bods_bodse]" "\n\t" 		\
+                       "out %[mcucr], %[tempreg]" "\n\t" 			\
+                       "andi %[tempreg], %[not_bodse]" "\n\t" 		\
+                       "out %[mcucr], %[tempreg]" 					\
+                       : [tempreg] "=&d" (tempreg) 					\
+                       : [mcucr] "I" _SFR_IO_ADDR(MCUCR), 			\
+                         [bods_bodse] "i" (_BV(BODS) | _BV(BODSE)), \
+                         [not_bodse] "i" (~_BV(BODSE))); 			\
+} while (0)
+#endif
+#endif
+
+
 // Define these as macros to save valuable space
-#define hw_init() Serial.begin(BAUD_RATE)
+
+#define hw_digitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+#define hw_init() Serial.begin(MY_BAUD_RATE)
 #define hw_watchdogReset() wdt_reset()
 #define hw_reboot() wdt_enable(WDTO_15MS); while (1)
 #define hw_millis() millis()
 #define hw_readConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
-#define hw_writeConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
+
+#ifndef eeprom_update_byte
+	#define hw_writeConfig(loc, val) if((uint8_t)(val) != eeprom_read_byte((uint8_t*)(loc))) { eeprom_write_byte((uint8_t*)(loc), (val)); }
+#else
+	#define hw_writeConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
+#endif
+
+//
 #define hw_readConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
 #define hw_writeConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
 

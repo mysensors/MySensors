@@ -1,0 +1,42 @@
+# Copyright (c) 2014-2015 Arduino LLC.  All right reserved.
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+mysensors_gw_native.name=Sensebender GW (Native USB Port)
+mysensors_gw_native.vid.0=0x2341
+mysensors_gw_native.pid.0=0x804d
+mysensors_gw_native.vid.1=0x2341
+mysensors_gw_native.pid.1=0x004d
+mysensors_gw_native.upload.tool=bossac
+mysensors_gw_native.upload.protocol=sam-ba
+mysensors_gw_native.upload.maximum_size=262144
+mysensors_gw_native.upload.use_1200bps_touch=true
+mysensors_gw_native.upload.wait_for_upload_port=true
+mysensors_gw_native.upload.native_usb=true
+mysensors_gw_native.build.mcu=cortex-m0plus
+mysensors_gw_native.build.f_cpu=48000000L
+mysensors_gw_native.build.usb_product="Arduino Zero"
+mysensors_gw_native.build.usb_manufacturer="Arduino LLC"
+mysensors_gw_native.build.board=SAMD_ZERO
+mysensors_gw_native.build.core=arduino:arduino
+mysensors_gw_native.build.extra_flags=-D__SAMD21G18A__ {build.usb_flags}
+mysensors_gw_native.build.ldscript=linker_scripts/gcc/flash_with_bootloader.ld
+mysensors_gw_native.build.openocdscript=openocd_scripts/mysensors_gw.cfg
+mysensors_gw_native.build.variant=mysensors_gw
+mysensors_gw_native.build.variant_system_lib=
+mysensors_gw_native.build.vid=0x2341
+mysensors_gw_native.build.pid=0x804d
+mysensors_gw_native.bootloader.tool=openocd
+mysensors_gw_native.bootloader.file=zero/samd21_sam_ba.bin
