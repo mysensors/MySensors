@@ -110,12 +110,12 @@ void setup() {
 
 void loop() {
 
-	measure(1,6,7,1);
+	measure(6,7,1);
 	Serial.print ("\t");
 	Serial.println (average());
 	long read1 = average();
 
-	measure(1,7,6,0);
+	measure(7,6,0);
 	Serial.print ("\t");
 	Serial.println (average());
 	long read2= average();
@@ -134,7 +134,7 @@ void loop() {
     gw.sleep(SLEEP_TIME);
 }
 
-void measure (int sensor, int phase_b, int phase_a, int analog_input)
+void measure (int phase_b, int phase_a, int analog_input)
 {
   // read sensor, filter, and calculate resistance value
   // Noise filter: median filter
