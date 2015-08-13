@@ -143,6 +143,4 @@
 #define RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
 
 
-
-
 #endif
