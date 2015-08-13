@@ -78,9 +78,9 @@ void setup()
   pinMode(BLUE_PIN, OUTPUT);
 
   // Correct saved RGB value for first start
-  gw.saveState(RED_PIN, constrain(gw.loadState(RED_PIN), 0, 100)); 
-  gw.saveState(GREEN_PIN, constrain(gw.loadState(GREEN_PIN), 0, 100)); 
-  gw.saveState(BLUE_PIN, constrain(gw.loadState(BLUE_PIN), 0, 100)); 
+  gw.saveState(RED_PIN, constrain((int8_t)gw.loadState(RED_PIN), 0, 100)); 
+  gw.saveState(GREEN_PIN, constrain((int8_t)gw.loadState(GREEN_PIN), 0, 100)); 
+  gw.saveState(BLUE_PIN, constrain((int8_t)gw.loadState(BLUE_PIN), 0, 100)); 
              
   // Get value from eeprom and write to output
   analogWrite(RED_PIN, 255 * gw.loadState(RED_PIN) / 100); 		
@@ -105,7 +105,7 @@ void setup()
   gw.send( BlueStatus.set(gw.loadState(BLUE_PIN)), false );
   
   // Correct RGB show state for first start and load it (set to 'On' at first start)
-  gw.saveState(0, constrain(gw.loadState(0), 0, 1));
+  gw.saveState(0, constrain((int8_t)gw.loadState(0), 0, 1));
   isShow=gw.loadState(0);
        
   // Send RGB show state to controler (request ack back: true/false)
@@ -189,7 +189,7 @@ void incomingMessage(const MyMessage &message)
           	// Save old value to eeprom if it'was not zero
           	if ( gw.loadState(message.sensor) != 0 )
           	{
-            		gw.saveState(10*message.sensor, constrain(gw.loadState(message.sensor), 0, 100)); 
+            		gw.saveState(10*message.sensor, constrain((int8_t)gw.loadState(message.sensor), 0, 100)); 
           	}
           	// Save new value to eeprom
           	gw.saveState(message.sensor, 0); 
@@ -212,7 +212,7 @@ void incomingMessage(const MyMessage &message)
   {    
     	uint8_t incomingDimmerStatus = message.getByte();
     	// limits range of sensor values to between 0 and 100 
-    	incomingDimmerStatus = constrain(incomingDimmerStatus, 0, 100);
+    	incomingDimmerStatus = constrain((int8_t)incomingDimmerStatus, 0, 100);
     	// Change Dimmer level
     	analogWrite(message.sensor, 255 * incomingDimmerStatus / 100);
     	//Save value to eeprom
