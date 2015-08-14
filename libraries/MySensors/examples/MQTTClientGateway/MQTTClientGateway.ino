@@ -55,6 +55,12 @@
 #include <Time.h>
 
 
+#ifdef MY_SIGNING_FEATURE
+#include <MySigningNone.h>
+#include <MySigningAtsha204Soft.h>
+#include <MySigningAtsha204.h>
+#endif
+
 //#define DSRTC
 #ifdef DSRTC
 #include <Wire.h>
@@ -133,7 +139,7 @@ MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 //MySigningNone signer;
-//MySigningAtsha204Soft signer;
+MySigningAtsha204Soft signer(false);
 //MySigningAtsha204 signer;
 
 // Hardware profile
@@ -143,6 +149,7 @@ MyMessage msg;
 char convBuf[MAX_PAYLOAD * 2 + 1];
 uint8_t buffsize;
 char buffer[MQTT_MAX_PACKET_SIZE];
+
 
 ////////////////////////////////////////////////////////////////
 
@@ -196,7 +203,7 @@ void loop()
   if (!client.connected())
   {
     client.connect("MySensor");
-    client.subscribe("MyMQTT/#");
+    client.subscribe(MQTT_TOPIC_MASK);
   }
   client.loop();
   gw.process();
@@ -423,8 +430,9 @@ void processMQTTMessage(char* topic, byte* payload,
   uint8_t i = 0;
   buffer[0] = 0;
   buffsize = 0;
+  uint8_t cmd = -1;
 
-  for (str = strtok_r(topic, "/", &p); str && i < 4;
+  for (str = strtok_r(topic, "/", &p); str && i < 5;
        str = strtok_r(NULL, "/", &p))
   {
     switch (i)
@@ -469,38 +477,56 @@ void processMQTTMessage(char* topic, byte* payload,
           msg.type = match;
           break;
         }
+       case 4:
+          {
+            // support the command get and set; get will be mapped to a C_REQ and set to C_SET
+            if (strcmp(str,MQTT_CMD_SET) == 0)
+            {
+              cmd = C_SET;
+            }
+            else if (strcmp(str,MQTT_CMD_GET) == 0) {
+              cmd = C_REQ;
+            } 
+            else {
+#ifdef DEBUG
+              Serial.print("Received unsupported command - ignore: ");
+              Serial.println(str);
+#endif              
+            }
+          } 
     }
     i++;
   }						//Check if packge has payload
 
-  char* ca;
-  ca = (char *)payload;
-  ca += length;
-  *ca = '\0';
+  if (cmd != -1) {
+    char* ca;
+    ca = (char *)payload;
+    ca += length;
+    *ca = '\0';
 
-  msg.set((const char*)payload);			//Payload
+    msg.set((const char*)payload);			//Payload
 
-  txBlink(1);
-  // inject time
-  if ((msg.destination == 0) && (msg.sensor == 199)) {
-    unsigned long epoch = atol((char*)payload);
-    if (epoch > 10000) {
+    txBlink(1);
+    // inject time
+    if ((msg.destination == 0) && (msg.sensor == 199)) {
+      unsigned long epoch = atol((char*)payload);
+      if (epoch > 10000) {
 #ifdef DSRTC
-      RTC.set(epoch); // this sets the RTC to the time from controller - which we do want periodically
+        RTC.set(epoch); // this sets the RTC to the time from controller - which we do want periodically
 #endif
-      setTime(epoch);
-
-    }
+        setTime(epoch);
+      }
 #ifdef DEBUG
-    Serial.print("Time recieved ");
-    Serial.println(epoch);
+      Serial.print("Time recieved ");
+      Serial.println(epoch);
 #endif
+    }
+    //
+    if (!gw.sendRoute(
+          build(msg, GATEWAY_ADDRESS, msg.destination, msg.sensor, C_SET, msg.type,
+                0)))
+      errBlink(1);
   }
-  //
-  if (!gw.sendRoute(
-        build(msg, GATEWAY_ADDRESS, msg.destination, msg.sensor, C_SET, msg.type,
-              0)))
-    errBlink(1);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////

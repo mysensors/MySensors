@@ -27,7 +27,11 @@ version 2 as published by the Free Software Foundation.
 #define MQTT_FIRST_SENSORID	20  		// If you want manually configured nodes below this value. 255 = Disable
 #define MQTT_LAST_SENSORID	254 		// 254 is max! 255 reserved.
 #define MQTT_PREFIX	"MyMQTT"	        // First prefix in MQTT tree, keep short!
+#define MQTT_TOPIC_MASK "MyMQTT/+/+/+/+"        // Topic mask the client will subscribe to. This ensures that it will not receive any sensor data send by sensors
+                                                // the following topic structure is assumed: MyMQTT/<node-id>/<child_id>/<sensor-type>/<cmd>
 #define MQTT_SEND_SUBSCRIPTION 1		// Send empty payload (request) to node upon MQTT client subscribe request.
+#define MQTT_CMD_SET "set"                      // command (see MQTT_TOPIC_MASK); mapped to C_SET command type of sensor network
+#define MQTT_CMD_GET "get"                      // command (see MQTT_TOPIC_MASK); mapped to C_REQ command type of sensor network
 
 // NOTE above : Beware to check if there is any length on payload in your incommingMessage code:
 // Example: if (msg.type==V_LIGHT && strlen(msg.getString())>0) otherwise the code might do strange things.
