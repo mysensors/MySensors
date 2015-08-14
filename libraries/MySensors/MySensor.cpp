@@ -107,33 +107,33 @@ void MySensor::handleLedsBlinking() {
 	// do the actual blinking
 	if(countRx && countRx != 255) {
 		// switch led on
-		digitalWrite(pinRx, HIGH);
+		hw_digitalWrite(pinRx, LED_ON);
 	}
 	else if(!countRx) {
 		// switching off
-		digitalWrite(pinRx, LOW);
+		hw_digitalWrite(pinRx, LED_OFF);
 	}
 	if(countRx != 255)
 		--countRx;
 
 	if(countTx && countTx != 255) {
 		// switch led on
-		digitalWrite(pinTx, HIGH);
+		hw_digitalWrite(pinTx, LED_ON);
 	}
 	else if(!countTx) {
 		// switching off
-		digitalWrite(pinTx, LOW);
+		hw_digitalWrite(pinTx, LED_OFF);
 	}
 	if(countTx != 255)
 		--countTx;
 
 	if(countErr && countErr != 255) {
 		// switch led on
-		digitalWrite(pinEr, HIGH);
+		hw_digitalWrite(pinEr, LED_ON);
 	}
 	else if(!countErr) {
 		// switching off
-		digitalWrite(pinEr, LOW);
+		hw_digitalWrite(pinEr, LED_OFF);
 	}
 	if(countErr != 255)
 		--countErr;
@@ -179,9 +179,9 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 	pinMode(pinEr, OUTPUT);
 
 	// Set initial state of leds
-	digitalWrite(pinRx, LOW);
-	digitalWrite(pinTx, LOW);
-	digitalWrite(pinEr, LOW);
+	hw_digitalWrite(pinRx, LED_OFF);
+	hw_digitalWrite(pinTx, LED_OFF);
+	hw_digitalWrite(pinEr, LED_OFF);
 
 	// initialize counters
 	countRx = 0;
@@ -487,6 +487,11 @@ void MySensor::sendBatteryLevel(uint8_t value, bool enableAck) {
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
 }
 
+void MySensor::sendHeartbeat(void) {
+	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT, false).set(heartbeat++));
+
+}
+
 void MySensor::present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?LIBRARY_VERSION:description));
 }
@@ -522,7 +527,7 @@ boolean MySensor::process() {
 #ifdef MY_OTA_FIRMWARE_FEATURE
 		unsigned long enter = hw_millis();
 		if (fwUpdateOngoing && (enter - fwLastRequestTime > MY_OTA_RETRY_DELAY)) {
-			if (fwRetry == 0) {
+			if (!fwRetry) {
 				debug(PSTR("fw upd fail\n"));
 				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 				fwUpdateOngoing = false;
@@ -746,38 +751,38 @@ boolean MySensor::process() {
 					return false;
 				} else debug(PSTR("fw update skipped\n"));
 			} else if (type == ST_FIRMWARE_RESPONSE) {
-				// Save block to flash
-				debug(PSTR("fw block %d\n"), fwBlock);
-				// extract FW block
-				ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)msg.data;
-				// write to flash
-				flash.writeBytes( ((fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
-				// wait until flash written
-				while ( flash.busy() );
-				fwBlock--;
-				if (!fwBlock) {
-					// We're finished! Do a checksum and reboot.
-					if (isValidFirmware()) {
-						debug(PSTR("fw checksum ok\n"));
-						// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)
-						flash.writeBytes(0, "FLXIMG:", 7);
-						// FW size in flash
-						uint16_t fwsize = FIRMWARE_BLOCK_SIZE * fc.blocks;
-						flash.writeByte(7, fwsize >> 8);
-						flash.writeByte(8, fwsize);
-						// end of header
-						flash.writeByte(9, ':');
-						// Write the new firmware config to eeprom
-						hw_writeConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
-						hw_reboot();
-					} else {
-						debug(PSTR("fw checksum fail\n"));
+				if (fwUpdateOngoing) {
+					// Save block to flash
+					debug(PSTR("fw block %d\n"), fwBlock);
+					// extract FW block
+					ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)msg.data;
+					// write to flash
+					flash.writeBytes( ((fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+					// wait until flash written
+					while ( flash.busy() );
+					fwBlock--;
+					if (!fwBlock) {
+						// We're finished! Do a checksum and reboot.
 						fwUpdateOngoing = false;
-					}
+						if (isValidFirmware()) {
+							debug(PSTR("fw checksum ok\n"));
+							// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)	
+							uint16_t fwsize = FIRMWARE_BLOCK_SIZE * fc.blocks;
+							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(fwsize >> 8),fwsize,':'};
+							flash.writeBytes(0, OTAbuffer, 10);
+							// Write the new firmware config to eeprom
+							hw_writeConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+							hw_reboot();
+						} else {
+							debug(PSTR("fw checksum fail\n"));
+						}
+					}		
+					// reset flags
+					fwRetry = MY_OTA_RETRY+1;
+					fwLastRequestTime = 0;
+				} else {
+					debug(PSTR("No fw update ongoing\n"));
 				}
-				// reset flags
-				fwRetry = MY_OTA_RETRY+1;
-				fwLastRequestTime = 0;
 				return false;
 			}
 

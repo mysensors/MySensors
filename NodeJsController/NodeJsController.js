@@ -364,7 +364,7 @@ function saveSketchVersion(sender, payload, db) {
 }
 
 function sendTime(destination, sensor, gw) {
-	var payload = new Date().getTime();
+	var payload = new Date().getTime()/1000;
 	var command = C_INTERNAL;
 	var acknowledge = 0; // no ack
 	var type = I_TIME;
