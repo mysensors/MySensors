@@ -191,7 +191,7 @@ void setup()
   //check for saved date in EEPROM
   DEBUG_PRINTLN(F("Checking EEPROM for stored date:"));
   delay(500);
-  if (gw.loadState(0) == 0xFF); // EEPROM flag
+  if (gw.loadState(0) == 0xFF) // EEPROM flag
   {
     DEBUG_PRINTLN(F("Retreiving last run time from EEPROM..."));
     for (int i = 0; i < 4 ; i++)
@@ -439,7 +439,7 @@ void loop()
       state = STAND_BY_ALL_OFF;
     }
   }
-  else if (state = ZONE_SELECT_MENU)
+  else if (state == ZONE_SELECT_MENU)
   {
     displayMenu();
   }
@@ -771,6 +771,9 @@ void updateDisplay()
           lcd.print(totalTimeRan);
           lcd.print(" Minutes   ");
         }
+      default:
+        // what of ZONE_SELECT_MENU?
+        break;
     }
     lastUpdateTime = millis();
   }

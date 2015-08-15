@@ -132,7 +132,7 @@ class SoftI2cMaster : public I2cMasterBase {
   //----------------------------------------------------------------------------
   void sclDelay(uint8_t n) {_delay_loop_1(n);}
   //----------------------------------------------------------------------------
-  bool writeScl(bool value) {
+  void writeScl(bool value) {
     uint8_t s = SREG;
     noInterrupts();
     if (value == LOW) {
@@ -145,7 +145,7 @@ class SoftI2cMaster : public I2cMasterBase {
     SREG = s;
   }
   //----------------------------------------------------------------------------
-  bool writeSda(bool value) {
+  void writeSda(bool value) {
     uint8_t s = SREG;
     noInterrupts();
     if (value == LOW) {

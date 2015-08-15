@@ -28,6 +28,8 @@
 #include "MySigning.h"
 #include "MySigningAtsha204.h"
 
+#define SIGNING_IDENTIFIER (1)
+
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_SIGNING
 

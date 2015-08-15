@@ -71,7 +71,7 @@ MySigningAtsha204 signer;
 #endif
 MySensor gw(radio, hw, signer);
 #else
-#error SecureActuator cannot possibly be secure without signing enabled
+// WARNING! SecureActuator cannot possibly be secure without signing enabled
 MySensor gw(radio, hw);
 #endif
 
@@ -85,7 +85,7 @@ void setup()
   // Fetch lock status
   for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS;lock++, pin++) {
     // Register all locks to gw (they will be created as child devices)
-    gw.present(lock, S_LOCK, false);
+    gw.present(lock, S_LOCK, "SecureActuator", false);
     // Then set lock pins in output mode
     pinMode(pin, OUTPUT);   
     // Set lock to last known state (using eeprom storage) 

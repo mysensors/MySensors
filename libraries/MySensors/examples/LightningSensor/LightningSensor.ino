@@ -42,7 +42,6 @@ void setup()
   // Register all sensors to gw (they will be created as child devices)
   gw.present(CHILD_ID_DISTANCE, S_DISTANCE);
   gw.present(CHILD_ID_INTENSITY, S_CUSTOM);
-  boolean metric = gw.getConfig().isMetric;
 
   Serial.begin(115200);
   Serial.println("Playing With Fusion: AS3935 Lightning Sensor, SEN-39001");
@@ -118,4 +117,4 @@ void loop()
 void AS3935_ISR()
 {
   AS3935_ISR_Trig = 1;
-}
+}
