@@ -68,16 +68,16 @@ NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and
 MySensor gw;
 MyMessage msg(CHILD_ID,V_TRIPPED);
 int oldParkedStatus=-1;
-int sendInterval = 5000;  // Send park status at maximum every 5 second.
+unsigned long sendInterval = 5000;  // Send park status at maximum every 5 second.
 unsigned long lastSend;
 #endif
 
-int blinkInterval = 100; // blink interval (milliseconds)
+unsigned long blinkInterval = 100; // blink interval (milliseconds)
 unsigned long lastBlinkPeriod;
 bool blinkColor = true;
 
 // To make a fading motion on the led ring/tape we only move one pixel/distDebounce time
-int distDebounce = 30; 
+unsigned long distDebounce = 30; 
 unsigned long lastDebouncePeriod;
 int numLightPixels=0;
 int skipZero=0;

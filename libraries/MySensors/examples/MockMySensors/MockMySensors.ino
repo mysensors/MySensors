@@ -1,13 +1,13 @@
 /*
-* MockMySensors
+* FakeMySensors
 *
 * This skecth is intended to crate fake sensors which register and respond to the controller
 * 
-* Barduino 2015
+* Barduino, GizMoCuz 2015
 */
 
-#include <SPI.h>
 #include <MySensor.h>  
+#include <SPI.h>
 
 // SPI Pins
 #define CE_PIN 9
@@ -18,14 +18,7 @@
 #define SHORT_WAIT 50
 
 #define SKETCH_NAME "FakeMySensors "
-#define SKETCH_VERSION "v0.2"
-
-// Define Sensors ids
-/*      S_DOOR, S_MOTION, S_SMOKE, S_LIGHT, S_DIMMER, S_COVER, S_TEMP, S_HUM, S_BARO, S_WIND,
-	S_RAIN, S_UV, S_WEIGHT, S_POWER, S_HEATER, S_DISTANCE, S_LIGHT_LEVEL, S_ARDUINO_NODE,
-	S_ARDUINO_REPEATER_NODE, S_LOCK, S_IR, S_WATER, S_AIR_QUALITY, S_CUSTOM, S_DUST,
-	S_SCENE_CONTROLLER
-*/
+#define SKETCH_VERSION "v0.3"
 
 ////#define ID_S_ARDUINO_NODE            //auto defined in initialization
 ////#define ID_S_ARDUINO_REPEATER_NODE   //auto defined in initialization 
@@ -40,29 +33,28 @@
 //#define ID_S_HUM                      8
 //#define ID_S_BARO                     9
 //#define ID_S_WIND                     10
-//#define ID_S_RAIN                    11
+//#define ID_S_RAIN                      11
 //#define ID_S_UV                      12
 //#define ID_S_WEIGHT                  13 
-#define ID_S_POWER                   14
-#define ID_S_HEATER                  15
-#define ID_S_DISTANCE                16
-#define ID_S_LIGHT_LEVEL             17 
-#define ID_S_LOCK                    18
-#define ID_S_IR                      19
-#define ID_S_WATER                   20 
-#define ID_S_AIR_QUALITY             21 
-#define ID_S_DUST                    22
-#define ID_S_SCENE_CONTROLLER        23
-
-#define ID_S_CUSTOM                  24
+//#define ID_S_POWER                   14
+//#define ID_S_HEATER                  15  <<-- not correctly implemented (1.5 API)
+//#define ID_S_DISTANCE                16
+//#define ID_S_LIGHT_LEVEL             17 
+//#define ID_S_LOCK                    18
+//#define ID_S_IR                      19
+//#define ID_S_WATER                   20 
+//#define ID_S_AIR_QUALITY             21 
+//#define ID_S_DUST                    22
+//#define ID_S_SCENE_CONTROLLER        23
+//#define ID_S_CUSTOM                  24
 
 // Global Vars
-unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 12000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
 // Instanciate MySersors Gateway
-MySensor gw(CE_PIN,CS_PIN);
+MySensor gw;
 
 //Instanciate Messages objects
 
@@ -134,8 +126,10 @@ MySensor gw(CE_PIN,CS_PIN);
 #endif
 
 #ifdef ID_S_HEATER
-  MyMessage msg_S_HEATER_M(ID_S_HEATER,V_HEATER);
-  MyMessage msg_S_HEATER_S(ID_S_HEATER,V_HEATER_SW);
+  float current_set_point=21.5;
+  MyMessage msg_S_HEATER_SP(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);
+  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);
+  MyMessage msg_S_HEATER_T(ID_S_HEATER,V_TEMP);
 #endif
 
 #ifdef ID_S_DISTANCE
@@ -161,11 +155,11 @@ MySensor gw(CE_PIN,CS_PIN);
 #endif
 
 #ifdef ID_S_AIR_QUALITY
-  MyMessage msg_S_AIR_QUALITY(ID_S_AIR_QUALITY,V_VAR1);
+  MyMessage msg_S_AIR_QUALITY(ID_S_AIR_QUALITY,V_LEVEL);
 #endif
 
 #ifdef ID_S_DUST
-  MyMessage msg_S_DUST(ID_S_DUST,V_DUST_LEVEL);
+  MyMessage msg_S_DUST(ID_S_DUST,V_LEVEL);
 #endif
 
 #ifdef ID_S_SCENE_CONTROLLER
@@ -241,13 +235,13 @@ void setup()
   #endif
   
   #ifdef ID_S_COVER
-    Serial.println("  S_COVER";
+    Serial.println("  S_COVER");
     gw.present(ID_S_COVER,S_COVER);
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_TEMP
-    Serial.println("  S_TMEP");
+    Serial.println("  S_TEMP");
     gw.present(ID_S_TEMP,S_TEMP);
     gw.wait(SHORT_WAIT);
   #endif
@@ -381,7 +375,7 @@ void loop()
   gw.wait(LONG_WAIT);
   
   //Read Sensors
-  #ifdef S_ID_DOOR 
+  #ifdef ID_S_DOOR 
     door(); 
   #endif
   
@@ -492,9 +486,7 @@ void receiveTime(unsigned long controllerTime) {
 
 }
 
-//void door(){}
-
-#ifdef S_ID_DOOR
+#ifdef ID_S_DOOR
 void door(){
 
   Serial.print("Door is: " );
@@ -623,7 +615,7 @@ void hum(){
 void baro(){
   
   const char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
-  long pressure = map(randNumber,1,100,87000,108600);
+  long pressure = map(randNumber,1,100,900,1200);
   int forecast = map(randNumber,1,100,0,5);
   
   Serial.print("Atmosferic Pressure is: " );
@@ -726,8 +718,9 @@ void power(){
 
 #ifdef ID_S_HEATER
 void heater(){
-  int heater_mode = gw.loadState(ID_S_HEATER);
-  bool heater_switch = gw.loadState(ID_S_HEATER+1);
+  int heater_set_point = gw.loadState(ID_S_HEATER);
+  int heater_flow_state = gw.loadState(ID_S_HEATER+1);
+  int heater_temp = gw.loadState(ID_S_HEATER+2);
   
   Serial.print("Heater mode is: " );
   
@@ -754,6 +747,11 @@ void heater(){
   Serial.println(heater_switch?"On":"Off");
   
   gw.send(msg_S_HEATER_S.set(heater_switch));  
+
+  Serial.print("Heater Temperature is: " );
+  Serial.println(map(randNumber,1,100,0,45));
+  
+  gw.send(msg_S_HEATER_T.set(map(randNumber,1,100,0,45)));
   
 }
 #endif

@@ -555,6 +555,7 @@ boolean MySensor::process() {
 #endif
 
 	uint8_t len = radio.receive((uint8_t *)&msg);
+	(void)len; //until somebody makes use of 'len'
 #ifdef WITH_LEDS_BLINKING
 	rxBlink(1);
 #endif

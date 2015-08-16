@@ -133,7 +133,7 @@ void incomingMessage(const MyMessage &message)
       newLevel = loadLevelState(EEPROM_DIM_LEVEL_SAVE);
     } 
     // Send dimmer level back to controller with ack enabled
-    gw.send(dimmerMsg.set(0), true);
+    gw.send(dimmerMsg.set(newLevel), true);
     // We do not change any levels here until ack comes back from gateway 
     return;
   } else if (message.type == V_DIMMER) {

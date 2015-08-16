@@ -279,6 +279,7 @@ void processMQTTMessage(char *inputString, uint8_t inputPos) {
 	uint8_t i = 0;
 	buffer[0]= 0;
 	buffsize = 0;
+	(void)inputPos;
 
 	if ((uint8_t)inputString[0] >> 4 == MQTTCONNECT) {
 		buffer[buffsize++] = MQTTCONNACK << 4;
@@ -336,7 +337,7 @@ void processMQTTMessage(char *inputString, uint8_t inputPos) {
 			} else if (i==2) {
 				msg.sensor = atoi(str);		//SensorID
 			} else if (i==3) {
-				char match=255;			//SensorType
+				unsigned char match=255;			//SensorType
 #ifdef MQTT_TRANSLATE_TYPES				
 
 				for (uint8_t j=0; strcpy_P(convBuf, (char*)pgm_read_word(&(vType[j]))) ; j++) {
@@ -348,7 +349,7 @@ void processMQTTMessage(char *inputString, uint8_t inputPos) {
 				}
 
 #endif
-                                if ( atoi(str)!=0 || str=="0" ) {
+                                if ( atoi(str)!=0 || (str[0]=='0' && str[1] =='\0') ) {
 					match=atoi(str);
 				}
 

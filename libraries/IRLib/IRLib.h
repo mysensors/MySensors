@@ -48,7 +48,7 @@
 
 #define RAWBUF 100 // Length of raw duration buffer (cannot exceed 255)
 
-typedef char IRTYPES; //formerly was an enum
+typedef unsigned char IRTYPES; //formerly was an enum
 #define UNKNOWN 0
 #define NEC 1
 #define SONY 2

@@ -37,8 +37,6 @@
 #include "utility/sha256.h"
 #include <stdint.h>
 
-#define SIGNING_IDENTIFIER (1)
-
 #ifdef MY_SECURE_NODE_WHITELISTING
 typedef struct {
 	uint8_t nodeId;

@@ -230,6 +230,7 @@ unsigned long KaKuTransmitter::getTelegram(char address, byte device, boolean on
 }
 
 void KaKuTransmitter::sendSignal(char address, byte group, byte device, boolean on) {
+	(void)device;
 	sendTelegram(getTelegram(address, group, on), _pin);
 }
 
