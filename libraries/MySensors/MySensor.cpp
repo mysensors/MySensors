@@ -397,6 +397,10 @@ boolean MySensor::sendRoute(MyMessage &message) {
 #endif
 
 	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
+		// Store this address in routing table (if repeater)
+		if (repeaterMode) {
+			hw_writeConfig(EEPROM_ROUTES_ADDRESS+sender, last);
+		}
 		// If destination is the gateway or if we aren't a repeater, let
 		// our parent take care of the message
 		ok = sendWrite(nc.parentNodeId, message);
