@@ -2,27 +2,47 @@
 * MockMySensors
 *
 * This skecth is intended to crate fake sensors which register and respond to the controller
-* 
-* Barduino, GizMoCuz 2015
+* ***
+* Barduino 2015, GizMoCuz 2015
 */
 
-#include <MySensor.h>  
-#include <SPI.h>
+#include <MySigningNone.h>
+#include <MyTransportRFM69.h>
+#include <MyTransportNRF24.h>
+#include <MyHwATMega328.h>
+#include <MySigningAtsha204Soft.h>
+#include <MySigningAtsha204.h>
 
-// SPI Pins
-#define CE_PIN 9
-#define CS_PIN 10
+#include <SPI.h>
+#include <MySensor.h>  
+#include <MyMessage.h>
+
+#define RADIO_ERROR_LED_PIN 4  // Error led pin
+#define RADIO_RX_LED_PIN    6  // Receive led pin
+#define RADIO_TX_LED_PIN    5  // the PCB, on board LED
 
 // Wait times
 #define LONG_WAIT 500
 #define SHORT_WAIT 50
 
-#define SKETCH_NAME "MockySensors "
-#define SKETCH_VERSION "v0.3"
+#define SKETCH_NAME "MockMySensors "
+#define SKETCH_VERSION "v0.4"
+
+// Define Sensors ids
+/*      S_DOOR, S_MOTION, S_SMOKE, S_LIGHT, S_DIMMER, S_COVER, S_TEMP, S_HUM, S_BARO, S_WIND,
+	S_RAIN, S_UV, S_WEIGHT, S_POWER, S_HEATER, S_DISTANCE, S_LIGHT_LEVEL, S_ARDUINO_NODE,
+	S_ARDUINO_REPEATER_NODE, S_LOCK, S_IR, S_WATER, S_AIR_QUALITY, S_CUSTOM, S_DUST,
+	S_SCENE_CONTROLLER
+*/
 
 ////#define ID_S_ARDUINO_NODE            //auto defined in initialization
 ////#define ID_S_ARDUINO_REPEATER_NODE   //auto defined in initialization 
 
+
+// Some of these ID's have not been updated for v1.5.  Uncommenting too many of them
+// will make the sketch too large for a pro mini's memory so it's probably best to try
+// one at a time.
+#define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR                     1
 //#define ID_S_MOTION                   2
 //#define ID_S_SMOKE                    3
@@ -33,11 +53,11 @@
 //#define ID_S_HUM                      8
 //#define ID_S_BARO                     9
 //#define ID_S_WIND                     10
-//#define ID_S_RAIN                      11
+//#define ID_S_RAIN                    11
 //#define ID_S_UV                      12
 //#define ID_S_WEIGHT                  13 
 //#define ID_S_POWER                   14
-//#define ID_S_HEATER                  15  <<-- not correctly implemented (1.5 API)
+//#define ID_S_HEATER                  15
 //#define ID_S_DISTANCE                16
 //#define ID_S_LIGHT_LEVEL             17 
 //#define ID_S_LOCK                    18
@@ -46,43 +66,71 @@
 //#define ID_S_AIR_QUALITY             21 
 //#define ID_S_DUST                    22
 //#define ID_S_SCENE_CONTROLLER        23
-//#define ID_S_CUSTOM                  24
+//#define ID_S_CUSTOM                  99
 
 // Global Vars
-unsigned long SLEEP_TIME = 12000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 180000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
 // Instanciate MySersors Gateway
-MySensor gw;
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
+//MyTransportRFM69 transport;
+
+// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+//MySigningNone signer;
+//MySigningAtsha204Soft signer;
+//MySigningAtsha204 signer;
+
+// Hardware profile 
+MyHwATMega328 hw;
+
+// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+// To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
+#ifdef WITH_LEDS_BLINKING
+  MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+#else
+  MySensor gw(transport, hw /*, signer*/);
+#endif
+
+//MySensor gw;
 
 //Instanciate Messages objects
 
-#ifdef ID_S_DOOR
-  MyMessage msg_S_DOOR(ID_S_DOOR,V_TRIPPED);
+#ifdef ID_S_ARMED
+  bool isArmed;
 #endif
 
-#ifdef ID_S_MOTION
+#ifdef ID_S_DOOR // V_TRIPPED, V_ARMED
+  MyMessage msg_S_DOOR_T(ID_S_DOOR,V_TRIPPED);
+  MyMessage msg_S_DOOR_A(ID_S_DOOR,V_ARMED);
+#endif
+
+#ifdef ID_S_MOTION // V_TRIPPED, V_ARMED
   MyMessage msg_S_MOTION_A(ID_S_MOTION,V_ARMED);
   MyMessage msg_S_MOTION_T(ID_S_MOTION,V_TRIPPED);
 #endif
 
-#ifdef ID_S_SMOKE
-  MyMessage msg_S_SMOKE(ID_S_SMOKE,V_TRIPPED);
+#ifdef ID_S_SMOKE  // V_TRIPPED, V_ARMED
+  MyMessage msg_S_SMOKE_T(ID_S_SMOKE,V_TRIPPED);
+  MyMessage msg_S_SMOKE_A(ID_S_SMOKE,V_ARMED);
 #endif
 
 #ifdef ID_S_LIGHT
   MyMessage msg_S_LIGHT(ID_S_LIGHT,V_LIGHT);
+  bool isLightOn=0;
 #endif
 
 #ifdef ID_S_DIMMER
   MyMessage msg_S_DIMMER(ID_S_DIMMER,V_DIMMER);
+  int dimmerVal=100;
 #endif
 
 #ifdef ID_S_COVER
   MyMessage msg_S_COVER_U(ID_S_COVER,V_UP);
   MyMessage msg_S_COVER_D(ID_S_COVER,V_DOWN);
   MyMessage msg_S_COVER_S(ID_S_COVER,V_STOP);
+  const char* coverVal = "V_STOP";
 #endif
 
 #ifdef ID_S_TEMP
@@ -118,18 +166,18 @@ MySensor gw;
 #endif
 
 #ifdef ID_S_POWER
-  MyMessage msg_S_POWER_I(ID_S_POWER,V_IMPEDANCE);
   MyMessage msg_S_POWER_W(ID_S_POWER,V_WATT);
   MyMessage msg_S_POWER_K(ID_S_POWER,V_KWH);
-  MyMessage msg_S_POWER_V(ID_S_POWER,V_VOLTAGE);
-  MyMessage msg_S_POWER_C(ID_S_POWER,V_CURRENT);
+//  MyMessage msg_S_POWER_I(ID_S_POWER,V_IMPEDANCE);
+//  MyMessage msg_S_POWER_V(ID_S_POWER,V_VOLTAGE);
+//  MyMessage msg_S_POWER_C(ID_S_POWER,V_CURRENT);
 #endif
 
-#ifdef ID_S_HEATER
-  float current_set_point=21.5;
-  MyMessage msg_S_HEATER_SP(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);
-  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);
-  MyMessage msg_S_HEATER_T(ID_S_HEATER,V_TEMP);
+#ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
+  MyMessage msg_S_HEATER_S(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
+  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_FLOW_STATE);     // HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver"). S_HEATER, S_HVAC 
+  int heatTemp=18;
+  const char* heatState="Off";
 #endif
 
 #ifdef ID_S_DISTANCE
@@ -142,11 +190,13 @@ MySensor gw;
 
 #ifdef ID_S_LOCK
   MyMessage msg_S_LOCK(ID_S_LOCK,V_LOCK_STATUS);
+  bool isLocked = 0;
 #endif
 
 #ifdef ID_S_IR
   MyMessage msg_S_IR_S(ID_S_IR,V_IR_SEND);
   MyMessage msg_S_IR_R(ID_S_IR,V_IR_RECEIVE);
+  const char* irVal = "";
 #endif
 
 #ifdef ID_S_WATER
@@ -165,9 +215,22 @@ MySensor gw;
 #ifdef ID_S_SCENE_CONTROLLER
   MyMessage msg_S_SCENE_CONTROLLER_ON(ID_S_SCENE_CONTROLLER,V_SCENE_ON);
   MyMessage msg_S_SCENE_CONTROLLER_OF(ID_S_SCENE_CONTROLLER,V_SCENE_OFF);
+  // not sure if scene controller sends int or chars
+  // betting on ints as Touch Display Scen by Hek
+  char *scenes[] = {
+    "All off",
+    "Good Morning", 
+    "Clean Up!", 
+    "All Lights Off", 
+    "Music On/Off"
+  };
+  int sceneVal=0;
+  int sceneValPrevious=0;
+  
 #endif
 
 #ifdef ID_S_CUSTOM
+  MyMessage msg_S_CUSTOM_1(ID_S_CUSTOM,V_VAR1);
   MyMessage msg_S_CUSTOM_2(ID_S_CUSTOM,V_VAR2);
   MyMessage msg_S_CUSTOM_3(ID_S_CUSTOM,V_VAR3);
   MyMessage msg_S_CUSTOM_4(ID_S_CUSTOM,V_VAR4);
@@ -200,6 +263,11 @@ void setup()
   Serial.println(metric ? "Metric":"Imperial");
   gw.wait(LONG_WAIT);
   
+  // Init Armed
+  #ifdef ID_S_ARMED
+    isArmed = true;
+  #endif
+    
   // Register all sensors to gw (they will be created as child devices)
   Serial.println("Presenting Nodes");
   Serial.println("________________");
@@ -241,7 +309,7 @@ void setup()
   #endif
   
   #ifdef ID_S_TEMP
-    Serial.println("  S_TEMP");
+    Serial.println("  S_TMEP");
     gw.present(ID_S_TEMP,S_TEMP);
     gw.wait(SHORT_WAIT);
   #endif
@@ -277,7 +345,7 @@ void setup()
   #endif
   
   #ifdef ID_S_WEIGHT
-    Serial.println("  S_WEIGHT"):
+    Serial.println("  S_WEIGHT");
     gw.present(ID_S_WEIGHT,S_WEIGHT);
     gw.wait(SHORT_WAIT);
   #endif
@@ -486,25 +554,31 @@ void receiveTime(unsigned long controllerTime) {
 
 }
 
+//void door(){}
+
 #ifdef ID_S_DOOR
 void door(){
-
+ 
   Serial.print("Door is: " );
   
   if (randNumber <= 50) {
     Serial.println("Open");
-    gw.send(msg_S_DOOR.set(1));
+    gw.send(msg_S_DOOR_T.set(1));
   } else {
     Serial.println("Closed");
-    gw.send(msg_S_DOOR.set(0));
+    gw.send(msg_S_DOOR_T.set(0));
   }
-  
+  #ifdef ID_S_ARMED
+    Serial.print("System is: " );
+    Serial.println((isArmed ? "Armed":"Disarmed"));
+    gw.send(msg_S_DOOR_A.set(isArmed));
+  #endif
 }
 #endif
 
 #ifdef ID_S_MOTION
 void motion(){
-
+  
   Serial.print("Motion is: " );
   
   if (randNumber <= 50) {
@@ -515,6 +589,11 @@ void motion(){
     gw.send(msg_S_MOTION_T.set(0));
   }
   
+  #ifdef ID_S_ARMED
+    Serial.print("System is: " );
+    Serial.println((isArmed ? "Armed":"Disarmed"));
+    gw.send(msg_S_MOTION_A.set(isArmed));
+  #endif
 }
 #endif
 
@@ -525,11 +604,17 @@ void smoke(){
   
   if (randNumber <= 50) {
     Serial.println("Active");
-    gw.send(msg_S_SMOKE.set(1));
+    gw.send(msg_S_SMOKE_T.set(1));
   } else {
     Serial.println("Quiet");
-    gw.send(msg_S_SMOKE.set(0));
+    gw.send(msg_S_SMOKE_T.set(0));
   }
+  
+  #ifdef ID_S_ARMED
+    Serial.print("System is: " );
+    Serial.println((isArmed ? "Armed":"Disarmed"));
+    gw.send(msg_S_SMOKE_A.set(isArmed));
+  #endif
   
 }
 #endif
@@ -537,26 +622,17 @@ void smoke(){
 #ifdef ID_S_LIGHT
 void light(){
 
-  bool isLightOn = gw.loadState(ID_S_LIGHT);
-  
   Serial.print("Light is: " );
+  Serial.println((isLightOn ? "On":"Off"));
   
-  if (isLightOn) {
-    Serial.println("On");
-    gw.send(msg_S_LIGHT.set(1));
-  } else {
-    Serial.println("Off");
-    gw.send(msg_S_LIGHT.set(0));
-  }
-  
+  gw.send(msg_S_LIGHT.set(isLightOn));
+
 }
 #endif
 
 #ifdef ID_S_DIMMER
 void dimmer(){
 
-  int dimmerVal = gw.loadState(ID_S_DIMMER);
-  
   Serial.print("Dimmer is set to: " );
   Serial.println(dimmerVal);
   
@@ -568,20 +644,15 @@ void dimmer(){
 #ifdef ID_S_COVER
 void cover(){
 
-  int coverVal = gw.loadState(ID_S_COVER);
-  
   Serial.print("Cover is : " );
-  
-  switch (coverVal) {
-    case 0:
+
+  if (coverVal == "V_UP"){
       Serial.println("Opening");
       gw.send(msg_S_COVER_U.set(V_UP));
-    break;
-    case 1:
+  }else if (coverVal == "V_DONW"){
       Serial.println("Closing");
       gw.send(msg_S_COVER_D.set(V_DOWN));
-    break;
-    default:
+  }else{
       Serial.println("Idle");
       gw.send(msg_S_COVER_S.set(V_STOP));
   }
@@ -615,7 +686,7 @@ void hum(){
 void baro(){
   
   const char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
-  long pressure = map(randNumber,1,100,900,1200);
+  long pressure = map(randNumber,1,100,87000,108600);
   int forecast = map(randNumber,1,100,0,5);
   
   Serial.print("Atmosferic Pressure is: " );
@@ -687,12 +758,7 @@ void weight(){
 
 #ifdef ID_S_POWER
 void power(){
-
-  Serial.print("Impedance is: " );
-  Serial.println(map(randNumber,1,100,0,150));
   
-  gw.send(msg_S_POWER_I.set(map(randNumber,1,100,0,150)));
-
   Serial.print("Watt is: " );
   Serial.println(map(randNumber,1,100,0,150));
   
@@ -703,55 +769,36 @@ void power(){
   
   gw.send(msg_S_POWER_K.set(map(randNumber,1,100,0,150)));
 
-  Serial.print("Voltage is: " );
-  Serial.println(map(randNumber,1,100,0,150));
-  
-  gw.send(msg_S_POWER_V.set(map(randNumber,1,100,0,150)));
+//  Serial.print("Impedance is: " );
+//  Serial.println(map(randNumber,1,100,0,150));
+//  
+//  gw.send(msg_S_POWER_I.set(map(randNumber,1,100,0,150)));
 
-  Serial.print("Current is: " );
-  Serial.println(map(randNumber,1,100,0,150));
-  
-  gw.send(msg_S_POWER_C.set(map(randNumber,1,100,0,150)));  
+//  Serial.print("Voltage is: " );
+//  Serial.println(map(randNumber,1,100,0,150));
+//  
+//  gw.send(msg_S_POWER_V.set(map(randNumber,1,100,0,150)));
+
+//  Serial.print("Current is: " );
+//  Serial.println(map(randNumber,1,100,0,150));
+//  
+//  gw.send(msg_S_POWER_C.set(map(randNumber,1,100,0,150)));  
 
 }
 #endif
 
 #ifdef ID_S_HEATER
 void heater(){
-  int heater_set_point = gw.loadState(ID_S_HEATER);
-  int heater_flow_state = gw.loadState(ID_S_HEATER+1);
-  int heater_temp = gw.loadState(ID_S_HEATER+2);
-  
+
   Serial.print("Heater mode is: " );
+  Serial.println(heatState);
   
-  if (heater_mode == 0){
-    Serial.println("Off");
-  }
-  else if (heater_mode == 1){
-    Serial.println("Heat On");
-  }
-  else if (heater_mode == 2){
-    Serial.println("Cool On");
-  }
-  else if (heater_mode == 3){
-    Serial.println("Auto Change Over");
-  }
-  else {
-    Serial.print("Unknown Heater Mode: ");
-    Serial.println(heater_mode);
-  }
-  
-  gw.send(msg_S_HEATER_M.set(heater_mode));
+  gw.send(msg_S_HEATER_F.set(heatState));
 
-  Serial.print("Heater is: " );
-  Serial.println(heater_switch?"On":"Off");
+  Serial.print("Heater Set Point is: " );
+  Serial.println(heatTemp);
   
-  gw.send(msg_S_HEATER_S.set(heater_switch));  
-
-  Serial.print("Heater Temperature is: " );
-  Serial.println(map(randNumber,1,100,0,45));
-  
-  gw.send(msg_S_HEATER_T.set(map(randNumber,1,100,0,45)));
+  gw.send(msg_S_HEATER_S.set(heatTemp));  
   
 }
 #endif
@@ -781,25 +828,15 @@ void light_level(){
 #ifdef ID_S_LOCK
 void lock(){
 
-  bool isLocked = gw.loadState(ID_S_LOCK);
-  
   Serial.print("Lock is: " );
-  
-  if (isLocked) {
-    Serial.println("On");
-    gw.send(msg_S_LOCK.set(1));
-  } else {
-    Serial.println("Off");
-    gw.send(msg_S_LOCK.set(0));
-  }
+  Serial.println((isLocked ? "Locked":"Unlocked"));
+  gw.send(msg_S_LOCK.set(isLocked));
   
 }
 #endif
 
 #ifdef ID_S_IR
 void ir(){
-
-  int irVal = gw.loadState(ID_S_IR);
   
   Serial.print("Infrared is: " );
   Serial.println(irVal);
@@ -850,16 +887,15 @@ void dust(){
 #ifdef ID_S_SCENE_CONTROLLER
 void scene(){
 
-  bool isSceneOn = gw.loadState(ID_S_SCENE_CONTROLLER);
-  
   Serial.print("Scene is: " );
-  Serial.println(isSceneOn ? "On":"Off");
+  Serial.println(scenes[sceneVal]);
   
-  if(isSceneOn)
-    gw.send(msg_S_SCENE_CONTROLLER_ON.set(isSceneOn));
-  else
-    gw.send(msg_S_SCENE_CONTROLLER_OF.set(isSceneOn));
-  
+  if(sceneValPrevious != sceneVal){
+    gw.send(msg_S_SCENE_CONTROLLER_OF.set(sceneValPrevious));
+    gw.send(msg_S_SCENE_CONTROLLER_ON.set(sceneVal));
+    sceneValPrevious=sceneVal;
+  }
+   
 }
 #endif
 
@@ -869,6 +905,7 @@ void custom(){
   Serial.print("Custom value is: " );
   Serial.println(randNumber);
   
+  gw.send(msg_S_CUSTOM_1.set(randNumber));
   gw.send(msg_S_CUSTOM_2.set(randNumber));
   gw.send(msg_S_CUSTOM_3.set(randNumber));
   gw.send(msg_S_CUSTOM_4.set(randNumber));
@@ -880,13 +917,24 @@ void custom(){
 
 void incomingMessage(const MyMessage &message) {
   switch (message.type) {
+    #ifdef ID_S_ARMED
+    case V_ARMED:
+          isArmed = message.getBool();
+          Serial.print("Incoming change for ID_S_ARMED:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println((isArmed ? "Armed":"Disarmed" ));
+    break;
+    #endif
+    
     #ifdef ID_S_LIGHT
     case V_LIGHT:
-          gw.saveState(ID_S_LIGHT, message.getBool());
+          isLightOn =  message.getBool();
           Serial.print("Incoming change for ID_S_LIGHT:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println(message.getBool());
+          Serial.println((isLightOn ? "On":"Off"));
+          light();
     break;
     #endif
     
@@ -896,7 +944,7 @@ void incomingMessage(const MyMessage &message) {
             Serial.println( "V_DIMMER data invalid (should be 0..100)" );
             break;
           }
-          gw.saveState(ID_S_DIMMER, message.getInt());
+          dimmerVal= message.getInt();
           Serial.print("Incoming change for ID_S_DIMMER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
@@ -906,7 +954,7 @@ void incomingMessage(const MyMessage &message) {
     
     #ifdef ID_S_COVER    
     case V_UP:
-          gw.saveState(ID_S_COVER, 0);
+          coverVal="V_UP";
           Serial.print("Incoming change for ID_S_COVER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
@@ -914,7 +962,7 @@ void incomingMessage(const MyMessage &message) {
     break;
     
     case V_DOWN:
-          gw.saveState(ID_S_COVER, 1);
+          coverVal="V_DOWN";
           Serial.print("Incoming change for ID_S_COVER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
@@ -922,7 +970,7 @@ void incomingMessage(const MyMessage &message) {
     break;
     
     case V_STOP:
-          gw.saveState(ID_S_COVER, 2);
+          coverVal="V_STOP";
           Serial.print("Incoming change for ID_S_COVER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
@@ -931,42 +979,27 @@ void incomingMessage(const MyMessage &message) {
     #endif
     
     #ifdef ID_S_HEATER
-    case V_HEATER:
-          gw.saveState(ID_S_HEATER, message.getInt());
+    case V_HVAC_FLOW_STATE:
+          heatState = message.getString();
           Serial.print("Incoming change for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
+          Serial.println(heatState);
           
-          if (message.getInt() == 0){
-            Serial.println("Off");
-          }
-          else if (message.getInt() == 1){
-            Serial.println("Heat On");
-          }
-          else if (message.getInt() == 2){
-            Serial.println("Cool On");
-          }
-          else if (message.getInt() == 3){
-            Serial.println("Auto Change Over");
-          }
-          else {
-            Serial.print("Unknown Heater Mode: ");
-            Serial.println(message.getInt());
-          }
     break;
     
-    case V_HEATER_SW:
-          gw.saveState(ID_S_HEATER+1, message.getBool());
+    case V_HVAC_SETPOINT_HEAT:
+          heatTemp = message.getInt();
           Serial.print("Incoming change for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println((message.getBool() ? "On":"Off"));
+          Serial.println(heatTemp);
     break;
     #endif
     
     #ifdef ID_S_LOCK
     case V_LOCK_STATUS:
-          gw.saveState(ID_S_LOCK, message.getBool());
+          isLocked =  message.getBool();
           Serial.print("Incoming change for ID_S_LOCK:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
@@ -976,33 +1009,37 @@ void incomingMessage(const MyMessage &message) {
     
     #ifdef ID_S_IR
     case V_IR_RECEIVE:
-          gw.saveState(ID_S_IR, message.getInt());
+          irVal = message.getString();
           Serial.print("Incoming change for ID_S_IR:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println(message.getInt());
+          Serial.println(irVal);
     break;
     #endif
     
     #ifdef ID_S_SCENE_CONTROLLER
     case V_SCENE_ON:
-          gw.saveState(ID_S_SCENE_CONTROLLER, 1);
+          sceneVal = message.getInt();
           Serial.print("Incoming change for ID_S_SCENE_CONTROLLER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println("On");
+          Serial.print(scenes[sceneVal]);
+          Serial.println(" On");
+          scene();
     break;
     case V_SCENE_OFF:
-          gw.saveState(ID_S_SCENE_CONTROLLER, 0);
+          sceneVal = message.getInt();
           Serial.print("Incoming change for ID_S_SCENE_CONTROLLER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println("Off");
+          Serial.print(scenes[sceneVal]);
+          Serial.println(" Off");
+          scene();
     break;
     #endif
 
     default: 
-      Serial.print("Unknown/UnImplemented message type:");
+      Serial.print("Unknown/UnImplemented message type: ");
       Serial.println(message.type);
   }
 
