@@ -17,13 +17,13 @@
 #define LONG_WAIT 500
 #define SHORT_WAIT 50
 
-#define SKETCH_NAME "FakeMySensors "
+#define SKETCH_NAME "MockySensors "
 #define SKETCH_VERSION "v0.3"
 
 ////#define ID_S_ARDUINO_NODE            //auto defined in initialization
 ////#define ID_S_ARDUINO_REPEATER_NODE   //auto defined in initialization 
 
-//#define ID_S_DOOR                     1
+#define ID_S_DOOR                     1
 //#define ID_S_MOTION                   2
 //#define ID_S_SMOKE                    3
 //#define ID_S_LIGHT                    4
