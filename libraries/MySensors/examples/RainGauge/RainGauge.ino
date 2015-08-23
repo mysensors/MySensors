@@ -123,7 +123,7 @@ volatile int wasTippedBuffer = 0;
 int rainSensorThreshold = 50; //default rain sensor sensitivity in hundredths.  Will be overwritten with msgTrippedVar2.
 byte state = 0;
 byte oldState = -1;
-int lastRainRate = 0;
+unsigned int lastRainRate = 0;
 int lastMeasure = 0;
 boolean gotTime = false;
 byte lastHour;

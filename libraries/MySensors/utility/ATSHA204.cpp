@@ -463,7 +463,8 @@ uint8_t ATSHA204Class::sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t
 	uint8_t poll_delay, poll_timeout, response_size;
 	uint8_t *p_buffer;
 	uint8_t len;
-
+  (void)tx_size;
+  
 	// Supply delays and response size.
 	switch (op_code) 
 	{

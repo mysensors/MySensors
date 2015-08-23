@@ -33,6 +33,8 @@
 #include "MySigningAtsha204Soft.h"
 #include "utility/sha256.h"
 
+#define SIGNING_IDENTIFIER (1)
+
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_SIGNING
 
@@ -72,15 +74,14 @@ MySigningAtsha204Soft::MySigningAtsha204Soft(bool requestSignatures,
 	uint8_t randomseedPin)
 	:
 	MySigning(requestSignatures),
-	rndPin(randomseedPin),
 #ifdef MY_SECURE_NODE_WHITELISTING
 	whitlist_sz(nof_whitelist_entries),
 	whitelist(the_whitelist),
 	node_serial_info(the_serial),
 #endif
+	Sha256(),
 	verification_ongoing(false),
-	Sha256()
-
+	rndPin(randomseedPin)
 {
 }
 

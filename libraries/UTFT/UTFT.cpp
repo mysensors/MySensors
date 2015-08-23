@@ -854,8 +854,8 @@ void UTFT::printChar(byte c, int x, int y)
 		{
 			setXY(x,y,x+cfont.x_size-1,y+cfont.y_size-1);
 	  
-			temp=((c-cfont.offset)*((cfont.x_size/8)*cfont.y_size))+4;
-			for(j=0;j<((cfont.x_size/8)*cfont.y_size);j++)
+			temp=(word)((c-cfont.offset)*((cfont.x_size/8)*cfont.y_size))+4;
+			for(j=0;j<(word)((cfont.x_size/8)*cfont.y_size);j++)
 			{
 				ch=pgm_read_byte(&cfont.font[temp]);
 				for(i=0;i<8;i++)
@@ -876,7 +876,7 @@ void UTFT::printChar(byte c, int x, int y)
 		{
 			temp=((c-cfont.offset)*((cfont.x_size/8)*cfont.y_size))+4;
 
-			for(j=0;j<((cfont.x_size/8)*cfont.y_size);j+=(cfont.x_size/8))
+			for(j=0;j<(word)((cfont.x_size/8)*cfont.y_size);j+=(cfont.x_size/8))
 			{
 				setXY(x,y+(j/(cfont.x_size/8)),x+cfont.x_size-1,y+(j/(cfont.x_size/8)));
 				for (int zz=(cfont.x_size/8)-1; zz>=0; zz--)
@@ -1080,7 +1080,7 @@ void UTFT::printNumF(double num, byte dec, int x, int y, char divider, int lengt
 
 	if (divider != '.')
 	{
-		for (int i=0; i<sizeof(st); i++)
+		for (unsigned int i=0; i<sizeof(st); i++)
 			if (st[i]=='.')
 				st[i]=divider;
 	}
@@ -1090,13 +1090,13 @@ void UTFT::printNumF(double num, byte dec, int x, int y, char divider, int lengt
 		if (neg)
 		{
 			st[0]='-';
-			for (int i=1; i<sizeof(st); i++)
+			for (unsigned int i=1; i<sizeof(st); i++)
 				if ((st[i]==' ') || (st[i]=='-'))
 					st[i]=filler;
 		}
 		else
 		{
-			for (int i=0; i<sizeof(st); i++)
+			for (unsigned int i=0; i<sizeof(st); i++)
 				if (st[i]==' ')
 					st[i]=filler;
 		}

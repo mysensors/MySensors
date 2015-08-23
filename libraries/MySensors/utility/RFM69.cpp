@@ -55,9 +55,9 @@ bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
     /* 0x05 */ { REG_FDEVMSB, RF_FDEVMSB_50000}, //default:5khz, (FDEV + BitRate/2 <= 500Khz)
     /* 0x06 */ { REG_FDEVLSB, RF_FDEVLSB_50000},
 
-    /* 0x07 */ { REG_FRFMSB, (freqBand==RF69_315MHZ ? RF_FRFMSB_315 : (freqBand==RF69_433MHZ ? RF_FRFMSB_433 : (freqBand==RF69_868MHZ ? RF_FRFMSB_868 : RF_FRFMSB_915))) },
-    /* 0x08 */ { REG_FRFMID, (freqBand==RF69_315MHZ ? RF_FRFMID_315 : (freqBand==RF69_433MHZ ? RF_FRFMID_433 : (freqBand==RF69_868MHZ ? RF_FRFMID_868 : RF_FRFMID_915))) },
-    /* 0x09 */ { REG_FRFLSB, (freqBand==RF69_315MHZ ? RF_FRFLSB_315 : (freqBand==RF69_433MHZ ? RF_FRFLSB_433 : (freqBand==RF69_868MHZ ? RF_FRFLSB_868 : RF_FRFLSB_915))) },
+    /* 0x07 */ { REG_FRFMSB, (freqBand==RF69_315MHZ ? (const byte)RF_FRFMSB_315 : (freqBand==RF69_433MHZ ? (const byte)RF_FRFMSB_433 : (freqBand==RF69_868MHZ ? (const byte)RF_FRFMSB_868 : (const byte)RF_FRFMSB_915))) },
+    /* 0x08 */ { REG_FRFMID, (freqBand==RF69_315MHZ ? (const byte)RF_FRFMID_315 : (freqBand==RF69_433MHZ ? (const byte)RF_FRFMID_433 : (freqBand==RF69_868MHZ ? (const byte)RF_FRFMID_868 : (const byte)RF_FRFMID_915))) },
+    /* 0x09 */ { REG_FRFLSB, (freqBand==RF69_315MHZ ? (const byte)RF_FRFLSB_315 : (freqBand==RF69_433MHZ ? (const byte)RF_FRFLSB_433 : (freqBand==RF69_868MHZ ? (const byte)RF_FRFLSB_868 : (const byte)RF_FRFLSB_915))) },
     
     // looks like PA1 and PA2 are not implemented on RFM69W, hence the max output power is 13dBm
     // +17dBm and +20dBm are possible on RFM69HW

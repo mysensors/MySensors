@@ -142,9 +142,9 @@ void DHT::readSensor()
   // - Then 40 bits: RISING and then a FALLING edge per bit
   // To keep our code simple, we accept any HIGH or LOW reading if it's max 85 usecs long
 
-  word rawHumidity;
-  word rawTemperature;
-  word data;
+  word rawHumidity = 0;
+  word rawTemperature = 0;
+  word data = 0;
 
   for ( int8_t i = -3 ; i < 2 * 40; i++ ) {
     byte age;

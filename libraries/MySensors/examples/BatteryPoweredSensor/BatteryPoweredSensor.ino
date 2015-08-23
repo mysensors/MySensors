@@ -30,8 +30,6 @@
 #include <SPI.h>
 #include <MySensor.h>
 
-#define DEBUG 1 // Debug enables Serial.print 1 = Yes 0 = No
-
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
 
 MySensor gw;
@@ -41,7 +39,11 @@ int oldBatteryPcnt = 0;
 void setup()  
 {
    // use the 1.1 V internal reference
+#if defined(__AVR_ATmega2560__)
+   analogReference(INTERNAL1V1);
+#else
    analogReference(INTERNAL);
+#endif
    gw.begin();
 
    // Send the sketch version information to the gateway and Controller
@@ -52,7 +54,7 @@ void loop()
 {
    // get the battery Voltage
    int sensorValue = analogRead(BATTERY_SENSE_PIN);
-   #if DEBUG > 0
+   #ifdef DEBUG
    Serial.println(sensorValue);
    #endif
    
@@ -63,7 +65,7 @@ void loop()
    float batteryV  = sensorValue * 0.003363075;
    int batteryPcnt = sensorValue / 10;
 
-   #if DEBUG > 0
+   #ifdef DEBUG
    Serial.print("Battery Voltage: ");
    Serial.print(batteryV);
    Serial.println(" V");
