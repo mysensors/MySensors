@@ -20,6 +20,7 @@
  *
  * REVISION HISTORY
  * Version 1.0 - Henrik Ekblad
+ * Version 1.1 - GizMoCuz
  * 
  * DESCRIPTION
  * Use this sensor to measure volume and flow of your house watermeter.
@@ -33,8 +34,8 @@
  * http://www.mysensors.org/build/pulse_water
  */
 
-#include <SPI.h>
 #include <MySensor.h>  
+#include <SPI.h>
 
 #define DIGITAL_INPUT_SENSOR 3                  // The digital input you attached your sensor.  (Only 2 and 3 generates interrupt!)
 #define SENSOR_INTERRUPT DIGITAL_INPUT_SENSOR-2        // Usually the interrupt = pin -2 (on uno/nano anyway)
@@ -47,7 +48,7 @@
 
 #define CHILD_ID 1                              // Id of the sensor child
 
-unsigned long SEND_FREQUENCY = 20000;           // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+unsigned long SEND_FREQUENCY = 30000;           // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 
 MySensor gw;
 MyMessage flowMsg(CHILD_ID,V_FLOW);
@@ -72,8 +73,11 @@ void setup()
 {  
   gw.begin(incomingMessage); 
 
+  // initialize our digital pins internal pullup resistor so one pulse switches from high to low (less distortion) 
+  pinMode(DIGITAL_INPUT_SENSOR, INPUT_PULLUP);
+  
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Water Meter", "1.2");
+  gw.sendSketchInfo("Water Meter", "1.1");
 
   // Register this device as Waterflow sensor
   gw.present(CHILD_ID, S_WATER);       
@@ -85,7 +89,7 @@ void setup()
 
   lastSend = lastPulse = millis();
 
-  attachInterrupt(SENSOR_INTERRUPT, onPulse, RISING);
+  attachInterrupt(SENSOR_INTERRUPT, onPulse, FALLING);
 }
 
 
@@ -93,7 +97,7 @@ void loop()
 { 
   gw.process();
   unsigned long currentTime = millis();
-	
+  
     // Only send values at a maximum frequency or woken up from sleep
   if (SLEEP_MODE || (currentTime - lastSend > SEND_FREQUENCY))
   {
@@ -124,7 +128,7 @@ void loop()
     } 
 
     // Pulse count has changed
-    if (pulseCount != oldPulseCount) {
+    if ((pulseCount != oldPulseCount)||(!SLEEP_MODE)) {
       oldPulseCount = pulseCount;
 
       Serial.print("pulsecount:");
@@ -133,7 +137,7 @@ void loop()
       gw.send(lastCounterMsg.set(pulseCount));                  // Send  pulsecount value to gw in VAR1
 
       double volume = ((double)pulseCount/((double)PULSE_FACTOR));     
-      if (volume != oldvolume) {
+      if ((volume != oldvolume)||(!SLEEP_MODE)) {
         oldvolume = volume;
 
         Serial.print("volume:");
@@ -152,6 +156,7 @@ void incomingMessage(const MyMessage &message) {
   if (message.type==V_VAR1) {
     unsigned long gwPulseCount=message.getULong();
     pulseCount += gwPulseCount;
+    flow=oldflow=0;
     Serial.print("Received last pulse count from gw:");
     Serial.println(pulseCount);
     pcReceived = true;
@@ -178,4 +183,3 @@ void onPulse()
   }
   pulseCount++; 
 }
-
