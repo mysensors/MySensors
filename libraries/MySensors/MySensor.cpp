@@ -153,7 +153,9 @@ void MySensor::errBlink(uint8_t cnt) {
 #endif
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
-	hw_init();
+    #ifdef ENABLED_SERIAL
+	    hw_init();
+    #endif
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;

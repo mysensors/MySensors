@@ -26,6 +26,9 @@
 // to see what is actually is happening when developing
 #define DEBUG
 
+// Disable this line, If you are using TX(1), RX(0) as normal I/O pin
+#define ENABLED_SERIAL
+
 // Serial output baud rate (for debug prints and serial gateway)
 #define BAUD_RATE 115200
 
