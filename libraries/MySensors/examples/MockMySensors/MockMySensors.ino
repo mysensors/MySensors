@@ -48,7 +48,7 @@
 #define ID_S_SMOKE                    3
 #define ID_S_LIGHT                    4
 #define ID_S_DIMMER                   5
-#define ID_S_COVER                    6
+//#define ID_S_COVER                    6
 #define ID_S_TEMP                     7
 #define ID_S_HUM                      8
 #define ID_S_BARO                     9
@@ -65,7 +65,7 @@
 #define ID_S_WATER                   20 
 #define ID_S_AIR_QUALITY             21 
 #define ID_S_DUST                    22
-#define ID_S_SCENE_CONTROLLER        23
+//#define ID_S_SCENE_CONTROLLER        23
 #define ID_S_CUSTOM                  99
 
 // Global Vars
@@ -649,7 +649,7 @@ void cover(){
   if (coverVal == "V_UP"){
       Serial.println("Opening");
       gw.send(msg_S_COVER_U.set(V_UP));
-  }else if (coverVal == "V_DONW"){
+  }else if (coverVal == "V_DOWN"){
       Serial.println("Closing");
       gw.send(msg_S_COVER_D.set(V_DOWN));
   }else{
