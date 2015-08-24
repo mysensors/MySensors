@@ -26,7 +26,7 @@
 // to see what is actually is happening when developing
 #define DEBUG
 
-//Comment this this line, If you are using TX(1), RX(0) as IO pin disable this
+// Disable this line, If you are using TX(1), RX(0) as normal I/O pin
 #define ENABLED_SERIAL
 
 // Serial output baud rate (for debug prints and serial gateway)
