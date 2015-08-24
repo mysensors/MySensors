@@ -44,37 +44,37 @@
 // one at a time.
 #define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR                     1
-//#define ID_S_MOTION                   2
-//#define ID_S_SMOKE                    3
-//#define ID_S_LIGHT                    4
-//#define ID_S_DIMMER                   5
-//#define ID_S_COVER                    6
-//#define ID_S_TEMP                     7
-//#define ID_S_HUM                      8
-//#define ID_S_BARO                     9
-//#define ID_S_WIND                     10
-//#define ID_S_RAIN                    11
-//#define ID_S_UV                      12
-//#define ID_S_WEIGHT                  13 
-//#define ID_S_POWER                   14
-//#define ID_S_HEATER                  15
-//#define ID_S_DISTANCE                16
-//#define ID_S_LIGHT_LEVEL             17 
-//#define ID_S_LOCK                    18
-//#define ID_S_IR                      19
-//#define ID_S_WATER                   20 
-//#define ID_S_AIR_QUALITY             21 
-//#define ID_S_DUST                    22
-//#define ID_S_SCENE_CONTROLLER        23
-//#define ID_S_CUSTOM                  99
+#define ID_S_MOTION                   2
+#define ID_S_SMOKE                    3
+#define ID_S_LIGHT                    4
+#define ID_S_DIMMER                   5
+#define ID_S_COVER                    6
+#define ID_S_TEMP                     7
+#define ID_S_HUM                      8
+#define ID_S_BARO                     9
+#define ID_S_WIND                     10
+#define ID_S_RAIN                    11
+#define ID_S_UV                      12
+#define ID_S_WEIGHT                  13 
+#define ID_S_POWER                   14
+#define ID_S_HEATER                  15
+#define ID_S_DISTANCE                16
+#define ID_S_LIGHT_LEVEL             17 
+#define ID_S_LOCK                    18
+#define ID_S_IR                      19
+#define ID_S_WATER                   20 
+#define ID_S_AIR_QUALITY             21 
+#define ID_S_DUST                    22
+#define ID_S_SCENE_CONTROLLER        23
+#define ID_S_CUSTOM                  99
 
 // Global Vars
-unsigned long SLEEP_TIME = 180000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 300000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
 // Instanciate MySersors Gateway
-MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL);
 //MyTransportRFM69 transport;
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
@@ -309,7 +309,7 @@ void setup()
   #endif
   
   #ifdef ID_S_TEMP
-    Serial.println("  S_TMEP");
+    Serial.println("  S_TEMP");
     gw.present(ID_S_TEMP,S_TEMP);
     gw.wait(SHORT_WAIT);
   #endif
@@ -924,6 +924,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isArmed ? "Armed":"Disarmed" ));
+          motion();//temp ack
     break;
     #endif
     
@@ -934,7 +935,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isLightOn ? "On":"Off"));
-          light();
+          light(); // temp ack
     break;
     #endif
     
@@ -1004,6 +1005,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(message.getBool()?"Locked":"Unlocked");
+          lock(); //temp ack
     break;
     #endif
     
