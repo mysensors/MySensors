@@ -45,28 +45,28 @@
 #define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR                     1
 #define ID_S_MOTION                   2
-#define ID_S_SMOKE                    3
-#define ID_S_LIGHT                    4
-#define ID_S_DIMMER                   5
+//#define ID_S_SMOKE                    3
+//#define ID_S_LIGHT                    4
+//#define ID_S_DIMMER                   5
 //#define ID_S_COVER                    6
-#define ID_S_TEMP                     7
-#define ID_S_HUM                      8
-#define ID_S_BARO                     9
-#define ID_S_WIND                     10
-#define ID_S_RAIN                    11
-#define ID_S_UV                      12
-#define ID_S_WEIGHT                  13 
-#define ID_S_POWER                   14
-#define ID_S_HEATER                  15
-#define ID_S_DISTANCE                16
-#define ID_S_LIGHT_LEVEL             17 
-#define ID_S_LOCK                    18
-#define ID_S_IR                      19
-#define ID_S_WATER                   20 
-#define ID_S_AIR_QUALITY             21 
-#define ID_S_DUST                    22
+//#define ID_S_TEMP                     7
+//#define ID_S_HUM                      8
+//#define ID_S_BARO                     9
+//#define ID_S_WIND                     10
+//#define ID_S_RAIN                    11
+//#define ID_S_UV                      12
+//#define ID_S_WEIGHT                  13 
+//#define ID_S_POWER                   14
+//#define ID_S_HEATER                  15
+//#define ID_S_DISTANCE                16
+//#define ID_S_LIGHT_LEVEL             17 
+//#define ID_S_LOCK                    18
+//#define ID_S_IR                      19
+//#define ID_S_WATER                   20 
+//#define ID_S_AIR_QUALITY             21 
+//#define ID_S_DUST                    22
 //#define ID_S_SCENE_CONTROLLER        23
-#define ID_S_CUSTOM                  99
+//#define ID_S_CUSTOM                  99
 
 // Global Vars
 unsigned long SLEEP_TIME = 300000; // Sleep time between reads (in milliseconds)
@@ -130,7 +130,7 @@ MyHwATMega328 hw;
   MyMessage msg_S_COVER_U(ID_S_COVER,V_UP);
   MyMessage msg_S_COVER_D(ID_S_COVER,V_DOWN);
   MyMessage msg_S_COVER_S(ID_S_COVER,V_STOP);
-  const char* coverVal = "V_STOP";
+  const char* coverVal = "V_STOP"; //compiler warnings
 #endif
 
 #ifdef ID_S_TEMP
@@ -216,7 +216,7 @@ MyHwATMega328 hw;
   MyMessage msg_S_SCENE_CONTROLLER_ON(ID_S_SCENE_CONTROLLER,V_SCENE_ON);
   MyMessage msg_S_SCENE_CONTROLLER_OF(ID_S_SCENE_CONTROLLER,V_SCENE_OFF);
   // not sure if scene controller sends int or chars
-  // betting on ints as Touch Display Scen by Hek
+  // betting on ints as Touch Display Scen by Hek // compiler warnings
   char *scenes[] = {
     "All off",
     "Good Morning", 
@@ -686,7 +686,7 @@ void hum(){
 void baro(){
   
   const char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
-  long pressure = map(randNumber,1,100,87000,108600);
+  long pressure = map(randNumber,1,100,870,1086);// hPa?
   int forecast = map(randNumber,1,100,0,5);
   
   Serial.print("Atmosferic Pressure is: " );
