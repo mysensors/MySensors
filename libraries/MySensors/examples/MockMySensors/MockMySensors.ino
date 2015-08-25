@@ -924,7 +924,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isArmed ? "Armed":"Disarmed" ));
-          door();//temp ack
+          door();//temp ack for door
     break;
     #endif
     
