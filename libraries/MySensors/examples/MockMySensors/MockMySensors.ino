@@ -44,7 +44,7 @@
 // one at a time.
 #define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR                     1
-#define ID_S_MOTION                   2
+//#define ID_S_MOTION                   2
 //#define ID_S_SMOKE                    3
 //#define ID_S_LIGHT                    4
 //#define ID_S_DIMMER                   5
@@ -924,7 +924,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isArmed ? "Armed":"Disarmed" ));
-          motion();//temp ack
+          door();//temp ack
     break;
     #endif
     
