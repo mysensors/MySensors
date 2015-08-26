@@ -17,46 +17,20 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyHwATMega328_h
-#define MyHwATMega328_h
+#ifdef ESP8266
 
-#ifdef __AVR_ATmega328P__
+#ifndef MyHwESP8266_h
+#define MyHwESP8266_h
 
 #include "MyHw.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
-#include <avr/eeprom.h>
-#include <avr/pgmspace.h>
-#include <avr/sleep.h>
-#include <avr/power.h>
-#include <avr/interrupt.h>
-#include <avr/wdt.h>
-
 
 
 #ifdef __cplusplus
 #include <Arduino.h>
 #include <SPI.h>
 #endif
-
-#if defined __AVR_ATmega328P__
-#ifndef sleep_bod_disable
-#define sleep_bod_disable() 										\
-do { 																\
-  unsigned char tempreg; 													\
-  __asm__ __volatile__("in %[tempreg], %[mcucr]" "\n\t" 			\
-                       "ori %[tempreg], %[bods_bodse]" "\n\t" 		\
-                       "out %[mcucr], %[tempreg]" "\n\t" 			\
-                       "andi %[tempreg], %[not_bodse]" "\n\t" 		\
-                       "out %[mcucr], %[tempreg]" 					\
-                       : [tempreg] "=&d" (tempreg) 					\
-                       : [mcucr] "I" _SFR_IO_ADDR(MCUCR), 			\
-                         [bods_bodse] "i" (_BV(BODS) | _BV(BODSE)), \
-                         [not_bodse] "i" (~_BV(BODSE))); 			\
-} while (0)
-#endif
-#endif
-
 
 // Define these as macros to save valuable space
 
@@ -65,19 +39,11 @@ do { 																\
 #define hw_watchdogReset() wdt_reset()
 #define hw_reboot() wdt_enable(WDTO_15MS); while (1)
 #define hw_millis() millis()
-#define hw_readConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
 
-#ifndef eeprom_update_byte
-	#define hw_writeConfig(loc, val) if((uint8_t)(val) != eeprom_read_byte((uint8_t*)(loc))) { eeprom_write_byte((uint8_t*)(loc), (val)); }
-#else
-	#define hw_writeConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
-#endif
-
-//
-#define hw_readConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
-#define hw_writeConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
-
-
+void hw_readConfigBlock(void* buf, void* adr, size_t length);
+void hw_writeConfigBlock(void* buf, void* adr, size_t length);
+void hw_writeConfig(int adr, uint8_t value);
+uint8_t hw_readConfig(int adr);
 
 enum period_t
 {
@@ -94,10 +60,10 @@ enum period_t
 	SLEEP_FOREVER
 };
 
-class MyHwATMega328 : public MyHw
+class MyHwESP8266 : public MyHw
 { 
 public:
-	MyHwATMega328();
+	MyHwESP8266();
 
 /*	void init();
 	void watchdogReset();
@@ -114,8 +80,7 @@ public:
 #ifdef DEBUG
 	void debugPrint(bool isGW, const char *fmt, ... );
 #endif
-private:
-	void internalSleep(unsigned long ms);
 };
 #endif
-#endif // #ifdef __AVR_ATmega328P__
+
+#endif // #ifdef ESP8266
