@@ -60,7 +60,7 @@
   * Inclusion mode button:
  * - Connect GPIO5 via switch to GND ('inclusion switch')
  * 
- * Hardware SHA204 signing and a separate SPI flash are not supported!
+ * Hardware SHA204 signing is currently not supported!
  *
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
