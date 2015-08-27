@@ -1,20 +1,17 @@
 #ifndef __GATEWAYUTIL_H__
 #define __GATEWAYUTIL_H__
 
-#include <MyTransport.h>
-
-
 #ifdef ARDUINO
 
 
-uint8_t inclusionTime = 1; // Number of minutes inclusion mode is enabled
-uint8_t pinInclusion =  3; // Input pin that should trigger inclusion mode
+static uint8_t inclusionTime = 1; // Number of minutes inclusion mode is enabled
+static uint8_t pinInclusion =  3; // Input pin that should trigger inclusion mode
 
 #define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from controller
 #define MAX_SEND_LENGTH 120 // Max buffersize needed for messages destined for controller
 
-volatile boolean buttonTriggeredInclusion;
-boolean inclusionMode; // Keeps track on inclusion mode
+static volatile boolean buttonTriggeredInclusion;
+static boolean inclusionMode; // Keeps track on inclusion mode
 bool inclusionButtonSupported = false;
 void (*serial)(const char *fmt, ... );
 
@@ -26,6 +23,11 @@ char convBuf[MAX_PAYLOAD*2+1];
 char serialBuffer[MAX_SEND_LENGTH]; // Buffer for building string when sending data to vera
 unsigned long inclusionStartTime;
 
+
+void startInclusionInterrupt() {
+  buttonTriggeredInclusion = true;
+}
+
 void setupGateway(uint8_t _inc, uint8_t _incTime, void (* _serial)(const char *, ... )) {
   inclusionMode = 0;
   buttonTriggeredInclusion = false;
@@ -36,17 +38,13 @@ void setupGateway(uint8_t _inc, uint8_t _incTime, void (* _serial)(const char *,
   if (inclusionButtonSupported)
   {
     pinInclusion = _inc;
-  
+
     // Setup digital in that triggers inclusion mode
-    pinMode(pinInclusion, INPUT);
-    digitalWrite(pinInclusion, HIGH);
+    pinMode(pinInclusion, INPUT_PULLUP);
+
+    // Add interrupt for inclusion button to pin
+    attachInterrupt(pinInclusion, startInclusionInterrupt, FALLING);
   }
-}
-
-
-
-void startInclusionInterrupt() {
-  buttonTriggeredInclusion = true;
 }
 
 void incomingMessage(const MyMessage &message) {

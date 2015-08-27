@@ -57,7 +57,10 @@
  * - Connect GPIO2 via 10K resistor to VCC
  * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
  * 
- * Signing, RF69 radio, inclusion button and a separate SPI flash are not supported yet!
+  * Inclusion mode button:
+ * - Connect GPIO5 via switch to GND ('inclusion switch')
+ * 
+ * * Signing, RF69 radio and a separate SPI flash are not supported yet!
  *
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
@@ -78,8 +81,8 @@
 const char *ssid =  "MySSID";    // cannot be longer than 32 characters!
 const char *pass =  "MyVerySecretPassword"; //
 
- #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
-// #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
+#define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
+#define INCLUSION_MODE_PIN  5 // Digital pin used for inclusion mode button
 
 #define RADIO_CE_PIN        4   // radio chip enable
 #define RADIO_SPI_SS_PIN    15  // radio SPI serial select
@@ -127,9 +130,9 @@ void output(const char *fmt, ... ) {
 void setup()  
 { 
   // Setup console
-  Serial.begin(115200);
+  hw_init();
 
-  Serial.println();
+  Serial.println(); Serial.println();
   Serial.println("ESP8266 MySensors Gateway");
   Serial.print("Connecting to "); Serial.println(ssid);
 
@@ -142,14 +145,7 @@ void setup()
   Serial.print("IP: "); Serial.println(WiFi.localIP());
   Serial.flush();
   
-#ifndef INCLUSION_MODE_PIN
-  setupGateway(255, INCLUSION_MODE_TIME, output);
-#else
   setupGateway(INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
-
-  // Add interrupt for inclusion button to pin
-  PCintPort::attachInterrupt(pinInclusion, startInclusionInterrupt, RISING);
-#endif
 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
   gw.begin(incomingMessage, 0, true, 0);
@@ -162,10 +158,8 @@ void setup()
 void loop() {
   gw.process();  
   
-#ifdef INCLUSION_MODE_PIN
   checkButtonTriggeredInclusion();
   checkInclusionFinished();
-#endif
   
   //check if there are any new clients
   if (server.hasClient())
