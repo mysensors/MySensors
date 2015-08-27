@@ -60,7 +60,7 @@
   * Inclusion mode button:
  * - Connect GPIO5 via switch to GND ('inclusion switch')
  * 
- * * Signing, RF69 radio and a separate SPI flash are not supported yet!
+ * Hardware SHA204 signing, RF69 radio and a separate SPI flash are not supported!
  *
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
@@ -68,6 +68,8 @@
 
 #include <SPI.h>  
 
+#include <MySigningNone.h> 
+#include <MySigningAtsha204Soft.h>
 #include <MyTransportNRF24.h>
 #include <EEPROM.h>
 #include <MyHwESP8266.h>
@@ -87,25 +89,36 @@ const char *pass =  "MyVerySecretPassword"; //
 #define RADIO_CE_PIN        4   // radio chip enable
 #define RADIO_SPI_SS_PIN    15  // radio SPI serial select
 
+#ifdef WITH_LEDS_BLINKING
 #define RADIO_ERROR_LED_PIN 7  // Error led pin
 #define RADIO_RX_LED_PIN    8  // Receive led pin
 #define RADIO_TX_LED_PIN    9  // the PCB, on board LED
+#endif
 
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
+
+// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
+#ifdef MY_SIGNING_FEATURE
+MySigningNone signer;
+//MySigningAtsha204Soft signer;
+#endif
 
 // Hardware profile 
 MyHwESP8266 hw;
 
 // Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 // To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
-#ifdef WITH_LEDS_BLINKING
-MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-#else
-MySensor gw(transport, hw /*, signer*/);
+MySensor gw(transport, hw
+#ifdef MY_SIGNING_FEATURE
+    , signer
 #endif
-
+#ifdef WITH_LEDS_BLINKING
+  , RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN
+#endif
+  );
+  
 
 #define IP_PORT 5003        // The port you want to open 
 
