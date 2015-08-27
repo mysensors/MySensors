@@ -60,7 +60,7 @@
   * Inclusion mode button:
  * - Connect GPIO5 via switch to GND ('inclusion switch')
  * 
- * Hardware SHA204 signing, RF69 radio and a separate SPI flash are not supported!
+ * Hardware SHA204 signing and a separate SPI flash are not supported!
  *
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
@@ -71,6 +71,7 @@
 #include <MySigningNone.h> 
 #include <MySigningAtsha204Soft.h>
 #include <MyTransportNRF24.h>
+#include <MyTransportRFM69.h>
 #include <EEPROM.h>
 #include <MyHwESP8266.h>
 #include <ESP8266WiFi.h>
@@ -97,7 +98,9 @@ const char *pass =  "MyVerySecretPassword"; //
 
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
+MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);
+//MyTransportRFM69 transport;
+
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 #ifdef MY_SIGNING_FEATURE
