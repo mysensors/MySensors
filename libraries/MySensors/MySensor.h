@@ -361,6 +361,7 @@ class MySensor
 
 	unsigned long ledBlinkPeriod;
 	void handleLedsBlinking(); // do the actual blinking
+	unsigned long blink_next_time;
 #endif
 
 	MyTransport& radio;
