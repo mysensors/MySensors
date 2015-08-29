@@ -3,7 +3,12 @@
  Based on MyMQTT-broker gateway created by Daniel Wiegert <daniel.wiegert@gmail.com>
  Based on MySensors Ethernet Gateway by Henrik Ekblad <henrik.ekblad@gmail.com>
  http://www.mysensors.org
- Requires MySensors lib 1.4b
+ 
+ Changes by Thomas Krebs <thkrebs@gmx.de>
+ - Add signing support from MySensors 1.5 and update for MySensors 1.5;
+ - Restructured code back to a C like implementation following the existing MQTTGateway
+ Requires MySensors lib 1.5
+ 
  * Change below; TCP_IP, TCP_PORT, TCP_MAC
  This will listen on your selected TCP_IP:TCP_PORT below, Please change TCP_MAC your liking also.
  *1 -> NOTE: Keep first byte at x2, x6, xA or xE (replace x with any hex value) for using Local Ranges.
@@ -22,12 +27,16 @@
  This can be useful if you want to send latest state back to the MQTT client. Just check if incoming
  message has any length or not.
  Example: if (msg.type==V_LIGHT && strlen(msg.getString())>0) otherwise the code might do strange things.
- * Address-layout is : [MQTT_BROKER_PREFIX]/[NodeID]/[SensorID]/V_[SensorType]
+   * Address-layout is : [MQTT_BROKER_PREFIX]/[NodeID]/[SensorID]/V_[SensorType][/set | /get]
  NodeID and SensorID is uint8 (0-255) number.
- Last segment is translation of the sensor type, look inside MyMQTT.cpp for the definitions.
+ Segment after SensorID is translation of the sensor type, look inside MyMQTT.cpp for the definitions.
  User can change this to their needs. We have also left some space for custom types.
  Special: (sensor 255 reserved for special commands)
+ 
+ The last seqment is a command to to be send down to the sensor. The gateway is subscribed to topics which have 
+ a command present! This is to avoid that a publish by the gateway will end up in the gateway via it subsription. 
  You can receive a node sketch name with MyMQTT/20/255/V_Sketch_name (or version with _version)
+ 
  To-do:
  Special commands : clear or set EEPROM Values, Send REBOOT and Receive reboot for MyMQTT itself.
  Be able to send ACK so client returns the data being sent.
@@ -40,9 +49,6 @@
  * How to set-up Openhab and MQTTGateway:
  http://forum.mysensors.org/topic/303/mqtt-broker-gateway
 
- Changes by Thomas Krebs <thkrebs@gmx.de>
- - Add signing support from MySensors 1.5 and update for MySensors 1.5;
- - Restructured code back to a C like implementation following the existing MQTTGateway
  */
 
 #include <SPI.h>
@@ -67,6 +73,7 @@
 #include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
 #endif
 
+#define MY_ATSHA204_PIN A3 // overwrite from myconfig.h
 
 /*
  * To configure MQTTClientGateway.ino to use an ENC28J60 based board include
@@ -120,6 +127,10 @@ uint8_t local_ip[] = {192, 168, 178, 11};
 //replace with ethernet shield mac. It's mandatory every device is assigned a unique mac. Is ignored on Yun
 uint8_t mac[] = { 0xA2, 0xAE, 0xAD, 0xA0, 0xA0, 0xA2 };
 
+///////////////////////////////////////////////////////////////////
+#define MQTT_AUTH_REQUIRED       // if your broker has anonymous access uncomment
+#define MQTT_USER "username"     // username on MQTT broker
+#define MQTT_PWD  "pwd"          // password for MQTT username above
 //////////////////////////////////////////////////////////////////
 
 #if defined remote_ip && defined remote_host
@@ -139,7 +150,7 @@ MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 //MySigningNone signer;
-MySigningAtsha204Soft signer(false);
+MySigningAtsha204Soft signer(true);
 //MySigningAtsha204 signer;
 
 // Hardware profile
@@ -149,7 +160,6 @@ MyMessage msg;
 char convBuf[MAX_PAYLOAD * 2 + 1];
 uint8_t buffsize;
 char buffer[MQTT_MAX_PACKET_SIZE];
-
 
 ////////////////////////////////////////////////////////////////
 
@@ -202,7 +212,11 @@ void loop()
 {
   if (!client.connected())
   {
-    client.connect("MySensor");
+    client.connect("MySensor"
+#ifdef MQTT_AUTH_REQUIRED    
+    ,MQTT_USER,MQTT_PWD
+#endif    
+    );
     client.subscribe(MQTT_TOPIC_MASK);
   }
   client.loop();

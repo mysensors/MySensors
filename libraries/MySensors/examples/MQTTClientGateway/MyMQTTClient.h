@@ -1,4 +1,4 @@
-/*
+#define MY_HMAC_KEY 0x10,0x23,0x0A,0x78,0x77,0x35,0xB0,0x01,0x70,0x47,0xF1,0xDE,0x21,0x94,0x94,0x67,0xEE,0x36,0x72,0x42,0x97,0xBB,0xA0,0x0A,0x0F,0x09,0x03,0xE2,0x00,0x31,0xE4,0x41/*
 The MySensors library adds a new layer on top of the RF24 library.
 It handles radio network routing, relaying and ids.
 Created by Henrik Ekblad <henrik.ekblad@gmail.com>
@@ -76,10 +76,10 @@ char VAR_33[] PROGMEM = "IR_RECEIVE";	//V_IR_RECEIVE
 char VAR_34[] PROGMEM = "FLOW";		//V_FLOW
 char VAR_35[] PROGMEM = "VOLUME";		//V_VOLUME
 char VAR_36[] PROGMEM = "LOCK_STATUS";	//V_LOCK_STATUS
-char VAR_37[] PROGMEM = "DUST_LEVEL";	//V_DUST_LEVEL
+char VAR_37[] PROGMEM = "LEVEL";	// S_DUST, S_LIGHT_LEVEL, ...
 char VAR_38[] PROGMEM = "VOLTAGE";	//V_VOLTAGE
 char VAR_39[] PROGMEM = "CURRENT";	//V_CURRENT
-char VAR_40[] PROGMEM = "";		//
+char VAR_40[] PROGMEM = "RGB";		//V_RGB
 char VAR_41[] PROGMEM = "";		//
 char VAR_42[] PROGMEM = "";		//
 char VAR_43[] PROGMEM = "";		//
