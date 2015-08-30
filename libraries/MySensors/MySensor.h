@@ -220,6 +220,12 @@ class MySensor
 	void sendBatteryLevel(uint8_t level, bool ack=false);
 
 	/**
+	 * Send a heartbeat message (I'm alive!) to the gateway/controller.
+	 * The payload will be an incremental 16 bit integer value starting at 1 when sensor is powered on.
+	 */
+	void sendHeartbeat(void);
+
+	/**
 	* Requests a value from gateway or some other sensor in the radio network.
 	* Make sure to add callback-method in begin-method to handle request responses.
 	*
@@ -373,6 +379,7 @@ class MySensor
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
 	uint8_t failedTransmissions;
+	uint16_t heartbeat;
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
