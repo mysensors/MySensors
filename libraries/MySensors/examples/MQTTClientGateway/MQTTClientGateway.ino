@@ -445,7 +445,7 @@ void processMQTTMessage(char* topic, byte* payload,
   uint8_t i = 0;
   buffer[0] = 0;
   buffsize = 0;
-  uint8_t cmd = -1;
+  int8_t cmd = -1;
 
   for (str = strtok_r(topic, "/", &p); str && i < 5;
        str = strtok_r(NULL, "/", &p))
