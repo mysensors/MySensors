@@ -29,8 +29,8 @@ version 2 as published by the Free Software Foundation.
 
 
 #define MQTT_AUTH_REQUIRED                      // if your broker has anonymous access uncomment
-#define MQTT_USER "username"                    // username on MQTT broker
-#define MQTT_PWD  "pwd"                         // password for MQTT username above
+#define MQTT_USER "user"                    // username on MQTT broker
+#define MQTT_PWD  "pwd"                        // password for MQTT username above
 #define MQTT_CONN_ID "MySensors"               // passed as id to the MQTT broker
 
 

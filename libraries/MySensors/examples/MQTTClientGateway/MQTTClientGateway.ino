@@ -205,13 +205,19 @@ void loop()
 {
   if (!client.connected())
   {
+    boolean ret;
 #ifdef MQTT_AUTH_REQUIRED
     strcpy(user, MQTT_USER);
     strcpy(pwd, MQTT_PWD);
-    client.connect(connID, user,pwd);
+    ret = client.connect(connID, user,pwd);
 #else
-    client.connect(connID);
+    ret = client.connect(connID);
 #endif
+    if (ret) {
+      Serial.println("Connected to MQTT broker");
+    } else {
+      Serial.println("Connection to MQTT broker failed");
+    }
     client.subscribe(mqttTopicMask);
   }
   client.loop();
