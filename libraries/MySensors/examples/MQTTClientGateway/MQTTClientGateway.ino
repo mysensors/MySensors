@@ -119,12 +119,6 @@ uint8_t local_ip[] = {192, 168, 178, 11};
 //replace with ethernet shield mac. It's mandatory every device is assigned a unique mac. Is ignored on Yun
 uint8_t mac[] = { 0xA2, 0xAE, 0xAD, 0xA0, 0xA0, 0xA2 };
 
-///////////////////////////////////////////////////////////////////
-#define MQTT_AUTH_REQUIRED       // if your broker has anonymous access uncomment
-#define MQTT_USER "username"     // username on MQTT broker
-#define MQTT_PWD  "pwd"          // password for MQTT username above
-//////////////////////////////////////////////////////////////////
-
 #if defined remote_ip && defined remote_host
 #error "cannot define both remote_ip and remote_host at the same time!"
 #endif
@@ -152,6 +146,10 @@ MyMessage msg;
 char convBuf[MAX_PAYLOAD * 2 + 1];
 uint8_t buffsize;
 char buffer[MQTT_MAX_PACKET_SIZE];
+char user[sizeof(MQTT_USER)];                  // introduced the bufs to get rid of compiler warnings
+char pwd[sizeof(MQTT_PWD)];                    // see above
+char connID[sizeof(MQTT_CONN_ID)];             // see above
+char mqttTopicMask[sizeof(MQTT_TOPIC_MASK)];   // see above
 
 ////////////////////////////////////////////////////////////////
 
@@ -186,6 +184,9 @@ MySensor gw(transport, hw
  */
 void setup()
 {
+  strcpy(connID,MQTT_CONN_ID);
+  strcpy(mqttTopicMask,MQTT_TOPIC_MASK);
+  
   countRx = 0;
   countTx = 0;
   countErr = 0;
@@ -204,12 +205,14 @@ void loop()
 {
   if (!client.connected())
   {
-    client.connect("MySensor"
-#ifdef MQTT_AUTH_REQUIRED    
-    ,MQTT_USER,MQTT_PWD
-#endif    
-    );
-    client.subscribe(MQTT_TOPIC_MASK);
+#ifdef MQTT_AUTH_REQUIRED
+    strcpy(user, MQTT_USER);
+    strcpy(pwd, MQTT_PWD);
+    client.connect(connID, user,pwd);
+#else
+    client.connect(connID);
+#endif
+    client.subscribe(mqttTopicMask);
   }
   client.loop();
   gw.process();
@@ -297,7 +300,7 @@ void sendMQTT(const MyMessage &inMsg)
       {
         strcpy_P(buffer, mqtt_prefix);
         buffsize += strlen_P(mqtt_prefix);
-        buffsize += sprintf(&buffer[buffsize], "/%i/255/BATTERY_LEVEL\0", msg.sender );
+        buffsize += sprintf(&buffer[buffsize], "/%i/255/BATTERY_LEVEL", msg.sender );
         msg.getString(convBuf);
 #ifdef DEBUG
         Serial.print("publish: ");
@@ -311,7 +314,7 @@ void sendMQTT(const MyMessage &inMsg)
       {
         strcpy_P(buffer, mqtt_prefix);
         buffsize += strlen_P(mqtt_prefix);
-        buffsize += sprintf(&buffer[buffsize], "/%i/255/SKETCH_NAME\0", msg.sender );
+        buffsize += sprintf(&buffer[buffsize], "/%i/255/SKETCH_NAME", msg.sender );
         msg.getString(convBuf);
 #ifdef DEBUG
         Serial.print("publish: ");
@@ -325,7 +328,7 @@ void sendMQTT(const MyMessage &inMsg)
       {
         strcpy_P(buffer, mqtt_prefix);
         buffsize += strlen_P(mqtt_prefix);
-        buffsize += sprintf(&buffer[buffsize], "/%i/255/SKETCH_VERSION\0", msg.sender );
+        buffsize += sprintf(&buffer[buffsize], "/%i/255/SKETCH_VERSION", msg.sender );
         msg.getString(convBuf);
 #ifdef DEBUG
         Serial.print("publish: ");
@@ -346,7 +349,7 @@ void sendMQTT(const MyMessage &inMsg)
         msg.type = VAR_TOTAL;		// If type > defined types set to unknown.
       strcpy_P(buffer, mqtt_prefix);
       buffsize += strlen_P(mqtt_prefix);
-      buffsize += sprintf(&buffer[buffsize], "/%i/%i/V_%s\0", msg.sender,
+      buffsize += sprintf(&buffer[buffsize], "/%i/%i/V_%s", msg.sender,
                           msg.sensor, getType(convBuf, &VAR_Type[msg.type]));
       msg.getString(convBuf);
 #ifdef DEBUG
@@ -523,7 +526,7 @@ void processMQTTMessage(char* topic, byte* payload,
         setTime(epoch);
       }
 #ifdef DEBUG
-      Serial.print("Time recieved ");
+      Serial.print("Time received ");
       Serial.println(epoch);
 #endif
     }

@@ -1,4 +1,4 @@
-#define MY_HMAC_KEY 0x10,0x23,0x0A,0x78,0x77,0x35,0xB0,0x01,0x70,0x47,0xF1,0xDE,0x21,0x94,0x94,0x67,0xEE,0x36,0x72,0x42,0x97,0xBB,0xA0,0x0A,0x0F,0x09,0x03,0xE2,0x00,0x31,0xE4,0x41/*
+/*
 The MySensors library adds a new layer on top of the RF24 library.
 It handles radio network routing, relaying and ids.
 Created by Henrik Ekblad <henrik.ekblad@gmail.com>
@@ -26,6 +26,13 @@ version 2 as published by the Free Software Foundation.
 #define MQTT_SEND_SUBSCRIPTION 1		// Send empty payload (request) to node upon MQTT client subscribe request.
 #define MQTT_CMD_SET "set"                      // command (see MQTT_TOPIC_MASK); mapped to C_SET command type of sensor network
 #define MQTT_CMD_GET "get"                      // command (see MQTT_TOPIC_MASK); mapped to C_REQ command type of sensor network
+
+
+#define MQTT_AUTH_REQUIRED                      // if your broker has anonymous access uncomment
+#define MQTT_USER "username"                    // username on MQTT broker
+#define MQTT_PWD  "pwd"                         // password for MQTT username above
+#define MQTT_CONN_ID "MySensors"               // passed as id to the MQTT broker
+
 
 // NOTE above : Beware to check if there is any length on payload in your incommingMessage code:
 // Example: if (msg.type==V_LIGHT && strlen(msg.getString())>0) otherwise the code might do strange things.
