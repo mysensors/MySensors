@@ -69,12 +69,12 @@
 //#define ID_S_CUSTOM                  99
 
 // Global Vars
-unsigned long SLEEP_TIME = 180000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 300000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
 // Instanciate MySersors Gateway
-MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
+MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL);
 //MyTransportRFM69 transport;
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
@@ -130,7 +130,7 @@ MyHwATMega328 hw;
   MyMessage msg_S_COVER_U(ID_S_COVER,V_UP);
   MyMessage msg_S_COVER_D(ID_S_COVER,V_DOWN);
   MyMessage msg_S_COVER_S(ID_S_COVER,V_STOP);
-  const char* coverVal = "V_STOP";
+  const char* coverVal = "V_STOP"; //compiler warnings
 #endif
 
 #ifdef ID_S_TEMP
@@ -216,7 +216,7 @@ MyHwATMega328 hw;
   MyMessage msg_S_SCENE_CONTROLLER_ON(ID_S_SCENE_CONTROLLER,V_SCENE_ON);
   MyMessage msg_S_SCENE_CONTROLLER_OF(ID_S_SCENE_CONTROLLER,V_SCENE_OFF);
   // not sure if scene controller sends int or chars
-  // betting on ints as Touch Display Scen by Hek
+  // betting on ints as Touch Display Scen by Hek // compiler warnings
   char *scenes[] = {
     "All off",
     "Good Morning", 
@@ -309,7 +309,7 @@ void setup()
   #endif
   
   #ifdef ID_S_TEMP
-    Serial.println("  S_TMEP");
+    Serial.println("  S_TEMP");
     gw.present(ID_S_TEMP,S_TEMP);
     gw.wait(SHORT_WAIT);
   #endif
@@ -649,7 +649,7 @@ void cover(){
   if (coverVal == "V_UP"){
       Serial.println("Opening");
       gw.send(msg_S_COVER_U.set(V_UP));
-  }else if (coverVal == "V_DONW"){
+  }else if (coverVal == "V_DOWN"){
       Serial.println("Closing");
       gw.send(msg_S_COVER_D.set(V_DOWN));
   }else{
@@ -686,7 +686,7 @@ void hum(){
 void baro(){
   
   const char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
-  long pressure = map(randNumber,1,100,87000,108600);
+  long pressure = map(randNumber,1,100,870,1086);// hPa?
   int forecast = map(randNumber,1,100,0,5);
   
   Serial.print("Atmosferic Pressure is: " );
@@ -924,6 +924,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isArmed ? "Armed":"Disarmed" ));
+          door();//temp ack for door
     break;
     #endif
     
@@ -934,7 +935,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isLightOn ? "On":"Off"));
-          light();
+          light(); // temp ack
     break;
     #endif
     
@@ -1004,6 +1005,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(message.getBool()?"Locked":"Unlocked");
+          lock(); //temp ack
     break;
     #endif
     
