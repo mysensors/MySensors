@@ -358,7 +358,7 @@ boolean PubSubClient::subscribe(char* topic) {
 }
 
 boolean PubSubClient::subscribe(char* topic, uint8_t qos) {
-   if (qos < 0 || qos > 1)
+    if (qos > 1) 
      return false;
 
    if (connected()) {
