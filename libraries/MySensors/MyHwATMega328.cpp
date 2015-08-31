@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifdef __AVR_ATmega328P__
+#ifdef ARDUINO_ARCH_AVR
 
 #include "MyHw.h"
 #include "MyHwATMega328.h"
@@ -217,4 +217,4 @@ void MyHwATMega328::debugPrint(bool isGW, const char *fmt, ... ) {
 }
 #endif
 
-#endif // #ifdef __AVR_ATmega328P__
+#endif // #ifdef ARDUINO_ARCH_AVR

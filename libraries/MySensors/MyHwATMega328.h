@@ -20,7 +20,7 @@
 #ifndef MyHwATMega328_h
 #define MyHwATMega328_h
 
-#ifdef __AVR_ATmega328P__
+#ifdef ARDUINO_ARCH_AVR
 
 #include "MyHw.h"
 #include "MyConfig.h"
@@ -118,4 +118,4 @@ private:
 	void internalSleep(unsigned long ms);
 };
 #endif
-#endif // #ifdef __AVR_ATmega328P__
+#endif // #ifdef ARDUINO_ARCH_AVR

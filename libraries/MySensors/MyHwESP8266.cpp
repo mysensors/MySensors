@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifdef ESP8266
+#ifdef ARDUINO_ARCH_ESP8266
  
 #include "MyHw.h"
 #include "MyHwESP8266.h"
@@ -181,4 +181,4 @@ void MyHwESP8266::debugPrint(bool isGW, const char *fmt, ... ) {
 }
 #endif
 
-#endif  // #ifdef ESP8266
+#endif  // #ifdef ARDUINO_ARCH_ESP8266

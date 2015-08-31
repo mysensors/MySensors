@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifdef ESP8266
+#ifdef ARDUINO_ARCH_ESP8266
 
 #ifndef MyHwESP8266_h
 #define MyHwESP8266_h
@@ -83,4 +83,4 @@ public:
 };
 #endif
 
-#endif // #ifdef ESP8266
+#endif // #ifdef ARDUINO_ARCH_ESP8266

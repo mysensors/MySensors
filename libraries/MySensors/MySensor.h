@@ -41,10 +41,10 @@
 
 // Set the hardware driver to use (initialized by MySensor-class)
 //#if defined __AVR_ATmega328P__
-#if defined(ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
 #include "MyHwESP8266.h"
 typedef MyHwESP8266 MyHwDriver;
-#else
+#elif defined(ARDUINO_ARCH_AVR)
 #include "MyHwATMega328.h"
 typedef MyHwATMega328 MyHwDriver;
 #endif
