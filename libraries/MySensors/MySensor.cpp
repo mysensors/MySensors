@@ -95,14 +95,12 @@ bool MySensor::isValidFirmware() {
 
 #ifdef WITH_LEDS_BLINKING
 void MySensor::handleLedsBlinking() {
-	static unsigned long next_time = hw_millis() + ledBlinkPeriod;
-
 	// Just return if it is not the time...
 	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(hw_millis() - next_time) < 0)
+	if ((long)(hw_millis() - blink_next_time) < 0)
 		return;
 	else
-		next_time = hw_millis() + ledBlinkPeriod;
+		blink_next_time = hw_millis() + ledBlinkPeriod;
 
 	// do the actual blinking
 	if(countRx && countRx != 255) {

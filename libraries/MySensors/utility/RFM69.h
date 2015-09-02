@@ -43,6 +43,10 @@
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__)
   #define RF69_IRQ_PIN          2
   #define RF69_IRQ_NUM          2
+#elif defined(ARDUINO_ARCH_ESP8266)
+  // TODO !! Untested code! Entering unknown territory...
+  #define RF69_IRQ_PIN          2
+  #define RF69_IRQ_NUM          0
 #endif
 
 #define CSMA_LIMIT          -90 // upper RX signal sensitivity threshold in dBm for carrier sense access

@@ -1,6 +1,10 @@
 #include <string.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
+#if defined(__AVR__)
+	#include <avr/pgmspace.h>
+	#define PRIPSTR "%S"
+#elif defined(ESP8266)
+#include <pgmspace.h>
+#endif
 #include "sha256.h"
 
 
