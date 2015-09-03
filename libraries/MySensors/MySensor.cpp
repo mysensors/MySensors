@@ -95,14 +95,12 @@ bool MySensor::isValidFirmware() {
 
 #ifdef WITH_LEDS_BLINKING
 void MySensor::handleLedsBlinking() {
-	static unsigned long next_time = hw_millis() + ledBlinkPeriod;
-
 	// Just return if it is not the time...
 	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(hw_millis() - next_time) < 0)
+	if ((long)(hw_millis() - blink_next_time) < 0)
 		return;
 	else
-		next_time = hw_millis() + ledBlinkPeriod;
+		blink_next_time = hw_millis() + ledBlinkPeriod;
 
 	// do the actual blinking
 	if(countRx && countRx != 255) {
@@ -153,7 +151,9 @@ void MySensor::errBlink(uint8_t cnt) {
 #endif
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
-	hw_init();
+    #ifdef ENABLED_SERIAL
+	    hw_init();
+    #endif
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;

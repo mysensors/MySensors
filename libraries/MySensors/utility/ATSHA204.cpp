@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_AVR)
+
 #include "Arduino.h"
 #include "ATSHA204.h"
 
@@ -572,3 +574,5 @@ uint8_t ATSHA204Class::sha204c_check_crc(uint8_t *response)
   return (crc[0] == response[count] && crc[1] == response[count + 1])
     ? SHA204_SUCCESS : SHA204_BAD_CRC;
 }
+
+#endif // defined(ARDUINO_ARCH_AVR)
