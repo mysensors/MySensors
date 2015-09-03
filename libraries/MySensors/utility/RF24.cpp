@@ -548,13 +548,17 @@ void RF24::startListening(void)
 /****************************************************************************/
 static uint8_t get_child_pipe_mask(const uint8_t idx)
 {
+#ifdef ESP8266
+  static const uint8_t child_pipe_enable[] =
+  {
+    _BV(ERX_P0), _BV(ERX_P1), _BV(ERX_P2), _BV(ERX_P3), _BV(ERX_P4), _BV(ERX_P5)
+  };
+  return child_pipe_enable[idx];
+#else
   static const uint8_t child_pipe_enable[] PROGMEM =
   {
     _BV(ERX_P0), _BV(ERX_P1), _BV(ERX_P2), _BV(ERX_P3), _BV(ERX_P4), _BV(ERX_P5)
   };
-#ifdef ESP8266
-  return child_pipe_enable[idx];
-#else
   return pgm_read_byte(&child_pipe_enable[idx]);
 #endif
 }
