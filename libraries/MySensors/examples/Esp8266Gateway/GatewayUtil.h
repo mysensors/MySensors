@@ -3,12 +3,18 @@
 
 #ifdef ARDUINO
 
-
 static uint8_t inclusionTime = 1; // Number of minutes inclusion mode is enabled
 static uint8_t pinInclusion =  3; // Input pin that should trigger inclusion mode
 
 #define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from controller
 #define MAX_SEND_LENGTH 120 // Max buffersize needed for messages destined for controller
+
+
+typedef struct
+{
+  char    string[MAX_RECEIVE_LENGTH];
+  uint8_t idx;
+} inputBuffer;
 
 static volatile boolean buttonTriggeredInclusion;
 static boolean inclusionMode; // Keeps track on inclusion mode
@@ -20,7 +26,6 @@ MyParserSerial parser;
 void setInclusionMode(boolean newMode);
 
 char convBuf[MAX_PAYLOAD*2+1];
-char serialBuffer[MAX_SEND_LENGTH]; // Buffer for building string when sending data to vera
 unsigned long inclusionStartTime;
 
 

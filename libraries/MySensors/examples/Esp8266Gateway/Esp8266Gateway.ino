@@ -123,24 +123,34 @@ MySensor gw(transport, hw
   );
   
 
-#define IP_PORT 5003        // The port you want to open 
+#define IP_PORT 5003         // The port you want to open 
+#define MAX_SRV_CLIENTS 5    // how many clients should be able to telnet to this ESP8266
 
 // a R/W server on the port
-WiFiServer server(IP_PORT);
-// handle to open connection
-WiFiClient client;
+static WiFiServer server(IP_PORT);
+static WiFiClient clients[MAX_SRV_CLIENTS];
+static bool clientsConnected[MAX_SRV_CLIENTS];
+static inputBuffer inputString[MAX_SRV_CLIENTS];
 
-char inputString[MAX_RECEIVE_LENGTH] = "";    // A string to hold incoming commands from serial/ethernet interface
-int inputPos = 0;
-bool sentReady = false;
+#define ARRAY_SIZE(x)  (sizeof(x)/sizeof(x[0]))
 
-void output(const char *fmt, ... ) {
-   va_list args;
-   va_start (args, fmt );
-   vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
-   va_end (args);
-   Serial.print(serialBuffer);
-   server.write(serialBuffer);
+
+void output(const char *fmt, ... )
+{
+  char serialBuffer[MAX_SEND_LENGTH];
+  va_list args;
+  va_start (args, fmt );
+  vsnprintf_P(serialBuffer, MAX_SEND_LENGTH, fmt, args);
+  va_end (args);
+  Serial.print(serialBuffer);
+  for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
+  {
+    if (clients[i] && clients[i].connected())
+    {
+//       Serial.print("Client "); Serial.print(i); Serial.println(" write");
+       clients[i].write((uint8_t*)serialBuffer, strlen(serialBuffer));
+    }
+  }
 }
 
 void setup()  
@@ -153,7 +163,8 @@ void setup()
   Serial.print("Connecting to "); Serial.println(ssid);
 
   (void)WiFi.begin(ssid, pass);
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -168,6 +179,7 @@ void setup()
   
   // start listening for clients
   server.begin();
+  server.setNoDelay(true);  
 }
 
 
@@ -176,47 +188,74 @@ void loop() {
   
   checkButtonTriggeredInclusion();
   checkInclusionFinished();
-  
-  //check if there are any new clients
-  if (server.hasClient())
-  {
-    if (client)
-    {
-      client.stop();
-    }
-    client = server.available();
-    output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
-  }     		 
 
-  if (client) {
-     if (!client.connected()) {
-       client.stop();
-     } else if (client.available()) { 
-       // read the bytes incoming from the client
-       char inChar = client.read();
-       if (inputPos<MAX_RECEIVE_LENGTH-1) { 
-         // if newline then command is complete
-         if (inChar == '\n') {  
-           Serial.println("Finished");
-            // a command was issued by the client
-            // we will now try to send it to the actuator
-            inputString[inputPos] = 0;
-      
-            // echo the string to the serial port
-            Serial.print(inputString);
-      
-            parseAndSend(gw, inputString);
-      
-            // clear the string:
-            inputPos = 0;
-         } else {  
-           // add it to the inputString:
-           inputString[inputPos] = inChar;
-           inputPos++;
-         }
+  // Go over list of clients and stop any that are no longer connected.
+  // If the server has a new client connection it will be assigned to a free slot.
+  bool allSlotsOccupied = true;
+  for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
+  {
+    if (!clients[i].connected())
+    {
+      if (clientsConnected[i])
+      {
+        Serial.print("Client "); Serial.print(i); Serial.println(" disconnected");
+        clients[i].stop();
+      }
+      //check if there are any new clients
+      if (server.hasClient())
+      {
+        clients[i] = server.available();
+        inputString[i].idx = 0;
+        Serial.print("Client "); Serial.print(i); Serial.println(" connected"); 
+        output(PSTR("0;0;%d;0;%d;Gateway startup complete.\n"),  C_INTERNAL, I_GATEWAY_READY);
+      }
+    }
+    bool connected = clients[i].connected();
+    clientsConnected[i] = connected;
+    allSlotsOccupied &= connected;
+  }
+  if (allSlotsOccupied && server.hasClient())
+  {
+    //no free/disconnected spot so reject
+    Serial.println("No free slot available");
+    WiFiClient c = server.available();
+    c.stop();
+  }
+  
+  // Loop over clients connect and read available data
+  for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
+  {
+    while(clients[i].connected() && clients[i].available())
+    {
+      char inChar = clients[i].read();
+      if ( inputString[i].idx < MAX_RECEIVE_LENGTH - 1 )
+      { 
+        // if newline then command is complete
+        if (inChar == '\n')
+        {  
+          // a command was issued by the client
+          // we will now try to send it to the actuator
+          inputString[i].string[inputString[i].idx] = 0;
+    
+          // echo the string to the serial port
+          Serial.print("Client "); Serial.print(i); Serial.print(": "); Serial.println(inputString[i].string);
+    
+          parseAndSend(gw, inputString[i].string);
+    
+          // clear the string:
+          inputString[i].idx = 0;
+          // Finished with this client's message. Next loop() we'll see if there's more to read.
+          break;
+        } else {  
+         // add it to the inputString:
+         inputString[i].string[inputString[i].idx++] = inChar;
+        }
       } else {
-         // Incoming message too long. Throw away 
-         inputPos = 0;
+        // Incoming message too long. Throw away 
+        Serial.print("Client "); Serial.print(i); Serial.println(": Message too long");
+        inputString[i].idx = 0;
+        // Finished with this client's message. Next loop() we'll see if there's more to read.
+        break;
       }
     }
   }
