@@ -37,6 +37,7 @@ int8_t LLCP::activate(uint16_t timeout)
 int8_t LLCP::waitForConnection(uint16_t timeout)
 {
 	uint8_t type;
+	(void)timeout;
 
 	sequence = 0;
 
@@ -76,6 +77,7 @@ int8_t LLCP::waitForConnection(uint16_t timeout)
 int8_t LLCP::waitForDisconnection(uint16_t timeout)
 {
 	uint8_t type;
+	(void)timeout;
 
 	// Get DISC PDU
 	DMSG("wait for a DISC PDU\n");
@@ -113,6 +115,7 @@ int8_t LLCP::waitForDisconnection(uint16_t timeout)
 int8_t LLCP::connect(uint16_t timeout)
 {
 	uint8_t type;
+	(void)timeout;
 
 	sequence = 0;
 
@@ -165,6 +168,7 @@ int8_t LLCP::connect(uint16_t timeout)
 int8_t LLCP::disconnect(uint16_t timeout)
 {
 	uint8_t type;
+	(void)timeout;
 
 	// try to get a SYMM PDU
 	if (2 > link.read(headerBuf, headerBufLen)) {
@@ -207,7 +211,6 @@ int8_t LLCP::disconnect(uint16_t timeout)
 
 bool LLCP::write(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
 {
-	uint8_t type;
 	uint8_t buf[3];
 
 	if (2 != link.read(buf, sizeof(buf))) {

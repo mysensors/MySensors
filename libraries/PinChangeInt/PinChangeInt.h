@@ -234,6 +234,7 @@ protected:
 	volatile	uint8_t			portFallingPins;
 	volatile uint8_t		lastPinView;
 	PCintPin*	firstPin;
+	PCintPin	thePin;
 };
 
 #ifndef LIBCALL_PINCHANGEINT // LIBCALL_PINCHANGEINT ***********************************************
@@ -388,8 +389,9 @@ int8_t PCintPort::addPin(uint8_t arduinoPin, PCIntvoidFuncPtr userFunc, uint8_t 
 		} while (true);
 	}
 
-	// Create pin p:  fill in the data.
-	PCintPin* p=new PCintPin;
+	// Create pin p:  fill in the data. NOTE: MySensors only support one pin due to size constraints
+	// TODO: Figure out a better way to solve this without relying on new/malloc
+	PCintPin* p = &thePin; //PCintPin* p=new PCintPin;
 	if (p == NULL) return(-1);
 	p->arduinoPin=arduinoPin;
 	p->mode = mode;
@@ -472,7 +474,8 @@ void PCintPort::detachInterrupt(uint8_t arduinoPin)
 // there isn't really a good way to back-map ports and masks to pins.
 void PCintPort::PCint() {
 	uint8_t thisChangedPin; //MIKE
-
+	(void)thisChangedPin;
+	
 	#ifdef FLASH
 	if (*led_port & led_mask) *led_port&=not_led_mask;
 	else *led_port|=led_mask;

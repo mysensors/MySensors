@@ -1,5 +1,5 @@
 /*
- Enc28J60Network.h
+ Enc28J60NetworkClass.h
  UIPEthernet network driver for Microchip ENC28J60 Ethernet Interface.
 
  Copyright (c) 2013 Norbert Truchsess <norbert.truchsess@t-online.de>
@@ -22,8 +22,8 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENC28J60NETWORK_H_
-#define ENC28J60NETWORK_H_
+#ifndef Enc28J60Network_H_
+#define Enc28J60Network_H_
 
 #include "mempool.h"
 
@@ -46,41 +46,46 @@ class Enc28J60Network : public MemoryPool
 {
 
 private:
-  uint16_t nextPacketPtr;
-  uint8_t bank;
+  static uint16_t nextPacketPtr;
+  static uint8_t bank;
 
-  struct memblock receivePkt;
+  static struct memblock receivePkt;
 
-  uint8_t readOp(uint8_t op, uint8_t address);
-  void writeOp(uint8_t op, uint8_t address, uint8_t data);
-  uint16_t setReadPtr(memhandle handle, memaddress position, uint16_t len);
-  void setERXRDPT();
-  void readBuffer(uint16_t len, uint8_t* data);
-  void writeBuffer(uint16_t len, uint8_t* data);
-  uint8_t readByte(uint16_t addr);
-  void writeByte(uint16_t addr, uint8_t data);
-  void setBank(uint8_t address);
-  uint8_t readReg(uint8_t address);
-  void writeReg(uint8_t address, uint8_t data);
-  void writeRegPair(uint8_t address, uint16_t data);
-  void phyWrite(uint8_t address, uint16_t data);
-  void clkout(uint8_t clk);
-  uint8_t getrev(void);
+  static uint8_t readOp(uint8_t op, uint8_t address);
+  static void writeOp(uint8_t op, uint8_t address, uint8_t data);
+  static uint16_t setReadPtr(memhandle handle, memaddress position, uint16_t len);
+  static void setERXRDPT();
+  static void readBuffer(uint16_t len, uint8_t* data);
+  static void writeBuffer(uint16_t len, uint8_t* data);
+  static uint8_t readByte(uint16_t addr);
+  static void writeByte(uint16_t addr, uint8_t data);
+  static void setBank(uint8_t address);
+  static uint8_t readReg(uint8_t address);
+  static void writeReg(uint8_t address, uint8_t data);
+  static void writeRegPair(uint8_t address, uint16_t data);
+  static void phyWrite(uint8_t address, uint16_t data);
+  static uint16_t phyRead(uint8_t address);
+  static void clkout(uint8_t clk);
 
-protected:
-  void memblock_mv_cb(memaddress dest, memaddress src, memaddress size);
+  friend void enc28J60_mempool_block_move_callback(memaddress,memaddress,memaddress);
 
 public:
-  Enc28J60Network();
-  void init(uint8_t* macaddr);
-  memhandle receivePacket();
-  void freePacket();
-  memaddress blockSize(memhandle handle);
-  void sendPacket(memhandle handle);
-  uint16_t readPacket(memhandle handle, memaddress position, uint8_t* buffer, uint16_t len);
-  uint16_t writePacket(memhandle handle, memaddress position, uint8_t* buffer, uint16_t len);
-  void copyPacket(memhandle dest, memaddress dest_pos, memhandle src, memaddress src_pos, uint16_t len);
-  uint16_t chksum(uint16_t sum, memhandle handle, memaddress pos, uint16_t len);
+
+  uint8_t getrev(void);
+  void powerOn();
+  void powerOff();
+  bool linkStatus();
+
+  static void init(uint8_t* macaddr);
+  static memhandle receivePacket();
+  static void freePacket();
+  static memaddress blockSize(memhandle handle);
+  static void sendPacket(memhandle handle);
+  static uint16_t readPacket(memhandle handle, memaddress position, uint8_t* buffer, uint16_t len);
+  static uint16_t writePacket(memhandle handle, memaddress position, uint8_t* buffer, uint16_t len);
+  static void copyPacket(memhandle dest, memaddress dest_pos, memhandle src, memaddress src_pos, uint16_t len);
+  static uint16_t chksum(uint16_t sum, memhandle handle, memaddress pos, uint16_t len);
 };
 
-#endif /* ENC28J60NETWORK_H_ */
+extern Enc28J60Network Enc28J60;
+#endif /* Enc28J60NetworkClass_H_ */

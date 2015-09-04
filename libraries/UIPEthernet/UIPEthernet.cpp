@@ -25,6 +25,8 @@
 #include "HardwareSerial.h"
 #endif
 
+#include "UIPUdp.h"
+
 extern "C"
 {
 #include "utility/uip-conf.h"
@@ -35,18 +37,24 @@ extern "C"
 
 #define ETH_HDR ((struct uip_eth_hdr *)&uip_buf[0])
 
+memhandle UIPEthernetClass::in_packet(NOBLOCK);
+memhandle UIPEthernetClass::uip_packet(NOBLOCK);
+uint8_t UIPEthernetClass::uip_hdrlen(0);
+uint8_t UIPEthernetClass::packetstate(0);
+
+IPAddress UIPEthernetClass::_dnsServerAddress;
+DhcpClass* UIPEthernetClass::_dhcp(NULL);
+
+unsigned long UIPEthernetClass::periodic_timer;
+
 // Because uIP isn't encapsulated within a class we have to use global
 // variables, so we can only have one TCP/IP stack per program.
 
-UIPEthernetClass::UIPEthernetClass() :
-    in_packet(NOBLOCK),
-    uip_packet(NOBLOCK),
-    uip_hdrlen(0),
-    packetstate(0),
-    _dhcp(NULL)
+UIPEthernetClass::UIPEthernetClass()
 {
 }
 
+#if UIP_UDP
 int
 UIPEthernetClass::begin(const uint8_t* mac)
 {
@@ -66,6 +74,7 @@ UIPEthernetClass::begin(const uint8_t* mac)
   }
   return ret;
 }
+#endif
 
 void
 UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip)
@@ -100,6 +109,7 @@ UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns, IPAddre
 int UIPEthernetClass::maintain(){
   tick();
   int rc = DHCP_CHECK_NONE;
+#if UIP_UDP
   if(_dhcp != NULL){
     //we have a pointer to dhcp, use it
     rc = _dhcp->checkLease();
@@ -118,6 +128,7 @@ int UIPEthernetClass::maintain(){
     }
   }
   return rc;
+#endif
 }
 
 IPAddress UIPEthernetClass::localIP()
@@ -154,7 +165,7 @@ UIPEthernetClass::tick()
 {
   if (in_packet == NOBLOCK)
     {
-      in_packet = network.receivePacket();
+      in_packet = Enc28J60Network::receivePacket();
 #ifdef UIPETHERNET_DEBUG
       if (in_packet != NOBLOCK)
         {
@@ -166,13 +177,13 @@ UIPEthernetClass::tick()
   if (in_packet != NOBLOCK)
     {
       packetstate = UIPETHERNET_FREEPACKET;
-      uip_len = network.blockSize(in_packet);
+      uip_len = Enc28J60Network::blockSize(in_packet);
       if (uip_len > 0)
         {
-          network.readPacket(in_packet,0,(uint8_t*)uip_buf,UIP_BUFSIZE);
+          Enc28J60Network::readPacket(in_packet,0,(uint8_t*)uip_buf,UIP_BUFSIZE);
           if (ETH_HDR ->type == HTONS(UIP_ETHTYPE_IP))
             {
-              uip_packet = in_packet;
+              uip_packet = in_packet; //required for upper_layer_checksum of in_packet!
 #ifdef UIPETHERNET_DEBUG
               Serial.print(F("readPacket type IP, uip_len: "));
               Serial.println(uip_len);
@@ -204,37 +215,65 @@ UIPEthernetClass::tick()
           Serial.print(F("freeing packet: "));
           Serial.println(in_packet);
 #endif
-          network.freePacket();
+          Enc28J60Network::freePacket();
           in_packet = NOBLOCK;
         }
     }
 
-  if (uip_timer_expired(&periodic_timer))
+  unsigned long now = millis();
+
+#if UIP_CLIENT_TIMER >= 0
+  boolean periodic = (long)( now - periodic_timer ) >= 0;
+  for (int i = 0; i < UIP_CONNS; i++)
     {
-      uip_timer_restart(&periodic_timer);
+#else
+  if ((long)( now - periodic_timer ) >= 0)
+    {
+      periodic_timer = now + UIP_PERIODIC_TIMER;
+
       for (int i = 0; i < UIP_CONNS; i++)
         {
-          uip_periodic(i);
-          // If the above function invocation resulted in data that
-          // should be sent out on the network, the global variable
-          // uip_len is set to a value > 0.
-          if (uip_len > 0)
-            {
-              uip_arp_out();
-              network_send();
-            }
+#endif
+      uip_conn = &uip_conns[i];
+#if UIP_CLIENT_TIMER >= 0
+      if (periodic)
+        {
+#endif
+          uip_process(UIP_TIMER);
+#if UIP_CLIENT_TIMER >= 0
         }
-
+      else
+        {
+          if ((long)( now - ((uip_userdata_t*)uip_conn->appstate)->timer) >= 0)
+            uip_process(UIP_POLL_REQUEST);
+          else
+            continue;
+        }
+#endif
+        // If the above function invocation resulted in data that
+        // should be sent out on the Enc28J60Network, the global variable
+        // uip_len is set to a value > 0.
+      if (uip_len > 0)
+        {
+          uip_arp_out();
+          network_send();
+        }
+    }
+#if UIP_CLIENT_TIMER >= 0
+  if (periodic)
+    {
+      periodic_timer = now + UIP_PERIODIC_TIMER;
+#endif
 #if UIP_UDP
       for (int i = 0; i < UIP_UDP_CONNS; i++)
         {
           uip_udp_periodic(i);
           // If the above function invocation resulted in data that
-          // should be sent out on the network, the global variable
+          // should be sent out on the Enc28J60Network, the global variable
           // uip_len is set to a value > 0. */
           if (uip_len > 0)
             {
-              network_send();
+              UIPUDP::_send((uip_udp_userdata_t *)(uip_udp_conns[i].appstate));
             }
         }
 #endif /* UIP_UDP */
@@ -246,41 +285,43 @@ boolean UIPEthernetClass::network_send()
   if (packetstate & UIPETHERNET_SENDPACKET)
     {
 #ifdef UIPETHERNET_DEBUG
-      Serial.print(F("network_send uip_packet: "));
+      Serial.print(F("Enc28J60Network_send uip_packet: "));
       Serial.print(uip_packet);
       Serial.print(F(", hdrlen: "));
       Serial.println(uip_hdrlen);
 #endif
-      network.writePacket(uip_packet,0,uip_buf,uip_hdrlen);
+      Enc28J60Network::writePacket(uip_packet,0,uip_buf,uip_hdrlen);
+      packetstate &= ~ UIPETHERNET_SENDPACKET;
       goto sendandfree;
     }
-  uip_packet = network.allocBlock(uip_len);
+  uip_packet = Enc28J60Network::allocBlock(uip_len);
   if (uip_packet != NOBLOCK)
     {
 #ifdef UIPETHERNET_DEBUG
-      Serial.print(F("network_send uip_buf (uip_len): "));
+      Serial.print(F("Enc28J60Network_send uip_buf (uip_len): "));
       Serial.print(uip_len);
       Serial.print(F(", packet: "));
       Serial.println(uip_packet);
 #endif
-      network.writePacket(uip_packet,0,uip_buf,uip_len);
+      Enc28J60Network::writePacket(uip_packet,0,uip_buf,uip_len);
       goto sendandfree;
     }
   return false;
 sendandfree:
-  network.sendPacket(uip_packet);
-  network.freeBlock(uip_packet);
+  Enc28J60Network::sendPacket(uip_packet);
+  Enc28J60Network::freeBlock(uip_packet);
   uip_packet = NOBLOCK;
   return true;
 }
 
 void UIPEthernetClass::init(const uint8_t* mac) {
-  uip_timer_set(&this->periodic_timer, CLOCK_SECOND / 4);
+  periodic_timer = millis() + UIP_PERIODIC_TIMER;
 
-  network.init((uint8_t*)mac);
+  Enc28J60Network::init((uint8_t*)mac);
   uip_seteth_addr(mac);
 
   uip_init();
+  uip_arp_init();
 }
 
 void UIPEthernetClass::configure(IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet) {
@@ -345,7 +386,11 @@ UIPEthernetClass::ipchksum(void)
 
 /*---------------------------------------------------------------------------*/
 uint16_t
+#if UIP_UDP
 UIPEthernetClass::upper_layer_chksum(uint8_t proto)
+#else
+uip_tcpchksum(void)
+#endif
 {
   uint16_t upper_layer_len;
   uint16_t sum;
@@ -359,27 +404,34 @@ UIPEthernetClass::upper_layer_chksum(uint8_t proto)
   /* First sum pseudoheader. */
 
   /* IP protocol and length fields. This addition cannot carry. */
+#if UIP_UDP
   sum = upper_layer_len + proto;
+#else
+  sum = upper_layer_len + UIP_PROTO_TCP;
+#endif
   /* Sum IP source and destination addresses. */
-  sum = chksum(sum, (u8_t *)&BUF->srcipaddr[0], 2 * sizeof(uip_ipaddr_t));
+  sum = UIPEthernetClass::chksum(sum, (u8_t *)&BUF->srcipaddr[0], 2 * sizeof(uip_ipaddr_t));
 
   uint8_t upper_layer_memlen;
+#if UIP_UDP
   switch(proto)
   {
-  case UIP_PROTO_ICMP:
-  case UIP_PROTO_ICMP6:
-    upper_layer_memlen = upper_layer_len;
-    break;
-  case UIP_PROTO_TCP:
-    upper_layer_memlen = (BUF->tcpoffset >> 4) << 2;
-    break;
-#if UIP_UDP
-    case UIP_PROTO_UDP:
+//    case UIP_PROTO_ICMP:
+//    case UIP_PROTO_ICMP6:
+//      upper_layer_memlen = upper_layer_len;
+//      break;
+  case UIP_PROTO_UDP:
     upper_layer_memlen = UIP_UDPH_LEN;
     break;
+  default:
+//  case UIP_PROTO_TCP:
 #endif
+    upper_layer_memlen = (BUF->tcpoffset >> 4) << 2;
+#if UIP_UDP
+    break;
   }
-  sum = chksum(sum, &uip_buf[UIP_IPH_LEN + UIP_LLH_LEN], upper_layer_memlen);
+#endif
+  sum = UIPEthernetClass::chksum(sum, &uip_buf[UIP_IPH_LEN + UIP_LLH_LEN], upper_layer_memlen);
 #ifdef UIPETHERNET_DEBUG_CHKSUM
   Serial.print(F("chksum uip_buf["));
   Serial.print(UIP_IPH_LEN + UIP_LLH_LEN);
@@ -390,9 +442,9 @@ UIPEthernetClass::upper_layer_chksum(uint8_t proto)
 #endif
   if (upper_layer_memlen < upper_layer_len)
     {
-      sum = network.chksum(
+      sum = Enc28J60Network::chksum(
           sum,
-          uip_packet,
+          UIPEthernetClass::uip_packet,
           UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_memlen,
           upper_layer_len - upper_layer_memlen
       );
@@ -403,7 +455,7 @@ UIPEthernetClass::upper_layer_chksum(uint8_t proto)
       Serial.print(UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_memlen);
       Serial.print(F("-"));
       Serial.print(UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_len);
-      Serial.print(F"]: "));
+      Serial.print(F("]: "));
       Serial.println(htons(sum),HEX);
 #endif
     }
@@ -416,6 +468,7 @@ uip_ipchksum(void)
   return UIPEthernet.ipchksum();
 }
 
+#if UIP_UDP
 uint16_t
 uip_tcpchksum(void)
 {
@@ -423,7 +476,6 @@ uip_tcpchksum(void)
   return sum;
 }
 
-#if UIP_UDP
 uint16_t
 uip_udpchksum(void)
 {

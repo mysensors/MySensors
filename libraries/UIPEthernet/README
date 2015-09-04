@@ -1,4 +1,4 @@
-This is UIPEthernet version 1.01
+This is UIPEthernet version 1.09
 
 An plugin-replacement of the stock Arduino Ethernet library for ENC28J60 shields and breakout boards. Full support for persistent (streaming) TCP-connections and UDP (Client and Server each), ARP, ICMP, DHCP and DNS. 
 Just include 'UIPEthernet.h' instead of 'Ethernet.h' and use all your code written for the stock Arduino Ethernet lib!
@@ -26,7 +26,9 @@ On a Mac, you will want to create a folder named "libraries" in in the "Document
     $ cd ~/Documents/Arduino/libraries
     $ git clone https://github.com/ntruchsess/arduino_uip UIPEthernet
     
-Or you download the zipped version of the library from https://github.com/ntruchsess/arduino_uip/archive/master.zip, create a directory [path to Arduino distribution]\libraries\UIPEthernet and put the contents of the zip-file there.
+Or you download the zipped version of the library from https://github.com/ntruchsess/arduino_uip/releases, and copy the contained directory UIPEthernet to [path to Arduino distribution]\libraries\UIPEthernet.
+
+If you are running Arduino-IDE 1.5.x use release-version 1.59 or checkout branch 'Arduino_1.5.x'
 
 Additional information can be found on the Arduino website: http://www.arduino.cc/en/Hacking/Libraries
 

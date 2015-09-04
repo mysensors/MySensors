@@ -1,32 +1,52 @@
-// Use this sensor to measure KWH and Watt of your house meeter
-// You need to set the correct pulsefactor of your meeter (blinks per KWH).
-// The sensor starts by fetching current KWH value from gateway.
-// Reports both KWH and Watt back to gateway.
-//
-// Unfortunately millis() won't increment when the Arduino is in 
-// sleepmode. So we cannot make this sensor sleep if we also want 
-// to calculate/report watt-number.
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik EKblad
+ * 
+ * DESCRIPTION
+ * This sketch provides an example how to implement a distance sensor using HC-SR04 
+ * Use this sensor to measure KWH and Watt of your house meeter
+ * You need to set the correct pulsefactor of your meeter (blinks per KWH).
+ * The sensor starts by fetching current KWH value from gateway.
+ * Reports both KWH and Watt back to gateway.
+ *
+ * Unfortunately millis() won't increment when the Arduino is in 
+ * sleepmode. So we cannot make this sensor sleep if we also want 
+ * to calculate/report watt-number.
+ * http://www.mysensors.org/build/pulse_power
+ */
 
-#include <Sleep_n0m1.h>
 #include <SPI.h>
-#include <EEPROM.h>  
-#include <RF24.h>
-#include <Sensor.h>  
+#include <MySensor.h>  
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
 #define PULSE_FACTOR 1000       // Nummber of blinks per KWH of your meeter
 #define SLEEP_MODE false        // Watt-value can only be reported when sleep mode is false.
 #define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
 #define INTERRUPT DIGITAL_INPUT_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
-#define CHILD_ID 1   // Id of the sensor child
-unsigned long SEND_FREQUENCY = 20; // Minimum time between send (in seconds). We don't wnat to spam the gateway.
-
-Sensor gw;
-Sleep sleep;
-
-//double kwhPerBlink = 1.0/((double)PULSE_FACTOR); 
+#define CHILD_ID 1              // Id of the sensor child
+unsigned long SEND_FREQUENCY = 20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
+MySensor gw;
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
-
+boolean pcReceived = false;
 volatile unsigned long pulseCount = 0;   
 volatile unsigned long lastBlink = 0;
 volatile unsigned long watt = 0;
@@ -34,21 +54,24 @@ unsigned long oldPulseCount = 0;
 unsigned long oldWatt = 0;
 double oldKwh;
 unsigned long lastSend;
+MyMessage wattMsg(CHILD_ID,V_WATT);
+MyMessage kwhMsg(CHILD_ID,V_KWH);
+MyMessage pcMsg(CHILD_ID,V_VAR1);
+
 
 void setup()  
 {  
-  gw.begin();
+  gw.begin(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Energy Meter", "1.0");
 
   // Register this device as power sensor
-  gw.sendSensorPresentation(CHILD_ID, S_POWER);
+  gw.present(CHILD_ID, S_POWER);
 
   // Fetch last known pulse count value from gw
-  pulseCount = oldPulseCount = atol(gw.getStatus(CHILD_ID, V_VAR1));
-  Serial.print("Last pulse count from gw:");
-  Serial.println(pulseCount);
+  gw.request(CHILD_ID, V_VAR1);
+  
   attachInterrupt(INTERRUPT, onPulse, RISING);
   lastSend=millis();
 }
@@ -56,15 +79,17 @@ void setup()
 
 void loop()     
 { 
-   unsigned long now = millis();
+  gw.process();
+  unsigned long now = millis();
   // Only send values at a maximum frequency or woken up from sleep
-  if (SLEEP_MODE || now - lastSend > 1000*SEND_FREQUENCY) {
+  bool sendTime = now - lastSend > SEND_FREQUENCY;
+  if (pcReceived && (SLEEP_MODE || sendTime)) {
     // New watt value has been calculated  
     if (!SLEEP_MODE && watt != oldWatt) {
       // Check that we dont get unresonable large watt value. 
       // could hapen when long wraps or false interrupt triggered
       if (watt<((unsigned long)MAX_WATT)) {
-        gw.sendVariable(CHILD_ID, V_WATT, watt);  // Send watt value to gw 
+        gw.send(wattMsg.set(watt));  // Send watt value to gw 
       }  
       Serial.print("Watt:");
       Serial.println(watt);
@@ -73,26 +98,32 @@ void loop()
   
     // Pulse cout has changed
     if (pulseCount != oldPulseCount) {
-      gw.sendVariable(CHILD_ID, V_VAR1, pulseCount);  // Send kwh value to gw 
+      gw.send(pcMsg.set(pulseCount));  // Send pulse count value to gw 
       double kwh = ((double)pulseCount/((double)PULSE_FACTOR));     
       oldPulseCount = pulseCount;
-      //Serial.print("Pulse count:");
-      //Serial.println(pulseCount);
       if (kwh != oldKwh) {
-        gw.sendVariable(CHILD_ID, V_KWH, kwh, 4);  // Send kwh value to gw 
-        //Serial.print("KWH:");
-        //Serial.println(kwh);
+        gw.send(kwhMsg.set(kwh, 4));  // Send kwh value to gw 
         oldKwh = kwh;
       }
-    }
+    }    
     lastSend = now;
+  } else if (sendTime && !pcReceived) {
+    // No count received. Try requesting it again
+    gw.request(CHILD_ID, V_VAR1);
+    lastSend=now;
   }
   
   if (SLEEP_MODE) {
-    delay(300); //delay to allow serial to fully print before sleep
-    gw.powerDown();
-    sleep.pwrDownMode(); //set sleep mode
-    sleep.sleepDelay(SEND_FREQUENCY * 1000); //sleep for: sleepTime 
+    gw.sleep(SEND_FREQUENCY);
+  }
+}
+
+void incomingMessage(const MyMessage &message) {
+  if (message.type==V_VAR1) {  
+    pulseCount = oldPulseCount = message.getLong();
+    Serial.print("Received last pulse count from gw:");
+    Serial.println(pulseCount);
+    pcReceived = true;
   }
 }
 

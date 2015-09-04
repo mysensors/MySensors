@@ -22,13 +22,15 @@
 
 #define POOLOFFSET 1
 
-MemoryPool::MemoryPool(memaddress start, memaddress size)
+struct memblock MemoryPool::blocks[MEMPOOL_NUM_MEMBLOCKS+1];
+
+void
+MemoryPool::init()
 {
   memset(&blocks[0], 0, sizeof(blocks));
-  blocks[POOLSTART].begin = start;
+  blocks[POOLSTART].begin = MEMPOOL_STARTADDRESS;
   blocks[POOLSTART].size = 0;
   blocks[POOLSTART].nextblock = NOBLOCK;
-  poolsize = size;
 }
 
 memhandle
@@ -37,12 +39,12 @@ MemoryPool::allocBlock(memaddress size)
   memblock* best = NULL;
   memhandle cur = POOLSTART;
   memblock* block = &blocks[POOLSTART];
-  memaddress bestsize = poolsize + 1;
+  memaddress bestsize = MEMPOOL_SIZE + 1;
 
   do
     {
       memhandle next = block->nextblock;
-      memaddress freesize = ( next == NOBLOCK ? blocks[POOLSTART].begin + poolsize : blocks[next].begin) - block->begin - block->size;
+      memaddress freesize = ( next == NOBLOCK ? blocks[POOLSTART].begin + MEMPOOL_SIZE : blocks[next].begin) - block->begin - block->size;
       if (freesize == size)
         {
           best = &blocks[cur];
@@ -77,14 +79,14 @@ MemoryPool::allocBlock(memaddress size)
           memaddress* src = &nextblock->begin;
           if (dest != *src)
             {
-#ifdef MEMBLOCK_MV
-              memblock_mv_cb(dest,*src,nextblock->size);
+#ifdef MEMPOOL_MEMBLOCK_MV
+              MEMPOOL_MEMBLOCK_MV(dest,*src,nextblock->size);
 #endif
               *src = dest;
             }
           block = nextblock;
         }
-      if (blocks[POOLSTART].begin + poolsize - block->begin - block->size >= size)
+      if (blocks[POOLSTART].begin + MEMPOOL_SIZE - block->begin - block->size >= size)
         best = block;
       else
         goto notfound;
@@ -93,7 +95,7 @@ MemoryPool::allocBlock(memaddress size)
   found:
     {
       block = &blocks[POOLOFFSET];
-      for (cur = POOLOFFSET; cur < NUM_MEMBLOCKS + POOLOFFSET; cur++)
+      for (cur = POOLOFFSET; cur < MEMPOOL_NUM_MEMBLOCKS + POOLOFFSET; cur++)
         {
           if (block->size)
             {
@@ -118,6 +120,8 @@ MemoryPool::allocBlock(memaddress size)
 void
 MemoryPool::freeBlock(memhandle handle)
 {
+  if (handle == NOBLOCK)
+    return;
   memblock *b = &blocks[POOLSTART];
 
   do

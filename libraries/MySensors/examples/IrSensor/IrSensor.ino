@@ -1,15 +1,39 @@
-// Example sketch showing how to control ir devices
-// An IR LED must be connected to Arduino PWM pin 3.
-// An optional ir receiver can be connected to PWM pin 8. 
-// All receied ir signals will be sent to gateway device stored in VAR_1.
-// When binary light on is clicked - sketch will send volume up ir command
-// When binary light off is clicked - sketch will send volume down ir command
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik EKblad
+ * 
+ * DESCRIPTION
+ * Example sketch showing how to control ir devices
+ * An IR LED must be connected to Arduino PWM pin 3.
+ * An optional ir receiver can be connected to PWM pin 8. 
+ * All receied ir signals will be sent to gateway device stored in VAR_1.
+ * When binary light on is clicked - sketch will send volume up ir command
+ * When binary light off is clicked - sketch will send volume down ir command
+ * http://www.mysensors.org/build/ir
+ */
 
-#include <Sensor.h>
+#include <MySensor.h>
 #include <SPI.h>
-#include <EEPROM.h>  
-#include <RF24.h>
-#include <IRremote.h>
+#include <IRLib.h>
 
 int RECV_PIN = 8;
 
@@ -17,56 +41,63 @@ int RECV_PIN = 8;
 
 IRsend irsend;
 IRrecv irrecv(RECV_PIN);
-decode_results results;
-
-Sensor gw;
+IRdecode decoder;
+//decode_results results;
+unsigned int Buffer[RAWBUF];
+MySensor gw;
+MyMessage msg(CHILD_1, V_VAR1);
 
 void setup()  
 {  
   irrecv.enableIRIn(); // Start the ir receiver
-  gw.begin();
+  decoder.UseExtnBuf(Buffer);
+  gw.begin(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("IR Sensor", "1.0");
 
   // Register a sensors to gw. Use binary light for test purposes.
-  gw.sendSensorPresentation(CHILD_1, S_LIGHT);
+  gw.present(CHILD_1, S_LIGHT);
 }
 
 
 void loop() 
 {
-  if (gw.messageAvailable()) {
-    message_s message = gw.getMessage(); 
-
-     int incomingRelayStatus = atoi(message.data);
-     if (incomingRelayStatus == 1) {
-      irsend.sendNEC(0x1EE17887, 32); // Vol up yamaha ysp-900
-     } else {
-      irsend.sendNEC(0x1EE1F807, 32); // Vol down yamaha ysp-900
-     }
-     // Start receiving ir again...
-    irrecv.enableIRIn(); 
-  }
-  
- 
-  if (irrecv.decode(&results)) {
+  gw.process();
+  if (irrecv.GetResults(&decoder)) {
+    irrecv.resume(); 
+    decoder.decode();
+    decoder.DumpResults();
+        
     char buffer[10];
-    sprintf(buffer, "%08lx", results.value);
-    dump(&results);
+    sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
-    gw.sendVariable(CHILD_1, V_VAR1, buffer);
-    irrecv.resume(); // Receive the next value
+    gw.send(msg.set(buffer));
   }
 }
 
 
+
+void incomingMessage(const MyMessage &message) {
+  // We only expect one type of message from controller. But we better check anyway.
+  if (message.type==V_LIGHT) {
+     int incomingRelayStatus = message.getInt();
+     if (incomingRelayStatus == 1) {
+      irsend.send(NEC, 0x1EE17887, 32); // Vol up yamaha ysp-900
+     } else {
+      irsend.send(NEC, 0x1EE1F807, 32); // Vol down yamaha ysp-900
+     }
+     // Start receiving ir again...
+    irrecv.enableIRIn(); 
+  }
+}
+    
 // Dumps out the decode_results structure.
 // Call this after IRrecv::decode()
 // void * to work around compiler issue
 //void dump(void *v) {
 //  decode_results *results = (decode_results *)v
-void dump(decode_results *results) {
+/*void dump(decode_results *results) {
   int count = results->rawlen;
   if (results->decode_type == UNKNOWN) {
     Serial.print("Unknown encoding: ");
@@ -110,4 +141,4 @@ void dump(decode_results *results) {
   }
   Serial.println("");
 }
-
+*/

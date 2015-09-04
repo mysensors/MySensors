@@ -1,195 +1,299 @@
-#include <Sleep_n0m1.h>
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik Ekblad
+ * 
+ * DESCRIPTION
+ * Pressure sensor example using BMP085 module  
+ * http://www.mysensors.org/build/pressure
+ *
+ */
+ 
 #include <SPI.h>
-#include <EEPROM.h>  
-#include <RF24.h>
-#include <Sensor.h>  
+#include <MySensor.h>  
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
 
-#define LIGHT_SENSOR_ANALOG_PIN 0
-unsigned long SLEEP_TIME = 60; // Sleep time between reads (in seconds)
+#define BARO_CHILD 0
+#define TEMP_CHILD 1
+
+const float ALTITUDE = 688; // <-- adapt this value to your own location's altitude.
+
+// Sleep time between reads (in seconds). Do not change this value as the forecast algorithm needs a sample every minute.
+const unsigned long SLEEP_TIME = 60000; 
+
+const char *weather[] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
+enum FORECAST
+{
+	STABLE = 0,			// "Stable Weather Pattern"
+	SUNNY = 1,			// "Slowly rising Good Weather", "Clear/Sunny "
+	CLOUDY = 2,			// "Slowly falling L-Pressure ", "Cloudy/Rain "
+	UNSTABLE = 3,		// "Quickly rising H-Press",     "Not Stable"
+	THUNDERSTORM = 4,	// "Quickly falling L-Press",    "Thunderstorm"
+	UNKNOWN = 5			// "Unknown (More Time needed)
+};
 
 Adafruit_BMP085 bmp = Adafruit_BMP085();      // Digital Pressure Sensor 
-Sensor gw;
+MySensor gw;
 
 float lastPressure = -1;
 float lastTemp = -1;
 int lastForecast = -1;
-Sleep sleep;
-char *weather[] = {"stable","sunny","cloudy","unstable","thunderstorm","unknown"};
-int minutes;
-float pressureSamples[180];
+
+const int LAST_SAMPLES_COUNT = 5;
+float lastPressureSamples[LAST_SAMPLES_COUNT];
+
+// this CONVERSION_FACTOR is used to convert from Pa to kPa in forecast algorithm
+// get kPa/h be dividing hPa by 10 
+#define CONVERSION_FACTOR (1.0/10.0)
+
 int minuteCount = 0;
 bool firstRound = true;
-float pressureAvg[7];
+// average value is used in forecast algorithm.
+float pressureAvg;
+// average after 2 hours is used as reference value for the next iteration.
+float pressureAvg2;
+
 float dP_dt;
-boolean metric; 
+boolean metric;
+MyMessage tempMsg(TEMP_CHILD, V_TEMP);
+MyMessage pressureMsg(BARO_CHILD, V_PRESSURE);
+MyMessage forecastMsg(BARO_CHILD, V_FORECAST);
 
-void setup() {
-  gw.begin();
 
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Pressure Sensor", "1.0");
+void setup() 
+{
+	gw.begin();
 
-  if (!bmp.begin()) {
-    Serial.println("Could not find a valid BMP085 sensor, check wiring!");
-    while (1) { }
-  }
+	// Send the sketch version information to the gateway and Controller
+	gw.sendSketchInfo("Pressure Sensor", "1.1");
 
-  // Register sensors to gw (they will be created as child devices)
-  gw.sendSensorPresentation(0, S_BARO);
-  gw.sendSensorPresentation(1, S_TEMP);
-  metric = gw.isMetricSystem();
+	if (!bmp.begin()) 
+	{
+		Serial.println("Could not find a valid BMP085 sensor, check wiring!");
+		while (1) {}
+	}
+
+	// Register sensors to gw (they will be created as child devices)
+	gw.present(BARO_CHILD, S_BARO);
+	gw.present(TEMP_CHILD, S_TEMP);
+	metric = gw.getConfig().isMetric;
+}
+
+void loop() 
+{
+	float pressure = bmp.readSealevelPressure(ALTITUDE) / 100.0;
+	float temperature = bmp.readTemperature();
+
+	if (!metric) 
+	{
+		// Convert to fahrenheit
+		temperature = temperature * 9.0 / 5.0 + 32.0;
+	}
+
+	int forecast = sample(pressure);
+
+	Serial.print("Temperature = ");
+	Serial.print(temperature);
+	Serial.println(metric ? " *C" : " *F");
+	Serial.print("Pressure = ");
+	Serial.print(pressure);
+	Serial.println(" hPa");
+	Serial.print("Forecast = ");
+	Serial.println(weather[forecast]);
+
+
+	if (temperature != lastTemp) 
+	{
+		gw.send(tempMsg.set(temperature, 1));
+		lastTemp = temperature;
+	}
+
+	if (pressure != lastPressure) 
+	{
+		gw.send(pressureMsg.set(pressure, 0));
+		lastPressure = pressure;
+	}
+
+	if (forecast != lastForecast)
+	{
+		gw.send(forecastMsg.set(weather[forecast]));
+		lastForecast = forecast;
+	}
+
+	gw.sleep(SLEEP_TIME);
+}
+
+float getLastPressureSamplesAverage()
+{
+	float lastPressureSamplesAverage = 0;
+	for (int i = 0; i < LAST_SAMPLES_COUNT; i++)
+	{
+		lastPressureSamplesAverage += lastPressureSamples[i];
+	}
+	lastPressureSamplesAverage /= LAST_SAMPLES_COUNT;
+
+	return lastPressureSamplesAverage;
 }
 
 
-void loop() {
-  float pressure = bmp.readPressure();
-  float temperature = bmp.readTemperature();
-  
-  if (!metric) {
-    // Convert to fahrenheit
-    temperature = temperature * 9.0 / 5.0 + 32.0;
-  }
-  
-  int forecast = sample(pressure);
 
-  Serial.print("Temperature = ");
-  Serial.print(temperature);
-  Serial.println(metric?" *C":" *F");
-  Serial.print("Pressure = ");
-  Serial.print(pressure);
-  Serial.println(" Pa");
-  Serial.println(weather[forecast]);
+// Algorithm found here
+// http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
+// Pressure in hPa -->  forecast done by calculating kPa/h
+int sample(float pressure)
+{
+	// Calculate the average of the last n minutes.
+	int index = minuteCount % LAST_SAMPLES_COUNT;
+	lastPressureSamples[index] = pressure;
 
-
-  if (temperature != lastTemp) {
-    gw.sendVariable(1, V_TEMP, temperature,1);
-    lastTemp = temperature;
-  }
-
-  if (pressure != lastPressure) {
-    gw.sendVariable(0, V_PRESSURE, pressure, 0);
-    lastPressure = pressure;
-  }
-
-  if (forecast != lastForecast) {
-    gw.sendVariable(0, V_FORECAST, weather[forecast]);
-    lastForecast = forecast;
-  }
-  
-  /*
-   DP/Dt explanation
-
-   0 = "Stable Weather Pattern"
-   1 = "Slowly rising Good Weather", "Clear/Sunny "
-   2 = "Slowly falling L-Pressure ", "Cloudy/Rain "
-   3 = "Quickly rising H-Press",     "Not Stable"
-   4 = "Quickly falling L-Press",    "Thunderstorm"
-   5 = "Unknown (More Time needed) 
-  */
-
-  // Power down the radio.  Note that the radio will get powered back up
-  // on the next write() call.
-  delay(1000); //delay to allow serial to fully print before sleep
-  gw.powerDown();
-  sleep.pwrDownMode(); //set sleep mode
-  sleep.sleepDelay(SLEEP_TIME * 1000); // sleep to conserve power
-}
-
-int sample(float pressure) {
-	// Algorithm found here
-	// http://www.freescale.com/files/sensors/doc/app_note/AN3914.pdf
-	if (minuteCount > 180)
-		minuteCount = 6;
-
-	pressureSamples[minuteCount] = pressure;
 	minuteCount++;
+	if (minuteCount > 185)
+	{
+		minuteCount = 6;
+	}
 
-	if (minuteCount == 5) {
-		// Avg pressure in first 5 min, value averaged from 0 to 5 min.
-		pressureAvg[0] = ((pressureSamples[1] + pressureSamples[2]
-				+ pressureSamples[3] + pressureSamples[4] + pressureSamples[5])
-				/ 5);
-	} else if (minuteCount == 35) {
-		// Avg pressure in 30 min, value averaged from 0 to 5 min.
-		pressureAvg[1] = ((pressureSamples[30] + pressureSamples[31]
-				+ pressureSamples[32] + pressureSamples[33]
-				+ pressureSamples[34]) / 5);
-		float change = (pressureAvg[1] - pressureAvg[0]);
+	if (minuteCount == 5)
+	{
+		pressureAvg = getLastPressureSamplesAverage();
+	}
+	else if (minuteCount == 35)
+	{
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
-			dP_dt = ((65.0 / 1023.0) * 2 * change); // note this is for t = 0.5hour
+		{
+			dP_dt = change * 2; // note this is for t = 0.5hour
+		}
 		else
-			dP_dt = (((65.0 / 1023.0) * change) / 1.5); // divide by 1.5 as this is the difference in time from 0 value.
-	} else if (minuteCount == 60) {
-		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[2] = ((pressureSamples[55] + pressureSamples[56]
-				+ pressureSamples[57] + pressureSamples[58]
-				+ pressureSamples[59]) / 5);
-		float change = (pressureAvg[2] - pressureAvg[0]);
+		{
+			dP_dt = change / 1.5; // divide by 1.5 as this is the difference in time from 0 value.
+		}
+	}
+	else if (minuteCount == 65)
+	{
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) //first time initial 3 hour
-			dP_dt = ((65.0 / 1023.0) * change); //note this is for t = 1 hour
+		{
+			dP_dt = change; //note this is for t = 1 hour
+		}
 		else
-			dP_dt = (((65.0 / 1023.0) * change) / 2); //divide by 2 as this is the difference in time from 0 value
-	} else if (minuteCount == 95) {
-		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[3] = ((pressureSamples[90] + pressureSamples[91]
-				+ pressureSamples[92] + pressureSamples[93]
-				+ pressureSamples[94]) / 5);
-		float change = (pressureAvg[3] - pressureAvg[0]);
+		{
+			dP_dt = change / 2; //divide by 2 as this is the difference in time from 0 value
+		}
+	}
+	else if (minuteCount == 95)
+	{
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
-			dP_dt = (((65.0 / 1023.0) * change) / 1.5); // note this is for t = 1.5 hour
+		{
+			dP_dt = change / 1.5; // note this is for t = 1.5 hour
+		}
 		else
-			dP_dt = (((65.0 / 1023.0) * change) / 2.5); // divide by 2.5 as this is the difference in time from 0 value
-	} else if (minuteCount == 120) {
-		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[4] = ((pressureSamples[115] + pressureSamples[116]
-				+ pressureSamples[117] + pressureSamples[118]
-				+ pressureSamples[119]) / 5);
-		float change = (pressureAvg[4] - pressureAvg[0]);
+		{
+			dP_dt = change / 2.5; // divide by 2.5 as this is the difference in time from 0 value
+		}
+	}
+	else if (minuteCount == 125)
+	{
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		pressureAvg2 = lastPressureAvg; // store for later use.
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
-			dP_dt = (((65.0 / 1023.0) * change) / 2); // note this is for t = 2 hour
+		{
+			dP_dt = change / 2; // note this is for t = 2 hour
+		}
 		else
-			dP_dt = (((65.0 / 1023.0) * change) / 3); // divide by 3 as this is the difference in time from 0 value
-	} else if (minuteCount == 155) {
-		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[5] = ((pressureSamples[150] + pressureSamples[151]
-				+ pressureSamples[152] + pressureSamples[153]
-				+ pressureSamples[154]) / 5);
-		float change = (pressureAvg[5] - pressureAvg[0]);
+		{
+			dP_dt = change / 3; // divide by 3 as this is the difference in time from 0 value
+		}
+	}
+	else if (minuteCount == 155)
+	{
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
-			dP_dt = (((65.0 / 1023.0) * change) / 2.5); // note this is for t = 2.5 hour
+		{
+			dP_dt = change / 2.5; // note this is for t = 2.5 hour
+		}
 		else
-			dP_dt = (((65.0 / 1023.0) * change) / 3.5); // divide by 3.5 as this is the difference in time from 0 value
-	} else if (minuteCount == 180) {
-		// Avg pressure at end of the hour, value averaged from 0 to 5 min.
-		pressureAvg[6] = ((pressureSamples[175] + pressureSamples[176]
-				+ pressureSamples[177] + pressureSamples[178]
-				+ pressureSamples[179]) / 5);
-		float change = (pressureAvg[6] - pressureAvg[0]);
+		{
+			dP_dt = change / 3.5; // divide by 3.5 as this is the difference in time from 0 value
+		}
+	}
+	else if (minuteCount == 185)
+	{
+		float lastPressureAvg = getLastPressureSamplesAverage();
+		float change = (lastPressureAvg - pressureAvg) * CONVERSION_FACTOR;
 		if (firstRound) // first time initial 3 hour
-			dP_dt = (((65.0 / 1023.0) * change) / 3); // note this is for t = 3 hour
+		{
+			dP_dt = change / 3; // note this is for t = 3 hour
+		}
 		else
-			dP_dt = (((65.0 / 1023.0) * change) / 4); // divide by 4 as this is the difference in time from 0 value
-		pressureAvg[0] = pressureAvg[5]; // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
+		{
+			dP_dt = change / 4; // divide by 4 as this is the difference in time from 0 value
+		}
+		pressureAvg = pressureAvg2; // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
 		firstRound = false; // flag to let you know that this is on the past 3 hour mark. Initialized to 0 outside main loop.
 	}
 
+	int forecast = UNKNOWN;
 	if (minuteCount < 35 && firstRound) //if time is less than 35 min on the first 3 hour interval.
-		return 5; // Unknown, more time needed
+	{
+		forecast = UNKNOWN;
+	}
 	else if (dP_dt < (-0.25))
-		return 4; // Quickly falling LP, Thunderstorm, not stable
+	{
+		forecast = THUNDERSTORM;
+	}
 	else if (dP_dt > 0.25)
-		return 3; // Quickly rising HP, not stable weather
+	{
+		forecast = UNSTABLE;
+	}
 	else if ((dP_dt > (-0.25)) && (dP_dt < (-0.05)))
-		return 2; // Slowly falling Low Pressure System, stable rainy weather
+	{
+		forecast = CLOUDY;
+	}
 	else if ((dP_dt > 0.05) && (dP_dt < 0.25))
-		return 1; // Slowly rising HP stable good weather
-	else if ((dP_dt > (-0.05)) && (dP_dt < 0.05))
-		return 0; // Stable weather
+	{
+		forecast = SUNNY;
+	}
+	else if ((dP_dt >(-0.05)) && (dP_dt < 0.05))
+	{
+		forecast = STABLE;
+	}
 	else
-		return 5; // Unknown
+	{
+		forecast = UNKNOWN;
+	}
+
+	// uncomment when debugging
+	//Serial.print(F("Forecast at minute "));
+	//Serial.print(minuteCount);
+	//Serial.print(F(" dP/dt = "));
+	//Serial.print(dP_dt);
+	//Serial.print(F("kPa/h --> "));
+	//Serial.println(weather[forecast]);
+
+	return forecast;
 }
-
-
-
