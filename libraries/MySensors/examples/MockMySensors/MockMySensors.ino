@@ -44,32 +44,32 @@
 // one at a time.
 #define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR                     1
-//#define ID_S_MOTION                   2
-//#define ID_S_SMOKE                    3
-//#define ID_S_LIGHT                    4
-//#define ID_S_DIMMER                   5
-//#define ID_S_COVER                    6
-//#define ID_S_TEMP                     7
-//#define ID_S_HUM                      8
-//#define ID_S_BARO                     9
-//#define ID_S_WIND                     10
-//#define ID_S_RAIN                    11
-//#define ID_S_UV                      12
-//#define ID_S_WEIGHT                  13 
-//#define ID_S_POWER                   14
-//#define ID_S_HEATER                  15
-//#define ID_S_DISTANCE                16
-//#define ID_S_LIGHT_LEVEL             17 
-//#define ID_S_LOCK                    18
-//#define ID_S_IR                      19
-//#define ID_S_WATER                   20 
-//#define ID_S_AIR_QUALITY             21 
-//#define ID_S_DUST                    22
-//#define ID_S_SCENE_CONTROLLER        23
-//#define ID_S_CUSTOM                  99
+#define ID_S_MOTION                   2
+#define ID_S_SMOKE                    3
+#define ID_S_LIGHT                    4
+#define ID_S_DIMMER                   5
+#define ID_S_COVER                    6
+#define ID_S_TEMP                     7
+#define ID_S_HUM                      8
+#define ID_S_BARO                     9
+#define ID_S_WIND                     10
+#define ID_S_RAIN                    11
+#define ID_S_UV                      12
+#define ID_S_WEIGHT                  13 
+#define ID_S_POWER                   14
+#define ID_S_HEATER                  15
+#define ID_S_DISTANCE                16
+#define ID_S_LIGHT_LEVEL             17 
+#define ID_S_LOCK                    18
+#define ID_S_IR                      19
+#define ID_S_WATER                   20 
+#define ID_S_AIR_QUALITY             21 
+#define ID_S_DUST                    22
+#define ID_S_SCENE_CONTROLLER        23
+#define ID_S_CUSTOM                  99
 
 // Global Vars
-unsigned long SLEEP_TIME = 300000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
@@ -175,9 +175,9 @@ MyHwATMega328 hw;
 
 #ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
   MyMessage msg_S_HEATER_S(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
-  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_FLOW_STATE);     // HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver"). S_HEATER, S_HVAC 
+  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_FLOW_STATE);     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver" // S_HVAC, S_HEATER
   int heatTemp=18;
-  const char* heatState="Off";
+  String heatState="Off";
 #endif
 
 #ifdef ID_S_DISTANCE
@@ -218,12 +218,12 @@ MyHwATMega328 hw;
   // not sure if scene controller sends int or chars
   // betting on ints as Touch Display Scen by Hek // compiler warnings
   char *scenes[] = {
-    "All off",
-    "Good Morning", 
-    "Clean Up!", 
-    "All Lights Off", 
-    "Music On/Off"
+    (char *)"Good Morning", 
+    (char *)"Clean Up!", 
+    (char *)"All Lights Off", 
+    (char *)"Music On/Off"
   };
+  
   int sceneVal=0;
   int sceneValPrevious=0;
   
@@ -789,11 +789,13 @@ void power(){
 
 #ifdef ID_S_HEATER
 void heater(){
+  char cBuff[heatState.length()+1];
+  heatState.toCharArray(cBuff,heatState.length()+1);
 
   Serial.print("Heater mode is: " );
-  Serial.println(heatState);
+  Serial.println(cBuff);
   
-  gw.send(msg_S_HEATER_F.set(heatState));
+  gw.send(msg_S_HEATER_F.set(cBuff));
 
   Serial.print("Heater Set Point is: " );
   Serial.println(heatTemp);
@@ -924,7 +926,15 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isArmed ? "Armed":"Disarmed" ));
-          door();//temp ack for door
+          #ifdef ID_S_DOOR
+            door();//temp ack for door
+          #endif
+          #ifdef ID_S_MOTION
+            motion();//temp ack
+          #endif
+          #ifdef ID_S_SMOKE
+            smoke();//temp ack
+          #endif
     break;
     #endif
     
@@ -950,6 +960,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(message.getInt());
+          dimmer();// temp ack
     break;
     #endif
     
@@ -986,6 +997,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(heatState);
+          heater();//temp ack
           
     break;
     
@@ -995,6 +1007,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(heatTemp);
+          heater();//temp ack
     break;
     #endif
     
@@ -1038,6 +1051,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.println(" Off");
           scene();
     break;
+    scene(); // tmp ack
     #endif
 
     default: 
