@@ -163,7 +163,9 @@ typedef enum {
 
 
 
+#ifndef BIT
 #define BIT(n)                  ( 1<<(n) )
+#endif
 // Create a bitmask of length len.
 #define BIT_MASK(len)           ( BIT(len)-1 )
 // Create a bitfield mask of length starting at bit 'start'.
