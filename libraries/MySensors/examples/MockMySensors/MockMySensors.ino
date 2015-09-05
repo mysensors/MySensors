@@ -26,7 +26,7 @@
 #define SHORT_WAIT 50
 
 #define SKETCH_NAME "MockMySensors "
-#define SKETCH_VERSION "v0.4"
+#define SKETCH_VERSION "v0.5"
 
 // Define Sensors ids
 /*      S_DOOR, S_MOTION, S_SMOKE, S_LIGHT, S_DIMMER, S_COVER, S_TEMP, S_HUM, S_BARO, S_WIND,
@@ -42,8 +42,8 @@
 // Some of these ID's have not been updated for v1.5.  Uncommenting too many of them
 // will make the sketch too large for a pro mini's memory so it's probably best to try
 // one at a time.
-#define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
-#define ID_S_DOOR                     1
+//#define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
+//#define ID_S_DOOR                     1
 //#define ID_S_MOTION                   2
 //#define ID_S_SMOKE                    3
 //#define ID_S_LIGHT                    4
@@ -66,6 +66,8 @@
 //#define ID_S_AIR_QUALITY             21 
 //#define ID_S_DUST                    22
 //#define ID_S_SCENE_CONTROLLER        23
+#define ID_S_MOISTURE                24
+
 //#define ID_S_CUSTOM                  99
 
 // Global Vars
@@ -173,11 +175,15 @@ MyHwATMega328 hw;
 //  MyMessage msg_S_POWER_C(ID_S_POWER,V_CURRENT);
 #endif
 
-#ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
-  MyMessage msg_S_HEATER_S(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
-  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_FLOW_STATE);     // HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver"). S_HEATER, S_HVAC 
-  int heatTemp=18;
-  const char* heatState="Off";
+#ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP, V_STATUS
+  float heater_setpoint=21.5;
+  float heater_temp=23.5;
+  bool heater_status=false;
+  String heater_flow_state = "Off";
+  MyMessage msg_S_HEATER_SETPOINT(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);
+  MyMessage msg_S_HEATER_STATUS(ID_S_HEATER,V_STATUS);
+  MyMessage msg_S_HEATER_TEMP(ID_S_HEATER,V_TEMP);
+  MyMessage msg_S_HEATER_FLOWSTATE(ID_S_HEATER,V_HVAC_FLOW_STATE);
 #endif
 
 #ifdef ID_S_DISTANCE
@@ -228,6 +234,10 @@ MyHwATMega328 hw;
   int sceneValPrevious=0;
   
 #endif
+
+#ifdef ID_S_MOISTURE
+  MyMessage msg_S_MOISTURE(ID_S_MOISTURE,V_LEVEL);
+#endif 
 
 #ifdef ID_S_CUSTOM
   MyMessage msg_S_CUSTOM_1(ID_S_CUSTOM,V_VAR1);
@@ -409,6 +419,12 @@ void setup()
     gw.present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER);
     gw.wait(SHORT_WAIT);
   #endif
+
+  #ifdef ID_S_MOISTURE
+    Serial.println("  S_MOISTURE");
+    gw.present(ID_S_MOISTURE,S_MOISTURE);
+    gw.wait(SHORT_WAIT);
+  #endif
   
   #ifdef ID_S_CUSTOM
     Serial.println("  S_CUSTOM");
@@ -534,6 +550,10 @@ void loop()
   #ifdef ID_S_SCENE_CONTROLLER
     scene();
   #endif
+  
+  #ifdef ID_S_MOISTURE
+    moisture();
+  #endif   
   
   #ifdef ID_S_CUSTOM
     custom();
@@ -789,17 +809,21 @@ void power(){
 
 #ifdef ID_S_HEATER
 void heater(){
+  Serial.print("Heater flow state is: " );
+  Serial.println(heater_flow_state);
+  gw.send(msg_S_HEATER_FLOWSTATE.set(heater_flow_state.c_str()));
 
-  Serial.print("Heater mode is: " );
-  Serial.println(heatState);
+  Serial.print("Heater on/off is: " );
+  Serial.println((heater_status==true)?"On":"Off");
+  gw.send(msg_S_HEATER_STATUS.set(heater_status));
   
-  gw.send(msg_S_HEATER_F.set(heatState));
+  Serial.print("Heater Temperature is: " );
+  Serial.println(heater_temp,1);
+  gw.send(msg_S_HEATER_TEMP.set(heater_temp,1));
 
-  Serial.print("Heater Set Point is: " );
-  Serial.println(heatTemp);
-  
-  gw.send(msg_S_HEATER_S.set(heatTemp));  
-  
+  Serial.print("Heater Setpoint: " );
+  Serial.println(heater_setpoint,1);
+  gw.send(msg_S_HEATER_SETPOINT.set(heater_setpoint,1));
 }
 #endif
 
@@ -899,6 +923,16 @@ void scene(){
 }
 #endif
 
+#ifdef ID_S_MOISTURE
+void moisture(){
+  
+  Serial.print("Moisture level is: " );
+  Serial.println(randNumber);
+  
+  gw.send(msg_S_MOISTURE.set(randNumber));
+}
+#endif
+
 #ifdef ID_S_CUSTOM
 void custom(){
   
@@ -980,21 +1014,26 @@ void incomingMessage(const MyMessage &message) {
     #endif
     
     #ifdef ID_S_HEATER
-    case V_HVAC_FLOW_STATE:
-          heatState = message.getString();
-          Serial.print("Incoming change for ID_S_HEATER:");
-          Serial.print(message.sensor);
-          Serial.print(", New status: ");
-          Serial.println(heatState);
-          
-    break;
-    
     case V_HVAC_SETPOINT_HEAT:
-          heatTemp = message.getInt();
+          Serial.print("Incoming set point for ID_S_HEATER:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          heater_setpoint=message.getFloat();
+          Serial.println(heater_setpoint,1);
+    break;
+    case V_STATUS:
           Serial.print("Incoming change for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println(heatTemp);
+          heater_status = message.getBool();
+          Serial.println(heater_status);
+    break;
+    case V_HVAC_FLOW_STATE:
+          Serial.print("Incoming flow state change for ID_S_HEATER:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          heater_flow_state=message.getString();
+          Serial.println(heater_flow_state);
     break;
     #endif
     
