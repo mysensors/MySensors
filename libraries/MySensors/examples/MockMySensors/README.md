@@ -16,8 +16,14 @@ With a Mega you can have them all
 
 Changes Log
 -----------------
+2015-09-06
+
+Merge with Gizmocuz (implementation of S_HEATER & S_MOISTURE
+Implementation of S_COVER, S_IR, S_SCENE_CONTROLLER
+
 
 2015-08-19
+
 Removed the load/save to eeprom
 Touched the heater sensor
 Created a pseudo sensor to handle the V_ARMED message.
