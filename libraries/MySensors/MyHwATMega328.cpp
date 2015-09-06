@@ -17,6 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#ifdef ARDUINO_ARCH_AVR
+
 #include "MyHw.h"
 #include "MyHwATMega328.h"
 
@@ -119,7 +121,9 @@ void powerDown(period_t period) {
 
 void MyHwATMega328::internalSleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
-	Serial.flush();
+  #ifdef ENABLED_SERIAL
+	  Serial.flush();
+  #endif
 	pinIntTrigger = 0;
 	while (!pinIntTrigger && ms >= 8000) { powerDown(SLEEP_8S); ms -= 8000; }
 	if (!pinIntTrigger && ms >= 4000)    { powerDown(SLEEP_4S); ms -= 4000; }
@@ -148,7 +152,9 @@ bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 			pinTriggeredWakeup = false;
 		}
 	} else {
-		Serial.flush();
+    #ifdef ENABLED_SERIAL
+		  Serial.flush();
+    #endif
 		powerDown(SLEEP_FOREVER);
 	}
 	detachInterrupt(interrupt);
@@ -166,7 +172,9 @@ inline uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t i
 			retVal = -1;
 		}
 	} else {
-		Serial.flush();
+    #ifdef ENABLED_SERIAL
+		  Serial.flush();
+    #endif
 		powerDown(SLEEP_FOREVER);
 	}
 	detachInterrupt(interrupt1);
@@ -209,3 +217,4 @@ void MyHwATMega328::debugPrint(bool isGW, const char *fmt, ... ) {
 }
 #endif
 
+#endif // #ifdef ARDUINO_ARCH_AVR
