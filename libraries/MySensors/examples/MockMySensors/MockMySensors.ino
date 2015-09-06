@@ -42,35 +42,9 @@
 // Some of these ID's have not been updated for v1.5.  Uncommenting too many of them
 // will make the sketch too large for a pro mini's memory so it's probably best to try
 // one at a time.
-<<<<<<< HEAD
+
 #define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR                     1
-#define ID_S_MOTION                   2
-#define ID_S_SMOKE                    3
-#define ID_S_LIGHT                    4
-#define ID_S_DIMMER                   5
-#define ID_S_COVER                    6
-#define ID_S_TEMP                     7
-#define ID_S_HUM                      8
-#define ID_S_BARO                     9
-#define ID_S_WIND                     10
-#define ID_S_RAIN                    11
-#define ID_S_UV                      12
-#define ID_S_WEIGHT                  13 
-#define ID_S_POWER                   14
-#define ID_S_HEATER                  15
-#define ID_S_DISTANCE                16
-#define ID_S_LIGHT_LEVEL             17 
-#define ID_S_LOCK                    18
-#define ID_S_IR                      19
-#define ID_S_WATER                   20 
-#define ID_S_AIR_QUALITY             21 
-#define ID_S_DUST                    22
-#define ID_S_SCENE_CONTROLLER        23
-#define ID_S_CUSTOM                  99
-=======
-//#define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
-//#define ID_S_DOOR                     1
 //#define ID_S_MOTION                   2
 //#define ID_S_SMOKE                    3
 //#define ID_S_LIGHT                    4
@@ -93,10 +67,11 @@
 //#define ID_S_AIR_QUALITY             21 
 //#define ID_S_DUST                    22
 //#define ID_S_SCENE_CONTROLLER        23
-#define ID_S_MOISTURE                24
+//#define ID_S_MOISTURE                24
 
-//#define ID_S_CUSTOM                  99
->>>>>>> mysensors/development
+#define ID_S_CUSTOM                  99
+
+
 
 // Global Vars
 unsigned long SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
@@ -204,23 +179,18 @@ MyHwATMega328 hw;
 //  MyMessage msg_S_POWER_C(ID_S_POWER,V_CURRENT);
 #endif
 
-<<<<<<< HEAD
-#ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
-  MyMessage msg_S_HEATER_S(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
-  MyMessage msg_S_HEATER_F(ID_S_HEATER,V_HVAC_FLOW_STATE);     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver" // S_HVAC, S_HEATER
-  int heatTemp=18;
-  String heatState="Off";
-=======
+
 #ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP, V_STATUS
+  MyMessage msg_S_HEATER_SET_POINT(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
+  MyMessage msg_S_HEATER_FLOW_STATE(ID_S_HEATER,V_HVAC_FLOW_STATE);     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver" // S_HVAC, S_HEATER
+  MyMessage msg_S_HEATER_STATUS(ID_S_HEATER,V_STATUS);
+  MyMessage msg_S_HEATER_TEMP(ID_S_HEATER,V_TEMP);
+  
   float heater_setpoint=21.5;
   float heater_temp=23.5;
   bool heater_status=false;
-  String heater_flow_state = "Off";
-  MyMessage msg_S_HEATER_SETPOINT(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);
-  MyMessage msg_S_HEATER_STATUS(ID_S_HEATER,V_STATUS);
-  MyMessage msg_S_HEATER_TEMP(ID_S_HEATER,V_TEMP);
-  MyMessage msg_S_HEATER_FLOWSTATE(ID_S_HEATER,V_HVAC_FLOW_STATE);
->>>>>>> mysensors/development
+  String heater_flow_state="Off";
+  const bool dup_v_status=false; // V_STATUS & V_LIGHT are the same, does not compile in case statement of incoming s_heater message
 #endif
 
 #ifdef ID_S_DISTANCE
@@ -846,18 +816,14 @@ void power(){
 
 #ifdef ID_S_HEATER
 void heater(){
-<<<<<<< HEAD
-  char cBuff[heatState.length()+1];
-  heatState.toCharArray(cBuff,heatState.length()+1);
-
-  Serial.print("Heater mode is: " );
-  Serial.println(cBuff);
+//  float heater_setpoint=21.5;
+//  float heater_temp=23.5;
+//  bool heater_status=false;
+//  String heatState="Off";
   
-  gw.send(msg_S_HEATER_F.set(cBuff));
-=======
   Serial.print("Heater flow state is: " );
   Serial.println(heater_flow_state);
-  gw.send(msg_S_HEATER_FLOWSTATE.set(heater_flow_state.c_str()));
+  gw.send(msg_S_HEATER_FLOW_STATE.set(heater_flow_state.c_str()));
 
   Serial.print("Heater on/off is: " );
   Serial.println((heater_status==true)?"On":"Off");
@@ -866,11 +832,10 @@ void heater(){
   Serial.print("Heater Temperature is: " );
   Serial.println(heater_temp,1);
   gw.send(msg_S_HEATER_TEMP.set(heater_temp,1));
->>>>>>> mysensors/development
 
   Serial.print("Heater Setpoint: " );
   Serial.println(heater_setpoint,1);
-  gw.send(msg_S_HEATER_SETPOINT.set(heater_setpoint,1));
+  gw.send(msg_S_HEATER_SET_POINT.set(heater_setpoint,1));
 }
 #endif
 
@@ -1073,38 +1038,30 @@ void incomingMessage(const MyMessage &message) {
     break;
     #endif
     
-    #ifdef ID_S_HEATER
+    #ifdef ID_S_HEATER    
     case V_HVAC_SETPOINT_HEAT:
+          heater_setpoint=message.getFloat();
+          
           Serial.print("Incoming set point for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-<<<<<<< HEAD
-          Serial.println(heatState);
-          heater();//temp ack
-          
-=======
-          heater_setpoint=message.getFloat();
           Serial.println(heater_setpoint,1);
->>>>>>> mysensors/development
+          heater();//temp ack
     break;
-    case V_STATUS:
+    case (V_STATUS || dup_v_status): //V_LIGHT & V_STATUS are the same; does not compile without hack
+          heater_status = message.getBool();
           Serial.print("Incoming change for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-<<<<<<< HEAD
-          Serial.println(heatTemp);
-          heater();//temp ack
-=======
-          heater_status = message.getBool();
           Serial.println(heater_status);
+          heater();//temp ack
     break;
     case V_HVAC_FLOW_STATE:
+          heater_flow_state=message.getString();
           Serial.print("Incoming flow state change for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          heater_flow_state=message.getString();
           Serial.println(heater_flow_state);
->>>>>>> mysensors/development
     break;
     #endif
     
@@ -1146,7 +1103,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(", New status: ");
           Serial.print(scenes[sceneVal]);
           Serial.println(" On");
-          scene();
+          scene();// temp ack
     break;
     case V_SCENE_OFF:
           sceneVal = message.getInt();
@@ -1155,9 +1112,8 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(", New status: ");
           Serial.print(scenes[sceneVal]);
           Serial.println(" Off");
-          scene();
+          scene();// temp ack
     break;
-    scene(); // tmp ack
     #endif
 
     default: 
