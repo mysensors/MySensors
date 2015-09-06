@@ -130,7 +130,8 @@ MyHwATMega328 hw;
   MyMessage msg_S_COVER_U(ID_S_COVER,V_UP);
   MyMessage msg_S_COVER_D(ID_S_COVER,V_DOWN);
   MyMessage msg_S_COVER_S(ID_S_COVER,V_STOP);
-  const char* coverVal = "V_STOP"; //compiler warnings
+  MyMessage msg_S_COVER_V(ID_S_COVER,V_VAR1);
+  int coverState=0; //0=Stop; 1=up; -1=down
 #endif
 
 #ifdef ID_S_TEMP
@@ -196,7 +197,7 @@ MyHwATMega328 hw;
 #ifdef ID_S_IR
   MyMessage msg_S_IR_S(ID_S_IR,V_IR_SEND);
   MyMessage msg_S_IR_R(ID_S_IR,V_IR_RECEIVE);
-  const char* irVal = "";
+  long irVal = 0;
 #endif
 
 #ifdef ID_S_WATER
@@ -646,17 +647,17 @@ void cover(){
 
   Serial.print("Cover is : " );
 
-  if (coverVal == "V_UP"){
+  if (coverState == 1){
       Serial.println("Opening");
-      gw.send(msg_S_COVER_U.set(V_UP));
-  }else if (coverVal == "V_DOWN"){
+      gw.send(msg_S_COVER_U.set(1));
+  }else if (coverState == -1){
       Serial.println("Closing");
-      gw.send(msg_S_COVER_D.set(V_DOWN));
+      gw.send(msg_S_COVER_D.set(0));
   }else{
       Serial.println("Idle");
-      gw.send(msg_S_COVER_S.set(V_STOP));
+      gw.send(msg_S_COVER_S.set(-1));
   }
-  
+  gw.send(msg_S_COVER_V.set(coverState));
 }
 #endif
 
@@ -844,6 +845,7 @@ void ir(){
   Serial.println(irVal);
   
   gw.send(msg_S_IR_S.set(irVal));
+  gw.send(msg_S_IR_R.set(irVal));
   
 }
 #endif
@@ -966,27 +968,30 @@ void incomingMessage(const MyMessage &message) {
     
     #ifdef ID_S_COVER    
     case V_UP:
-          coverVal="V_UP";
+          coverState=1;
           Serial.print("Incoming change for ID_S_COVER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println("V_UP");
+          cover(); // temp ack
     break;
     
     case V_DOWN:
-          coverVal="V_DOWN";
+          coverState=-1;
           Serial.print("Incoming change for ID_S_COVER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println("V_DOWN");
+          cover(); //temp ack
     break;
     
     case V_STOP:
-          coverVal="V_STOP";
+          coverState=0;
           Serial.print("Incoming change for ID_S_COVER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println("V_STOP");
+          cover(); //temp ack
     break;
     #endif
     
@@ -1023,12 +1028,21 @@ void incomingMessage(const MyMessage &message) {
     #endif
     
     #ifdef ID_S_IR
-    case V_IR_RECEIVE:
-          irVal = message.getString();
+    case V_IR_SEND:
+          irVal = message.getLong();
           Serial.print("Incoming change for ID_S_IR:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(irVal);
+          ir(); // temp ack
+    break;
+    case V_IR_RECEIVE:
+          irVal = message.getLong();
+          Serial.print("Incoming change for ID_S_IR:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(irVal);
+          ir(); // temp ack
     break;
     #endif
     
