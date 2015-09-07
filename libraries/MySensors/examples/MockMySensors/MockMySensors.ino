@@ -45,39 +45,39 @@
 
 #define ID_S_ARMED             0  // dummy to controll armed stated for several sensors
 #define ID_S_DOOR              1
-#define ID_S_MOTION            2
-#define ID_S_SMOKE             3
-#define ID_S_LIGHT             4
-#define ID_S_DIMMER            5
-#define ID_S_COVER             6
-#define ID_S_TEMP              7
-#define ID_S_HUM               8
-#define ID_S_BARO              9
-#define ID_S_WIND              10
-#define ID_S_RAIN              11
-#define ID_S_UV                12
-#define ID_S_WEIGHT            13 
-#define ID_S_POWER             14
-#define ID_S_HEATER            15
-#define ID_S_DISTANCE          16
-#define ID_S_LIGHT_LEVEL       17 
-#define ID_S_LOCK              18
-#define ID_S_IR                19
-#define ID_S_WATER             20 
-#define ID_S_AIR_QUALITY       21 
-#define ID_S_DUST              22
-#define ID_S_SCENE_CONTROLLER  23
-// Lib 1.5 sensors
-#define ID_S_RGB_LIGHT         24
-#define ID_S_RGBW_LIGHT        25
-#define ID_S_COLOR_SENSOR      26
-#define ID_S_HVAC              27
-#define ID_S_MULTIMETER        28
-#define ID_S_SPRINKLER         29
-#define ID_S_WATER_LEAK        30
-#define ID_S_SOUND             31
-#define ID_S_VIBRATION         32
-#define ID_S_MOISTURE          33
+//#define ID_S_MOTION            2
+//#define ID_S_SMOKE             3
+//#define ID_S_LIGHT             4
+//#define ID_S_DIMMER            5
+//#define ID_S_COVER             6
+//#define ID_S_TEMP              7
+//#define ID_S_HUM               8
+//#define ID_S_BARO              9
+//#define ID_S_WIND              10
+//#define ID_S_RAIN              11
+//#define ID_S_UV                12
+//#define ID_S_WEIGHT            13 
+//#define ID_S_POWER             14
+//#define ID_S_HEATER            15
+//#define ID_S_DISTANCE          16
+//#define ID_S_LIGHT_LEVEL       17 
+//#define ID_S_LOCK              18
+//#define ID_S_IR                19
+//#define ID_S_WATER             20 
+//#define ID_S_AIR_QUALITY       21 
+//#define ID_S_DUST              22
+//#define ID_S_SCENE_CONTROLLER  23
+//// Lib 1.5 sensors
+//#define ID_S_RGB_LIGHT         24
+//#define ID_S_RGBW_LIGHT        25
+//#define ID_S_COLOR_SENSOR      26
+//#define ID_S_HVAC              27
+//#define ID_S_MULTIMETER        28
+//#define ID_S_SPRINKLER         29
+//#define ID_S_WATER_LEAK        30
+//#define ID_S_SOUND             31
+//#define ID_S_VIBRATION         32
+//#define ID_S_MOISTURE          33
 
 //#define ID_S_CUSTOM            99
 
