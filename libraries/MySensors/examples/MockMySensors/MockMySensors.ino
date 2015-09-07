@@ -43,33 +43,43 @@
 // will make the sketch too large for a pro mini's memory so it's probably best to try
 // one at a time.
 
-#define ID_S_ARMED                    0  // dummy to controll armed stated for several sensors
-#define ID_S_DOOR                     1
-//#define ID_S_MOTION                   2
-//#define ID_S_SMOKE                    3
-//#define ID_S_LIGHT                    4
-//#define ID_S_DIMMER                   5
-//#define ID_S_COVER                    6
-//#define ID_S_TEMP                     7
-//#define ID_S_HUM                      8
-//#define ID_S_BARO                     9
-//#define ID_S_WIND                     10
-//#define ID_S_RAIN                    11
-//#define ID_S_UV                      12
-//#define ID_S_WEIGHT                  13 
-//#define ID_S_POWER                   14
-//#define ID_S_HEATER                  15
-//#define ID_S_DISTANCE                16
-//#define ID_S_LIGHT_LEVEL             17 
-//#define ID_S_LOCK                    18
-//#define ID_S_IR                      19
-//#define ID_S_WATER                   20 
-//#define ID_S_AIR_QUALITY             21 
-//#define ID_S_DUST                    22
-//#define ID_S_SCENE_CONTROLLER        23
-//#define ID_S_MOISTURE                24
+#define ID_S_ARMED             0  // dummy to controll armed stated for several sensors
+#define ID_S_DOOR              1
+#define ID_S_MOTION            2
+#define ID_S_SMOKE             3
+#define ID_S_LIGHT             4
+#define ID_S_DIMMER            5
+#define ID_S_COVER             6
+#define ID_S_TEMP              7
+#define ID_S_HUM               8
+#define ID_S_BARO              9
+#define ID_S_WIND              10
+#define ID_S_RAIN              11
+#define ID_S_UV                12
+#define ID_S_WEIGHT            13 
+#define ID_S_POWER             14
+#define ID_S_HEATER            15
+#define ID_S_DISTANCE          16
+#define ID_S_LIGHT_LEVEL       17 
+#define ID_S_LOCK              18
+#define ID_S_IR                19
+#define ID_S_WATER             20 
+#define ID_S_AIR_QUALITY       21 
+#define ID_S_DUST              22
+#define ID_S_SCENE_CONTROLLER  23
+// Lib 1.5 sensors
+#define ID_S_RGB_LIGHT         24
+#define ID_S_RGBW_LIGHT        25
+#define ID_S_COLOR_SENSOR      26
+#define ID_S_HVAC              27
+#define ID_S_MULTIMETER        28
+#define ID_S_SPRINKLER         29
+#define ID_S_WATER_LEAK        30
+#define ID_S_SOUND             31
+#define ID_S_VIBRATION         32
+#define ID_S_MOISTURE          33
 
-#define ID_S_CUSTOM                  99
+//#define ID_S_CUSTOM            99
 
 
 
@@ -174,13 +184,13 @@ MyHwATMega328 hw;
 #ifdef ID_S_POWER
   MyMessage msg_S_POWER_W(ID_S_POWER,V_WATT);
   MyMessage msg_S_POWER_K(ID_S_POWER,V_KWH);
-//  MyMessage msg_S_POWER_I(ID_S_POWER,V_IMPEDANCE);
-//  MyMessage msg_S_POWER_V(ID_S_POWER,V_VOLTAGE);
-//  MyMessage msg_S_POWER_C(ID_S_POWER,V_CURRENT);
 #endif
 
 
-#ifdef ID_S_HEATER  //V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP, V_STATUS
+#ifdef ID_S_HEATER
+
+  //////// REVIEW IMPLEMENTATION ////////////
+  
   MyMessage msg_S_HEATER_SET_POINT(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
   MyMessage msg_S_HEATER_FLOW_STATE(ID_S_HEATER,V_HVAC_FLOW_STATE);     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver" // S_HVAC, S_HEATER
   MyMessage msg_S_HEATER_STATUS(ID_S_HEATER,V_STATUS);
@@ -190,7 +200,12 @@ MyHwATMega328 hw;
   float heater_temp=23.5;
   bool heater_status=false;
   String heater_flow_state="Off";
-  const bool dup_v_status=false; // V_STATUS & V_LIGHT are the same, does not compile in case statement of incoming s_heater message
+  
+  // V_TEMP                // Temperature
+  // V_STATUS              // Binary status. 0=off 1=on
+  // V_HVAC_FLOW_STATE     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver"
+  // V_HVAC_SPEED          // HVAC/Heater fan speed ("Min", "Normal", "Max", "Auto")
+  // V_HVAC_SETPOINT_HEAT  // HVAC/Heater setpoint
 #endif
 
 #ifdef ID_S_DISTANCE
@@ -240,6 +255,80 @@ MyHwATMega328 hw;
   int sceneVal=0;
   int sceneValPrevious=0;
   
+#endif
+
+#ifdef ID_S_RGB_LIGHT 
+  MyMessage msg_S_RGB_LIGHT_V_RGB(ID_S_RGB_LIGHT,V_RGB);
+  MyMessage msg_S_RGB_LIGHT_V_WATT(ID_S_RGB_LIGHT,V_WATT);
+  String rgbState="000000";
+  //RGB light V_RGB, V_WATT 
+  //RGB value transmitted as ASCII hex string (I.e "ff0000" for red)
+#endif
+
+#ifdef ID_S_RGBW_LIGHT
+  MyMessage msg_S_RGBW_LIGHT_V_RGBW(ID_S_RGB_LIGHT,V_RGBW);
+  MyMessage msg_S_RGBW_LIGHT_V_WATT(ID_S_RGB_LIGHT,V_WATT);
+  String rgbwState="00000000";
+  //RGBW light (with separate white component)	V_RGBW, V_WATT
+  //RGBW value transmitted as ASCII hex string (I.e "ff0000ff" for red + full white)	S_RGBW_LIGHT
+#endif
+
+#ifdef ID_S_COLOR_SENSOR
+  MyMessage msg_S_COLOR_SENSOR_V_RGB(ID_S_COLOR_SENSOR,V_RGB);
+  //Color sensor	V_RGB
+  //RGB value transmitted as ASCII hex string (I.e "ff0000" for red)	S_RGB_LIGHT, S_COLOR_SENSOR
+#endif
+
+#ifdef ID_S_HVAC
+  MyMessage msg_S_HVAC_V_HVAC_SETPOINT_HEAT(ID_S_HVAC,V_HVAC_SETPOINT_HEAT);
+  MyMessage msg_S_HVAC_V_HVAC_SETPOINT_COOL(ID_S_HVAC,V_HVAC_SETPOINT_COOL);
+  MyMessage msg_S_HVAC_V_HVAC_FLOW_STATET(ID_S_HVAC,V_HVAC_FLOW_STATE);
+  MyMessage msg_S_HVAC_V_HVAC_FLOW_MODE(ID_S_HVAC,V_HVAC_FLOW_MODE);
+  MyMessage msg_S_HVAC_V_HVAC_SPEED(ID_S_HVAC,V_HVAC_SPEED);
+  
+  float hvac_SetPointHeat = 16.5;
+  float hvac_SetPointCool = 25.5;
+  String hvac_FlowState   = "AutoChangeOver";
+  String hvac_FlowMode    = "Auto";
+  String hvac_Speed       = "Normal";
+
+  //Thermostat/HVAC device	
+  //V_HVAC_SETPOINT_HEAT,  // HVAC/Heater setpoint
+  //V_HVAC_SETPOINT_COOL,  // HVAC cold setpoint
+  //V_HVAC_FLOW_STATE,     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver"
+  //V_HVAC_FLOW_MODE,      // Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn")
+  //V_HVAC_SPEED           // HVAC/Heater fan speed ("Min", "Normal", "Max", "Auto")
+  
+  // NOT IMPLEMENTED YET
+  //V_TEMP                 // Temperature
+  //V_STATUS               // Binary status. 0=off 1=on
+#endif
+
+#ifdef ID_S_MULTIMETER
+  MyMessage msg_S_MULTIMETER_V_IMPEDANCE(ID_S_POWER,V_IMPEDANCE);
+  MyMessage msg_S_MULTIMETER_V_VOLTAGE(ID_S_POWER,V_VOLTAGE);
+  MyMessage msg_S_MULTIMETER_V_CURRENT(ID_S_POWER,V_CURRENT);
+
+  // Multimeter device	V_VOLTAGE, V_CURRENT, V_IMPEDANCE
+  // V_IMPEDANCE	14	Impedance value
+  // V_VOLTAGE	38	Voltage level
+  // V_CURRENT	39	Current level
+#endif
+
+#ifdef ID_S_SPRINKLER
+  // S_SPRINKLER	31	Sprinkler device	V_STATUS (turn on/off), V_TRIPPED (if fire detecting device)
+  // V_STATUS	2	Binary status. 0=off 1=on	
+  // V_ARMED	15	Armed status of a security sensor. 1=Armed, 0=Bypassed
+  // V_TRIPPED	16	Tripped status of a security sensor. 1=Tripped, 0=Untripped
+#endif
+
+#ifdef ID_S_WATER_LEAK
+#endif
+#ifdef ID_S_SOUND
+#endif
+#ifdef ID_S_VIBRATION
+#endif
+#ifdef ID_S_MOISTURE
 #endif
 
 #ifdef ID_S_MOISTURE
@@ -426,6 +515,47 @@ void setup()
     gw.present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER);
     gw.wait(SHORT_WAIT);
   #endif
+  
+  #ifdef ID_S_RGB_LIGHT
+    Serial.println("  RGB_LIGHT");
+    gw.present(ID_S_RGB_LIGHT,S_RGB_LIGHT);
+    gw.wait(SHORT_WAIT);
+  #endif
+  
+  #ifdef ID_S_RGBW_LIGHT
+    Serial.println("  RGBW_LIGHT");
+    gw.present(ID_S_RGBW_LIGHT,S_RGBW_LIGHT);
+    gw.wait(SHORT_WAIT);
+  #endif
+  
+  #ifdef ID_S_COLOR_SENSOR
+    Serial.println("  COLOR_SENSOR");
+    gw.present(ID_S_COLOR_SENSOR,S_COLOR_SENSOR);
+    gw.wait(SHORT_WAIT);
+  #endif
+  
+  #ifdef ID_S_HVAC
+    Serial.println("  HVAC");
+    gw.present(ID_S_HVAC,S_HVAC);
+    gw.wait(SHORT_WAIT);
+  #endif
+  
+  #ifdef ID_S_MULTIMETER
+    Serial.println("  MULTIMETER");
+    gw.present(ID_S_MULTIMETER,S_MULTIMETER);
+    gw.wait(SHORT_WAIT);
+  #endif
+  
+  #ifdef ID_S_SPRINKLER
+  #endif
+  #ifdef ID_S_WATER_LEAK
+  #endif
+  #ifdef ID_S_SOUND
+  #endif
+  #ifdef ID_S_VIBRATION
+  #endif
+  #ifdef ID_S_MOISTURE
+  #endif
 
   #ifdef ID_S_MOISTURE
     Serial.println("  S_MOISTURE");
@@ -556,6 +686,37 @@ void loop()
   
   #ifdef ID_S_SCENE_CONTROLLER
     scene();
+  #endif
+  
+  #ifdef ID_S_RGB_LIGHT
+    rgbLight();
+  #endif
+  
+  #ifdef ID_S_RGBW_LIGHT
+    rgbwLight();
+  #endif
+  
+  #ifdef ID_S_COLOR_SENSOR
+    color();
+  #endif
+  
+  #ifdef ID_S_HVAC
+    hvac();
+  #endif
+  
+  #ifdef ID_S_MULTIMETER
+    multimeter();
+  #endif
+  
+  #ifdef ID_S_SPRINKLER
+  #endif
+  #ifdef ID_S_WATER_LEAK
+  #endif
+  #ifdef ID_S_SOUND
+  #endif
+  #ifdef ID_S_VIBRATION
+  #endif
+  #ifdef ID_S_MOISTURE
   #endif
   
   #ifdef ID_S_MOISTURE
@@ -787,29 +948,12 @@ void weight(){
 void power(){
   
   Serial.print("Watt is: " );
-  Serial.println(map(randNumber,1,100,0,150));
-  
+  Serial.println(map(randNumber,1,100,0,150));  
   gw.send(msg_S_POWER_W.set(map(randNumber,1,100,0,150)));
 
   Serial.print("KWH is: " );
-  Serial.println(map(randNumber,1,100,0,150));
-  
+  Serial.println(map(randNumber,1,100,0,150));  
   gw.send(msg_S_POWER_K.set(map(randNumber,1,100,0,150)));
-
-//  Serial.print("Impedance is: " );
-//  Serial.println(map(randNumber,1,100,0,150));
-//  
-//  gw.send(msg_S_POWER_I.set(map(randNumber,1,100,0,150)));
-
-//  Serial.print("Voltage is: " );
-//  Serial.println(map(randNumber,1,100,0,150));
-//  
-//  gw.send(msg_S_POWER_V.set(map(randNumber,1,100,0,150)));
-
-//  Serial.print("Current is: " );
-//  Serial.println(map(randNumber,1,100,0,150));
-//  
-//  gw.send(msg_S_POWER_C.set(map(randNumber,1,100,0,150)));  
 
 }
 #endif
@@ -936,6 +1080,115 @@ void scene(){
 }
 #endif
 
+#ifdef ID_S_RGB_LIGHT
+void rgbLight(){
+  
+  Serial.print("RGB Light state is: " );
+  Serial.println(rgbState);
+  gw.send(msg_S_RGB_LIGHT_V_RGB.set(rgbState.c_str()));
+  
+  Serial.print("RGB Light Watt is: " );
+  Serial.println(map(randNumber,1,100,0,150));  
+  gw.send(msg_S_RGB_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
+  
+}
+#endif
+
+#ifdef ID_S_RGBW_LIGHT
+void rgbwLight(){
+  
+  Serial.print("RGBW Light state is: " );
+  Serial.println(rgbwState);
+  gw.send(msg_S_RGBW_LIGHT_V_RGBW.set(rgbwState.c_str()));
+  
+  Serial.print("RGBW Light Watt is: " );
+  Serial.println(map(randNumber,1,100,0,150));  
+  gw.send(msg_S_RGBW_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
+  
+}
+#endif
+
+#ifdef ID_S_COLOR_SENSOR
+void color(){
+  String colorState;
+  
+  String red   = String(random(0,256),HEX);
+  String green = String(random(0,256),HEX);
+  String blue  = String(random(0,256),HEX);
+  
+  colorState=String(red + green + blue);
+
+  Serial.print("Color state is: " );
+  Serial.println(colorState);
+  gw.send(msg_S_COLOR_SENSOR_V_RGB.set(colorState.c_str()));
+  
+}
+#endif
+
+#ifdef ID_S_HVAC
+void hvac(){
+  
+//  float hvac_SetPointHeat = 16.5;
+//  float hvac_SetPointCool = 25.5;
+//  String hvac_FlowState   = "AutoChangeOver";
+//  String hvac_FlowMode    = "Auto";
+//  String hvac_Speed       = "Normal";
+  
+  Serial.print("HVAC Set Point Heat is: " );
+  Serial.println(hvac_SetPointHeat);
+  gw.send(msg_S_HVAC_V_HVAC_SETPOINT_HEAT.set(hvac_SetPointHeat,1));
+  
+  Serial.print("HVAC Set Point Cool is: " );
+  Serial.println(hvac_SetPointCool);
+  gw.send(msg_S_HVAC_V_HVAC_SETPOINT_COOL.set(hvac_SetPointCool,1));
+  
+  Serial.print("HVAC Flow State is: " );
+  Serial.println(hvac_FlowState);
+  gw.send(msg_S_HVAC_V_HVAC_FLOW_STATET.set(hvac_FlowState.c_str()));
+  
+  Serial.print("HVAC Flow Mode is: " );
+  Serial.println(hvac_FlowMode);
+  gw.send(msg_S_HVAC_V_HVAC_FLOW_MODE.set(hvac_FlowMode.c_str()));
+  
+  Serial.print("HVAC Speed is: " );
+  Serial.println(hvac_Speed);
+  gw.send(msg_S_HVAC_V_HVAC_SPEED.set(hvac_Speed.c_str()));
+  
+}
+#endif
+
+#ifdef ID_S_MULTIMETER
+void multimeter(){
+  int impedance=map(randNumber,1,100,0,15000);
+  int volt=map(randNumber,1,100,0,380);
+  int amps=map(randNumber,1,100,0,16);
+  
+  Serial.print("Impedance is: " );
+  Serial.println(impedance);
+  gw.send(msg_S_MULTIMETER_V_IMPEDANCE.set(impedance));
+
+  Serial.print("Voltage is: " );
+  Serial.println(volt);
+  gw.send(msg_S_MULTIMETER_V_VOLTAGE.set(volt));
+
+  Serial.print("Current is: " );
+  Serial.println(amps);
+  gw.send(msg_S_MULTIMETER_V_CURRENT.set(amps));  
+
+}
+#endif
+
+#ifdef ID_S_SPRINKLER
+#endif
+#ifdef ID_S_WATER_LEAK
+#endif
+#ifdef ID_S_SOUND
+#endif
+#ifdef ID_S_VIBRATION
+#endif
+#ifdef ID_S_MOISTURE
+#endif
+
 #ifdef ID_S_MOISTURE
 void moisture(){
   
@@ -983,16 +1236,30 @@ void incomingMessage(const MyMessage &message) {
     break;
     #endif
     
+    
+    case V_STATUS: // V_LIGHT:
     #ifdef ID_S_LIGHT
-    case V_LIGHT:
+        if(message.sensor==ID_S_LIGHT){
           isLightOn =  message.getBool();
           Serial.print("Incoming change for ID_S_LIGHT:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println((isLightOn ? "On":"Off"));
           light(); // temp ack
-    break;
+        }
     #endif
+    #ifdef ID_S_HEATER
+        if(message.sensor == ID_S_HEATER){
+          heater_status = message.getBool();
+          Serial.print("Incoming change for ID_S_HEATER:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(heater_status);
+          heater();//temp ack
+        }
+    #endif
+    break;
+    
     
     #ifdef ID_S_DIMMER
     case V_DIMMER:
@@ -1038,8 +1305,11 @@ void incomingMessage(const MyMessage &message) {
     break;
     #endif
     
-    #ifdef ID_S_HEATER    
+        
     case V_HVAC_SETPOINT_HEAT:
+      
+      #ifdef ID_S_HEATER
+        if(message.sensor == ID_S_HEATER){
           heater_setpoint=message.getFloat();
           
           Serial.print("Incoming set point for ID_S_HEATER:");
@@ -1047,23 +1317,44 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(", New status: ");
           Serial.println(heater_setpoint,1);
           heater();//temp ack
-    break;
-    case (V_STATUS || dup_v_status): //V_LIGHT & V_STATUS are the same; does not compile without hack
-          heater_status = message.getBool();
-          Serial.print("Incoming change for ID_S_HEATER:");
+        }
+      #endif
+      
+      #ifdef ID_S_HVAC
+        if(message.sensor == ID_S_HVAC){
+          hvac_SetPointHeat=message.getFloat();
+          Serial.print("Incoming set point for ID_S_HVAC:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
-          Serial.println(heater_status);
-          heater();//temp ack
+          Serial.println(hvac_SetPointHeat,1);
+          hvac();//temp ack
+        }
+      #endif
     break;
+
     case V_HVAC_FLOW_STATE:
+      #ifdef ID_S_HEATER
+        if(message.sensor == ID_S_HEATER){
           heater_flow_state=message.getString();
           Serial.print("Incoming flow state change for ID_S_HEATER:");
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(heater_flow_state);
+        }
+       #endif
+       
+       #ifdef ID_S_HVAC
+         if(message.sensor == ID_S_HVAC){
+          hvac_FlowState=message.getString();
+          
+          Serial.print("Incoming set point for ID_S_HVAC:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(hvac_FlowState);
+          hvac();//temp ack
+         }
+       #endif
     break;
-    #endif
     
     #ifdef ID_S_LOCK
     case V_LOCK_STATUS:
@@ -1115,7 +1406,65 @@ void incomingMessage(const MyMessage &message) {
           scene();// temp ack
     break;
     #endif
-
+    
+    #ifdef ID_S_RGB_LIGHT
+    case V_RGB:
+          rgbState=message.getString();
+          Serial.print("Incoming flow state change for ID_S_RGB_LIGHT:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(rgbState);
+    break;
+    #endif
+    
+    #ifdef ID_S_RGBW_LIGHT
+    case V_RGBW:
+          rgbwState=message.getString();
+          Serial.print("Incoming flow state change for ID_S_RGBW_LIGHT:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(rgbwState);
+    break;
+    #endif
+    
+    #ifdef ID_S_HVAC
+            //  hvac_SetPointHeat 
+            //  hvac_SetPointCool 
+            //  hvac_FlowState   
+            //  hvac_FlowMode    
+            //  hvac_Speed       
+    
+    case V_HVAC_SETPOINT_COOL:
+          hvac_SetPointCool=message.getFloat();
+          
+          Serial.print("Incoming set point for ID_S_HVAC:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(hvac_SetPointCool,1);
+          hvac();//temp ack
+    break;
+   
+    case V_HVAC_FLOW_MODE:
+          hvac_Speed=message.getString();
+          
+          Serial.print("Incoming set point for ID_S_HVAC:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(hvac_Speed);
+          hvac();//temp ack
+    break;
+    
+    case V_HVAC_SPEED:
+           hvac_FlowMode=message.getString();
+          
+          Serial.print("Incoming set point for ID_S_HVAC:");
+          Serial.print(message.sensor);
+          Serial.print(", New status: ");
+          Serial.println(hvac_FlowMode);
+          hvac();//temp ack
+    break;
+    #endif
+    
     default: 
       Serial.print("Unknown/UnImplemented message type: ");
       Serial.println(message.type);

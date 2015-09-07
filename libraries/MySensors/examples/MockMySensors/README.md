@@ -16,6 +16,16 @@ With a Mega you can have them all
 
 Changes Log
 -----------------
+
+2015-09-07
+Five more sensors
+	S_RGB_LIGHT
+	S_RGBW_LIGHT
+	S_COLOR_SENSOR
+	S_HVAC
+	S_MULTIMETER
+Consolidated HVAC and HEATER incoming message
+
 2015-09-06
 
 Merge with Gizmocuz (implementation of S_HEATER & S_MOISTURE
