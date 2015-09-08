@@ -75,7 +75,7 @@ void setup()
   digitalWrite(SECONDARY_BUTTON_PIN, HIGH);
   
   // Send the sketch version information to the gateway and Controller
-  sensor_node.sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER"."SKETCH_MINOR_VER);
+  sensor_node.sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
 
   // Register binary input sensor to sensor_node (they will be created as child devices)
   // You can use S_DOOR, S_MOTION or S_LIGHT here depending on your usage. 
