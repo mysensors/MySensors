@@ -78,7 +78,7 @@
 //#define ID_S_SOUND             31
 //#define ID_S_VIBRATION         32
 //#define ID_S_MOISTURE          33
-
+//
 //#define ID_S_CUSTOM            99
 
 
@@ -193,13 +193,16 @@ MyHwATMega328 hw;
   
   MyMessage msg_S_HEATER_SET_POINT(ID_S_HEATER,V_HVAC_SETPOINT_HEAT);  // HVAC/Heater setpoint (Integer between 0-100). S_HEATER, S_HVAC
   MyMessage msg_S_HEATER_FLOW_STATE(ID_S_HEATER,V_HVAC_FLOW_STATE);     // Mode of header. One of "Off", "HeatOn", "CoolOn", or "AutoChangeOver" // S_HVAC, S_HEATER
-  MyMessage msg_S_HEATER_STATUS(ID_S_HEATER,V_STATUS);
-  MyMessage msg_S_HEATER_TEMP(ID_S_HEATER,V_TEMP);
+  
+  //MyMessage msg_S_HEATER_STATUS(ID_S_HEATER,V_STATUS);
+  //MyMessage msg_S_HEATER_TEMP(ID_S_HEATER,V_TEMP);
   
   float heater_setpoint=21.5;
-  float heater_temp=23.5;
-  bool heater_status=false;
   String heater_flow_state="Off";
+  
+//  float heater_temp=23.5;
+//  bool heater_status=false;
+  
   
   // V_TEMP                // Temperature
   // V_STATUS              // Binary status. 0=off 1=on
@@ -266,8 +269,8 @@ MyHwATMega328 hw;
 #endif
 
 #ifdef ID_S_RGBW_LIGHT
-  MyMessage msg_S_RGBW_LIGHT_V_RGBW(ID_S_RGB_LIGHT,V_RGBW);
-  MyMessage msg_S_RGBW_LIGHT_V_WATT(ID_S_RGB_LIGHT,V_WATT);
+  MyMessage msg_S_RGBW_LIGHT_V_RGBW(ID_S_RGBW_LIGHT,V_RGBW);
+  MyMessage msg_S_RGBW_LIGHT_V_WATT(ID_S_RGBW_LIGHT,V_WATT);
   String rgbwState="00000000";
   //RGBW light (with separate white component)	V_RGBW, V_WATT
   //RGBW value transmitted as ASCII hex string (I.e "ff0000ff" for red + full white)	S_RGBW_LIGHT
@@ -305,9 +308,9 @@ MyHwATMega328 hw;
 #endif
 
 #ifdef ID_S_MULTIMETER
-  MyMessage msg_S_MULTIMETER_V_IMPEDANCE(ID_S_POWER,V_IMPEDANCE);
-  MyMessage msg_S_MULTIMETER_V_VOLTAGE(ID_S_POWER,V_VOLTAGE);
-  MyMessage msg_S_MULTIMETER_V_CURRENT(ID_S_POWER,V_CURRENT);
+  MyMessage msg_S_MULTIMETER_V_IMPEDANCE(ID_S_MULTIMETER,V_IMPEDANCE);
+  MyMessage msg_S_MULTIMETER_V_VOLTAGE(ID_S_MULTIMETER,V_VOLTAGE);
+  MyMessage msg_S_MULTIMETER_V_CURRENT(ID_S_MULTIMETER,V_CURRENT);
 
   // Multimeter device	V_VOLTAGE, V_CURRENT, V_IMPEDANCE
   // V_IMPEDANCE	14	Impedance value
@@ -380,169 +383,169 @@ void setup()
   
   #ifdef ID_S_DOOR
     Serial.println("  S_DOOR");
-    gw.present(ID_S_DOOR,S_DOOR);
+    gw.present(ID_S_DOOR,S_DOOR,"Outside Door");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_MOTION
     Serial.println("  S_MOTION");
-    gw.present(ID_S_MOTION,S_MOTION);
+    gw.present(ID_S_MOTION,S_MOTION,"Outside Motion");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_SMOKE
     Serial.println("  S_SMOKE");
-    gw.present(ID_S_SMOKE,S_SMOKE);
+    gw.present(ID_S_SMOKE,S_SMOKE,"Kitchen Smoke");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_LIGHT
     Serial.println("  S_LIGHT");
-    gw.present(ID_S_LIGHT,S_LIGHT);
+    gw.present(ID_S_LIGHT,S_LIGHT,"Hall Light");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_DIMMER
     Serial.println("  S_DIMMER");
-    gw.present(ID_S_DIMMER,S_DIMMER);
+    gw.present(ID_S_DIMMER,S_DIMMER,"Living room dimmer");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_COVER
     Serial.println("  S_COVER");
-    gw.present(ID_S_COVER,S_COVER);
+    gw.present(ID_S_COVER,S_COVER,"Window cover");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_TEMP
     Serial.println("  S_TEMP");
-    gw.present(ID_S_TEMP,S_TEMP);
+    gw.present(ID_S_TEMP,S_TEMP,"House Temperarue");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_HUM
     Serial.println("  S_HUM");
-    gw.present(ID_S_HUM,S_HUM);
+    gw.present(ID_S_HUM,S_HUM,"Current Humidity");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_BARO
     Serial.println("  S_BARO");
-    gw.present(ID_S_BARO,S_BARO);
+    gw.present(ID_S_BARO,S_BARO," Air pressure");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_WIND
     Serial.println("  S_WIND");
-    gw.present(ID_S_WIND,S_WIND);
+    gw.present(ID_S_WIND,S_WIND,"Wind Station");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_RAIN
     Serial.println("  S_RAIN");
-    gw.present(ID_S_RAIN,S_RAIN);
+    gw.present(ID_S_RAIN,S_RAIN,"Rain Station");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_UV
     Serial.println("  S_UV");
-    gw.present(ID_S_UV,S_UV);
+    gw.present(ID_S_UV,S_UV,"Ultra Violet");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_WEIGHT
     Serial.println("  S_WEIGHT");
-    gw.present(ID_S_WEIGHT,S_WEIGHT);
+    gw.present(ID_S_WEIGHT,S_WEIGHT,"Outdoor Scale");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_POWER
     Serial.println("  S_POWER");
-    gw.present(ID_S_POWER,S_POWER);
+    gw.present(ID_S_POWER,S_POWER,"Power Metric");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_HEATER
     Serial.println("  S_HEATER");
-    gw.present(ID_S_HEATER,S_HEATER);
+    gw.present(ID_S_HEATER,S_HEATER,"Garage Heater");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_DISTANCE
     Serial.println("  S_DISTANCE");
-    gw.present(ID_S_DISTANCE,S_DISTANCE);
+    gw.present(ID_S_DISTANCE,S_DISTANCE,"Distance Measure");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_LIGHT_LEVEL
     Serial.println("  S_LIGHT_LEVEL");
-    gw.present(ID_S_LIGHT_LEVEL,S_LIGHT_LEVEL);
+    gw.present(ID_S_LIGHT_LEVEL,S_LIGHT_LEVEL,"Outside Light Level");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_LOCK
     Serial.println("  S_LOCK");
-    gw.present(ID_S_LOCK,S_LOCK);
+    gw.present(ID_S_LOCK,S_LOCK,"Front Door Lock");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_IR
     Serial.println("  S_IR");
-    gw.present(ID_S_IR,S_IR);
+    gw.present(ID_S_IR,S_IR,"Univeral Command");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_WATER
     Serial.println("  S_WATER");
-    gw.present(ID_S_WATER,S_WATER);
+    gw.present(ID_S_WATER,S_WATER,"Water Level");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_AIR_QUALITY
     Serial.println("  S_AIR_QUALITY");
-    gw.present(ID_S_AIR_QUALITY,S_AIR_QUALITY);
+    gw.present(ID_S_AIR_QUALITY,S_AIR_QUALITY,"Air Station");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_DUST  
     Serial.println("  S_DUST");
-    gw.present(ID_S_DUST,S_DUST);
+    gw.present(ID_S_DUST,S_DUST,"Dust Level");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_SCENE_CONTROLLER
     Serial.println("  S_SCENE_CONTROLLER");
-    gw.present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER);
+    gw.present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER,"Scene Controller");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_RGB_LIGHT
     Serial.println("  RGB_LIGHT");
-    gw.present(ID_S_RGB_LIGHT,S_RGB_LIGHT);
+    gw.present(ID_S_RGB_LIGHT,S_RGB_LIGHT,"Mood Light");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_RGBW_LIGHT
     Serial.println("  RGBW_LIGHT");
-    gw.present(ID_S_RGBW_LIGHT,S_RGBW_LIGHT);
+    gw.present(ID_S_RGBW_LIGHT,S_RGBW_LIGHT,"Mood Light 2");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_COLOR_SENSOR
     Serial.println("  COLOR_SENSOR");
-    gw.present(ID_S_COLOR_SENSOR,S_COLOR_SENSOR);
+    gw.present(ID_S_COLOR_SENSOR,S_COLOR_SENSOR,"Hall Painting");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_HVAC
     Serial.println("  HVAC");
-    gw.present(ID_S_HVAC,S_HVAC);
+    gw.present(ID_S_HVAC,S_HVAC,"HVAC");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_MULTIMETER
     Serial.println("  MULTIMETER");
-    gw.present(ID_S_MULTIMETER,S_MULTIMETER);
+    gw.present(ID_S_MULTIMETER,S_MULTIMETER,"Electric Staion");
     gw.wait(SHORT_WAIT);
   #endif
   
@@ -559,13 +562,13 @@ void setup()
 
   #ifdef ID_S_MOISTURE
     Serial.println("  S_MOISTURE");
-    gw.present(ID_S_MOISTURE,S_MOISTURE);
+    gw.present(ID_S_MOISTURE,S_MOISTURE,"Basement Sensor");
     gw.wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_CUSTOM
     Serial.println("  S_CUSTOM");
-    gw.present(ID_S_CUSTOM,S_CUSTOM);
+    gw.present(ID_S_CUSTOM,S_CUSTOM,"Other Stuff");
     gw.wait(SHORT_WAIT);
   #endif
 
@@ -969,13 +972,13 @@ void heater(){
   Serial.println(heater_flow_state);
   gw.send(msg_S_HEATER_FLOW_STATE.set(heater_flow_state.c_str()));
 
-  Serial.print("Heater on/off is: " );
-  Serial.println((heater_status==true)?"On":"Off");
-  gw.send(msg_S_HEATER_STATUS.set(heater_status));
+//  Serial.print("Heater on/off is: " );
+//  Serial.println((heater_status==true)?"On":"Off");
+//  gw.send(msg_S_HEATER_STATUS.set(heater_status));
   
-  Serial.print("Heater Temperature is: " );
-  Serial.println(heater_temp,1);
-  gw.send(msg_S_HEATER_TEMP.set(heater_temp,1));
+//  Serial.print("Heater Temperature is: " );
+//  Serial.println(heater_temp,1);
+//  gw.send(msg_S_HEATER_TEMP.set(heater_temp,1));
 
   Serial.print("Heater Setpoint: " );
   Serial.println(heater_setpoint,1);
@@ -1248,16 +1251,16 @@ void incomingMessage(const MyMessage &message) {
           light(); // temp ack
         }
     #endif
-    #ifdef ID_S_HEATER
-        if(message.sensor == ID_S_HEATER){
-          heater_status = message.getBool();
-          Serial.print("Incoming change for ID_S_HEATER:");
-          Serial.print(message.sensor);
-          Serial.print(", New status: ");
-          Serial.println(heater_status);
-          heater();//temp ack
-        }
-    #endif
+//    #ifdef ID_S_HEATER
+//        if(message.sensor == ID_S_HEATER){
+//          heater_status = message.getBool();
+//          Serial.print("Incoming change for ID_S_HEATER:");
+//          Serial.print(message.sensor);
+//          Serial.print(", New status: ");
+//          Serial.println(heater_status);
+//          heater();//temp ack
+//        }
+//    #endif
     break;
     
     
@@ -1340,6 +1343,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(heater_flow_state);
+          heater();//temp ack
         }
        #endif
        
@@ -1414,6 +1418,8 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(rgbState);
+          rgbLight(); // temp ack
+          
     break;
     #endif
     
@@ -1424,6 +1430,7 @@ void incomingMessage(const MyMessage &message) {
           Serial.print(message.sensor);
           Serial.print(", New status: ");
           Serial.println(rgbwState);
+          rgbwLight();
     break;
     #endif
     
