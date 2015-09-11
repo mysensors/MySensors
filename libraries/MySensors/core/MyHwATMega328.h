@@ -36,7 +36,6 @@
 
 #ifdef __cplusplus
 #include <Arduino.h>
-#include <SPI.h>
 #endif
 
 #if defined __AVR_ATmega328P__

@@ -11,7 +11,7 @@
 
 #ifndef __RF24_CONFIG_H__
 #define __RF24_CONFIG_H__
-	#include <MyConfig.h>
+	#include "MyConfig.h"
 
   #if ARDUINO < 100
 	#include <WProgram.h>
@@ -38,17 +38,19 @@
       #if defined SPI_UART
 		#include <SPI_UART.h>
 		#define _SPI uspi
-	  #elif defined SOFTSPI
-	  // change these pins to your liking
-	  //const uint8_t SOFT_SPI_MISO_PIN = 16;  //  <-- Moved to MyConfig.h
-	  //const uint8_t SOFT_SPI_MOSI_PIN = 15;  //  <-- Moved to MyConfig.h
-	  //const uint8_t SOFT_SPI_SCK_PIN = 14;   //  <-- Moved to MyConfig.h
+	  #elif defined MY_SOFTSPI
+		#include "drivers/DigitalIO/DigitalIO.h"
 
-      const uint8_t SPI_MODE = 0;
-      #define _SPI spi
+		// change these pins to your liking
+		const uint8_t SOFT_SPI_MISO_PIN = MY_SOFT_SPI_MOSI_PIN;
+		const uint8_t SOFT_SPI_MOSI_PIN = MY_SOFT_SPI_MISO_PIN;
+		const uint8_t SOFT_SPI_SCK_PIN = MY_SOFT_SPI_SCK_PIN;
+
+		const uint8_t SPI_MODE = 0;
+		#define _SPI spi
       
 	  #else	    
-		#include <SPI.h>
+		#include "drivers/SPI/SPI.h"
 		#define _SPI SPI
 	  #endif
 	#endif

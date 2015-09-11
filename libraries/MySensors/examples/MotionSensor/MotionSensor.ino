@@ -27,17 +27,19 @@
  *
  */
 
-#include <MySensor.h>  
-#include <SPI.h>
+//#define MY_DEBUG
+
+#include "MySensor.h"  
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)
 #define INTERRUPT DIGITAL_INPUT_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
 #define CHILD_ID 1   // Id of the sensor child
 
-MySensor gw;
 // Initialize motion message
 MyMessage msg(CHILD_ID, V_TRIPPED);
+
+
 
 void setup()  
 {  

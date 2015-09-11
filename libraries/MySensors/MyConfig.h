@@ -24,10 +24,10 @@
 
 // Enable debug flag for debug prints. This will add a lot to the size of the final sketch but good
 // to see what is actually is happening when developing
-#define MY_DEBUG
+//#define MY_DEBUG
 
-// Disable this line, If you are using TX(1), RX(0) as normal I/O pin
-#define MY_ENABLED_SERIAL
+// Enable this line, If you are using TX(1), RX(0) as normal I/O pin
+// #define MY_DISABLED_SERIAL
 
 // Serial output baud rate (for debug prints and serial gateway)
 #ifndef MY_BAUD_RATE
@@ -112,33 +112,41 @@
 /**********************************
 *  Message Signing Settings
 ***********************************/
-// Disable to completly disable signing functionality in library
+// Disable to completely disable signing functionality in library
 //#define MY_SIGNING_FEATURE
 
 // Define a suitable timeout for a signature verification session
-// Consider the turnaround from a nonce being generated to a signed message being received
+// Consider the turn-around from a nonce being generated to a signed message being received
 // which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
+#ifndef MY_VERIFICATION_TIMEOUT_MS
 #define MY_VERIFICATION_TIMEOUT_MS 5000
+#endif
 
-// Enable to turn on whitelisting
+// Enable to turn on white-listing
 // When enabled, a signing node will salt the signature with it's unique signature and nodeId.
 // The verifying node will look up the sender in a local table of trusted nodes and
 // do the corresponding salting in order to verify the signature.
-// For this reason, if whitelisting is enabled on one of the nodes in a sign-verify pair, both
-// nodes have to implement whitelisting for this to work.
-// Note that a node can still transmit a non-salted message (i.e. have whitelisting disabled)
-// to a node that has whitelisting enabled (assuming the receiver does not have a matching entry
-// for the sender in it's whitelist)
+// For this reason, if white listing is enabled on one of the nodes in a sign-verify pair, both
+// nodes have to implement white listing for this to work.
+// Note that a node can still transmit a non-salted message (i.e. have white listing disabled)
+// to a node that has white listing enabled (assuming the receiver does not have a matching entry
+// for the sender in it's white list)
 //#define MY_SECURE_NODE_WHITELISTING
 
 // MySigningAtsha204 default setting
+#ifndef MY_ATSHA204_PIN
 #define MY_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
+#endif
 
 // MySigningAtsha204Soft default settings
+#ifndef MY_RANDOMSEED_PIN
 #define MY_RANDOMSEED_PIN 7 // A7 - Pin used for random generation (do not connect anything to this)
+#endif
 
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
+#ifndef MY_HMAC_KEY
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+#endif
 
 /**********************************
 *  NRF24L01 Driver Defaults
@@ -155,30 +163,48 @@
 #define RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
 
 // Enable SOFTSPI for NRF24L01 when using the W5100 Ethernet module
-//#define SOFTSPI
-#ifdef SOFTSPI
-	// Define the soft SPI pins used for NRF radio
-	const uint8_t SOFT_SPI_MISO_PIN = 16;
-    const uint8_t SOFT_SPI_MOSI_PIN = 15;
-    const uint8_t SOFT_SPI_SCK_PIN = 14;
-#endif
+//#define MY_SOFTSPI
 
+#ifndef MY_SOFT_SPI_SCK_PIN
+#define MY_SOFT_SPI_SCK_PIN 14
+#endif
+#ifndef MY_SOFT_SPI_MISO_PIN
+#define MY_SOFT_SPI_MISO_PIN 16
+#endif
+#ifndef MY_SOFT_SPI_MOSI_PIN
+#define MY_SOFT_SPI_MOSI_PIN 15
+#endif
 
 /**********************************
 *  RFM69 Driver Defaults
 ***********************************/
-// Default network id. Use the same for all nodes that will talk to each other
-#define RFM69_NETWORKID     100
 
 // Default frequency to use. This must match the hardware version of the RFM69 radio (uncomment one):
-// #define RFM69_FREQUENCY   RF69_433MHZ
-#define RFM69_FREQUENCY   RF69_868MHZ
-//#define FREQUENCY     RF69_915MHZ
+#ifndef MY_RFM69_FREQUENCY
+// #define MY_RFM69_FREQUENCY   RF69_433MHZ
+#define MY_RFM69_FREQUENCY   RF69_868MHZ
+//#define MY_RFM69_FREQUENCY     RF69_915MHZ
+#endif
+
+// Default network id. Use the same for all nodes that will talk to each other
+#ifndef MY_RFM69_NETWORKID
+#define MY_RFM69_NETWORKID     100
+#endif
+#ifndef MY_RF69_IRQ_PIN
+#define MY_RF69_IRQ_PIN RF69_IRQ_PIN
+#endif
+#ifndef MY_RF69_SPI_CS
+#define MY_RF69_SPI_CS RF69_SPI_CS
+#endif
+#ifndef MY_RF69_IRQ_NUM
+#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+#endif
 
 // Enable this for encryption of packets
-//#define RFM69_ENABLE_ENCRYPTION
-#define RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
-
+//#define MY_RFM69_ENABLE_ENCRYPTION
+#ifndef MY_RFM69_ENCRYPTKEY
+#define MY_RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
+#endif
 
 /**************************************
 *  Gateway Transport Ethernet Defaults

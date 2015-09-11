@@ -121,7 +121,7 @@ void powerDown(period_t period) {
 
 void MyHwATMega328::internalSleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
-  #ifdef MY_ENABLED_SERIAL
+  #ifndef MY_DISABLED_SERIAL
 	  Serial.flush();
   #endif
 	pinIntTrigger = 0;
@@ -152,7 +152,7 @@ bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 			pinTriggeredWakeup = false;
 		}
 	} else {
-    #ifdef MY_ENABLED_SERIAL
+    #ifndef MY_DISABLED_SERIAL
 		  Serial.flush();
     #endif
 		powerDown(SLEEP_FOREVER);
@@ -172,7 +172,7 @@ inline uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t i
 			retVal = -1;
 		}
 	} else {
-    #ifdef MY_ENABLED_SERIAL
+    #ifndef MY_DISABLED_SERIAL
 		  Serial.flush();
     #endif
 		powerDown(SLEEP_FOREVER);

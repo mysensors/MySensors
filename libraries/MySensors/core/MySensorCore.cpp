@@ -19,27 +19,7 @@
 
 
 
-#include "MySensor.h"
-
-
-
-#include "drivers/RF24/RF24.cpp"
-
-#include "drivers/RFM69/RFM69.cpp"
-
-#include "drivers/ATSHA204/ATSHA204.cpp"
-#include "drivers/ATSHA204/sha256.cpp"
-
-#include "drivers/SPIFlash/SPIFlash.cpp"
-
-
-#include "drivers/Ethernet_W5100/utility/socket.cpp"
-#include "drivers/Ethernet_W5100/utility/w5100.cpp"
-#include "drivers/Ethernet_W5100/DNS.cpp"
-#include "drivers/Ethernet_W5100/Ethernet.cpp"
-#include "drivers/Ethernet_W5100/EthernetUdp.cpp"
-#include "drivers/Ethernet_W5100/IPAddress.cpp"
-
+#include "MySensorCore.h"
 
 #define DISTANCE_INVALID (0xFF)
 
@@ -168,7 +148,7 @@ void MySensor::errBlink(uint8_t cnt) {
 #endif
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
-    #ifdef MY_ENABLED_SERIAL
+    #ifndef MY_DISABLED_SERIAL
 	    hw_init();
     #endif
 	repeaterMode = _repeaterMode;

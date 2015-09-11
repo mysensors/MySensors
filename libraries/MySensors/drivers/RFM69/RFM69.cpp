@@ -31,7 +31,7 @@
 // **********************************************************************************
 #include "RFM69.h"
 #include "RFM69registers.h"
-#include <SPI.h>
+#include "drivers/SPI/SPI.h"
 
 volatile byte RFM69::DATA[RF69_MAX_DATA_LEN];
 volatile byte RFM69::_mode;       // current transceiver state

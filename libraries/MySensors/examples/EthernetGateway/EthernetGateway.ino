@@ -56,21 +56,10 @@
  *
  */
 
-#include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
-#include <SPI.h>
-
-//#include <MySigningNone.h>
-//#include <MySigningAtsha204.h>
-//#include <MySigningAtsha204Soft.h>
-//#include <MyTransportRFM69.h>
-//#include <MyTransportNRF24.h>
-//#include <MyHwATMega328.h>
-
 
 #define MY_WITH_LEDS_BLINKING
 #define MY_INCLUSION_MODE_FEATURE
 #define MY_INCLUSION_BUTTON_FEATURE
-
 
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 
@@ -78,15 +67,13 @@
 #define MY_INCLUSION_MODE_BUTTON_PIN  3 // Digital pin used for inclusion mode button
 
 #define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
-#define MY_DEFAULT_RX_LED_PIN    8  // Receive led pin
-#define MY_DEFAULT_TX_LED_PIN    9  // the PCB, on board LED
+#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
+#define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
 
-#define RADIO_CE_PIN        5  // radio chip enable
-#define RADIO_SPI_SS_PIN    6  // radio SPI serial select
+#define MY_RADIO_CE_PIN        5  // radio chip enable
+#define MY_RADIO_SPI_SS_PIN    6  // radio SPI serial select
 
 #include <MySensor.h>
-#include <MyProtocolDefault.h>
-#include <MyGatewayTransportEthernet.h>
 
 
 #define MY_IP_PORT 5003        // The port you want to open 
