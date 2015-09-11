@@ -45,7 +45,7 @@ public:
 	virtual void sleep(unsigned long ms) = 0;
 	virtual bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) = 0;
 	virtual uint8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) = 0;
-	#ifdef DEBUG
+	#ifdef MY_DEBUG
 	virtual void debugPrint(bool isGW, const char *fmt, ... ) = 0;
 	#endif
 

@@ -24,11 +24,15 @@
 
 // Enable debug flag for debug prints. This will add a lot to the size of the final sketch but good
 // to see what is actually is happening when developing
-#define DEBUG
+#define MY_DEBUG
+
+// Disable this line, If you are using TX(1), RX(0) as normal I/O pin
+#define MY_ENABLED_SERIAL
 
 // Serial output baud rate (for debug prints and serial gateway)
+#ifndef MY_BAUD_RATE
 #define MY_BAUD_RATE 115200
-
+#endif
 
 /**********************************
 *  Over the air firmware updates
@@ -40,10 +44,13 @@
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
 //#define MY_OTA_FIRMWARE_FEATURE
 // Slave select pin for external flash
+#ifdef MY_OTA_FLASH_SS
 #define MY_OTA_FLASH_SS 8
+#endif
 // Flash jdecid
+#ifdef MY_OTA_FLASH_JDECID
 #define MY_OTA_FLASH_JDECID 0x1F65
-
+#endif
 
 /**********************************
 *  Information LEDs blinking
@@ -63,23 +70,30 @@
 
 
 // default LEDs blinking period in milliseconds
+#ifndef MY_DEFAULT_LED_BLINK_PERIOD
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
+#endif
 // The RX LED default pin
+#ifndef MY_DEFAULT_RX_LED_PIN
 #define MY_DEFAULT_RX_LED_PIN 6
+#endif
 // The TX LED default pin
+#ifndef MY_DEFAULT_TX_LED_PIN
 #define MY_DEFAULT_TX_LED_PIN 5
+#endif
 // The Error LED default pin
+#ifndef MY_DEFAULT_ERR_LED_PIN
 #define MY_DEFAULT_ERR_LED_PIN 4
-
+#endif
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
 **********************************************/
 // Enabled inclusion mode feature
-#define MY_INCLUSION_MODE_FEATURE
+//#define MY_INCLUSION_MODE_FEATURE
 
 // Enables inclusion-mode button feature on the gateway device
-#define MY_INCLUSION_BUTTON_FEATURE
+//#define MY_INCLUSION_BUTTON_FEATURE
 
 // Disable inclusion mode button if inclusion mode feature is not enabled
 #ifndef MY_INCLUSION_MODE_FEATURE
@@ -87,9 +101,13 @@
 #endif
 
 // The default input pin used for the inclusion mode button
+#ifndef MY_INCLUSION_MODE_BUTTON_PIN
 #define MY_INCLUSION_MODE_BUTTON_PIN 3
+#endif
 // Number of seconds (default one minute) inclusion mode should be enabled
+#ifndef MY_INCLUSION_MODE_DURATION
 #define MY_INCLUSION_MODE_DURATION 60
+#endif
 
 /**********************************
 *  Message Signing Settings
@@ -121,7 +139,6 @@
 
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-
 
 /**********************************
 *  NRF24L01 Driver Defaults
@@ -170,6 +187,6 @@
 //#define IP_ADDRESS_DHCP
 
 // Enable to use UDP instead of plain Ethernet
-#define USE_UDP
+#define MY_USE_UDP
 
 #endif

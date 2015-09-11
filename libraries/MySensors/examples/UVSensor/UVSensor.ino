@@ -53,7 +53,7 @@ MyMessage uvMsg(CHILD_ID_UV, V_UV);
 unsigned long lastSend =0; 
 float uvIndex;
 float lastUV = -1;
-int uvIndexValue [12] = { 50, 227, 318, 408, 503, 606, 696, 795, 881, 976, 1079, 1170};
+uint16_t uvIndexValue [12] = { 50, 227, 318, 408, 503, 606, 696, 795, 881, 976, 1079, 1170};
 
 void setup()  
 { 
@@ -98,7 +98,7 @@ void loop()
   //Serial.println(uvIndex,2);
 
   //Send value to gateway if changed, or at least every 5 minutes
-  if ((uvIndex != lastUV)||(currentTime-lastSend >= 5*60*1000)) {
+  if ((uvIndex != lastUV)||(currentTime-lastSend >= 5UL*60UL*1000UL)) {
       lastSend=currentTime;
       gw.send(uvMsg.set(uvIndex,2));
       lastUV = uvIndex;

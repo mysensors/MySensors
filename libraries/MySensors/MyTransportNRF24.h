@@ -23,8 +23,8 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 #include <stdint.h>
-#include "utility/RF24.h"
-#include "utility/RF24_config.h"
+#include "drivers/RF24/RF24.h"
+#include "drivers/RF24/RF24_config.h"
 
 #define TO_ADDR(x) (RF24_BASE_RADIO_ID + x)
 

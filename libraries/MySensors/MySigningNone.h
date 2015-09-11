@@ -32,8 +32,6 @@
 #include "MySigning.h"
 #include <stdint.h>
 
-#define SIGNING_IDENTIFIER (0)
-
 // The "none" signing driver that can be used for nodes
 // not requiring signing
 // It does check SIGNING_IDENTIFIER byte to avoid illegal mixing of signing back-ends in

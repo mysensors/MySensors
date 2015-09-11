@@ -59,32 +59,38 @@
 #include <DigitalIO.h>     // This include can be removed when using UIPEthernet module  
 #include <SPI.h>
 
-#include <MySigningNone.h>
-#include <MySigningAtsha204.h>
-#include <MySigningAtsha204Soft.h>
-#include <MyTransportRFM69.h>
-#include <MyTransportNRF24.h>
-#include <MyHwATMega328.h>
+//#include <MySigningNone.h>
+//#include <MySigningAtsha204.h>
+//#include <MySigningAtsha204Soft.h>
+//#include <MyTransportRFM69.h>
+//#include <MyTransportNRF24.h>
+//#include <MyHwATMega328.h>
 
-#include <MyGateway.h>
-#include <MyProtocolDefault.h>
-#include <MyGatewayTransportEthernet.h>
 
-// needed due to Arduino IDE
-#include <Ethernet.h>
+#define MY_WITH_LEDS_BLINKING
+#define MY_INCLUSION_MODE_FEATURE
+#define MY_INCLUSION_BUTTON_FEATURE
 
-#define INCLUSION_MODE_TIME 60 // Number of minutes inclusion mode is enabled
-#define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
+
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
+
+#define MY_INCLUSION_MODE_DURATION 60 // Number of minutes inclusion mode is enabled
+#define MY_INCLUSION_MODE_BUTTON_PIN  3 // Digital pin used for inclusion mode button
+
+#define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
+#define MY_DEFAULT_RX_LED_PIN    8  // Receive led pin
+#define MY_DEFAULT_TX_LED_PIN    9  // the PCB, on board LED
 
 #define RADIO_CE_PIN        5  // radio chip enable
 #define RADIO_SPI_SS_PIN    6  // radio SPI serial select
 
-#define RADIO_ERROR_LED_PIN 7  // Error led pin
-#define RADIO_RX_LED_PIN    8  // Receive led pin
-#define RADIO_TX_LED_PIN    9  // the PCB, on board LED
+#include <MySensor.h>
+#include <MyProtocolDefault.h>
+#include <MyGatewayTransportEthernet.h>
 
-#define IP_PORT 5003        // The port you want to open 
-#ifndef IP_ADDRESS_DHCP
+
+#define MY_IP_PORT 5003        // The port you want to open 
+#ifndef MY_IP_ADDRESS_DHCP
 // Gateway IP address if not using DHCP
 IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!
 #endif /* IP_ADDRESS_DHCP */
@@ -122,22 +128,11 @@ MyGatewayTransportEthernet ctrlTransport(protocol, mac, myIp, /* gw port */ CONT
 
 // Construct MyGateway library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 // To use LEDs blinking, uncomment MY_LEDS_BLINKING_FEATURE in MyConfig.h
-#ifdef MY_WITH_LEDS_BLINKING
-MyGateway gw(ctrlTransport, transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-#else
 MyGateway gw(ctrlTransport, transport, hw /*, signer*/);
-#endif
 
 void setup()
 {
-  gw.begin(NULL
-#ifdef MY_INCLUSION_MODE_FEATURE
-           , INCLUSION_MODE_TIME
-#ifdef MY_INCLUSION_BUTTON_FEATURE
-           , INCLUSION_MODE_PIN
-#endif
-#endif
-          );
+  gw.begin(NULL);
 }
 
 void loop() {

@@ -649,7 +649,7 @@ bool IRdecodeRC6::decode(void) {
  * Hopefully this code is unique for each button.
  */
 #define FNV_PRIME_32 16777619
-#define FNV_BASIS_32 2166136261
+#define FNV_BASIS_32 2166136261UL
 // Compare two tick values, returning 0 if newval is shorter,
 // 1 if newval is equal, and 2 if newval is longer
 int IRdecodeHash::compare(unsigned int oldval, unsigned int newval) {
@@ -730,12 +730,12 @@ void IRrecvBase::resume() {
 bool IRrecvLoop::GetResults(IRdecodeBase *decoder) {
   bool Finished=false;
   byte OldState=HIGH;byte NewState;
-  unsigned long StartTime, DeltaTime, EndTime;
+  unsigned long StartTime, DeltaTime=0, EndTime=0;
   StartTime=micros();
   while(irparams.rawlen<RAWBUF) {  //While the buffer not overflowing
     while(OldState==(NewState=digitalRead(irparams.recvpin))) { //While the pin hasn't changed
       if( (DeltaTime = (EndTime=micros()) - StartTime) > 10000) { //If it's a very long wait
-        if(Finished=irparams.rawlen) break; //finished unless it's the opening gap
+        if((Finished=irparams.rawlen)) break; //finished unless it's the opening gap
       }
     }
     if(Finished) break;
@@ -797,6 +797,9 @@ void IRrecvPCI_Handler(){
       break;
     case STATE_IDLE:
        if(digitalRead(irparams.recvpin)) return; else irparams.rcvstate=STATE_RUNNING;
+       break;
+    default:
+       // what of STATE_UNKNOWN, STATE_MARK and STATE_SPACE?
        break;
   };
   irparams.rawbuf[irparams.rawlen]=DeltaTime;
@@ -981,6 +984,9 @@ ISR(TIMER_INTR_NAME)
     if (irdata == IR_MARK) { // reset gap timer
       irparams.timer = 0;
     }
+    break;
+  default:
+    // what of STATE_UNKNOWN and STATE_RUNNING?
     break;
   }
   do_Blink();

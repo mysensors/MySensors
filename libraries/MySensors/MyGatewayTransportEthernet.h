@@ -26,17 +26,17 @@
 #include "MyGatewayTransport.h"
 #include "MyProtocolDefault.h"
 
-#include <IPAddress.h>
+#include "drivers/Ethernet_W5100/IPAddress.h"
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
 //#include <UIPEthernet.h>  
 
 // Use this fo WizNET W5100 module and Arduino Ethernet Shield 
-#include <Ethernet.h> 
+#include "drivers/Ethernet_W5100/Ethernet.h"
 
-#ifdef USE_UDP
-#include <EthernetUdp.h>
-#endif /* USE_UDP */
+#ifdef MY_USE_UDP
+#include "drivers/Ethernet_W5100/EthernetUdp.h"
+#endif /* MY_USE_UDP */
 
 #define CONTROLLER_PORT 5003
 #define IP_RENEWAL_INTERVAL 60000  // in milliseconds
@@ -86,11 +86,11 @@ protected:
 	IPAddress gatewayIP;
 	uint16_t gatewayPort;
 
-#ifndef USE_UDP
+#ifdef MY_USE_UDP
+	EthernetUDP *server;
+#else
 	EthernetServer *server;
 	uint8_t inputPos;
-#else
-	EthernetUDP *server;
 #endif
 
 	char inputBuffer[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface

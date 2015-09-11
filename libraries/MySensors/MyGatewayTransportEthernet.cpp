@@ -58,7 +58,7 @@ bool MyGatewayTransportEthernet::begin() {
 	// TODO: use HW delay
 	delay(1000);
 
-#ifdef USE_UDP
+#ifdef MY_USE_UDP
 	server = new EthernetUDP();
 	server->begin(gatewayPort);
 #else
@@ -78,7 +78,7 @@ bool MyGatewayTransportEthernet::send(MyMessage &message)
 	}
 	else {
 		msg = protocol.format(message);
-#ifdef USE_UDP
+#ifdef MY_USE_UDP
 		server->beginPacket(controllerIP, controllerPort);
 		server->write(msg, strlen(msg));
 		// returns 1 if the packet was sent successfully
@@ -107,7 +107,7 @@ bool MyGatewayTransportEthernet::available()
 	renewIP();
 #endif
 
-#ifdef USE_UDP
+#ifdef MY_USE_UDP
 	int packet_size = server->parsePacket();
 
 	if (server->available()) {

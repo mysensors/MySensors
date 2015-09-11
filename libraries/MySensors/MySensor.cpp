@@ -18,7 +18,28 @@
  */
 
 
+
 #include "MySensor.h"
+
+
+
+#include "drivers/RF24/RF24.cpp"
+
+#include "drivers/RFM69/RFM69.cpp"
+
+#include "drivers/ATSHA204/ATSHA204.cpp"
+#include "drivers/ATSHA204/sha256.cpp"
+
+#include "drivers/SPIFlash/SPIFlash.cpp"
+
+
+#include "drivers/Ethernet_W5100/utility/socket.cpp"
+#include "drivers/Ethernet_W5100/utility/w5100.cpp"
+#include "drivers/Ethernet_W5100/DNS.cpp"
+#include "drivers/Ethernet_W5100/Ethernet.cpp"
+#include "drivers/Ethernet_W5100/EthernetUdp.cpp"
+#include "drivers/Ethernet_W5100/IPAddress.cpp"
+
 
 #define DISTANCE_INVALID (0xFF)
 
@@ -53,17 +74,11 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 #ifdef MY_SIGNING_FEATURE
 	, MySigning &_signer
 #endif
-#ifdef MY_LEDS_BLINKING_FEATURE
-		, uint8_t _rx, uint8_t _tx, uint8_t _er, unsigned long _blink_period
-#endif
 	)
 	:
 	radio(_radio),
 #ifdef MY_SIGNING_FEATURE
 	signer(_signer),
-#endif
-#ifdef MY_LEDS_BLINKING_FEATURE
-	pinRx(_rx), pinTx(_tx), pinEr(_er), ledBlinkPeriod(_blink_period),
 #endif
 #ifdef MY_OTA_FIRMWARE_FEATURE
  	flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID),
@@ -95,45 +110,45 @@ bool MySensor::isValidFirmware() {
 
 #ifdef MY_LEDS_BLINKING_FEATURE
 void MySensor::handleLedsBlinking() {
-	static unsigned long next_time = hw_millis() + ledBlinkPeriod;
+	static unsigned long next_time = hw_millis() + MY_DEFAULT_LED_BLINK_PERIOD;
 
 	// Just return if it is not the time...
 	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(hw_millis() - next_time) < 0)
+	if ((long)(hw_millis() - blink_next_time) < 0)
 		return;
 	else
-		next_time = hw_millis() + ledBlinkPeriod;
+		blink_next_time = hw_millis() + ledBlinkPeriod;
 
 	// do the actual blinking
 	if(countRx && countRx != 255) {
 		// switch led on
-		hw_digitalWrite(pinRx, LED_ON);
+		hw_digitalWrite(MY_DEFAULT_RX_LED_PIN, LED_ON);
 	}
 	else if(!countRx) {
 		// switching off
-		hw_digitalWrite(pinRx, LED_OFF);
+		hw_digitalWrite(MY_DEFAULT_RX_LED_PIN, LED_OFF);
 	}
 	if(countRx != 255)
 		--countRx;
 
 	if(countTx && countTx != 255) {
 		// switch led on
-		hw_digitalWrite(pinTx, LED_ON);
+		hw_digitalWrite(MY_DEFAULT_TX_LED_PIN, LED_ON);
 	}
 	else if(!countTx) {
 		// switching off
-		hw_digitalWrite(pinTx, LED_OFF);
+		hw_digitalWrite(MY_DEFAULT_TX_LED_PIN, LED_OFF);
 	}
 	if(countTx != 255)
 		--countTx;
 
 	if(countErr && countErr != 255) {
 		// switch led on
-		hw_digitalWrite(pinEr, LED_ON);
+		hw_digitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_ON);
 	}
 	else if(!countErr) {
 		// switching off
-		hw_digitalWrite(pinEr, LED_OFF);
+		hw_digitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_OFF);
 	}
 	if(countErr != 255)
 		--countErr;
@@ -153,7 +168,9 @@ void MySensor::errBlink(uint8_t cnt) {
 #endif
 
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
-	hw_init();
+    #ifdef MY_ENABLED_SERIAL
+	    hw_init();
+    #endif
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;
@@ -174,14 +191,14 @@ void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, b
 
 #ifdef MY_LEDS_BLINKING_FEATURE
 	// Setup led pins
-	pinMode(pinRx, OUTPUT);
-	pinMode(pinTx, OUTPUT);
-	pinMode(pinEr, OUTPUT);
+	pinMode(MY_DEFAULT_RX_LED_PIN, OUTPUT);
+	pinMode(MY_DEFAULT_TX_LED_PIN, OUTPUT);
+	pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
 
 	// Set initial state of leds
-	hw_digitalWrite(pinRx, LED_OFF);
-	hw_digitalWrite(pinTx, LED_OFF);
-	hw_digitalWrite(pinEr, LED_OFF);
+	hw_digitalWrite(MY_DEFAULT_RX_LED_PIN, LED_OFF);
+	hw_digitalWrite(MY_DEFAULT_TX_LED_PIN, LED_OFF);
+	hw_digitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_OFF);
 
 	// initialize counters
 	countRx = 0;
@@ -397,6 +414,10 @@ boolean MySensor::sendRoute(MyMessage &message) {
 #endif
 
 	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
+		// Store this address in routing table (if repeater)
+		if (repeaterMode) {
+			hw_writeConfig(EEPROM_ROUTES_ADDRESS+sender, last);
+		}
 		// If destination is the gateway or if we aren't a repeater, let
 		// our parent take care of the message
 		ok = sendWrite(nc.parentNodeId, message);
@@ -555,6 +576,7 @@ boolean MySensor::process() {
 #endif
 
 	uint8_t len = radio.receive((uint8_t *)&msg);
+	(void)len; //until somebody makes use of 'len'
 #ifdef MY_LEDS_BLINKING_FEATURE
 	rxBlink(1);
 #endif
@@ -886,4 +908,149 @@ int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, ui
 	}
 #endif
 }
+
+
+
+
+
+// Inline function and macros
+static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
+	msg.sender = GATEWAY_ADDRESS;
+	msg.destination = GATEWAY_ADDRESS;
+	msg.sensor = 0;
+	msg.type = type;
+	mSetCommand(msg, C_INTERNAL);
+	mSetRequestAck(msg, false);
+	mSetAck(msg, false);
+	return msg;
+}
+
+MyGateway::MyGateway(MyGatewayTransport &_transport, MyTransport &_radio,
+		MyHw &_hw
+#ifdef MY_SIGNING_FEATURE
+		, MySigning &_signer
+#endif
+		) :
+		transport(_transport), MySensor(_radio, _hw
+#ifdef MY_SIGNING_FEATURE
+		, _signer
+#endif
+		)
+{
+#ifdef MY_INCLUSION_MODE_FEATURE
+	inclusionMode = false;
+#endif
+}
+
+void MyGateway::begin(void (*_msgCallback)(const MyMessage &)) {
+	// Setup digital in that triggers inclusion mode
+#ifdef MY_INCLUSION_MODE_FEATURE
+#ifdef MY_INCLUSION_BUTTON_FEATURE
+	pinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
+	digitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
+#endif
+#endif
+
+	// initialize the transport driver
+	if (!transport.begin()) {
+		debug(PSTR("transport driver init fail\n"));
+		while(1); // Nothing more we can do
+	}
+
+	// Start MySensors in repeater mode
+	MySensor::begin(_msgCallback, GATEWAY_ADDRESS, true, GATEWAY_ADDRESS);
+
+	// Startup complete
+	transport.send(buildGw(msg, I_GATEWAY_READY).set("Gateway startup complete."));
+
+}
+
+boolean MyGateway::sendRoute(MyMessage &message) {
+	if (message.destination == GATEWAY_ADDRESS) {
+		// This is a message sent from a sensor attached on the gateway node.
+		// Pass it directly to the gateway transport layer.
+		transport.send(message);
+	} else {
+		MySensor::sendRoute(message);
+	}
+}
+
+boolean MyGateway::process() {
+#ifdef MY_INCLUSION_MODE_FEATURE
+	checkInclusionMode();
+#endif
+	bool newMessage = false;
+	if (transport.available()) {
+		MyMessage &gmsg = transport.receive();
+		if (msg.destination == GATEWAY_ADDRESS) {
+			// Check if sender requests an ack back.
+			if (mGetRequestAck(gmsg)) {
+				// Copy message
+				tmpMsg = gmsg;
+				mSetRequestAck(tmpMsg, false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+				mSetAck(tmpMsg, true);
+				tmpMsg.sender = nc.nodeId;
+				tmpMsg.destination = msg.sender;
+				transport.send(tmpMsg);
+			}
+			if (mGetCommand(gmsg) == C_INTERNAL) {
+				if (msg.type == I_VERSION) {
+					// Request for version. Create the response
+					transport.send(buildGw(msg, I_VERSION).set(LIBRARY_VERSION));
+#ifdef MY_INCLUSION_MODE_FEATURE
+				} else if (msg.type == I_INCLUSION_MODE) {
+					// Request to change inclusion mode
+					setInclusionMode(atoi(msg.data) == 1);
+#endif
+				} else {
+					processInternalMessages(gmsg);
+				}
+			} else {
+				// Call incoming message callback if available
+				if (msgCallback != NULL) {
+					msgCallback(msg);
+				}
+				newMessage = true;
+			}
+		}
+	}
+
+	// new message from sensor node
+	if (MySensor::process()) {
+		MyMessage &msg = MySensor::getLastMessage();
+		newMessage = true;
+		transport.send(msg);
+	}
+
+	return newMessage;
+}
+
+#ifdef MY_INCLUSION_MODE_FEATURE
+void MyGateway::setInclusionMode(boolean newMode) {
+  if (newMode != inclusionMode) {
+    inclusionMode = newMode;
+    // Send back mode change to controller
+    transport.send(buildGw(msg, I_INCLUSION_MODE).set(inclusionMode?1:0));
+    if (inclusionMode) {
+    	inclusionStartTime = hw_millis();
+    }
+  }
+}
+
+void MyGateway::checkInclusionMode() {
+
+	#ifdef MY_INCLUSION_BUTTON_FEATURE
+	if (!inclusionMode && digitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == LOW) {
+		// Start inclusion mode
+		setInclusionMode(true);
+	}
+	#endif
+
+	if (inclusionMode && hw_millis()-inclusionStartTime>MY_INCLUSION_MODE_DURATION*1000L) {
+		// inclusionTimeInMinutes minute(s) has passed.. stop inclusion mode
+		setInclusionMode(false);
+	}
+}
+#endif
+
 

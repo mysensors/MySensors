@@ -32,20 +32,29 @@
 #endif
 #include "MyMessage.h"
 #ifdef MY_OTA_FIRMWARE_FEATURE
-#include "utility/SPIFlash.h"
+#include "drivers/SPIFlash/SPIFlash.h"
 #endif
+
+#include "MyGatewayTransport.h"
+#include "MyGatewayTransportSerial.h"
+
 #include <stddef.h>
 #include <stdarg.h>
 
 
 // Set the hardware driver to use (initialized by MySensor-class)
 //#if defined __AVR_ATmega328P__
+#if defined(ARDUINO_ARCH_ESP8266)
+#include "MyHwESP8266.h"
+typedef MyHwESP8266 MyHwDriver;
+#elif defined(ARDUINO_ARCH_AVR)
 #include "MyHwATMega328.h"
 typedef MyHwATMega328 MyHwDriver;
+#endif
 //#endif
 
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 #define debug(x,...) hw.debugPrint(isGateway, x, ##__VA_ARGS__)
 #else
 #define debug(x,...)
@@ -152,12 +161,6 @@ class MySensor
 	MySensor(MyTransport &radio =*new MyTransportNRF24(), MyHw &hw=*new MyHwDriver()
 #ifdef MY_SIGNING_FEATURE
 		, MySigning &signer=*new MySigningNone()
-#endif
-#ifdef MY_LEDS_BLINKING_FEATURE
-		, uint8_t _rx=MY_DEFAULT_RX_LED_PIN,
-		uint8_t _tx=MY_DEFAULT_TX_LED_PIN,
-		uint8_t _er=MY_DEFAULT_ERR_LED_PIN,
-		unsigned long _blink_period=MY_DEFAULT_LED_BLINK_PERIOD
 #endif
 		);
 
@@ -349,32 +352,28 @@ class MySensor
 
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage tmpMsg ;  // Buffer for temporary messages (acks and nonces among others).
-#ifdef MY_SIGNING_FEATURE
-	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
-	MyMessage msgSign;  // Buffer for message to sign.
-	MySigning& signer;
-#endif
 
 #ifdef MY_LEDS_BLINKING_FEATURE
-	uint8_t pinRx; // Rx led pin
-	uint8_t pinTx; // Tx led pin
-	uint8_t pinEr; // Err led pin
-
 	// these variables don't need to be volatile, since we are not using interrupts
 	uint8_t countRx;
 	uint8_t countTx;
 	uint8_t countErr;
 
-	unsigned long ledBlinkPeriod;
 	void handleLedsBlinking(); // do the actual blinking
+	unsigned long blink_next_time;
 #endif
 
 	MyTransport& radio;
+#ifdef MY_SIGNING_FEATURE
+	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
+	MyMessage msgSign;  // Buffer for message to sign.
+	MySigning& signer;
+#endif
 	MyHw& hw;
 	
 	boolean sendWrite(uint8_t dest, MyMessage &message);
 	void processInternalMessages(MyMessage &msg);
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
 	uint8_t failedTransmissions;
@@ -395,5 +394,57 @@ class MySensor
 	uint8_t crc8Message(MyMessage &message);
 };
 #endif
+
+
+class MyGateway : public MySensor
+{
+public:
+	// MyProtocolSerial constructor
+	MyGateway(MyGatewayTransport &transport=*new MyGatewayTransportSerial(), MyTransport &radio =*new MyTransportNRF24(), MyHw &hw=*new MyHwDriver()
+#ifdef MY_SIGNING_FEATURE
+		, MySigning &signer=*new MySigningNone()
+#endif
+		);
+
+
+	/**
+		* Begin operation of the MySensors library
+		*
+		* Call this in setup(), before calling any other sensor net library methods.
+		* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses. Default is NULL.
+		* @param inclusionModeDuration Number of milliseconds inclusion mode should be enabled
+		* @param inclusionModeButtonPin Button pin used for enabling inclusion mode
+		*/
+
+		void begin(void (* msgCallback)(const MyMessage &)=NULL);
+
+
+	/**
+	 * See MySensor.h
+	 *
+	 * Overloaded to handle local sensor data sent to controller.
+	 */
+	boolean sendRoute(MyMessage &message);
+
+	/**
+	 * Processes incoming messages to this node.
+	 * Returns true if there is a message addressed for this node was received.
+	 * Preferred way of handling incoming messages is to use the callback defined in begin().
+	 */
+	boolean process();
+
+private:
+
+	MyGatewayTransport& transport;
+
+#ifdef MY_INCLUSION_MODE_FEATURE
+
+	void setInclusionMode(bool newMode);
+	void checkInclusionMode();
+	unsigned long inclusionStartTime;
+	bool inclusionMode;
+#endif
+};
+
 
 #endif

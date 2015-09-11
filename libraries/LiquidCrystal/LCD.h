@@ -90,6 +90,8 @@ inline static void waitUsec ( uint16_t uSec )
 {
 #ifndef FAST_MODE
    delayMicroseconds ( uSec );
+#else
+   (void)uSec;
 #endif // FAST_MODE
 }
 
@@ -481,7 +483,7 @@ public:
     @param      value: pin associated to backlight control.
     @param      pol: backlight polarity control (POSITIVE, NEGATIVE)
     */
-   virtual void setBacklightPin ( uint8_t value, t_backlighPol pol ) { };
+   virtual void setBacklightPin ( uint8_t /*value*/, t_backlighPol /*pol*/ ) { };
    
    /*!
     @function
@@ -500,7 +502,7 @@ public:
     BACKLIGHT_OFF will be interpreted as off and BACKLIGHT_ON will drive the
     backlight on.
     */
-   virtual void setBacklight ( uint8_t value ) { };
+   virtual void setBacklight ( uint8_t /*value*/ ) { };
    
    /*!
     @function
@@ -514,9 +516,9 @@ public:
     @param      value[in] Value to write to the LCD.
     */
 #if (ARDUINO <  100)
-   virtual void write(uint8_t value);
+   virtual void write(uint8_t /*value*/);
 #else
-   virtual size_t write(uint8_t value);
+   virtual size_t write(uint8_t /*value*/);
 #endif
    
 #if (ARDUINO <  100)
@@ -566,9 +568,9 @@ private:
     the LCD.
     */
 #if (ARDUINO <  100)
-   virtual void send(uint8_t value, uint8_t mode) { };
+   virtual void send(uint8_t /*value*/, uint8_t /*mode*/) { };
 #else
-   virtual void send(uint8_t value, uint8_t mode) = 0;
+   virtual void send(uint8_t /*value*/, uint8_t /*mode*/) = 0;
 #endif
    
 };

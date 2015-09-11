@@ -23,7 +23,7 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 #include <stdint.h>
-#include "utility/RFM69.h"
+#include "drivers/RFM69/RFM69.h"
 #include <SPI.h>
 
 

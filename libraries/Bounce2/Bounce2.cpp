@@ -18,7 +18,7 @@ Bounce::Bounce() {
 void Bounce::attach(int pin) {
  this->pin = pin;
  debouncedState = unstableState = digitalRead(pin);
- #ifdef BOUNCE_LOCK-OUT
+ #ifdef BOUNCE_LOCK_OUT
  previous_millis = 0;
  #else
  previous_millis = millis();
@@ -37,7 +37,7 @@ void Bounce::interval(unsigned long interval_millis)
 bool Bounce::update()
 {
 
-#ifdef BOUNCE_LOCK-OUT
+#ifdef BOUNCE_LOCK_OUT
     stateChanged = false;
 	// Ignore everything if we are locked out
 	if (millis() - previous_millis >= interval_millis) {

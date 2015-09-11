@@ -80,14 +80,7 @@ MyGateway gw(ctrlTransport, transport, hw /*, signer*/);
 
 void setup()  
 { 
-  gw.begin(NULL
-  #ifdef MY_INCLUSION_MODE_FEATURE
-				, INCLUSION_MODE_TIME
-  #ifdef MY_INCLUSION_BUTTON_FEATURE
-				, INCLUSION_MODE_PIN
-  #endif
-  #endif
-  );
+  gw.begin(NULL);
 
 }
 

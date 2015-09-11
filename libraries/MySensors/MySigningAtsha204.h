@@ -30,10 +30,8 @@
 
 #include "MyConfig.h"
 #include "MySigning.h"
-#include "utility/ATSHA204.h"
+#include "drivers/ATSHA204/ATSHA204.h"
 #include <stdint.h>
-
-#define SIGNING_IDENTIFIER (1)
 
 #ifdef MY_SECURE_NODE_WHITELISTING
 typedef struct {
