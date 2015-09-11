@@ -49,7 +49,7 @@
 #include "core/MyHwATMega328.cpp"
 #include "core/MyTransport.cpp"
 #include "core/MyTransportNRF24.cpp"
-#include "core/MyTransportRFM69.cpp"
+//#include "core/MyTransportRFM69.cpp"
 
 #include "core/MyGatewayTransport.cpp"
 #include "core/MyGatewayTransportSerial.cpp"
@@ -58,7 +58,7 @@
 
 
 // Initialize library
-MyTransportRFM69 transport;
+//MyTransportRFM69 transport;
 MySensor gw;
 
 
