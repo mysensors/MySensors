@@ -26,7 +26,7 @@
 
 #include "MyConfig.h"
 
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100_CLIENT) || defined(MY_GATEWAY_W5100_SERVER)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100)
 	#define MY_GATEWAY_FEATURE
 	#define MY_NODE_TYPE "gateway"
 #elif defined(MY_REPEATER_FEATURE)
@@ -102,7 +102,7 @@
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
 	#endif
-	#if defined(MY_GATEWAY_W5100_CLIENT) || defined(MY_GATEWAY_W5100_SERVER)
+	#if defined(MY_GATEWAY_W5100)
 		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
 		#include "drivers/AVR/Ethernet_W5100/utility/w5100.cpp"
 		#include "drivers/AVR/Ethernet_W5100/DNS.cpp"
@@ -110,19 +110,22 @@
 		#include "drivers/AVR/Ethernet_W5100/EthernetUdp.cpp"
 		#include "drivers/AVR/Ethernet_W5100/IPAddress.cpp"
 
+		#if defined(MY_CONTROLLER_IP_ADDRESS)
+			#define MY_GATEWAY_CLIENT_MODE
+		#endif
+
 		#if !defined(MY_PORT)
-			#error You must define MY_PORT
+			#error You must define MY_PORT (cotroller or gatway port to open)
 		#endif
 		#if !defined(USE_UDP)
 			#include "drivers/AVR/Ethernet_W5100/EthernetServer.cpp"
 		#endif
-		#if defined(MY_GATEWAY_W5100_CLIENT) && !defined(MY_CONTROLLER_IP_ADDRESS)
-			#error You must define MY_CONTROLLER_IP_ADDRESS when acting as client
-		#endif
 
-		#if defined(MY_GATEWAY_W5100_CLIENT)
+		#if defined(MY_GATEWAY_CLIENT_MODE)
 			#include "drivers/AVR/Ethernet_W5100/EthernetClient.cpp"
 			#include "core/MyGatewayTransportEthernet.cpp"
+		#else
+			// What do we do here?
 		#endif
 	#elif defined(MY_GATEWAY_SERIAL)
 		#include "core/MyGatewayTransportSerial.cpp"

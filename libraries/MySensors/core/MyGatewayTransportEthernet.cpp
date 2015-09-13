@@ -66,13 +66,13 @@ bool gatewayTransportSend(MyMessage &message)
 	else {
 		_ethernetMsg = protocolFormat(message);
 #ifdef MY_USE_UDP
-		_ethernetServer.beginPacket(_ethernetControllerIP, MY_CONTROLLER_PORT);
+		_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 		_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
 		// returns 1 if the packet was sent successfully
 		return _ethernetServer.endPacket();
 #else
 		EthernetClient client;
-		if (client.connect(_ethernetControllerIP, MY_CONTROLLER_PORT)) {
+		if (client.connect(_ethernetControllerIP, MY_PORT)) {
 			client.write(_ethernetMsg, strlen(_ethernetMsg));
 			client.stop();
 			return true;

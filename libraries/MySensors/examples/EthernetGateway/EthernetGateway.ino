@@ -63,10 +63,8 @@
 #define MY_RADIO_NRF24 
 
 
-// W5100 Ethernet in client mode (node opens conmection to controller)
-#define MY_GATEWAY_W5100_CLIENT
-// W5100 Ethernet in client mode (controller opens conmection to node)
-//#define MY_GATEWAY_W5100_SERVER
+// W5100 Ethernet gateway 
+#define MY_GATEWAY_W5100
 
 // Set default gateway protocol (http://www.mysensors.org/download/serial_api_15)
 #define MY_GATEWAY_PROTOCOL_DEFAULT
@@ -88,10 +86,8 @@
 // The port to keep open on node server mode / or port to contact in client mode
 #define MY_PORT 5003      
 
-// Controller ip address (client mode)
+// Controller ip address (enables client mode). Undefine this to act as sever.
 #define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254   
-// The port you want to contact on controller (client mode)
-#define MY_CONTROLLER_PORT 5003                
  
 // The MAC address can be anything you want but should be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
@@ -124,7 +120,6 @@
 
 void setup()
 {
-  dataCallback();
 }
 
 void loop() {
