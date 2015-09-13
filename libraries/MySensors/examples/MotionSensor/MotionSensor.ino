@@ -28,8 +28,14 @@
  */
 
 //#define MY_DEBUG
+//#define MY_SOFTSPI
+//#define MY_OTA_FIRMWARE_FEATURE
 
-#include "MySensor.h"  
+#define MY_RADIO_NRF24  // MY_RADIO_RFM69
+
+#include <MySensor.h>
+
+
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)
@@ -43,14 +49,14 @@ MyMessage msg(CHILD_ID, V_TRIPPED);
 
 void setup()  
 {  
-  gw.begin();
+  dataDallback();
 
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Motion Sensor", "1.0");
+  sendSketchInfo("Motion Sensor", "1.0");
 
   pinMode(DIGITAL_INPUT_SENSOR, INPUT);      // sets the motion sensor digital pin as input
   // Register all sensors to gw (they will be created as child devices)
-  gw.present(CHILD_ID, S_MOTION);
+  present(CHILD_ID, S_MOTION);
   
 }
 
@@ -60,10 +66,10 @@ void loop()
   boolean tripped = digitalRead(DIGITAL_INPUT_SENSOR) == HIGH; 
         
   Serial.println(tripped);
-  gw.send(msg.set(tripped?"1":"0"));  // Send tripped value to gw 
+  send(msg.set(tripped?"1":"0"));  // Send tripped value to gw 
  
   // Sleep until interrupt comes in on motion sensor. Send update every two minute. 
-  gw.sleep(INTERRUPT,CHANGE, SLEEP_TIME);
+  sleep(INTERRUPT,CHANGE, SLEEP_TIME);
 }
 
 

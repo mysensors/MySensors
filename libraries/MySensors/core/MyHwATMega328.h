@@ -22,7 +22,6 @@
 
 #ifdef ARDUINO_ARCH_AVR
 
-#include "MyHw.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
 #include <avr/eeprom.h>
@@ -42,7 +41,7 @@
 #ifndef sleep_bod_disable
 #define sleep_bod_disable() 										\
 do { 																\
-  unsigned char tempreg; 													\
+  unsigned char tempreg; 											\
   __asm__ __volatile__("in %[tempreg], %[mcucr]" "\n\t" 			\
                        "ori %[tempreg], %[bods_bodse]" "\n\t" 		\
                        "out %[mcucr], %[tempreg]" "\n\t" 			\
@@ -59,22 +58,22 @@ do { 																\
 
 // Define these as macros to save valuable space
 
-#define hw_digitalWrite(__pin, __value) (digitalWrite(__pin, __value))
-#define hw_init() Serial.begin(MY_BAUD_RATE)
-#define hw_watchdogReset() wdt_reset()
-#define hw_reboot() wdt_enable(WDTO_15MS); while (1)
-#define hw_millis() millis()
-#define hw_readConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
+#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+#define hwInit() Serial.begin(MY_BAUD_RATE)
+#define hwWatchdogReset() wdt_reset()
+#define hwReboot() wdt_enable(WDTO_15MS); while (1)
+#define hwMillis() millis()
+#define hwReadConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
 
 #ifndef eeprom_update_byte
-	#define hw_writeConfig(loc, val) if((uint8_t)(val) != eeprom_read_byte((uint8_t*)(loc))) { eeprom_write_byte((uint8_t*)(loc), (val)); }
+	#define hwWriteConfig(loc, val) if((uint8_t)(val) != eeprom_read_byte((uint8_t*)(loc))) { eeprom_write_byte((uint8_t*)(loc), (val)); }
 #else
-	#define hw_writeConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
+	#define hwWriteConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
 #endif
 
 //
-#define hw_readConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
-#define hw_writeConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
+#define hwReadConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
+#define hwWriteConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
 
 
 
@@ -93,28 +92,14 @@ enum period_t
 	SLEEP_FOREVER
 };
 
-class MyHwATMega328 : public MyHw
-{ 
-public:
-	MyHwATMega328();
 
-/*	void init();
-	void watchdogReset();
-	void reboot();
-	unsigned long millis();
-	uint8_t readConfig(uint8_t pos);
-	void writeConfig(uint8_t pos, uint8_t value);
-	void readConfigBlock(void* buf, void * pos, size_t length);
-	void writeConfigBlock(void* pos, void* buf, size_t length); */
-
-	void sleep(unsigned long ms);
-	bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
-	uint8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
+void hwSleep(unsigned long ms);
+bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
+uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
 #ifdef MY_DEBUG
-	void debugPrint(bool isGW, const char *fmt, ... );
+	void hwDebugPrint(const char *fmt, ... );
 #endif
-private:
-	void internalSleep(unsigned long ms);
-};
-#endif
+void hwInternalSleep(unsigned long ms);
+
 #endif // #ifdef ARDUINO_ARCH_AVR
+#endif

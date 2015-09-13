@@ -22,7 +22,6 @@
 
 #include "MyMessage.h"
 #include "MyProtocol.h"
-#include "MyGatewayTransport.h"
 #include "MyProtocolDefault.h"
 
 #define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller

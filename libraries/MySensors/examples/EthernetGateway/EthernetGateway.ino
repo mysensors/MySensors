@@ -56,15 +56,61 @@
  *
  */
 
+// Enable debug prints to console
+#define MY_DEBUG 
 
+// This node has a NR24L01+ radio attached
+#define MY_RADIO_NRF24 
+
+
+// W5100 Ethernet in client mode (node opens conmection to controller)
+#define MY_GATEWAY_W5100_CLIENT
+// W5100 Ethernet in client mode (controller opens conmection to node)
+//#define MY_GATEWAY_W5100_SERVER
+
+// Set default gateway protocol (http://www.mysensors.org/download/serial_api_15)
+#define MY_GATEWAY_PROTOCOL_DEFAULT
+
+// Enable Soft SPI for radio (note different radio wiring required)
+// Useful for W5100 which sometimes have hard time co-operate with radio on the same spi bus.
+//#define MY_SOFTSPI
+//#define MY_SOFT_SPI_SCK_PIN 14
+//#define MY_SOFT_SPI_MISO_PIN 16
+//#define MY_SOFT_SPI_MOSI_PIN 15
+         
+
+// Enable to use UDP          
+#define MY_USE_UDP
+
+#define MY_IP_ADDRESS 192,168,178,66   // If this is disabled, DHCP is used to retrieve address
+// Renewal period if using DHCP
+//#define MY_IP_RENEWAL_INTERVAL 60000
+// The port to keep open on node server mode / or port to contact in client mode
+#define MY_PORT 5003      
+
+// Controller ip address (client mode)
+#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254   
+// The port you want to contact on controller (client mode)
+#define MY_CONTROLLER_PORT 5003                
+
+// The MAC address can be anything you want but should be unique on your network.
+// Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
+// Note that most of the Ardunio examples use  "DEAD BEEF FEED" for the MAC address.
+#define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+
+// Flash leds on rx/tx/err
 #define MY_WITH_LEDS_BLINKING
-#define MY_INCLUSION_MODE_FEATURE
-#define MY_INCLUSION_BUTTON_FEATURE
-
+// Set blinking period
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 
-#define MY_INCLUSION_MODE_DURATION 60 // Number of minutes inclusion mode is enabled
-#define MY_INCLUSION_MODE_BUTTON_PIN  3 // Digital pin used for inclusion mode button
+// Enable inclusion mode
+#define MY_INCLUSION_MODE_FEATURE
+// Enable Inclusion mode button on gateway
+#define MY_INCLUSION_BUTTON_FEATURE
+// Set inclusion mode duration (in seconds)
+#define MY_INCLUSION_MODE_DURATION 60 
+// Digital pin used for inclusion mode button
+#define MY_INCLUSION_MODE_BUTTON_PIN  3 
 
 #define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
@@ -76,53 +122,11 @@
 #include <MySensor.h>
 
 
-#define MY_IP_PORT 5003        // The port you want to open 
-#ifndef MY_IP_ADDRESS_DHCP
-// Gateway IP address if not using DHCP
-IPAddress myIp (192, 168, 178, 66);  // Configure your static ip-address here    COMPILE ERROR HERE? Use Arduino IDE 1.5.7 or later!
-#endif /* IP_ADDRESS_DHCP */
-
-// NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
-//MyTransportRFM69 transport;
-
-// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-//MySigningNone signer;
-//MySigningAtsha204Soft signer;
-//MySigningAtsha204 signer;
-
-// Hardware profile
-MyHwATMega328 hw;
-
-// Use default controller protocol
-MyProtocolDefault protocol;
-
-// The MAC address can be anything you want but should be unique on your network.
-// Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
-// Note that most of the Ardunio examples use  "DEAD BEEF FEED" for the MAC address.
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // DEAD BEEF FEED
-
-// Controller IP
-IPAddress controllerIP = IPAddress(192, 168, 178, 254);
-
-// Gateway transport driver
-#ifdef IP_ADDRESS_DHCP
-MyGatewayTransportEthernet ctrlTransport(protocol, mac, /* gw port */ CONTROLLER_PORT, IP_RENEWAL_INTERVAL, controllerIP, CONTROLLER_PORT);
-#else
-MyGatewayTransportEthernet ctrlTransport(protocol, mac, myIp, /* gw port */ CONTROLLER_PORT, controllerIP, CONTROLLER_PORT);
-#endif
-
-
-// Construct MyGateway library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-// To use LEDs blinking, uncomment MY_LEDS_BLINKING_FEATURE in MyConfig.h
-MyGateway gw(ctrlTransport, transport, hw /*, signer*/);
-
 void setup()
 {
-  gw.begin(NULL);
+  dataCallback();
 }
 
 void loop() {
-  gw.process();
 }
 

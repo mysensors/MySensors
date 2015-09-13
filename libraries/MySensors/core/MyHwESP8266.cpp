@@ -19,7 +19,6 @@
 
 #ifdef ARDUINO_ARCH_ESP8266
  
-#include "MyHw.h"
 #include "MyHwESP8266.h"
 #include <EEPROM.h>
 
@@ -43,7 +42,7 @@ ISR (WDT_vect)
 }
 */
 
-static void hw_initConfigBlock( size_t length = 1024 /*ATMega328 has 1024 bytes*/ )
+static void hwInitConfigBlock( size_t length = 1024 /*ATMega328 has 1024 bytes*/ )
 {
   static bool initDone = false;
   if (!initDone)
@@ -53,7 +52,7 @@ static void hw_initConfigBlock( size_t length = 1024 /*ATMega328 has 1024 bytes*
   }
 }
 
-void hw_readConfigBlock(void* buf, void* adr, size_t length)
+void hwReadConfigBlock(void* buf, void* adr, size_t length)
 {
   hw_initConfigBlock();
   uint8_t* dst = static_cast<uint8_t*>(buf);
@@ -64,7 +63,7 @@ void hw_readConfigBlock(void* buf, void* adr, size_t length)
   }
 }
 
-void hw_writeConfigBlock(void* buf, void* adr, size_t length)
+void hwWriteConfigBlock(void* buf, void* adr, size_t length)
 {
   hw_initConfigBlock();
   uint8_t* src = static_cast<uint8_t*>(buf);
@@ -76,14 +75,14 @@ void hw_writeConfigBlock(void* buf, void* adr, size_t length)
   EEPROM.commit();
 }
 
-uint8_t hw_readConfig(int adr)
+uint8_t hwReadConfig(int adr)
 {
   uint8_t value;
   hw_readConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
   return value;
 }
 
-void hw_writeConfig(int adr, uint8_t value)
+void hwWriteConfig(int adr, uint8_t value)
 {
   uint8_t curr = hw_readConfig(adr);
   if (curr != value)
@@ -94,85 +93,40 @@ void hw_writeConfig(int adr, uint8_t value)
 
 
 
-MyHwESP8266::MyHwESP8266() : MyHw()
-{
-}
 
-
-/*
-
-// The following was redifined as macros to save space
-
-inline uint8_t MyHwATMega328::readConfig(uint8_t pos) {
-	return eeprom_read_byte((uint8_t*)pos);
-}
-
-inline void MyHwATMega328::writeConfig(uint8_t pos, uint8_t value) {
-	eeprom_update_byte((uint8_t*)pos, value);
-}
-
-inline void MyHwATMega328::readConfigBlock(void* buf, void * pos, size_t length) {
-	eeprom_read_block(buf, (void*)pos, length);
-}
-
-inline void MyHwATMega328::writeConfigBlock(void* pos, void* buf, size_t length) {
-	eeprom_write_block((void*)pos, (void*)buf, length);
-}
-
-
-inline void MyHwATMega328::init() {
-	Serial.begin(BAUD_RATE);
-}
-
-inline void MyHwATMega328::watchdogReset() {
-	wdt_reset();
-}
-
-inline void MyHwATMega328::reboot() {
-	wdt_enable(WDTO_15MS); for (;;);
-}
-
-inline unsigned long MyHwATMega328::millis() {
-	return ::millis();
-}
-*/
-
-
-void MyHwESP8266::sleep(unsigned long ms) {
+void hwSleep(unsigned long ms) {
   // TODO: Not supported!
 }
 
-bool MyHwESP8266::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
   // TODO: Not supported!
 	return false;
 }
 
-inline uint8_t MyHwESP8266::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
   // TODO: Not supported!
 	return 0;
 }
 
-
-
 #ifdef MY_DEBUG
-void MyHwESP8266::debugPrint(bool isGW, const char *fmt, ... ) {
+void hwDebugPrint(bool isGW, const char *fmt, ... ) {
 	char fmtBuffer[300];
-	if (isGW) {
+	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 		snprintf_P(fmtBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		Serial.print(fmtBuffer);
-	}
+	#endif
 	va_list args;
 	va_start (args, fmt );
 	va_end (args);
-	if (isGW) {
+	#ifdef MY_GATEWAY_FEATURE
 		// Truncate message if this is gateway node
 		vsnprintf_P(fmtBuffer, 60, fmt, args);
 		fmtBuffer[59] = '\n';
 		fmtBuffer[60] = '\0';
-	} else {
+	#else
 		vsnprintf_P(fmtBuffer, 299, fmt, args);
-	}
+	#endif
 	va_end (args);
 	Serial.print(fmtBuffer);
 	Serial.flush();

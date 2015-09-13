@@ -26,7 +26,7 @@
 #include "drivers/RF24/RF24.h"
 #include "drivers/RF24/RF24_config.h"
 
-#define TO_ADDR(x) (RF24_BASE_RADIO_ID + x)
+#define TO_ADDR(x) (MY_RF24_BASE_RADIO_ID + x)
 
 #define WRITE_PIPE ((uint8_t)0)
 #define CURRENT_NODE_PIPE ((uint8_t)1)
@@ -35,7 +35,7 @@
 class MyTransportNRF24 : public MyTransport
 { 
 public:
-	MyTransportNRF24(uint8_t ce=RF24_CE_PIN, uint8_t cs=RF24_CS_PIN, uint8_t paLevel=RF24_PA_LEVEL);
+	MyTransportNRF24();
 	bool init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();

@@ -19,39 +19,28 @@
 
 #include "MyGatewayTransportEthernet.h"
 
-MyGatewayTransportEthernet::MyGatewayTransportEthernet(
-		MyProtocol &protocol,
-		uint8_t *gw_mac
-#ifndef IP_ADDRESS_DHCP
-		, IPAddress gw_ip
-#endif /* not IP_ADDRESS_DHCP */
-		, uint16_t gw_port
-#ifdef IP_ADDRESS_DHCP
-		, unsigned long ip_renew_interval
-#endif /* IP_ADDRESS_DHCP */
-		, IPAddress controller_IP
-		, uint16_t controller_port) :
-	MyGatewayTransport(protocol),
-	gatewayMAC(gw_mac),
-#ifndef IP_ADDRESS_DHCP
-	gatewayIP(gw_ip),
-#endif /* not IP_ADDRESS_DHCP */
-	gatewayPort(gw_port),
-#ifdef IP_ADDRESS_DHCP
-	ip_renewal_period(ip_renew_interval),
-#endif /* IP_ADDRESS_DHCP */
-	controllerIP(controller_IP),
-	controllerPort(controller_port)
-{
-	;
-}
+IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
+IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
+byte _ethernetGatewayMAC[] = { MY_MAC_ADDRESS };
+uint16_t _ethernetGatewayPort = MY_PORT;
+char _ethernetInputBuffer[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
+MyMessage _ethernetMsg;
 
-bool MyGatewayTransportEthernet::begin() {
-#ifdef IP_ADDRESS_DHCP
-	// Get IP address from DHCP
-	Ethernet.begin(gatewayMAC);
+#ifdef MY_USE_UDP
+	EthernetUDP _ethernetServer;
 #else
-	Ethernet.begin(gatewayMAC, gatewayIP);
+	// we have to use pointers due to the constructor of EthernetServer
+	EthernetServer _ethernetServer(_ethernetGatewayPort);
+	uint8_t _ethernetInputPos;
+#endif /* USE_UDP */
+
+
+bool gatewayTransportBegin() {
+#ifdef MY_IP_ADDRESS
+	Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
+#else
+	// Get IP address from DHCP
+	Ethernet.begin(_ethernetGatewayMAC);
 #endif /* IP_ADDRESS_DHCP */
 
 	// give the Ethernet interface a second to initialize
@@ -59,34 +48,32 @@ bool MyGatewayTransportEthernet::begin() {
 	delay(1000);
 
 #ifdef MY_USE_UDP
-	server = new EthernetUDP();
-	server->begin(gatewayPort);
+	_ethernetServer.begin(_ethernetGatewayPort);
 #else
 	// we have to use pointers due to the constructor of EthernetServer
-	server = new EthernetServer(gatewayPort);
-	server->begin();
+	_ethernetServer.begin();
 #endif /* USE_UDP */
 }
 
-bool MyGatewayTransportEthernet::send(MyMessage &message)
+bool gatewayTransportSend(MyMessage &message)
 {
-	char *msg = NULL;
+	char *_ethernetMsg = NULL;
 
-	if (controllerIP == INADDR_NONE) {
+	if (_ethernetControllerIP == INADDR_NONE) {
 		// no controller IP address set!
 		return false;
 	}
 	else {
-		msg = protocol.format(message);
+		_ethernetMsg = _protocol.format(message);
 #ifdef MY_USE_UDP
-		server->beginPacket(controllerIP, controllerPort);
-		server->write(msg, strlen(msg));
+		_ethernetServer.beginPacket(_ethernetControllerIP, MY_CONTROLLER_PORT);
+		_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
 		// returns 1 if the packet was sent successfully
-		return server->endPacket();
+		return _ethernetServer.endPacket();
 #else
 		EthernetClient client;
-		if (client.connect(controllerIP, controllerPort)) {
-			client.write(msg, strlen(msg));
+		if (client.connect(_ethernetControllerIP, MY_CONTROLLER_PORT)) {
+			client.write(_ethernetMsg, strlen(_ethernetMsg));
 			client.stop();
 			return true;
 		}
@@ -98,71 +85,64 @@ bool MyGatewayTransportEthernet::send(MyMessage &message)
 	}
 }
 
-bool MyGatewayTransportEthernet::available()
+bool gatewayTransportAvailable()
 {
 	bool available = false;
 
-#ifdef IP_ADDRESS_DHCP
+#ifndef MY_IP_ADDRESS
 	// renew IP address using DHCP
-	renewIP();
+	gatewayTransportRenewIP();
 #endif
 
 #ifdef MY_USE_UDP
-	int packet_size = server->parsePacket();
+	int packet_size = _ethernetServer.parsePacket();
 
-	if (server->available()) {
-		server->read(inputBuffer, MAX_RECEIVE_LENGTH);
+	if (_ethernetServer.available()) {
+		_ethernetServer.read(_ethernetInputBuffer, MAX_RECEIVE_LENGTH);
 		available = true;
 	}
 #else
 	// if an incoming client connects, there will be
 	// bytes available to read via the client object
-	EthernetClient client = server->available();
+	EthernetClient client = _ethernetServer.available();
 
 	if (client) {
 		while (client.available()) {
 			// read the bytes incoming from the client
 			char inChar = client.read();
 
-			if (inputPos < MAX_RECEIVE_LENGTH - 1) {
+			if (_ethernetInputPos < MAX_RECEIVE_LENGTH - 1) {
 				// if newline then command is complete
 				if (inChar == '\n') {
-					inputBuffer[inputPos] = 0;
+					_ethernetInputBuffer[_ethernetInputPos] = 0;
 					available = true;
 				} else {
-					inputBuffer[inputPos] = inChar;
-					inputPos++;
+					_ethernetInputBuffer[_ethernetInputPos] = inChar;
+					_ethernetInputPos++;
 				}
 			}
 		}
 	}
-	inputPos = 0;
+	_ethernetInputPos = 0;
 #endif
 
 	if (available) {
 		// Parse message and return parse result
-		available = protocol.parse(msg, inputBuffer);
+		available = _protocol.parse(_ethernetMsg, _ethernetInputBuffer);
 	}
 
 	return available;
 }
 
-MyMessage& MyGatewayTransportEthernet::receive()
+MyMessage& gatewayTransportReceive()
 {
 	// Return the last parsed message
-	return msg;
+	return _ethernetMsg;
 }
 
-void MyGatewayTransportEthernet::setControllerIPPort(const IPAddress& addr, const uint16_t port) {
-	controllerIP = addr;
 
-	/* set the port if some legal value passed */
-	if (port > 0)
-		controllerPort = port;
-}
-
-#ifdef IP_ADDRESS_DHCP
-void MyGatewayTransportEthernet::renewIP()
+#ifndef MY_IP_ADDRES
+void gatewayTransportRenewIP()
 {
 	/* renew/rebind IP address
 	 0 - nothing happened
@@ -172,7 +152,7 @@ void MyGatewayTransportEthernet::renewIP()
 	 4 - rebind success
 	 */
 	// TODO: Use millis from MyHw ??
-	static unsigned long next_time = millis() + ip_renewal_period;
+	static unsigned long next_time = millis() + MY_IP_RENEWAL_INTERVAL;
 	unsigned long now = millis();
 
 	// http://playground.arduino.cc/Code/TimingRollover
@@ -184,6 +164,6 @@ void MyGatewayTransportEthernet::renewIP()
 		return;
 	}
 
-	next_time = now + ip_renewal_period;
+	next_time = now + MY_IP_RENEWAL_INTERVAL;
 }
 #endif /* IP_ADDRESS_DHCP */

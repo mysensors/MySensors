@@ -19,7 +19,7 @@ void RF24::csn(bool mode)
   // divider of 4 is the minimum we want.
   // CLK:BUS 8Mhz:2Mhz, 16Mhz:4Mhz, or 20Mhz:5Mhz
 #ifdef ARDUINO
-	#if  ( !defined(RF24_TINY) && !defined (__arm__)  && !defined (SOFTSPI)) || defined (CORE_TEENSY)
+	#if  ( !defined(RF24_TINY) && !defined (__arm__)  && !defined (MY_SOFTSPI)) || defined (CORE_TEENSY)
  			_SPI.setBitOrder(MSBFIRST);
   			_SPI.setDataMode(SPI_MODE0);
 			_SPI.setClockDivider(SPI_CLOCK_DIV2);

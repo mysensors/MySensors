@@ -20,11 +20,10 @@
 #include "MyTransport.h"
 #include "MyTransportNRF24.h"
 
-MyTransportNRF24::MyTransportNRF24(uint8_t ce, uint8_t cs, uint8_t paLevel)
+MyTransportNRF24::MyTransportNRF24()
 	:
 	MyTransport(),
-	rf24(ce, cs),
-	_paLevel(paLevel)
+	rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN)
 {
 }
 
@@ -38,9 +37,9 @@ bool MyTransportNRF24::init() {
 	rf24.setAutoAck(1);
 	rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
 	rf24.enableAckPayload();
-	rf24.setChannel(RF24_CHANNEL);
+	rf24.setChannel(MY_RF24_CHANNEL);
 	rf24.setPALevel(_paLevel);
-	rf24.setDataRate(RF24_DATARATE);
+	rf24.setDataRate(MY_RF24_DATARATE);
 	rf24.setRetries(5,15);
 	rf24.setCRCLength(RF24_CRC_16);
 	rf24.enableDynamicPayloads();

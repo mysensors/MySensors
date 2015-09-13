@@ -25,7 +25,7 @@
  * @details  Software Two Wire Interface library.
  * @{
  */
-#include <SoftI2cMaster.h>
+#include "SoftI2cMaster.h"
 //------------------------------------------------------------------------------
 /**
  * Start an I2C transfer with possible continuation.

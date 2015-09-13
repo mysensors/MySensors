@@ -25,7 +25,7 @@
  * @details  Two Wire Interface library.
  * @{
  */
-#include <PinIO.h>
+#include "PinIO.h"
 #include <util/atomic.h>
 #include <Arduino.h>
 //==============================================================================

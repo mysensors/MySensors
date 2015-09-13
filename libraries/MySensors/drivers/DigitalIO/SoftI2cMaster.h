@@ -33,8 +33,8 @@
 #include <Arduino.h>
 #endif  // ARDUINO
 #include <util/delay_basic.h>
-#include <DigitalPin.h>
-#include <I2cConstants.h>
+#include "DigitalPin.h"
+#include "I2cConstants.h"
 //------------------------------------------------------------------------------
 // State codes.
 

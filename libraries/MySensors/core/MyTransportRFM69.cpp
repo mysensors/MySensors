@@ -20,18 +20,16 @@
 #include "MyTransport.h"
 #include "MyTransportRFM69.h"
 
-MyTransportRFM69::MyTransportRFM69(uint8_t freqBand, uint8_t networkId, uint8_t slaveSelectPin, uint8_t interruptPin, bool isRFM69HW, uint8_t interruptNum)
+MyTransportRFM69::MyTransportRFM69()
 	:
 	MyTransport(),
-	radio(slaveSelectPin, interruptPin, isRFM69HW, interruptNum),
-	_freqBand(freqBand),
-	_networkId(networkId)
+	radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_IS_RFM69HW, MY_RF69_IRQ_NUM)
 {
 }
 
 bool MyTransportRFM69::init() {
 	// Start up the radio library (_address will be set later by the MySensors library)
-	radio.initialize(_freqBand, _address, _networkId);
+	radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID);
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
     radio.encrypt(RFM69_ENCRYPTKEY);
 #endif

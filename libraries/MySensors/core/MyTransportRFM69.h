@@ -30,7 +30,7 @@
 class MyTransportRFM69 : public MyTransport
 { 
 public:
-	MyTransportRFM69(uint8_t freqBand=MY_RFM69_FREQUENCY, uint8_t networkId=MY_RFM69_NETWORKID, uint8_t slaveSelectPin=MY_RF69_SPI_CS, uint8_t interruptPin=MY_RF69_IRQ_PIN, bool isRFM69HW=false, uint8_t interruptNum=MY_RF69_IRQ_NUM);
+	MyTransportRFM69();
 	bool init();
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
@@ -41,8 +41,6 @@ public:
 private:
 	RFM69 radio;
 	uint8_t _address;
-	uint8_t _freqBand;
-	uint8_t _networkId;
 };
 
 #endif

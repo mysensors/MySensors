@@ -22,7 +22,6 @@
 #ifndef MyHwESP8266_h
 #define MyHwESP8266_h
 
-#include "MyHw.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
 
@@ -34,16 +33,16 @@
 
 // Define these as macros to save valuable space
 
-#define hw_digitalWrite(__pin, __value) (digitalWrite(__pin, __value))
-#define hw_init() Serial.begin(BAUD_RATE)
-#define hw_watchdogReset() wdt_reset()
-#define hw_reboot() wdt_enable(WDTO_15MS); while (1)
-#define hw_millis() millis()
+#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+#define hwInit() Serial.begin(BAUD_RATE)
+#define hwWatchdogReset() wdt_reset()
+#define hwReboot() wdt_enable(WDTO_15MS); while (1)
+#define hwMillis() millis()
 
-void hw_readConfigBlock(void* buf, void* adr, size_t length);
-void hw_writeConfigBlock(void* buf, void* adr, size_t length);
-void hw_writeConfig(int adr, uint8_t value);
-uint8_t hw_readConfig(int adr);
+void hwReadConfigBlock(void* buf, void* adr, size_t length);
+void hwWriteConfigBlock(void* buf, void* adr, size_t length);
+void hwWriteConfig(int adr, uint8_t value);
+uint8_t hwReadConfig(int adr);
 
 enum period_t
 {
@@ -60,27 +59,13 @@ enum period_t
 	SLEEP_FOREVER
 };
 
-class MyHwESP8266 : public MyHw
-{ 
-public:
-	MyHwESP8266();
 
-/*	void init();
-	void watchdogReset();
-	void reboot();
-	unsigned long millis();
-	uint8_t readConfig(uint8_t pos);
-	void writeConfig(uint8_t pos, uint8_t value);
-	void readConfigBlock(void* buf, void * pos, size_t length);
-	void writeConfigBlock(void* pos, void* buf, size_t length); */
 
-	void sleep(unsigned long ms);
-	bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
-	uint8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
+void hwSleep(unsigned long ms);
+bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
+uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
 #ifdef MY_DEBUG
-	void debugPrint(bool isGW, const char *fmt, ... );
-#endif
-};
+	void hwDebugPrint(const char *fmt, ... );
 #endif
 
 #endif // #ifdef ARDUINO_ARCH_ESP8266
