@@ -47,7 +47,6 @@ private:
 	RF24 rf24;
 	uint8_t _address;
 	uint8_t _paLevel;
-	uint8_t _paLevel;
 	uint8_t _channel;
 	rf24_datarate_e _datarate;
 };
