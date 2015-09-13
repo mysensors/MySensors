@@ -26,7 +26,7 @@
 
 #include "MyConfig.h"
 
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60)
 	#define MY_GATEWAY_FEATURE
 	#define MY_NODE_TYPE "gateway"
 #elif defined(MY_REPEATER_FEATURE)
@@ -102,6 +102,13 @@
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
 	#endif
+	#if defined(MY_CONTROLLER_IP_ADDRESS)
+		#define MY_GATEWAY_CLIENT_MODE
+	#endif
+	#if !defined(MY_PORT)
+		#error You must define MY_PORT (cotroller or gatway port to open)
+	#endif
+
 	#if defined(MY_GATEWAY_W5100)
 		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
 		#include "drivers/AVR/Ethernet_W5100/utility/w5100.cpp"
@@ -110,13 +117,6 @@
 		#include "drivers/AVR/Ethernet_W5100/EthernetUdp.cpp"
 		#include "drivers/AVR/Ethernet_W5100/IPAddress.cpp"
 
-		#if defined(MY_CONTROLLER_IP_ADDRESS)
-			#define MY_GATEWAY_CLIENT_MODE
-		#endif
-
-		#if !defined(MY_PORT)
-			#error You must define MY_PORT (cotroller or gatway port to open)
-		#endif
 		#if !defined(USE_UDP)
 			#include "drivers/AVR/Ethernet_W5100/EthernetServer.cpp"
 		#endif
@@ -127,6 +127,23 @@
 		#else
 			// What do we do here?
 		#endif
+	#elif defined(MY_GATEWAY_ENC28J60)
+		#undef MY_USE_UDP // Will not fit (or compile) on ENC28J60
+		#include "drivers/AVR/Ethernet_UIP/src/utility/uipethernet-conf.h"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/uip-conf.h"
+		#include "drivers/AVR/Ethernet_UIP/src/UIPEthernet.h"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/Enc28J60Network.cpp"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/mempool_conf.h"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/mempool.cpp"
+		#include "drivers/AVR/Ethernet_UIP/src/UIPEthernet.cpp"
+		#include "drivers/AVR/Ethernet_UIP/src/UIPServer.cpp"
+		#include "drivers/AVR/Ethernet_UIP/src/UIPClient.cpp"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/clock-arch.c"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/uip_timer.c"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/uip.c"
+		#include "drivers/AVR/Ethernet_UIP/src/utility/uip_arp.c"
+
+		#include "core/MyGatewayTransportEthernet.cpp"
 	#elif defined(MY_GATEWAY_SERIAL)
 		#include "core/MyGatewayTransportSerial.cpp"
 	#endif

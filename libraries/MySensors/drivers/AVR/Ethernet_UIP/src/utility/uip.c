@@ -190,7 +190,7 @@ static u16_t lastport;       /* Keeps track of the last port used for
 
 /* Temporary variables. */
 u8_t uip_acc32[4];
-static u8_t c, opt;
+static u8_t cc, opt;
 static u16_t tmp16;
 
 /* Structures and definitions. */
@@ -378,19 +378,19 @@ uip_udpchksum(void)
 void
 uip_init(void)
 {
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
-    uip_listenports[c] = 0;
+  for(cc = 0; cc < UIP_LISTENPORTS; ++cc) {
+    uip_listenports[cc] = 0;
   }
-  for(c = 0; c < UIP_CONNS; ++c) {
-    uip_conns[c].tcpstateflags = UIP_CLOSED;
+  for(cc = 0; cc < UIP_CONNS; ++cc) {
+    uip_conns[cc].tcpstateflags = UIP_CLOSED;
   }
 #if UIP_ACTIVE_OPEN
   lastport = 1024;
 #endif /* UIP_ACTIVE_OPEN */
 
 #if UIP_UDP
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
-    uip_udp_conns[c].lport = 0;
+  for(cc = 0; cc < UIP_UDP_CONNS; ++cc) {
+    uip_udp_conns[cc].lport = 0;
   }
 #endif /* UIP_UDP */
   
@@ -418,8 +418,8 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 
   /* Check if this port is already in use, and if so try to find
      another one. */
-  for(c = 0; c < UIP_CONNS; ++c) {
-    conn = &uip_conns[c];
+  for(cc = 0; cc < UIP_CONNS; ++cc) {
+    conn = &uip_conns[cc];
     if(conn->tcpstateflags != UIP_CLOSED &&
        conn->lport == htons(lastport)) {
       goto again;
@@ -427,8 +427,8 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
   }
 
   conn = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
-    cconn = &uip_conns[c];
+  for(cc = 0; cc < UIP_CONNS; ++cc) {
+    cconn = &uip_conns[cc];
     if(cconn->tcpstateflags == UIP_CLOSED) {
       conn = cconn;
       break;
@@ -482,17 +482,17 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
     lastport = 4096;
   }
   
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
-    if(uip_udp_conns[c].lport == htons(lastport)) {
+  for(cc = 0; cc < UIP_UDP_CONNS; ++cc) {
+    if(uip_udp_conns[cc].lport == htons(lastport)) {
       goto again;
     }
   }
 
 
   conn = 0;
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
-    if(uip_udp_conns[c].lport == 0) {
-      conn = &uip_udp_conns[c];
+  for(cc = 0; cc < UIP_UDP_CONNS; ++cc) {
+    if(uip_udp_conns[cc].lport == 0) {
+      conn = &uip_udp_conns[cc];
       break;
     }
   }
@@ -517,9 +517,9 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 void
 uip_unlisten(u16_t port)
 {
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
-    if(uip_listenports[c] == port) {
-      uip_listenports[c] = 0;
+  for(cc = 0; cc < UIP_LISTENPORTS; ++cc) {
+    if(uip_listenports[cc] == port) {
+      uip_listenports[cc] = 0;
       return;
     }
   }
@@ -528,9 +528,9 @@ uip_unlisten(u16_t port)
 void
 uip_listen(u16_t port)
 {
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
-    if(uip_listenports[c] == 0) {
-      uip_listenports[c] = port;
+  for(cc = 0; cc < UIP_LISTENPORTS; ++cc) {
+    if(uip_listenports[cc] == 0) {
+      uip_listenports[cc] = port;
       return;
     }
   }
@@ -1206,8 +1206,8 @@ uip_process(u8_t flag)
   
   tmp16 = BUF->destport;
   /* Next, check listening connections. */
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
-    if(tmp16 == uip_listenports[c])
+  for(cc = 0; cc < UIP_LISTENPORTS; ++cc) {
+    if(tmp16 == uip_listenports[cc])
       goto found_listen;
   }
   
@@ -1227,21 +1227,21 @@ uip_process(u8_t flag)
   BUF->tcpoffset = 5 << 4;
 
   /* Flip the seqno and ackno fields in the TCP header. */
-  c = BUF->seqno[3];
+  cc = BUF->seqno[3];
   BUF->seqno[3] = BUF->ackno[3];
-  BUF->ackno[3] = c;
+  BUF->ackno[3] = cc;
   
-  c = BUF->seqno[2];
+  cc = BUF->seqno[2];
   BUF->seqno[2] = BUF->ackno[2];
-  BUF->ackno[2] = c;
+  BUF->ackno[2] = cc;
   
-  c = BUF->seqno[1];
+  cc = BUF->seqno[1];
   BUF->seqno[1] = BUF->ackno[1];
-  BUF->ackno[1] = c;
+  BUF->ackno[1] = cc;
   
-  c = BUF->seqno[0];
+  cc = BUF->seqno[0];
   BUF->seqno[0] = BUF->ackno[0];
-  BUF->ackno[0] = c;
+  BUF->ackno[0] = cc;
 
   /* We also have to increase the sequence number we are
      acknowledging. If the least significant byte overflowed, we need
@@ -1277,15 +1277,15 @@ uip_process(u8_t flag)
      CLOSED connections are found. Thanks to Eddie C. Dost for a very
      nice algorithm for the TIME_WAIT search. */
   uip_connr = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
-    if(uip_conns[c].tcpstateflags == UIP_CLOSED) {
-      uip_connr = &uip_conns[c];
+  for(cc = 0; cc < UIP_CONNS; ++cc) {
+    if(uip_conns[cc].tcpstateflags == UIP_CLOSED) {
+      uip_connr = &uip_conns[cc];
       break;
     }
-    if(uip_conns[c].tcpstateflags == UIP_TIME_WAIT) {
+    if(uip_conns[cc].tcpstateflags == UIP_TIME_WAIT) {
       if(uip_connr == 0 ||
-	 uip_conns[c].timer > uip_connr->timer) {
-	uip_connr = &uip_conns[c];
+	 uip_conns[cc].timer > uip_connr->timer) {
+	uip_connr = &uip_conns[cc];
       }
     }
   }
@@ -1325,19 +1325,19 @@ uip_process(u8_t flag)
 
   /* Parse the TCP MSS option, if present. */
   if((BUF->tcpoffset & 0xf0) > 0x50) {
-    for(c = 0; c < ((BUF->tcpoffset >> 4) - 5) << 2 ;) {
-      opt = uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + c];
+    for(cc = 0; cc < ((BUF->tcpoffset >> 4) - 5) << 2 ;) {
+      opt = uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + cc];
       if(opt == TCP_OPT_END) {
 	/* End of options. */
 	break;
       } else if(opt == TCP_OPT_NOOP) {
-	++c;
+	++cc;
 	/* NOP option. */
       } else if(opt == TCP_OPT_MSS &&
-		uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
+		uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + cc] == TCP_OPT_MSS_LEN) {
 	/* An MSS option with the right option length. */
-	tmp16 = ((u16_t)uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + c] << 8) |
-	  (u16_t)uip_buf[UIP_IPTCPH_LEN + UIP_LLH_LEN + 3 + c];
+	tmp16 = ((u16_t)uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + cc] << 8) |
+	  (u16_t)uip_buf[UIP_IPTCPH_LEN + UIP_LLH_LEN + 3 + cc];
 	uip_connr->initialmss = uip_connr->mss =
 	  tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
 	
@@ -1346,12 +1346,12 @@ uip_process(u8_t flag)
       } else {
 	/* All other options have a length field, so that we easily
 	   can skip past them. */
-	if(uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c] == 0) {
+	if(uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + cc] == 0) {
 	  /* If the length field is zero, the options are malformed
 	     and we don't process them further. */
 	  break;
 	}
-	c += uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c];
+	cc += uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + cc];
       }
     }
   }
@@ -1395,11 +1395,11 @@ uip_process(u8_t flag)
   }
   /* Calculated the length of the data, if the application has sent
      any data to us. */
-  c = (BUF->tcpoffset >> 4) << 2;
+  cc = (BUF->tcpoffset >> 4) << 2;
   /* uip_len will contain the length of the actual TCP data. This is
      calculated by subtracing the length of the TCP header (in
      c) and the length of the IP header (20 bytes). */
-  uip_len = uip_len - c - UIP_IPH_LEN;
+  uip_len = uip_len - cc - UIP_IPH_LEN;
 
   /* First, check if the sequence number of the incoming packet is
      what we're expecting next. If not, we send out an ACK with the
@@ -1494,19 +1494,19 @@ uip_process(u8_t flag)
 
       /* Parse the TCP MSS option, if present. */
       if((BUF->tcpoffset & 0xf0) > 0x50) {
-	for(c = 0; c < ((BUF->tcpoffset >> 4) - 5) << 2 ;) {
-	  opt = uip_buf[UIP_IPTCPH_LEN + UIP_LLH_LEN + c];
+	for(cc = 0; cc < ((BUF->tcpoffset >> 4) - 5) << 2 ;) {
+	  opt = uip_buf[UIP_IPTCPH_LEN + UIP_LLH_LEN + cc];
 	  if(opt == TCP_OPT_END) {
 	    /* End of options. */
 	    break;
 	  } else if(opt == TCP_OPT_NOOP) {
-	    ++c;
+	    ++cc;
 	    /* NOP option. */
 	  } else if(opt == TCP_OPT_MSS &&
-		    uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
+		    uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + cc] == TCP_OPT_MSS_LEN) {
 	    /* An MSS option with the right option length. */
-	    tmp16 = (uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + c] << 8) |
-	      uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 3 + c];
+	    tmp16 = (uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + cc] << 8) |
+	      uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 3 + cc];
 	    uip_connr->initialmss =
 	      uip_connr->mss = tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
 
@@ -1515,12 +1515,12 @@ uip_process(u8_t flag)
 	  } else {
 	    /* All other options have a length field, so that we easily
 	       can skip past them. */
-	    if(uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c] == 0) {
+	    if(uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + cc] == 0) {
 	      /* If the length field is zero, the options are malformed
 		 and we don't process them further. */
 	      break;
 	    }
-	    c += uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c];
+	    cc += uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + cc];
 	  }
 	}
       }

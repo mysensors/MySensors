@@ -63,8 +63,9 @@
 #define MY_RADIO_NRF24 
 
 
-// W5100 Ethernet gateway 
-#define MY_GATEWAY_W5100
+// Enable gateway type 
+//#define MY_GATEWAY_W5100
+#define MY_GATEWAY_ENC28J60
 
 // Set default gateway protocol (http://www.mysensors.org/download/serial_api_15)
 #define MY_GATEWAY_PROTOCOL_DEFAULT
