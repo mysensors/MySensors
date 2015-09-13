@@ -36,13 +36,14 @@
 #endif
 
 // CORE
-#include "drivers/SPI/SPI.cpp"
 
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
+	#include "drivers/ESP8266/SPI/SPI.cpp"
 	#include "core/MyHwESP8266.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
+	#include "drivers/AVR/SPI/SPI.cpp"
 	#include "core/MyHwATMega328.cpp"
 #endif
 
@@ -66,26 +67,25 @@
 	#define MY_RADIO_FEATURE
 	// SOFTSPI
 	#ifdef MY_SOFTSPI
-		#include "drivers/DigitalIO/SoftI2cMaster.cpp"
-		#include "drivers/DigitalIO/PinIO.cpp"
+		#if defined(ARDUINO_ARCH_ESP8266)
+			#error Soft SPI is not available on ESP8266
+		#endif
+		#include "drivers/AVR/DigitalIO/SoftI2cMaster.cpp"
+		#include "drivers/AVR/DigitalIO/PinIO.cpp"
 	#endif
 
 	// FLASH
 	#ifdef MY_OTA_FIRMWARE_FEATURE
-		SPIFlash flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 		#include "drivers/SPIFlash/SPIFlash.cpp"
+		SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 	#endif
 
-	#include "core/MyTransport.cpp"
 	#if defined(MY_RADIO_NRF24)
 		#include "drivers/RF24/RF24.cpp"
 		#include "core/MyTransportNRF24.cpp"
-		MyTransportNRF24 transport;
-
 	#elif defined(MY_RADIO_RFM69)
 		#include "drivers/RFM69/RFM69.cpp"
 		#include "core/MyTransportRFM69.cpp"
-		MyTransportRFM69 transport;
 	#endif
 #endif
 
@@ -93,10 +93,8 @@
 // GATEWAY - TRANSPORT
 #if defined(MY_GATEWAY_FEATURE)
 	// GATEWAY - PROTOCOL
-	#include "core/MyProtocol.cpp"
 	#if defined(MY_GATEWAY_PROTOCOL_DEFAULT)
 		#include "core/MyProtocolDefault.cpp"
-		MyProtocolDefault _protocol;
 	#else
 		#error No gateway protocol specified!
 	#endif
@@ -105,29 +103,29 @@
 		#define MY_REPEATER_FEATURE
 	#endif
 	#if defined(MY_GATEWAY_W5100_CLIENT) || defined(MY_GATEWAY_W5100_SERVER)
-		#include "drivers/Ethernet_W5100/utility/socket.cpp"
-		#include "drivers/Ethernet_W5100/utility/w5100.cpp"
-		#include "drivers/Ethernet_W5100/DNS.cpp"
-		#include "drivers/Ethernet_W5100/Ethernet.cpp"
-		#include "drivers/Ethernet_W5100/EthernetUdp.cpp"
-		#include "drivers/Ethernet_W5100/IPAddress.cpp"
+		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
+		#include "drivers/AVR/Ethernet_W5100/utility/w5100.cpp"
+		#include "drivers/AVR/Ethernet_W5100/DNS.cpp"
+		#include "drivers/AVR/Ethernet_W5100/Ethernet.cpp"
+		#include "drivers/AVR/Ethernet_W5100/EthernetUdp.cpp"
+		#include "drivers/AVR/Ethernet_W5100/IPAddress.cpp"
+
 		#if !defined(MY_PORT)
 			#error You must define MY_PORT
 		#endif
 		#if !defined(USE_UDP)
-			#include "drivers/Ethernet_W5100/EthernetServer.cpp"
+			#include "drivers/AVR/Ethernet_W5100/EthernetServer.cpp"
 		#endif
 		#if defined(MY_GATEWAY_W5100_CLIENT) && !defined(MY_CONTROLLER_IP_ADDRESS)
 			#error You must define MY_CONTROLLER_IP_ADDRESS when acting as client
 		#endif
 
 		#if defined(MY_GATEWAY_W5100_CLIENT)
-			#include "drivers/Ethernet_W5100/EthernetClient.cpp"
+			#include "drivers/AVR/Ethernet_W5100/EthernetClient.cpp"
 			#include "core/MyGatewayTransportEthernet.cpp"
 		#endif
 	#elif defined(MY_GATEWAY_SERIAL)
 		#include "core/MyGatewayTransportSerial.cpp"
-		MyGatewayTransportSerial gwTransport(protocol);
 	#endif
 #else
 	#undef MY_GATEWAY_FEATURE

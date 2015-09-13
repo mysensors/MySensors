@@ -27,20 +27,12 @@
 #include "drivers/SPI/SPI.h"
 
 
-class MyTransportRFM69 : public MyTransport
-{ 
-public:
-	MyTransportRFM69();
-	bool init();
-	void setAddress(uint8_t address);
-	uint8_t getAddress();
-	bool send(uint8_t to, const void* data, uint8_t len);
-	bool available(uint8_t *to);
-	uint8_t receive(void* data);
-	void powerDown();
-private:
-	RFM69 radio;
-	uint8_t _address;
-};
+bool transportInit();
+void transportSetAddress(uint8_t address);
+uint8_t transportGetAddress();
+bool transportSend(uint8_t to, const void* data, uint8_t len);
+bool transportAvailable(uint8_t *to);
+uint8_t transportReceive(void* data);
+void transportPowerDown();
 
 #endif

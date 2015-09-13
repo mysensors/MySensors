@@ -39,7 +39,7 @@
 		#include <SPI_UART.h>
 		#define _SPI uspi
 	  #elif defined MY_SOFTSPI
-		#include "drivers/DigitalIO/DigitalIO.h"
+		#include "drivers/AVR/DigitalIO/DigitalIO.h"
 
 		// change these pins to your liking
 		const uint8_t SOFT_SPI_MISO_PIN = MY_SOFT_SPI_MOSI_PIN;
@@ -50,7 +50,7 @@
 		#define _SPI spi
       
 	  #else	    
-		#include "drivers/SPI/SPI.h"
+		#include "drivers/AVR/SPI/SPI.h"
 		#define _SPI SPI
 	  #endif
 	#endif

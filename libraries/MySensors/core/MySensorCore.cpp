@@ -109,7 +109,7 @@ bool isValidFirmware() {
 	// init crc
 	uint16_t crc = ~0;
 	for (uint16_t i = 0; i < _fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
-		crc ^= flash.readByte(i + FIRMWARE_START_OFFSET);
+		crc ^= _flash.readByte(i + FIRMWARE_START_OFFSET);
 	    for (int8_t j = 0; j < 8; ++j) {
 	        if (crc & 1)
 	            crc = (crc >> 1) ^ 0xA001;
@@ -217,7 +217,7 @@ void begin() {
 		_failedTransmissions = 0;
 
 		// Setup radio
-		if (!transport.init()) {
+		if (!transportInit()) {
 			debug(PSTR("radio init fail\n"));
 			while(1); // Nothing more we can do
 		}
@@ -311,7 +311,7 @@ ControllerConfig getConfig() {
 #if defined(MY_RADIO_FEATURE)
 void requestNodeId() {
 	debug(PSTR("req id\n"));
-	transport.setAddress(_nc.nodeId);
+	transportSetAddress(_nc.nodeId);
 	build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
 	sendWrite(_nc.parentNodeId, _msg);
 	wait(2000);
@@ -323,7 +323,7 @@ void requestNodeId() {
 
 void setupNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
-	transport.setAddress(_nc.nodeId);
+	transportSetAddress(_nc.nodeId);
 	// Present node and request config
 	#ifndef MY_GATEWAY_FEATURE
 		if (_nc.nodeId != AUTO) {
@@ -563,7 +563,7 @@ boolean sendWrite(uint8_t to, MyMessage &message) {
 	#ifdef MY_LEDS_BLINKING_FEATURE
 	txBlink(1);
 	#endif
-	bool ok = transport.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
+	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
 			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
@@ -660,7 +660,7 @@ void process() {
 
 	#if defined(MY_RADIO_FEATURE)
 	uint8_t to = 0;
-	if (!transport.available(&to))
+	if (!transportAvailable(&to))
 	{
 		#ifdef MY_OTA_FIRMWARE_FEATURE
 		unsigned long enter = hwMillis();
@@ -692,7 +692,7 @@ void process() {
 	(void)signer.checkTimer(); // Manage signing timeout
 	#endif
 
-	uint8_t len = transport.receive((uint8_t *)&_msg);
+	uint8_t len = transportReceive((uint8_t *)&_msg);
 	(void)len; //until somebody makes use of 'len'
 	#ifdef MY_LEDS_BLINKING_FEATURE
 	rxBlink(1);
@@ -842,14 +842,14 @@ void process() {
 					// copy new FW config
 					memcpy(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
 					// Init flash
-					if (!flash.initialize()) {
+					if (!_flash.initialize()) {
 						debug(PSTR("flash init fail\n"));
 						_fwUpdateOngoing = false;
 					} else {
 						// erase lower 32K -> max flash size for ATMEGA328
-						flash.blockErase32K(0);
+						_flash.blockErase32K(0);
 						// wait until flash erased
-						while ( flash.busy() );
+						while ( _flash.busy() );
 						_fwBlock = _fc.blocks;
 						_fwUpdateOngoing = true;
 						// reset flags
@@ -865,9 +865,9 @@ void process() {
 					// extract FW block
 					ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)_msg.data;
 					// write to flash
-					flash.writeBytes( ((_fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+					_flash.writeBytes( ((_fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 					// wait until flash written
-					while ( flash.busy() );
+					while ( _flash.busy() );
 					_fwBlock--;
 					if (!_fwBlock) {
 						// We're finished! Do a checksum and reboot.
@@ -877,7 +877,7 @@ void process() {
 							// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)	
 							uint16_t fwsize = FIRMWARE_BLOCK_SIZE * _fc.blocks;
 							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(fwsize >> 8),fwsize,':'};
-							flash.writeBytes(0, OTAbuffer, 10);
+							_flash.writeBytes(0, OTAbuffer, 10);
 							// Write the new firmware config to eeprom
 							hwWriteConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
 							hwReboot();
@@ -986,7 +986,7 @@ void sleep(unsigned long ms) {
 		} else {
 	#endif
 		#if defined(MY_RADIO_FEATURE)
-			transport.powerDown();
+			transportPowerDown();
 		#endif
 			hwSleep(ms);
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -1003,7 +1003,7 @@ bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	} else {
 	#endif
 		#if defined(MY_RADIO_FEATURE)
-			transport.powerDown();
+			transportPowerDown();
 		#endif
 		return hwSleep(interrupt, mode, ms) ;
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -1020,7 +1020,7 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 	} else {
 	#endif
 		#if defined(MY_RADIO_FEATURE)
-			transport.powerDown();
+			transportPowerDown();
 		#endif
 		return hwSleep(interrupt1, mode1, interrupt2, mode2, ms) ;
 	#if defined(MY_OTA_FIRMWARE_FEATURE)

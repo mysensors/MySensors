@@ -16,25 +16,23 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
-
-#ifdef ARDUINO_ARCH_ESP8266
-
 #ifndef MyHwESP8266_h
 #define MyHwESP8266_h
 
+#include "MyHw.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
 
 
 #ifdef __cplusplus
 #include <Arduino.h>
-#include <SPI.h>
+//#include <SPI.h>
 #endif
 
 // Define these as macros to save valuable space
 
 #define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
-#define hwInit() Serial.begin(BAUD_RATE)
+#define hwInit() Serial.begin(MY_BAUD_RATE)
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
 #define hwMillis() millis()
@@ -44,28 +42,5 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
-enum period_t
-{
-	SLEEP_15Ms,
-	SLEEP_30MS,
-	SLEEP_60MS,
-	SLEEP_120MS,
-	SLEEP_250MS,
-	SLEEP_500MS,
-	SLEEP_1S,
-	SLEEP_2S,
-	SLEEP_4S,
-	SLEEP_8S,
-	SLEEP_FOREVER
-};
-
-
-
-void hwSleep(unsigned long ms);
-bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
-uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
-#ifdef MY_DEBUG
-	void hwDebugPrint(const char *fmt, ... );
-#endif
 
 #endif // #ifdef ARDUINO_ARCH_ESP8266

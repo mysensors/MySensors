@@ -17,76 +17,72 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyTransport.h"
 #include "MyTransportNRF24.h"
 
-MyTransportNRF24::MyTransportNRF24()
-	:
-	MyTransport(),
-	rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN)
-{
-}
+RF24 _rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN);
+uint8_t _address;
+uint8_t _paLevel;
 
-bool MyTransportNRF24::init() {
+bool transportInit() {
 	// Start up the radio library
-	rf24.begin();
+	_rf24.begin();
 
-	if (!rf24.isPVariant()) {
+	if (!_rf24.isPVariant()) {
 		return false;
 	}
-	rf24.setAutoAck(1);
-	rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
-	rf24.enableAckPayload();
-	rf24.setChannel(MY_RF24_CHANNEL);
-	rf24.setPALevel(_paLevel);
-	rf24.setDataRate(MY_RF24_DATARATE);
-	rf24.setRetries(5,15);
-	rf24.setCRCLength(RF24_CRC_16);
-	rf24.enableDynamicPayloads();
+	_rf24.setAutoAck(1);
+	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
+	_rf24.enableAckPayload();
+	_rf24.setChannel(MY_RF24_CHANNEL);
+	_rf24.setPALevel(_paLevel);
+	_rf24.setDataRate(MY_RF24_DATARATE);
+	_rf24.setRetries(5,15);
+	_rf24.setCRCLength(RF24_CRC_16);
+	_rf24.enableDynamicPayloads();
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
-	rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+	_rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
 	return true;
 }
 
-void MyTransportNRF24::setAddress(uint8_t address) {
+void transportSetAddress(uint8_t address) {
 	_address = address;
-	rf24.openReadingPipe(WRITE_PIPE, TO_ADDR(address));
-	rf24.openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(address));
-	rf24.startListening();
+	_rf24.openReadingPipe(WRITE_PIPE, TO_ADDR(address));
+	_rf24.openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(address));
+	_rf24.startListening();
 }
 
-uint8_t MyTransportNRF24::getAddress() {
+uint8_t transportGetAddress() {
 	return _address;
 }
 
-bool MyTransportNRF24::send(uint8_t to, const void* data, uint8_t len) {
+bool transportSend(uint8_t to, const void* data, uint8_t len) {
 	// Make sure radio has powered up
-	rf24.powerUp();
-	rf24.stopListening();
-	rf24.openWritingPipe(TO_ADDR(to));
-	bool ok = rf24.write(data, len, to == BROADCAST_ADDRESS);
-	rf24.startListening();
+	_rf24.powerUp();
+	_rf24.stopListening();
+	_rf24.openWritingPipe(TO_ADDR(to));
+	bool ok = _rf24.write(data, len, to == BROADCAST_ADDRESS);
+	_rf24.startListening();
 	return ok;
 }
 
-bool MyTransportNRF24::available(uint8_t *to) {
+bool transportAvailable(uint8_t *to) {
 	uint8_t pipe = 255;
-	boolean avail = rf24.available(&pipe);
+	boolean avail = _rf24.available(&pipe);
 	(void)avail; //until somebody makes use of 'avail'
 	if (pipe == CURRENT_NODE_PIPE)
 		*to = _address;
 	else if (pipe == BROADCAST_PIPE)
 		*to = BROADCAST_ADDRESS;
-	return (rf24.available() && pipe < 6);
+	return (_rf24.available() && pipe < 6);
 }
 
-uint8_t MyTransportNRF24::receive(void* data) {
-	uint8_t len = rf24.getDynamicPayloadSize();
-	rf24.read(data, len);
+uint8_t transportReceive(void* data) {
+	uint8_t len = _rf24.getDynamicPayloadSize();
+	_rf24.read(data, len);
 	return len;
 }
 
-void MyTransportNRF24::powerDown() {
-	rf24.powerDown();
+void transportPowerDown() {
+	_rf24.powerDown();
 }

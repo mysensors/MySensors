@@ -20,52 +20,49 @@
 #include "MyTransport.h"
 #include "MyTransportRFM69.h"
 
-MyTransportRFM69::MyTransportRFM69()
-	:
-	MyTransport(),
-	radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_IS_RFM69HW, MY_RF69_IRQ_NUM)
-{
-}
+RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_IS_RFM69HW, MY_RF69_IRQ_NUM);
+uint8_t _address;
 
-bool MyTransportRFM69::init() {
+
+bool transportInit() {
 	// Start up the radio library (_address will be set later by the MySensors library)
-	radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID);
+	_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID);
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
-    radio.encrypt(RFM69_ENCRYPTKEY);
+    _radio.encrypt(RFM69_ENCRYPTKEY);
 #endif
 	return true;
 }
 
-void MyTransportRFM69::setAddress(uint8_t address) {
+void transportSetAddress(uint8_t address) {
 	_address = address;
-	radio.setAddress(address);
+	_radio.setAddress(address);
 }
 
-uint8_t MyTransportRFM69::getAddress() {
+uint8_t transportGetAddress() {
 	return _address;
 }
 
-bool MyTransportRFM69::send(uint8_t to, const void* data, uint8_t len) {
-	return radio.sendWithRetry(to,data,len);
+bool transportSend(uint8_t to, const void* data, uint8_t len) {
+	return _radio.sendWithRetry(to,data,len);
 }
 
-bool MyTransportRFM69::available(uint8_t *to) {
-	if (radio.TARGETID == BROADCAST_ADDRESS)
+bool transportAvailable(uint8_t *to) {
+	if (_radio.TARGETID == BROADCAST_ADDRESS)
 		*to = BROADCAST_ADDRESS;
 	else
 		*to = _address;
-	return radio.receiveDone();
+	return _radio.receiveDone();
 }
 
-uint8_t MyTransportRFM69::receive(void* data) {
-	memcpy(data,(const void *)radio.DATA, radio.DATALEN);
+uint8_t transportReceive(void* data) {
+	memcpy(data,(const void *)_radio.DATA, _radio.DATALEN);
 	// Send ack back if this message wasn't a broadcast
-	if (radio.TARGETID != RF69_BROADCAST_ADDR)
-		radio.ACKRequested();
-    radio.sendACK();
-	return radio.DATALEN;
+	if (_radio.TARGETID != RF69_BROADCAST_ADDR)
+		_radio.ACKRequested();
+    _radio.sendACK();
+	return _radio.DATALEN;
 }	
 
-void MyTransportRFM69::powerDown() {
-	radio.sleep();
+void transportPowerDown() {
+	_radio.sleep();
 }

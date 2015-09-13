@@ -21,9 +21,10 @@
 #include "MyProtocolDefault.h"
 #include "MyTransport.h"
 
-MyProtocolDefault::MyProtocolDefault() : MyProtocol() {}
+char fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];
+char convBuffer[MAX_PAYLOAD*2+1];
 
-bool MyProtocolDefault::parse(MyMessage &message, char *inputString) {
+bool protocolParse(MyMessage &message, char *inputString) {
 	char *str, *p, *value=NULL;
 	uint8_t bvalue[MAX_PAYLOAD];
 	uint8_t blen = 0;
@@ -58,8 +59,8 @@ bool MyProtocolDefault::parse(MyMessage &message, char *inputString) {
 					blen = 0;
 					uint8_t val;
 					while (*str) {
-						val = h2i(*str++) << 4;
-						val += h2i(*str++);
+						val = protocolH2i(*str++) << 4;
+						val += protocolH2i(*str++);
 						bvalue[blen] = val;
 						blen++;
 					}
@@ -89,13 +90,12 @@ bool MyProtocolDefault::parse(MyMessage &message, char *inputString) {
 	return true;
 }
 
-char * MyProtocolDefault::format(MyMessage &message) {
+char * protocolFormat(MyMessage &message) {
 	snprintf_P(fmtBuffer, MAX_FORMAT_BUFFER_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(convBuffer));
 	return fmtBuffer;
 }
 
-
-uint8_t MyProtocolDefault::h2i(char c) {
+uint8_t protocolH2i(char c) {
 	uint8_t i = 0;
 	if (c <= '9')
 		i += c - '0';
@@ -105,3 +105,5 @@ uint8_t MyProtocolDefault::h2i(char c) {
 		i += c - 'A' + 10;
 	return i;
 }
+
+

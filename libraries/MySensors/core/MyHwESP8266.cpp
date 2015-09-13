@@ -17,10 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifdef ARDUINO_ARCH_ESP8266
- 
 #include "MyHwESP8266.h"
-#include <EEPROM.h>
+#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
 
 /*
 int8_t pinIntTrigger = 0;
@@ -54,7 +52,7 @@ static void hwInitConfigBlock( size_t length = 1024 /*ATMega328 has 1024 bytes*/
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length)
 {
-  hw_initConfigBlock();
+  hwInitConfigBlock();
   uint8_t* dst = static_cast<uint8_t*>(buf);
   int offs = reinterpret_cast<int>(adr);
   while (length-- > 0)
@@ -65,7 +63,7 @@ void hwReadConfigBlock(void* buf, void* adr, size_t length)
 
 void hwWriteConfigBlock(void* buf, void* adr, size_t length)
 {
-  hw_initConfigBlock();
+  hwInitConfigBlock();
   uint8_t* src = static_cast<uint8_t*>(buf);
   int offs = reinterpret_cast<int>(adr);
   while (length-- > 0)
@@ -78,16 +76,16 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length)
 uint8_t hwReadConfig(int adr)
 {
   uint8_t value;
-  hw_readConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
+  hwReadConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
   return value;
 }
 
 void hwWriteConfig(int adr, uint8_t value)
 {
-  uint8_t curr = hw_readConfig(adr);
+  uint8_t curr = hwReadConfig(adr);
   if (curr != value)
   {
-    hw_writeConfigBlock(&value, reinterpret_cast<void*>(adr), 1); 
+    hwWriteConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
   }
 }
 
@@ -109,7 +107,7 @@ uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t m
 }
 
 #ifdef MY_DEBUG
-void hwDebugPrint(bool isGW, const char *fmt, ... ) {
+void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
@@ -134,5 +132,3 @@ void hwDebugPrint(bool isGW, const char *fmt, ... ) {
 	//Serial.write(freeRam());
 }
 #endif
-
-#endif  // #ifdef ARDUINO_ARCH_ESP8266

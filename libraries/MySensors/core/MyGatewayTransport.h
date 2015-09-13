@@ -5,8 +5,8 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Created by Tomas Hozza <thozza@gmail.com>
+ * Copyright (C) 2015  Tomas Hozza 
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -17,7 +17,25 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyTransport.h"
+#ifndef MyGatewayTransport_h
+#define MyGatewayTransport_h
 
-MyTransport::MyTransport() {
-}
+#include "MyConfig.h"
+#include "MyMessage.h"
+#include "MyProtocol.h"
+
+
+
+// initialize the driver
+bool gatewayTransportBegin();
+
+// Send message to controller
+bool gatewayTransportSend(MyMessage &message);
+
+// Check if a new message is available from controller
+bool gatewayTransportAvailable();
+
+// Pick up last message received from controller
+MyMessage& gatewayTransportReceive();
+
+#endif /* MyGatewayTransportEthernet_h */

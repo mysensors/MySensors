@@ -24,35 +24,18 @@
 #include "MyMessage.h"
 #include "MyProtocol.h"
 #include "MyProtocolDefault.h"
+#include "MyGatewayTransport.h"
 
-#include "drivers/Ethernet_W5100/IPAddress.h"
 
 // Use this if you have attached a Ethernet ENC28J60 shields  
 //#include <UIPEthernet.h>  
 
-// Use this fo WizNET W5100 module and Arduino Ethernet Shield 
-#include "drivers/Ethernet_W5100/Ethernet.h"
 
-#ifdef MY_USE_UDP
-#include "drivers/Ethernet_W5100/EthernetUdp.h"
-#endif /* MY_USE_UDP */
 
 #define CONTROLLER_PORT 5003
 #define IP_RENEWAL_INTERVAL 60000  // in milliseconds
 #define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller
 
-
-// initialize the driver
-bool gatewayTransportBegin();
-
-// Send message to controller
-bool gatewayTransportSend(MyMessage &message);
-
-// Check if a new message is available from controller
-bool gatewayTransportAvailable();
-
-// Pick up last message received from controller
-MyMessage& gatewayTransportReceive();
 
 #ifndef MY_IP_ADDRESS
 	void gatewayTransportRenewIP();

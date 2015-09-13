@@ -42,7 +42,7 @@
 #include "pins_arduino.h"
 #endif
 
-#include "drivers/SPI/SPI.h"
+#include "drivers/AVR/SPI/SPI.h"
 
 /// IMPORTANT: NAND FLASH memory requires erase before write, because
 ///            it can only transition from 1s to 0s and only the erase command can reset all 0s to 1s

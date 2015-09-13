@@ -10,7 +10,7 @@
 #ifndef	W5100_H_INCLUDED
 #define	W5100_H_INCLUDED
 
-#include "drivers/SPI/SPI.h"
+#include "drivers/AVR/SPI/SPI.h"
 
 #define ETHERNET_SHIELD_SPI_CS 10
 

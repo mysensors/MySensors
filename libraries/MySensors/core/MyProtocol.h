@@ -22,18 +22,12 @@
 
 #include "MyMessage.h"
 
-class MyProtocol
-{
-public:
-	// MyProtocol constructor
-	MyProtocol();
-	// parse(message, inputString)
-	// parse a string into a message element
-	// returns true if successfully parsed the input string
-	virtual bool parse(MyMessage &message, char *inputString) = 0;
+// parse(message, inputString)
+// parse a string into a message element
+// returns true if successfully parsed the input string
+bool protocolParse(MyMessage &message, char *inputString);
 
-	// Format MyMessage to the protocol represenataion
-	virtual char *format(MyMessage &message) = 0;
+// Format MyMessage to the protocol represenataion
+char *protocolFormat(MyMessage &message);
 
-};
 #endif

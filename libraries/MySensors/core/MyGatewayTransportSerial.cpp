@@ -17,54 +17,55 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+
 #include "MyGatewayTransportSerial.h"
 
+char _serialInputString[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
+int _serialInputPos;
+MyMessage _serialMsg;
 
-MyGatewayTransportSerial::MyGatewayTransportSerial(MyProtocol &_protocol) : MyGatewayTransport(_protocol),inputPos(0)
-{
 
-}
 
-bool MyGatewayTransportSerial::begin() {
+bool gatewayTransportBegin() {
 	return true;
 }
 
-bool MyGatewayTransportSerial::send(MyMessage &message) {
-	Serial.print(protocol.format(message));
+bool gatewayTransportSend(MyMessage &message) {
+	Serial.print(protocolFormat(message));
 	// Serial print is always successful
 	return true;
 }
 
-bool MyGatewayTransportSerial::available() {
+bool gatewayTransportAvailable() {
 	bool available = false;
 	while (Serial.available()) {
 		// get the new byte:
 		char inChar = (char) Serial.read();
 		// if the incoming character is a newline, set a flag
 		// so the main loop can do something about it:
-		if (inputPos < MAX_RECEIVE_LENGTH - 1 && !available) {
+		if (_serialInputPos < MAX_RECEIVE_LENGTH - 1 && !available) {
 			if (inChar == '\n') {
-				inputString[inputPos] = 0;
+				_serialInputString[_serialInputPos] = 0;
 				available = true;
 			} else {
 				// add it to the inputString:
-				inputString[inputPos] = inChar;
-				inputPos++;
+				_serialInputString[_serialInputPos] = inChar;
+				_serialInputPos++;
 			}
 		} else {
 			// Incoming message too long. Throw away
-			inputPos = 0;
+			_serialInputPos = 0;
 		}
 	}
 	if (available) {
 		// Parse message and return parse result
-		available = protocol.parse(msg, inputString);
-		inputPos = 0;
+		available = protocolParse(_serialMsg, _serialInputString);
+		_serialInputPos = 0;
 	}
 	return available;
 }
 
-MyMessage & MyGatewayTransportSerial::receive() {
+MyMessage & gatewayTransportReceive() {
 	// Return the last parsed message
-	return msg;
+	return _serialMsg;
 }

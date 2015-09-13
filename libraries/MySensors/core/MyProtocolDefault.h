@@ -21,22 +21,10 @@
 #define MyProtocolDefault_h
 
 #include "MyConfig.h"
-#include "MyProtocol.h"
 #include "MyTransport.h"
 
 #define MAX_FORMAT_BUFFER_LENGTH 120 // Max buffersize when formatting messages
 
+uint8_t protocolH2i(char c);
 
-class MyProtocolDefault : public MyProtocol
-{ 
-public:
-	MyProtocolDefault();
-	bool parse(MyMessage &message, char *inputString);
-	char *format(MyMessage &message);
-private:
-	char fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];
-	char convBuffer[MAX_PAYLOAD*2+1];
-
-	uint8_t h2i(char c);
-};
 #endif

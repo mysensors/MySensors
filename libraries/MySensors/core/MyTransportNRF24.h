@@ -32,21 +32,12 @@
 #define CURRENT_NODE_PIPE ((uint8_t)1)
 #define BROADCAST_PIPE ((uint8_t)2)
 
-class MyTransportNRF24 : public MyTransport
-{ 
-public:
-	MyTransportNRF24();
-	bool init();
-	void setAddress(uint8_t address);
-	uint8_t getAddress();
-	bool send(uint8_t to, const void* data, uint8_t len);
-	bool available(uint8_t *to);
-	uint8_t receive(void* data);
-	void powerDown();
-private:
-	RF24 rf24;
-	uint8_t _address;
-	uint8_t _paLevel;
-};
+bool transportInit();
+void transportSetAddress(uint8_t address);
+uint8_t transportGetAddress();
+bool transportSend(uint8_t to, const void* data, uint8_t len);
+bool transportAvailable(uint8_t *to);
+uint8_t transportReceive(void* data);
+void transportPowerDown();
 
 #endif

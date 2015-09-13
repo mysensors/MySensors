@@ -20,8 +20,7 @@
 #ifndef MyHwATMega328_h
 #define MyHwATMega328_h
 
-#ifdef ARDUINO_ARCH_AVR
-
+#include "MyHw.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
 #include <avr/eeprom.h>
@@ -92,14 +91,6 @@ enum period_t
 	SLEEP_FOREVER
 };
 
-
-void hwSleep(unsigned long ms);
-bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
-uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
-#ifdef MY_DEBUG
-	void hwDebugPrint(const char *fmt, ... );
-#endif
 void hwInternalSleep(unsigned long ms);
 
-#endif // #ifdef ARDUINO_ARCH_AVR
 #endif

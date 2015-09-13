@@ -64,7 +64,7 @@ bool gatewayTransportSend(MyMessage &message)
 		return false;
 	}
 	else {
-		_ethernetMsg = _protocol.format(message);
+		_ethernetMsg = protocolFormat(message);
 #ifdef MY_USE_UDP
 		_ethernetServer.beginPacket(_ethernetControllerIP, MY_CONTROLLER_PORT);
 		_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
@@ -128,7 +128,7 @@ bool gatewayTransportAvailable()
 
 	if (available) {
 		// Parse message and return parse result
-		available = _protocol.parse(_ethernetMsg, _ethernetInputBuffer);
+		available = protocolParse(_ethernetMsg, _ethernetInputBuffer);
 	}
 
 	return available;
