@@ -22,6 +22,11 @@
 #define MyConfig_h
 #include <stdint.h>
 
+
+/**********************************
+*  Serial and debug options
+***********************************/
+
 // Enables this in sketch to show debug prints. This option will add a lot to the size of the
 // final sketch but is helpful to see what is actually is happening during development
 //#define MY_DEBUG
@@ -34,10 +39,20 @@
 #undef MY_DEBUG
 #endif
 
-// Serial output baud rate (for debug prints and serial gateway)
+// Serial output baud rate (debug prints and serial gateway speed)
 #ifndef MY_BAUD_RATE
 #define MY_BAUD_RATE 115200
 #endif
+
+/**********************************
+*  Radio selection and modes
+***********************************/
+
+// Selecting radio transport is optional (for a gateway node).
+
+//#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 
 // Node id defaults to AUTO (tries to fetch id from controller)
 #ifndef MY_NODE_ID
@@ -57,7 +72,7 @@
 ***********************************/
 
 // Enable MY_OTA_FIRMWARE_FEATURE in sketch to allow safe over-the-air firmware updates.
-// This feature requires external flash and the DualOptiBoot bootloader.
+// This feature requires external flash and the DualOptiBoot boot-loader.
 // Note: You can still have OTA FW updates without external flash but it
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
 //#define MY_OTA_FIRMWARE_FEATURE
@@ -174,22 +189,22 @@
 *  NRF24L01 Driver Defaults
 ***********************************/
 #ifndef MY_RF24_CE_PIN
-#define MY_RF24_CE_PIN		   9
+#define MY_RF24_CE_PIN 9
 #endif
 #ifndef MY_RF24_CS_PIN
-#define MY_RF24_CS_PIN		   10
+#define MY_RF24_CS_PIN 10
 #endif
 
 #ifndef MY_RF24_PA_LEVEL
-#define MY_RF24_PA_LEVEL 	   RF24_PA_MAX
+#define MY_RF24_PA_LEVEL RF24_PA_MAX
 #endif
 // RF channel for the sensor net, 0-127
 #ifndef MY_RF24_CHANNEL
-#define MY_RF24_CHANNEL	   76
+#define MY_RF24_CHANNEL	76
 #endif
 //RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
 #ifndef MY_RF24_DATARATE
-#define MY_RF24_DATARATE 	   RF24_250KBPS
+#define MY_RF24_DATARATE RF24_250KBPS
 #endif
 // This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
 #ifndef MY_RF24_BASE_RADIO_ID
@@ -246,11 +261,26 @@
 #endif
 
 /**************************************
-*  Gateway Transport Ethernet Defaults
+* Ethernet Gateway Transport  Defaults
 ***************************************/
-// Enable to use DHCP for getting IP address. If not defined, static IP is expected
-//#define MY_IP_ADDRESS_VIA_DHCP
 
+// The gateway options available
+//#define MY_GATEWAY_W5100
+//#define MY_GATEWAY_ENC28J60
+//#define MY_GATEWAY_ESP8266
+
+// The port to open on controller or gateway
+#ifndef MY_PORT
+#define MY_PORT 5003
+#endif
+
+// Static ip address of gateway (if this is disabled, DHCP will be used)
+//#define MY_IP_ADDRESS 192,168,178,66
+
+// Enables UDP mode for Ethernet gateway (W5100)
+//#define MY_USE_UDP
+
+// DHCP, default renewal setting
 #ifndef MY_IP_RENEWAL_INTERVAL
 #define MY_IP_RENEWAL_INTERVAL 60000
 #endif
@@ -258,7 +288,9 @@
 #ifndef MY_MAC_ADDRESS
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 #endif
-// Enable to use UDP instead of plain Ethernet
-//#define MY_USE_UDP
+
+// Controller ip-address, if this is defined, gateway will act as a client trying to contact controller on MY_PORT.
+// If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server allowing incoming connections.
+//#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 
 #endif

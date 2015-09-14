@@ -28,14 +28,17 @@
  */
 
 //#define MY_DEBUG
+
+#define MY_RADIO_NRF24  // MY_RADIO_RFM69
+
 //#define MY_SOFTSPI
 //#define MY_OTA_FIRMWARE_FEATURE
 
-#define MY_SIGNING_SOFT
+//#define MY_SIGNING_SOFT
+//#define MY_REPEATER_FEATURE
 
 // #define MY_GATEWAY_SERIAL  // REMOVE-ME
 // #define MY_GATEWAY_PROTOCOL_DEFAULT  // REMOVE-ME
-#define MY_RADIO_NRF24  // MY_RADIO_RFM69
 
 #include <MySensor.h>
 

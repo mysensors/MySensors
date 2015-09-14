@@ -35,8 +35,6 @@
 	#define MY_NODE_TYPE "sensor"
 #endif
 
-// CORE
-
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
@@ -184,14 +182,17 @@
 extern void setup();
 extern void loop();
 
-// Initialize library and call sketch functions
+#include <Arduino.h>
+// Initialize library and handle sketch functions like we want to
 int main() {
-	begin();
-	setup();
+	init();  // Init Arduino
+	begin(); // Startup MySensors library
+	setup(); // Call sketch setup
 	while(1) {
-		// We handle incoming message processing here
-		process();
-		loop();
+		process();  // Process incoming data
+		loop(); // Call sketch loop
+		if (serialEventRun) serialEventRun();
 	}
+	return 0;
 }
 #endif
