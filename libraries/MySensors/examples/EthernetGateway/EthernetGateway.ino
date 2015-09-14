@@ -64,8 +64,8 @@
 
 
 // Enable gateway type 
-
-
+#define MY_GATEWAY_W5100
+//#define MY_GATEWAY_W5100
 
 // Set default gateway protocol (http://www.mysensors.org/download/serial_api_15)
 #define MY_GATEWAY_PROTOCOL_DEFAULT
@@ -96,7 +96,7 @@
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 
 // Flash leds on rx/tx/err
-#define MY_WITH_LEDS_BLINKING
+#define MY_LEDS_BLINKING_FEATURE
 // Set blinking period
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 

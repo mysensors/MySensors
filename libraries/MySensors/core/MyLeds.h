@@ -17,19 +17,38 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyTransportNRF24_h
-#define MyTransportNRF24_h
+#ifndef MyLeds_h
+#define MyLeds_h
 
-#include "MyConfig.h"
-#include "MyTransport.h"
-#include <stdint.h>
-#include "drivers/RF24/RF24.h"
-#include "drivers/RF24/RF24_config.h"
 
-#define TO_ADDR(x) (MY_RF24_BASE_RADIO_ID + x)
+#ifdef WITH_LEDS_BLINKING_INVERSE
+#define LED_ON 0x1
+#define LED_OFF 0x0
+#else
+#define LED_ON 0x0
+#define LED_OFF 0x1
+#endif
 
-#define WRITE_PIPE ((uint8_t)0)
-#define CURRENT_NODE_PIPE ((uint8_t)1)
-#define BROADCAST_PIPE ((uint8_t)2)
+#ifdef MY_LEDS_BLINKING_FEATURE
+	#define ledBlinkTx(x,...) ledsBlinkTx(x)
+	#define ledBlinkRx(x,...) ledsBlinkRx(x)
+	#define ledBlinkErr(x,...) ledsBlinkErr(x)
+
+	/**
+	 * Blink with LEDs
+	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
+	 */
+	void ledsInit();
+	void ledsBlinkRx(uint8_t cnt);
+	void ledsBlinkTx(uint8_t cnt);
+	void ledsBlinkErr(uint8_t cnt);
+	void ledsProcess(); // do the actual blinking
+
+#else
+	// Remove led functions if feature is disabled
+	#define ledBlinkTx(x,...)
+	#define ledBlinkRx(x,...)
+	#define ledBlinkErr(x,...)
+#endif
 
 #endif

@@ -17,41 +17,12 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-
-
 #include "MySensorCore.h"
 
-
-NodeConfig _nc; // Essential settings for node to work
 ControllerConfig _cc; // Configuration coming from controller
-#ifdef MY_OTA_FIRMWARE_FEATURE
-NodeFirmwareConfig _fc;
-bool _fwUpdateOngoing;
-unsigned long _fwLastRequestTime;
-uint16_t _fwBlock;
-uint8_t _fwRetry;
-#endif
-
-#ifdef MY_RADIO_FEATURE
-bool _autoFindParent;
-uint8_t _failedTransmissions;
-#endif
-
+NodeConfig _nc; // Essential settings for node to work
 MyMessage _msg;  // Buffer for incoming messages.
-MyMessage _msgTmp ;  // Buffer for temporary messages (acks and nonces among others).
-
-#ifdef MY_LEDS_BLINKING_FEATURE
-// these variables don't need to be volatile, since we are not using interrupts
-uint8_t _countRx;
-uint8_t _countTx;
-uint8_t _countErr;
-unsigned long _blink_next_time;
-#endif
-
-#ifdef MY_SIGNING_FEATURE
-uint16_t _doSign[16]; // Bitfield indicating which sensors require signed communication
-MyMessage _msgSign;  // Buffer for message to sign.
-#endif
+MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among others).
 
 #ifdef MY_DEBUG
 	char convBuf[MAX_PAYLOAD*2+1];
@@ -62,124 +33,30 @@ void (*_timeCallback)(unsigned long); // Callback for requested time messages
 void (*_msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
 
-#define DISTANCE_INVALID (0xFF)
+void process() {
+	hwWatchdogReset();
 
-#ifdef MY_SIGNING_FEATURE
-// Macros for manipulating signing requirement table
-#define DO_SIGN(node) (node == 0 ? (~_doSign[0]&1) : (~_doSign[node>>4]&(node%16)))
-#define SET_SIGN(node) (node == 0 ? (_doSign[0]&=~1) : (_doSign[node>>4]&=~(node%16)))
-#define CLEAR_SIGN(node) (node == 0 ? (_doSign[0]|=1) : (_doSign[node>>4]|=(node%16)))
-#endif
+	#if defined (MY_LEDS_BLINKING_FEATURE)
+		ledsProcess();
+	#endif
 
-// Inline function and macros
-static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
-	msg.sender = sender;
-	msg.destination = destination;
-	msg.sensor = sensor;
-	msg.type = type;
-	mSetCommand(msg,command);
-	mSetRequestAck(msg,enableAck);
-	mSetAck(msg,false);
-	return msg;
+	#if defined(MY_INCLUSION_MODE_FEATURE)
+		inclusionProcess();
+	#endif
+
+	#if defined(MY_GATEWAY_FEATURE)
+		gatewayTransportProcess();
+	#endif
+
+	#if defined(MY_RADIO_FEATURE)
+		transportProcess();
+	#endif
 }
 
-static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
-	msg.sender = GATEWAY_ADDRESS;
-	msg.destination = GATEWAY_ADDRESS;
-	msg.sensor = 0;
-	msg.type = type;
-	mSetCommand(msg, C_INTERNAL);
-	mSetRequestAck(msg, false);
-	mSetAck(msg, false);
-	return msg;
-}
 
 static inline bool isValidParent( const uint8_t parent ) {
 	return parent != AUTO;
 }
-static inline bool isValidDistance( const uint8_t distance ) {
-	return distance != DISTANCE_INVALID;
-}
-
-
-
-#ifdef MY_OTA_FIRMWARE_FEATURE
-// do a crc16 on the whole received firmware
-bool isValidFirmware() {
-	// init crc
-	uint16_t crc = ~0;
-	for (uint16_t i = 0; i < _fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
-		crc ^= _flash.readByte(i + FIRMWARE_START_OFFSET);
-	    for (int8_t j = 0; j < 8; ++j) {
-	        if (crc & 1)
-	            crc = (crc >> 1) ^ 0xA001;
-	        else
-	            crc = (crc >> 1);
-	    }
-	}	
-	return crc == _fc.crc;
-}
-
-#endif
-
-#ifdef MY_LEDS_BLINKING_FEATURE
-void handleLedsBlinking() {
-	static unsigned long next_time = hwMillis() + MY_DEFAULT_LED_BLINK_PERIOD;
-
-	// Just return if it is not the time...
-	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(hwMillis() - _blink_next_time) < 0)
-		return;
-	else
-		_blink_next_time = hwMillis() + ledBlinkPeriod;
-
-	// do the actual blinking
-	if(_countRx && _countRx != 255) {
-		// switch led on
-		hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, LED_ON);
-	}
-	else if(!_countRx) {
-		// switching off
-		hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, LED_OFF);
-	}
-	if(_countRx != 255)
-		--_countRx;
-
-	if(_countTx && _countTx != 255) {
-		// switch led on
-		hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, LED_ON);
-	}
-	else if(!_countTx) {
-		// switching off
-		hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, LED_OFF);
-	}
-	if(_countTx != 255)
-		--_countTx;
-
-	if(_countErr && _countErr != 255) {
-		// switch led on
-		hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_ON);
-	}
-	else if(!_countErr) {
-		// switching off
-		hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_OFF);
-	}
-	if(_countErr != 255)
-		--_countErr;
-}
-
-void rxBlink(uint8_t cnt) {
-  if(_countRx == 255) { _countRx = cnt; }
-}
-
-void txBlink(uint8_t cnt) {
-  if(_countTx == 255) { _countTx = cnt; }
-}
-
-void errBlink(uint8_t cnt) {
-  if(_countErr == 255) { _countErr = cnt; }
-}
-#endif
 
 
 void dataCallback(void (*msgCallback)(const MyMessage &)) {
@@ -187,29 +64,21 @@ void dataCallback(void (*msgCallback)(const MyMessage &)) {
 }
 
 void begin() {
-
-	#if defined(MY_INCLUSION_MODE_FEATURE)
-		inclusionMode = false;
-	#endif
-
-	#ifndef MY_DISABLED_SERIAL
+	#if defined(MY_DISABLED_SERIAL)
 	    hwInit();
     #endif
 
-	#ifdef MY_GATEWAY_FEATURE
-		#if defined(MY_INCLUSION_MODE_FEATURE) && defined(MY_INCLUSION_BUTTON_FEATURE)
-	    	// Setup digital in that triggers inclusion mode
-			pinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
-			digitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
+	#if defined(MY_GATEWAY_FEATURE)
+		#if defined(MY_INCLUSION_BUTTON_FEATURE)
+	    	inclusionInit();
 		#endif
-		// initialize the transport driver
-		if (!gatewayTransportBegin()) {
+
+	    // initialize the transport driver
+		if (!gatewayTransportInit()) {
 			debug(PSTR("transport driver init fail\n"));
 			while(1); // Nothing more we can do
 		}
-	#endif
 
-	#if defined(MY_GATEWAY_FEATURE)
 		gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 	#endif
 
@@ -223,27 +92,14 @@ void begin() {
 		}
 	#endif
 
-	#ifdef MY_SIGNING_FEATURE
+	#if defined(MY_SIGNING_FEATURE)
 		// Read out the signing requirements from EEPROM
 		hwReadConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
 	#endif
 
-#ifdef MY_LEDS_BLINKING_FEATURE
-	// Setup led pins
-	pinMode(MY_DEFAULT_RX_LED_PIN, OUTPUT);
-	pinMode(MY_DEFAULT_TX_LED_PIN, OUTPUT);
-	pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
-
-	// Set initial state of leds
-	hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, LED_OFF);
-	hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, LED_OFF);
-	hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_OFF);
-
-	// initialize counters
-	_countRx = 0;
-	_countTx = 0;
-	_countErr = 0;
-#endif
+	#if defined(MY_LEDS_BLINKING_FEATURE)
+		ledsInit();
+	#endif
 
 	// Read latest received controller configuration from EEPROM
 	hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
@@ -277,7 +133,7 @@ void begin() {
 			_nc.distance = 1;
 		} else if (!isValidParent(_nc.parentNodeId)) {
 			// Auto find parent, but parent in eeprom is invalid. Try find one.
-			findParentNode();
+			transportFindParentNode();
 		}
 
 		if (MY_NODE_ID != AUTO) {
@@ -287,12 +143,12 @@ void begin() {
 			hwWriteConfig(EEPROM_NODE_ID_ADDRESS, MY_NODE_ID);
 		} else if (_nc.nodeId == AUTO && isValidParent(_nc.parentNodeId)) {
 			// Try to fetch node-id from gateway
-			requestNodeId();
+			transportRequestNodeId();
 		}
 	#endif
 
 	#if defined(MY_RADIO_FEATURE)
-		setupNode();
+		transportSetupNode();
 	#endif
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), MY_NODE_TYPE, _nc.nodeId, _nc.parentNodeId, _nc.distance);
 }
@@ -308,270 +164,22 @@ ControllerConfig getConfig() {
 	return _cc;
 }
 
-#if defined(MY_RADIO_FEATURE)
-void requestNodeId() {
-	debug(PSTR("req id\n"));
-	transportSetAddress(_nc.nodeId);
-	build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
-	sendWrite(_nc.parentNodeId, _msg);
-	wait(2000);
-}
-#endif
-
-#if defined(MY_RADIO_FEATURE)
-
-
-void setupNode() {
-	// Open reading pipe for messages directed to this node (set write pipe to same)
-	transportSetAddress(_nc.nodeId);
-	// Present node and request config
-	#ifndef MY_GATEWAY_FEATURE
-		if (_nc.nodeId != AUTO) {
-			#ifdef MY_SIGNING_FEATURE
-				// Notify gateway (and possibly controller) about the signing preferences of this node
-				sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(signer.requestSignatures()));
-
-				// If we do require signing, wait for the gateway to tell us how it prefer us to transmit our messages
-				if (signer.requestSignatures()) {
-					wait(2000);
-				}
-			#endif
-
-			// Send presentation for this radio node
-			#ifdef MY_REPEATER_FEATURE
-				present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
-			#else
-				present(NODE_SENSOR_ID, S_ARDUINO_NODE);
-			#endif
-			// Send a configuration exchange request to controller
-			// Node sends parent node. Controller answers with latest node configuration
-			// which is picked up in process()
-			sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
-
-			// Wait configuration reply.
-			wait(2000);
-
-			#ifdef MY_OTA_FIRMWARE_FEATURE
-				RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)_msg.data;
-				mSetLength(_msg, sizeof(RequestFirmwareConfig));
-				mSetCommand(_msg, C_STREAM);
-				mSetPayloadType(_msg,P_CUSTOM);
-				// copy node settings to reqFWConfig
-				memcpy(reqFWConfig,&_fc,sizeof(NodeFirmwareConfig));
-				// add bootloader information
-				reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
-				_fwUpdateOngoing = false;
-				sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
-			#endif
-		}
-	#endif
-}
-#endif
-
-#if defined(MY_RADIO_FEATURE)
-void findParentNode() {
-	static boolean findingParentNode = false;
-
-	if (findingParentNode)
-		return;
-	findingParentNode = true;
-
-	_failedTransmissions = 0;
-
-	// Set distance to max
-	_nc.distance = 255;
-
-	// Send ping message to BROADCAST_ADDRESS (to which all relaying nodes and gateway listens and should reply to)
-	debug(PSTR("find parent\n"));
-
-	build(_msg, _nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set("");
-	// Write msg, but suppress recursive parent search
-	sendWrite(BROADCAST_ADDRESS, _msg);
-
-	// Wait for ping response.
-	wait(2000);
-	findingParentNode = false;
-}
-#endif
-
-
 
 boolean sendRoute(MyMessage &message) {
-
 	#if defined(MY_GATEWAY_FEATURE)
 		if (message.destination == _nc.nodeId) {
 			// This is a message sent from a sensor attached on the gateway node.
 			// Pass it directly to the gateway transport layer.
-			#ifdef MY_LEDS_BLINKING_FEATURE
-				txBlink(1);
-			#endif
+			ledBlinkTx(1);
 			return gatewayTransportSend(message);
 		}
 	#endif
-
-
 	#if defined(MY_RADIO_FEATURE)
-		uint8_t sender = message.sender;
-		uint8_t dest = message.destination;
-		uint8_t last = message.last;
-		bool ok;
-
-		// If we still don't have any parent id, re-request and skip this message.
-		if (_nc.parentNodeId == AUTO) {
-			findParentNode();
-			#ifdef MY_LEDS_BLINKING_FEATURE
-				errBlink(1);
-			#endif
-			return false;
-		}
-
-		// If we still don't have any node id, re-request and skip this message.
-		if (_nc.nodeId == AUTO) {
-			requestNodeId();
-			#ifdef MY_LEDS_BLINKING_FEATURE
-				errBlink(1);
-			#endif
-			return false;
-		}
-
-		mSetVersion(message, PROTOCOL_VERSION);
-
-		#ifdef MY_SIGNING_FEATURE
-		// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-		if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) && mGetLength(message) &&
-			(mGetCommand(message) != C_INTERNAL ||
-			 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
-			  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
-			  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
-			bool signOk = false;
-			// Send nonce-request
-			if (!sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
-				debug(PSTR("nonce tr err\n"));
-				return false;
-			}
-			// We have to wait for the nonce to arrive before we can sign our original message
-			// Other messages could come in-between. We trust process() takes care of them
-			unsigned long enter = hwMillis();
-			_msgSign = message; // Copy the message to sign since message buffer might be touched in process()
-			while (hwMillis() - enter < MY_VERIFICATION_TIMEOUT_MS) {
-				if (process()) {
-					if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
-						// Proceed with signing if nonce has been received
-						if (signer.putNonce(getLastMessage()) && signer.signMsg(_msgSign)) {
-							message = _msgSign; // Write the signed message back
-							signOk = true;
-						}
-						break;
-					}
-				}
-			}
-			if (hwMillis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
-				debug(PSTR("nonce tmo\n"));
-				#ifdef MY_LEDS_BLINKING_FEATURE
-					errBlink(1);
-				#endif
-				return false;
-			}
-			if (!signOk) {
-				debug(PSTR("sign fail\n"));
-				#ifdef MY_LEDS_BLINKING_FEATURE
-					errBlink(1);
-				#endif
-				return false;
-			}
-			// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
-			// or signature will become invalid and the message rejected by the receiver
-		} else mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
-		#endif
-
-		if (dest == GATEWAY_ADDRESS || !MY_IS_REPEATER) {
-			// Store this address in routing table (if repeater)
-			#if defined (MY_IS_REPEATER)
-				hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
-			#endif
-			// If destination is the gateway or if we aren't a repeater, let
-			// our parent take care of the message
-			ok = sendWrite(_nc.parentNodeId, message);
-		} else {
-			// Relay the message
-			uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS+dest);
-			if (route > GATEWAY_ADDRESS && route < BROADCAST_ADDRESS) {
-				// This message should be forwarded to a child node. If we send message
-				// to this nodes pipe then all children will receive it because the are
-				// all listening to this nodes pipe.
-				//
-				//    +----B
-				//  -A
-				//    +----C------D
-				//
-				//  We're node C, Message comes from A and has destination D
-				//
-				// Message destination is not gateway and is in routing table for this node.
-				// Send it downstream
-				return sendWrite(route, message);
-			} else if (sender == GATEWAY_ADDRESS && dest == BROADCAST_ADDRESS) {
-				// Node has not yet received any id. We need to send it
-				// by doing a broadcast sending,
-				return sendWrite(BROADCAST_ADDRESS, message);
-			} else if (MY_IS_GATEWAY) {
-				// Destination isn't in our routing table and isn't a broadcast address
-				// Nothing to do here
-				return false;
-			} else  {
-				// A message comes from a child node and we have no
-				// route for it.
-				//
-				//    +----B
-				//  -A
-				//    +----C------D    <-- Message comes from D
-				//
-				//     We're node C
-				//
-				// Message should be passed to node A (this nodes relay)
-
-				// This message should be routed back towards sensor net gateway
-				ok = sendWrite(_nc.parentNodeId, message);
-				// Add this child to our "routing table" if it not already exist
-				hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
-			}
-		}
-
-		if (!ok) {
-			// Failure when sending to parent node. The parent node might be down and we
-			// need to find another route to gateway.
-			#ifdef MY_LEDS_BLINKING_FEATURE
-				errBlink(1);
-			#endif
-			_failedTransmissions++;
-			if (_autoFindParent && _failedTransmissions > SEARCH_FAILURES) {
-				findParentNode();
-			}
-		} else {
-			_failedTransmissions = 0;
-		}
-		return ok;
+		transportSendRoute(message);
 	#else
 		return false;
 	#endif
 }
-
-#ifdef MY_RADIO_FEATURE
-boolean sendWrite(uint8_t to, MyMessage &message) {
-	mSetVersion(message, PROTOCOL_VERSION);
-	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
-	message.last = _nc.nodeId;
-	#ifdef MY_LEDS_BLINKING_FEATURE
-	txBlink(1);
-	#endif
-	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
-
-	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
-			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
-			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(convBuf));
-
-	return ok;
-}
-#endif
 
 bool send(MyMessage &message, bool enableAck) {
 	message.sender = _nc.nodeId;
@@ -611,320 +219,7 @@ void requestTime(void (* timeCallback)(unsigned long)) {
 	sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
-void process() {
-	hwWatchdogReset();
-
-	#ifdef MY_LEDS_BLINKING_FEATURE
-	handleLedsBlinking();
-	#endif
-
-	#ifdef MY_INCLUSION_MODE_FEATURE
-	checkInclusionMode();
-	#endif
-
-	#if defined (MY_GATEWAY_FEATURE)
-	if (gatewayTransportAvailable()) {
-		MyMessage &_msg = gatewayTransportReceive();
-		if (_msg.destination == GATEWAY_ADDRESS) {
-			// Check if sender requests an ack back.
-			if (mGetRequestAck(_msg)) {
-				// Copy message
-				_msgTmp = _msg;
-				mSetRequestAck(_msgTmp, false); // Reply without ack flag (otherwise we would end up in an eternal loop)
-				mSetAck(_msgTmp, true);
-				_msgTmp.sender = _nc.nodeId;
-				_msgTmp.destination = _msg.sender;
-				gatewayTransportSend(_msgTmp);
-			}
-			if (mGetCommand(_msg) == C_INTERNAL) {
-				if (_msg.type == I_VERSION) {
-					// Request for version. Create the response
-					gatewayTransportSend(buildGw(_msg, I_VERSION).set(LIBRARY_VERSION));
-				#ifdef MY_INCLUSION_MODE_FEATURE
-				} else if (_msg.type == I_INCLUSION_MODE) {
-					// Request to change inclusion mode
-					setInclusionMode(atoi(_msg.data) == 1);
-				#endif
-				} else {
-					processInternalMessages();
-				}
-			} else {
-				// Call incoming message callback if available
-				if (_msgCallback != NULL) {
-					_msgCallback(_msg);
-				}
-			}
-		}
-	}
-	#endif
-
-	#if defined(MY_RADIO_FEATURE)
-	uint8_t to = 0;
-	if (!transportAvailable(&to))
-	{
-		#ifdef MY_OTA_FIRMWARE_FEATURE
-		unsigned long enter = hwMillis();
-		if (_fwUpdateOngoing && (enter - _fwLastRequestTime > MY_OTA_RETRY_DELAY)) {
-			if (!_fwRetry) {
-				debug(PSTR("fw upd fail\n"));
-				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
-				_fwUpdateOngoing = false;
-				#ifdef MY_LEDS_BLINKING_FEATURE
-				errBlink(1);
-				#endif
-				return;
-			}
-			_fwRetry--;
-			_fwLastRequestTime = enter;
-			// Time to (re-)request firmware block from controller
-			RequestFWBlock *firmwareRequest = (RequestFWBlock *)_msg.data;
-			mSetLength(_msg, sizeof(RequestFWBlock));
-			firmwareRequest->type = _fc.type;
-			firmwareRequest->version = _fc.version;
-			firmwareRequest->block = (_fwBlock - 1);
-			sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
-		}
-		#endif
-		return;
-	}
-
-	#ifdef MY_SIGNING_FEATURE
-	(void)signer.checkTimer(); // Manage signing timeout
-	#endif
-
-	uint8_t len = transportReceive((uint8_t *)&_msg);
-	(void)len; //until somebody makes use of 'len'
-	#ifdef MY_LEDS_BLINKING_FEATURE
-	rxBlink(1);
-	#endif
-
-	#ifdef MY_SIGNING_FEATURE
-	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
-	// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
-	if (signer.requestSignatures() && _msg.destination == _nc.nodeId && mGetLength(_msg) && !mGetAck(_msg) &&
-		(mGetCommand(_msg) != C_INTERNAL ||
-		 (_msg.type != I_GET_NONCE_RESPONSE && _msg.type != I_GET_NONCE && _msg.type != I_REQUEST_SIGNING &&
-		  _msg.type != I_ID_REQUEST && _msg.type != I_ID_RESPONSE &&
-		  _msg.type != I_FIND_PARENT && _msg.type != I_FIND_PARENT_RESPONSE))) {
-		if (!mGetSigned(_msg)) {
-			// Got unsigned message that should have been signed
-			debug(PSTR("no sign\n"));
-			#ifdef MY_LEDS_BLINKING_FEATURE
-			errBlink(1);
-			#endif
-			return;
-		}
-		else if (!signer.verifyMsg(_msg)) {
-			debug(PSTR("verify fail\n"));
-			#ifdef MY_LEDS_BLINKING_FEATURE
-			errBlink(1);
-			#endif
-			return; // This signed message has been tampered with!
-		}
-	}
-	#endif
-
-	// Add string termination, good if we later would want to print it.
-	_msg.data[mGetLength(_msg)] = '\0';
-	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
-				_msg.sender, _msg.last, _msg.destination, _msg.sensor, mGetCommand(_msg), _msg.type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(convBuf));
-	mSetSigned(_msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
-
-	if(!(mGetVersion(_msg) == PROTOCOL_VERSION)) {
-		debug(PSTR("ver mismatch\n"));
-		#ifdef MY_LEDS_BLINKING_FEATURE
-		errBlink(1);
-		#endif
-		return;
-	}
-
-	uint8_t command = mGetCommand(_msg);
-	uint8_t type = _msg.type;
-	uint8_t sender = _msg.sender;
-	uint8_t last = _msg.last;
-	uint8_t destination = _msg.destination;
-
-	if (destination == _nc.nodeId) {
-		// This message is addressed to this node
-
-		if (MY_IS_REPEATER && last != _nc.parentNodeId) {
-			// Message is from one of the child nodes. Add it to routing table.
-			hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
-		}
-
-		// Check if sender requests an ack back.
-		if (mGetRequestAck(_msg)) {
-			// Copy message
-			_msgTmp = _msg;
-			mSetRequestAck(_msgTmp,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
-			mSetAck(_msgTmp,true);
-			_msgTmp.sender = _nc.nodeId;
-			_msgTmp.destination = _msg.sender;
-			sendRoute(_msgTmp);
-		}
-
-		if (command == C_INTERNAL) {
-			if (type == I_FIND_PARENT_RESPONSE) {
-				if (_autoFindParent) {
-					// We've received a reply to a FIND_PARENT message. Check if the distance is
-					// shorter than we already have.
-					uint8_t distance = _msg.getByte();
-					if (isValidDistance(distance))
-					{
-						// Distance to gateway is one more for us w.r.t. parent
-						distance++;
-						if (isValidDistance(distance) && (distance < _nc.distance)) {
-							// Found a neighbor closer to GW than previously found
-							_nc.distance = distance;
-							_nc.parentNodeId = _msg.sender;
-							hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _nc.parentNodeId);
-							hwWriteConfig(EEPROM_DISTANCE_ADDRESS, _nc.distance);
-							debug(PSTR("parent=%d, d=%d\n"), _nc.parentNodeId, _nc.distance);
-						}
-					}
-				}
-				return;
-			#ifdef MY_SIGNING_FEATURE
-			} else if (type == I_GET_NONCE) {
-				if (signer.getNonce(_msg)) {
-					sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
-				}
-				return false; // Nonce exchange is an internal MySensor protocol message, no need to inform caller about this
-			} else if (type == I_REQUEST_SIGNING) {
-				if (_msg.getBool()) {
-					// We received an indicator that the sender require us to sign all messages we send to it
-					SET_SIGN(_msg.sender);
-				} else {
-					// We received an indicator that the sender does not require us to sign all messages we send to it
-					CLEAR_SIGN(_msg.sender);
-				}
-				// Save updated table
-				hwWriteConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
-
-				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
-				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
-				// to sign it's messages
-				if (MY_GATEWAY_FEATURE) {
-					if (signer.requestSignatures() && DO_SIGN(_msg.sender))
-						sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
-					else
-						sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
-				}
-				return; // Signing request is an internal MySensor protocol message, no need to inform caller about this
-			} else if (type == I_GET_NONCE_RESPONSE) {
-				return; // Just pass along nonce silently (no need to call callback for these)
-			#endif
-			} else if (sender == GATEWAY_ADDRESS) {
-				if (type == I_ID_RESPONSE && _nc.nodeId == AUTO) {
-					_nc.nodeId = _msg.getByte();
-					if (_nc.nodeId == AUTO) {
-						// sensor net gateway will return max id if all sensor id are taken
-						debug(PSTR("full\n"));
-						while (1); // Wait here. Nothing else we can do...
-					}
-					setupNode();
-					// Write id to EEPROM
-					hwWriteConfig(EEPROM_NODE_ID_ADDRESS, _nc.nodeId);
-					debug(PSTR("id=%d\n"), _nc.nodeId);
-				} else {
-					processInternalMessages();
-				}
-				return;
-			}
-		}
-		#ifdef MY_OTA_FIRMWARE_FEATURE
-		else if (command == C_STREAM) {
-			if (type == ST_FIRMWARE_CONFIG_RESPONSE) {
-				NodeFirmwareConfig *firmwareConfigResponse = (NodeFirmwareConfig *)_msg.data;
-				// compare with current node configuration, if they differ, start fw fetch process
-				if (memcmp(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
-					debug(PSTR("fw update\n"));
-					// copy new FW config
-					memcpy(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
-					// Init flash
-					if (!_flash.initialize()) {
-						debug(PSTR("flash init fail\n"));
-						_fwUpdateOngoing = false;
-					} else {
-						// erase lower 32K -> max flash size for ATMEGA328
-						_flash.blockErase32K(0);
-						// wait until flash erased
-						while ( _flash.busy() );
-						_fwBlock = _fc.blocks;
-						_fwUpdateOngoing = true;
-						// reset flags
-						_fwRetry = MY_OTA_RETRY+1;
-						_fwLastRequestTime = 0;
-					}
-					return ;
-				} else debug(PSTR("fw update skipped\n"));
-			} else if (type == ST_FIRMWARE_RESPONSE) {
-				if (_fwUpdateOngoing) {
-					// Save block to flash
-					debug(PSTR("fw block %d\n"), _fwBlock);
-					// extract FW block
-					ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)_msg.data;
-					// write to flash
-					_flash.writeBytes( ((_fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
-					// wait until flash written
-					while ( _flash.busy() );
-					_fwBlock--;
-					if (!_fwBlock) {
-						// We're finished! Do a checksum and reboot.
-						_fwUpdateOngoing = false;
-						if (isValidFirmware()) {
-							debug(PSTR("fw checksum ok\n"));
-							// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)	
-							uint16_t fwsize = FIRMWARE_BLOCK_SIZE * _fc.blocks;
-							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(fwsize >> 8),fwsize,':'};
-							_flash.writeBytes(0, OTAbuffer, 10);
-							// Write the new firmware config to eeprom
-							hwWriteConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
-							hwReboot();
-						} else {
-							debug(PSTR("fw checksum fail\n"));
-						}
-					}		
-					// reset flags
-					_fwRetry = MY_OTA_RETRY+1;
-					_fwLastRequestTime = 0;
-				} else {
-					debug(PSTR("No fw update ongoing\n"));
-				}
-				return;
-			}
-
-		}
-		#endif
-		// Call incoming message callback if available
-		if (_msgCallback != NULL) {
-			_msgCallback(_msg);
-		}
-		return;
-	} else if (MY_IS_REPEATER && _nc.nodeId != AUTO) {
-		// If this node have an id, relay the message
-		if (command == C_INTERNAL && type == I_FIND_PARENT) {
-			if (sender != _nc.parentNodeId) {
-				if (_nc.distance == DISTANCE_INVALID)
-					findParentNode();
-
-				if (_nc.distance != DISTANCE_INVALID) {
-					// Relaying nodes should always answer ping messages
-					// Wait a random delay of 0-2 seconds to minimize collision
-					// between ping ack messages from other relaying nodes
-					wait(hwMillis() & 0x3ff);
-					sendWrite(sender, build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
-				}
-			}
-		} else if (to == _nc.nodeId) {
-			// We should try to relay this message to another node
-			sendRoute(_msg);
-		}
-	}
-	#endif
-}
-
-
+// Message delivered through _msg
 void processInternalMessages() {
 	bool isMetric;
 	uint8_t type = _msg.type;
@@ -938,8 +233,12 @@ void processInternalMessages() {
 		isMetric = _msg.getString()[0] == 'M' ;
 		_cc.isMetric = isMetric;
 		hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
-	} else if (type == I_CHILDREN) {
-		if (MY_IS_REPEATER && _msg.getString()[0] == 'C') {
+	} else if (type == I_TIME && _timeCallback != NULL) {
+		// Deliver time to callback
+		_timeCallback(_msg.getULong());
+	}
+	#if defined(MY_REPEATER_FEATURE)
+		if (type == I_CHILDREN && _msg.getString()[0] == 'C') {
 			// Clears child relay data for this node
 			debug(PSTR("clear\n"));
 			uint8_t i = 255;
@@ -950,26 +249,19 @@ void processInternalMessages() {
 			hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, 0xFF);
 			hwWriteConfig(EEPROM_DISTANCE_ADDRESS, 0xFF);
 			// Find parent node
-			findParentNode();
+			transportFindParentNode();
 			sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
 		}
-	} else if (type == I_TIME) {
-		if (_timeCallback != NULL) {
-			// Deliver time to callback
-			_timeCallback(_msg.getULong());
-		}
-	}
+	#endif
 }
 
 
-#if defined (MY_REPEATER_FEATURE)
 void saveState(uint8_t pos, uint8_t value) {
 	hwWriteConfig(EEPROM_LOCAL_CONFIG_ADDRESS+pos, value);
 }
 uint8_t loadState(uint8_t pos) {
 	return hwReadConfig(EEPROM_LOCAL_CONFIG_ADDRESS+pos);
 }
-#endif
 
 void wait(unsigned long ms) {
 	unsigned long enter = hwMillis();
@@ -1029,31 +321,5 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 }
 
 
-#ifdef MY_INCLUSION_MODE_FEATURE
-void setInclusionMode(boolean newMode) {
-  if (newMode != inclusionMode) {
-    inclusionMode = newMode;
-    // Send back mode change to controller
-    gatewayTransportSend(buildGw(_msg, I_INCLUSION_MODE).set(inclusionMode?1:0));
-    if (inclusionMode) {
-    	inclusionStartTime = hwMillis();
-    }
-  }
-}
-
-void checkInclusionMode() {
-	#ifdef MY_INCLUSION_BUTTON_FEATURE
-	if (!inclusionMode && digitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == LOW) {
-		// Start inclusion mode
-		setInclusionMode(true);
-	}
-	#endif
-
-	if (inclusionMode && hwMillis()-inclusionStartTime>MY_INCLUSION_MODE_DURATION*1000L) {
-		// inclusionTimeInMinutes minute(s) has passed.. stop inclusion mode
-		setInclusionMode(false);
-	}
-}
-#endif
 
 

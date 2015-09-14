@@ -26,7 +26,7 @@ MyMessage _serialMsg;
 
 
 
-bool gatewayTransportBegin() {
+bool gatewayTransportInit() {
 	return true;
 }
 

@@ -35,23 +35,11 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-
-
-
 #ifdef MY_DEBUG
 #define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
 #else
 #define debug(x,...)
 #endif
-
-#ifdef WITH_LEDS_BLINKING_INVERSE
-#define LED_ON 0x1
-#define LED_OFF 0x0
-#else
-#define LED_ON 0x0
-#define LED_OFF 0x1
-#endif
-
 
 // EEPROM start address for mysensors library data
 #define EEPROM_START 0
@@ -70,8 +58,8 @@
 #define EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS (EEPROM_FIRMWARE_CRC_ADDRESS+2)
 #define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS+32) // First free address for sketch static configuration
 
-// Search for a new parent node after this many transmission failures
-#define SEARCH_FAILURES  5
+// This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
+#define GATEWAY_ADDRESS ((uint8_t)0)
 
 
 struct NodeConfig
@@ -86,65 +74,15 @@ struct ControllerConfig {
 };
 
 
-// Size of each firmware block
-#define FIRMWARE_BLOCK_SIZE	16
-// Number of times a firmware block should be requested before giving up
-#define FIRMWARE_MAX_REQUESTS 5
-// Number of times to request a fw block before giving up
-#define MY_OTA_RETRY 5
-// Number of millisecons before re-request a fw block
-#define MY_OTA_RETRY_DELAY 500
-// Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
-#define FIRMWARE_START_OFFSET 10
-// Bootloader version
-#define MY_OTA_BOOTLOADER_MAJOR_VERSION 3
-#define MY_OTA_BOOTLOADER_MINOR_VERSION 0
-#define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)
-
-
-// FW config structure, stored in eeprom
-typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t blocks;
-	uint16_t crc;
-} __attribute__((packed)) NodeFirmwareConfig;
-
-typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t blocks;
-	uint16_t crc;
-	uint16_t BLVersion;
-} __attribute__((packed)) RequestFirmwareConfig;
-
-typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t block;
-} __attribute__((packed)) RequestFWBlock;
-
-typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t block;
-	uint8_t data[FIRMWARE_BLOCK_SIZE];
-} __attribute__((packed)) ReplyFWBlock;
-
-
-
 /**
-* Begin operation of the MySensors library
+* Set the callback method for incoming messages
 *
-* Call this in setup(), before calling any other sensor net library methods.
-* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses. Default is NULL.
+* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses.
 */
-
-
 void dataCallback(void (* msgCallback)(const MyMessage &)=NULL);
 
 /**
- * Return the nodes nodeId.
+ * Return this nodes id.
  */
 uint8_t getNodeId();
 
@@ -284,47 +222,46 @@ bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
 
-
 /******  PRIVATE ********/
+
 void begin();
 
 void process(void);
 
 void processInternalMessages();
 
-#ifdef MY_LEDS_BLINKING_FEATURE
-	/**
-	 * Blink with LEDs
-	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
-	 */
-	void rxBlink(uint8_t cnt);
-	void txBlink(uint8_t cnt);
-	void errBlink(uint8_t cnt);
-	void handleLedsBlinking(); // do the actual blinking
-#endif
-
-#ifdef MY_OTA_FIRMWARE_FEATURE
-	// do a crc16 on the whole received firmware
-	bool isValidFirmware();
-#endif
-
-
-#ifdef MY_INCLUSION_MODE_FEATURE
-	void setInclusionMode(bool newMode);
-	void checkInclusionMode();
-	unsigned long inclusionStartTime;
-	bool inclusionMode;
-#endif
-
-
 boolean sendRoute(MyMessage &message);
-#if defined(MY_RADIO_FEATURE)
-	boolean sendWrite(uint8_t dest, MyMessage &message);
-	void requestNodeId();
-	void setupNode();
-	void findParentNode();
+
+extern NodeConfig _nc;
+extern MyMessage _msg;  // Buffer for incoming messages.
+extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces among others).
+extern void (*_msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
+#ifdef MY_DEBUG
+	extern char convBuf[MAX_PAYLOAD*2+1];
 #endif
 
+// Inline function and macros
+static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
+	msg.sender = sender;
+	msg.destination = destination;
+	msg.sensor = sensor;
+	msg.type = type;
+	mSetCommand(msg,command);
+	mSetRequestAck(msg,enableAck);
+	mSetAck(msg,false);
+	return msg;
+}
+
+static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
+	msg.sender = GATEWAY_ADDRESS;
+	msg.destination = GATEWAY_ADDRESS;
+	msg.sensor = 0;
+	msg.type = type;
+	mSetCommand(msg, C_INTERNAL);
+	mSetRequestAck(msg, false);
+	mSetAck(msg, false);
+	return msg;
+}
 
 
 #endif

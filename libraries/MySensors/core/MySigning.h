@@ -30,6 +30,12 @@
 #include <stdint.h>
 #include "MyMessage.h"
 
+
+// Macros for manipulating signing requirement table
+#define DO_SIGN(node) (node == 0 ? (~_doSign[0]&1) : (~_doSign[node>>4]&(node%16)))
+#define SET_SIGN(node) (node == 0 ? (_doSign[0]&=~1) : (_doSign[node>>4]&=~(node%16)))
+#define CLEAR_SIGN(node) (node == 0 ? (_doSign[0]|=1) : (_doSign[node>>4]|=(node%16)))
+
 class MySigning
 { 
 public:

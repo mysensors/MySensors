@@ -23,19 +23,33 @@
 #include "MyConfig.h"
 #include "MyMessage.h"
 #include "MyProtocol.h"
+#include "MySensorCore.h"
+
+// Common gateway functions
+
+void gatewayTransportProcess();
 
 
+// Gateway "interface" functions
 
-// initialize the driver
-bool gatewayTransportBegin();
+/**
+ * initialize the driver
+ */
+bool gatewayTransportInit();
 
-// Send message to controller
+/**
+ * Send message to controller
+ */
 bool gatewayTransportSend(MyMessage &message);
 
-// Check if a new message is available from controller
+/*
+ * Check if a new message is available from controller
+ */
 bool gatewayTransportAvailable();
 
-// Pick up last message received from controller
+/*
+ * Pick up last message received from controller
+ */
 MyMessage& gatewayTransportReceive();
 
 #endif /* MyGatewayTransportEthernet_h */

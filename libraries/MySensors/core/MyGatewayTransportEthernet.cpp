@@ -35,7 +35,7 @@ MyMessage _ethernetMsg;
 #endif /* USE_UDP */
 
 
-bool gatewayTransportBegin() {
+bool gatewayTransportInit() {
 #ifdef MY_IP_ADDRESS
 	Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
 #else

@@ -27,12 +27,4 @@
 #include "drivers/SPI/SPI.h"
 
 
-bool transportInit();
-void transportSetAddress(uint8_t address);
-uint8_t transportGetAddress();
-bool transportSend(uint8_t to, const void* data, uint8_t len);
-bool transportAvailable(uint8_t *to);
-uint8_t transportReceive(void* data);
-void transportPowerDown();
-
 #endif

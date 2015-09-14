@@ -95,9 +95,9 @@
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-//#define MY_WITH_LEDS_BLINKING
+//#define MY_LEDS_BLINKING_FEATURE
 
-// The following setting allows you to inverse the blinking feature WITH_LEDS_BLINKING
+// The following setting allows you to inverse the blinking feature MY_LEDS_BLINKING_FEATURE
 // When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
 // off when blinking
 

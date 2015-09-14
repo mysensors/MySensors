@@ -45,6 +45,19 @@
 	#include "core/MyHwATMega328.cpp"
 #endif
 
+// LEDS
+#if defined(MY_LEDS_BLINKING_FEATURE)
+	#include "core/MyLeds.cpp"
+#else
+	#include "core/MyLeds.h"
+#endif
+
+// INCLUSION MODE
+#if defined(MY_INCLUSION_MODE_FEATURE)
+	#include "core/MyInclusionMode.cpp"
+#endif
+
+
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
 	#include "MySigning.cpp"
@@ -60,42 +73,21 @@
 	#endif
 #endif
 
-// RADIO
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
-	#define MY_RADIO_FEATURE
-	// SOFTSPI
-	#ifdef MY_SOFTSPI
-		#if defined(ARDUINO_ARCH_ESP8266)
-			#error Soft SPI is not available on ESP8266
-		#endif
-		#include "drivers/AVR/DigitalIO/SoftI2cMaster.cpp"
-		#include "drivers/AVR/DigitalIO/PinIO.cpp"
-	#endif
-
-	// FLASH
-	#ifdef MY_OTA_FIRMWARE_FEATURE
-		#include "drivers/SPIFlash/SPIFlash.cpp"
-		SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
-	#endif
-
-	#if defined(MY_RADIO_NRF24)
-		#include "drivers/RF24/RF24.cpp"
-		#include "core/MyTransportNRF24.cpp"
-	#elif defined(MY_RADIO_RFM69)
-		#include "drivers/RFM69/RFM69.cpp"
-		#include "core/MyTransportRFM69.cpp"
-	#endif
-#endif
 
 
 // GATEWAY - TRANSPORT
 #if defined(MY_GATEWAY_FEATURE)
+	// GATEWAY - COMMON FUNCTIONS
+	#include "core/MyGatewayTransport.cpp"
+
 	// GATEWAY - PROTOCOL
 	#if defined(MY_GATEWAY_PROTOCOL_DEFAULT)
 		#include "core/MyProtocolDefault.cpp"
 	#else
 		#error No gateway protocol specified!
 	#endif
+
+	// GATEWAY - CONFIGURATION
 	#if defined(MY_RADIO_FEATURE)
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
@@ -108,6 +100,7 @@
 	#endif
 
 	#if defined(MY_GATEWAY_W5100)
+		// GATEWAY - W5100
 		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
 		#include "drivers/AVR/Ethernet_W5100/utility/w5100.cpp"
 		#include "drivers/AVR/Ethernet_W5100/DNS.cpp"
@@ -126,6 +119,7 @@
 			// What do we do here?
 		#endif
 	#elif defined(MY_GATEWAY_ENC28J60)
+		// GATEWAY - ENC28J60
 		#undef MY_USE_UDP // Will not fit (or compile) on ENC28J60
 		#include "drivers/AVR/Ethernet_UIP/src/utility/uipethernet-conf.h"
 		#include "drivers/AVR/Ethernet_UIP/src/utility/uip-conf.h"
@@ -143,6 +137,7 @@
 
 		#include "core/MyGatewayTransportEthernet.cpp"
 	#elif defined(MY_GATEWAY_SERIAL)
+		// GATEWAY - SERIAL
 		#include "core/MyGatewayTransportSerial.cpp"
 	#endif
 #else
@@ -174,6 +169,34 @@
 #else
 	#define	MY_IS_GATEWAY false
 #endif
+
+// RADIO
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
+	#define MY_RADIO_FEATURE
+	// SOFTSPI
+	#ifdef MY_SOFTSPI
+		#if defined(ARDUINO_ARCH_ESP8266)
+			#error Soft SPI is not available on ESP8266
+		#endif
+		#include "drivers/AVR/DigitalIO/SoftI2cMaster.cpp"
+		#include "drivers/AVR/DigitalIO/PinIO.cpp"
+	#endif
+
+	// FLASH
+	#ifdef MY_OTA_FIRMWARE_FEATURE
+		#include "drivers/SPIFlash/SPIFlash.cpp"
+		SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
+	#endif
+	#include "core/MyTransport.cpp"
+	#if defined(MY_RADIO_NRF24)
+		#include "drivers/RF24/RF24.cpp"
+		#include "core/MyTransportNRF24.cpp"
+	#elif defined(MY_RADIO_RFM69)
+		#include "drivers/RFM69/RFM69.cpp"
+		#include "core/MyTransportRFM69.cpp"
+	#endif
+#endif
+
 
 
 #include "core/MyMessage.cpp"

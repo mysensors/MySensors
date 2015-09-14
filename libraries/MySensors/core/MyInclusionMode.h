@@ -17,19 +17,19 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyTransportNRF24_h
-#define MyTransportNRF24_h
+#ifndef MyInclusionMode_h
+#define MyInclusionMode_h
 
-#include "MyConfig.h"
-#include "MyTransport.h"
-#include <stdint.h>
-#include "drivers/RF24/RF24.h"
-#include "drivers/RF24/RF24_config.h"
+#include "MySensorCore.h"
 
-#define TO_ADDR(x) (MY_RF24_BASE_RADIO_ID + x)
+unsigned long inclusionStartTime;
+bool inclusionMode;
 
-#define WRITE_PIPE ((uint8_t)0)
-#define CURRENT_NODE_PIPE ((uint8_t)1)
-#define BROADCAST_PIPE ((uint8_t)2)
+extern bool gatewayTransportSend(MyMessage &message);
+
+void inclusionInit();
+void inclusionModeSet(boolean newMode);
+void inclusionProcess();
+
 
 #endif
