@@ -25,6 +25,7 @@
 // #pragma message(VAR_NAME_VALUE(MY_GATEWAY_FEATURE))
 
 #include "MyConfig.h"
+#include "core/MySensorCore.h"
 
 #if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60)
 	#define MY_GATEWAY_FEATURE
@@ -60,16 +61,19 @@
 
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-	#include "MySigning.cpp"
+	// SIGNING COMMON FUNCTIONS
+	#include "core/MySigning.cpp"
 	#define MY_SIGNING_FEATURE
+	#if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)
+		#error Only one signing engine can be activated
+	#endif
+
 	#if defined(MY_SIGNING_ATSHA204)
-		#include "MySigningAtsha204.cpp"
+		#include "core/MySigningAtsha204.cpp"
 		#include "drivers/ATSHA204/ATSHA204.cpp"
-		MySigningAtsha204 signer;
 	#elif defined(MY_SIGNING_SOFT)
-		#include "MySigningAtsha204Soft.cpp"
+		#include "core/MySigningAtsha204Soft.cpp"
 		#include "drivers/ATSHA204/sha256.cpp"
-		MySigningAtsha204Soft signer;
 	#endif
 #endif
 
@@ -144,31 +148,6 @@
 	#undef MY_GATEWAY_FEATURE
 #endif
 
-// Make sure to disable child features when parent feature is disabled
-#if !defined(MY_RADIO_FEATURE)
-	#undef MY_OTA_FIRMWARE_FEATURE
-	#undef MY_REPEATER_FEATURE
-	#undef MY_SECURE_NODE_WHITELISTING
-	#undef MY_SIGNING_FEATURE
-#endif
-
-#if !defined(MY_GATEWAY_FEATURE)
-	#undef MY_INCLUSION_MODE_FEATURE
-	#undef MY_INCLUSION_BUTTON_FEATURE
-#endif
-
-// Defines used in code for if-statements
-#if defined(MY_REPEATER_FEATURE)
-	#define	MY_IS_REPEATER true
-#else
-	#define	MY_IS_REPEATER false
-#endif
-
-#if defined(MY_GATEWAY_FEATURE)
-	#define	MY_IS_GATEWAY true
-#else
-	#define	MY_IS_GATEWAY false
-#endif
 
 // RADIO
 #if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
@@ -188,6 +167,9 @@
 		SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 	#endif
 	#include "core/MyTransport.cpp"
+	#if defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)
+		#error Only one radio driver can be activated
+	#endif
 	#if defined(MY_RADIO_NRF24)
 		#include "drivers/RF24/RF24.cpp"
 		#include "core/MyTransportNRF24.cpp"
@@ -196,6 +178,20 @@
 		#include "core/MyTransportRFM69.cpp"
 	#endif
 #endif
+
+// Make sure to disable child features when parent feature is disabled
+#if !defined(MY_RADIO_FEATURE)
+	#undef MY_OTA_FIRMWARE_FEATURE
+	#undef MY_REPEATER_FEATURE
+	#undef MY_SIGNING_NODE_WHITELISTING
+	#undef MY_SIGNING_FEATURE
+#endif
+
+#if !defined(MY_GATEWAY_FEATURE)
+	#undef MY_INCLUSION_MODE_FEATURE
+	#undef MY_INCLUSION_BUTTON_FEATURE
+#endif
+
 
 
 
@@ -209,10 +205,10 @@ extern void loop();
 // Initialize library and handle sketch functions like we want to
 int main() {
 	init();  // Init Arduino
-	begin(); // Startup MySensors library
+	_begin(); // Startup MySensors library
 	setup(); // Call sketch setup
 	while(1) {
-		process();  // Process incoming data
+		_process();  // Process incoming data
 		loop(); // Call sketch loop
 		if (serialEventRun) serialEventRun();
 	}

@@ -23,6 +23,9 @@
 bool _autoFindParent;
 uint8_t _failedTransmissions;
 
+#ifdef MY_SIGNING_FEATURE
+	bool _signingNonceStatus;
+#endif
 
 #ifdef MY_OTA_FIRMWARE_FEATURE
 	NodeFirmwareConfig _fc;
@@ -60,14 +63,14 @@ inline void transportProcess() {
 			firmwareRequest->type = _fc.type;
 			firmwareRequest->version = _fc.version;
 			firmwareRequest->block = (_fwBlock - 1);
-			sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
+			_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
 		}
 		#endif
 		return;
 	}
 
 	#ifdef MY_SIGNING_FEATURE
-	(void)signer.checkTimer(); // Manage signing timeout
+	(void)signerCheckTimer(); // Manage signing timeout
 	#endif
 
 	uint8_t len = transportReceive((uint8_t *)&_msg);
@@ -77,29 +80,31 @@ inline void transportProcess() {
 	#ifdef MY_SIGNING_FEATURE
 		// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 		// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
-		if (signer.requestSignatures() && _msg.destination == _nc.nodeId && mGetLength(_msg) && !mGetAck(_msg) &&
-			(mGetCommand(_msg) != C_INTERNAL ||
-			 (_msg.type != I_GET_NONCE_RESPONSE && _msg.type != I_GET_NONCE && _msg.type != I_REQUEST_SIGNING &&
-			  _msg.type != I_ID_REQUEST && _msg.type != I_ID_RESPONSE &&
-			  _msg.type != I_FIND_PARENT && _msg.type != I_FIND_PARENT_RESPONSE))) {
-			if (!mGetSigned(_msg)) {
-				// Got unsigned message that should have been signed
-				debug(PSTR("no sign\n"));
-				ledBlinkErr(1);
-				return;
+		#ifdef MY_SIGNING_REQUEST_SIGNATURES
+			if (_msg.destination == _nc.nodeId && mGetLength(_msg) && !mGetAck(_msg) &&
+				(mGetCommand(_msg) != C_INTERNAL ||
+				 (_msg.type != I_GET_NONCE_RESPONSE && _msg.type != I_GET_NONCE && _msg.type != I_REQUEST_SIGNING &&
+				  _msg.type != I_ID_REQUEST && _msg.type != I_ID_RESPONSE &&
+				  _msg.type != I_FIND_PARENT && _msg.type != I_FIND_PARENT_RESPONSE))) {
+				if (!mGetSigned(_msg)) {
+					// Got unsigned message that should have been signed
+					debug(PSTR("no sign\n"));
+					ledBlinkErr(1);
+					return;
+				}
+				else if (!signerVerifyMsg(_msg)) {
+					debug(PSTR("verify fail\n"));
+					ledBlinkErr(1);
+					return; // This signed message has been tampered with!
+				}
 			}
-			else if (!signer.verifyMsg(_msg)) {
-				debug(PSTR("verify fail\n"));
-				ledBlinkErr(1);
-				return; // This signed message has been tampered with!
-			}
-		}
+		#endif
 	#endif
 
 	// Add string termination, good if we later would want to print it.
 	_msg.data[mGetLength(_msg)] = '\0';
 	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
-				_msg.sender, _msg.last, _msg.destination, _msg.sensor, mGetCommand(_msg), _msg.type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(convBuf));
+				_msg.sender, _msg.last, _msg.destination, _msg.sensor, mGetCommand(_msg), _msg.type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
 	mSetSigned(_msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
 
 	if(!(mGetVersion(_msg) == PROTOCOL_VERSION)) {
@@ -132,7 +137,7 @@ inline void transportProcess() {
 			mSetAck(_msgTmp,true);
 			_msgTmp.sender = _nc.nodeId;
 			_msgTmp.destination = _msg.sender;
-			sendRoute(_msgTmp);
+			_sendRoute(_msgTmp);
 		}
 
 		if (command == C_INTERNAL) {
@@ -158,10 +163,10 @@ inline void transportProcess() {
 				return;
 			#ifdef MY_SIGNING_FEATURE
 			} else if (type == I_GET_NONCE) {
-				if (signer.getNonce(_msg)) {
-					sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
+				if (signerGetNonce(_msg)) {
+					_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
 				}
-				return false; // Nonce exchange is an internal MySensor protocol message, no need to inform caller about this
+				return; // Nonce exchange is an internal MySensor protocol message, no need to inform caller about this
 			} else if (type == I_REQUEST_SIGNING) {
 				if (_msg.getBool()) {
 					// We received an indicator that the sender require us to sign all messages we send to it
@@ -176,14 +181,22 @@ inline void transportProcess() {
 				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
 				// to sign it's messages
-				if (MY_GATEWAY_FEATURE) {
-					if (signer.requestSignatures() && DO_SIGN(_msg.sender))
-						sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
-					else
-						sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
-				}
+				#if defined (MY_GATEWAY_FEATURE)
+					#ifdef MY_SIGNING_REQUEST_SIGNATURES
+						if (DO_SIGN(_msg.sender))
+							_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
+						else
+							_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+					#else
+						_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+					#endif
+				#endif
 				return; // Signing request is an internal MySensor protocol message, no need to inform caller about this
 			} else if (type == I_GET_NONCE_RESPONSE) {
+				// Proceed with signing if nonce has been received
+				if (signerPutNonce(_msg) && signerSignMsg(_msgSign)) {
+					_signingNonceStatus = SIGN_OK;
+				}
 				return; // Just pass along nonce silently (no need to call callback for these)
 			#endif
 			} else if (sender == GATEWAY_ADDRESS) {
@@ -199,7 +212,7 @@ inline void transportProcess() {
 					hwWriteConfig(EEPROM_NODE_ID_ADDRESS, _nc.nodeId);
 					debug(PSTR("id=%d\n"), _nc.nodeId);
 				} else {
-					processInternalMessages();
+					_processInternalMessages();
 				}
 				return;
 			}
@@ -292,7 +305,7 @@ inline void transportProcess() {
 				}
 			} else if (to == _nc.nodeId) {
 				// We should try to relay this message to another node
-				sendRoute(_msg);
+				_sendRoute(_msg);
 			}
 		}
 	#endif
@@ -327,7 +340,7 @@ boolean transportSendWrite(uint8_t to, MyMessage &message) {
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
 			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
-			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(convBuf));
+			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(_convBuf));
 
 	return ok;
 }
@@ -356,103 +369,101 @@ boolean transportSendRoute(MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 
 	#ifdef MY_SIGNING_FEATURE
-	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-	if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) && mGetLength(message) &&
-		(mGetCommand(message) != C_INTERNAL ||
-		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
-		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
-		  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
-		bool signOk = false;
-		// Send nonce-request
-		if (!sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
-			debug(PSTR("nonce tr err\n"));
-			return false;
-		}
-		// We have to wait for the nonce to arrive before we can sign our original message
-		// Other messages could come in-between. We trust process() takes care of them
-		unsigned long enter = hwMillis();
-		_msgSign = message; // Copy the message to sign since message buffer might be touched in process()
-		while (hwMillis() - enter < MY_VERIFICATION_TIMEOUT_MS) {
-			if (process()) {
-				if (mGetCommand(getLastMessage()) == C_INTERNAL && getLastMessage().type == I_GET_NONCE_RESPONSE) {
-					// Proceed with signing if nonce has been received
-					if (signer.putNonce(getLastMessage()) && signer.signMsg(_msgSign)) {
-						message = _msgSign; // Write the signed message back
-						signOk = true;
-					}
-					break;
-				}
+		// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
+		if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) && mGetLength(message) &&
+			(mGetCommand(message) != C_INTERNAL ||
+			 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
+			  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
+			  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
+			bool signing = SIGN_WAITING_FOR_NONCE;
+			// Send nonce-request
+			if (!_sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
+				debug(PSTR("nonce tr err\n"));
+				return false;
 			}
+			// We have to wait for the nonce to arrive before we can sign our original message
+			// Other messages could come in-between. We trust process() takes care of them
+			unsigned long enter = hwMillis();
+			_msgSign = message; // Copy the message to sign since message buffer might be touched in process()
+
+			while (hwMillis() - enter < MY_VERIFICATION_TIMEOUT_MS && _signingNonceStatus==SIGN_WAITING_FOR_NONCE) {
+				_process();
+			}
+			if (hwMillis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
+				debug(PSTR("nonce tmo\n"));
+				ledBlinkErr(1);
+				return false;
+			}
+			if (_signingNonceStatus == SIGN_OK) {
+				message = _msgSign; // Write the signed message back
+			} else {
+				debug(PSTR("sign fail\n"));
+				ledBlinkErr(1);
+				return false;
+			}
+			// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
+			// or signature will become invalid and the message rejected by the receiver
+		} else {
+			mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
 		}
-		if (hwMillis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
-			debug(PSTR("nonce tmo\n"));
-			ledBlinkErr(1);
-			return false;
-		}
-		if (!signOk) {
-			debug(PSTR("sign fail\n"));
-			ledBlinkErr(1);
-			return false;
-		}
-		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
-		// or signature will become invalid and the message rejected by the receiver
-	} else {
-		mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
-	}
 	#endif
 
-	if (dest == GATEWAY_ADDRESS || !MY_IS_REPEATER) {
-		// Store this address in routing table (if repeater)
-		#if defined (MY_IS_REPEATER)
-			hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
-		#endif
-		// If destination is the gateway or if we aren't a repeater, let
-		// our parent take care of the message
+
+	#if !defined(MY_REPEATER_FEATURE)
+		// None repeating node... We can only send to our parent
 		ok = transportSendWrite(_nc.parentNodeId, message);
-	} else {
-		// Relay the message
-		uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS+dest);
-		if (route > GATEWAY_ADDRESS && route < BROADCAST_ADDRESS) {
-			// This message should be forwarded to a child node. If we send message
-			// to this nodes pipe then all children will receive it because the are
-			// all listening to this nodes pipe.
-			//
-			//    +----B
-			//  -A
-			//    +----C------D
-			//
-			//  We're node C, Message comes from A and has destination D
-			//
-			// Message destination is not gateway and is in routing table for this node.
-			// Send it downstream
-			return transportSendWrite(route, message);
-		} else if (sender == GATEWAY_ADDRESS && dest == BROADCAST_ADDRESS) {
-			// Node has not yet received any id. We need to send it
-			// by doing a broadcast sending,
-			return transportSendWrite(BROADCAST_ADDRESS, message);
-		} else if (MY_IS_GATEWAY) {
-			// Destination isn't in our routing table and isn't a broadcast address
-			// Nothing to do here
-			return false;
-		} else  {
-			// A message comes from a child node and we have no
-			// route for it.
-			//
-			//    +----B
-			//  -A
-			//    +----C------D    <-- Message comes from D
-			//
-			//     We're node C
-			//
-			// Message should be passed to node A (this nodes relay)
-
-			// This message should be routed back towards sensor net gateway
-			ok = transportSendWrite(_nc.parentNodeId, message);
-			// Add this child to our "routing table" if it not already exist
+	#else
+		if (dest == GATEWAY_ADDRESS) {
+			// Store this address in routing table (if repeater)
 			hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
-		}
-	}
+			// If destination is the gateway or if we aren't a repeater, let
+			// our parent take care of the message
+			ok = transportSendWrite(_nc.parentNodeId, message);
+		} else {
+			// Relay the message
+			uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS+dest);
+			if (route > GATEWAY_ADDRESS && route < BROADCAST_ADDRESS) {
+				// This message should be forwarded to a child node. If we send message
+				// to this nodes pipe then all children will receive it because the are
+				// all listening to this nodes pipe.
+				//
+				//    +----B
+				//  -A
+				//    +----C------D
+				//
+				//  We're node C, Message comes from A and has destination D
+				//
+				// Message destination is not gateway and is in routing table for this node.
+				// Send it downstream
+				return transportSendWrite(route, message);
+			} else if (sender == GATEWAY_ADDRESS && dest == BROADCAST_ADDRESS) {
+				// Node has not yet received any id. We need to send it
+				// by doing a broadcast sending,
+				return transportSendWrite(BROADCAST_ADDRESS, message);
+			}
+			#if defined (MY_GATEWAY_FEATURE)
+				// Destination isn't in our routing table and isn't a broadcast address
+				// Nothing to do here
+				return false;
+			# else
+				// A message comes from a child node and we have no
+				// route for it.
+				//
+				//    +----B
+				//  -A
+				//    +----C------D    <-- Message comes from D
+				//
+				//     We're node C
+				//
+				// Message should be passed to node A (this nodes relay)
 
+				// This message should be routed back towards sensor net gateway
+				ok = transportSendWrite(_nc.parentNodeId, message);
+				// Add this child to our "routing table" if it not already exist
+				hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
+			#endif
+		}
+	#endif
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
@@ -484,12 +495,13 @@ void transportSetupNode() {
 		if (_nc.nodeId != AUTO) {
 			#ifdef MY_SIGNING_FEATURE
 				// Notify gateway (and possibly controller) about the signing preferences of this node
-				sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(signer.requestSignatures()));
-
-				// If we do require signing, wait for the gateway to tell us how it prefer us to transmit our messages
-				if (signer.requestSignatures()) {
+				#if defined(MY_SIGNING_REQUEST_SIGNATURES)
+					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
+					// If we do require signing, wait for the gateway to tell us how it prefer us to transmit our messages
 					wait(2000);
-				}
+				#else
+					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+				#endif
 			#endif
 
 			// Send presentation for this radio node
@@ -501,7 +513,7 @@ void transportSetupNode() {
 			// Send a configuration exchange request to controller
 			// Node sends parent node. Controller answers with latest node configuration
 			// which is picked up in process()
-			sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
+			_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
 
 			// Wait configuration reply.
 			wait(2000);
@@ -516,7 +528,7 @@ void transportSetupNode() {
 				// add bootloader information
 				reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
 				_fwUpdateOngoing = false;
-				sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
+				_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
 			#endif
 		}
 	#endif

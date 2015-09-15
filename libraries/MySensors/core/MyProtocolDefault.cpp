@@ -21,8 +21,8 @@
 #include "MyProtocolDefault.h"
 #include "MyTransport.h"
 
-char fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];
-char convBuffer[MAX_PAYLOAD*2+1];
+char _fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];
+char _convBuffer[MAX_PAYLOAD*2+1];
 
 bool protocolParse(MyMessage &message, char *inputString) {
 	char *str, *p, *value=NULL;
@@ -91,8 +91,8 @@ bool protocolParse(MyMessage &message, char *inputString) {
 }
 
 char * protocolFormat(MyMessage &message) {
-	snprintf_P(fmtBuffer, MAX_FORMAT_BUFFER_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(convBuffer));
-	return fmtBuffer;
+	snprintf_P(_fmtBuffer, MAX_FORMAT_BUFFER_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(_convBuffer));
+	return _fmtBuffer;
 }
 
 uint8_t protocolH2i(char c) {

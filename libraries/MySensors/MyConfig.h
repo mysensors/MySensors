@@ -148,7 +148,7 @@
 *  Message Signing Settings
 ***********************************/
 
-// Enable one of these in sketch to use signing functionality
+// Enable one of these in sketch to use the signing functionality
 //#define MY_SIGNING_ATSHA204
 //#define MY_SIGNING_SOFT
 
@@ -168,21 +168,26 @@
 // Note that a node can still transmit a non-salted message (i.e. have white listing disabled)
 // to a node that has white listing enabled (assuming the receiver does not have a matching entry
 // for the sender in it's white list)
-//#define MY_SECURE_NODE_WHITELISTING
+//#define MY_SIGNING_NODE_WHITELIST {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 
-// MySigningAtsha204 default setting
-#ifndef MY_ATSHA204_PIN
-#define MY_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
+// Atsha204 default pin setting
+#ifndef MY_SIGNING_ATSHA204_PIN
+#define MY_SIGNING_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
 #endif
 
-// MySigningAtsha204Soft default settings
-#ifndef MY_RANDOMSEED_PIN
-#define MY_RANDOMSEED_PIN 7 // A7 - Pin used for random generation (do not connect anything to this)
+// Pin used for random generation in soft signing (do not connect anything to this when enabled)
+#ifndef MY_SIGNING_SOFT_RANDOMSEED_PIN
+#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 // A7 -
+#endif
+
+// Set the soft_serial value to an arbitrary value for proper security
+#ifndef MY_SIGNING_SOFT_SERIAL
+#define MY_SIGNING_SOFT_SERIAL 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
 #endif
 
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
-#ifndef MY_HMAC_KEY
-#define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+#ifndef MY_SIGNING_SOFT_HMAC_KEY
+#define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 #endif
 
 /**********************************

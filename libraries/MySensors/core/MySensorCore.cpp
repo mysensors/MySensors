@@ -25,7 +25,7 @@ MyMessage _msg;  // Buffer for incoming messages.
 MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among others).
 
 #ifdef MY_DEBUG
-	char convBuf[MAX_PAYLOAD*2+1];
+	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
 uint16_t _heartbeat;
@@ -33,8 +33,9 @@ void (*_timeCallback)(unsigned long); // Callback for requested time messages
 void (*_msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
 
-void process() {
+void _process() {
 	hwWatchdogReset();
+
 
 	#if defined (MY_LEDS_BLINKING_FEATURE)
 		ledsProcess();
@@ -59,11 +60,11 @@ static inline bool isValidParent( const uint8_t parent ) {
 }
 
 
-void dataCallback(void (*msgCallback)(const MyMessage &)) {
+void setIncomingCallback(void (*msgCallback)(const MyMessage &)) {
 	_msgCallback = msgCallback;
 }
 
-void begin() {
+void _begin() {
 	#if defined(MY_DISABLED_SERIAL)
 	    hwInit();
     #endif
@@ -165,7 +166,7 @@ ControllerConfig getConfig() {
 }
 
 
-boolean sendRoute(MyMessage &message) {
+boolean _sendRoute(MyMessage &message) {
 	#if defined(MY_GATEWAY_FEATURE)
 		if (message.destination == _nc.nodeId) {
 			// This is a message sent from a sensor attached on the gateway node.
@@ -185,42 +186,42 @@ bool send(MyMessage &message, bool enableAck) {
 	message.sender = _nc.nodeId;
 	mSetCommand(message,C_SET);
     mSetRequestAck(message,enableAck);
-	return sendRoute(message);
+	return _sendRoute(message);
 }
 
 void sendBatteryLevel(uint8_t value, bool enableAck) {
-	sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
+	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
 }
 
 void sendHeartbeat(void) {
-	sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT, false).set(_heartbeat++));
+	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT, false).set(_heartbeat++));
 
 }
 
 void present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
-	sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?LIBRARY_VERSION:description));
+	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?LIBRARY_VERSION:description));
 }
 
 void sendSketchInfo(const char *name, const char *version, bool enableAck) {
 	if (name != NULL) {
-		sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, enableAck).set(name));
+		_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, enableAck).set(name));
 	}
     if (version != NULL) {
-    	sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, enableAck).set(version));
+    	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, enableAck).set(version));
     }
 }
 
 void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination) {
-	sendRoute(build(_msg, _nc.nodeId, destination, childSensorId, C_REQ, variableType, false).set(""));
+	_sendRoute(build(_msg, _nc.nodeId, destination, childSensorId, C_REQ, variableType, false).set(""));
 }
 
 void requestTime(void (* timeCallback)(unsigned long)) {
 	_timeCallback = timeCallback;
-	sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
+	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
 // Message delivered through _msg
-void processInternalMessages() {
+void _processInternalMessages() {
 	bool isMetric;
 	uint8_t type = _msg.type;
 
@@ -250,7 +251,7 @@ void processInternalMessages() {
 			hwWriteConfig(EEPROM_DISTANCE_ADDRESS, 0xFF);
 			// Find parent node
 			transportFindParentNode();
-			sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
+			_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
 		}
 	#endif
 }
@@ -266,7 +267,7 @@ uint8_t loadState(uint8_t pos) {
 void wait(unsigned long ms) {
 	unsigned long enter = hwMillis();
 	while (hwMillis() - enter < ms) {
-		process();
+		_process();
 	}
 }
 
@@ -274,7 +275,8 @@ void sleep(unsigned long ms) {
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 		if (_fwUpdateOngoing) {
 			// Do not sleep node while fw update is ongoing
-			process();
+			_process();
+			return;
 		} else {
 	#endif
 		#if defined(MY_RADIO_FEATURE)
@@ -290,7 +292,6 @@ bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (_fwUpdateOngoing) {
 		// Do not sleep node while fw update is ongoing
-		process();
 		return false;
 	} else {
 	#endif
@@ -307,7 +308,6 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (_fwUpdateOngoing) {
 		// Do not sleep node while fw update is ongoing
-		process();
 		return -1;
 	} else {
 	#endif

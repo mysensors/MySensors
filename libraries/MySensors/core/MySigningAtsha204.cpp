@@ -34,6 +34,25 @@
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_SIGNING
 
+uint8_t atshaPin=MY_ATSHA204_PIN);
+ATSHA204Class atsha204;
+unsigned long timestamp;
+bool verification_ongoing;
+uint8_t current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH+SHA204_SERIAL_SZ+1];
+uint8_t temp_message[SHA_MSG_SIZE];
+uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
+uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
+void calculateSignature(MyMessage &msg);
+uint8_t* sha256(const uint8_t* data, size_t sz);
+
+#ifdef MY_SIGNING_NODE_WHITELISTING
+	uint8_t nof_whitelist_entries=0;
+	const uint8_t whitelist_entry_t* the_whitelist=NULL,
+	uint8_t whitlist_sz;
+	const whitelist_entry_t* whitelist;
+#endif
+
+
 #ifdef DEBUG_SIGNING
 #define DEBUG_SIGNING_PRINTLN(args) Serial.println(args)
 #else
@@ -60,14 +79,14 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 
 
 MySigningAtsha204::MySigningAtsha204(bool requestSignatures,
-#ifdef MY_SECURE_NODE_WHITELISTING
+#ifdef MY_SIGNING_NODE_WHITELISTING
 	uint8_t nof_whitelist_entries, const whitelist_entry_t* the_whitelist,
 #endif
 	uint8_t atshaPin)
 	:
 	MySigning(requestSignatures),
 	atsha204(atshaPin),
-#ifdef MY_SECURE_NODE_WHITELISTING
+#ifdef MY_SIGNING_NODE_WHITELISTING
 	whitelist(the_whitelist),
 	whitlist_sz(nof_whitelist_entries),
 #endif
@@ -142,7 +161,7 @@ bool MySigningAtsha204::signMsg(MyMessage &msg) {
 	mSetSigned(msg, 1); // make sure signing flag is set before signature is calculated
 	calculateSignature(msg);
 
-#ifdef MY_SECURE_NODE_WHITELISTING
+#ifdef MY_SIGNING_NODE_WHITELISTING
 	// Salt the signature with the senders nodeId and the unique serial of the ATSHA device
 	memcpy(current_nonce, &rx_buffer[SHA204_BUFFER_POS_DATA], 32); // We can reuse the nonce buffer now since it is no longer needed
 	current_nonce[32] = msg.sender;
@@ -180,7 +199,7 @@ bool MySigningAtsha204::verifyMsg(MyMessage &msg) {
 		DEBUG_SIGNING_PRINTBUF(F("SIM:"), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg)); // SIM = Signature in message
 		calculateSignature(msg); // Get signature of message
 
-#ifdef MY_SECURE_NODE_WHITELISTING
+#ifdef MY_SIGNING_NODE_WHITELISTING
 		// Look up the senders nodeId in our whitelist and salt the signature with that data
 		for (int j=0; j < whitlist_sz; j++) {
 			if (whitelist[j].nodeId == msg.sender) {
@@ -200,7 +219,7 @@ bool MySigningAtsha204::verifyMsg(MyMessage &msg) {
 		// Compare the caluclated signature with the provided signature
 		if (memcmp(&msg.data[mGetLength(msg)], &rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg))) {
 			DEBUG_SIGNING_PRINTBUF(F("SNOK:"), &rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg)); // SNOK = Signature bad
-#ifdef MY_SECURE_NODE_WHITELISTING
+#ifdef MY_SIGNING_NODE_WHITELISTING
 			DEBUG_SIGNING_PRINTLN(F("W?")); // W? = Is the sender whitelisted?
 #endif
 			return false; 

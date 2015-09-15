@@ -79,7 +79,7 @@ struct ControllerConfig {
 *
 * @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses.
 */
-void dataCallback(void (* msgCallback)(const MyMessage &)=NULL);
+void setIncomingCallback(void (* msgCallback)(const MyMessage &)=NULL);
 
 /**
  * Return this nodes id.
@@ -175,11 +175,6 @@ void saveState(uint8_t pos, uint8_t value);
  */
 uint8_t loadState(uint8_t pos);
 
-/**
-* Returns the last received message
-*/
-MyMessage& getLastMessage(void);
-
 
 
 /**
@@ -224,20 +219,20 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 
 /******  PRIVATE ********/
 
-void begin();
+void _begin();
 
-void process(void);
+void _process(void);
 
-void processInternalMessages();
+void _processInternalMessages();
 
-boolean sendRoute(MyMessage &message);
+boolean _sendRoute(MyMessage &message);
 
 extern NodeConfig _nc;
 extern MyMessage _msg;  // Buffer for incoming messages.
 extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces among others).
 extern void (*_msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 #ifdef MY_DEBUG
-	extern char convBuf[MAX_PAYLOAD*2+1];
+	extern char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
 // Inline function and macros

@@ -29,65 +29,57 @@
 
 #include <stdint.h>
 #include "MyMessage.h"
+#include "drivers/ATSHA204/ATSHA204.h"
 
+#ifdef MY_SIGNING_NODE_WHITELISTING
+typedef struct {
+	uint8_t nodeId;
+	uint8_t serial[SHA204_SERIAL_SZ];
+} whitelist_entry_t;
+#endif
 
 // Macros for manipulating signing requirement table
 #define DO_SIGN(node) (node == 0 ? (~_doSign[0]&1) : (~_doSign[node>>4]&(node%16)))
 #define SET_SIGN(node) (node == 0 ? (_doSign[0]&=~1) : (_doSign[node>>4]&=~(node%16)))
 #define CLEAR_SIGN(node) (node == 0 ? (_doSign[0]|=1) : (_doSign[node>>4]|=(node%16)))
+#define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
-class MySigning
-{ 
-public:
-	// MySigning constructor.
-	// Different parameters would be needed depending on signing backend (e.g. pins connected etc.).
-	// Keeping these parameters as #define's in MyConfig to streamline the driver interface.
-	// @param requestSignatures Set this to true if you want destination node to sign all messages sent to this node. Default is not to require signing.
-	MySigning(bool requestSignatures=false);
+// Stores signing identifier and a new nonce in provided message for signing operations.
+// All space in message payload buffer is used for signing identifier and nonce.
+// Returns false if subsystem is busy processing an ongoing signing operation.
+// If successful, this marks the start of a signing operation at the receiving side so
+// implementation is expected to do any necessary initializations within this call.
+bool signerGetNonce(MyMessage &msg);
 
-	// Returns the current requestSignature setting
-	bool requestSignatures();
+// Check timeout of verification session.
+// Nonce will be purged if it takes too long for a signed message to be sent to the receiver.
+// This function should be called on regular intervals.
+bool signerCheckTimer(void);
 
-	// Stores signing identifier and a new nonce in provided message for signing operations.
-	// All space in message payload buffer is used for signing identifier and nonce.
-	// Returns false if subsystem is busy processing an ongoing signing operation.
-	// If successful, this marks the start of a signing operation at the receiving side so
-	// implementation is expected to do any necessary initializations within this call.
-	virtual bool getNonce(MyMessage &msg) = 0;
+// Get nonce from provided message and store for signing operations.
+// Returns false if subsystem is busy processing an ongoing signing operation.
+// Returns false if signing identifier found in message is not supported by the used backend.
+// If successful, this marks the start of a signing operation at the sending side so
+// implementation is expected to do any necessary initializations within this call.
+bool signerPutNonce(MyMessage &msg);
 
-	// Check timeout of verification session.
-	// Nonce will be purged if it takes too long for a signed message to be sent to the receiver.
-	// This function should be called on regular intervals.
-	virtual bool checkTimer(void) = 0;
+// Signs provided message. All remaining space in message payload buffer is used for signing
+// identifier and signature.
+// Nonce used for signature calculation is the one generated previously using getNonce().
+// Nonce will be cleared when this function is called to prevent re-use of nonce.
+// Returns false if subsystem is busy processing an ongoing signing operation.
+// Returns false if not two bytes or more of free payload space is left in provided message.
+// This ends a signing operation at the sending side so implementation is expected to do any
+// deinitializations and enter a power saving state within this call.
+bool signerSignMsg(MyMessage &msg);
 
-	// Get nonce from provided message and store for signing operations.
-	// Returns false if subsystem is busy processing an ongoing signing operation.
-	// Returns false if signing identifier found in message is not supported by the used backend.
-	// If successful, this marks the start of a signing operation at the sending side so
-	// implementation is expected to do any necessary initializations within this call.
-	virtual bool putNonce(MyMessage &msg) = 0;
-
-	// Signs provided message. All remaining space in message payload buffer is used for signing
-	// identifier and signature.
-	// Nonce used for signature calculation is the one generated previously using getNonce().
-	// Nonce will be cleared when this function is called to prevent re-use of nonce.
-	// Returns false if subsystem is busy processing an ongoing signing operation.
-	// Returns false if not two bytes or more of free payload space is left in provided message.
-	// This ends a signing operation at the sending side so implementation is expected to do any
-	// deinitializations and enter a power saving state within this call.
-	virtual bool signMsg(MyMessage &msg) = 0;
-
-	// Verifies signature in provided message.
-	// Nonce used for verification is the one previously set using putNonce().
-	// Nonce will be cleared when this function is called to prevent re-use of nonce.
-	// Returns false if subsystem is busy processing an ongoing signing operation.
-	// Returns false if signing identifier found in message is not supported by the used backend.
-	// This ends a signing operation at the receiving side so implementation is expected to do any
-	// deinitializations and enter a power saving state within this call.
-	virtual bool verifyMsg(MyMessage &msg) = 0;
-
-	public:
-		bool _requestSignatures;
-};
+// Verifies signature in provided message.
+// Nonce used for verification is the one previously set using putNonce().
+// Nonce will be cleared when this function is called to prevent re-use of nonce.
+// Returns false if subsystem is busy processing an ongoing signing operation.
+// Returns false if signing identifier found in message is not supported by the used backend.
+// This ends a signing operation at the receiving side so implementation is expected to do any
+// deinitializations and enter a power saving state within this call.
+bool signerVerifyMsg(MyMessage &msg);
 
 #endif

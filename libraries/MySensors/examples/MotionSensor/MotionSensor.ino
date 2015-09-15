@@ -29,7 +29,9 @@
 
 //#define MY_DEBUG
 
-#define MY_RADIO_NRF24  // MY_RADIO_RFM69
+// Enable and select radio type
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
 
 //#define MY_SOFTSPI
 //#define MY_OTA_FIRMWARE_FEATURE

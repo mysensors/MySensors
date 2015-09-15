@@ -23,11 +23,3 @@
 uint16_t _doSign[16]; // Bitfield indicating which sensors require signed communication
 MyMessage _msgSign;  // Buffer for message to sign.
 
-
-MySigning::MySigning(bool requestSignatures) : _requestSignatures(requestSignatures) {
-}
-
-
-bool MySigning::requestSignatures() {
-	return _requestSignatures;
-}

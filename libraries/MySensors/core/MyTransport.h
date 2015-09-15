@@ -41,6 +41,9 @@
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5
 
+// Status when waiting for signing nonce in process
+enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
+
 
 // FW config structure, stored in eeprom
 typedef struct {
