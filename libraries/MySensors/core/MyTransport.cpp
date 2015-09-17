@@ -300,7 +300,7 @@ inline void transportProcess() {
 						// Wait a random delay of 0-2 seconds to minimize collision
 						// between ping ack messages from other relaying nodes
 						wait(hwMillis() & 0x3ff);
-						sendWrite(sender, build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
+						transportSendWrite(sender, build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
 					}
 				}
 			} else if (to == _nc.nodeId) {

@@ -43,7 +43,7 @@ inline void gatewayTransportProcess() {
 					inclusionModeSet(atoi(_msg.data) == 1);
 				#endif
 				} else {
-					processInternalMessages();
+					_processInternalMessages();
 				}
 			} else {
 				// Call incoming message callback if available

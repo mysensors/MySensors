@@ -26,7 +26,10 @@
  * This example will remember lock state even after power failure.
  */
 
-// Enable and select radio type
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
  
@@ -35,9 +38,9 @@
 //#define MY_SIGNING_ATSHA204 // Hardware signing using ATSHA204A
 
 // Enable node whitelisting
-#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+//#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 // Enable this if you want destination node to sign all messages sent to this node. Default is not to require signing. 
-#define MY_SIGNING_REQUEST_SIGNATURES
+//#define MY_SIGNING_REQUEST_SIGNATURES
 
 
 // SETTINGS FOR MY_SIGNING_SOFT
@@ -50,7 +53,6 @@
 
 // SETTINGS FOR MY_SIGNING_ATSHA204
 #define MY_SIGNING_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
-
 
 #include <MySensor.h>
 

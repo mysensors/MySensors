@@ -54,20 +54,31 @@ void _process() {
 	#endif
 }
 
-
+#if defined(MY_RADIO_FEATURE)
 static inline bool isValidParent( const uint8_t parent ) {
 	return parent != AUTO;
 }
-
+#endif
 
 void setIncomingCallback(void (*msgCallback)(const MyMessage &)) {
 	_msgCallback = msgCallback;
 }
 
 void _begin() {
-	#if defined(MY_DISABLED_SERIAL)
+	#if !defined(MY_DISABLED_SERIAL)
 	    hwInit();
     #endif
+
+	#if defined(MY_RADIO_FEATURE)
+		_failedTransmissions = 0;
+
+		// Setup radio
+		if (!transportInit()) {
+			debug(PSTR("radio init fail\n"));
+			while(1); // Nothing more we can do
+		}
+	#endif
+
 
 	#if defined(MY_GATEWAY_FEATURE)
 		#if defined(MY_INCLUSION_BUTTON_FEATURE)
@@ -83,15 +94,6 @@ void _begin() {
 		gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 	#endif
 
-	#if defined(MY_RADIO_FEATURE)
-		_failedTransmissions = 0;
-
-		// Setup radio
-		if (!transportInit()) {
-			debug(PSTR("radio init fail\n"));
-			while(1); // Nothing more we can do
-		}
-	#endif
 
 	#if defined(MY_SIGNING_FEATURE)
 		// Read out the signing requirements from EEPROM
@@ -114,7 +116,7 @@ void _begin() {
 		_nc.parentNodeId = GATEWAY_ADDRESS;
 		_nc.distance = 0;
 		_nc.nodeId = GATEWAY_ADDRESS;
-	#else
+	#elif defined(MY_RADIO_FEATURE)
 		// Read settings from eeprom
 		hwReadConfigBlock((void*)&_nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 		// Read latest received controller configuration from EEPROM
@@ -151,6 +153,7 @@ void _begin() {
 	#if defined(MY_RADIO_FEATURE)
 		transportSetupNode();
 	#endif
+
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), MY_NODE_TYPE, _nc.nodeId, _nc.parentNodeId, _nc.distance);
 }
 
@@ -176,7 +179,7 @@ boolean _sendRoute(MyMessage &message) {
 		}
 	#endif
 	#if defined(MY_RADIO_FEATURE)
-		transportSendRoute(message);
+		return transportSendRoute(message);
 	#else
 		return false;
 	#endif

@@ -6,6 +6,6 @@
 #ifndef Version_h
 #define Version_h
 
-#define LIBRARY_VERSION "1.5"
+#define LIBRARY_VERSION "1.6"
 
 #endif

@@ -1,4 +1,4 @@
-/**
+  /**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -36,57 +36,44 @@
  * 
  */
 
-#include <MySigningNone.h>
-#include <MyTransportRFM69.h>
-#include <MyTransportNRF24.h>
-#include <MyHwATMega328.h>
-#include <MySigningAtsha204Soft.h>
-#include <MySigningAtsha204.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
 
-#include <SPI.h>  
-#include <MyGatewayTransportSerial.h>  
-#include <MyProtocolDefault.h>  
-#include <MyGateway.h>  
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
 
-#define INCLUSION_MODE_TIME 60 // Number of seconds inclusion mode is enabled
-#define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
-#define RADIO_ERROR_LED_PIN 4  // Error led pin
-#define RADIO_RX_LED_PIN    6  // Receive led pin
-#define RADIO_TX_LED_PIN    5  // the PCB, on board LED
+// Enable serial gateway
+#define MY_GATEWAY_SERIAL
 
-// NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
-//MyTransportRFM69 transport;
+// Flash leds on rx/tx/err
+#define MY_LEDS_BLINKING_FEATURE
+// Set blinking period
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
 
-// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-//MySigningNone signer;
-//MySigningAtsha204Soft signer;
-//MySigningAtsha204 signer;
+// Enable inclusion mode
+#define MY_INCLUSION_MODE_FEATURE
+// Enable Inclusion mode button on gateway
+#define MY_INCLUSION_BUTTON_FEATURE
+// Set inclusion mode duration (in seconds)
+#define MY_INCLUSION_MODE_DURATION 60 
+// Digital pin used for inclusion mode button
+#define MY_INCLUSION_MODE_BUTTON_PIN  3 
 
-// Hardware profile 
-MyHwATMega328 hw;
+#define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
+#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
+#define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
 
-// Controller Transport profile
-MyProtocolDefault protocol;
-MyGatewayTransportSerial ctrlTransport(protocol);
-
-// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-// To use LEDs blinking, uncomment MY_LEDS_BLINKING_FEATURE in MyConfig.h
-#ifdef MY_LEDS_BLINKING_FEATURE
-MyGateway gw(ctrlTransport, transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-#else
-MyGateway gw(ctrlTransport, transport, hw /*, signer*/);
-#endif
+#include <MySensor.h>  
 
 void setup()  
 { 
-  gw.begin(NULL);
-
+  // Nothing to do here
 }
 
 void loop()  
 { 
-  gw.process();
+  // Nothing to do here
 }
 
 

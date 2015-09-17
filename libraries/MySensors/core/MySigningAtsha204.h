@@ -33,27 +33,14 @@
 #include "drivers/ATSHA204/ATSHA204.h"
 #include <stdint.h>
 
-#ifdef MY_SIGNING_NODE_WHITELISTING
-typedef struct {
-	uint8_t nodeId;
-	uint8_t serial[SHA204_SERIAL_SZ];
-} whitelist_entry_t;
-#endif
+
 
 // The ATSHA204 is capable of generating proper random numbers for nonce
 // and can calculate HMAC-SHA256 signatures. This is enterprise-
 // level of security and ought to implement the signing needs for anybody.
-class MySigningAtsha204 : public MySigning
-{ 
-public:
-	MySigningAtsha204(bool requestSignatures=true,
 
-	bool getNonce(MyMessage &msg);
-	bool checkTimer(void);
-	bool putNonce(MyMessage &msg);
-	bool signMsg(MyMessage &msg);
-	bool verifyMsg(MyMessage &msg);
-private:
-};
+void signerCalculateSignature(MyMessage &msg);
+uint8_t* signerSha256(const uint8_t* data, size_t sz);
+
 
 #endif

@@ -18,7 +18,7 @@
  */
 
 #include "MyProtocol.h"
-#include "MyProtocolDefault.h"
+#include "MyProtocolMySensors.h"
 #include "MyTransport.h"
 
 char _fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];

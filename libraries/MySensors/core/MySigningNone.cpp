@@ -59,24 +59,21 @@ static void DEBUG_NONE_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, ui
 #define DEBUG_NONE_PRINTBUF(str, buf, sz)
 #endif
 
-MySigningNone::MySigningNone() : MySigning() {
-}
-
-bool MySigningNone::getNonce(MyMessage &msg) {
+bool signerGetNonce(MyMessage &msg) {
 	(void)msg;
 	return true;
 }
 
-bool MySigningNone::checkTimer() {
+bool signerCheckTimer() {
 	return true;
 }
 
-bool MySigningNone::putNonce(MyMessage &msg) {
+bool signerPutNonce(MyMessage &msg) {
 	(void)msg;
 	return true;
 }
 
-bool MySigningNone::signMsg(MyMessage &msg) {
+bool signerSignMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_SIGNING_PRINTLN(F("MTOL")); // Message too large for signature to fit
@@ -87,7 +84,7 @@ bool MySigningNone::signMsg(MyMessage &msg) {
 	return true;
 }
 
-bool MySigningNone::verifyMsg(MyMessage &msg) {
+bool signerVerifyMsg(MyMessage &msg) {
 	if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER)
 		return false;
 	else

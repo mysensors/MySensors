@@ -223,6 +223,7 @@ static u16_t tmp16;
 
 
 /* Macros. */
+#undef BUF
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define FBUF ((struct uip_tcpip_hdr *)&uip_reassbuf[0])
 #define ICMPBUF ((struct uip_icmpip_hdr *)&uip_buf[UIP_LLH_LEN])

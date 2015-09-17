@@ -77,7 +77,6 @@ typedef struct {
 
 
 #define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
-#define NODE_SENSOR_ID 0xFF // Node child id is always created for when a node
 
 #define BROADCAST_ADDRESS ((uint8_t)0xFF)
 

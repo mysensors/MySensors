@@ -60,6 +60,8 @@
 
 // This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
 #define GATEWAY_ADDRESS ((uint8_t)0)
+// Node child is always created/presented when a node is started
+#define NODE_SENSOR_ID 0xFF
 
 
 struct NodeConfig

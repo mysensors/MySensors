@@ -19,15 +19,14 @@
 #ifndef MySensor_h
 #define MySensor_h
 
-#define VALUE_TO_STRING(x) #x
-#define VALUE(x) VALUE_TO_STRING(x)
-#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
-// #pragma message(VAR_NAME_VALUE(MY_GATEWAY_FEATURE))
+/* { dg-warning "import is a deprecated GCC extension" "deprecated" {target *-*-* } 0 } */
+
+
 
 #include "MyConfig.h"
 #include "core/MySensorCore.h"
 
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(ARDUINO_ARCH_ESP8266)
 	#define MY_GATEWAY_FEATURE
 	#define MY_NODE_TYPE "gateway"
 #elif defined(MY_REPEATER_FEATURE)
@@ -41,6 +40,8 @@
 #if defined(ARDUINO_ARCH_ESP8266)
 	#include "drivers/ESP8266/SPI/SPI.cpp"
 	#include "core/MyHwESP8266.cpp"
+	// For ESP8266, we always enable gateway feature
+	#define MY_GATEWAY_ESP8266
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "drivers/AVR/SPI/SPI.cpp"
 	#include "core/MyHwATMega328.cpp"
@@ -84,9 +85,14 @@
 	// GATEWAY - COMMON FUNCTIONS
 	#include "core/MyGatewayTransport.cpp"
 
+	// We currently only support one protocol, enable it.
+	#if !defined(MY_GATEWAY_PROTOCOL_DEFAULT)
+		#define MY_GATEWAY_PROTOCOL_DEFAULT
+	#endif
+
 	// GATEWAY - PROTOCOL
 	#if defined(MY_GATEWAY_PROTOCOL_DEFAULT)
-		#include "core/MyProtocolDefault.cpp"
+		#include "core/MyProtocolMySensors.cpp"
 	#else
 		#error No gateway protocol specified!
 	#endif
@@ -102,8 +108,10 @@
 	#if !defined(MY_PORT)
 		#error You must define MY_PORT (cotroller or gatway port to open)
 	#endif
+	#if defined(MY_GATEWAY_ESP8266)
+		// GATEWAY - ESP8266
 
-	#if defined(MY_GATEWAY_W5100)
+	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100
 		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
 		#include "drivers/AVR/Ethernet_W5100/utility/w5100.cpp"
@@ -192,7 +200,9 @@
 	#undef MY_INCLUSION_BUTTON_FEATURE
 #endif
 
-
+#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
+	#error No radio or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+#endif
 
 
 #include "core/MyMessage.cpp"

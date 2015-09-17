@@ -56,19 +56,16 @@
  *
  */
 
-// Enable debug prints to console
+// Enable debug prints to serial monitor
 #define MY_DEBUG 
 
-// This node has a NR24L01+ radio attached
-#define MY_RADIO_NRF24 
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
 
-
-// Enable gateway type 
+// Enable gateway transportation type 
 #define MY_GATEWAY_W5100
-//#define MY_GATEWAY_W5100
-
-// Set default gateway protocol (http://www.mysensors.org/download/serial_api_15)
-#define MY_GATEWAY_PROTOCOL_DEFAULT
+//#define MY_GATEWAY_ENC28J60
 
 // Enable Soft SPI for radio (note different radio wiring required)
 // Useful for W5100 which sometimes have hard time co-operate with radio on the same spi bus.

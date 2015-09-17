@@ -24,7 +24,6 @@
 #include "MyTransport.h"
 #include <stdint.h>
 #include "drivers/RFM69/RFM69.h"
-#include "drivers/SPI/SPI.h"
 
 
 #endif

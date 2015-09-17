@@ -37,15 +37,5 @@
 // It does check SIGNING_IDENTIFIER byte to avoid illegal mixing of signing back-ends in
 // the network (as seen by this node) and it does verify proper execution order on the API.
 // The "none" driver rejects all other back-ends.
-class MySigningNone : public MySigning
-{ 
-public:
-	MySigningNone();
-	bool getNonce(MyMessage &msg);
-	bool checkTimer(void);
-	bool putNonce(MyMessage &msg);
-	bool signMsg(MyMessage &msg);
-	bool verifyMsg(MyMessage &msg);
-};
 
 #endif

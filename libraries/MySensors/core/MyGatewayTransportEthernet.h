@@ -23,7 +23,7 @@
 #include "MyConfig.h"
 #include "MyMessage.h"
 #include "MyProtocol.h"
-#include "MyProtocolDefault.h"
+#include "MyProtocolMySensors.h"
 #include "MyGatewayTransport.h"
 
 
