@@ -28,7 +28,6 @@
 #include "utility/AES.h"
 
 
-
 #define TO_ADDR(x) (RF24_BASE_RADIO_ID + x)
 
 #define WRITE_PIPE ((uint8_t)0)
