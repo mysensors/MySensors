@@ -72,6 +72,7 @@ bool MyTransportNRF24ENC::send(uint8_t to, const void* data, uint8_t len) {
 	uint8_t dataenc[32] = {0} ;
 	memcpy(dataenc,data,len); // copy input data because it is read-only
 
+	aes.set_IV(0);//not sure if necessary
 	len = len > 16 ? 32 : 16;
 	aes.cbc_encrypt(dataenc, dataenc, len/16); //encrypt
 	
@@ -99,6 +100,7 @@ uint8_t MyTransportNRF24ENC::receive(void* data) {
 	uint8_t len = rf24.getDynamicPayloadSize();
 	rf24.read(data, len);
 
+	aes.set_IV(0);//not sure if necessary
 	aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1); // decrypt
 	
 	return len;
