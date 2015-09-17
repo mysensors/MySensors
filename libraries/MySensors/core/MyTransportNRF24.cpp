@@ -22,6 +22,11 @@
 RF24 _rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN);
 uint8_t _address;
 uint8_t _paLevel;
+#if defined(MY_RF24_ENABLE_ENCRYPTION)
+	AES _aes;
+	uint8_t _dataenc[32] = {0};
+	uint8_t _psk[] = { MY_RF24_ENCRYPTKEY };
+#endif
 
 bool transportInit() {
 	// Start up the radio library
@@ -42,6 +47,12 @@ bool transportInit() {
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	_rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+
+
+	#if defined(MY_RF24_ENABLE_ENCRYPTION)
+		_aes.set_key(_psk, 16); //set up AES-key
+	#endif
+
 	return true;
 }
 
@@ -57,11 +68,23 @@ uint8_t transportGetAddress() {
 }
 
 bool transportSend(uint8_t to, const void* data, uint8_t len) {
+	#if defined(MY_RF24_ENABLE_ENCRYPTION)
+		memcpy(_dataenc,data,len); // copy input data because it is read-only
+
+		_aes.set_IV(0);//not sure if necessary
+		len = len > 16 ? 32 : 16;
+		_aes.cbc_encrypt(_dataenc, _dataenc, len/16); //encrypt
+	#endif
+
 	// Make sure radio has powered up
 	_rf24.powerUp();
 	_rf24.stopListening();
 	_rf24.openWritingPipe(TO_ADDR(to));
-	bool ok = _rf24.write(data, len, to == BROADCAST_ADDRESS);
+	#if defined(MY_RF24_ENABLE_ENCRYPTION)
+		bool ok = _rf24.write(_dataenc, len, to == BROADCAST_ADDRESS);
+	#else
+		bool ok = _rf24.write(data, len, to == BROADCAST_ADDRESS);
+	#endif
 	_rf24.startListening();
 	return ok;
 }
@@ -80,6 +103,10 @@ bool transportAvailable(uint8_t *to) {
 uint8_t transportReceive(void* data) {
 	uint8_t len = _rf24.getDynamicPayloadSize();
 	_rf24.read(data, len);
+	#if defined(MY_RF24_ENABLE_ENCRYPTION)
+		_aes.set_IV(0);//not sure if necessary
+		_aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1); // decrypt
+	#endif
 	return len;
 }
 

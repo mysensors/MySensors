@@ -1,0 +1,16 @@
+Monte Carlo test vectors:
+  http://csrc.nist.gov/groups/STM/cavp/documents/aes/aesmct.zip
+
+(Compare the Monte Carlo output to the ECBMCT128.rsp file)
+
+Known Answer Tests:
+  http://csrc.nist.gov/groups/STM/cavp/documents/aes/KAT_AES.zip
+
+- Compare the other test outputs to 
+  ECBVarTxt128.rsp
+  ECBVarKey128.rsp
+  ECBVarTxt192.rsp
+  ECBVarKey192.rsp
+  ECBVarTxt256.rsp
+  ECBVarKey256.rsp
+

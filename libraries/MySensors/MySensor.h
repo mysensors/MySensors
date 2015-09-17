@@ -179,6 +179,9 @@
 		#error Only one radio driver can be activated
 	#endif
 	#if defined(MY_RADIO_NRF24)
+		#if defined(MY_RF24_ENABLE_ENCRYPTION)
+			#include "drivers/AES/AES.cpp"
+		#endif
 		#include "drivers/RF24/RF24.cpp"
 		#include "core/MyTransportNRF24.cpp"
 	#elif defined(MY_RADIO_RFM69)

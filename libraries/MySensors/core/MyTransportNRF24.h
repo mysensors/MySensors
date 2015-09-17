@@ -25,6 +25,9 @@
 #include <stdint.h>
 #include "drivers/RF24/RF24.h"
 #include "drivers/RF24/RF24_config.h"
+#if defined(MY_RF24_ENABLE_ENCRYPTION)
+#include "drivers/AES/AES.h"
+#endif
 
 #define TO_ADDR(x) (MY_RF24_BASE_RADIO_ID + x)
 
