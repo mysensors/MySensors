@@ -20,8 +20,6 @@
 #include "MyTransport.h"
 #include "MyTransportNRF24ENC.h"
 
-//AES aes;
-
 
 MyTransportNRF24ENC::MyTransportNRF24ENC(uint8_t ce, uint8_t cs, uint8_t paLevel, uint8_t channel, rf24_datarate_e datarate)
 	:
@@ -36,10 +34,8 @@ MyTransportNRF24ENC::MyTransportNRF24ENC(uint8_t ce, uint8_t cs, uint8_t paLevel
 bool MyTransportNRF24ENC::init() {
 	// Start up the radio library
 
-	//randomseed(analogRead(RNDPIN));
 	uint8_t psk[] = { PSK };
-
-	aes.set_key(psk, 16);
+	aes.set_key(psk, 16); //set up AES-key
 
 	rf24.begin();
 
@@ -73,15 +69,13 @@ uint8_t MyTransportNRF24ENC::getAddress() {
 }
 
 bool MyTransportNRF24ENC::send(uint8_t to, const void* data, uint8_t len) {
-	// Make sure radio has powered up
-	//encrypt
-
 	uint8_t dataenc[32] = {0} ;
-	memcpy(dataenc,data,len);
+	memcpy(dataenc,data,len); // copy input data because it is read-only
 
-	len=len > 16 ? 32 : 16;
-	aes.cbc_encrypt(dataenc, dataenc, len/16);
+	len = len > 16 ? 32 : 16;
+	aes.cbc_encrypt(dataenc, dataenc, len/16); //encrypt
 	
+	// Make sure radio has powered up
 	rf24.powerUp();
 	rf24.stopListening();
 	rf24.openWritingPipe(TO_ADDR(to));
@@ -104,8 +98,9 @@ bool MyTransportNRF24ENC::available(uint8_t *to) {
 uint8_t MyTransportNRF24ENC::receive(void* data) {
 	uint8_t len = rf24.getDynamicPayloadSize();
 	rf24.read(data, len);
-	//decrypt
-	aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1);
+
+	aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1); // decrypt
+	
 	return len;
 }
 
