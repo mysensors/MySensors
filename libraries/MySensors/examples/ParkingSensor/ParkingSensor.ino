@@ -137,7 +137,7 @@ void loop() {
         numLightPixels--;
       } else {
         skipZero = 0;
-        int newLightPixels = NUMPIXELS - (NUMPIXELS*(displayDist-PANIC_DISTANCE)/MAX_DISTANCE);
+        int newLightPixels = NUMPIXELS - (NUMPIXELS*(displayDist-PANIC_DISTANCE)/(MAX_DISTANCE-PANIC_DISTANCE));
         if (newLightPixels>numLightPixels) {
           // Fast raise
           numLightPixels += max((newLightPixels - numLightPixels) / 2, 1);
