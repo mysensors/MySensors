@@ -45,7 +45,7 @@
 #endif
 
 /**********************************
-*  Radio selection and modes
+*  Radio selection and node config
 ***********************************/
 
 // Selecting radio transport is optional (for a gateway node).
@@ -101,7 +101,7 @@
 // When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
 // off when blinking
 
-//#define WITH_LEDS_BLINKING_INVERSE
+//#define MY_WITH_LEDS_BLINKING_INVERSE
 
 
 // default LEDs blinking period in milliseconds
@@ -198,7 +198,7 @@
 //#define MY_RF24_ENABLE_ENCRYPTION
 
 // Default encrytion key. Override in sketch if needed.
-#ifndef MY_RF24_CE_PIN
+#ifndef MY_RF24_ENCRYPTKEY
 #define MY_RF24_ENCRYPTKEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16
 #endif
 

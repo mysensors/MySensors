@@ -41,10 +41,16 @@
  */
 
  
-#include <SPI.h>
-#include <Encoder.h>
+// Enable debug prints
+#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <MySensor.h>  
 #include <Bounce2.h>
+#include <Encoder.h>
 
 #define LED_PIN 3           // Arduino pin attached to MOSFET Gate pin
 #define KNOB_ENC_PIN_1 4    // Rotary encoder input pin 1
@@ -73,13 +79,15 @@ unsigned long lastFadeStep;
 unsigned long sendDimTimeout;
 char convBuffer[10];
 
-MySensor gw;
 MyMessage dimmerMsg(CHILD_ID_LIGHT, V_DIMMER);
 Encoder knob(KNOB_ENC_PIN_1, KNOB_ENC_PIN_2);  
 Bounce debouncer = Bounce(); 
 
 void setup()  
 { 
+  // Initialize library and add callback for incoming messages (signing is required)
+  setIncomingCallback(incomingMessage);
+
   // Set knob button pin as input (with debounce)
   pinMode(KNOB_BUTTON_PIN, INPUT);
   digitalWrite(KNOB_BUTTON_PIN, HIGH);
@@ -90,28 +98,22 @@ void setup()
   // Set analog led pin to off
   analogWrite( LED_PIN, 0);
 
-  // Init mysensors library
-  gw.begin(incomingMessage, AUTO, false);
-
   // Send the Sketch Version Information to the Gateway
-  gw.present(CHILD_ID_LIGHT, S_DIMMER);
-  gw.sendSketchInfo(SN, SV);
+  present(CHILD_ID_LIGHT, S_DIMMER);
+  sendSketchInfo(SN, SV);
 
   // Retreive our last dim levels from the eprom
   fadeTo = dimValue = 0;
   byte oldLevel = loadLevelState(EEPROM_DIM_LEVEL_LAST);
   Serial.print("Sending in last known light level to controller: ");
   Serial.println(oldLevel);  
-  gw.send(dimmerMsg.set(oldLevel), true);   
+  send(dimmerMsg.set(oldLevel), true);   
 
   Serial.println("Ready to receive messages...");  
 }
 
 void loop()      
 {
-  // Process incoming messages (like config and light state from controller)
-  gw.process();
-  
   // Check if someone turned the rotary encode
   checkRotaryEncoder();
   
@@ -133,7 +135,7 @@ void incomingMessage(const MyMessage &message)
       newLevel = loadLevelState(EEPROM_DIM_LEVEL_SAVE);
     } 
     // Send dimmer level back to controller with ack enabled
-    gw.send(dimmerMsg.set(newLevel), true);
+    send(dimmerMsg.set(newLevel), true);
     // We do not change any levels here until ack comes back from gateway 
     return;
   } else if (message.type == V_DIMMER) {
@@ -190,7 +192,7 @@ void checkButtonClick() {
       int saved = loadLevelState(EEPROM_DIM_LEVEL_SAVE);
       newLevel = saved > 0 ? saved : 100;
     }
-    gw.send(dimmerMsg.set(newLevel),true);
+    send(dimmerMsg.set(newLevel),true);
   }
   oldButtonVal = buttonVal;
 }
@@ -220,17 +222,17 @@ void fadeStep() {
   if (sendDimValue && currentTime > sendDimTimeout + SEND_THROTTLE_DELAY)  {
      // We're done fading.. send in new dim-value to controller.
      // Send in new dim value with ack (will be picked up in incomingMessage) 
-    gw.send(dimmerMsg.set(dimValue), true); // Send new dimmer value and request ack back
+    send(dimmerMsg.set(dimValue), true); // Send new dimmer value and request ack back
     sendDimValue = false;
   }
 }
 
 // Make sure only to store/fetch values in the range 0-100 from eeprom
 int loadLevelState(byte pos) {
-  return min(max(gw.loadState(pos),0),100);
+  return min(max(loadState(pos),0),100);
 }
 void saveLevelState(byte pos, byte data) {
-  gw.saveState(pos,min(max(data,0),100));
+  saveState(pos,min(max(data,0),100));
 }
 
 

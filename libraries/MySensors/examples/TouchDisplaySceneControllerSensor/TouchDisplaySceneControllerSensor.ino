@@ -37,8 +37,6 @@
  * The 3v3 output on the ATMega2560 is especially bad. I had to use a step down 
  * on the 5V output to get solid transmissions.
  * 
- * The shield does not seem like sharing SPI with RF24 so you'll have to
- * activate SOFTSPI-define in MySenors/util/RF24_config.h
  *
  * Connect radio 
  * ----------------------------------
@@ -54,8 +52,16 @@
  *
  */
 
-#include <DigitalIO.h>
-#include <SPI.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable soft spi as radio has a hard time sharing spi 
+#define MY_SOFTSPI
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <Time.h>  
 #include <MySensor.h>  
 #include <stdarg.h>
@@ -87,9 +93,6 @@ const int buttonCount = sizeof(buttons)/sizeof(char *);
 const int padding = 10;
 const int topBarHeight = 60;
 
-MyTransportNRF24 radio;  // NRFRF24L01 radio driver
-MyHwATMega328 hw; // Select AtMega328 hardware profile
-MySensor gw(radio, hw);
 MyMessage on(CHILD_ID, V_SCENE_ON);
 MyMessage off(CHILD_ID, V_SCENE_OFF);
 
@@ -103,8 +106,6 @@ char timeBuf[20];
 
 void setup()  
 { 
-  gw.begin(NULL, AUTO, false, 0);
-
   myGLCD.InitLCD();
   myGLCD.clrScr();
   myGLCD.setFont((uint8_t*)ArialNumFontPlus);
@@ -127,10 +128,10 @@ void setup()
   myButtons.drawButtons();
 
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Scene Ctrl", "1.0");
-  gw.present(CHILD_ID, S_SCENE_CONTROLLER);
+  sendSketchInfo("Scene Ctrl", "1.0");
+  present(CHILD_ID, S_SCENE_CONTROLLER);
   // Request time from controller. 
-  gw.requestTime(receiveTime); 
+  requestTime(receiveTime); 
 }
 
 
@@ -140,7 +141,6 @@ unsigned long lastPressedButtonTime = 0;
 
 void loop()      
 { 
-  gw.process();
   unsigned long now = millis();
   
   if (myTouch.dataAvailable()) {
@@ -151,10 +151,10 @@ void loop()
       
       if (pressedButton != lastPressedButton || now-lastPressedButtonTime > (unsigned long)RESEND_DEBOUNCE) {
         if (longPress) {
-          gw.send(off.set(pressedButton));
+          send(off.set(pressedButton));
           Serial.print("Long pressed: ");
         } else {
-          gw.send(on.set(pressedButton));
+          send(on.set(pressedButton));
           Serial.print("Pressed: ");    
         }
         Serial.println(pressedButton);    
@@ -170,7 +170,7 @@ void loop()
     || (timeReceived && now-lastRequest > (unsigned long)60*1000*60)) {
     // Request time from controller. 
     Serial.println("requesting time");
-    gw.requestTime(receiveTime);  
+    requestTime(receiveTime);  
     lastRequest = now;
   }
 

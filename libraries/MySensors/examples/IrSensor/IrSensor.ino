@@ -31,8 +31,14 @@
  * http://www.mysensors.org/build/ir
  */
 
+// Enable debug prints
+//#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <MySensor.h>
-#include <SPI.h>
 #include <IRLib.h>
 
 int RECV_PIN = 8;
@@ -44,26 +50,24 @@ IRrecv irrecv(RECV_PIN);
 IRdecode decoder;
 //decode_results results;
 unsigned int Buffer[RAWBUF];
-MySensor gw;
 MyMessage msg(CHILD_1, V_VAR1);
 
 void setup()  
 {  
   irrecv.enableIRIn(); // Start the ir receiver
   decoder.UseExtnBuf(Buffer);
-  gw.begin(incomingMessage);
+  setIncomingCallback(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("IR Sensor", "1.0");
+  sendSketchInfo("IR Sensor", "1.0");
 
-  // Register a sensors to gw. Use binary light for test purposes.
-  gw.present(CHILD_1, S_LIGHT);
+  // Register a sensors to  Use binary light for test purposes.
+  present(CHILD_1, S_LIGHT);
 }
 
 
 void loop() 
 {
-  gw.process();
   if (irrecv.GetResults(&decoder)) {
     irrecv.resume(); 
     decoder.decode();
@@ -72,7 +76,7 @@ void loop()
     char buffer[10];
     sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
-    gw.send(msg.set(buffer));
+    send(msg.set(buffer));
   }
 }
 

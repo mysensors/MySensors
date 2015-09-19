@@ -35,9 +35,16 @@
  */
 
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <MySensor.h>
 #include <MAX6675.h>
-#include <SPI.h>
+
 uint8_t CS0 = 4; // CS pin on MAX6675
 uint8_t SO = 3; // SO pin of MAX6675
 uint8_t SCLK = 5; // SCK pin of MAX6675
@@ -46,7 +53,6 @@ float temperature = 0.0; // Temperature output variable
 float lastTemperature;
 unsigned long SLEEP_TIME = 30000;
 boolean metric = true;
-MySensor gw;
 
 MyMessage msg(0, V_TEMP);
 
@@ -56,21 +62,15 @@ MAX6675 temp0(CS0, SO, SCLK, units);
 
 void setup()
 {
-  // Startup and initialize MySensors library. Set callback for incoming messages.
-  gw.begin();
-
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Max6675 Temp Sensor", "1.0");
+  sendSketchInfo("Max6675 Temp Sensor", "1.0");
 
   // Present all sensors to controller
-  gw.present(0, S_TEMP);
+  present(0, S_TEMP);
 }
 
 void loop()
 {
-  // Process incoming messages (like config from server)
-  gw.process();
-
   temperature = temp0.read_temp(); // Read the temp
 
   if (temperature < 0) { // If there is an error with the TC, temperature will be < 0
@@ -79,9 +79,9 @@ void loop()
     Serial.print("Current Temperature: ");
     Serial.println( temperature ); // Print the temperature to Serial
     if (temperature != lastTemperature)
-      gw.send(msg.setSensor(0).set(temperature, 1));
+      send(msg.setSensor(0).set(temperature, 1));
     lastTemperature = temperature;
   }
 
-  gw.sleep(SLEEP_TIME);
+  sleep(SLEEP_TIME);
 }

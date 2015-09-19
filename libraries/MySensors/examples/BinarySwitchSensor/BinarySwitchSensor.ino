@@ -27,14 +27,19 @@
  */
 
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <MySensor.h>
-#include <SPI.h>
 #include <Bounce2.h>
 
 #define CHILD_ID 3
 #define BUTTON_PIN  3  // Arduino Digital I/O pin for button/reed switch
 
-MySensor gw;
 Bounce debouncer = Bounce(); 
 int oldValue=-1;
 
@@ -43,9 +48,7 @@ MyMessage msg(CHILD_ID,V_TRIPPED);
 
 void setup()  
 {  
-  gw.begin();
-
- // Setup the button
+  // Setup the button
   pinMode(BUTTON_PIN,INPUT);
   // Activate internal pull-up
   digitalWrite(BUTTON_PIN,HIGH);
@@ -57,7 +60,7 @@ void setup()
   // Register binary input sensor to gw (they will be created as child devices)
   // You can use S_DOOR, S_MOTION or S_LIGHT here depending on your usage. 
   // If S_LIGHT is used, remember to update variable type you send in. See "msg" above.
-  gw.present(CHILD_ID, S_DOOR);  
+  present(CHILD_ID, S_DOOR);  
 }
 
 
@@ -70,7 +73,7 @@ void loop()
  
   if (value != oldValue) {
      // Send in the new value
-     gw.send(msg.set(value==HIGH ? 1 : 0));
+     send(msg.set(value==HIGH ? 1 : 0));
      oldValue = value;
   }
 } 

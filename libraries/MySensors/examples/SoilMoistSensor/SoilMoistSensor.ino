@@ -60,15 +60,20 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <math.h>       // Conversion equation from resistance to %
-#include <SPI.h>
 #include <MySensor.h>
 
 // Setting up format for reading 3 soil sensors
 #define NUM_READS 10    // Number of sensor reads for filtering
 #define CHILD_ID 0
 
-MySensor gw;  // Arduino initialization
 MyMessage msg(CHILD_ID, V_LEVEL);  
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
@@ -90,11 +95,9 @@ values valueOf[NUM_READS];        // Calculated moisture percentages and resista
 int i;                            // Simple index variable
 
 void setup() {
-  // initialize serial communications at 9600 bps:
-  Serial.begin(115200);
-  gw.begin();
-  gw.sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
-  gw.present(CHILD_ID, S_HUM);  
+
+  sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
+  present(CHILD_ID, S_HUM);  
   // initialize the digital pins as an output.
   // Pin 6,7 is for sensor 1
   // initialize the digital pin as an output.
@@ -104,8 +107,6 @@ void setup() {
   // initialize the digital pin as an output.
   // Pin 7 is sense resistor voltage supply 2
   pinMode(7, OUTPUT);   
-
-
 }
 
 void loop() {
@@ -129,9 +130,9 @@ void loop() {
 	Serial.println ();
 	
 	//send back the values
-	gw.send(msg.set((long int)ceil(sensor1)));
+	send(msg.set((long int)ceil(sensor1)));
 	// delay until next measurement (msec)
-    gw.sleep(SLEEP_TIME);
+    sleep(SLEEP_TIME);
 }
 
 void measure (int phase_b, int phase_a, int analog_input)

@@ -32,9 +32,14 @@
  * Contributor: epierre
 **/
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
 
 #include <MySensor.h>
-#include <SPI.h>
 #include <Wire.h>
 
 #define CHILD_ID_VIBRATION 0
@@ -49,18 +54,15 @@ float valVIBRATION =0.0;
 float lastVIBRATION =0.0;
 unsigned char state = 0;
 
-MySensor gw;
 MyMessage vibrationMsg(CHILD_ID_VIBRATION, V_LEVEL);
 
 void setup()  
 {
-  gw.begin();
-
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("VIBRATION Sensor", "1.0");
+  sendSketchInfo("VIBRATION Sensor", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
-  gw.present(CHILD_ID_VIBRATION, S_VIBRATION);
+  present(CHILD_ID_VIBRATION, S_VIBRATION);
 
   
   pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
@@ -72,7 +74,7 @@ void loop()
 {    
   
   if(state>=40){ // basically below 40 so ignire basic level
-        gw.send(vibrationMsg.set(int(state)));
+        send(vibrationMsg.set(int(state)));
         state = 0;  
         digitalWrite(SensorLED,HIGH);
    }    else {
@@ -85,7 +87,7 @@ void loop()
   // on the next write() call.
   delay(1000); //delay to allow serial to fully print before sleep
 
-  gw.sleep(SLEEP_TIME); //sleep for: sleepTime
+  sleep(SLEEP_TIME); //sleep for: sleepTime
 }
 
 void blink()//Interrupts function

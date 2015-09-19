@@ -63,11 +63,9 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-//#define MY_RF24_ENABLE_ENCRYPTION
-
 // Enable gateway transportation type 
-//#define MY_GATEWAY_W5100
-#define MY_GATEWAY_ENC28J60
+#define MY_GATEWAY_W5100
+//#define MY_GATEWAY_ENC28J60
 
 // Enable Soft SPI for radio (note different radio wiring required)
 // Useful for W5100 which sometimes have hard time co-operate with radio on the same spi bus.

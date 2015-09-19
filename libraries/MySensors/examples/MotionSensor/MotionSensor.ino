@@ -27,27 +27,14 @@
  *
  */
 
+// Enable debug prints
 //#define MY_DEBUG
 
-// Enable and select radio type
+// Enable and select radio type attached
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-//#define MY_SOFTSPI
-//#define MY_OTA_FIRMWARE_FEATURE
-
-//#define MY_SIGNING_SOFT
-//#define MY_REPEATER_FEATURE
-
-//#define MY_INCLUSION_MODE_FEATURE
-//#define MY_INCLUSION_BUTTON_FEATURE
-//#define MY_GATEWAY_SERIAL  // REMOVE-ME
-//#define MY_GATEWAY_PROTOCOL_DEFAULT  // REMOVE-ME
-//#define MY_LEDS_BLINKING_FEATURE
-
 #include <MySensor.h>
-
-
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)
@@ -56,8 +43,6 @@ unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in millisecond
 
 // Initialize motion message
 MyMessage msg(CHILD_ID, V_TRIPPED);
-
-
 
 void setup()  
 {  

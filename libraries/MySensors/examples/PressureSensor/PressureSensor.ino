@@ -26,8 +26,14 @@
  * http://www.mysensors.org/build/pressure
  *
  */
- 
-#include <SPI.h>
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <MySensor.h>  
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
@@ -52,7 +58,6 @@ enum FORECAST
 };
 
 Adafruit_BMP085 bmp = Adafruit_BMP085();      // Digital Pressure Sensor 
-MySensor gw;
 
 float lastPressure = -1;
 float lastTemp = -1;
@@ -81,10 +86,8 @@ MyMessage forecastMsg(BARO_CHILD, V_FORECAST);
 
 void setup() 
 {
-	gw.begin();
-
 	// Send the sketch version information to the gateway and Controller
-	gw.sendSketchInfo("Pressure Sensor", "1.1");
+	sendSketchInfo("Pressure Sensor", "1.1");
 
 	if (!bmp.begin()) 
 	{
@@ -93,9 +96,9 @@ void setup()
 	}
 
 	// Register sensors to gw (they will be created as child devices)
-	gw.present(BARO_CHILD, S_BARO);
-	gw.present(TEMP_CHILD, S_TEMP);
-	metric = gw.getConfig().isMetric;
+	present(BARO_CHILD, S_BARO);
+	present(TEMP_CHILD, S_TEMP);
+	metric = getConfig().isMetric;
 }
 
 void loop() 
@@ -123,23 +126,23 @@ void loop()
 
 	if (temperature != lastTemp) 
 	{
-		gw.send(tempMsg.set(temperature, 1));
+		send(tempMsg.set(temperature, 1));
 		lastTemp = temperature;
 	}
 
 	if (pressure != lastPressure) 
 	{
-		gw.send(pressureMsg.set(pressure, 0));
+		send(pressureMsg.set(pressure, 0));
 		lastPressure = pressure;
 	}
 
 	if (forecast != lastForecast)
 	{
-		gw.send(forecastMsg.set(weather[forecast]));
+		send(forecastMsg.set(weather[forecast]));
 		lastForecast = forecast;
 	}
 
-	gw.sleep(SLEEP_TIME);
+	sleep(SLEEP_TIME);
 }
 
 float getLastPressureSamplesAverage()

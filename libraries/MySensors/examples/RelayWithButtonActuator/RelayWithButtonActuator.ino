@@ -29,8 +29,17 @@
  * http://www.mysensors.org/build/relay
  */ 
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+// Enabled repeater feature for this node
+#define MY_REPEATER_FEATURE
+
 #include <MySensor.h>
-#include <SPI.h>
 #include <Bounce2.h>
 
 #define RELAY_PIN  4  // Arduino Digital I/O pin number for relay 
@@ -42,15 +51,15 @@
 Bounce debouncer = Bounce(); 
 int oldValue=0;
 bool state;
-MySensor gw;
+
 MyMessage msg(CHILD_ID,V_LIGHT);
 
 void setup()  
 {  
-  gw.begin(incomingMessage, AUTO, true);
-
+  setIncomingCallback(incomingMessage);
+  
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Relay & Button", "1.0");
+  sendSketchInfo("Relay & Button", "1.0");
 
  // Setup the button
   pinMode(BUTTON_PIN,INPUT);
@@ -62,7 +71,7 @@ void setup()
   debouncer.interval(5);
 
   // Register all sensors to gw (they will be created as child devices)
-  gw.present(CHILD_ID, S_LIGHT);
+  present(CHILD_ID, S_LIGHT);
 
   // Make sure relays are off when starting up
   digitalWrite(RELAY_PIN, RELAY_OFF);
@@ -70,7 +79,7 @@ void setup()
   pinMode(RELAY_PIN, OUTPUT);   
       
   // Set relay to last known state (using eeprom storage) 
-  state = gw.loadState(CHILD_ID);
+  state = loadState(CHILD_ID);
   digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
 }
 
@@ -80,12 +89,11 @@ void setup()
 */
 void loop() 
 {
-  gw.process();
   debouncer.update();
   // Get the update value
   int value = debouncer.read();
   if (value != oldValue && value==0) {
-      gw.send(msg.set(state?false:true), true); // Send new state and request ack back
+      send(msg.set(state?false:true), true); // Send new state and request ack back
   }
   oldValue = value;
 } 
@@ -101,7 +109,7 @@ void incomingMessage(const MyMessage &message) {
      state = message.getBool();
      digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
      // Store state in eeprom
-     gw.saveState(CHILD_ID, state);
+     saveState(CHILD_ID, state);
     
      // Write some debug info
      Serial.print("Incoming change for sensor:");

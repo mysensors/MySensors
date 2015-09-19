@@ -21,7 +21,7 @@
 #define MyLeds_h
 
 
-#ifdef WITH_LEDS_BLINKING_INVERSE
+#ifdef MY_WITH_LEDS_BLINKING_INVERSE
 #define LED_ON 0x1
 #define LED_OFF 0x0
 #else
