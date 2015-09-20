@@ -17,9 +17,13 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyProtocol.h"
-#include "MyProtocolMySensors.h"
+#include "MyConfig.h"
 #include "MyTransport.h"
+#include "MyProtocol.h"
+
+#define MAX_FORMAT_BUFFER_LENGTH 120 // Max buffersize when formatting messages
+
+uint8_t protocolH2i(char c);
 
 char _fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];
 char _convBuffer[MAX_PAYLOAD*2+1];

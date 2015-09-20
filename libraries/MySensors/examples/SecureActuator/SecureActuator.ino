@@ -65,7 +65,7 @@
 
 void setup()  
 {
-  // Initialize library and add callback for incoming messages (signing is required)
+  // Add callback for incoming messages (signing is required)
   setIncomingCallback(incomingMessage);
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Secure Lock", "1.0");

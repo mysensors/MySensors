@@ -35,6 +35,13 @@ MyMessage _ethernetMsg;
 #endif /* USE_UDP */
 
 
+#define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller
+
+#ifndef MY_IP_ADDRESS
+	void gatewayTransportRenewIP();
+#endif
+
+
 bool gatewayTransportInit() {
 #ifdef MY_IP_ADDRESS
 	Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);

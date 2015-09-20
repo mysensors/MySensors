@@ -26,7 +26,13 @@
  * http://www.mysensors.org/build/light
  */
 
-#include <SPI.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <MySensor.h>  
 
 #define CHILD_ID_LIGHT 0
@@ -34,19 +40,16 @@
 
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
-MySensor gw;
 MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL);
 int lastLightLevel;
 
 void setup()  
 { 
-  gw.begin();
-
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Light Sensor", "1.0");
+  sendSketchInfo("Light Sensor", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
-  gw.present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
+  present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
 }
 
 void loop()      
@@ -54,10 +57,10 @@ void loop()
   int lightLevel = (1023-analogRead(LIGHT_SENSOR_ANALOG_PIN))/10.23; 
   Serial.println(lightLevel);
   if (lightLevel != lastLightLevel) {
-      gw.send(msg.set(lightLevel));
+      send(msg.set(lightLevel));
       lastLightLevel = lightLevel;
   }
-  gw.sleep(SLEEP_TIME);
+  sleep(SLEEP_TIME);
 }
 
 

@@ -27,7 +27,6 @@
 #if defined(ARDUINO_ARCH_AVR)
 
 #include "MySigning.h"
-#include "MySigningAtsha204.h"
 
 #define SIGNING_IDENTIFIER (1)
 
@@ -46,6 +45,8 @@ uint8_t _singning_tx_buffer[SHA204_CMD_SIZE_MAX];
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
 
+void signerCalculateSignature(MyMessage &msg);
+uint8_t* signerSha256(const uint8_t* data, size_t sz);
 
 
 #ifdef DEBUG_SIGNING

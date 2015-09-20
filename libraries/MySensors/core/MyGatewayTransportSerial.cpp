@@ -18,13 +18,17 @@
  */
 
 
-#include "MyGatewayTransportSerial.h"
+#include "MyConfig.h"
+#include "MyProtocolMySensors.h"
+#include "MyGatewayTransport.h"
+#include "MyMessage.h"
+#include "MyProtocol.h"
+
+#define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller
 
 char _serialInputString[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
 int _serialInputPos;
 MyMessage _serialMsg;
-
-
 
 bool gatewayTransportInit() {
 	return true;

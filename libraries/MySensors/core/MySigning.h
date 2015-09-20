@@ -27,6 +27,7 @@
 #ifndef MySigning_h
 #define MySigning_h
 
+#include "MyConfig.h"
 #include <stdint.h>
 #include "MyMessage.h"
 #include "drivers/ATSHA204/ATSHA204.h"

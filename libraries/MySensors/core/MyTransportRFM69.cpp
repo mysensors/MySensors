@@ -17,8 +17,10 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#include "MyConfig.h"
 #include "MyTransport.h"
-#include "MyTransportRFM69.h"
+#include <stdint.h>
+#include "drivers/RFM69/RFM69.h"
 
 RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_IS_RFM69HW, MY_RF69_IRQ_NUM);
 uint8_t _address;

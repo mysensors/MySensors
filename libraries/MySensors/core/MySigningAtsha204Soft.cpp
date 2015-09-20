@@ -28,9 +28,7 @@
  *
  */
 
-#include "MyConfig.h"
 #include "MySigning.h"
-#include "MySigningAtsha204Soft.h"
 #include "drivers/ATSHA204/sha256.h"
 
 #define SIGNING_IDENTIFIER (1)
@@ -48,6 +46,8 @@ uint8_t _signing_hmac[32];
 	const uint8_t _signing_node_serial_info[SHA204_SERIAL_SZ] = {MY_SIGNING_SOFT_SERIAL};
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
+
+void signerCalculateSignature(MyMessage &msg);
 
 // Uncomment this to get some useful serial debug info (Serial.print and Serial.println expected)
 //#define DEBUG_SIGNING
