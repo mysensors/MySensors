@@ -1,0 +1,1 @@
+#define bitmapdatatype unsigned short*

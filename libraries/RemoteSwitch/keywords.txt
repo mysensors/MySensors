@@ -1,0 +1,15 @@
+RemoteTransmitter	KEYWORD1
+ActionTransmitter	KEYWORD1
+BlokkerTransmitter	KEYWORD1
+KaKuTransmitter	KEYWORD1
+ElroTransmitter	KEYWORD1
+sendTelegram	KEYWORD2
+sendCode	KEYWORD2
+sendSignal	KEYWORD2
+isSameCode	KEYWORD2
+RemoteReceiver	KEYWORD1
+init	KEYWORD2
+enable	KEYWORD2
+disable	KEYWORD2
+deinit	KEYWORD2
+isReceiving	KEYWORD2
