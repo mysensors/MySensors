@@ -87,14 +87,13 @@
 #define RADIO_CE_PIN        5  // radio chip enable
 #define RADIO_SPI_SS_PIN    6  // radio SPI serial select
 
-#define RADIO_ERROR_LED_PIN 7  // Error led pin
-#define RADIO_RX_LED_PIN    8  // Receive led pin
-#define RADIO_TX_LED_PIN    9  // the PCB, on board LED
-
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
 MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
 //MyTransportRFM69 transport;
+
+#ifdef MY_SIGNING_FEATURE
+//MySigningNone signer;
 #ifdef MY_SECURE_NODE_WHITELISTING
 // We do not expect any node to send us signed data since we do not request it
 // Provide and populate this whitelist with proper values in case we change our mind
@@ -102,25 +101,26 @@ whitelist_entry_t node_whitelist[] = {
   { .nodeId = 101, // Just some value, this need to be changed 
     .serial = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09} }
 };
+//MySigningAtsha204Soft signer(false, 1, node_whitelist);
 MySigningAtsha204 signer(false, 1, node_whitelist);  // Message signing driver
 #else
+//MySigningAtsha204Soft signer(false);
 MySigningAtsha204 signer(false);  // Message signing driver
 #endif
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-//MySigningNone signer;
-//MySigningAtsha204Soft signer;
 //MySigningAtsha204 signer;
+#endif
 
 // Hardware profile 
 MyHwATMega328 hw;
 
 // Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 // To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
-#ifdef WITH_LEDS_BLINKING
-MySensor gw(transport, hw, signer, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-#else
-MySensor gw(radio, signer);
+MySensor gw(transport, hw
+#ifdef MY_SIGNING_FEATURE
+ ,signer
 #endif
+ );
 
 
 #define IP_PORT 5003        // The port you want to open 
