@@ -1,13 +1,22 @@
- /*
- The MySensors library adds a new layer on top of the RF24 library.
- It handles radio network routing, relaying and ids.
-
- Created by Henrik Ekblad <henrik.ekblad@gmail.com>
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
  */
+
 
 #include "MySensor.h"
 
@@ -44,68 +53,181 @@ MySensor::MySensor(MyTransport &_radio, MyHw &_hw
 #ifdef MY_SIGNING_FEATURE
 	, MySigning &_signer
 #endif
+#ifdef WITH_LEDS_BLINKING
+		, uint8_t _rx, uint8_t _tx, uint8_t _er, unsigned long _blink_period
+#endif
 	)
 	:
 	radio(_radio),
 #ifdef MY_SIGNING_FEATURE
 	signer(_signer),
 #endif
+#ifdef WITH_LEDS_BLINKING
+	pinRx(_rx), pinTx(_tx), pinEr(_er), ledBlinkPeriod(_blink_period),
+#endif
+#ifdef MY_OTA_FIRMWARE_FEATURE
+ 	flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID),
+#endif
 	hw(_hw)
 {
 }
 
 
+#ifdef MY_OTA_FIRMWARE_FEATURE
+
+// do a crc16 on the whole received firmware
+bool MySensor::isValidFirmware() {		
+	// init crc
+	uint16_t crc = ~0;
+	for (uint16_t i = 0; i < fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
+		crc ^= flash.readByte(i + FIRMWARE_START_OFFSET);
+	    for (int8_t j = 0; j < 8; ++j) {
+	        if (crc & 1)
+	            crc = (crc >> 1) ^ 0xA001;
+	        else
+	            crc = (crc >> 1);
+	    }
+	}	
+	return crc == fc.crc; 
+}
+
+#endif
+
+#ifdef WITH_LEDS_BLINKING
+void MySensor::handleLedsBlinking() {
+	// Just return if it is not the time...
+	// http://playground.arduino.cc/Code/TimingRollover
+	if ((long)(hw_millis() - blink_next_time) < 0)
+		return;
+	else
+		blink_next_time = hw_millis() + ledBlinkPeriod;
+
+	// do the actual blinking
+	if(countRx && countRx != 255) {
+		// switch led on
+		hw_digitalWrite(pinRx, LED_ON);
+	}
+	else if(!countRx) {
+		// switching off
+		hw_digitalWrite(pinRx, LED_OFF);
+	}
+	if(countRx != 255)
+		--countRx;
+
+	if(countTx && countTx != 255) {
+		// switch led on
+		hw_digitalWrite(pinTx, LED_ON);
+	}
+	else if(!countTx) {
+		// switching off
+		hw_digitalWrite(pinTx, LED_OFF);
+	}
+	if(countTx != 255)
+		--countTx;
+
+	if(countErr && countErr != 255) {
+		// switch led on
+		hw_digitalWrite(pinEr, LED_ON);
+	}
+	else if(!countErr) {
+		// switching off
+		hw_digitalWrite(pinEr, LED_OFF);
+	}
+	if(countErr != 255)
+		--countErr;
+}
+
+void MySensor::rxBlink(uint8_t cnt) {
+  if(countRx == 255) { countRx = cnt; }
+}
+
+void MySensor::txBlink(uint8_t cnt) {
+  if(countTx == 255) { countTx = cnt; }
+}
+
+void MySensor::errBlink(uint8_t cnt) {
+  if(countErr == 255) { countErr = cnt; }
+}
+#endif
+
 void MySensor::begin(void (*_msgCallback)(const MyMessage &), uint8_t _nodeId, boolean _repeaterMode, uint8_t _parentNodeId) {
-	hw_init();
+    #ifdef ENABLED_SERIAL
+	    hw_init();
+    #endif
 	repeaterMode = _repeaterMode;
 	msgCallback = _msgCallback;
 	failedTransmissions = 0;
 
-	// Only gateway should use node id 0
-	isGateway = _nodeId == 0;
+	// Only gateway should use node id 0!
+	isGateway = _nodeId == GATEWAY_ADDRESS;
 
 	// Setup radio
-	radio.init();
+	if (!radio.init()) {
+		debug(PSTR("radio init fail\n"));
+		while(1); // Nothing more we can do
+	}
 
-	// Read settings from eeprom
-	hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
-	// Read latest received controller configuration from EEPROM
-	hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 #ifdef MY_SIGNING_FEATURE
 	// Read out the signing requirements from EEPROM
 	hw_readConfigBlock((void*)doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(doSign));
 #endif
 
+#ifdef WITH_LEDS_BLINKING
+	// Setup led pins
+	pinMode(pinRx, OUTPUT);
+	pinMode(pinTx, OUTPUT);
+	pinMode(pinEr, OUTPUT);
+
+	// Set initial state of leds
+	hw_digitalWrite(pinRx, LED_OFF);
+	hw_digitalWrite(pinTx, LED_OFF);
+	hw_digitalWrite(pinEr, LED_OFF);
+
+	// initialize counters
+	countRx = 0;
+	countTx = 0;
+	countErr = 0;
+#endif
+
 	if (isGateway) {
+		// Set configuration for gateway
+		nc.parentNodeId = GATEWAY_ADDRESS;
 		nc.distance = 0;
-	}
+		nc.nodeId = GATEWAY_ADDRESS;
+	} else {
+		// Read settings from eeprom
+		hw_readConfigBlock((void*)&nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
+		// Read latest received controller configuration from EEPROM
+		hw_readConfigBlock((void*)&cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
+		hw_readConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+#endif
 
-	if (cc.isMetric == 0xff) {
-		// Eeprom empty, set default to metric
-		cc.isMetric = 0x01;
-	}
+		if (cc.isMetric == 0xff) {
+			// Eeprom empty, set default to metric
+			cc.isMetric = 0x01;
+		}
 
-	autoFindParent = _parentNodeId == AUTO;
-	if (!autoFindParent) {
-		nc.parentNodeId = _parentNodeId;
-		// Save static parent id in eeprom (used by bootloader)
-		hw_writeConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
-		// We don't actually know the distance to gw here. Let's pretend it is 1.
-		// If the current node is also repeater, be aware of this.
-		nc.distance = 1;
-	} else if (!isValidParent(nc.parentNodeId)) {
-		// Auto find parent, but parent in eeprom is invalid. Try find one.
-		findParentNode();
-	}
+		autoFindParent = _parentNodeId == AUTO;
+		if (!autoFindParent) {
+			nc.parentNodeId = _parentNodeId;
+			// Save static parent id in eeprom (used by bootloader)
+			hw_writeConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _parentNodeId);
+			// We don't actually know the distance to gw here. Let's pretend it is 1.
+			// If the current node is also repeater, be aware of this.
+			nc.distance = 1;
+		} else if (!isValidParent(nc.parentNodeId)) {
+			// Auto find parent, but parent in eeprom is invalid. Try find one.
+			findParentNode();
+		}
 
-	if (!isGateway) {
 		if (_nodeId != AUTO) {
 			// Set static id
 			nc.nodeId = _nodeId;
 			// Save static id in eeprom
-			if (_nodeId > 0)
-				hw_writeConfig(EEPROM_NODE_ID_ADDRESS, _nodeId);
-		} else if (isValidParent(nc.parentNodeId)) {
+			hw_writeConfig(EEPROM_NODE_ID_ADDRESS, _nodeId);
+		} else if (nc.nodeId == AUTO && isValidParent(nc.parentNodeId)) {
 			// Try to fetch node-id from gateway
 			requestNodeId();
 		}
@@ -158,10 +280,31 @@ void MySensor::setupNode() {
 
 		// Wait configuration reply.
 		wait(2000);
+
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)msg.data;
+		mSetLength(msg, sizeof(RequestFirmwareConfig));
+		mSetCommand(msg, C_STREAM);
+		mSetPayloadType(msg,P_CUSTOM);
+		// copy node settings to reqFWConfig
+		memcpy(reqFWConfig,&fc,sizeof(NodeFirmwareConfig));
+		// add bootloader information
+		reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
+		fwUpdateOngoing = false;
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
+#endif
+
+
 	}
 }
 
 void MySensor::findParentNode() {
+	static boolean findingParentNode = false;
+
+	if (findingParentNode)
+		return;
+	findingParentNode = true;
+
 	failedTransmissions = 0;
 
 	// Set distance to max
@@ -176,6 +319,7 @@ void MySensor::findParentNode() {
 
 	// Wait for ping response.
 	wait(2000);
+	findingParentNode = false;
 }
 
 boolean MySensor::sendRoute(MyMessage &message) {
@@ -187,12 +331,18 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	// If we still don't have any parent id, re-request and skip this message.
 	if (nc.parentNodeId == AUTO) {
 		findParentNode();
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
 	// If we still don't have any node id, re-request and skip this message.
 	if (nc.nodeId == AUTO) {
 		requestNodeId();
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
@@ -200,7 +350,7 @@ boolean MySensor::sendRoute(MyMessage &message) {
 
 #ifdef MY_SIGNING_FEATURE
 	// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(msg) &&
+	if (DO_SIGN(message.destination) && message.sender == nc.nodeId && !mGetAck(message) && mGetLength(message) &&
 		(mGetCommand(message) != C_INTERNAL ||
 		 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
 		  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
@@ -229,10 +379,16 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		}
 		if (hw_millis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
 			debug(PSTR("nonce tmo\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		if (!signOk) {
 			debug(PSTR("sign fail\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
@@ -241,6 +397,10 @@ boolean MySensor::sendRoute(MyMessage &message) {
 #endif
 
 	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
+		// Store this address in routing table (if repeater)
+		if (repeaterMode) {
+			hw_writeConfig(EEPROM_ROUTES_ADDRESS+sender, last);
+		}
 		// If destination is the gateway or if we aren't a repeater, let
 		// our parent take care of the message
 		ok = sendWrite(nc.parentNodeId, message);
@@ -291,6 +451,9 @@ boolean MySensor::sendRoute(MyMessage &message) {
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		failedTransmissions++;
 		if (autoFindParent && failedTransmissions > SEARCH_FAILURES) {
 			findParentNode();
@@ -305,6 +468,9 @@ boolean MySensor::sendWrite(uint8_t to, MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = nc.nodeId;
+#ifdef WITH_LEDS_BLINKING
+	txBlink(1);
+#endif
 	bool ok = radio.send(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
@@ -325,8 +491,13 @@ void MySensor::sendBatteryLevel(uint8_t value, bool enableAck) {
 	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
 }
 
-void MySensor::present(uint8_t childSensorId, uint8_t sensorType, bool enableAck) {
-	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(LIBRARY_VERSION));
+void MySensor::sendHeartbeat(void) {
+	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT, false).set(heartbeat++));
+
+}
+
+void MySensor::present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
+	sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?LIBRARY_VERSION:description));
 }
 
 void MySensor::sendSketchInfo(const char *name, const char *version, bool enableAck) {
@@ -349,15 +520,49 @@ void MySensor::requestTime(void (* _timeCallback)(unsigned long)) {
 
 boolean MySensor::process() {
 	hw_watchdogReset();
+
+#ifdef WITH_LEDS_BLINKING
+	handleLedsBlinking();
+#endif
+
 	uint8_t to = 0;
 	if (!radio.available(&to))
+	{
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		unsigned long enter = hw_millis();
+		if (fwUpdateOngoing && (enter - fwLastRequestTime > MY_OTA_RETRY_DELAY)) {
+			if (!fwRetry) {
+				debug(PSTR("fw upd fail\n"));
+				// Give up. We have requested MY_OTA_RETRY times without any packet in return.
+				fwUpdateOngoing = false;
+#ifdef WITH_LEDS_BLINKING
+				errBlink(1);
+#endif
+				return false;
+			}
+			fwRetry--;
+			fwLastRequestTime = enter;
+			// Time to (re-)request firmware block from controller
+			RequestFWBlock *firmwareRequest = (RequestFWBlock *)msg.data;
+			mSetLength(msg, sizeof(RequestFWBlock));
+			firmwareRequest->type = fc.type;
+			firmwareRequest->version = fc.version;
+			firmwareRequest->block = (fwBlock - 1);
+			sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
+		}
+#endif
 		return false;
+	}
 
 #ifdef MY_SIGNING_FEATURE
 	(void)signer.checkTimer(); // Manage signing timeout
 #endif
 
 	uint8_t len = radio.receive((uint8_t *)&msg);
+	(void)len; //until somebody makes use of 'len'
+#ifdef WITH_LEDS_BLINKING
+	rxBlink(1);
+#endif
 
 #ifdef MY_SIGNING_FEATURE
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
@@ -370,10 +575,16 @@ boolean MySensor::process() {
 		if (!mGetSigned(msg)) {
 			// Got unsigned message that should have been signed
 			debug(PSTR("no sign\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false;
 		}
 		else if (!signer.verifyMsg(msg)) {
 			debug(PSTR("verify fail\n"));
+#ifdef WITH_LEDS_BLINKING
+			errBlink(1);
+#endif
 			return false; // This signed message has been tampered with!
 		}
 	}
@@ -387,6 +598,9 @@ boolean MySensor::process() {
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("ver mismatch\n"));
+#ifdef WITH_LEDS_BLINKING
+		errBlink(1);
+#endif
 		return false;
 	}
 
@@ -506,10 +720,79 @@ boolean MySensor::process() {
 						findParentNode();
 						sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
 					}
+				} else if (type == I_TIME) {
+					if (timeCallback != NULL) {
+						// Deliver time to callback
+						timeCallback(msg.getULong());
+					}
 				}
 				return false;
 			}
 		}
+#ifdef MY_OTA_FIRMWARE_FEATURE
+		else if (command == C_STREAM) {
+			if (type == ST_FIRMWARE_CONFIG_RESPONSE) {
+				NodeFirmwareConfig *firmwareConfigResponse = (NodeFirmwareConfig *)msg.data;
+				// compare with current node configuration, if they differ, start fw fetch process
+				if (memcmp(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
+					debug(PSTR("fw update\n"));
+					// copy new FW config
+					memcpy(&fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
+					// Init flash
+					if (!flash.initialize()) {
+						debug(PSTR("flash init fail\n"));
+						fwUpdateOngoing = false;
+					} else {
+						// erase lower 32K -> max flash size for ATMEGA328
+						flash.blockErase32K(0);
+						// wait until flash erased
+						while ( flash.busy() );
+						fwBlock = fc.blocks;
+						fwUpdateOngoing = true;
+						// reset flags
+						fwRetry = MY_OTA_RETRY+1;
+						fwLastRequestTime = 0;
+					}
+					return false;
+				} else debug(PSTR("fw update skipped\n"));
+			} else if (type == ST_FIRMWARE_RESPONSE) {
+				if (fwUpdateOngoing) {
+					// Save block to flash
+					debug(PSTR("fw block %d\n"), fwBlock);
+					// extract FW block
+					ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)msg.data;
+					// write to flash
+					flash.writeBytes( ((fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+					// wait until flash written
+					while ( flash.busy() );
+					fwBlock--;
+					if (!fwBlock) {
+						// We're finished! Do a checksum and reboot.
+						fwUpdateOngoing = false;
+						if (isValidFirmware()) {
+							debug(PSTR("fw checksum ok\n"));
+							// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)	
+							uint16_t fwsize = FIRMWARE_BLOCK_SIZE * fc.blocks;
+							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(fwsize >> 8),fwsize,':'};
+							flash.writeBytes(0, OTAbuffer, 10);
+							// Write the new firmware config to eeprom
+							hw_writeConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+							hw_reboot();
+						} else {
+							debug(PSTR("fw checksum fail\n"));
+						}
+					}		
+					// reset flags
+					fwRetry = MY_OTA_RETRY+1;
+					fwLastRequestTime = 0;
+				} else {
+					debug(PSTR("No fw update ongoing\n"));
+				}
+				return false;
+			}
+
+		}
+#endif
 		// Call incoming message callback if available
 		if (msgCallback != NULL) {
 			msgCallback(msg);
@@ -520,14 +803,17 @@ boolean MySensor::process() {
 		// If this node have an id, relay the message
 
 		if (command == C_INTERNAL && type == I_FIND_PARENT) {
-			if (nc.distance == DISTANCE_INVALID) {
-				findParentNode();
-			} else if (sender != nc.parentNodeId) {
-				// Relaying nodes should always answer ping messages
-				// Wait a random delay of 0-2 seconds to minimize collision
-				// between ping ack messages from other relaying nodes
-				wait(hw_millis() & 0x3ff);
-				sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+			if (sender != nc.parentNodeId) {
+				if (nc.distance == DISTANCE_INVALID)
+					findParentNode();
+
+				if (nc.distance != DISTANCE_INVALID) {
+					// Relaying nodes should always answer ping messages
+					// Wait a random delay of 0-2 seconds to minimize collision
+					// between ping ack messages from other relaying nodes
+					wait(hw_millis() & 0x3ff);
+					sendWrite(sender, build(msg, nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(nc.distance));
+				}
 			}
 		} else if (to == nc.nodeId) {
 			// We should try to relay this message to another node
@@ -556,17 +842,46 @@ void MySensor::wait(unsigned long ms) {
 }
 
 void MySensor::sleep(unsigned long ms) {
-	radio.powerDown();
-	hw.sleep(ms);
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	if (fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		process();
+	} else {
+#endif
+		radio.powerDown();
+		hw.sleep(ms);
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	}
+#endif
 }
 
 bool MySensor::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	radio.powerDown();
-	return hw.sleep(interrupt, mode, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	if (fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		process();
+		return false;
+	} else {
+#endif
+		radio.powerDown();
+		return hw.sleep(interrupt, mode, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	}
+#endif
 }
 
 int8_t MySensor::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	radio.powerDown();
-	return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	if (fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		process();
+		return -1;
+	} else {
+#endif
+		radio.powerDown();
+		return hw.sleep(interrupt1, mode1, interrupt2, mode2, ms) ;
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	}
+#endif
 }
 

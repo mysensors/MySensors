@@ -2,7 +2,7 @@
 #include <DallasTemperature.h>
 
 // Data wire is plugged into port 2 on the Arduino
-#define ONE_WIRE_BUS 3
+#define ONE_WIRE_BUS 2
 #define TEMPERATURE_PRECISION 9
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
@@ -52,9 +52,9 @@ void setup(void)
 		Serial.println();
 		
 		Serial.print("Setting resolution to ");
-		Serial.println(TEMPERATURE_PRECISION,DEC);
+		Serial.println(TEMPERATURE_PRECISION, DEC);
 		
-		// set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
+		// set the resolution to TEMPERATURE_PRECISION bit (Each Dallas/Maxim device is capable of several different resolutions)
 		sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
 		
 		 Serial.print("Resolution actually set to: ");

@@ -87,7 +87,7 @@
 // Avoid spurious warnings
 // Arduino DUE is arm and uses traditional PROGMEM constructs
 #if 1
-#if ! defined( NATIVE ) && defined( ARDUINO ) && ! defined(__arm__)  && ! defined( CORE_TEENSY3 )
+#if ! defined( NATIVE ) && defined( ARDUINO ) && ! defined(__arm__)  && ! defined( CORE_TEENSY3 ) && ! defined(ESP8266)
 #undef PROGMEM
 #define PROGMEM __attribute__(( section(".progmem.data") ))
 #undef PSTR
@@ -97,18 +97,21 @@
 
 // Progmem is Arduino-specific
 // Arduino DUE is arm and does not include avr/pgmspace
-#if defined(ARDUINO) && ! defined(__arm__)
+#if defined(__AVR__)
 	#include <avr/pgmspace.h>
 	#define PRIPSTR "%S"
+#else
+#if defined(ESP8266)
+#include <pgmspace.h>
 #else
 #if ! defined(ARDUINO) // This doesn't work on Arduino DUE
 	typedef char const char;
 #else // Fill in pgm_read_byte that is used, but missing from DUE
 	#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
 #endif
+#endif
 
-
-#if !defined ( CORE_TEENSY )
+#if !defined ( CORE_TEENSY ) && ! defined(ESP8266)
 	typedef uint16_t prog_uint16_t;
 	#define PSTR(x) (x)
 	#define printf_P printf

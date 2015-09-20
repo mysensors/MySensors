@@ -1,5 +1,28 @@
-
-/*
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik Ekblad
+ * 
+ * DESCRIPTION
+ * http://www.mysensors.org/build/scene_controller
  * Touch Display Scene Controller build using a touch enabled tft display
  * attached to a ATMega 2560. This example fetches time from controller and sends
  * in scene commands to the controller. 
@@ -54,17 +77,19 @@ int RESEND_DEBOUNCE = 2000; // Number of millisecons interval between sending of
 
 // Add your buttons here. Max is 5 if you still want time at the top.
 char *buttons[] = {
-    "Good Morning", 
-    "Clean Up!", 
-    "All Lights Off", 
-    "Music On/Off"
+    (char *)"Good Morning", 
+    (char *)"Clean Up!", 
+    (char *)"All Lights Off", 
+    (char *)"Music On/Off"
   };
     
 const int buttonCount = sizeof(buttons)/sizeof(char *);
 const int padding = 10;
 const int topBarHeight = 60;
 
-MySensor gw(17,18);
+MyTransportNRF24 radio;  // NRFRF24L01 radio driver
+MyHwATMega328 hw; // Select AtMega328 hardware profile
+MySensor gw(radio, hw);
 MyMessage on(CHILD_ID, V_SCENE_ON);
 MyMessage off(CHILD_ID, V_SCENE_OFF);
 
@@ -119,13 +144,12 @@ void loop()
   unsigned long now = millis();
   
   if (myTouch.dataAvailable()) {
-    unsigned long startPress = millis();
     int pressedButton = myButtons.checkButtons();
 
     if (pressedButton>=0) {
-      bool longPress = millis()-now>LONG_PRESS;
+      bool longPress = millis()-now>(unsigned long)LONG_PRESS;
       
-      if (pressedButton != lastPressedButton || now-lastPressedButtonTime > RESEND_DEBOUNCE) {
+      if (pressedButton != lastPressedButton || now-lastPressedButtonTime > (unsigned long)RESEND_DEBOUNCE) {
         if (longPress) {
           gw.send(off.set(pressedButton));
           Serial.print("Long pressed: ");
@@ -142,8 +166,8 @@ void loop()
 
   // If no time has been received yet, request it every 10 second from controller
   // When time has been received, request update every hour
-  if ((!timeReceived && now-lastRequest > 10*1000)
-    || (timeReceived && now-lastRequest > 60*1000*60)) {
+  if ((!timeReceived && now-lastRequest > (unsigned long)10*1000)
+    || (timeReceived && now-lastRequest > (unsigned long)60*1000*60)) {
     // Request time from controller. 
     Serial.println("requesting time");
     gw.requestTime(receiveTime);  

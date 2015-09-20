@@ -1,3 +1,22 @@
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
+
 #include "MyTransport.h"
 #include "MyTransportNRF24.h"
 
@@ -9,13 +28,12 @@ MyTransportNRF24::MyTransportNRF24(uint8_t ce, uint8_t cs, uint8_t paLevel)
 {
 }
 
-void MyTransportNRF24::init() {
+bool MyTransportNRF24::init() {
 	// Start up the radio library
 	rf24.begin();
 
 	if (!rf24.isPVariant()) {
-		debug(PSTR("check wires\n"));
-		while(1);
+		return false;
 	}
 	rf24.setAutoAck(1);
 	rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
@@ -29,6 +47,7 @@ void MyTransportNRF24::init() {
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+	return true;
 }
 
 void MyTransportNRF24::setAddress(uint8_t address) {
@@ -55,6 +74,7 @@ bool MyTransportNRF24::send(uint8_t to, const void* data, uint8_t len) {
 bool MyTransportNRF24::available(uint8_t *to) {
 	uint8_t pipe = 255;
 	boolean avail = rf24.available(&pipe);
+	(void)avail; //until somebody makes use of 'avail'
 	if (pipe == CURRENT_NODE_PIPE)
 		*to = _address;
 	else if (pipe == BROADCAST_PIPE)

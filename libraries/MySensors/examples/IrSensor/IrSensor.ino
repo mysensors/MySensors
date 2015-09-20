@@ -1,9 +1,35 @@
-// Example sketch showing how to control ir devices
-// An IR LED must be connected to Arduino PWM pin 3.
-// An optional ir receiver can be connected to PWM pin 8. 
-// All receied ir signals will be sent to gateway device stored in VAR_1.
-// When binary light on is clicked - sketch will send volume up ir command
-// When binary light off is clicked - sketch will send volume down ir command
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik EKblad
+ * 
+ * DESCRIPTION
+ * Example sketch showing how to control ir devices
+ * An IR LED must be connected to Arduino PWM pin 3.
+ * An optional ir receiver can be connected to PWM pin 8. 
+ * All receied ir signals will be sent to gateway device stored in VAR_1.
+ * When binary light on is clicked - sketch will send volume up ir command
+ * When binary light off is clicked - sketch will send volume down ir command
+ * http://www.mysensors.org/build/ir
+ */
 
 #include <MySensor.h>
 #include <SPI.h>

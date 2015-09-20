@@ -1,3 +1,24 @@
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
+
+#ifdef ARDUINO_ARCH_AVR
+
 #include "MyHw.h"
 #include "MyHwATMega328.h"
 
@@ -9,6 +30,14 @@ void wakeUp()	 //place to send the interrupts
 void wakeUp2()	 //place to send the second interrupts
 {
 	pinIntTrigger = 2;
+}
+
+// Watchdog Timer interrupt service routine. This routine is required
+// to allow automatic WDIF and WDIE bit clearance in hardware.
+ISR (WDT_vect)
+{
+	// WDIE & WDIF is cleared in hardware upon entering this ISR
+	wdt_disable();
 }
 
 MyHwATMega328::MyHwATMega328() : MyHw()
@@ -90,9 +119,11 @@ void powerDown(period_t period) {
 	ADCSRA |= (1 << ADEN);
 }
 
-inline void MyHwATMega328::sleep(unsigned long ms) {
+void MyHwATMega328::internalSleep(unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
-	Serial.flush();
+  #ifdef ENABLED_SERIAL
+	  Serial.flush();
+  #endif
 	pinIntTrigger = 0;
 	while (!pinIntTrigger && ms >= 8000) { powerDown(SLEEP_8S); ms -= 8000; }
 	if (!pinIntTrigger && ms >= 4000)    { powerDown(SLEEP_4S); ms -= 4000; }
@@ -106,18 +137,24 @@ inline void MyHwATMega328::sleep(unsigned long ms) {
 	if (!pinIntTrigger && ms >= 16)      { powerDown(SLEEP_15Ms); ms -= 15; }
 }
 
+void MyHwATMega328::sleep(unsigned long ms) {
+	internalSleep(ms);
+}
+
 bool MyHwATMega328::sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	// Let serial prints finish (debug, log etc)
 	bool pinTriggeredWakeup = true;
 	attachInterrupt(interrupt, wakeUp, mode);
 	if (ms>0) {
 		pinIntTrigger = 0;
-		sleep(ms);
+		internalSleep(ms);
 		if (0 == pinIntTrigger) {
 			pinTriggeredWakeup = false;
 		}
 	} else {
-		Serial.flush();
+    #ifdef ENABLED_SERIAL
+		  Serial.flush();
+    #endif
 		powerDown(SLEEP_FOREVER);
 	}
 	detachInterrupt(interrupt);
@@ -130,12 +167,14 @@ inline uint8_t MyHwATMega328::sleep(uint8_t interrupt1, uint8_t mode1, uint8_t i
 	attachInterrupt(interrupt2, wakeUp2, mode2);
 	if (ms>0) {
 		pinIntTrigger = 0;
-		sleep(ms);
+		internalSleep(ms);
 		if (0 == pinIntTrigger) {
 			retVal = -1;
 		}
 	} else {
-		Serial.flush();
+    #ifdef ENABLED_SERIAL
+		  Serial.flush();
+    #endif
 		powerDown(SLEEP_FOREVER);
 	}
 	detachInterrupt(interrupt1);
@@ -178,3 +217,4 @@ void MyHwATMega328::debugPrint(bool isGW, const char *fmt, ... ) {
 }
 #endif
 
+#endif // #ifdef ARDUINO_ARCH_AVR

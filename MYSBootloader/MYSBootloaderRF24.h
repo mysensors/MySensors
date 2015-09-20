@@ -9,12 +9,11 @@ typedef enum { RF24_1MBPS = 0, RF24_2MBPS, RF24_250KBPS } rf24_datarate_e;
 
 #define _write_register(reg) ( (reg) | W_REGISTER)
 #define _read_register(reg) ( (reg) | R_REGISTER)
-
 #define addr_width 5
+
 uint64_t pipe0_reading_address = 0;
 
-
-uint8_t BurstReadAddress(uint8_t addr, uint8_t* buf, uint8_t len) {
+static uint8_t BurstReadAddress(uint8_t addr, uint8_t* buf, uint8_t len) {
 	csnlow();
 	uint8_t status = SPItransfer( addr );
 	while ( len-- ) {
@@ -25,7 +24,7 @@ uint8_t BurstReadAddress(uint8_t addr, uint8_t* buf, uint8_t len) {
 	return status;
 }
 
-uint8_t BurstWriteAddress(uint8_t addr, uint8_t* buf, uint8_t len) {
+static uint8_t BurstWriteAddress(uint8_t addr, uint8_t* buf, uint8_t len) {
 	csnlow();
 	uint8_t status = SPItransfer( addr );
 	while ( len-- ) {
@@ -35,30 +34,30 @@ uint8_t BurstWriteAddress(uint8_t addr, uint8_t* buf, uint8_t len) {
 	return status;
 }
 
-uint8_t ReadAddress(uint8_t addr) {
+static uint8_t ReadAddress(uint8_t addr) {
 	return BurstReadAddress(addr,NULL,1);
 }
 
 
-uint8_t WriteAddress(uint8_t addr, uint8_t val) {
+static uint8_t WriteAddress(uint8_t addr, uint8_t val) {
 	return BurstWriteAddress(addr,&val,1);
 }
 
-#define BurstWriteRegister(reg,buf,len) BurstWriteAddress(_write_register(reg),buf,len)
-#define WriteRegister(reg,val) WriteAddress(_write_register(reg),val)
-#define BurstReadRegister(reg,buf,len) BurstReadAddress(_read_register(reg),buf,len)
+#define BurstWriteRegister(reg,buf,len) BurstWriteAddress(_write_register(reg), buf, len)
+#define WriteRegister(reg,val) WriteAddress(_write_register(reg), val)
+#define BurstReadRegister(reg,buf,len) BurstReadAddress(_read_register(reg), buf, len)
 #define ReadRegister(reg) ReadAddress(_read_register(reg))
-#define get_status() BurstReadAddress(NOP,NULL,0)
+#define get_status() BurstReadAddress(NOP, NULL, 0)
 
 void Flush_RX(void) {
-	BurstWriteAddress(FLUSH_RX,NULL,0);
+	BurstWriteAddress(FLUSH_RX, NULL, 0);
 }
 
 void Flush_TX(void) {
-	BurstWriteAddress(FLUSH_TX,NULL,0);
+	BurstWriteAddress(FLUSH_TX, NULL, 0);
 }
 
-void Flush_RXTX_CLI(void) {
+static void Flush_RXTX_CLI(void) {
 	// flush RX and TX buffer
 	Flush_RX();
 	Flush_TX();
@@ -86,18 +85,18 @@ static void stopListening(void) {
 
 
 
-static bool write_buf(uint8_t* buf, uint8_t len, const bool multicast ) {
+static boolean write_buf(uint8_t* buf, uint8_t len, const bool multicast ) {
 	// write payload to FIFO
 	BurstWriteRegister( multicast ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD, buf, len) ;
 	// CE pulse to start transmission
 	cehigh();
 	// IMPORTANT: minimum CE pulse width 10us, see nRF24L01 specs
-	delaym(1);
+	_delay_us(CE_PULSE_LENGTH);
 	// start transmitting
 	celow();
 	
 
-	// wait until sent, here we potentially have a deadlock when transmitter not connected/not working
+	// wait until sent or ACKed, here we potentially have a deadlock when transmitter not connected/not working => wdt recovers
 	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { }
 	// read interrupts and clear
 	uint8_t status = WriteRegister(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
@@ -119,7 +118,7 @@ static uint8_t getDynamicPayloadSize(void) {
 }
 
 
-static bool available(uint8_t* pipe_num) {
+static boolean available(uint8_t* pipe_num) {
 	if (!(ReadAddress(FIFO_STATUS) & _BV(RX_EMPTY) )){
 		if (pipe_num) {
 			uint8_t status = get_status();
@@ -131,11 +130,13 @@ static bool available(uint8_t* pipe_num) {
 }
 
 
-static void readMessage(uint8_t* buf) {
+static uint8_t readMessage(uint8_t* buf) {
 	// read payload
-	BurstReadRegister(R_RX_PAYLOAD,buf,getDynamicPayloadSize());
+	uint8_t PL_LEN = getDynamicPayloadSize();
+	BurstReadRegister(R_RX_PAYLOAD,buf,PL_LEN);
 	// reset interrupts
-	WriteRegister(STATUS,_BV(RX_DR) | _BV(MAX_RT) | _BV(TX_DS));
+	WriteRegister(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+	return PL_LEN;
 }
 
 static void openWritingPipe(uint64_t value) {
@@ -162,7 +163,7 @@ static void openReadingPipe(uint8_t pipe, uint64_t address) {
 static boolean write(uint8_t destination, uint8_t* buf, uint8_t len, boolean multicast) {
 	stopListening();
 	openWritingPipe(TO_ADDR(destination));
-	bool result = write_buf(buf, len, multicast);
+	boolean result = write_buf(buf, len, multicast);
 	startListening();
 	return result;
 }
@@ -177,6 +178,8 @@ static void setAddress(uint8_t addr)
 	}
 }
 
+
+
 static void RFinit(void){
 	// set address width
 	WriteRegister(SETUP_AW, (addr_width-2) % 4);
@@ -190,7 +193,7 @@ static void RFinit(void){
 	WriteRegister(RF_SETUP, ((RF24_DATARATE & 0b00000010 ) << 4) | ((RF24_DATARATE & 0b00000001 ) << 3) | ((RF24_PA_LEVEL << 1) + 1));
 	// flush RX and TX FIFO, clear interrupts
 	Flush_RXTX_CLI();
-	// activate dynamic payload feature
+	// activate to unlock features
 	WriteAddress(ACTIVATE,0x73);
 	// enable payload with ACK and dynamic payload length
 	WriteRegister(FEATURE, _BV(EN_ACK_PAY) | _BV(EN_DPL) );
@@ -198,13 +201,8 @@ static void RFinit(void){
 	WriteRegister(DYNPD, _BV(DPL_P5) | _BV(DPL_P4) | _BV(DPL_P3) | _BV(DPL_P2) | _BV(DPL_P1) | _BV(DPL_P0));
 	//powerUp, enable 16bit CRC, no RX mode
 	WriteRegister(CONFIG, _BV(PWR_UP) | _BV(CRCO) | _BV(EN_CRC) | ~_BV(PRIM_RX));
-	// stabilize
-	delaym(5);
-	
-	// We are not listening to broadcast pipe since we do not reply to broadcasting messages (e.g. FIND_PARENT_RESPONSE messages)
-	// openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
-
-
+	// stabilize 5ms
+	_delay_ms(5);
 }
 
 #endif // MYSBootloaderRF24_H

@@ -1,3 +1,23 @@
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
+
+
 #include "MyMessage.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,12 +81,11 @@ char* MyMessage::getStream(char *buffer) const {
 
 char* MyMessage::getString(char *buffer) const {
 	uint8_t payloadType = miGetPayloadType();
-	if (payloadType == P_STRING) {
-		strncpy(buffer, data, miGetLength());
-		buffer[miGetLength()] = 0;
-		return buffer;
-	} else if (buffer != NULL) {
-		if (payloadType == P_BYTE) {
+	if (buffer != NULL) {
+		if (payloadType == P_STRING) {
+			strncpy(buffer, data, miGetLength());
+			buffer[miGetLength()] = 0;
+		} else if (payloadType == P_BYTE) {
 			itoa(bValue, buffer, 10);
 		} else if (payloadType == P_INT16) {
 			itoa(iValue, buffer, 10);

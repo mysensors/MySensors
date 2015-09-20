@@ -1,13 +1,22 @@
-/*
- The MySensors library adds a new layer on top of the RF24 library.
- It handles radio network routing, relaying and ids.
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
 
- Created by Henrik Ekblad <henrik.ekblad@gmail.com>
-	
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
-*/
 
 #ifndef MySensor_h
 #define MySensor_h
@@ -23,14 +32,37 @@
 #include "MySigningNone.h"
 #endif
 #include "MyMessage.h"
+#ifdef MY_OTA_FIRMWARE_FEATURE
+#include "utility/SPIFlash.h"
+#endif
 #include <stddef.h>
 #include <stdarg.h>
+
+
+// Set the hardware driver to use (initialized by MySensor-class)
+//#if defined __AVR_ATmega328P__
+#if defined(ARDUINO_ARCH_ESP8266)
+#include "MyHwESP8266.h"
+typedef MyHwESP8266 MyHwDriver;
+#elif defined(ARDUINO_ARCH_AVR)
+#include "MyHwATMega328.h"
+typedef MyHwATMega328 MyHwDriver;
+#endif
+//#endif
 
 
 #ifdef DEBUG
 #define debug(x,...) hw.debugPrint(isGateway, x, ##__VA_ARGS__)
 #else
 #define debug(x,...)
+#endif
+
+#ifdef WITH_LEDS_BLINKING_INVERSE
+#define LED_ON 0x1
+#define LED_OFF 0x0
+#else
+#define LED_ON 0x0
+#define LED_OFF 0x1
 #endif
 
 
@@ -54,6 +86,7 @@
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5
 
+
 struct NodeConfig
 {
 	uint8_t nodeId; // Current node id
@@ -64,6 +97,53 @@ struct NodeConfig
 struct ControllerConfig {
 	uint8_t isMetric;
 };
+
+
+// Size of each firmware block
+#define FIRMWARE_BLOCK_SIZE	16
+// Number of times a firmware block should be requested before giving up
+#define FIRMWARE_MAX_REQUESTS 5
+// Number of times to request a fw block before giving up
+#define MY_OTA_RETRY 5
+// Number of millisecons before re-request a fw block
+#define MY_OTA_RETRY_DELAY 500
+// Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
+#define FIRMWARE_START_OFFSET 10
+// Bootloader version
+#define MY_OTA_BOOTLOADER_MAJOR_VERSION 3
+#define MY_OTA_BOOTLOADER_MINOR_VERSION 0
+#define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)
+
+
+// FW config structure, stored in eeprom
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t blocks;
+	uint16_t crc;
+} __attribute__((packed)) NodeFirmwareConfig;
+
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t blocks;
+	uint16_t crc;
+	uint16_t BLVersion;
+} __attribute__((packed)) RequestFirmwareConfig;
+
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t block;
+} __attribute__((packed)) RequestFWBlock;
+
+typedef struct {
+	uint16_t type;
+	uint16_t version;
+	uint16_t block;
+	uint8_t data[FIRMWARE_BLOCK_SIZE];
+} __attribute__((packed)) ReplyFWBlock;
+
 
 #ifdef __cplusplus
 class MySensor
@@ -78,6 +158,12 @@ class MySensor
 	MySensor(MyTransport &radio =*new MyTransportNRF24(), MyHw &hw=*new MyHwDriver()
 #ifdef MY_SIGNING_FEATURE
 		, MySigning &signer=*new MySigningNone()
+#endif
+#ifdef WITH_LEDS_BLINKING
+		, uint8_t _rx=DEFAULT_RX_LED_PIN,
+		uint8_t _tx=DEFAULT_TX_LED_PIN,
+		uint8_t _er=DEFAULT_ERR_LED_PIN,
+		unsigned long _blink_period=DEFAULT_LED_BLINK_PERIOD
 #endif
 		);
 
@@ -104,9 +190,11 @@ class MySensor
 	*
 	* @param sensorId Select a unique sensor id for this sensor. Choose a number between 0-254.
 	* @param sensorType The sensor type. See sensor typedef in MyMessage.h.
+	* @param description A textual description of the sensor.
 	* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+	* @param description A textual description of the sensor.
 	*/
-	void present(uint8_t sensorId, uint8_t sensorType, bool ack=false);
+	void present(uint8_t sensorId, uint8_t sensorType, const char *description="", bool ack=false);
 
 	/**
 	 * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
@@ -135,6 +223,12 @@ class MySensor
 	 *
 	 */
 	void sendBatteryLevel(uint8_t level, bool ack=false);
+
+	/**
+	 * Send a heartbeat message (I'm alive!) to the gateway/controller.
+	 * The payload will be an incremental 16 bit integer value starting at 1 when sensor is powered on.
+	 */
+	void sendHeartbeat(void);
 
 	/**
 	* Requests a value from gateway or some other sensor in the radio network.
@@ -232,23 +326,56 @@ class MySensor
 	 */
 	int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
+#ifdef WITH_LEDS_BLINKING
+	/**
+	 * Blink with LEDs
+	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
+	 */
+	void rxBlink(uint8_t cnt);
+	void txBlink(uint8_t cnt);
+	void errBlink(uint8_t cnt);
+#endif
 
   protected:
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	NodeFirmwareConfig fc;
+	bool fwUpdateOngoing;
+	unsigned long fwLastRequestTime;
+	uint16_t fwBlock;
+	uint8_t fwRetry;
+	SPIFlash flash;
+#endif
+
 	bool repeaterMode;
 	bool autoFindParent;
 	bool isGateway;
 
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage tmpMsg ;  // Buffer for temporary messages (acks and nonces among others).
+
+#ifdef WITH_LEDS_BLINKING
+	uint8_t pinRx; // Rx led pin
+	uint8_t pinTx; // Tx led pin
+	uint8_t pinEr; // Err led pin
+
+	// these variables don't need to be volatile, since we are not using interrupts
+	uint8_t countRx;
+	uint8_t countTx;
+	uint8_t countErr;
+
+	unsigned long ledBlinkPeriod;
+	void handleLedsBlinking(); // do the actual blinking
+	unsigned long blink_next_time;
+#endif
+
+	MyTransport& radio;
 #ifdef MY_SIGNING_FEATURE
 	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
 	MyMessage msgSign;  // Buffer for message to sign.
 	MySigning& signer;
 #endif
-
-	MyTransport& radio;
 	MyHw& hw;
 	
 	boolean sendWrite(uint8_t dest, MyMessage &message);
@@ -258,8 +385,15 @@ class MySensor
 	char convBuf[MAX_PAYLOAD*2+1];
 #endif
 	uint8_t failedTransmissions;
+	uint16_t heartbeat;
     void (*timeCallback)(unsigned long); // Callback for requested time messages
     void (*msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
+
+#ifdef MY_OTA_FIRMWARE_FEATURE
+// do a crc16 on the whole received firmware
+    bool isValidFirmware();
+#endif
+
 
     void requestNodeId();
 	void setupNode();

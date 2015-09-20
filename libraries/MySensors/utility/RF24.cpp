@@ -41,7 +41,7 @@ void RF24::csn(bool mode)
 			delayMicroseconds(11);  // allow csn to settle
 		}
 	}		
-#else if !defined  (__arm__) || defined (CORE_TEENSY)
+#elif !defined  (__arm__) || defined (CORE_TEENSY)
 	digitalWrite(csn_pin,mode);		
 #endif
 
@@ -498,7 +498,7 @@ void RF24::begin(void)
 
   // Reset current status
   // Notice reset and flush is the last thing we do
-  write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+  write_register(RF24_STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   // Set up default configuration.  Callers can always change it later.
   // This channel should be universally safe and not bleed over into adjacent
@@ -525,7 +525,7 @@ void RF24::startListening(void)
   powerUp();
  #endif
   write_register(CONFIG, read_register(CONFIG) | _BV(PRIM_RX));
-  write_register(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+  write_register(RF24_STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   // Restore the pipe0 adddress, if exists
   if (pipe0_reading_address[0] > 0){
@@ -546,22 +546,35 @@ void RF24::startListening(void)
 }
 
 /****************************************************************************/
-static const uint8_t child_pipe_enable[] PROGMEM =
+static uint8_t get_child_pipe_mask(const uint8_t idx)
 {
-  ERX_P0, ERX_P1, ERX_P2, ERX_P3, ERX_P4, ERX_P5
-};
+#ifdef ESP8266
+  static const uint8_t child_pipe_enable[] =
+  {
+    _BV(ERX_P0), _BV(ERX_P1), _BV(ERX_P2), _BV(ERX_P3), _BV(ERX_P4), _BV(ERX_P5)
+  };
+  return child_pipe_enable[idx];
+#else
+  static const uint8_t child_pipe_enable[] PROGMEM =
+  {
+    _BV(ERX_P0), _BV(ERX_P1), _BV(ERX_P2), _BV(ERX_P3), _BV(ERX_P4), _BV(ERX_P5)
+  };
+  return pgm_read_byte(&child_pipe_enable[idx]);
+#endif
+}
 
 void RF24::stopListening(void)
 {
-
   ce(LOW);
   #if defined(__arm__)
   	delayMicroseconds(300);
   #endif
   delayMicroseconds(130);
+
   if(read_register(FEATURE) & _BV(EN_ACK_PAY)){
 	flush_tx();
   }
+
   //flush_rx();
   write_register(CONFIG, ( read_register(CONFIG) ) & ~_BV(PRIM_RX) );
  
@@ -569,13 +582,13 @@ void RF24::stopListening(void)
   // for 3 pins solution TX mode is only left with additonal powerDown/powerUp cycle
   if (ce_pin == csn_pin) {
     powerDown();
-	powerUp();
+    powerUp();
   }
   #endif
-  write_register(EN_RXADDR,read_register(EN_RXADDR) | _BV(pgm_read_byte(&child_pipe_enable[0]))); // Enable RX on pipe0
+
+  write_register(EN_RXADDR,read_register(EN_RXADDR) | get_child_pipe_mask(0)); // Enable RX on pipe0
   
   delayMicroseconds(100);
-
 }
 
 /****************************************************************************/
@@ -636,7 +649,7 @@ bool RF24::write( const void* buf, uint8_t len, const bool multicast )
     
 	ce(LOW);
 
-	uint8_t status = write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+	uint8_t status = write_register(RF24_STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   //Max retries exceeded
   if( status & _BV(MAX_RT)){
@@ -686,7 +699,7 @@ bool RF24::writeBlocking( const void* buf, uint8_t len, uint32_t timeout )
 /****************************************************************************/
 
 void RF24::reUseTX(){
-		write_register(STATUS,_BV(MAX_RT) );			  //Clear max retry flag
+		write_register(RF24_STATUS,_BV(MAX_RT) );			  //Clear max retry flag
 		spiTrans( REUSE_TX_PL );
 		ce(LOW);										  //Re-Transfer packet
 		ce(HIGH);
@@ -709,7 +722,7 @@ bool RF24::writeFast( const void* buf, uint8_t len, const bool multicast )
 
 		if( get_status() & _BV(MAX_RT)){
 			//reUseTX();										  //Set re-transmit
-			write_register(STATUS,_BV(MAX_RT) );			  //Clear max retry flag
+			write_register(RF24_STATUS,_BV(MAX_RT) );			  //Clear max retry flag
 			return 0;										  //Return 0. The previous payload has been retransmitted
 															  //From the user perspective, if you get a 0, just keep trying to send the same payload
 		}
@@ -777,7 +790,7 @@ bool RF24::txStandBy(){
 	#endif
 	while( ! (read_register(FIFO_STATUS) & _BV(TX_EMPTY)) ){
 		if( get_status() & _BV(MAX_RT)){
-			write_register(STATUS,_BV(MAX_RT) );
+			write_register(RF24_STATUS,_BV(MAX_RT) );
 			ce(LOW);
 			flush_tx();    //Non blocking, flush the data
 			return 0;
@@ -802,7 +815,7 @@ bool RF24::txStandBy(uint32_t timeout){
 
 	while( ! (read_register(FIFO_STATUS) & _BV(TX_EMPTY)) ){
 		if( get_status() & _BV(MAX_RT)){
-			write_register(STATUS,_BV(MAX_RT) );
+			write_register(RF24_STATUS,_BV(MAX_RT) );
 				ce(LOW);										  //Set re-transmit
 				ce(HIGH);
 				if(millis() - start >= timeout){
@@ -891,7 +904,7 @@ void RF24::read( void* buf, uint8_t len ){
   read_payload( buf, len );
 
   //Clear the two possible interrupt flags with one command
-  write_register(STATUS,_BV(RX_DR) | _BV(MAX_RT) | _BV(TX_DS) );
+  write_register(RF24_STATUS,_BV(RX_DR) | _BV(MAX_RT) | _BV(TX_DS) );
 
 }
 
@@ -901,7 +914,7 @@ void RF24::whatHappened(bool& tx_ok,bool& tx_fail,bool& rx_ready)
 {
   // Read the status & reset the status in one easy call
   // Or is that such a good idea?
-  uint8_t status = write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+  uint8_t status = write_register(RF24_STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   // Report to the user what happened
   tx_ok = status & _BV(TX_DS);
@@ -972,7 +985,7 @@ void RF24::openReadingPipe(uint8_t child, uint64_t address)
     // Note it would be more efficient to set all of the bits for all open
     // pipes at once.  However, I thought it would make the calling code
     // more simple to do it this way.
-    write_register(EN_RXADDR,read_register(EN_RXADDR) | _BV(pgm_read_byte(&child_pipe_enable[child])));
+    write_register(EN_RXADDR,read_register(EN_RXADDR) | get_child_pipe_mask(child));
   }
 }
 
@@ -1009,7 +1022,7 @@ void RF24::openReadingPipe(uint8_t child, const uint8_t *address)
     // Note it would be more efficient to set all of the bits for all open
     // pipes at once.  However, I thought it would make the calling code
     // more simple to do it this way.
-    write_register(EN_RXADDR,read_register(EN_RXADDR) | _BV(pgm_read_byte(&child_pipe_enable[child])));
+    write_register(EN_RXADDR,read_register(EN_RXADDR) | get_child_pipe_mask(child));
 
   }
 }
@@ -1018,7 +1031,7 @@ void RF24::openReadingPipe(uint8_t child, const uint8_t *address)
 
 void RF24::closeReadingPipe( uint8_t pipe )
 {
-  write_register(EN_RXADDR,read_register(EN_RXADDR) & ~_BV(pgm_read_byte(&child_pipe_enable[pipe])));
+  write_register(EN_RXADDR,read_register(EN_RXADDR) & ~get_child_pipe_mask(pipe));
 }
 
 /****************************************************************************/

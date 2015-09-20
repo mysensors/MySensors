@@ -1,28 +1,54 @@
-/* Secret Knock Sensor
-
-   See original instructions here (note: The MySensors adopted code might differ in wiring. The instructions below is correct):
-   https://learn.adafruit.com/secret-knock-activated-drawer-lock/ 
-   Version 13.10.31  Built with Arduino IDE 1.0.5
-   
-   By Steve Hoefer http://grathio.com
-   Adapted to MySensors by Henrik Ekblad
-   
-   Licensed under Creative Commons Attribution-Noncommercial-Share Alike 3.0
-   http://creativecommons.org/licenses/by-nc-sa/3.0/us/
-   (In short: Do what you want, as long as you credit me, don't relicense it, and don't sell it or use it in anything you sell without contacting me.)
-   
-   ------Wiring------
-   Pin 0: Program button used for recording a new Knock (connect Pin0 -> button -> GND) 
-   Pin 1: Optional: Connect LED here (remember resisor in series)
-   Pin 2: Optional: Piezo element (for beeps). 
-   Pin 5: A sound sensor (digital output) for sensing knocks. See MySensors purchase guide. I used this: http://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_ff3=2&pub=5575069610&toolid=10001&campid=5337433187&customid=&icep_item=200941260251&ipn=psmain&icep_vectorid=229466&kwid=902099&mtid=824&kw=lg 
-   Pin 4: Connects to either 1. Relay which open door or lock or 
-                             2. transistor that opens a solenoid lock when HIGH (see adafruit guide for this option).
-                                 
- 
-   Connect radio according as usual(you can skip IRQ pin) 
-   http://www.mysensors.org/build/connect_radio 
-*/
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Henrik Ekblad
+ * 
+ * DESCRIPTION
+ *
+ * Secret Knock Sensor
+ * http://www.mysensors.org/build/knock
+ *
+ * See original instructions here (note: The MySensors adopted code might differ in wiring. The instructions below is correct):
+ * https://learn.adafruit.com/secret-knock-activated-drawer-lock/ 
+ * Version 13.10.31  Built with Arduino IDE 1.0.5
+ * 
+ * By Steve Hoefer http://grathio.com
+ * Adapted to MySensors by Henrik Ekblad
+ * 
+ * Licensed under Creative Commons Attribution-Noncommercial-Share Alike 3.0
+ * http://creativecommons.org/licenses/by-nc-sa/3.0/us/
+ * (In short: Do what you want, as long as you credit me, don't relicense it, and don't sell it or use it in anything you sell without contacting me.)
+ * 
+ * ------Wiring------
+ * Pin 0: Program button used for recording a new Knock (connect Pin0 -> button -> GND) 
+ * Pin 1: Optional: Connect LED here (remember resisor in series)
+ * Pin 2: Optional: Piezo element (for beeps). 
+ * Pin 5: A sound sensor (digital output) for sensing knocks. See MySensors purchase guide. I used this: http://rover.ebay.com/rover/1/711-53200-19255-0/1?icep_ff3=2&pub=5575069610&toolid=10001&campid=5337433187&customid=&icep_item=200941260251&ipn=psmain&icep_vectorid=229466&kwid=902099&mtid=824&kw=lg 
+ * Pin 4: Connects to either 1. Relay which open door or lock or 
+ *                           2. transistor that opens a solenoid lock when HIGH (see adafruit guide for this option).
+ *                               
+ *
+ * Connect radio according as usual(you can skip IRQ pin) 
+ * http://www.mysensors.org/build/connect_radio 
+ */
  
 #include <MySensor.h>  
 #include <SPI.h>
@@ -272,7 +298,6 @@ boolean validateKnock(){
 // reads the secret knock from EEPROM. (if any.)
 void readSecretKnock(){
   byte reading;
-  int i;
   reading = gw.loadState(1);
   if (reading == eepromValid){    // only read EEPROM if the signature byte is correct.
     for (int i=0; i < maximumKnocks ;i++){

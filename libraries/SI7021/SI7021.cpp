@@ -128,7 +128,7 @@ void SI7021::setHeater(bool on) {
 // get humidity, then get temperature reading from humidity measurement
 struct si7021_env SI7021::getHumidityAndTemperature() {
     si7021_env ret = {0, 0, 0};
-    ret.humidityBasisPoints      = getHumidityBasisPoints();
+    ret.humidityPercent          = getHumidityPercent();
     ret.celsiusHundredths        = _getCelsiusPostHumidity();
     ret.fahrenheitHundredths     = (1.8 * ret.celsiusHundredths) + 3200;
     return ret;

@@ -49,6 +49,8 @@ LiquidCrystal_SR1W::LiquidCrystal_SR1W (uint8_t srdata, t_sr1w_circuitType circu
 // init
 void LiquidCrystal_SR1W::init(uint8_t srdata, t_sr1w_circuitType circuitType, t_backlighPol blpol, uint8_t lines, uint8_t font)
 {
+	(void)lines;
+	(void)font;
 	_srRegister = fio_pinToOutputRegister(srdata);
 	_srMask = fio_pinToBit(srdata);
    
