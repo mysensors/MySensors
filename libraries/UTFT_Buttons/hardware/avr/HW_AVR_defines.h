@@ -1,1 +1,0 @@
-#define bitmapdatatype unsigned int*
