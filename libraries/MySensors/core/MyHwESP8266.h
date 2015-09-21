@@ -29,6 +29,11 @@
 //#include <SPI.h>
 #endif
 
+
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+
+
 // Define these as macros to save valuable space
 
 #define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))

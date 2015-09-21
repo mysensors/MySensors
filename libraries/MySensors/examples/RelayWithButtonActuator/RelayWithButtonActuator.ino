@@ -56,8 +56,6 @@ MyMessage msg(CHILD_ID,V_LIGHT);
 
 void setup()  
 {  
-  setIncomingCallback(incomingMessage);
-  
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Relay & Button", "1.0");
 
@@ -98,7 +96,7 @@ void loop()
   oldValue = value;
 } 
  
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.isAck()) {
      Serial.println("This is an ack from gateway");

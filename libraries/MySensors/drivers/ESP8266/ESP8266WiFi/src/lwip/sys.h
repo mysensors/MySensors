@@ -32,7 +32,7 @@
 #ifndef __LWIP_SYS_H__
 #define __LWIP_SYS_H__
 
-#include "lwip/opt.h"
+#include "opt.h"
 
 #include "eagle_soc.h"
 

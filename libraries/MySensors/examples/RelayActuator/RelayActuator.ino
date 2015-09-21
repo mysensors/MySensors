@@ -46,9 +46,6 @@
 
 void setup()  
 {   
-  // Initialize library and add callback for incoming messages
-  setIncomingCallback(incomingMessage);
-  
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Relay", "1.0");
 
@@ -69,7 +66,7 @@ void loop()
   
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
      // Change relay state

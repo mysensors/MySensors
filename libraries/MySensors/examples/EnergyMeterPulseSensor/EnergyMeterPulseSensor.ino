@@ -67,9 +67,6 @@ MyMessage pcMsg(CHILD_ID,V_VAR1);
 
 void setup()  
 {  
-  // Initialize library and add callback for incoming messages (signing is required)
-  setIncomingCallback(incomingMessage);
-
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Energy Meter", "1.0");
 
@@ -124,7 +121,7 @@ void loop()
   }
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   if (message.type==V_VAR1) {  
     pulseCount = oldPulseCount = message.getLong();
     Serial.print("Received last pulse count from gw:");

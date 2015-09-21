@@ -28,14 +28,14 @@
 #ifndef __LWIP_NETIFAPI_H__
 #define __LWIP_NETIFAPI_H__
 
-#include "lwip/opt.h"
+#include "opt.h"
 
 #if LWIP_NETIF_API /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/sys.h"
-#include "lwip/netif.h"
-#include "lwip/dhcp.h"
-#include "lwip/autoip.h"
+#include "sys.h"
+#include "netif.h"
+#include "dhcp.h"
+#include "autoip.h"
 
 #ifdef __cplusplus
 extern "C" {

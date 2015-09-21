@@ -56,7 +56,6 @@ void setup()
 {  
   irrecv.enableIRIn(); // Start the ir receiver
   decoder.UseExtnBuf(Buffer);
-  setIncomingCallback(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("IR Sensor", "1.0");
@@ -82,7 +81,7 @@ void loop()
 
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
      int incomingRelayStatus = message.getInt();

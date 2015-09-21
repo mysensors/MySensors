@@ -98,8 +98,6 @@ void setup() {
   pinMode(programButton, INPUT);
   digitalWrite(programButton, HIGH); // Enable internal pull up 
 
-  setIncomingCallback(incomingMessage);
-  
   sendSketchInfo("Secret Knock", "1.0");
   present(CHILD_ID, S_LOCK);
   
@@ -365,7 +363,7 @@ void chirp(int playTime, int delayTime){
 
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS) {
      // Change relay state

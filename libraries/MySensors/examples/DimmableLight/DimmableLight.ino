@@ -57,9 +57,6 @@ MyMessage dimmerMsg(CHILD_ID_LIGHT, V_DIMMER);
 
 void setup()  
 { 
-  // Initialize library and add callback for incoming messages (signing is required)
-  setIncomingCallback(incomingMessage);
-
   // Send the Sketch Version Information to the Gateway
   sendSketchInfo(SN, SV);
 
@@ -86,7 +83,7 @@ void loop()
 {
 }
 
-void incomingMessage(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   if (message.type == V_LIGHT) {
     Serial.println( "V_LIGHT command received..." );

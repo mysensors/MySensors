@@ -55,9 +55,6 @@ bool attachedServo = false;
             
 void setup() 
 { 
-  // Attach method for incoming messages
-  setIncomingCallback(incomingMessage);
-  
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Servo", "1.0");
 
@@ -76,7 +73,7 @@ void loop()
   }
 } 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   myservo.attach(SERVO_DIGITAL_OUT_PIN);   
   attachedServo = true;
   if (message.type==V_DIMMER) { // This could be M_ACK_VARIABLE or M_SET_VARIABLE

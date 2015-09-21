@@ -37,11 +37,11 @@
 #ifndef __LWIP_SNMP_STRUCTS_H__
 #define __LWIP_SNMP_STRUCTS_H__
 
-#include "lwip/opt.h"
+#include "opt.h"
 
 #if LWIP_SNMP /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/snmp.h"
+#include "snmp.h"
 
 #if SNMP_PRIVATE_MIB
 /* When using a private MIB, you have to create a file 'private_mib.h' that contains

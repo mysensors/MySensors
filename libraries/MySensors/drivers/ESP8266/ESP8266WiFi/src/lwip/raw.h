@@ -32,14 +32,14 @@
 #ifndef __LWIP_RAW_H__
 #define __LWIP_RAW_H__
 
-#include "lwip/opt.h"
+#include "opt.h"
 
 #if LWIP_RAW /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/pbuf.h"
-#include "lwip/def.h"
-#include "lwip/ip.h"
-#include "lwip/ip_addr.h"
+#include "pbuf.h"
+#include "def.h"
+#include "ip.h"
+#include "ip_addr.h"
 
 #ifdef __cplusplus
 extern "C" {

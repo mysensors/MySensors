@@ -33,8 +33,8 @@
 #define __LWIP_DEF_H__
 
 /* arch.h might define NULL already */
-#include "lwip/arch.h"
-#include "lwip/opt.h"
+#include "arch.h"
+#include "opt.h"
 
 #ifdef __cplusplus
 extern "C" {

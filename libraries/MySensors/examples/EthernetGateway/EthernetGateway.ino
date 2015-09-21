@@ -110,9 +110,6 @@
 #define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
 #define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
 
-#define MY_RADIO_CE_PIN        5  // radio chip enable
-#define MY_RADIO_SPI_SS_PIN    6  // radio SPI serial select
-
 #include <MySensor.h>
 
 

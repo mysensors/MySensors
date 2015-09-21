@@ -32,10 +32,10 @@
 #ifndef __LWIP_ICMP_H__
 #define __LWIP_ICMP_H__
 
-#include "lwip/opt.h"
-#include "lwip/pbuf.h"
-#include "lwip/ip_addr.h"
-#include "lwip/netif.h"
+#include "opt.h"
+#include "pbuf.h"
+#include "ip_addr.h"
+#include "netif.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,9 +74,9 @@ enum icmp_te_type {
  *  is splitted to two u16_t like ICMP echo needs it.
  *  This header is also used for other ICMP types that do not
  *  use the data part.
- *  ¶¨ÒåICMP»ØËÍÇëÇó±¨ÎÄÊ×²¿½á¹¹£¬
- *  ÓÉÓÚËùÓÐICMP±¨ÎÄÊ×²¿ÓÐºÜ´óÏàËÆÐÔ£¬
- *  ¸Ã½á¹¹Í¬ÑùÊÊÓÃÓÚÆäËüICMP±¨ÎÄ¡£
+ *  ï¿½ï¿½ï¿½ï¿½ICMPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½á¹¹ï¿½ï¿½
+ *  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ICMPï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ÐºÜ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½
+ *  ï¿½Ã½á¹¹Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ICMPï¿½ï¿½ï¿½Ä¡ï¿½
  */
 PACK_STRUCT_BEGIN
 struct icmp_echo_hdr {
@@ -91,11 +91,11 @@ PACK_STRUCT_END
 #  include "arch/epstruct.h"
 #endif
 
-//¶ÁÈ¡ICMPÊ×²¿ÖÐ×Ö¶Î
+//ï¿½ï¿½È¡ICMPï¿½×²ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
 #define ICMPH_TYPE(hdr) ((hdr)->type)
 #define ICMPH_CODE(hdr) ((hdr)->code)
 
-/** Combines type and code to an u16_t ÏòICMP±¨ÎÄÊ×²¿×Ö¶ÎÖÐÐ´ÈëÏàÓ¦Öµ*/
+/** Combines type and code to an u16_t ï¿½ï¿½ICMPï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½Ó¦Öµ*/
 #define ICMPH_TYPE_SET(hdr, t) ((hdr)->type = (t))
 #define ICMPH_CODE_SET(hdr, c) ((hdr)->code = (c))
 

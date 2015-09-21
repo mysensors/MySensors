@@ -282,8 +282,8 @@ inline void transportProcess() {
 		}
 		#endif
 		// Call incoming message callback if available
-		if (_msgCallback != NULL) {
-			_msgCallback(_msg);
+		if (receive) {
+			receive(_msg);
 		}
 		return;
 	}

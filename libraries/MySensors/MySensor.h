@@ -39,7 +39,9 @@
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
 	#include "drivers/ESP8266/SPI/SPI.cpp"
+	#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
 	#include "core/MyHwESP8266.cpp"
+
 	// For ESP8266, we always enable gateway feature
 	#define MY_GATEWAY_ESP8266
 #elif defined(ARDUINO_ARCH_AVR)
@@ -110,7 +112,11 @@
 	#endif
 	#if defined(MY_GATEWAY_ESP8266)
 		// GATEWAY - ESP8266
+//		#include "drivers/ESP8266/ESP8266WiFi/src/ESP8266Wifi.cpp"
 
+//		#include "drivers/ESP8266/ESP8266WiFi/src/WifiClient.cpp"
+//		#include "drivers/ESP8266/ESP8266WiFi/src/WifiServer.cpp"
+//		#include "drivers/ESP8266/ESP8266WiFi/src/WifiUdp.cpp"
 	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100
 		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
@@ -212,18 +218,31 @@
 #include "core/MySensorCore.cpp"
 
 extern void setup();
-extern void loop();
+//extern void loop();
+
+// Optional sketch functions called by MySensors library
+void receive(const MyMessage &message)  __attribute__((weak));
+void receiveTime(unsigned long)  __attribute__((weak));
+void presentation()  __attribute__((weak));
+extern "C" void setup()  __attribute__((weak));
+extern "C" void loop()  __attribute__((weak));
+
 
 #include <Arduino.h>
 // Initialize library and handle sketch functions like we want to
-int main() {
+int main(void) {
 	init();  // Init Arduino
+	#if defined(USBCON)
+		USBDevice.attach();
+	#endif
 	_begin(); // Startup MySensors library
-	setup(); // Call sketch setup
-	while(1) {
+	if (setup) setup(); // Call sketch setup
+	for(;;) {
 		_process();  // Process incoming data
-		loop(); // Call sketch loop
+		if (loop) loop(); // Call sketch loop
+		#if !defined(ARDUINO_ARCH_ESP8266)
 		if (serialEventRun) serialEventRun();
+		#endif
 	}
 	return 0;
 }

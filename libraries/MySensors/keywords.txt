@@ -19,6 +19,11 @@ requestTime	KEYWORD2
 saveState	KEYWORD2
 loadState	KEYWORD2
 wait	KEYWORD2
+receive	KEYWORD2
+receiveTime	KEYWORD2
+loop	KEYWORD2
+setup	KEYWORD2
+presentation	KEYWORD2
 
 ######################################
 # Constants (LITERAL1)

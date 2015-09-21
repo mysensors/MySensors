@@ -85,9 +85,6 @@ Bounce debouncer = Bounce();
 
 void setup()  
 { 
-  // Initialize library and add callback for incoming messages (signing is required)
-  setIncomingCallback(incomingMessage);
-
   // Set knob button pin as input (with debounce)
   pinMode(KNOB_BUTTON_PIN, INPUT);
   digitalWrite(KNOB_BUTTON_PIN, HIGH);
@@ -124,7 +121,7 @@ void loop()
   fadeStep();
 }
 
-void incomingMessage(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   if (message.type == V_LIGHT) {
     // Incoming on/off command sent from controller ("1" or "0")

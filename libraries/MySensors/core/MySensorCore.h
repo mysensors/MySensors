@@ -76,12 +76,6 @@ struct ControllerConfig {
 };
 
 
-/**
-* Set the callback method for incoming messages
-*
-* @param incomingMessageCallback Callback function for incoming messages from other nodes or controller and request responses.
-*/
-void setIncomingCallback(void (* msgCallback)(const MyMessage &)=NULL);
 
 /**
  * Return this nodes id.
@@ -144,11 +138,10 @@ void sendHeartbeat(void);
 void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS);
 
 /**
- * Requests time from controller. Answer will be delivered to callback.
+ * Requests time from controller. Answer will be delivered to receiveTime function in sketch.
  *
- * @param callback for time request. Incoming argument is seconds since 1970.
  */
-void requestTime(void (* timeCallback)(unsigned long));
+void requestTime();
 
 
 
@@ -232,10 +225,12 @@ boolean _sendRoute(MyMessage &message);
 extern NodeConfig _nc;
 extern MyMessage _msg;  // Buffer for incoming messages.
 extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces among others).
-extern void (*_msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 #ifdef MY_DEBUG
 	extern char _convBuf[MAX_PAYLOAD*2+1];
 #endif
+void receive(const MyMessage &message)  __attribute__((weak));
+void receiveTime(unsigned long)  __attribute__((weak));
+void presentation()  __attribute__((weak));
 
 // Inline function and macros
 static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {

@@ -29,8 +29,6 @@ MyMessage mPing(CHILD, V_VAR1);   //Ping message
 MyMessage mPong(CHILD, V_VAR2);   //Pong message
 
 void setup() {
-  setIncomingCallback(incomingMessage);
-    
   present(CHILD, S_CUSTOM);  //
   
   sendSketchInfo( nodeTypeAsCharRepresentation( getNodeId() ), VSN );
@@ -63,7 +61,7 @@ void loop() {
   }
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   
   LOG(F("Received %s from %s\n"), msgTypeAsCharRepresentation((mysensor_data)message.type), nodeTypeAsCharRepresentation(message.sender));
 

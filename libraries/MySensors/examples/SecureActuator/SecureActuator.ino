@@ -62,11 +62,8 @@
 #define LOCK_LOCK 1  // GPIO value to write to lock attached lock
 #define LOCK_UNLOCK 0 // GPIO value to write to unlock attached lock
 
-
 void setup()  
 {
-  // Add callback for incoming messages (signing is required)
-  setIncomingCallback(incomingMessage);
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Secure Lock", "1.0");
 
@@ -85,7 +82,7 @@ void loop()
 {
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS) {
      // Change relay state

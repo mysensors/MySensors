@@ -33,8 +33,8 @@
 #ifndef __LWIP_PBUF_H__
 #define __LWIP_PBUF_H__
 
-#include "lwip/opt.h"
-#include "lwip/err.h"
+#include "opt.h"
+#include "err.h"
 
 #ifdef __cplusplus
 extern "C" {

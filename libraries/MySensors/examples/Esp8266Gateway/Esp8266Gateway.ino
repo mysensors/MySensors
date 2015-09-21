@@ -64,64 +64,78 @@
  *
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
-#define NO_PORTB_PINCHANGES 
-
-#include <SPI.h>  
-
-#include <MySigningNone.h> 
-#include <MySigningAtsha204Soft.h>
-#include <MyTransportNRF24.h>
-#include <MyTransportRFM69.h>
-#include <EEPROM.h>
-#include <MyHwESP8266.h>
 #include <ESP8266WiFi.h>
-
-#include <MyParserSerial.h>  
-#include <MySensor.h>  
 #include <stdarg.h>
-#include "GatewayUtil.h"
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type (if attached)
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+// Gateway always enabled for ESP8266 by default
+//#define MY_GATEWAY_ESP8266
+
+// Enable to use UDP          
+#define MY_USE_UDP
+
+#define MY_IP_ADDRESS 192,168,178,66   // If this is disabled, DHCP is used to retrieve address
+// Renewal period if using DHCP
+//#define MY_IP_RENEWAL_INTERVAL 60000
+// The port to keep open on node server mode / or port to contact in client mode
+#define MY_PORT 5003      
+
+// Controller ip address (enables client mode). Undefine this to act as sever.
+#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254   
+ 
+// The MAC address can be anything you want but should be unique on your network.
+// Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
+// Note that most of the Ardunio examples use  "DEAD BEEF FEED" for the MAC address.
+#define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+
+// Flash leds on rx/tx/err
+#define MY_LEDS_BLINKING_FEATURE
+// Set blinking period
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
+
+// Enable inclusion mode
+#define MY_INCLUSION_MODE_FEATURE
+// Enable Inclusion mode button on gateway
+#define MY_INCLUSION_BUTTON_FEATURE
+// Set inclusion mode duration (in seconds)
+#define MY_INCLUSION_MODE_DURATION 60 
+// Digital pin used for inclusion mode button
+#define MY_INCLUSION_MODE_BUTTON_PIN  3 
+
+#define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
+#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
+#define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
+
+
+// NEW 
+#define MY_ESP8266_MAX_CLIENTS 5    // how many clients should be able to telnet to this ESP8266
+#define MY_ESP8266_SSID "MySSID"
+#define MY_ESP8266_PASSWORD "MyVerySecretPassword"
+
+
+
+#define MAX_RECEIVE_LENGTH 100 // Max buffersize needed for messages coming from controller
+#define MAX_SEND_LENGTH 120 // Max buffersize needed for messages destined for controller
+
+typedef struct
+{
+  char    string[MAX_RECEIVE_LENGTH];
+  uint8_t idx;
+} inputBuffer;
+
+
+#include <MySensor.h>  
+//#include <stdarg.h>
 
 const char *ssid =  "MySSID";    // cannot be longer than 32 characters!
 const char *pass =  "MyVerySecretPassword"; //
 
-#define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
-#define INCLUSION_MODE_PIN  5 // Digital pin used for inclusion mode button
-
-#define RADIO_CE_PIN        4   // radio chip enable
-#define RADIO_SPI_SS_PIN    15  // radio SPI serial select
-
-#ifdef WITH_LEDS_BLINKING
-#define RADIO_ERROR_LED_PIN 7  // Error led pin
-#define RADIO_RX_LED_PIN    8  // Receive led pin
-#define RADIO_TX_LED_PIN    9  // the PCB, on board LED
-#endif
-
-
-// NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);
-//MyTransportRFM69 transport;
-
-
-// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-#ifdef MY_SIGNING_FEATURE
-MySigningNone signer;
-//MySigningAtsha204Soft signer;
-#endif
-
-// Hardware profile 
-MyHwESP8266 hw;
-
-// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-// To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
-MySensor gw(transport, hw
-#ifdef MY_SIGNING_FEATURE
-    , signer
-#endif
-#ifdef WITH_LEDS_BLINKING
-  , RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN
-#endif
-  );
-  
 
 #define IP_PORT 5003         // The port you want to open 
 #define MAX_SRV_CLIENTS 5    // how many clients should be able to telnet to this ESP8266
@@ -155,7 +169,7 @@ void output(const char *fmt, ... )
 
 void setup()  
 { 
-  // Setup console
+/*  // Setup console
   hw_init();
 
   Serial.println(); Serial.println();
@@ -175,17 +189,16 @@ void setup()
   setupGateway(INCLUSION_MODE_PIN, INCLUSION_MODE_TIME, output);
 
   // Initialize gateway at maximum PA level, channel 70 and callback for write operations 
-  gw.begin(incomingMessage, 0, true, 0);
+  begin(incomingMessage, 0, true, 0);
   
   // start listening for clients
   server.begin();
-  server.setNoDelay(true);  
+  server.setNoDelay(true);  */
 }
 
 
 void loop() {
-  gw.process();  
-  
+/*  
   checkButtonTriggeredInclusion();
   checkInclusionFinished();
 
@@ -258,7 +271,7 @@ void loop() {
         break;
       }
     }
-  }
+  }*/
 }
 
 

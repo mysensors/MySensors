@@ -62,9 +62,6 @@ int isShow;
      
 void setup() 
 {
-   // Add callback for incoming messages
-  setIncomingCallback(incomingMessage);
-        
   // Present sketch (name, version)
   sendSketchInfo(SN, SV);				
        
@@ -130,7 +127,7 @@ void loop()
 }
 
 
-void incomingMessage(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   if (message.isAck())
   {

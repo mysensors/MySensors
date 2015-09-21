@@ -30,7 +30,6 @@ MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among other
 
 uint16_t _heartbeat;
 void (*_timeCallback)(unsigned long); // Callback for requested time messages
-void (*_msgCallback)(const MyMessage &); // Callback for incoming messages from other nodes and gateway.
 
 
 void _process() {
@@ -59,10 +58,6 @@ static inline bool isValidParent( const uint8_t parent ) {
 	return parent != AUTO;
 }
 #endif
-
-void setIncomingCallback(void (*msgCallback)(const MyMessage &)) {
-	_msgCallback = msgCallback;
-}
 
 void _begin() {
 	#if !defined(MY_DISABLED_SERIAL)
@@ -218,8 +213,7 @@ void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination) {
 	_sendRoute(build(_msg, _nc.nodeId, destination, childSensorId, C_REQ, variableType, false).set(""));
 }
 
-void requestTime(void (* timeCallback)(unsigned long)) {
-	_timeCallback = timeCallback;
+void requestTime() {
 	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
@@ -237,9 +231,9 @@ void _processInternalMessages() {
 		isMetric = _msg.getString()[0] == 'M' ;
 		_cc.isMetric = isMetric;
 		hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
-	} else if (type == I_TIME && _timeCallback != NULL) {
+	} else if (type == I_TIME && receiveTime) {
 		// Deliver time to callback
-		_timeCallback(_msg.getULong());
+		receiveTime(_msg.getULong());
 	}
 	#if defined(MY_REPEATER_FEATURE)
 		if (type == I_CHILDREN && _msg.getString()[0] == 'C') {

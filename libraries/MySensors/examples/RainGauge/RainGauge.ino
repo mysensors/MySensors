@@ -145,9 +145,6 @@ void setup()
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   //
-  //Let's get the controller talking to the Arduino
-  setIncomingCallback(getVariables);
-
   sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
   wait(DWELL_TIME);
   present(CHILD_ID_RAIN_LOG, S_RAIN);
@@ -161,7 +158,7 @@ void setup()
   unsigned long functionTimeout = millis();
   while (timeStatus() == timeNotSet && millis() - functionTimeout < 30000UL)
   {
-    requestTime(receiveTime);
+    requestTime();
     DEBUG_PRINTLN(F("Getting Time"));
     wait(1000); // call once per second
     DEBUG_PRINTLN(F("."));
@@ -322,7 +319,7 @@ void loop()
     DEBUG_PRINTLN(eepromIndex);
     saveState(eepromIndex, 0xFE);
     saveState(eepromIndex + 1, 0xFE);
-    requestTime(receiveTime); // sync the time every hour
+    requestTime(); // sync the time every hour
     wait(DWELL_TIME);
     transmitRainData();
     rainRate = 0;
@@ -529,7 +526,7 @@ void transmitRainData(void)
   wait(DWELL_TIME);
 }
 
-void getVariables(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   if (message.sensor == CHILD_ID_RAIN_LOG)
   {

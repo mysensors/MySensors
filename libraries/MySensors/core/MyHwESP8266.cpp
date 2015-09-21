@@ -18,7 +18,7 @@
  */
 
 #include "MyHwESP8266.h"
-#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
+
 
 /*
 int8_t pinIntTrigger = 0;

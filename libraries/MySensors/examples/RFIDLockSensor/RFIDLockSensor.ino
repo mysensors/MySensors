@@ -96,9 +96,6 @@ void setup() {
   // configure board to read RFID tags
   nfc.SAMConfig();
 
-  // Add callback for incoming messages 
-  setIncomingCallback(incomingMessage);
-  
   sendSketchInfo("RFID Lock", "1.0");
   present(CHILD_ID, S_LOCK);
   
@@ -169,7 +166,7 @@ void setLockState(bool state, bool doSend){
   lockStatus = state;
 }
  
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS) {
      // Change relay state

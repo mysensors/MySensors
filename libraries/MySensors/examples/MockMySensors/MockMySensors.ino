@@ -333,8 +333,6 @@ void setup()
   // Random SEED
   randomSeed(analogRead(0));
   
-  // Start the gateway
-  setIncomingCallback(incomingMessage);
   wait(LONG_WAIT);
   Serial.println("GW Started");
   
@@ -574,7 +572,7 @@ void loop()
   
   // Request time
   Serial.println("Request Time");
-  requestTime(receiveTime);
+  requestTime();
   wait(LONG_WAIT);
   
   //Read Sensors
@@ -1196,7 +1194,7 @@ void custom(){
 #endif
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   switch (message.type) {
     #ifdef ID_S_ARMED
     case V_ARMED:

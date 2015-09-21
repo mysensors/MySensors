@@ -131,7 +131,7 @@ void setup()
   sendSketchInfo("Scene Ctrl", "1.0");
   present(CHILD_ID, S_SCENE_CONTROLLER);
   // Request time from controller. 
-  requestTime(receiveTime); 
+  requestTime(); 
 }
 
 
@@ -170,7 +170,7 @@ void loop()
     || (timeReceived && now-lastRequest > (unsigned long)60*1000*60)) {
     // Request time from controller. 
     Serial.println("requesting time");
-    requestTime(receiveTime);  
+    requestTime();  
     lastRequest = now;
   }
 

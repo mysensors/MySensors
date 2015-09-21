@@ -44,7 +44,7 @@ void setup()
   sendSketchInfo("Clock", "1.0");
 
   // Request time from controller. 
-  requestTime(receiveTime);  
+  requestTime();  
 }
 
 // This is called when a new time value was received
@@ -64,7 +64,7 @@ void loop()
     || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
     // Request time from controller. 
     Serial.println("requesting time");
-    requestTime(receiveTime);  
+    requestTime();  
     lastRequest = now;
   }
   

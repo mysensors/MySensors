@@ -29,7 +29,7 @@
 #ifndef __LWIP_NETDB_H__
 #define __LWIP_NETDB_H__
 
-#include "lwip/opt.h"
+#include "opt.h"
 
 #if LWIP_DNS && LWIP_SOCKET
 

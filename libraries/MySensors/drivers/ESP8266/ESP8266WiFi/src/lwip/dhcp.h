@@ -4,12 +4,12 @@
 #ifndef __LWIP_DHCP_H__
 #define __LWIP_DHCP_H__
 
-#include "lwip/opt.h"
+#include "opt.h"
 
 #if LWIP_DHCP /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/netif.h"
-#include "lwip/udp.h"
+#include "netif.h"
+#include "udp.h"
 
 #ifdef __cplusplus
 extern "C" {

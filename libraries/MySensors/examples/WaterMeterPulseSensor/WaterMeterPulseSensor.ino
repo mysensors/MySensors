@@ -76,8 +76,6 @@ unsigned long lastPulse =0;
 
 void setup()  
 {  
-  setIncomingCallback(incomingMessage);
-  
   // initialize our digital pins internal pullup resistor so one pulse switches from high to low (less distortion) 
   pinMode(DIGITAL_INPUT_SENSOR, INPUT_PULLUP);
   
@@ -156,7 +154,7 @@ void loop()
   }
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   if (message.type==V_VAR1) {
     unsigned long gwPulseCount=message.getULong();
     pulseCount += gwPulseCount;

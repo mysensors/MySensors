@@ -68,7 +68,7 @@ void setup()
   setSyncProvider(RTC.get);  
 
   // Request latest time from controller at startup
-  requestTime(receiveTime);  
+  requestTime();  
   
   // initialize the lcd for 16 chars 2 lines and turn on backlight
   lcd.begin(16,2); 
@@ -93,7 +93,7 @@ void loop()
     || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
     // Request time from controller. 
     Serial.println("requesting time");
-    requestTime(receiveTime);  
+    requestTime();  
     lastRequest = now;
   }
   

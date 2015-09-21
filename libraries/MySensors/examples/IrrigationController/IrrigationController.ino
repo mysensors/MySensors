@@ -206,7 +206,6 @@ void setup()
       lastTimeRun = lastTimeRun | loadState(i + 1); // assemble 4 bytes into an ussigned long epoch timestamp
     }
   }
-  setIncomingCallback(getVariables);
   sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
   for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
   {
@@ -225,7 +224,7 @@ void setup()
   int clockCounter = 0;
   while (timeStatus() == timeNotSet && clockCounter < 21)
   {
-    requestTime(receiveTime);
+    requestTime();
     DEBUG_PRINTLN(F("Requesting time from Gateway:"));
     wait(1000);
     lcd.print(".");
@@ -533,7 +532,7 @@ void slowToggleLED ()
   }
 }
 //
-void getVariables(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   boolean zoneTimeUpdate = false;
   if (message.isAck())
@@ -835,7 +834,7 @@ void updateClock()
     lcd.setCursor(15, 0);
     lcd.write(byte(0));
     clockUpdating = true;
-    requestTime(receiveTime);
+    requestTime();
     lastVeraGetTime = millis();
   }
 }

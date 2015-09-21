@@ -60,9 +60,6 @@ MyMessage lightMsg(0, V_LIGHT);
  */
 void setup()  
 { 
-  // Initialize library and add callback for incoming messages (signing is required)
-  setIncomingCallback(incomingMessage);
-
   // Register the LED Dimmable Light with the gateway
   present( 0, S_DIMMER );
   
@@ -80,7 +77,7 @@ void loop()
 
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   if (message.type == V_LIGHT || message.type == V_DIMMER) {
     
     //  Retrieve the power or dim level from the incoming request message
