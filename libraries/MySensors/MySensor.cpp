@@ -567,7 +567,7 @@ boolean MySensor::process() {
 #ifdef MY_SIGNING_FEATURE
 	// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 	// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
-	if (signer.requestSignatures() && msg.destination == nc.nodeId && mGetLength(msg) && !mGetAck(msg) &&
+	if (DO_SIGN(msg.sender) && signer.requestSignatures() && msg.destination == nc.nodeId && mGetLength(msg) && !mGetAck(msg) &&
 		(mGetCommand(msg) != C_INTERNAL ||
 		 (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING &&
 		  msg.type != I_ID_REQUEST && msg.type != I_ID_RESPONSE &&
