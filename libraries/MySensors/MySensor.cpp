@@ -671,7 +671,7 @@ boolean MySensor::process() {
 				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
 				// to sign it's messages
 				if (isGateway) {
-					if (signer.requestSignatures() && DO_SIGN(msg.sender))
+					if (signer.requestSignatures() || DO_SIGN(msg.sender))
 						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
 					else
 						sendRoute(build(msg, nc.nodeId, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
