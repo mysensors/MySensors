@@ -50,7 +50,6 @@
  */
 bool I2cMasterBase::transfer(uint8_t addrRW,
                              void *buf, size_t nbytes, uint8_t option) {
-  uint8_t* p = reinterpret_cast<uint8_t*>(buf);
   if (_state != STATE_REP_START) {
     start();
   }

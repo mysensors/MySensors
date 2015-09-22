@@ -56,8 +56,10 @@ void SPIFlash::select() {
 #ifndef SPI_HAS_TRANSACTION
   noInterrupts();
 #endif
+#ifndef ESP8266
   _SPCR = SPCR;
   _SPSR = SPSR;
+#endif
 
 #ifdef SPI_HAS_TRANSACTION
   SPI.beginTransaction(_settings);
@@ -80,15 +82,19 @@ void SPIFlash::unselect() {
 #else  
   interrupts();
 #endif
+#ifndef ESP8266
   SPCR = _SPCR;
   SPSR = _SPSR;
+#endif
 }
 
 /// setup SPI, read device ID etc...
 boolean SPIFlash::initialize()
 {
+#ifndef ESP8266
   _SPCR = SPCR;
   _SPSR = SPSR;
+#endif
   pinMode(_slaveSelectPin, OUTPUT);
 #ifdef SPI_HAS_TRANSACTION
   _settings = SPISettings(4000000, MSBFIRST, SPI_MODE0);

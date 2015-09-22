@@ -56,6 +56,8 @@
 #define PANIC_DISTANCE 5 // Mix distance we red warning indication should be active (in cm)
 #define PARKED_DISTANCE 20 // Distance when "parked signal" should be sent to controller (in cm)
 
+#define PARK_OFF_TIMEOUT 20000 // Number of milliseconds until turning off light when parked.
+
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 
@@ -67,17 +69,18 @@ NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and
 #define CHILD_ID 1
 MySensor gw;
 MyMessage msg(CHILD_ID,V_TRIPPED);
-int oldParkedStatus=-1;
-int sendInterval = 5000;  // Send park status at maximum every 5 second.
-unsigned long lastSend;
 #endif
+unsigned long sendInterval = 5000;  // Send park status at maximum every 5 second.
+unsigned long lastSend;
 
-int blinkInterval = 100; // blink interval (milliseconds)
+int oldParkedStatus=-1;
+
+unsigned long blinkInterval = 100; // blink interval (milliseconds)
 unsigned long lastBlinkPeriod;
 bool blinkColor = true;
 
 // To make a fading motion on the led ring/tape we only move one pixel/distDebounce time
-int distDebounce = 30; 
+unsigned long distDebounce = 30; 
 unsigned long lastDebouncePeriod;
 int numLightPixels=0;
 int skipZero=0;
@@ -109,7 +112,6 @@ void loop() {
   if (now-lastDebouncePeriod > distDebounce) {
     lastDebouncePeriod = now;
 
-#ifdef SEND_STATUS_TO_CONTROLLER
     // Update parked status
     int parked = displayDist != 0 && displayDist<PARKED_DISTANCE;
     if (parked != oldParkedStatus && now-lastSend > sendInterval) {
@@ -117,46 +119,54 @@ void loop() {
         Serial.println("Car Parked");
       else
         Serial.println("Car Gone");
+#ifdef SEND_STATUS_TO_CONTROLLER
       gw.send(msg.set(parked)); 
+#endif
       oldParkedStatus = parked;
       lastSend = now;
     }
-#endif
-    
-    if (displayDist == 0) {
-      // No reading from sensor, assume no object found
-      numLightPixels--;
-    } else {
-      skipZero = 0;
-      int newLightPixels = NUMPIXELS - (NUMPIXELS*(displayDist-PANIC_DISTANCE)/MAX_DISTANCE);
-      if (newLightPixels>numLightPixels) {
-        // Fast raise
-        numLightPixels += max((newLightPixels - numLightPixels) / 2, 1);
-      } else if (newLightPixels<numLightPixels) {
-        // Slow decent
-        numLightPixels--;
-      }
-    }
 
-    if (numLightPixels>=NUMPIXELS) {
-      // Do some intense red blinking 
-      if (now-lastBlinkPeriod > blinkInterval) {
-        blinkColor = !blinkColor;
-        lastBlinkPeriod = now;
-      }
-      for(int i=0;i<numLightPixels;i++){
-        pixels.setPixelColor(i, pixels.Color(blinkColor?255*MAX_INTESITY/100:0,0,0)); 
-      }              
-    } else {
-      for(int i=0;i<numLightPixels;i++){
-        int r = 255 * i/NUMPIXELS;
-        int g = 255 - r;     
-        // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-        pixels.setPixelColor(i, pixels.Color(r*MAX_INTESITY/100,g*MAX_INTESITY/100,0)); 
-      }
-      // Turn off the rest
-      for(int i=numLightPixels;i<NUMPIXELS;i++){
+    if (parked && now-lastSend > PARK_OFF_TIMEOUT) {
+      // We've been parked for a while now. Turn off all pixels
+      for(int i=0;i<NUMPIXELS;i++){
         pixels.setPixelColor(i, pixels.Color(0,0,0)); 
+      }
+    } else {
+      if (displayDist == 0) {
+        // No reading from sensor, assume no object found
+        numLightPixels--;
+      } else {
+        skipZero = 0;
+        int newLightPixels = NUMPIXELS - (NUMPIXELS*(displayDist-PANIC_DISTANCE)/MAX_DISTANCE);
+        if (newLightPixels>numLightPixels) {
+          // Fast raise
+          numLightPixels += max((newLightPixels - numLightPixels) / 2, 1);
+        } else if (newLightPixels<numLightPixels) {
+          // Slow decent
+          numLightPixels--;
+        }
+      }
+  
+      if (numLightPixels>=NUMPIXELS) {
+        // Do some intense red blinking 
+        if (now-lastBlinkPeriod > blinkInterval) {
+          blinkColor = !blinkColor;
+          lastBlinkPeriod = now;
+        }
+        for(int i=0;i<numLightPixels;i++){
+          pixels.setPixelColor(i, pixels.Color(blinkColor?255*MAX_INTESITY/100:0,0,0)); 
+        }              
+      } else {
+        for(int i=0;i<numLightPixels;i++){
+          int r = 255 * i/NUMPIXELS;
+          int g = 255 - r;     
+          // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
+          pixels.setPixelColor(i, pixels.Color(r*MAX_INTESITY/100,g*MAX_INTESITY/100,0)); 
+        }
+        // Turn off the rest
+        for(int i=numLightPixels;i<NUMPIXELS;i++){
+          pixels.setPixelColor(i, pixels.Color(0,0,0)); 
+        }
       }
     }
     pixels.show(); // This sends the updated pixel color to the hardware.

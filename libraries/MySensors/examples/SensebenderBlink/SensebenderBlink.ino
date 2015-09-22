@@ -3,6 +3,7 @@
 
 #include <MySensor.h>
 #include <SPI.h>
+#include "utility/SPIFlash.h"
 
 #define SketchName "Sensebender Blink"
 #define SketchVersion "20150721"

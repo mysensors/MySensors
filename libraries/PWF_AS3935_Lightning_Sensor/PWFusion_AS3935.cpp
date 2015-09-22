@@ -78,15 +78,8 @@ uint8_t PWF_AS3935::_sing_reg_read(uint8_t RegAdd)
 
 void PWF_AS3935::_sing_reg_write(uint8_t RegAdd, uint8_t DataMask, uint8_t RegData)
 {
-	// start by reading original register data (only modifying what we need to)
-	uint8_t OrigRegData = _sing_reg_read(RegAdd);
-
-	// calculate new register data... 'delete' old targeted data, replace with new data
-	// note: 'DataMask' must be bits targeted for replacement
-	// add'l note: this function does NOT shift values into the proper place... they need to be there already
-	uint8_t NewRegData = ((OrigRegData & ~DataMask) | (RegData & DataMask));
-
-	// now configure and write the updated register value
+	(void)DataMask;
+	// Configure and write the updated register value
 	digitalWrite(_cs, LOW);							// set pin low to start talking to IC
 	// next pack command byte, send AS3935.... structure is shown below
 	//  MODE   Register Address/Direct Cmd
@@ -228,7 +221,7 @@ uint32_t PWF_AS3935::AS3935_GetStrikeEnergyRaw(void)
 {
 	uint32_t nrgy_raw = ((_sing_reg_read(0x06) & 0x1F) << 8);	// MMSB, shift 8  bits left, make room for MSB
 	nrgy_raw |= _sing_reg_read(0x05);							// read MSB
-	nrgy_raw <= 8;												// shift 8 bits left, make room for LSB
+	nrgy_raw <<= 8;												// shift 8 bits left, make room for LSB
 	nrgy_raw |= _sing_reg_read(0x04);							// read LSB, add to others
 	
 	return nrgy_raw;

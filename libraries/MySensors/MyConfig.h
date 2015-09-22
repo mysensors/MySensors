@@ -26,6 +26,9 @@
 // to see what is actually is happening when developing
 #define DEBUG
 
+// Disable this line, If you are using TX(1), RX(0) as normal I/O pin
+#define ENABLED_SERIAL
+
 // Serial output baud rate (for debug prints and serial gateway)
 #define BAUD_RATE 115200
 
@@ -53,7 +56,7 @@
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-//#define WITH_LEDS_BLINKING
+// #define WITH_LEDS_BLINKING
 
 // The following setting allows you to inverse the blinking feature WITH_LEDS_BLINKING
 // When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
@@ -102,7 +105,6 @@
 
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-
 
 /**********************************
 *  NRF24L01 Driver Defaults

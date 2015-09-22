@@ -41,8 +41,13 @@
 
 // Set the hardware driver to use (initialized by MySensor-class)
 //#if defined __AVR_ATmega328P__
+#if defined(ARDUINO_ARCH_ESP8266)
+#include "MyHwESP8266.h"
+typedef MyHwESP8266 MyHwDriver;
+#elif defined(ARDUINO_ARCH_AVR)
 #include "MyHwATMega328.h"
 typedef MyHwATMega328 MyHwDriver;
+#endif
 //#endif
 
 
@@ -349,11 +354,6 @@ class MySensor
 
 	MyMessage msg;  // Buffer for incoming messages.
 	MyMessage tmpMsg ;  // Buffer for temporary messages (acks and nonces among others).
-#ifdef MY_SIGNING_FEATURE
-	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
-	MyMessage msgSign;  // Buffer for message to sign.
-	MySigning& signer;
-#endif
 
 #ifdef WITH_LEDS_BLINKING
 	uint8_t pinRx; // Rx led pin
@@ -367,9 +367,15 @@ class MySensor
 
 	unsigned long ledBlinkPeriod;
 	void handleLedsBlinking(); // do the actual blinking
+	unsigned long blink_next_time;
 #endif
 
 	MyTransport& radio;
+#ifdef MY_SIGNING_FEATURE
+	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
+	MyMessage msgSign;  // Buffer for message to sign.
+	MySigning& signer;
+#endif
 	MyHw& hw;
 	
 	boolean sendWrite(uint8_t dest, MyMessage &message);

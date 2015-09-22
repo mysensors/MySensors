@@ -237,7 +237,6 @@ void write_key(uint8_t* key)
 
 void dump_configuration()
 {
-  uint8_t config_word[4];
   uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
   uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
   uint8_t ret_code;
@@ -682,6 +681,8 @@ void setup()
   uint8_t lockConfig = 0;
   uint8_t lockValue = 0;
   uint16_t crc;
+  (void)crc;
+
   Serial.begin(115200);
 
   Serial.println(F("ATSHA204 personalization sketch for MySensors usage."));

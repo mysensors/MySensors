@@ -298,7 +298,6 @@ boolean validateKnock(){
 // reads the secret knock from EEPROM. (if any.)
 void readSecretKnock(){
   byte reading;
-  int i;
   reading = gw.loadState(1);
   if (reading == eepromValid){    // only read EEPROM if the signature byte is correct.
     for (int i=0; i < maximumKnocks ;i++){

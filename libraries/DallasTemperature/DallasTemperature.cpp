@@ -700,6 +700,7 @@ void DallasTemperature::setAlarmHandler(AlarmHandler *handler)
 // The default alarm handler
 void DallasTemperature::defaultAlarmHandler(const uint8_t* deviceAddress)
 {
+    (void)deviceAddress;
 }
 
 #endif

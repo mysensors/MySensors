@@ -20,6 +20,8 @@
 #ifndef MyHwATMega328_h
 #define MyHwATMega328_h
 
+#ifdef ARDUINO_ARCH_AVR
+
 #include "MyHw.h"
 #include "MyConfig.h"
 #include "MyMessage.h"
@@ -116,3 +118,4 @@ private:
 	void internalSleep(unsigned long ms);
 };
 #endif
+#endif // #ifdef ARDUINO_ARCH_AVR

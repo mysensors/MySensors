@@ -33,7 +33,7 @@ bool MyTransportRFM69::init() {
 	// Start up the radio library (_address will be set later by the MySensors library)
 	radio.initialize(_freqBand, _address, _networkId);
 #ifdef RFM69_ENABLE_ENCRYPTION
-    radio.encrypt(ENCRYPTKEY);
+    radio.encrypt(RFM69_ENCRYPTKEY);
 #endif
 	return true;
 }

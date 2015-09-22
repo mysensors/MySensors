@@ -110,6 +110,8 @@ LiquidCrystal_SR::LiquidCrystal_SR (uint8_t srdata, uint8_t srclock,
 void LiquidCrystal_SR::init(uint8_t srdata, uint8_t srclock, uint8_t enable, 
                             uint8_t lines, uint8_t font)
 {
+   (void)lines;
+   (void)font;
    // Initialise private variables
    _two_wire = 0;
    
@@ -200,10 +202,10 @@ void LiquidCrystal_SR::send(uint8_t value, uint8_t mode)
 //
 // setBacklightPin
 void LiquidCrystal_SR::setBacklightPin ( uint8_t pin, t_backlighPol pol )
-{ }
+{ (void)pin; (void)pol; }
 
 //
 // setBacklight
 void LiquidCrystal_SR::setBacklight ( uint8_t mode ) 
-{ }
+{ (void)mode; }
 

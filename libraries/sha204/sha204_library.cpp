@@ -791,6 +791,19 @@ uint8_t atsha204Class::sha204m_check_parameters(uint8_t op_code, uint8_t param1,
 	return SHA204_SUCCESS;
 
 #else
+  (void)rx_size;
+  (void)tx_size;
+  (void)tx_buffer;
+  (void)rx_buffer;
+  (void)param1;
+  (void)param2;
+  (void)data1;
+  (void)data2;
+  (void)data3;
+  (void)datalen1;
+  (void)datalen2;
+  (void)datalen3;
+  (void)op_code;
 	return SHA204_SUCCESS;
 #endif
 }
