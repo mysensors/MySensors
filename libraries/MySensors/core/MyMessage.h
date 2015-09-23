@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -17,7 +17,11 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-
+/**
+ * @file MyMessage.h
+ *
+ * @brief API and type declarations for MySensors messages
+ */
 #ifndef MyMessage_h
 #define MyMessage_h
 
@@ -148,12 +152,15 @@ typedef enum {
 } mysensor_data;
 
 
-// Type of internal messages (for internal messages)
+/// @brief Type of internal messages (for internal messages)
 typedef enum {
 	I_BATTERY_LEVEL, I_TIME, I_VERSION, I_ID_REQUEST, I_ID_RESPONSE,
 	I_INCLUSION_MODE, I_CONFIG, I_FIND_PARENT, I_FIND_PARENT_RESPONSE,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
-	I_REBOOT, I_GATEWAY_READY, I_REQUEST_SIGNING, I_GET_NONCE, I_GET_NONCE_RESPONSE,
+	I_REBOOT, I_GATEWAY_READY,
+	I_REQUEST_SIGNING,    /*!< Indicates senter require signed messages (bool param) */
+	I_GET_NONCE,          /*!< Request for a nonce */
+	I_GET_NONCE_RESPONSE, /*!< Payload is nonce data */
 	I_HEARTBEAT, I_PRESENTATION, I_DISCOVER, I_DISCOVER_RESPONSE
 } mysensor_internal;
 
@@ -224,6 +231,7 @@ typedef enum {
 #define miGetPayloadType() BF_GET(command_ack_payload, 5, 3)
 
 
+#if !DOXYGEN
 #ifdef __cplusplus
 class MyMessage
 {
@@ -322,6 +330,7 @@ struct
 };
 uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];	
 } __attribute__((packed)) MyMessage;
+#endif
 #endif
 
 #endif
