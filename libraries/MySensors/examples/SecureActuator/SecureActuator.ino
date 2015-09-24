@@ -17,13 +17,17 @@
  * version 2 as published by the Free Software Foundation.
  *
  *******************************
+ */
+/**
+ * @ingroup MySigninggrp
+ * @{
+ * @file SecureActuator.ino
+ * @brief Example sketch showing how to securely control locks.
+ *
+ * This example will remember lock state even after power failure.
  *
  * REVISION HISTORY
- * Version 1.0 - Patrick "Anticimex" Fallberg <patrick@fallberg.net>
- * 
- * DESCRIPTION
- * Example sketch showing how to securely control locks. 
- * This example will remember lock state even after power failure.
+ *  - See git log (git log libraries/MySensors/examples/SecureActuator/SecureActuator.ino)
  */
 
 /**
@@ -95,10 +99,16 @@ void presentation()
   }
 }
 
+/** @brief Sketch execution code */
 void loop() 
 {
 }
 
+/**
+ * @brief Incoming message handler
+ *
+ * @param message The message to handle.
+ */
 void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS) {
@@ -113,4 +123,4 @@ void receive(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
-
+/** @}*/

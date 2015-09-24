@@ -17,12 +17,15 @@
  * version 2 as published by the Free Software Foundation.
  *
  *******************************
+ */
+/**
+ * @ingroup MySigninggrp
+ * @{
+ * @file Sha204Personalizer.ino
+ * @brief SHA204 personalization sketch
  *
  * REVISION HISTORY
- * Version 1.0 - Patrick Fallberg, January 10, 2015
- * 
- * DESCRIPTION
- * SHA204 personalization sketch
+ *  - See git log (git log libraries/MySensors/examples/Sha204Personalizer/Sha204Personalizer.ino)
  */
 
 /**
