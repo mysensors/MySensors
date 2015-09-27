@@ -98,9 +98,6 @@ void setup() {
   pinMode(programButton, INPUT);
   digitalWrite(programButton, HIGH); // Enable internal pull up 
 
-  sendSketchInfo("Secret Knock", "1.0");
-  present(CHILD_ID, S_LOCK);
-  
   readSecretKnock();   // Load the secret knock (if any) from EEPROM.
   
   digitalWrite(lockPin, HIGH); // Unlock the door for a bit when we power up. For system check and to allow a way in if the key is forgotten
@@ -110,6 +107,11 @@ void setup() {
   setLockState(lockStatus, true); // Now set the last known state and send it to controller 
 
   delay(500);          // This delay is here because the solenoid lock returning to place can otherwise trigger and inadvertent knock.
+}
+
+void presentation()  {
+  sendSketchInfo("Secret Knock", "1.0");
+  present(CHILD_ID, S_LOCK);
 }
  
 void loop() {

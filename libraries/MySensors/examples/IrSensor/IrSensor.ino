@@ -57,13 +57,15 @@ void setup()
   irrecv.enableIRIn(); // Start the ir receiver
   decoder.UseExtnBuf(Buffer);
 
+}
+
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("IR Sensor", "1.0");
 
   // Register a sensors to  Use binary light for test purposes.
   present(CHILD_1, S_LIGHT);
 }
-
 
 void loop() 
 {

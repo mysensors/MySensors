@@ -60,17 +60,16 @@ MyMessage msg2(CHILD_ID_AIQ, V_UNIT_PREFIX);
 
 void setup()  
 {
+  pinMode(AIQ_SENSOR_ANALOG_PIN, INPUT);
+}
+
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("AIQ Sensor CO2 MH-Z14", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
   present(CHILD_ID_AIQ, S_AIR_QUALITY);  
   send(msg2.set("ppm"));
-  
-  sleep(SLEEP_TIME);
-  
-  pinMode(AIQ_SENSOR_ANALOG_PIN, INPUT);
-   
 }
 
 void loop() { 

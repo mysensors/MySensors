@@ -95,11 +95,14 @@ void setup() {
   Serial.println("Starting distance sensor");
   pixels.begin(); // This initializes the NeoPixel library.
   Serial.println("Neopixels initialized");
+}
+
 #ifdef SEND_STATUS_TO_CONTROLLER
+void presentation()  {
   sendSketchInfo("Parking Sensor", "1.0");
   present(CHILD_ID, S_DOOR, "Parking Status");
-#endif
 }
+#endif
 
 void loop() {
   unsigned long now = millis();

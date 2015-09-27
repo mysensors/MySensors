@@ -62,15 +62,6 @@ int isShow;
      
 void setup() 
 {
-  // Present sketch (name, version)
-  sendSketchInfo(SN, SV);				
-       
-  // Register sensors (id, type, description, ack back)
-  present(RED_PIN, S_DIMMER, "present RED light", false);
-  present(GREEN_PIN, S_DIMMER, "present GREEN light", false);
-  present(BLUE_PIN, S_DIMMER, "present BLUE light", false);
-  present(0, S_LIGHT, "present Show button", false);
-
   // Define pin mode (pin number, type)
   pinMode(RED_PIN, OUTPUT);		
   pinMode(GREEN_PIN, OUTPUT);
@@ -112,6 +103,17 @@ void setup()
   
   if (isShow==1){Serial.println("RGB show running..."); }
   Serial.println("Ready to receive messages...");  
+}
+
+void presentation()  {
+  // Present sketch (name, version)
+  sendSketchInfo(SN, SV);        
+       
+  // Register sensors (id, type, description, ack back)
+  present(RED_PIN, S_DIMMER, "present RED light", false);
+  present(GREEN_PIN, S_DIMMER, "present GREEN light", false);
+  present(BLUE_PIN, S_DIMMER, "present BLUE light", false);
+  present(0, S_LIGHT, "present Show button", false);
 }
 
 void loop()

@@ -96,11 +96,13 @@ void setup() {
   // configure board to read RFID tags
   nfc.SAMConfig();
 
-  sendSketchInfo("RFID Lock", "1.0");
-  present(CHILD_ID, S_LOCK);
-  
   lockStatus = loadState(0);    // Read last lock status from eeprom
   setLockState(lockStatus, true); // Now set the last known state and send it to controller 
+}
+
+void presentation()  {
+  sendSketchInfo("RFID Lock", "1.0");
+  present(CHILD_ID, S_LOCK);
 }
  
 void loop() {

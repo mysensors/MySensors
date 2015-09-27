@@ -56,10 +56,7 @@ MyMessage msg(CHILD_ID,V_LIGHT);
 
 void setup()  
 {  
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Relay & Button", "1.0");
-
- // Setup the button
+  // Setup the button
   pinMode(BUTTON_PIN,INPUT);
   // Activate internal pull-up
   digitalWrite(BUTTON_PIN,HIGH);
@@ -67,9 +64,6 @@ void setup()
   // After setting up the button, setup debouncer
   debouncer.attach(BUTTON_PIN);
   debouncer.interval(5);
-
-  // Register all sensors to gw (they will be created as child devices)
-  present(CHILD_ID, S_LIGHT);
 
   // Make sure relays are off when starting up
   digitalWrite(RELAY_PIN, RELAY_OFF);
@@ -81,6 +75,13 @@ void setup()
   digitalWrite(RELAY_PIN, state?RELAY_ON:RELAY_OFF);
 }
 
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Relay & Button", "1.0");
+
+  // Register all sensors to gw (they will be created as child devices)
+  present(CHILD_ID, S_LIGHT);
+}
 
 /*
 *  Example on how to asynchronously check for new messages from gw

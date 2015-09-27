@@ -29,6 +29,9 @@ MyMessage mPing(CHILD, V_VAR1);   //Ping message
 MyMessage mPong(CHILD, V_VAR2);   //Pong message
 
 void setup() {
+}
+
+void presentation()  {
   present(CHILD, S_CUSTOM);  //
   
   sendSketchInfo( nodeTypeAsCharRepresentation( getNodeId() ), VSN );

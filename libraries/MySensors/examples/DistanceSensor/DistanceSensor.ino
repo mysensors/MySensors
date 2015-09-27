@@ -49,12 +49,15 @@ boolean metric = true;
 
 void setup()  
 { 
+  metric = getConfig().isMetric;
+}
+
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Distance Sensor", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID, S_DISTANCE);
-  metric = getConfig().isMetric;
 }
 
 void loop()      

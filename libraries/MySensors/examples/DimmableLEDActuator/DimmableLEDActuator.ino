@@ -60,12 +60,15 @@ MyMessage lightMsg(0, V_LIGHT);
  */
 void setup()  
 { 
+  // Pull the gateway's current dim level - restore light level upon sendor node power-up
+  request( 0, V_DIMMER );
+}
+
+void presentation() {
   // Register the LED Dimmable Light with the gateway
   present( 0, S_DIMMER );
   
   sendSketchInfo(SN, SV);
-  // Pull the gateway's current dim level - restore light level upon sendor node power-up
-  request( 0, V_DIMMER );
 }
 
 /***

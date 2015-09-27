@@ -54,15 +54,19 @@ void setup()
 { 
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN); 
 
+  metric = getConfig().isMetric;
+}
+
+void presentation()  
+{ 
   // Send the Sketch Version Information to the Gateway
   sendSketchInfo("Humidity", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM);
   present(CHILD_ID_TEMP, S_TEMP);
-  
-  metric = getConfig().isMetric;
 }
+
 
 void loop()      
 {  

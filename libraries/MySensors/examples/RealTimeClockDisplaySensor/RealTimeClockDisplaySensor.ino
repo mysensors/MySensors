@@ -61,9 +61,6 @@ LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 
 void setup()  
 {  
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("RTC Clock", "1.0");
-  
   // the function to get the time from the RTC
   setSyncProvider(RTC.get);  
 
@@ -72,6 +69,11 @@ void setup()
   
   // initialize the lcd for 16 chars 2 lines and turn on backlight
   lcd.begin(16,2); 
+}
+
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("RTC Clock", "1.0");
 }
 
 // This is called when a new time value was received

@@ -39,14 +39,6 @@ MyMessage msgInt(CHILD_ID_INTENSITY, V_VAR1);
 
 void setup()  
 { 
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Lightning Sensor", "1.1");
-
-  // Register all sensors to gw (they will be created as child devices)
-  present(CHILD_ID_DISTANCE, S_DISTANCE);
-  present(CHILD_ID_INTENSITY, S_CUSTOM);
-
-  Serial.begin(115200);
   Serial.println("Playing With Fusion: AS3935 Lightning Sensor, SEN-39001");
   Serial.println("beginning boot procedure....");
   
@@ -74,6 +66,15 @@ void setup()
   // delay execution to allow chip to stabilize.
   delay(1000);
 
+}
+
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Lightning Sensor", "1.1");
+
+  // Register all sensors to gw (they will be created as child devices)
+  present(CHILD_ID_DISTANCE, S_DISTANCE);
+  present(CHILD_ID_INTENSITY, S_CUSTOM);
 }
 
 void loop()      

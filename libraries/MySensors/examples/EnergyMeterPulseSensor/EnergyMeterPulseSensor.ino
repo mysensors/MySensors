@@ -67,12 +67,6 @@ MyMessage pcMsg(CHILD_ID,V_VAR1);
 
 void setup()  
 {  
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Energy Meter", "1.0");
-
-  // Register this device as power sensor
-  present(CHILD_ID, S_POWER);
-
   // Fetch last known pulse count value from gw
   request(CHILD_ID, V_VAR1);
   
@@ -80,6 +74,13 @@ void setup()
   lastSend=millis();
 }
 
+void presentation() {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Energy Meter", "1.0");
+
+  // Register this device as power sensor
+  present(CHILD_ID, S_POWER);
+}
 
 void loop()     
 { 

@@ -58,16 +58,17 @@ MyMessage vibrationMsg(CHILD_ID_VIBRATION, V_LEVEL);
 
 void setup()  
 {
+  pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
+  attachInterrupt(1, blink, FALLING);// Trigger the blink function when the falling edge is detected
+  pinMode(SensorLED, OUTPUT);  
+}
+
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("VIBRATION Sensor", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
   present(CHILD_ID_VIBRATION, S_VIBRATION);
-
-  
-  pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
-  attachInterrupt(1, blink, FALLING);// Trigger the blink function when the falling edge is detected
-  pinMode(SensorLED, OUTPUT);  
 }
 
 void loop()      

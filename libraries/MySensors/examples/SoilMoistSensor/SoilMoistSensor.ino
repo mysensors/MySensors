@@ -95,9 +95,6 @@ values valueOf[NUM_READS];        // Calculated moisture percentages and resista
 int i;                            // Simple index variable
 
 void setup() {
-
-  sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
-  present(CHILD_ID, S_HUM);  
   // initialize the digital pins as an output.
   // Pin 6,7 is for sensor 1
   // initialize the digital pin as an output.
@@ -107,6 +104,11 @@ void setup() {
   // initialize the digital pin as an output.
   // Pin 7 is sense resistor voltage supply 2
   pinMode(7, OUTPUT);   
+}
+
+void presentation()  {
+  sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
+  present(CHILD_ID, S_HUM);  
 }
 
 void loop() {

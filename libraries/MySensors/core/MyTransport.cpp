@@ -81,11 +81,15 @@ inline void transportProcess() {
 		// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 		// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
 		#ifdef MY_SIGNING_REQUEST_SIGNATURES
-			if (_msg.destination == _nc.nodeId && mGetLength(_msg) && !mGetAck(_msg) &&
-				(mGetCommand(_msg) != C_INTERNAL ||
-				 (_msg.type != I_GET_NONCE_RESPONSE && _msg.type != I_GET_NONCE && _msg.type != I_REQUEST_SIGNING &&
-				  _msg.type != I_ID_REQUEST && _msg.type != I_ID_RESPONSE &&
-				  _msg.type != I_FIND_PARENT && _msg.type != I_FIND_PARENT_RESPONSE))) {
+
+			if ((!MY_IS_GATEWAY || DO_SIGN(msg.sender)) &&
+				msg.destination == nc.nodeId &&
+				mGetLength(msg) &&
+				!mGetAck(msg) &&
+				(mGetCommand(msg) != C_INTERNAL ||
+				 (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING &&
+				  msg.type != I_ID_REQUEST && msg.type != I_ID_RESPONSE &&
+				  msg.type != I_FIND_PARENT && msg.type != I_FIND_PARENT_RESPONSE))) {
 				if (!mGetSigned(_msg)) {
 					// Got unsigned message that should have been signed
 					debug(PSTR("no sign\n"));
@@ -207,7 +211,7 @@ inline void transportProcess() {
 						debug(PSTR("full\n"));
 						while (1); // Wait here. Nothing else we can do...
 					}
-					transportSetupNode();
+					transportPresentNode();
 					// Write id to EEPROM
 					hwWriteConfig(EEPROM_NODE_ID_ADDRESS, _nc.nodeId);
 					debug(PSTR("id=%d\n"), _nc.nodeId);
@@ -487,7 +491,7 @@ void transportRequestNodeId() {
 	wait(2000);
 }
 
-void transportSetupNode() {
+void transportPresentNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	transportSetAddress(_nc.nodeId);
 	// Present node and request config
@@ -532,6 +536,8 @@ void transportSetupNode() {
 			#endif
 		}
 	#endif
+	if (presentation)
+		presentation();
 }
 
 void transportFindParentNode() {

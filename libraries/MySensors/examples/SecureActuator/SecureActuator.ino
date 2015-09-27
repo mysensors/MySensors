@@ -62,7 +62,16 @@
 #define LOCK_LOCK 1  // GPIO value to write to lock attached lock
 #define LOCK_UNLOCK 0 // GPIO value to write to unlock attached lock
 
-void setup()  
+void setup() {
+  for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS;lock++, pin++) {
+    // Set lock pins in output mode
+    pinMode(pin, OUTPUT);   
+    // Set lock to last known state (using eeprom storage) 
+    digitalWrite(pin, loadState(lock)?LOCK_LOCK:LOCK_UNLOCK);
+  }
+}
+
+void presentation()  
 {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Secure Lock", "1.0");
@@ -71,10 +80,6 @@ void setup()
   for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS;lock++, pin++) {
     // Register all locks to gw (they will be created as child devices)
     present(lock, S_LOCK, "SecureActuator", false);
-    // Then set lock pins in output mode
-    pinMode(pin, OUTPUT);   
-    // Set lock to last known state (using eeprom storage) 
-    digitalWrite(pin, loadState(lock)?LOCK_LOCK:LOCK_UNLOCK);
   }
 }
 

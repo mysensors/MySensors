@@ -60,8 +60,7 @@ MyMessage msg(0, V_TEMP);
 
 MAX6675 temp0(CS0, SO, SCLK, units);
 
-void setup()
-{
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Max6675 Temp Sensor", "1.0");
 

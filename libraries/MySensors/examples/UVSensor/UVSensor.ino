@@ -58,8 +58,8 @@ float uvIndex;
 float lastUV = -1;
 uint16_t uvIndexValue [12] = { 50, 227, 318, 408, 503, 606, 696, 795, 881, 976, 1079, 1170};
 
-void setup()  
-{ 
+
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("UV Sensor", "1.2");
 

@@ -335,7 +335,9 @@ void setup()
   
   wait(LONG_WAIT);
   Serial.println("GW Started");
-  
+}
+
+void presentation()  {
   // Send the Sketch Version Information to the Gateway
   Serial.print("Send Sketch Info: ");
   sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);

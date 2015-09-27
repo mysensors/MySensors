@@ -79,12 +79,6 @@ void setup()
   // initialize our digital pins internal pullup resistor so one pulse switches from high to low (less distortion) 
   pinMode(DIGITAL_INPUT_SENSOR, INPUT_PULLUP);
   
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Water Meter", "1.1");
-
-  // Register this device as Waterflow sensor
-  present(CHILD_ID, S_WATER);       
-
   pulseCount = oldPulseCount = 0;
 
   // Fetch last known pulse count value from gw
@@ -95,6 +89,13 @@ void setup()
   attachInterrupt(SENSOR_INTERRUPT, onPulse, FALLING);
 }
 
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Water Meter", "1.1");
+
+  // Register this device as Waterflow sensor
+  present(CHILD_ID, S_WATER);       
+}
 
 void loop()     
 { 

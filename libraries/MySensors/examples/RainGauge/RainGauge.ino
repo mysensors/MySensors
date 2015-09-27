@@ -145,14 +145,6 @@ void setup()
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   //
-  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
-  wait(DWELL_TIME);
-  present(CHILD_ID_RAIN_LOG, S_RAIN);
-  wait(DWELL_TIME);
-  present(CHILD_ID_TRIPPED_INDICATOR, S_MOTION);
-  wait(DWELL_TIME);
-  DEBUG_PRINTLN(F("Sensor Presentation Complete"));
-  //
   //Sync time with the server, this will be called hourly in order to keep time from creeping with the crystal
   //
   unsigned long functionTimeout = millis();
@@ -206,23 +198,42 @@ void setup()
   //
 #ifdef DHT_ON
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN);
-  // Register all sensors to gw (they will be created as child devices)
-  present(CHILD_ID_HUM, S_HUM);
-  wait(DWELL_TIME);
-  present(CHILD_ID_TEMP, S_TEMP);
   wait(DWELL_TIME);
   metric = getConfig().isMetric;
-  wait(DWELL_TIME);
 #endif
   //
 #ifdef LUX_ON
-  present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
   wait(DWELL_TIME);
   lightSensor.begin();
 #endif
   //
   DEBUG_PRINTLN(F("Radio Setup Complete!"));
   transmitRainData();
+}
+
+
+void presentation()  {
+  // Register all sensors to gw (they will be created as child devices)
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
+  wait(DWELL_TIME);
+  present(CHILD_ID_RAIN_LOG, S_RAIN);
+  wait(DWELL_TIME);
+  present(CHILD_ID_TRIPPED_INDICATOR, S_MOTION);
+  wait(DWELL_TIME);
+
+#ifdef DHT_ON
+  present(CHILD_ID_HUM, S_HUM);
+  wait(DWELL_TIME);
+  present(CHILD_ID_TEMP, S_TEMP);
+  wait(DWELL_TIME);
+#endif
+
+
+#ifdef LUX_ON
+  present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
+#endif
+
+  DEBUG_PRINTLN(F("Sensor Presentation Complete"));
 }
 
 void loop()

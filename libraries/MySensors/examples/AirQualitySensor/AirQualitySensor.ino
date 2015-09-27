@@ -83,17 +83,17 @@ float           SmokeCurve[3] ={2.3,0.53,-0.44};    //two points are taken from 
 
 MyMessage msg(CHILD_ID_MQ, V_LEVEL);
 
-
 void setup()  
 { 
+  Ro = MQCalibration(MQ_SENSOR_ANALOG_PIN);         //Calibrating the sensor. Please make sure the sensor is in clean air 
+}
+
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Air Quality Sensor", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
   present(CHILD_ID_MQ, S_AIR_QUALITY);  
-
-  Ro = MQCalibration(MQ_SENSOR_ANALOG_PIN);         //Calibrating the sensor. Please make sure the sensor is in clean air 
-                                                    //when you perform the calibration  
 }
 
 void loop()      

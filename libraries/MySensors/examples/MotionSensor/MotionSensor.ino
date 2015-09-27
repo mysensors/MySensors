@@ -46,13 +46,15 @@ MyMessage msg(CHILD_ID, V_TRIPPED);
 
 void setup()  
 {  
+  pinMode(DIGITAL_INPUT_SENSOR, INPUT);      // sets the motion sensor digital pin as input
+}
+
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Motion Sensor", "1.0");
 
-  pinMode(DIGITAL_INPUT_SENSOR, INPUT);      // sets the motion sensor digital pin as input
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID, S_MOTION);
-  
 }
 
 void loop()     

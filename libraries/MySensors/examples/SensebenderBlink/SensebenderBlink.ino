@@ -30,9 +30,10 @@ MyMessage msgCounter(CHILD_ID_COUNTER, V_VAR1);
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LED_STATUS);
-  
+}
+
+void presentation()  {
   sendSketchInfo(SketchName, SketchVersion);  
-  
   present(CHILD_ID_COUNTER, S_CUSTOM,"Millis()"); 
 }
 

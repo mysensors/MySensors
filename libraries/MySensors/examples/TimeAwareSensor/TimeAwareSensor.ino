@@ -40,11 +40,13 @@ unsigned long lastUpdate=0, lastRequest=0;
 
 void setup()  
 {  
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Clock", "1.0");
-
   // Request time from controller. 
   requestTime();  
+}
+
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Clock", "1.0");
 }
 
 // This is called when a new time value was received

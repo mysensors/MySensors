@@ -86,19 +86,21 @@ MyMessage forecastMsg(BARO_CHILD, V_FORECAST);
 
 void setup() 
 {
-	// Send the sketch version information to the gateway and Controller
-	sendSketchInfo("Pressure Sensor", "1.1");
-
 	if (!bmp.begin()) 
 	{
 		Serial.println("Could not find a valid BMP085 sensor, check wiring!");
 		while (1) {}
 	}
-
-	// Register sensors to gw (they will be created as child devices)
-	present(BARO_CHILD, S_BARO);
-	present(TEMP_CHILD, S_TEMP);
 	metric = getConfig().isMetric;
+}
+
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Pressure Sensor", "1.1");
+
+  // Register sensors to gw (they will be created as child devices)
+  present(BARO_CHILD, S_BARO);
+  present(TEMP_CHILD, S_TEMP);
 }
 
 void loop() 

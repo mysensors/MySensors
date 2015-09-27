@@ -95,10 +95,6 @@ void setup()
   // Set analog led pin to off
   analogWrite( LED_PIN, 0);
 
-  // Send the Sketch Version Information to the Gateway
-  present(CHILD_ID_LIGHT, S_DIMMER);
-  sendSketchInfo(SN, SV);
-
   // Retreive our last dim levels from the eprom
   fadeTo = dimValue = 0;
   byte oldLevel = loadLevelState(EEPROM_DIM_LEVEL_LAST);
@@ -107,6 +103,12 @@ void setup()
   send(dimmerMsg.set(oldLevel), true);   
 
   Serial.println("Ready to receive messages...");  
+}
+
+void presentation() {
+  // Send the Sketch Version Information to the Gateway
+  present(CHILD_ID_LIGHT, S_DIMMER);
+  sendSketchInfo(SN, SV);
 }
 
 void loop()      

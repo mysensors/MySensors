@@ -76,7 +76,9 @@ void setup()
   // Activate internal pull-ups
   digitalWrite(PRIMARY_BUTTON_PIN, HIGH);
   digitalWrite(SECONDARY_BUTTON_PIN, HIGH);
-  
+}
+
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
 

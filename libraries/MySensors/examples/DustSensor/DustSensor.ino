@@ -64,8 +64,7 @@ float dustDensity = 0;
 
 MyMessage dustMsg(CHILD_ID_DUST, V_LEVEL);
 
-void setup()  
-{
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Dust Sensor", "1.1");
 
@@ -73,8 +72,7 @@ void setup()
   present(CHILD_ID_DUST, S_DUST);  
 }
 
-void loop()      
-{    
+void loop() {    
   uint16_t voMeasured = analogRead(DUST_SENSOR_ANALOG_PIN);// Get DUST value
 
   // 0 - 5V mapped to 0 - 1023 integer values

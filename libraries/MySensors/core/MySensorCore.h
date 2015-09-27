@@ -170,8 +170,6 @@ void saveState(uint8_t pos, uint8_t value);
  */
 uint8_t loadState(uint8_t pos);
 
-
-
 /**
  * Wait for a specified amount of time to pass.  Keeps process()ing.
  * This does not power-down the radio nor the Arduino.

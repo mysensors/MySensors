@@ -146,7 +146,7 @@ void _begin() {
 	#endif
 
 	#if defined(MY_RADIO_FEATURE)
-		transportSetupNode();
+		transportPresentNode();
 	#endif
 
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), MY_NODE_TYPE, _nc.nodeId, _nc.parentNodeId, _nc.distance);
@@ -231,6 +231,19 @@ void _processInternalMessages() {
 		isMetric = _msg.getString()[0] == 'M' ;
 		_cc.isMetric = isMetric;
 		hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
+	} else if (type == I_PRESENTATION) {
+		// Re-send node presentation to controller
+		transportPresentNode();
+	} else if (type == I_HEARTBEAT) {
+		if (!mGetAck(_msg)) {
+			// Send heartbeat ack message back to sender (with the same payload)
+			_msgTmp = _msg;
+			mSetRequestAck(_msgTmp,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+			mSetAck(_msgTmp,true);
+			_msgTmp.sender = _nc.nodeId;
+			_msgTmp.destination = _msg.sender;
+			_sendRoute(_msgTmp);
+		}
 	} else if (type == I_TIME && receiveTime) {
 		// Deliver time to callback
 		receiveTime(_msg.getULong());

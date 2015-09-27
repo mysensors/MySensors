@@ -50,7 +50,9 @@ void setup()
 #else
    analogReference(INTERNAL);
 #endif
+}
 
+void presentation() {
    // Send the sketch version information to the gateway and Controller
    sendSketchInfo("Battery Meter", "1.0");
 }

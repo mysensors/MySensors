@@ -28,6 +28,7 @@
 
 #if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(ARDUINO_ARCH_ESP8266)
 	#define MY_GATEWAY_FEATURE
+	#define MY_IS_GATEWAY (true)
 	#define MY_NODE_TYPE "gateway"
 #elif defined(MY_REPEATER_FEATURE)
 	#define MY_NODE_TYPE "repeater"
@@ -237,6 +238,7 @@ int main(void) {
 	#endif
 	_begin(); // Startup MySensors library
 	if (setup) setup(); // Call sketch setup
+
 	for(;;) {
 		_process();  // Process incoming data
 		if (loop) loop(); // Call sketch loop

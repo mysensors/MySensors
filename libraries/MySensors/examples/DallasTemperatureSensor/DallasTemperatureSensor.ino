@@ -56,7 +56,9 @@ void setup()
   sensors.begin();
   // requestTemperatures() will not block current thread
   sensors.setWaitForConversion(false);
+}
 
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Temperature Sensor", "1.1");
 
@@ -68,7 +70,6 @@ void setup()
      present(i, S_TEMP);
   }
 }
-
 
 void loop()     
 {     

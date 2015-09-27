@@ -57,11 +57,6 @@ MyMessage dimmerMsg(CHILD_ID_LIGHT, V_DIMMER);
 
 void setup()  
 { 
-  // Send the Sketch Version Information to the Gateway
-  sendSketchInfo(SN, SV);
-
-  present(CHILD_ID_LIGHT, S_DIMMER );
-
   //Retreive our last light state from the eprom
   int LightState=loadState(EPROM_LIGHT_STATE); 
   if (LightState<=1) {
@@ -77,6 +72,13 @@ void setup()
   SetCurrentState2Hardware();
   
   Serial.println( "Node ready to receive messages..." );  
+}
+
+void presentation() {
+  // Send the Sketch Version Information to the Gateway
+  sendSketchInfo(SN, SV);
+
+  present(CHILD_ID_LIGHT, S_DIMMER );
 }
 
 void loop()      

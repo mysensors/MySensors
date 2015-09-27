@@ -92,7 +92,7 @@ typedef struct {
 
 void transportProcess();
 void transportRequestNodeId();
-void transportSetupNode();
+void transportPresentNode();
 void transportFindParentNode();
 boolean transportSendRoute(MyMessage &message);
 boolean transportSendWrite(uint8_t to, MyMessage &message);

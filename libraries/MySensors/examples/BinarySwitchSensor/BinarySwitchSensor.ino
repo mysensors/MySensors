@@ -57,6 +57,9 @@ void setup()
   debouncer.attach(BUTTON_PIN);
   debouncer.interval(5);
   
+}
+
+void presentation() {
   // Register binary input sensor to gw (they will be created as child devices)
   // You can use S_DOOR, S_MOTION or S_LIGHT here depending on your usage. 
   // If S_LIGHT is used, remember to update variable type you send in. See "msg" above.

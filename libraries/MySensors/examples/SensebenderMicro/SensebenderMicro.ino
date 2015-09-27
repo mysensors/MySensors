@@ -162,15 +162,6 @@ void setup() {
 
   Serial.flush();
   Serial.println(F(" - Online!"));
-  sendSketchInfo("Sensebender Micro", RELEASE);
-  
-  present(CHILD_ID_TEMP,S_TEMP);
-  present(CHILD_ID_HUM,S_HUM);
-  
-#ifdef BATT_SENSOR
-  present(BATT_SENSOR, S_POWER);
-#endif
-
   
   isMetric = getConfig().isMetric;
   Serial.print(F("isMetric: ")); Serial.println(isMetric);
@@ -179,6 +170,17 @@ void setup() {
   sendBattLevel(false);
   if (ota_enabled) Serial.println("OTA FW update enabled");
 
+}
+
+void presentation()  {
+  sendSketchInfo("Sensebender Micro", RELEASE);
+
+  present(CHILD_ID_TEMP,S_TEMP);
+  present(CHILD_ID_HUM,S_HUM);
+    
+#ifdef BATT_SENSOR
+  present(BATT_SENSOR, S_POWER);
+#endif
 }
 
 

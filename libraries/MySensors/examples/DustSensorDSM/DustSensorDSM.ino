@@ -67,6 +67,11 @@ MyMessage msgPM25(CHILD_ID_DUST_PM25, V_UNIT_PREFIX);
 
 void setup()  
 {
+  pinMode(DUST_SENSOR_DIGITAL_PIN_PM10,INPUT);
+  pinMode(DUST_SENSOR_DIGITAL_PIN_PM25,INPUT);
+}
+
+void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Dust Sensor DSM501", "1.4");
 
@@ -75,9 +80,6 @@ void setup()
   send(msgPM10.set("ppm"));
   present(CHILD_ID_DUST_PM25, S_DUST);  
   send(msgPM25.set("ppm"));
-  
-  pinMode(DUST_SENSOR_DIGITAL_PIN_PM10,INPUT);
-  pinMode(DUST_SENSOR_DIGITAL_PIN_PM25,INPUT);
 }
 
 void loop()      

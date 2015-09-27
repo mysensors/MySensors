@@ -40,7 +40,11 @@
 
 #include <MySensor.h>
 
-void setup()  
+void setup() {
+  
+}
+
+void presentation()  
 {  
   //Send the sensor node sketch version information to the gateway
   sendSketchInfo("Repeater Node", "1.0");

@@ -43,8 +43,8 @@ unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 MyMessage msg(CHILD_ID_LIGHT, V_LIGHT_LEVEL);
 int lastLightLevel;
 
-void setup()  
-{ 
+
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Light Sensor", "1.0");
 

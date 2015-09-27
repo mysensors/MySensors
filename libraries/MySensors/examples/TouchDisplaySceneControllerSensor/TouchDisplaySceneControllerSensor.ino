@@ -127,13 +127,15 @@ void setup()
   }
   myButtons.drawButtons();
 
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Scene Ctrl", "1.0");
-  present(CHILD_ID, S_SCENE_CONTROLLER);
   // Request time from controller. 
   requestTime(); 
 }
 
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Scene Ctrl", "1.0");
+  present(CHILD_ID, S_SCENE_CONTROLLER);
+}
 
 
 int lastPressedButton = -1;

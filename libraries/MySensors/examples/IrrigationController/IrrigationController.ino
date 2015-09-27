@@ -206,11 +206,7 @@ void setup()
       lastTimeRun = lastTimeRun | loadState(i + 1); // assemble 4 bytes into an ussigned long epoch timestamp
     }
   }
-  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
-  for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
-  {
-    present(i, S_LIGHT);
-  }
+
   DEBUG_PRINTLN(F("Sensor Presentation Complete"));
   //
   digitalWrite (ledPin, LOW);
@@ -282,6 +278,17 @@ void setup()
   }
   lcd.clear();
 }
+
+
+void presentation()  
+{ 
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
+  for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
+  {
+    present(i, S_LIGHT);
+  }
+}
+
 //
 void loop()
 {

@@ -55,15 +55,17 @@ bool attachedServo = false;
             
 void setup() 
 { 
+  // Request last servo state at startup
+  request(CHILD_ID, V_DIMMER);
+} 
+
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Servo", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID, S_COVER);
-
-  // Request last servo state at startup
-  request(CHILD_ID, V_DIMMER);
-} 
+}
 
 void loop() 
 { 
