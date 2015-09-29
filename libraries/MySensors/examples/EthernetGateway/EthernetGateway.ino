@@ -84,12 +84,12 @@
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
 
 #define W5100_SPI_EN        4  // W5100 Ethernet module SPI enable (optional if using a shield/module that manages SPI_EN signal)
-#define RADIO_CE_PIN        5  // radio chip enable
-#define RADIO_SPI_SS_PIN    6  // radio SPI serial select
+#define MY_CE_PIN           5  // radio chip enable
+#define MY_SPI_SS_PIN       6  // radio SPI serial select
 
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RADIO_CE_PIN, RADIO_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
+MyTransportNRF24 transport(MY_CE_PIN, MY_SPI_SS_PIN, RF24_PA_LEVEL_GW);  
 //MyTransportRFM69 transport;
 
 #ifdef MY_SIGNING_FEATURE
