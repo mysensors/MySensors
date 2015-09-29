@@ -132,6 +132,7 @@ MyHwATMega328 hw;
 // Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 MySensor gw(transport, hw /*, signer*/);
 
+inline MyMessage& build (MyMessage &msg, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck);
 
 EthernetServer server = EthernetServer(TCP_PORT);
 EthernetClient *currentClient = NULL;
