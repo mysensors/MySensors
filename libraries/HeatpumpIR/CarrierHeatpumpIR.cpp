@@ -145,7 +145,7 @@ void CarrierHeatpumpIR::sendCarrier(IRSender& IR, byte operatingMode, byte fanSp
   IR.space(CARRIER_AIRCON1_HDR_SPACE);
 
   // Payload
-  for (int i=0; i<sizeof(sendBuffer); i++) {
+  for (size_t i=0; i<sizeof(sendBuffer); i++) {
     IR.sendIRByte(sendBuffer[i], CARRIER_AIRCON1_BIT_MARK, CARRIER_AIRCON1_ZERO_SPACE, CARRIER_AIRCON1_ONE_SPACE);
   }
 
@@ -157,7 +157,7 @@ void CarrierHeatpumpIR::sendCarrier(IRSender& IR, byte operatingMode, byte fanSp
   IR.space(CARRIER_AIRCON1_HDR_SPACE);
 
   // Payload again
-  for (int i=0; i<sizeof(sendBuffer); i++) {
+  for (size_t i=0; i<sizeof(sendBuffer); i++) {
     IR.sendIRByte(sendBuffer[i], CARRIER_AIRCON1_BIT_MARK, CARRIER_AIRCON1_ZERO_SPACE, CARRIER_AIRCON1_ONE_SPACE);
   }
 

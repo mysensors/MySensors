@@ -197,7 +197,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, byte powerMode, byte ope
     IR.space(MITSUBISHI_AIRCON1_HDR_SPACE);
 
     // Data
-    for (int i=0; i<sizeof(MitsubishiTemplate); i++) {
+    for (unsigned int i=0; i<sizeof(MitsubishiTemplate); i++) {
       IR.sendIRByte(MitsubishiTemplate[i], MITSUBISHI_AIRCON1_BIT_MARK, MITSUBISHI_AIRCON1_ZERO_SPACE, MITSUBISHI_AIRCON1_ONE_SPACE);
     }
 

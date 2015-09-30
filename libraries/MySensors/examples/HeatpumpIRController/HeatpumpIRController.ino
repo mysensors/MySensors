@@ -89,8 +89,7 @@ void loop()
 // Handle incoming messages from the MySensors Gateway
 void incomingMessage(const MyMessage &message) {
 
-	const char *irData;
-	long irCommand;
+    const char *irData;
 
   // V_IR type message
   if (message.type==V_IR_SEND) {
@@ -161,10 +160,10 @@ libraries\HeatpumpIR\HeatpumpIR.h for the constants
   byte fan   = (irCommand & 0x00000F00) >> 8;
   byte temp  = (irCommand & 0x000000FF);
 
-  prog_char* buf;
+  const char* buf;
   Serial.print(F("Model: "));
 
-  buf = (prog_char*)heatpumpIR[model]->model();
+  buf = heatpumpIR[model]->model();
   // 'model' is a PROGMEM pointer, so need to write a byte at a time
   while (char modelChar = pgm_read_byte(buf++))
   {
