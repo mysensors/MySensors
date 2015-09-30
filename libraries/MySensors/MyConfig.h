@@ -44,6 +44,7 @@
 #define MY_BAUD_RATE 115200
 #endif
 
+
 /**********************************
 *  Radio selection and node config
 ***********************************/
@@ -87,6 +88,28 @@
 #define MY_OTA_FLASH_JDECID 0x1F65
 #endif
 
+
+/**********************************
+*  Gateway config
+***********************************/
+
+// Max buffersize needed for messages coming from controller
+#ifndef MY_GATEWAY_MAX_RECEIVE_LENGTH
+#define MY_GATEWAY_MAX_RECEIVE_LENGTH 100
+#endif
+
+// Max buffer size when sending messages
+#ifndef MY_GATEWAY_MAX_SEND_LENGTH
+#define MY_GATEWAY_MAX_SEND_LENGTH 120
+#endif
+
+// Max number of parallel clients (sever mode)
+#ifndef MY_GATEWAY_MAX_CLIENTS
+#define MY_GATEWAY_MAX_CLIENTS 1
+#endif
+
+
+
 /**********************************
 *  Information LEDs blinking
 ***********************************/
@@ -98,7 +121,7 @@
 //#define MY_LEDS_BLINKING_FEATURE
 
 // The following setting allows you to inverse the blinking feature MY_LEDS_BLINKING_FEATURE
-// When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
+// When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
 // off when blinking
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE

@@ -20,7 +20,9 @@
 #ifndef MyProtocol_h
 #define MyProtocol_h
 
+#include "MyConfig.h"
 #include "MyMessage.h"
+
 
 // parse(message, inputString)
 // parse a string into a message element

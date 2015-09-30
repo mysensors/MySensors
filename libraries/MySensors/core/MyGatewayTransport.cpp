@@ -19,8 +19,11 @@
 
 #include "MyGatewayTransport.h"
 
+extern boolean transportSendRoute(MyMessage &message);
+
 inline void gatewayTransportProcess() {
 	if (gatewayTransportAvailable()) {
+
 		MyMessage &_msg = gatewayTransportReceive();
 		if (_msg.destination == GATEWAY_ADDRESS) {
 			// Check if sender requests an ack back.
@@ -51,6 +54,10 @@ inline void gatewayTransportProcess() {
 					receive(_msg);
 				}
 			}
+		} else {
+			#if defined(MY_RADIO_FEATURE)
+				transportSendRoute(_msg);
+			#endif
 		}
 	}
 }

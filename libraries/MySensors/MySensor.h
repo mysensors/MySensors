@@ -26,6 +26,7 @@
 #include "MyConfig.h"
 #include "core/MySensorCore.h"
 
+// Detect node type
 #if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(ARDUINO_ARCH_ESP8266)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
@@ -36,13 +37,18 @@
 	#define MY_NODE_TYPE "sensor"
 #endif
 
+// Enable radio "feature" if one of the radio types was enabled
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
+	#define MY_RADIO_FEATURE
+#endif
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
-	#include "drivers/ESP8266/SPI/SPI.cpp"
+	#undef PSTR
+	#define PSTR(x) (x)
 	#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
+	#include "drivers/ESP8266/SPI/SPI.cpp"
 	#include "core/MyHwESP8266.cpp"
-
 	// For ESP8266, we always enable gateway feature
 	#define MY_GATEWAY_ESP8266
 #elif defined(ARDUINO_ARCH_AVR)
@@ -118,14 +124,20 @@
 //		#include "drivers/ESP8266/ESP8266WiFi/src/WifiClient.cpp"
 //		#include "drivers/ESP8266/ESP8266WiFi/src/WifiServer.cpp"
 //		#include "drivers/ESP8266/ESP8266WiFi/src/WifiUdp.cpp"
+		#if !defined(USE_UDP)
+
+		#endif
+
+		#include "core/MyGatewayTransportEthernet.cpp"
+
 	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100
-		#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
+		/*#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
 		#include "drivers/AVR/Ethernet_W5100/utility/w5100.cpp"
 		#include "drivers/AVR/Ethernet_W5100/DNS.cpp"
 		#include "drivers/AVR/Ethernet_W5100/Ethernet.cpp"
 		#include "drivers/AVR/Ethernet_W5100/EthernetUdp.cpp"
-		#include "drivers/AVR/Ethernet_W5100/IPAddress.cpp"
+		#include "drivers/AVR/Ethernet_W5100/IPAddress.cpp"*/
 
 		#if !defined(USE_UDP)
 			#include "drivers/AVR/Ethernet_W5100/EthernetServer.cpp"
@@ -166,7 +178,6 @@
 
 // RADIO
 #if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
-	#define MY_RADIO_FEATURE
 	// SOFTSPI
 	#ifdef MY_SOFTSPI
 		#if defined(ARDUINO_ARCH_ESP8266)

@@ -122,7 +122,6 @@ inline void transportProcess() {
 	uint8_t sender = _msg.sender;
 	uint8_t last = _msg.last;
 	uint8_t destination = _msg.destination;
-
 	if (destination == _nc.nodeId) {
 		// This message is addressed to this node
 
@@ -285,6 +284,10 @@ inline void transportProcess() {
 
 		}
 		#endif
+		#if defined(MY_GATEWAY_FEATURE)
+			// Hand over message to controller
+			gatewayTransportSend(_msg);
+		#endif
 		// Call incoming message callback if available
 		if (receive) {
 			receive(_msg);
@@ -356,6 +359,7 @@ boolean transportSendRoute(MyMessage &message) {
 	uint8_t last = message.last;
 	bool ok;
 
+
 	// If we still don't have any parent id, re-request and skip this message.
 	if (_nc.parentNodeId == AUTO) {
 		transportFindParentNode();
@@ -412,7 +416,6 @@ boolean transportSendRoute(MyMessage &message) {
 		}
 	#endif
 
-
 	#if !defined(MY_REPEATER_FEATURE)
 		// None repeating node... We can only send to our parent
 		ok = transportSendWrite(_nc.parentNodeId, message);
@@ -448,6 +451,7 @@ boolean transportSendRoute(MyMessage &message) {
 			#if defined (MY_GATEWAY_FEATURE)
 				// Destination isn't in our routing table and isn't a broadcast address
 				// Nothing to do here
+				debug(PSTR("Destination %d unknown\n"), dest);
 				return false;
 			# else
 				// A message comes from a child node and we have no

@@ -86,7 +86,6 @@ void _begin() {
 			while(1); // Nothing more we can do
 		}
 
-		gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 	#endif
 
 

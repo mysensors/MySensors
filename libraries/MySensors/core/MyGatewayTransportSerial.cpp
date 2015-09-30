@@ -19,20 +19,16 @@
 
 
 #include "MyConfig.h"
-#include "MyProtocolMySensors.h"
+#include "MyProtocol.h"
 #include "MyGatewayTransport.h"
 #include "MyMessage.h"
 #include "MyProtocol.h"
 
-#define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller
 
-char _serialInputString[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
+char _serialInputString[MY_GATEWAY_MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
 int _serialInputPos;
 MyMessage _serialMsg;
 
-bool gatewayTransportInit() {
-	return true;
-}
 
 bool gatewayTransportSend(MyMessage &message) {
 	Serial.print(protocolFormat(message));
@@ -40,14 +36,21 @@ bool gatewayTransportSend(MyMessage &message) {
 	return true;
 }
 
+bool gatewayTransportInit() {
+	gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+	return true;
+}
+
+
 bool gatewayTransportAvailable() {
 	bool available = false;
+
 	while (Serial.available()) {
 		// get the new byte:
 		char inChar = (char) Serial.read();
 		// if the incoming character is a newline, set a flag
 		// so the main loop can do something about it:
-		if (_serialInputPos < MAX_RECEIVE_LENGTH - 1 && !available) {
+		if (_serialInputPos < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1 && !available) {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
 				available = true;

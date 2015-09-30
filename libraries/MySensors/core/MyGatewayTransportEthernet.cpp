@@ -17,25 +17,59 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyGatewayTransportEthernet.h"
+#include "MyGatewayTransport.h"
 
-IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
-IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
+#if defined(MY_CONTROLLER_IP_ADDRESS)
+	IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
+#endif
+
+#if defined(MY_IP_ADDRESS)
+	IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
+#endif
 byte _ethernetGatewayMAC[] = { MY_MAC_ADDRESS };
 uint16_t _ethernetGatewayPort = MY_PORT;
-char _ethernetInputBuffer[MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
 MyMessage _ethernetMsg;
 
-#ifdef MY_USE_UDP
-	EthernetUDP _ethernetServer;
+#define ARRAY_SIZE(x)  (sizeof(x)/sizeof(x[0]))
+
+// gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+
+typedef struct
+{
+  char string[MY_GATEWAY_MAX_RECEIVE_LENGTH];
+  uint8_t idx;
+} inputBuffer;
+
+#if defined(MY_GATEWAY_ESP8266)
+	// Some re-defines to make code more readable below
+	#define EthernetServer WiFiServer
+	#define EthernetClient WiFiClient
+
+	#if defined(MY_IP_ADDRESS)
+		IPAddress gateway(MY_IP_GATEWAY_ADDRESS);
+		IPAddress subnet(MY_IP_SUBNET_ADDRESS);
+	#endif
+
+#endif
+
+
+
+#if defined(MY_USE_UDP)
+	#if defined(MY_GATEWAY_ESP8266)
+		WiFiUDP _ethernetServer;
+	#else
+		EthernetUDP _ethernetServer;
+	#endif
 #else
-	// we have to use pointers due to the constructor of EthernetServer
 	EthernetServer _ethernetServer(_ethernetGatewayPort);
 	uint8_t _ethernetInputPos;
 #endif /* USE_UDP */
 
 
-#define MAX_RECEIVE_LENGTH 100 // Maximum message length for messages coming from controller
+static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
+static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
+static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+
 
 #ifndef MY_IP_ADDRESS
 	void gatewayTransportRenewIP();
@@ -43,102 +77,136 @@ MyMessage _ethernetMsg;
 
 
 bool gatewayTransportInit() {
-#ifdef MY_IP_ADDRESS
-	Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
-#else
-	// Get IP address from DHCP
-	Ethernet.begin(_ethernetGatewayMAC);
-#endif /* IP_ADDRESS_DHCP */
+	#if defined(MY_GATEWAY_ESP8266)
+		(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
+		#ifdef MY_IP_ADDRESS
+			WiFi.config(_ethernetGatewayIP, gateway, subnet);
+		#endif
+		while (WiFi.status() != WL_CONNECTED)
+		{
+			delay(500);
+			Serial.print(".");
+		}
+		Serial.println(PSTR("Connected to AP!"));
+		Serial.print(PSTR("IP: "));
+		Serial.println(WiFi.localIP());
 
-	// give the Ethernet interface a second to initialize
-	// TODO: use HW delay
-	delay(1000);
+	#else
+		#ifdef MY_IP_ADDRESS
+			Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
+		#else
+			// Get IP address from DHCP
+			Ethernet.begin(_ethernetGatewayMAC);
+		#endif /* IP_ADDRESS_DHCP */
+		// give the Ethernet interface a second to initialize
+		// TODO: use HW delay
+		delay(1000);
+	#endif
 
-#ifdef MY_USE_UDP
-	_ethernetServer.begin(_ethernetGatewayPort);
-#else
-	// we have to use pointers due to the constructor of EthernetServer
-	_ethernetServer.begin();
-#endif /* USE_UDP */
+	#ifdef MY_USE_UDP
+		_ethernetServer.begin(_ethernetGatewayPort);
+	#else
+		// we have to use pointers due to the constructor of EthernetServer
+		_ethernetServer.begin();
+		#if defined(MY_GATEWAY_ESP8266)
+			_ethernetServer.setNoDelay(true);
+		#endif
+	#endif /* USE_UDP */
 }
 
 bool gatewayTransportSend(MyMessage &message)
 {
-	char *_ethernetMsg = NULL;
+	char *_ethernetMsg = protocolFormat(message);
 
-	if (_ethernetControllerIP == INADDR_NONE) {
-		// no controller IP address set!
-		return false;
-	}
-	else {
-		_ethernetMsg = protocolFormat(message);
-#ifdef MY_USE_UDP
-		_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
-		_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
-		// returns 1 if the packet was sent successfully
-		return _ethernetServer.endPacket();
-#else
-		EthernetClient client;
-		if (client.connect(_ethernetControllerIP, MY_PORT)) {
-			client.write(_ethernetMsg, strlen(_ethernetMsg));
-			client.stop();
-			return true;
-		}
-		else {
-			// connecting to the server failed!
-			return false;
-		}
-#endif /* USE_UDP */ 
-	}
+	#if defined(MY_CONTROLLER_IP_ADDRESS)
+		#if defined(MY_USE_UDP)
+			_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
+			_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
+			// returns 1 if the packet was sent successfully
+			return _ethernetServer.endPacket();
+		#else
+			EthernetClient client;
+			if (client.connect(_ethernetControllerIP, MY_PORT)) {
+				client.write(_ethernetMsg, strlen(_ethernetMsg));
+				client.stop();
+				return true;
+			}
+			else {
+				// connecting to the server failed!
+				return false;
+			}
+
+		#endif
+	#else
+	  // Send to connected clients
+	  for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
+	  {
+	    if (clients[i] && clients[i].connected())
+	    {
+		   clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
+	    }
+	  }
+	  // TODO: What do we return here?
+	  return true;
+	#endif
 }
 
 bool gatewayTransportAvailable()
 {
 	bool available = false;
 
-#ifndef MY_IP_ADDRESS
-	// renew IP address using DHCP
-	gatewayTransportRenewIP();
-#endif
+	#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266)
+		// renew IP address using DHCP
+		gatewayTransportRenewIP();
+	#endif
 
-#ifdef MY_USE_UDP
-	int packet_size = _ethernetServer.parsePacket();
+	#ifdef MY_USE_UDP
+		int packet_size = _ethernetServer.parsePacket();
 
-	if (_ethernetServer.available()) {
-		_ethernetServer.read(_ethernetInputBuffer, MAX_RECEIVE_LENGTH);
-		available = true;
-	}
-#else
-	// if an incoming client connects, there will be
-	// bytes available to read via the client object
-	EthernetClient client = _ethernetServer.available();
+		if (_ethernetServer.available()) {
+			_ethernetServer.read(inputString[0], MY_GATEWAY_MAX_RECEIVE_LENGTH);
+			return protocolParse(_ethernetMsg, inputString[0]);
+		}
+	#else
+		// Loop over clients connect and read available data
+		for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
+			while (clients[i].connected() && clients[i].available()) {
+				char inChar = clients[i].read();
+				if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
+					// if newline then command is complete
+					if (inChar == '\n') {
+						// a command was issued by the client
+						// we will now try to send it to the actuator
+						inputString[i].string[inputString[i].idx] = 0;
 
-	if (client) {
-		while (client.available()) {
-			// read the bytes incoming from the client
-			char inChar = client.read();
+						// echo the string to the serial port
+						Serial.print(PSTR("Client "));
+						Serial.print(i);
+						Serial.print(": ");
+						Serial.println(inputString[i].string);
 
-			if (_ethernetInputPos < MAX_RECEIVE_LENGTH - 1) {
-				// if newline then command is complete
-				if (inChar == '\n') {
-					_ethernetInputBuffer[_ethernetInputPos] = 0;
-					available = true;
+						// clear the string:
+						inputString[i].idx = 0;
+
+						return protocolParse(_ethernetMsg, inputString[i].string);
+					} else {
+						// add it to the inputString:
+						inputString[i].string[inputString[i].idx++] = inChar;
+					}
 				} else {
-					_ethernetInputBuffer[_ethernetInputPos] = inChar;
-					_ethernetInputPos++;
+					// Incoming message too long. Throw away
+					Serial.print(PSTR("Client "));
+					Serial.print(i);
+					Serial.println(PSTR(": Message too long"));
+					inputString[i].idx = 0;
+					// Finished with this client's message. Next loop() we'll see if there's more to read.
+					break;
 				}
 			}
 		}
-	}
-	_ethernetInputPos = 0;
-#endif
 
-	if (available) {
-		// Parse message and return parse result
-		available = protocolParse(_ethernetMsg, _ethernetInputBuffer);
-	}
-
-	return available;
+	#endif
+	return false;
 }
 
 MyMessage& gatewayTransportReceive()
@@ -148,7 +216,7 @@ MyMessage& gatewayTransportReceive()
 }
 
 
-#ifndef MY_IP_ADDRES
+#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266)
 void gatewayTransportRenewIP()
 {
 	/* renew/rebind IP address

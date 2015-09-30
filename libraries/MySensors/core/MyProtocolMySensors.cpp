@@ -21,11 +21,9 @@
 #include "MyTransport.h"
 #include "MyProtocol.h"
 
-#define MAX_FORMAT_BUFFER_LENGTH 120 // Max buffersize when formatting messages
-
 uint8_t protocolH2i(char c);
 
-char _fmtBuffer[MAX_FORMAT_BUFFER_LENGTH];
+char _fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH];
 char _convBuffer[MAX_PAYLOAD*2+1];
 
 bool protocolParse(MyMessage &message, char *inputString) {
@@ -95,7 +93,7 @@ bool protocolParse(MyMessage &message, char *inputString) {
 }
 
 char * protocolFormat(MyMessage &message) {
-	snprintf_P(_fmtBuffer, MAX_FORMAT_BUFFER_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(_convBuffer));
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(_convBuffer));
 	return _fmtBuffer;
 }
 
