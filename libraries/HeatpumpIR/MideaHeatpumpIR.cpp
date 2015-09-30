@@ -12,6 +12,9 @@ MideaHeatpumpIR::MideaHeatpumpIR() : HeatpumpIR()
 
 void MideaHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
 {
+  (void)swingVCmd;
+  (void)swingHCmd;
+
   // Sensible defaults for the heat pump mode
   byte operatingMode = MIDEA_AIRCON1_MODE_HEAT;
   byte fanSpeed = MIDEA_AIRCON1_FAN_AUTO;

@@ -12,6 +12,9 @@ CarrierHeatpumpIR::CarrierHeatpumpIR() : HeatpumpIR()
 
 void CarrierHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
 {
+  (void)swingVCmd;
+  (void)swingHCmd;
+
   // Sensible defaults for the heat pump mode
 
   byte operatingMode = CARRIER_AIRCON1_MODE_HEAT;

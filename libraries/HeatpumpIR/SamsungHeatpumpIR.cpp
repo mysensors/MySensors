@@ -12,6 +12,9 @@ SamsungHeatpumpIR::SamsungHeatpumpIR() : HeatpumpIR()
 
 void SamsungHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
 {
+  (void)swingVCmd;
+  (void)swingHCmd;
+
   // Sensible defaults for the heat pump mode
 
   byte powerMode = SAMSUNG_AIRCON1_MODE_ON;

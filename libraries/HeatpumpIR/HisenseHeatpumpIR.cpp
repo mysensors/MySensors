@@ -12,6 +12,9 @@ HisenseHeatpumpIR::HisenseHeatpumpIR() : HeatpumpIR()
 
 void HisenseHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd , byte fanSpeedCmd , byte temperatureCmd , byte swingVCmd , byte swingHCmd )
 {
+  (void)swingVCmd;
+  (void)swingHCmd;
+
   // Sensible defaults for the heat pump mode
 
   byte powerMode = HISENSE_AIRCON1_POWER_ON;
@@ -47,7 +50,7 @@ void HisenseHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
         operatingMode = HISENSE_AIRCON1_MODE_FAN;
         if ( fanSpeedCmd == FAN_AUTO ) {
           fanSpeedCmd = FAN_1; // Fan speed cannot be 'AUTO' in FAN mode
-		  temperatureCmd = 25; // Fixed temperature FAN mode
+          temperatureCmd = 25; // Fixed temperature FAN mode
         }
         break;
     }
@@ -66,7 +69,7 @@ void HisenseHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
       break;
     case FAN_3:
       fanSpeed = HISENSE_AIRCON1_FAN3;
-	  break;
+      break;
   }
 
   if ( temperatureCmd > 17 && temperatureCmd < 33)
@@ -81,6 +84,9 @@ void HisenseHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
 // Send the Hisense code
 void HisenseHeatpumpIR::sendHisense(IRSender& IR, byte powerMode, byte operatingMode, byte fanSpeed, byte temperature, byte swingV ,byte swingH)
 {
+  (void)swingV;
+  (void)swingH;
+
   byte HisenseTemplate[] = { 0x87, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,    // Header byte 0-1
                              0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00 };  //
 

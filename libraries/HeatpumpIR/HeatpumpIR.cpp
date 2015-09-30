@@ -5,7 +5,7 @@ HeatpumpIR::HeatpumpIR()
 }
 
 // This is a virtual function, i.e. never called
-void HeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+void HeatpumpIR::send(IRSender&, byte, byte, byte, byte, byte, byte)
 {
 }
 
