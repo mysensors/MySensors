@@ -133,15 +133,27 @@
 #endif
 // The RX LED default pin
 #ifndef MY_DEFAULT_RX_LED_PIN
-#define MY_DEFAULT_RX_LED_PIN 6
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_RX_LED_PIN 8
+	#else
+		#define MY_DEFAULT_RX_LED_PIN 6
+	#endif
 #endif
 // The TX LED default pin
 #ifndef MY_DEFAULT_TX_LED_PIN
-#define MY_DEFAULT_TX_LED_PIN 5
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_TX_LED_PIN 9
+	#else
+		#define MY_DEFAULT_TX_LED_PIN 5
+	#endif
 #endif
 // The Error LED default pin
 #ifndef MY_DEFAULT_ERR_LED_PIN
-#define MY_DEFAULT_ERR_LED_PIN 4
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_ERR_LED_PIN 7
+	#else
+		#define MY_DEFAULT_ERR_LED_PIN 4
+	#endif
 #endif
 
 /**********************************************
@@ -160,7 +172,11 @@
 
 // The default input pin used for the inclusion mode button
 #ifndef MY_INCLUSION_MODE_BUTTON_PIN
-#define MY_INCLUSION_MODE_BUTTON_PIN 3
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_INCLUSION_MODE_BUTTON_PIN 5
+	#else
+		#define MY_INCLUSION_MODE_BUTTON_PIN 3
+	#endif
 #endif
 // Number of seconds (default one minute) inclusion mode should be enabled
 #ifndef MY_INCLUSION_MODE_DURATION
@@ -220,17 +236,26 @@
 // Enables RF24 encryption (all nodes and gateway must have this enabled)
 //#define MY_RF24_ENABLE_ENCRYPTION
 
-// Default encrytion key. Override in sketch if needed.
+// Default encryption key. Override in sketch if needed.
 #ifndef MY_RF24_ENCRYPTKEY
 #define MY_RF24_ENCRYPTKEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16
 #endif
 
 // Default pin settings. Override in sketch if needed.
 #ifndef MY_RF24_CE_PIN
-#define MY_RF24_CE_PIN 9
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_RF24_CE_PIN 4
+	#else
+		#define MY_RF24_CE_PIN 9
+	#endif
 #endif
+
 #ifndef MY_RF24_CS_PIN
-#define MY_RF24_CS_PIN 10
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_RF24_CS_PIN 15
+	#else
+		#define MY_RF24_CS_PIN 10
+	#endif
 #endif
 
 #ifndef MY_RF24_PA_LEVEL

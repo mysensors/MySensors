@@ -44,11 +44,16 @@ uint8_t _paLevel;
 
 bool transportInit() {
 	// Start up the radio library
+	Serial.println("Radio1");
 	_rf24.begin();
+	Serial.println("Radio2");
 
 	if (!_rf24.isPVariant()) {
+		Serial.println("Radio3");
+
 		return false;
 	}
+	Serial.println("Radio4");
 	_rf24.setAutoAck(1);
 	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
 	_rf24.enableAckPayload();
@@ -58,9 +63,11 @@ bool transportInit() {
 	_rf24.setRetries(5,15);
 	_rf24.setCRCLength(RF24_CRC_16);
 	_rf24.enableDynamicPayloads();
+	Serial.println("Radio5");
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	_rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
+	Serial.println("Radio6");
 
 
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)

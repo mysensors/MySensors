@@ -64,6 +64,7 @@ void _begin() {
 	    hwInit();
     #endif
 
+	debug(PSTR("Starting...\n"));
 	#if defined(MY_RADIO_FEATURE)
 		_failedTransmissions = 0;
 
@@ -73,7 +74,6 @@ void _begin() {
 			while(1); // Nothing more we can do
 		}
 	#endif
-
 
 	#if defined(MY_GATEWAY_FEATURE)
 		#if defined(MY_INCLUSION_BUTTON_FEATURE)
@@ -147,7 +147,8 @@ void _begin() {
 	#if defined(MY_RADIO_FEATURE)
 		transportPresentNode();
 	#endif
-
+	if (presentation)
+		presentation();
 	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), MY_NODE_TYPE, _nc.nodeId, _nc.parentNodeId, _nc.distance);
 }
 
@@ -232,7 +233,11 @@ void _processInternalMessages() {
 		hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
 	} else if (type == I_PRESENTATION) {
 		// Re-send node presentation to controller
-		transportPresentNode();
+		#if defined(MY_RADIO_FEATURE)
+			transportPresentNode();
+		#endif
+		if (presentation)
+			presentation();
 	} else if (type == I_HEARTBEAT) {
 		if (!mGetAck(_msg)) {
 			// Send heartbeat ack message back to sender (with the same payload)

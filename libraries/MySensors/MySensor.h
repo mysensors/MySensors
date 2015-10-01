@@ -44,10 +44,11 @@
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
+	// Remove PSTR macros from debug prints
 	#undef PSTR
 	#define PSTR(x) (x)
-	#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
-	#include "drivers/ESP8266/SPI/SPI.cpp"
+	/*#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
+	#include "drivers/ESP8266/SPI/SPI.cpp"*/
 	#include "core/MyHwESP8266.cpp"
 	// For ESP8266, we always enable gateway feature
 	#define MY_GATEWAY_ESP8266
@@ -230,33 +231,21 @@
 #include "core/MySensorCore.cpp"
 
 extern void setup();
-//extern void loop();
-
 // Optional sketch functions called by MySensors library
 void receive(const MyMessage &message)  __attribute__((weak));
 void receiveTime(unsigned long)  __attribute__((weak));
 void presentation()  __attribute__((weak));
 extern "C" void setup()  __attribute__((weak));
 extern "C" void loop()  __attribute__((weak));
-
+extern "C" void loop2()  __attribute__((weak));
 
 #include <Arduino.h>
-// Initialize library and handle sketch functions like we want to
-int main(void) {
-	init();  // Init Arduino
-	#if defined(USBCON)
-		USBDevice.attach();
-	#endif
-	_begin(); // Startup MySensors library
-	if (setup) setup(); // Call sketch setup
 
-	for(;;) {
-		_process();  // Process incoming data
-		if (loop) loop(); // Call sketch loop
-		#if !defined(ARDUINO_ARCH_ESP8266)
-		if (serialEventRun) serialEventRun();
-		#endif
-	}
-	return 0;
-}
+#if defined(MY_GATEWAY_ESP8266)
+	#include "core/MyMainESP8266.cpp"
+#else
+	#include "core/MyMainDefault.cpp"
+#endif
+
+
 #endif

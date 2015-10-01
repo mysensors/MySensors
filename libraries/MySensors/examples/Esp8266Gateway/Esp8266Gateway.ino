@@ -65,10 +65,15 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
+#include <EEPROM.h>
+#include <SPI.h>
 #include <ESP8266WiFi.h>
 
 // Enable debug prints to serial monitor
 #define MY_DEBUG 
+
+// Use a bit lower baudrate here than default
+#define MY_BAUD_RATE 9600
 
 // Enable and select radio type (if attached)
 #define MY_RADIO_NRF24
@@ -80,6 +85,8 @@
 #define MY_ESP8266_SSID "MySSID"
 #define MY_ESP8266_PASSWORD "MyVerySecretPassword"
 
+
+
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 // #define MY_IP_ADDRESS 192,168,178,66   
 // If using static ip you need to define Gateway and Subnet address as well
@@ -90,11 +97,12 @@
 #define MY_PORT 5003      
 
 // How many clients should be able to connect to this gateway (default 1)
-#define MY_GATEWAY_MAX_CLIENTS 5
+#define MY_GATEWAY_MAX_CLIENTS 2
 
 // Controller ip address (enables client mode). Undefine this to act as sever.
-//#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254   
- 
+
+// #define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254   
+ /*
 // Flash leds on rx/tx/err
 #define MY_LEDS_BLINKING_FEATURE
 // Set blinking period
@@ -112,12 +120,11 @@
 #define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
 #define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
-
+*/
 
 #include <MySensor.h>
 
 void setup() { 
-  
 }
 
 void presentation() {
@@ -126,7 +133,8 @@ void presentation() {
 
 
 void loop() {
-
+  wait(500);
+  Serial.println("Hello");
 }
 
 

@@ -86,6 +86,7 @@ bool gatewayTransportInit() {
 		{
 			delay(500);
 			Serial.print(".");
+			hwWatchdogReset();
 		}
 		Serial.println(PSTR("Connected to AP!"));
 		Serial.print(PSTR("IP: "));
@@ -168,17 +169,47 @@ bool gatewayTransportAvailable()
 			return protocolParse(_ethernetMsg, inputString[0]);
 		}
 	#else
-		// Loop over clients connect and read available data
+		// Go over list of clients and stop any that are no longer connected.
+		// If the server has a new client connection it will be assigned to a free slot.
+		bool allSlotsOccupied = true;
+		for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
+			if (!clients[i].connected()) {
+				if (clientsConnected[i]) {
+					Serial.print("Client ");
+					Serial.print(i);
+					Serial.println(" disconnected");
+					clients[i].stop();
+				}
+				//check if there are any new clients
+				if (_ethernetServer.hasClient()) {
+					clients[i] = _ethernetServer.available();
+					inputString[i].idx = 0;
+					Serial.print("Client ");
+					Serial.print(i);
+					Serial.println(" connected");
+					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+				}
+			}
+			bool connected = clients[i].connected();
+			clientsConnected[i] = connected;
+			allSlotsOccupied &= connected;
+		}
+		if (allSlotsOccupied && _ethernetServer.hasClient()) {
+			//no free/disconnected spot so reject
+			Serial.println("No free slot available");
+			EthernetClient c = _ethernetServer.available();
+			c.stop();
+		}
+			// Loop over clients connect and read available data
 		for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 			while (clients[i].connected() && clients[i].available()) {
 				char inChar = clients[i].read();
+				Serial.print(inChar);
 				if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
 					// if newline then command is complete
 					if (inChar == '\n') {
 						// a command was issued by the client
 						// we will now try to send it to the actuator
-						inputString[i].string[inputString[i].idx] = 0;
-
 						// echo the string to the serial port
 						Serial.print(PSTR("Client "));
 						Serial.print(i);
@@ -188,7 +219,11 @@ bool gatewayTransportAvailable()
 						// clear the string:
 						inputString[i].idx = 0;
 
-						return protocolParse(_ethernetMsg, inputString[i].string);
+						bool ret = protocolParse(_ethernetMsg, inputString[i].string);
+						inputString[i].string[inputString[i].idx] = 0;
+						if (ret)
+							return ret;
+
 					} else {
 						// add it to the inputString:
 						inputString[i].string[inputString[i].idx++] = inChar;

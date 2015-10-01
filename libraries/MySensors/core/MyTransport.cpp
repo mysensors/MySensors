@@ -540,8 +540,6 @@ void transportPresentNode() {
 			#endif
 		}
 	#endif
-	if (presentation)
-		presentation();
 }
 
 void transportFindParentNode() {
