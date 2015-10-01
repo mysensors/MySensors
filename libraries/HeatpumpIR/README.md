@@ -1,5 +1,6 @@
-arduino-heatpumpir
-==================
+# arduino-heatpumpir
+
+Original location: https://github.com/ToniA/arduino-heatpumpir
 
 An Arduino library to control a Panasonic, Midea, Carrier, Fujitsu or Mitsubishi heat pump/split unit air conditioner.
 Currently supports at least these models 
@@ -13,8 +14,8 @@ Currently supports at least these models
 * Hisense AUD (remote control Y-H1-01,  Y-H1-02(E), Y-J1, Y-E4-07) probably AUC model
 
 
-Instructions
-------------
+## Instructions
+
 * Download the library, and place it under your personal Arduino 'libraries' directory, under directory 'HeatpumpIR'
 * See the example sketches
 

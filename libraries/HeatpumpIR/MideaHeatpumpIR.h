@@ -37,11 +37,11 @@ class MideaHeatpumpIR : public HeatpumpIR
 {
   public:
     MideaHeatpumpIR();
-    void send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
 
   private:
-    void sendMidea(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature);
-    void sendMidearaw(IRSender& IR, byte sendBuffer[]);
+    void sendMidea(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature);
+    void sendMidearaw(IRSender& IR, uint8_t sendBuffer[]);
 };
 
 #endif

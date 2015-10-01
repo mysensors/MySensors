@@ -10,22 +10,22 @@ FujitsuHeatpumpIR::FujitsuHeatpumpIR() : HeatpumpIR()
 }
 
 
-void FujitsuHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+void FujitsuHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   send(IR,  powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, false);
 }
 
 
-void FujitsuHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd, bool ecoModeCmd)
+void FujitsuHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool ecoModeCmd)
 {
   // Sensible defaults for the heat pump mode
 
-  byte operatingMode = FUJITSU_AIRCON1_MODE_HEAT;
-  byte fanSpeed = FUJITSU_AIRCON1_FAN_AUTO;
-  byte temperature = 23;
-  byte swingV = FUJITSU_AIRCON1_VDIR_MANUAL;
-  byte swingH = FUJITSU_AIRCON1_HDIR_MANUAL;
-  byte ecoMode = FUJITSU_AIRCON1_ECO_OFF;
+  uint8_t operatingMode = FUJITSU_AIRCON1_MODE_HEAT;
+  uint8_t fanSpeed = FUJITSU_AIRCON1_FAN_AUTO;
+  uint8_t temperature = 23;
+  uint8_t swingV = FUJITSU_AIRCON1_VDIR_MANUAL;
+  uint8_t swingH = FUJITSU_AIRCON1_HDIR_MANUAL;
+  uint8_t ecoMode = FUJITSU_AIRCON1_ECO_OFF;
 
   if (powerModeCmd == POWER_OFF)
   {
@@ -49,7 +49,7 @@ void FujitsuHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
         break;
       case MODE_FAN:
         operatingMode = FUJITSU_AIRCON1_MODE_FAN;
-        // When Fujitsu goes to FAN mode, it sets the low bit of the byte with the temperature. What is the meaning of that?
+        // When Fujitsu goes to FAN mode, it sets the low bit of the uint8_t with the temperature. What is the meaning of that?
        break;
     }
   }
@@ -95,21 +95,21 @@ void FujitsuHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
 }
 
 
-void FujitsuHeatpumpIR::sendFujitsu(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature, byte swingV, byte swingH, byte ecoMode)
+void FujitsuHeatpumpIR::sendFujitsu(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, uint8_t ecoMode)
 {
   // ON, HEAT, AUTO FAN, +24 degrees
-  byte FujitsuTemplate[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0xFE, 0x09, 0x30, 0x80, 0x04, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00 };
+  uint8_t FujitsuTemplate[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0xFE, 0x09, 0x30, 0x80, 0x04, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00 };
   //                            0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15
 
-  byte OFF_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
-  byte checksum = 0x00;
+  uint8_t OFF_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
+  uint8_t checksum = 0x00;
 
 /*
 
   Fujitsu does not have codes to set the air direction to any specific position, but just go to the next position:
 
-  byte nextVerticalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x6C, 0x93 };
-  byte nextHorizontalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x79,0x86 };
+  uint8_t nextVerticalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x6C, 0x93 };
+  uint8_t nextHorizontalPosition_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x79,0x86 };
 
   These would need to be sent separately...
 */
@@ -130,7 +130,7 @@ void FujitsuHeatpumpIR::sendFujitsu(IRSender& IR, byte operatingMode, byte fanSp
     checksum += FujitsuTemplate[i];
   }
 
-  FujitsuTemplate[15] = (byte)(0x9E - checksum);
+  FujitsuTemplate[15] = (uint8_t)(0x9E - checksum);
 
   if (operatingMode == FUJITSU_AIRCON1_MODE_OFF) {
     // OFF
@@ -143,7 +143,7 @@ void FujitsuHeatpumpIR::sendFujitsu(IRSender& IR, byte operatingMode, byte fanSp
 
 void FujitsuHeatpumpIR::sendFujitsuHiPower(IRSender& IR)
 {
-  byte HiPower_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x39, 0xC6 };
+  uint8_t HiPower_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x39, 0xC6 };
 
   sendFujitsuMsg(IR, sizeof(HiPower_msg), HiPower_msg);
 }
@@ -151,7 +151,7 @@ void FujitsuHeatpumpIR::sendFujitsuHiPower(IRSender& IR)
 
 void FujitsuHeatpumpIR::sendFujitsuFilterClean(IRSender& IR)
 {
-  byte FilterClean_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
+  uint8_t FilterClean_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
 
   sendFujitsuMsg(IR, sizeof(FilterClean_msg), FilterClean_msg);
 }
@@ -159,7 +159,7 @@ void FujitsuHeatpumpIR::sendFujitsuFilterClean(IRSender& IR)
 
 void FujitsuHeatpumpIR::sendFujitsuSuperQuiet(IRSender& IR)
 {
-  byte SuperQuiet_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
+  uint8_t SuperQuiet_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
 
   sendFujitsuMsg(IR, sizeof(SuperQuiet_msg), SuperQuiet_msg);
 }
@@ -167,13 +167,13 @@ void FujitsuHeatpumpIR::sendFujitsuSuperQuiet(IRSender& IR)
 
 void FujitsuHeatpumpIR::sendFujitsuTestRun(IRSender& IR)
 {
-  byte TestRun_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
+  uint8_t TestRun_msg[] = { 0x14, 0x63, 0x00, 0x10, 0x10, 0x02, 0xFD };
 
   sendFujitsuMsg(IR, sizeof(TestRun_msg), TestRun_msg);
 }
 
 
-void FujitsuHeatpumpIR::sendFujitsuMsg(IRSender& IR, byte msgSize, byte *msg)
+void FujitsuHeatpumpIR::sendFujitsuMsg(IRSender& IR, uint8_t msgSize, uint8_t *msg)
 {
   // 40 kHz PWM frequency
   IR.setFrequency(40);
@@ -183,8 +183,8 @@ void FujitsuHeatpumpIR::sendFujitsuMsg(IRSender& IR, byte msgSize, byte *msg)
   IR.space(FUJITSU_AIRCON1_HDR_SPACE);
 
   // Data
-  for (byte i=0; i<msgSize; i++) {
-      IR.sendIRByte(msg[i], FUJITSU_AIRCON1_BIT_MARK, FUJITSU_AIRCON1_ZERO_SPACE, FUJITSU_AIRCON1_ONE_SPACE);
+  for (uint8_t i=0; i<msgSize; i++) {
+      IR.sendIRbyte(msg[i], FUJITSU_AIRCON1_BIT_MARK, FUJITSU_AIRCON1_ZERO_SPACE, FUJITSU_AIRCON1_ONE_SPACE);
   }
 
   // End mark

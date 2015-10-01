@@ -31,16 +31,16 @@ MitsubishiFEHeatpumpIR::MitsubishiFEHeatpumpIR() : MitsubishiHeatpumpIR()
 }
 
 
-void MitsubishiHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+void MitsubishiHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   // Sensible defaults for the heat pump mode
 
-  byte powerMode     = MITSUBISHI_AIRCON1_MODE_ON;
-  byte operatingMode = MITSUBISHI_AIRCON1_MODE_HEAT;
-  byte fanSpeed      = MITSUBISHI_AIRCON1_FAN_AUTO;
-  byte temperature   = 23;
-  byte swingV        = MITSUBISHI_AIRCON1_VS_AUTO;
-  byte swingH        = MITSUBISHI_AIRCON1_HS_SWING;
+  uint8_t powerMode     = MITSUBISHI_AIRCON1_MODE_ON;
+  uint8_t operatingMode = MITSUBISHI_AIRCON1_MODE_HEAT;
+  uint8_t fanSpeed      = MITSUBISHI_AIRCON1_FAN_AUTO;
+  uint8_t temperature   = 23;
+  uint8_t swingV        = MITSUBISHI_AIRCON1_VS_AUTO;
+  uint8_t swingH        = MITSUBISHI_AIRCON1_HS_SWING;
 
   if (powerModeCmd == 0)
   {
@@ -155,12 +155,12 @@ void MitsubishiHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingM
   sendMitsubishi(IR, powerMode, operatingMode, fanSpeed, temperature, swingV, swingH);
 }
 
-void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, byte powerMode, byte operatingMode, byte fanSpeed, byte temperature, byte swingV, byte swingH)
+void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH)
 {
-  byte MitsubishiTemplate[] = { 0x23, 0xCB, 0x26, 0x01, 0x00, 0x20, 0x48, 0x00, 0x00, 0x00, 0x61, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00 };
+  uint8_t MitsubishiTemplate[] = { 0x23, 0xCB, 0x26, 0x01, 0x00, 0x20, 0x48, 0x00, 0x00, 0x00, 0x61, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00 };
   //                            0     1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16    17
 
-  byte checksum = 0x00;
+  uint8_t checksum = 0x00;
 
   // Set the operatingmode on the template message
   MitsubishiTemplate[5] = powerMode;
@@ -198,7 +198,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, byte powerMode, byte ope
 
     // Data
     for (unsigned int i=0; i<sizeof(MitsubishiTemplate); i++) {
-      IR.sendIRByte(MitsubishiTemplate[i], MITSUBISHI_AIRCON1_BIT_MARK, MITSUBISHI_AIRCON1_ZERO_SPACE, MITSUBISHI_AIRCON1_ONE_SPACE);
+      IR.sendIRbyte(MitsubishiTemplate[i], MITSUBISHI_AIRCON1_BIT_MARK, MITSUBISHI_AIRCON1_ZERO_SPACE, MITSUBISHI_AIRCON1_ONE_SPACE);
     }
 
     // Pause between the first and the second data burst

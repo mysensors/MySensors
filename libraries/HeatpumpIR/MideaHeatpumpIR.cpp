@@ -10,15 +10,15 @@ MideaHeatpumpIR::MideaHeatpumpIR() : HeatpumpIR()
 }
 
 
-void MideaHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+void MideaHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   (void)swingVCmd;
   (void)swingHCmd;
 
   // Sensible defaults for the heat pump mode
-  byte operatingMode = MIDEA_AIRCON1_MODE_HEAT;
-  byte fanSpeed = MIDEA_AIRCON1_FAN_AUTO;
-  byte temperature = 23;
+  uint8_t operatingMode = MIDEA_AIRCON1_MODE_HEAT;
+  uint8_t fanSpeed = MIDEA_AIRCON1_FAN_AUTO;
+  uint8_t temperature = 23;
 
   switch (powerModeCmd)
   {
@@ -48,8 +48,8 @@ void MideaHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCm
       break;
     case MODE_MAINT:
       // Maintenance mode ('FP' on the remote) is a special mode on Midea
-	  // Also, this is a switch between 'normal' operation and 'maintenance' operation,
-	  // i.e. if already running on maintenance, the heatpump will go back to normal operation
+      // Also, this is a switch between 'normal' operation and 'maintenance' operation,
+      // i.e. if already running on maintenance, the heatpump will go back to normal operation
       operatingMode = MIDEA_AIRCON1_MODE_FP;
       break;
   }
@@ -79,14 +79,14 @@ void MideaHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCm
 }
 
 // Send the Midea code
-void MideaHeatpumpIR::sendMidea(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature)
+void MideaHeatpumpIR::sendMidea(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature)
 {
-  byte sendBuffer[3] = { 0x4D, 0x00, 0x00 }; // First byte is always 0x4D
+  uint8_t sendBuffer[3] = { 0x4D, 0x00, 0x00 }; // First uint8_t is always 0x4D
 
-  static const prog_uint8_t temperatures[] PROGMEM = {0, 8, 12, 4, 6, 14, 10, 2, 3, 11, 9, 1, 5, 13 };
+  static const uint8_t temperatures[] PROGMEM = {0, 8, 12, 4, 6, 14, 10, 2, 3, 11, 9, 1, 5, 13 };
 
-  static const prog_uint8_t OffMsg[] PROGMEM = {0x4D, 0xDE, 0x07 };
-  static const prog_uint8_t FPMsg[] PROGMEM =  {0xAD, 0xAF, 0xB5 };
+  static const uint8_t OffMsg[] PROGMEM = {0x4D, 0xDE, 0x07 };
+  static const uint8_t FPMsg[] PROGMEM =  {0xAD, 0xAF, 0xB5 };
 
   if (operatingMode == MIDEA_AIRCON1_MODE_OFF)
   {
@@ -115,7 +115,7 @@ void MideaHeatpumpIR::sendMidea(IRSender& IR, byte operatingMode, byte fanSpeed,
 }
 
 // Send the Midea raw code
-void MideaHeatpumpIR::sendMidearaw(IRSender& IR, byte sendBuffer[])
+void MideaHeatpumpIR::sendMidearaw(IRSender& IR, uint8_t sendBuffer[])
 {
   // 40 kHz PWM frequency
   IR.setFrequency(40);
@@ -124,24 +124,24 @@ void MideaHeatpumpIR::sendMidearaw(IRSender& IR, byte sendBuffer[])
   IR.mark(MIDEA_AIRCON1_HDR_MARK);
   IR.space(MIDEA_AIRCON1_HDR_SPACE);
 
-  // Six bytes, every second byte is a bitwise not of the previous byte
+  // Six uint8_ts, every second uint8_t is a bitwise not of the previous uint8_t
   for (int i=0; i<3; i++) {
-    IR.sendIRByte(sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(~sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(~sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
   }
 
   // Pause
   IR.mark(MIDEA_AIRCON1_BIT_MARK);
   IR.space(MIDEA_AIRCON1_MSG_SPACE);
 
-  // Header, two last bytes repeated
+  // Header, two last uint8_ts repeated
   IR.mark(MIDEA_AIRCON1_HDR_MARK);
   IR.space(MIDEA_AIRCON1_HDR_SPACE);
 
-  // Six bytes, every second byte is a bitwise not of the previous byte
+  // Six uint8_ts, every second uint8_t is a bitwise not of the previous uint8_t
   for (int i=0; i<3; i++) {
-    IR.sendIRByte(sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(~sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(~sendBuffer[i], MIDEA_AIRCON1_BIT_MARK, MIDEA_AIRCON1_ZERO_SPACE, MIDEA_AIRCON1_ONE_SPACE);
   }
 
   // End mark

@@ -41,16 +41,16 @@ PanasonicNKEHeatpumpIR::PanasonicNKEHeatpumpIR() : PanasonicHeatpumpIR()
 }
 
 
-// Panasonic DKE/NKE/JKE numeric values to command bytes
-void PanasonicHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+// Panasonic DKE/NKE/JKE numeric values to command uint8_ts
+void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   // Sensible defaults for the heat pump mode
 
-  byte operatingMode = PANASONIC_AIRCON2_TIMER_CNL;
-  byte fanSpeed      = PANASONIC_AIRCON2_FAN_AUTO;
-  byte temperature   = 23;
-  byte swingV        = PANASONIC_AIRCON2_VS_UP;
-  byte swingH        = PANASONIC_AIRCON2_HS_AUTO;
+  uint8_t operatingMode = PANASONIC_AIRCON2_TIMER_CNL;
+  uint8_t fanSpeed      = PANASONIC_AIRCON2_FAN_AUTO;
+  uint8_t temperature   = 23;
+  uint8_t swingV        = PANASONIC_AIRCON2_VS_UP;
+  uint8_t swingH        = PANASONIC_AIRCON2_HS_AUTO;
 
   switch (powerModeCmd)
   {
@@ -171,10 +171,10 @@ void PanasonicHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMo
 }
 
 // Send the Panasonic DKE/JKE/NKE code
-void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature, byte swingV, byte swingH)
+void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH)
 {
-  // Only bytes 13, 14, 16, 17 and 26 are modified, DKE and JKE seem to share the same template?
-  static const prog_uint8_t panasonicProgmemTemplate[][27] PROGMEM = {
+  // Only uint8_ts 13, 14, 16, 17 and 26 are modified, DKE and JKE seem to share the same template?
+  static const uint8_t panasonicProgmemTemplate[][27] PROGMEM = {
     // DKE, model 0
     { 0x02, 0x20, 0xE0, 0x04, 0x00, 0x00, 0x00, 0x06, 0x02, 0x20, 0xE0, 0x04, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x0E, 0xE0, 0x00, 0x00, 0x01, 0x00, 0x06, 0x00 },
     // JKE, model 1
@@ -185,7 +185,7 @@ void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, byte operatingMode, byte f
   };
 
   // Save some SRAM by only having one copy of the template on the SRAM
-  byte panasonicTemplate[27];
+  uint8_t panasonicTemplate[27];
   memcpy_P(panasonicTemplate, panasonicProgmemTemplate[_panasonicModel], sizeof(panasonicTemplate));
 
   panasonicTemplate[13] = operatingMode;
@@ -199,7 +199,7 @@ void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, byte operatingMode, byte f
 
   // Checksum calculation
 
-  byte checksum = 0xF4;
+  uint8_t checksum = 0xF4;
 
   for (int i=0; i<26; i++) {
     checksum += panasonicTemplate[i];
@@ -214,9 +214,9 @@ void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, byte operatingMode, byte f
   IR.mark(PANASONIC_AIRCON2_HDR_MARK);
   IR.space(PANASONIC_AIRCON2_HDR_SPACE);
 
-  // First 8 bytes
+  // First 8 uint8_ts
   for (int i=0; i<8; i++) {
-    IR.sendIRByte(panasonicTemplate[i], PANASONIC_AIRCON2_BIT_MARK, PANASONIC_AIRCON2_ZERO_SPACE, PANASONIC_AIRCON2_ONE_SPACE);
+    IR.sendIRbyte(panasonicTemplate[i], PANASONIC_AIRCON2_BIT_MARK, PANASONIC_AIRCON2_ZERO_SPACE, PANASONIC_AIRCON2_ONE_SPACE);
   }
 
   // Pause
@@ -227,9 +227,9 @@ void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, byte operatingMode, byte f
   IR.mark(PANASONIC_AIRCON2_HDR_MARK);
   IR.space(PANASONIC_AIRCON2_HDR_SPACE);
 
-  // Last 19 bytes
+  // Last 19 uint8_ts
   for (int i=8; i<27; i++) {
-    IR.sendIRByte(panasonicTemplate[i], PANASONIC_AIRCON2_BIT_MARK, PANASONIC_AIRCON2_ZERO_SPACE, PANASONIC_AIRCON2_ONE_SPACE);
+    IR.sendIRbyte(panasonicTemplate[i], PANASONIC_AIRCON2_BIT_MARK, PANASONIC_AIRCON2_ZERO_SPACE, PANASONIC_AIRCON2_ONE_SPACE);
   }
 
   IR.mark(PANASONIC_AIRCON2_BIT_MARK);

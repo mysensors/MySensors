@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 // HeatpumpIR libraries, https://github.com/ToniA/arduino-heatpumpir
 #include <FujitsuHeatpumpIR.h>
 #include <PanasonicCKPHeatpumpIR.h>

@@ -10,19 +10,19 @@ HisenseHeatpumpIR::HisenseHeatpumpIR() : HeatpumpIR()
 }
 
 
-void HisenseHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd , byte fanSpeedCmd , byte temperatureCmd , byte swingVCmd , byte swingHCmd )
+void HisenseHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd , uint8_t fanSpeedCmd , uint8_t temperatureCmd , uint8_t swingVCmd , uint8_t swingHCmd )
 {
   (void)swingVCmd;
   (void)swingHCmd;
 
   // Sensible defaults for the heat pump mode
 
-  byte powerMode = HISENSE_AIRCON1_POWER_ON;
-  byte operatingMode = HISENSE_AIRCON1_MODE_HEAT;
-  byte fanSpeed = HISENSE_AIRCON1_FAN_AUTO;
-  byte temperature = 21;
-  byte swingV=0;
-  byte swingH=0;
+  uint8_t powerMode = HISENSE_AIRCON1_POWER_ON;
+  uint8_t operatingMode = HISENSE_AIRCON1_MODE_HEAT;
+  uint8_t fanSpeed = HISENSE_AIRCON1_FAN_AUTO;
+  uint8_t temperature = 21;
+  uint8_t swingV=0;
+  uint8_t swingH=0;
 
   if (powerModeCmd == POWER_OFF)
   {
@@ -82,21 +82,21 @@ void HisenseHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
 }
 
 // Send the Hisense code
-void HisenseHeatpumpIR::sendHisense(IRSender& IR, byte powerMode, byte operatingMode, byte fanSpeed, byte temperature, byte swingV ,byte swingH)
+void HisenseHeatpumpIR::sendHisense(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV ,uint8_t swingH)
 {
   (void)swingV;
   (void)swingH;
 
-  byte HisenseTemplate[] = { 0x87, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,    // Header byte 0-1
+  uint8_t HisenseTemplate[] = { 0x87, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,    // Header uint8_t 0-1
                              0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00 };  //
 
-  byte  i;
+  uint8_t  i;
 
   // Set the Fan speed, On/Off.
   HisenseTemplate[2] = fanSpeed | powerMode;
   HisenseTemplate[3] =  (((temperature - 18)  << 4)  | operatingMode ) ;
 
-  // Calculate the byte checksum EXOR byte 2 to 12
+  // Calculate the uint8_t checksum EXOR uint8_t 2 to 12
   HisenseTemplate[13] = HisenseTemplate[2];
   for (i=3; i<13; i++) {
      HisenseTemplate[13]= HisenseTemplate[i] ^ HisenseTemplate[13];
@@ -111,7 +111,7 @@ void HisenseHeatpumpIR::sendHisense(IRSender& IR, byte powerMode, byte operating
 
   // Payload header part
   for (i=0; i<7; i++) {
-    IR.sendIRByte(HisenseTemplate[i], HISENSE_AIRCON1_BIT_MARK, HISENSE_AIRCON1_ZERO_SPACE, HISENSE_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(HisenseTemplate[i], HISENSE_AIRCON1_BIT_MARK, HISENSE_AIRCON1_ZERO_SPACE, HISENSE_AIRCON1_ONE_SPACE);
   }
 
   // Mesage space
@@ -120,7 +120,7 @@ void HisenseHeatpumpIR::sendHisense(IRSender& IR, byte powerMode, byte operating
 
   // Payload message part
   for (; i<14; i++) {
-    IR.sendIRByte(HisenseTemplate[i], HISENSE_AIRCON1_BIT_MARK, HISENSE_AIRCON1_ZERO_SPACE, HISENSE_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(HisenseTemplate[i], HISENSE_AIRCON1_BIT_MARK, HISENSE_AIRCON1_ZERO_SPACE, HISENSE_AIRCON1_ONE_SPACE);
   }
 
   // End mark
