@@ -39,16 +39,16 @@ class FujitsuHeatpumpIR : public HeatpumpIR
 {
   public:
     FujitsuHeatpumpIR();
-    void send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd);
-    void send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd, bool ecoModeCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool ecoModeCmd);
     void sendFujitsuHiPower(IRSender& IR);
     void sendFujitsuFilterClean(IRSender& IR);
     void sendFujitsuSuperQuiet(IRSender& IR);
     void sendFujitsuTestRun(IRSender& IR);
 
   private:
-    void sendFujitsu(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature, byte swingV, byte swingH, byte ecoMode);
-    void sendFujitsuMsg(IRSender& IR, byte msgSize, byte *msg);
+    void sendFujitsu(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, uint8_t ecoMode);
+    void sendFujitsuMsg(IRSender& IR, uint8_t msgSize, uint8_t *msg);
 };
 
 #endif

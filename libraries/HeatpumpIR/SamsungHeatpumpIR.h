@@ -33,10 +33,10 @@ class SamsungHeatpumpIR : public HeatpumpIR
 {
   public:
     SamsungHeatpumpIR();
-    void send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
 
   private:
-    void sendSamsung(IRSender& IR, byte powerMode, byte operatingMode, byte fanSpeed, byte temperature, byte swingV);
+    void sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV);
 };
 
 #endif

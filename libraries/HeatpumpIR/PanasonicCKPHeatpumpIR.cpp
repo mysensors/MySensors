@@ -11,17 +11,17 @@ PanasonicCKPHeatpumpIR::PanasonicCKPHeatpumpIR()
 }
 
 
-// Panasonic CKP numeric values to command bytes
-void PanasonicCKPHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+// Panasonic CKP numeric values to command uint8_ts
+void PanasonicCKPHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   // Sensible defaults for the heat pump mode
 
-  byte powerMode     = false;
-  byte operatingMode = PANASONIC_AIRCON1_MODE_KEEP;
-  byte fanSpeed      = PANASONIC_AIRCON1_FAN_AUTO;
-  byte temperature   = 23;
-  byte swingV        = PANASONIC_AIRCON1_VS_UP;
-  byte swingH        = PANASONIC_AIRCON1_HS_SWING;
+  uint8_t powerMode     = false;
+  uint8_t operatingMode = PANASONIC_AIRCON1_MODE_KEEP;
+  uint8_t fanSpeed      = PANASONIC_AIRCON1_FAN_AUTO;
+  uint8_t temperature   = 23;
+  uint8_t swingV        = PANASONIC_AIRCON1_VS_UP;
+  uint8_t swingH        = PANASONIC_AIRCON1_HS_SWING;
 
   switch (powerModeCmd)
   {
@@ -134,9 +134,9 @@ void PanasonicCKPHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatin
 }
 
 // Send the Panasonic CKP code
-void PanasonicCKPHeatpumpIR::sendPanasonicCKP(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature, byte swingV, byte swingH)
+void PanasonicCKPHeatpumpIR::sendPanasonicCKP(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH)
 {
-  byte sendBuffer[4];
+  uint8_t sendBuffer[4];
 
   // Fan speed & temperature, temperature needs to be 27 in FAN mode
   if (operatingMode == PANASONIC_AIRCON1_MODE_FAN || operatingMode == (PANASONIC_AIRCON1_MODE_FAN | PANASONIC_AIRCON1_MODE_KEEP ))
@@ -160,20 +160,20 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKP(IRSender& IR, byte operatingMode, 
 }
 
 // Send the Panasonic CKP raw code
-void PanasonicCKPHeatpumpIR::sendPanasonicCKPraw(IRSender& IR, byte sendBuffer[])
+void PanasonicCKPHeatpumpIR::sendPanasonicCKPraw(IRSender& IR, uint8_t sendBuffer[])
 {
   // 40 kHz PWM frequency
   IR.setFrequency(40);
 
-  // Header, two first bytes repeated
+  // Header, two first uint8_ts repeated
   IR.mark(PANASONIC_AIRCON1_HDR_MARK);
   IR.space(PANASONIC_AIRCON1_HDR_SPACE);
 
   for (int i=0; i<2; i++) {
-    IR.sendIRByte(sendBuffer[0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
 
     IR.mark(PANASONIC_AIRCON1_HDR_MARK);
     IR.space(PANASONIC_AIRCON1_HDR_SPACE);
@@ -184,16 +184,16 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKPraw(IRSender& IR, byte sendBuffer[]
   IR.mark(PANASONIC_AIRCON1_BIT_MARK);
   IR.space(PANASONIC_AIRCON1_MSG_SPACE);
 
-  // Header, two last bytes repeated
+  // Header, two last uint8_ts repeated
 
   IR.mark(PANASONIC_AIRCON1_HDR_MARK);
   IR.space(PANASONIC_AIRCON1_HDR_SPACE);
 
   for (int i=0; i<2; i++) {
-    IR.sendIRByte(sendBuffer[2], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[2], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[3], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[3], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[2], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[2], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[3], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[3], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
 
     IR.mark(PANASONIC_AIRCON1_HDR_MARK);
     IR.space(PANASONIC_AIRCON1_HDR_SPACE);
@@ -212,12 +212,12 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKPraw(IRSender& IR, byte sendBuffer[]
 // * a timer event is scheduled to cancel the timer after TWO minutes (the 'TIMER' led turns off
 void PanasonicCKPHeatpumpIR::sendPanasonicCKPOnOffTimerCancel(IRSender& IR, boolean powerState, boolean cancelTimer)
 {
-  static const prog_uint8_t ON_msg[] PROGMEM =     { 0x7F, 0x38, 0xBF, 0x38, 0x10, 0x3D, 0x80, 0x3D, 0x09, 0x34, 0x80, 0x34 }; //  ON at 00:10, time now 00:09, no OFF timing
-  static const prog_uint8_t OFF_msg[] PROGMEM =    { 0x10, 0x38, 0x80, 0x38, 0x7F, 0x3D, 0xBF, 0x3D, 0x09, 0x34, 0x80, 0x34 }; // OFF at 00:10, time now 00:09, no ON timing
-  static const prog_uint8_t CANCEL_msg[] PROGMEM = { 0x7F, 0x38, 0xBF, 0x38, 0x7F, 0x3D, 0xBF, 0x3D, 0x17, 0x34, 0x80, 0x34 }; // Timer CANCEL
+  static const uint8_t ON_msg[] PROGMEM =     { 0x7F, 0x38, 0xBF, 0x38, 0x10, 0x3D, 0x80, 0x3D, 0x09, 0x34, 0x80, 0x34 }; //  ON at 00:10, time now 00:09, no OFF timing
+  static const uint8_t OFF_msg[] PROGMEM =    { 0x10, 0x38, 0x80, 0x38, 0x7F, 0x3D, 0xBF, 0x3D, 0x09, 0x34, 0x80, 0x34 }; // OFF at 00:10, time now 00:09, no ON timing
+  static const uint8_t CANCEL_msg[] PROGMEM = { 0x7F, 0x38, 0xBF, 0x38, 0x7F, 0x3D, 0xBF, 0x3D, 0x17, 0x34, 0x80, 0x34 }; // Timer CANCEL
 
   // Save some SRAM by only having one copy of the template on the SRAM
-  byte sendBuffer[sizeof(ON_msg)];
+  uint8_t sendBuffer[sizeof(ON_msg)];
 
   if ( cancelTimer == true ) {
     memcpy_P(sendBuffer, CANCEL_msg, sizeof(ON_msg));
@@ -234,10 +234,10 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKPOnOffTimerCancel(IRSender& IR, bool
     IR.mark(PANASONIC_AIRCON1_HDR_MARK);
     IR.space(PANASONIC_AIRCON1_HDR_SPACE);
 
-    IR.sendIRByte(sendBuffer[i*2 + 0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[i*2 + 0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[i*2 + 1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
-    IR.sendIRByte(sendBuffer[i*2 + 1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i*2 + 0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i*2 + 0], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i*2 + 1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i*2 + 1], PANASONIC_AIRCON1_BIT_MARK, PANASONIC_AIRCON1_ZERO_SPACE, PANASONIC_AIRCON1_ONE_SPACE);
 
     IR.mark(PANASONIC_AIRCON1_HDR_MARK);
     IR.space(PANASONIC_AIRCON1_HDR_SPACE);

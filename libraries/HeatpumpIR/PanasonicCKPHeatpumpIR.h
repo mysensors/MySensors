@@ -43,12 +43,12 @@ class PanasonicCKPHeatpumpIR : public HeatpumpIR
 {
   public:
     PanasonicCKPHeatpumpIR();
-    void send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
     void sendPanasonicCKPCancelTimer(IRSender& IR);
 
   private:
-    void sendPanasonicCKP(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature, byte swingV, byte swingH);
-    void sendPanasonicCKPraw(IRSender& IR, byte sendBuffer[]);
+    void sendPanasonicCKP(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH);
+    void sendPanasonicCKPraw(IRSender& IR, uint8_t sendBuffer[]);
     void sendPanasonicCKPOnOffTimerCancel(IRSender& IR, boolean powerState, boolean cancelTimer);
 };
 

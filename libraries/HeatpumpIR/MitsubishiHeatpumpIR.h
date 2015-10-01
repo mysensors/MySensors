@@ -55,13 +55,13 @@ class MitsubishiHeatpumpIR : public HeatpumpIR
 {
   protected: // Cannot create generic Mitsubishi heatpump instances
     MitsubishiHeatpumpIR();
-    byte _mitsubishiModel;  // Tells whether this is FD or EF (or other supported model...)
+    uint8_t _mitsubishiModel;  // Tells whether this is FD or EF (or other supported model...)
 
   public:
-    void send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
 
   private:
-    void sendMitsubishi(IRSender& IR, byte powerMode, byte operatingMode, byte fanSpeed, byte temperature, byte swingVCmd, byte swingHCmd);
+    void sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingVCmd, uint8_t swingHCmd);
 };
 
 class MitsubishiFDHeatpumpIR : public MitsubishiHeatpumpIR

@@ -10,18 +10,18 @@ SamsungHeatpumpIR::SamsungHeatpumpIR() : HeatpumpIR()
 }
 
 
-void SamsungHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+void SamsungHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   (void)swingVCmd;
   (void)swingHCmd;
 
   // Sensible defaults for the heat pump mode
 
-  byte powerMode = SAMSUNG_AIRCON1_MODE_ON;
-  byte operatingMode = SAMSUNG_AIRCON1_MODE_HEAT;
-  byte fanSpeed = SAMSUNG_AIRCON1_FAN_AUTO;
-  byte temperature = 23;
-  byte swingV = SAMSUNG_AIRCON1_VS_AUTO;
+  uint8_t powerMode = SAMSUNG_AIRCON1_MODE_ON;
+  uint8_t operatingMode = SAMSUNG_AIRCON1_MODE_HEAT;
+  uint8_t fanSpeed = SAMSUNG_AIRCON1_FAN_AUTO;
+  uint8_t temperature = 23;
+  uint8_t swingV = SAMSUNG_AIRCON1_VS_AUTO;
 
   if (powerModeCmd == POWER_OFF)
   {
@@ -87,13 +87,13 @@ void SamsungHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
 
 // Send the Samsung code
 
-void SamsungHeatpumpIR::sendSamsung(IRSender& IR, byte powerMode, byte operatingMode, byte fanSpeed, byte temperature, byte swingV)
+void SamsungHeatpumpIR::sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV)
 {
-  byte SamsungTemplate[] = { 0x02, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00,   // Header part
+  uint8_t SamsungTemplate[] = { 0x02, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00,   // Header part
                              0x01, 0xD2, 0x0F, 0x00, 0x00, 0x00, 0x00,   // Always the same data on POWER messages
-                             0x01, 0x00, 0xFE, 0x71, 0x00, 0x00, 0x00 }; // The actual data is in this part, on bytes 14-20
+                             0x01, 0x00, 0xFE, 0x71, 0x00, 0x00, 0x00 }; // The actual data is in this part, on uint8_ts 14-20
 
-  byte SamsungChecksum = 0;
+  uint8_t SamsungChecksum = 0;
 
   // Set the power mode on the template message, also add the first part checksum
   SamsungTemplate[6] = powerMode;
@@ -114,15 +114,15 @@ void SamsungHeatpumpIR::sendSamsung(IRSender& IR, byte powerMode, byte operating
   // Set the vertical swing mode on the template message
   SamsungTemplate[16] = swingV;
 
-  // Calculate the byte 15 checksum
-  // Count the number of ONE bits on message bytes 15-20
-  for (byte j=15; j<21; j++) {
-    byte SamsungByte = SamsungTemplate[j];
-    for (byte i=0; i<8; i++) {
-      if ( (SamsungByte & 0x01) == 0x01 ) {
+  // Calculate the uint8_t 15 checksum
+  // Count the number of ONE bits on message uint8_ts 15-20
+  for (uint8_t j=15; j<21; j++) {
+    uint8_t Samsunguint8_t = SamsungTemplate[j];
+    for (uint8_t i=0; i<8; i++) {
+      if ( (Samsunguint8_t & 0x01) == 0x01 ) {
         SamsungChecksum++;
       }
-      SamsungByte >>= 1;
+      Samsunguint8_t >>= 1;
     }
   }
 
@@ -142,7 +142,7 @@ void SamsungHeatpumpIR::sendSamsung(IRSender& IR, byte powerMode, byte operating
 
   // Payload header part
   for (int i=0; i<7; i++) {
-    IR.sendIRByte(SamsungTemplate[i], SAMSUNG_AIRCON1_BIT_MARK, SAMSUNG_AIRCON1_ZERO_SPACE, SAMSUNG_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(SamsungTemplate[i], SAMSUNG_AIRCON1_BIT_MARK, SAMSUNG_AIRCON1_ZERO_SPACE, SAMSUNG_AIRCON1_ONE_SPACE);
   }
 
   // Pause + new header
@@ -154,7 +154,7 @@ void SamsungHeatpumpIR::sendSamsung(IRSender& IR, byte powerMode, byte operating
 
   // Payload power message part
   for (int i=7; i<14; i++) {
-    IR.sendIRByte(SamsungTemplate[i], SAMSUNG_AIRCON1_BIT_MARK, SAMSUNG_AIRCON1_ZERO_SPACE, SAMSUNG_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(SamsungTemplate[i], SAMSUNG_AIRCON1_BIT_MARK, SAMSUNG_AIRCON1_ZERO_SPACE, SAMSUNG_AIRCON1_ONE_SPACE);
   }
 
   // Pause + new header
@@ -166,7 +166,7 @@ void SamsungHeatpumpIR::sendSamsung(IRSender& IR, byte powerMode, byte operating
 
   // Payload data message part
   for (int i=14; i<21; i++) {
-    IR.sendIRByte(SamsungTemplate[i], SAMSUNG_AIRCON1_BIT_MARK, SAMSUNG_AIRCON1_ZERO_SPACE, SAMSUNG_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(SamsungTemplate[i], SAMSUNG_AIRCON1_BIT_MARK, SAMSUNG_AIRCON1_ZERO_SPACE, SAMSUNG_AIRCON1_ONE_SPACE);
   }
 
   // End mark

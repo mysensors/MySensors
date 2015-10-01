@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include <FujitsuHeatpumpIR.h>
 #include <PanasonicCKPHeatpumpIR.h>
 #include <PanasonicHeatpumpIR.h>
@@ -25,13 +27,13 @@ void setup()
 void loop()
 {
   int i = 0;
-  prog_char* buf;
+  const char* buf;
 
   do {
     // Send the same IR command to all supported heatpumps
     Serial.print(F("Sending IR to "));
 
-    buf = (prog_char*)heatpumpIR[i]->model();
+    buf = heatpumpIR[i]->model();
     // 'model' is a PROGMEM pointer, so need to write a byte at a time
     while (char modelChar = pgm_read_byte(buf++))
     {
@@ -39,7 +41,7 @@ void loop()
     }
     Serial.print(F(", info: "));
 
-    buf = (prog_char*)heatpumpIR[i]->info();
+    buf = heatpumpIR[i]->info();
     // 'info' is a PROGMEM pointer, so need to write a byte at a time
     while (char infoChar = pgm_read_byte(buf++))
     {

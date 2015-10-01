@@ -10,16 +10,16 @@ CarrierHeatpumpIR::CarrierHeatpumpIR() : HeatpumpIR()
 }
 
 
-void CarrierHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingModeCmd, byte fanSpeedCmd, byte temperatureCmd, byte swingVCmd, byte swingHCmd)
+void CarrierHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   (void)swingVCmd;
   (void)swingHCmd;
 
   // Sensible defaults for the heat pump mode
 
-  byte operatingMode = CARRIER_AIRCON1_MODE_HEAT;
-  byte fanSpeed = CARRIER_AIRCON1_FAN_AUTO;
-  byte temperature = 23;
+  uint8_t operatingMode = CARRIER_AIRCON1_MODE_HEAT;
+  uint8_t fanSpeed = CARRIER_AIRCON1_FAN_AUTO;
+  uint8_t temperature = 23;
 
   if (powerModeCmd == POWER_OFF)
   {
@@ -82,12 +82,12 @@ void CarrierHeatpumpIR::send(IRSender& IR, byte powerModeCmd, byte operatingMode
 // Send the Carrier code
 // Carrier has the LSB and MSB in different format than Panasonic
 
-void CarrierHeatpumpIR::sendCarrier(IRSender& IR, byte operatingMode, byte fanSpeed, byte temperature)
+void CarrierHeatpumpIR::sendCarrier(IRSender& IR, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature)
 {
-  byte sendBuffer[9] = { 0x4f, 0xb0, 0xc0, 0x3f, 0x80, 0x00, 0x00, 0x00, 0x00 }; // The data is on the last four bytes
+  uint8_t sendBuffer[9] = { 0x4f, 0xb0, 0xc0, 0x3f, 0x80, 0x00, 0x00, 0x00, 0x00 }; // The data is on the last four uint8_ts
 
-  static const prog_uint8_t temperatures[] PROGMEM = { 0x00, 0x08, 0x04, 0x0c, 0x02, 0x0a, 0x06, 0x0e, 0x01, 0x09, 0x05, 0x0d, 0x03, 0x0b };
-  byte checksum = 0;
+  static const uint8_t temperatures[] PROGMEM = { 0x00, 0x08, 0x04, 0x0c, 0x02, 0x0a, 0x06, 0x0e, 0x01, 0x09, 0x05, 0x0d, 0x03, 0x0b };
+  uint8_t checksum = 0;
 
   // PROGMEM arrays cannot be addressed directly, see http://forum.arduino.cc/index.php?topic=106603.0
   sendBuffer[5] = pgm_read_byte(&(temperatures[(temperature-17)]));
@@ -149,7 +149,7 @@ void CarrierHeatpumpIR::sendCarrier(IRSender& IR, byte operatingMode, byte fanSp
 
   // Payload
   for (size_t i=0; i<sizeof(sendBuffer); i++) {
-    IR.sendIRByte(sendBuffer[i], CARRIER_AIRCON1_BIT_MARK, CARRIER_AIRCON1_ZERO_SPACE, CARRIER_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i], CARRIER_AIRCON1_BIT_MARK, CARRIER_AIRCON1_ZERO_SPACE, CARRIER_AIRCON1_ONE_SPACE);
   }
 
   // Pause + new header
@@ -161,7 +161,7 @@ void CarrierHeatpumpIR::sendCarrier(IRSender& IR, byte operatingMode, byte fanSp
 
   // Payload again
   for (size_t i=0; i<sizeof(sendBuffer); i++) {
-    IR.sendIRByte(sendBuffer[i], CARRIER_AIRCON1_BIT_MARK, CARRIER_AIRCON1_ZERO_SPACE, CARRIER_AIRCON1_ONE_SPACE);
+    IR.sendIRbyte(sendBuffer[i], CARRIER_AIRCON1_BIT_MARK, CARRIER_AIRCON1_ZERO_SPACE, CARRIER_AIRCON1_ONE_SPACE);
   }
 
   // End mark
