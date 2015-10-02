@@ -44,6 +44,7 @@ typedef struct
 	// Some re-defines to make code more readable below
 	#define EthernetServer WiFiServer
 	#define EthernetClient WiFiClient
+	#define EthernetUDP WiFiUDP
 
 	#if defined(MY_IP_ADDRESS)
 		IPAddress gateway(MY_IP_GATEWAY_ADDRESS);
@@ -55,11 +56,7 @@ typedef struct
 
 
 #if defined(MY_USE_UDP)
-	#if defined(MY_GATEWAY_ESP8266)
-		WiFiUDP _ethernetServer;
-	#else
-		EthernetUDP _ethernetServer;
-	#endif
+	EthernetUDP _ethernetServer;
 #else
 	EthernetServer _ethernetServer(_ethernetGatewayPort);
 	uint8_t _ethernetInputPos;
@@ -165,8 +162,8 @@ bool gatewayTransportAvailable()
 		int packet_size = _ethernetServer.parsePacket();
 
 		if (_ethernetServer.available()) {
-			_ethernetServer.read(inputString[0], MY_GATEWAY_MAX_RECEIVE_LENGTH);
-			return protocolParse(_ethernetMsg, inputString[0]);
+			_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
+			return protocolParse(_ethernetMsg, inputString[0].string);
 		}
 	#else
 		// Go over list of clients and stop any that are no longer connected.

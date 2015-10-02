@@ -339,10 +339,12 @@ bool transportIsValidFirmware() {
 
 
 boolean transportSendWrite(uint8_t to, MyMessage &message) {
+
 	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = _nc.nodeId;
 	ledBlinkTx(1);
+
 	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
@@ -358,7 +360,6 @@ boolean transportSendRoute(MyMessage &message) {
 	uint8_t dest = message.destination;
 	uint8_t last = message.last;
 	bool ok;
-
 
 	// If we still don't have any parent id, re-request and skip this message.
 	if (_nc.parentNodeId == AUTO) {
@@ -417,6 +418,7 @@ boolean transportSendRoute(MyMessage &message) {
 	#endif
 
 	#if !defined(MY_REPEATER_FEATURE)
+
 		// None repeating node... We can only send to our parent
 		ok = transportSendWrite(_nc.parentNodeId, message);
 	#else
@@ -467,11 +469,14 @@ boolean transportSendRoute(MyMessage &message) {
 
 				// This message should be routed back towards sensor net gateway
 				ok = transportSendWrite(_nc.parentNodeId, message);
+
 				// Add this child to our "routing table" if it not already exist
 				hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
+
 			#endif
 		}
 	#endif
+
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
@@ -483,6 +488,7 @@ boolean transportSendRoute(MyMessage &message) {
 	} else {
 		_failedTransmissions = 0;
 	}
+
 	return ok;
 }
 

@@ -70,8 +70,13 @@ void _begin() {
 
 		// Setup radio
 		if (!transportInit()) {
-			debug(PSTR("radio init fail\n"));
-			while(1); // Nothing more we can do
+			debug(PSTR("Radio init fail\n"));
+			// Nothing more we can do
+			while(1) {
+				#if defined(MY_GATEWAY_ESP8266)
+					yield();
+				#endif
+			};
 		}
 	#endif
 
@@ -82,8 +87,13 @@ void _begin() {
 
 	    // initialize the transport driver
 		if (!gatewayTransportInit()) {
-			debug(PSTR("transport driver init fail\n"));
-			while(1); // Nothing more we can do
+			debug(PSTR("Transport driver init fail\n"));
+			// Nothing more we can do
+			while(1) {
+				#if defined(MY_GATEWAY_ESP8266)
+					yield();
+				#endif
+			}
 		}
 
 	#endif
@@ -278,10 +288,14 @@ uint8_t loadState(uint8_t pos) {
 	return hwReadConfig(EEPROM_LOCAL_CONFIG_ADDRESS+pos);
 }
 
+
 void wait(unsigned long ms) {
 	unsigned long enter = hwMillis();
 	while (hwMillis() - enter < ms) {
 		_process();
+		#if defined(ARDUINO_ARCH_ESP8266)
+			yield();
+		#endif
 	}
 }
 

@@ -38,8 +38,7 @@
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error  
  * 
- * See http://www.mysensors.org/build/ethernet_gateway for wiring instructions.
- * The ESP8266 however requires different wiring:
+ * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
  * nRF24L01+  ESP8266
  * VCC        VCC
  * CE         GPIO4          
@@ -67,7 +66,6 @@
 
 #include <EEPROM.h>
 #include <SPI.h>
-#include <ESP8266WiFi.h>
 
 // Enable debug prints to serial monitor
 #define MY_DEBUG 
@@ -79,18 +77,20 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-// Gateway mode always enabled for ESP8266
+// Gateway mode always enabled for ESP8266. But we add this anyway ;)
 #define MY_GATEWAY_ESP8266
 
 #define MY_ESP8266_SSID "MySSID"
 #define MY_ESP8266_PASSWORD "MyVerySecretPassword"
 
-
+// Enable communicate using UDP
+//#define MY_USE_UDP
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
-// #define MY_IP_ADDRESS 192,168,178,66   
+//#define MY_IP_ADDRESS 192,168,98,87
+
 // If using static ip you need to define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,0,1
+#define MY_IP_GATEWAY_ADDRESS 192,168,98,1
 #define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 // The port to keep open on node server mode 
@@ -99,9 +99,8 @@
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 2
 
-// Controller ip address (enables client mode). Undefine this to act as sever.
-
-// #define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254   
+// Controller ip address. Enables client mode. Enable this if MY_USE_UDP and you want sensor data sent somewhere. 
+//#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
  /*
 // Flash leds on rx/tx/err
 #define MY_LEDS_BLINKING_FEATURE
@@ -122,6 +121,12 @@
 #define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
 */
 
+#if defined(MY_USE_UDP)
+  #include <WiFiUDP.h>
+#else
+  #include <ESP8266WiFi.h>
+#endif
+
 #include <MySensor.h>
 
 void setup() { 
@@ -133,8 +138,7 @@ void presentation() {
 
 
 void loop() {
-  wait(500);
-  Serial.println("Hello");
+  // Send locally attech sensors data here
 }
 
 

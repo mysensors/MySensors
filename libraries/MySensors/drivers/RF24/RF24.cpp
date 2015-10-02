@@ -645,6 +645,9 @@ bool RF24::write( const void* buf, uint8_t len, const bool multicast )
 				return 0;							
 			}
 		#endif
+		#if defined(ARDUINO_ARCH_ESP8266)
+			yield();
+		#endif
 	}
     
 	ce(LOW);

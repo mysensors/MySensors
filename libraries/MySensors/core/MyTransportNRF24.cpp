@@ -44,35 +44,32 @@ uint8_t _paLevel;
 
 bool transportInit() {
 	// Start up the radio library
-	Serial.println("Radio1");
 	_rf24.begin();
-	Serial.println("Radio2");
 
 	if (!_rf24.isPVariant()) {
-		Serial.println("Radio3");
-
 		return false;
 	}
-	Serial.println("Radio4");
 	_rf24.setAutoAck(1);
 	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
 	_rf24.enableAckPayload();
 	_rf24.setChannel(MY_RF24_CHANNEL);
 	_rf24.setPALevel(_paLevel);
-	_rf24.setDataRate(MY_RF24_DATARATE);
+	if (!_rf24.setDataRate(MY_RF24_DATARATE)) {
+		return false;
+	}
 	_rf24.setRetries(5,15);
 	_rf24.setCRCLength(RF24_CRC_16);
 	_rf24.enableDynamicPayloads();
-	Serial.println("Radio5");
 
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	_rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
-	Serial.println("Radio6");
 
 
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		_aes.set_key(_psk, 16); //set up AES-key
 	#endif
+
+	//_rf24.printDetails();
 
 	return true;
 }
@@ -98,6 +95,7 @@ bool transportSend(uint8_t to, const void* data, uint8_t len) {
 	#endif
 
 	// Make sure radio has powered up
+
 	_rf24.powerUp();
 	_rf24.stopListening();
 	_rf24.openWritingPipe(TO_ADDR(to));
@@ -113,6 +111,7 @@ bool transportSend(uint8_t to, const void* data, uint8_t len) {
 bool transportAvailable(uint8_t *to) {
 	uint8_t pipe = 255;
 	boolean avail = _rf24.available(&pipe);
+
 	(void)avail; //until somebody makes use of 'avail'
 	if (pipe == CURRENT_NODE_PIPE)
 		*to = _address;

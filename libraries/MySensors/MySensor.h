@@ -19,10 +19,6 @@
 #ifndef MySensor_h
 #define MySensor_h
 
-/* { dg-warning "import is a deprecated GCC extension" "deprecated" {target *-*-* } 0 } */
-
-
-
 #include "MyConfig.h"
 #include "core/MySensorCore.h"
 
@@ -238,6 +234,7 @@ void presentation()  __attribute__((weak));
 extern "C" void setup()  __attribute__((weak));
 extern "C" void loop()  __attribute__((weak));
 extern "C" void loop2()  __attribute__((weak));
+
 
 #include <Arduino.h>
 

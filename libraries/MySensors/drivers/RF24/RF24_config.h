@@ -23,7 +23,7 @@
 
   /*** USER DEFINES:  ***/  
   //#define FAILURE_HANDLING
-  //#define SERIAL_DEBUG  
+  //#define SERIAL_DEBUG
   #define MINIMAL
   //#define SPI_UART  // Requires library from https://github.com/TMRh20/Sketches/tree/master/SPI_UART
   //#define MY_SOFTSPI   // Requires library from https://github.com/greiman/DigitalIO
