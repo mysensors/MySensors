@@ -923,7 +923,7 @@ private:
    */
   uint8_t get_status(void);
 
-  #if !defined (MINIMAL)
+#ifdef DEBUG
   /**
    * Decode and print the given status to stdout
    *
@@ -973,7 +973,7 @@ private:
    *
    * @param v  Value to print in hex.
    */
-  void print_hex( uint8_t v );
+  void print_hex( uint8_t v, const bool prefix0x = false );
   
 #endif
   /**

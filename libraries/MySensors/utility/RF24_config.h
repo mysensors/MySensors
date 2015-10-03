@@ -23,8 +23,6 @@
 
   /*** USER DEFINES:  ***/  
   //#define FAILURE_HANDLING
-  //#define SERIAL_DEBUG  
-  //#define MINIMAL
   //#define SPI_UART  // Requires library from https://github.com/TMRh20/Sketches/tree/master/SPI_UART
   //#define SOFTSPI   // Requires library from https://github.com/greiman/DigitalIO
   /**********************/
@@ -74,16 +72,7 @@
   #define _SPI SPI
 #endif
 
-  
-  #ifdef SERIAL_DEBUG
-	#define IF_SERIAL_DEBUG(x) ({x;})
-  #else
-	#define IF_SERIAL_DEBUG(x)
-	#if defined(RF24_TINY)
-	#define printf_P(...)
-    #endif
-  #endif
-
+ 
 // Avoid spurious warnings
 // Arduino DUE is arm and uses traditional PROGMEM constructs
 #if 1
