@@ -773,7 +773,7 @@ boolean MySensor::process() {
 							debug(PSTR("fw checksum ok\n"));
 							// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)	
 							uint16_t fwsize = FIRMWARE_BLOCK_SIZE * fc.blocks;
-							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(fwsize >> 8),fwsize,':'};
+							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(uint8_t)(fwsize >> 8),(uint8_t)(fwsize & 0xff),':'};
 							flash.writeBytes(0, OTAbuffer, 10);
 							// Write the new firmware config to eeprom
 							hw_writeConfigBlock((void*)&fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));

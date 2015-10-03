@@ -334,14 +334,6 @@ class MySensor
   protected:
 	NodeConfig nc; // Essential settings for node to work
 	ControllerConfig cc; // Configuration coming from controller
-#ifdef MY_OTA_FIRMWARE_FEATURE
-	NodeFirmwareConfig fc;
-	bool fwUpdateOngoing;
-	unsigned long fwLastRequestTime;
-	uint16_t fwBlock;
-	uint8_t fwRetry;
-	SPIFlash flash;
-#endif
 
 	bool repeaterMode;
 	bool autoFindParent;
@@ -369,6 +361,14 @@ class MySensor
 	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
 	MyMessage msgSign;  // Buffer for message to sign.
 	MySigning& signer;
+#endif
+#ifdef MY_OTA_FIRMWARE_FEATURE
+	NodeFirmwareConfig fc;
+	bool fwUpdateOngoing;
+	unsigned long fwLastRequestTime;
+	uint16_t fwBlock;
+	uint8_t fwRetry;
+	SPIFlash flash;
 #endif
 	MyHw& hw;
 	
