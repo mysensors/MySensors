@@ -27,10 +27,17 @@
  */
 
 
+// use JeeLib as RFM12 API
+#include <JeeLib.h>
+// Translate between JeeLib and MyTransport  Modules
+#include <MyTransportRFM12.h>
+
 #include <MySensor.h>
 #include <SPI.h>
 #include <Bounce2.h>
+#include <EEPROM.h>
 
+#define NODE_ID 22
 #define CHILD_ID 3
 #define BUTTON_PIN  3  // Arduino Digital I/O pin for button/reed switch
 
@@ -46,9 +53,9 @@ MyMessage msg(CHILD_ID,V_TRIPPED);
 
 void setup()  
 {  
-  gw.begin();
+  gw.begin(NULL, 22);
 
- // Setup the button
+  // Setup the button
   pinMode(BUTTON_PIN,INPUT);
   // Activate internal pull-up
   digitalWrite(BUTTON_PIN,HIGH);
