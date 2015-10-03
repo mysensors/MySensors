@@ -162,6 +162,8 @@ volatile uint8_t countErr;
 
 void processMQTTMessages(char* topic, byte* payload, unsigned int length);
 PubSubClient client(remote_ip, remote_port, processMQTTMessages, ethClient);
+inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor,
+                        uint8_t command, uint8_t type, bool enableAck);
 
 ////////////////////////////////////////////////////////////////
 

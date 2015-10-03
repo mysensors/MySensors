@@ -41,8 +41,13 @@
 
 // Set the hardware driver to use (initialized by MySensor-class)
 //#if defined __AVR_ATmega328P__
+#if defined(ARDUINO_ARCH_ESP8266)
+#include "MyHwESP8266.h"
+typedef MyHwESP8266 MyHwDriver;
+#elif defined(ARDUINO_ARCH_AVR)
 #include "MyHwATMega328.h"
 typedef MyHwATMega328 MyHwDriver;
+#endif
 //#endif
 
 
@@ -354,6 +359,7 @@ class MySensor
 
 	unsigned long ledBlinkPeriod;
 	void handleLedsBlinking(); // do the actual blinking
+	unsigned long blink_next_time;
 #endif
 
 	MyTransport& radio;
