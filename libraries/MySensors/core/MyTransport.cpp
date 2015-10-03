@@ -28,6 +28,7 @@ uint8_t _failedTransmissions;
 #endif
 
 #ifdef MY_OTA_FIRMWARE_FEATURE
+	SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 	NodeFirmwareConfig _fc;
 	bool _fwUpdateOngoing;
 	unsigned long _fwLastRequestTime;
@@ -264,7 +265,7 @@ inline void transportProcess() {
 							debug(PSTR("fw checksum ok\n"));
 							// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)
 							uint16_t fwsize = FIRMWARE_BLOCK_SIZE * _fc.blocks;
-							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(fwsize >> 8),fwsize,':'};
+							uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(uint8_t)(fwsize >> 8),(uint8_t)(fwsize & 0xff),':'};
 							_flash.writeBytes(0, OTAbuffer, 10);
 							// Write the new firmware config to eeprom
 							hwWriteConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
@@ -358,7 +359,9 @@ boolean transportSendWrite(uint8_t to, MyMessage &message) {
 boolean transportSendRoute(MyMessage &message) {
 	uint8_t sender = message.sender;
 	uint8_t dest = message.destination;
+	#if defined(MY_REPEATER_FEATURE)
 	uint8_t last = message.last;
+	#endif
 	bool ok;
 
 	// If we still don't have any parent id, re-request and skip this message.

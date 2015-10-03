@@ -83,7 +83,7 @@ bool gatewayTransportInit() {
 		{
 			delay(500);
 			Serial.print(".");
-			hwWatchdogReset();
+			yield();
 		}
 		Serial.println(PSTR("Connected to AP!"));
 		Serial.print(PSTR("IP: "));
@@ -110,6 +110,7 @@ bool gatewayTransportInit() {
 			_ethernetServer.setNoDelay(true);
 		#endif
 	#endif /* USE_UDP */
+	return true;
 }
 
 bool gatewayTransportSend(MyMessage &message)

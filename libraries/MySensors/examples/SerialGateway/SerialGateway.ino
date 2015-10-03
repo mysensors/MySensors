@@ -39,6 +39,7 @@
 // Enable debug prints to serial monitor
 #define MY_DEBUG 
 
+
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
@@ -66,14 +67,16 @@
 
 #include <MySensor.h>  
 
-void setup()  
-{ 
-  // Nothing to do here
+void setup() { 
+  // Setup locally attached sensors
 }
 
-void loop()  
-{ 
-  // Nothing to do here
+void presentation() {
+ // Present locally attached sensors 
+}
+
+void loop() { 
+  // Send locally attached sensor data here 
 }
 
 

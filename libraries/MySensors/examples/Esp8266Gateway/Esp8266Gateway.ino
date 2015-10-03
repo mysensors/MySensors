@@ -73,7 +73,7 @@
 // Use a bit lower baudrate here than default
 #define MY_BAUD_RATE 9600
 
-// Enable and select radio type (if attached)
+// Enables and select radio type (if attached)
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
@@ -83,7 +83,8 @@
 #define MY_ESP8266_SSID "MySSID"
 #define MY_ESP8266_PASSWORD "MyVerySecretPassword"
 
-// Enable communicate using UDP
+
+// Enable UDP communication
 //#define MY_USE_UDP
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
@@ -99,7 +100,8 @@
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 2
 
-// Controller ip address. Enables client mode. Enable this if MY_USE_UDP and you want sensor data sent somewhere. 
+// Controller ip address. Enables client mode (default is "server" mode). 
+// Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere. 
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
  /*
 // Flash leds on rx/tx/err

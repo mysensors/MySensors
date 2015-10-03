@@ -43,8 +43,6 @@
 	// Remove PSTR macros from debug prints
 	#undef PSTR
 	#define PSTR(x) (x)
-	/*#include "drivers/ESP8266/EEPROM/EEPROM.cpp"
-	#include "drivers/ESP8266/SPI/SPI.cpp"*/
 	#include "core/MyHwESP8266.cpp"
 	// For ESP8266, we always enable gateway feature
 	#define MY_GATEWAY_ESP8266
@@ -116,17 +114,7 @@
 	#endif
 	#if defined(MY_GATEWAY_ESP8266)
 		// GATEWAY - ESP8266
-//		#include "drivers/ESP8266/ESP8266WiFi/src/ESP8266Wifi.cpp"
-
-//		#include "drivers/ESP8266/ESP8266WiFi/src/WifiClient.cpp"
-//		#include "drivers/ESP8266/ESP8266WiFi/src/WifiServer.cpp"
-//		#include "drivers/ESP8266/ESP8266WiFi/src/WifiUdp.cpp"
-		#if !defined(USE_UDP)
-
-		#endif
-
 		#include "core/MyGatewayTransportEthernet.cpp"
-
 	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100
 		/*#include "drivers/AVR/Ethernet_W5100/utility/socket.cpp"
@@ -187,7 +175,6 @@
 	// FLASH
 	#ifdef MY_OTA_FIRMWARE_FEATURE
 		#include "drivers/SPIFlash/SPIFlash.cpp"
-		SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 	#endif
 	#include "core/MyTransport.cpp"
 	#if defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)
