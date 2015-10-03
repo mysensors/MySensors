@@ -923,7 +923,7 @@ private:
    */
   uint8_t get_status(void);
 
-  #if !defined (MINIMAL)
+#ifdef DEBUG
   /**
    * Decode and print the given status to stdout
    *
@@ -943,30 +943,38 @@ private:
   void print_observe_tx(uint8_t value);
 
   /**
-   * Print the name and value of an 8-bit register to stdout
+   * Print the value of an 8-bit register to stdout
    *
    * Optionally it can print some quantity of successive
    * registers on the same line.  This is useful for printing a group
    * of related registers on one line.
    *
-   * @param name Name of the register
    * @param reg Which register. Use constants from nRF24L01.h
    * @param qty How many successive registers to print
    */
-  void print_byte_register(const char* name, uint8_t reg, uint8_t qty = 1);
+  void print_byte_register(uint8_t reg, uint8_t qty = 1);
 
   /**
-   * Print the name and value of a 40-bit address register to stdout
+   * Print the value of a 40-bit address register to stdout
    *
    * Optionally it can print some quantity of successive
    * registers on the same line.  This is useful for printing a group
    * of related registers on one line.
    *
-   * @param name Name of the register
    * @param reg Which register. Use constants from nRF24L01.h
    * @param qty How many successive registers to print
    */
-  void print_address_register(const char* name, uint8_t reg, uint8_t qty = 1);
+  void print_address_register(uint8_t reg, uint8_t qty = 1);
+
+  /**
+   * Print a value in hex to serial output.
+   *
+   * For values < 16 a leading 0 will be printed.
+   *
+   * @param v  Value to print in hex.
+   */
+  void print_hex( uint8_t v, const bool prefix0x = false );
+  
 #endif
   /**
    * Turn on or off the special features of the chip
