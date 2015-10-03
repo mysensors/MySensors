@@ -63,6 +63,7 @@
 //#define MY_RADIO_RFM69
 
 #include <Time.h>  
+#include <SPI.h>
 #include <MySensor.h>  
 #include <stdarg.h>
 #include <UTFT.h>

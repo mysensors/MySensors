@@ -53,14 +53,11 @@ typedef struct
 
 #endif
 
-
-
 #if defined(MY_USE_UDP)
 	EthernetUDP _ethernetServer;
 #else
 	EthernetServer _ethernetServer(_ethernetGatewayPort);
-	uint8_t _ethernetInputPos;
-#endif /* USE_UDP */
+#endif
 
 
 static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
@@ -137,17 +134,55 @@ bool gatewayTransportSend(MyMessage &message)
 
 		#endif
 	#else
-	  // Send to connected clients
-	  for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
-	  {
-	    if (clients[i] && clients[i].connected())
-	    {
-		   clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
-	    }
-	  }
-	  // TODO: What do we return here?
-	  return true;
+		// Send message to connected clients
+		#if defined(MY_GATEWAY_ESP8266)
+			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
+			{
+				if (clients[i] && clients[i].connected())
+				{
+					clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
+				}
+			}
+			return true;
+		#else
+			_ethernetServer.write(_ethernetMsg);
+			return true;
+		#endif
 	#endif
+}
+
+bool _readFromClient(uint8_t i) {
+	while (clients[i].connected() && clients[i].available()) {
+		char inChar = clients[i].read();
+		if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
+			// if newline then command is complete
+			if (inChar == '\n') {
+				// a command was issued by the client
+				// we will now try to send it to the actuator
+				// echo the string to the serial port
+				debug(PSTR("Client %d: %s\n"), i, inputString[i].string);
+
+				// clear the string:
+				inputString[i].idx = 0;
+
+				bool ret = protocolParse(_ethernetMsg, inputString[i].string);
+				inputString[i].string[inputString[i].idx] = 0;
+				if (ret)
+					return ret;
+
+			} else {
+				// add it to the inputString:
+				inputString[i].string[inputString[i].idx++] = inChar;
+			}
+		} else {
+			// Incoming message too long. Throw away
+			debug(PSTR("Client %d: Message too long\n"), i);
+			inputString[i].idx = 0;
+			// Finished with this client's message. Next loop() we'll see if there's more to read.
+			break;
+		}
+	}
+	return false;
 }
 
 bool gatewayTransportAvailable()
@@ -167,77 +202,61 @@ bool gatewayTransportAvailable()
 			return protocolParse(_ethernetMsg, inputString[0].string);
 		}
 	#else
-		// Go over list of clients and stop any that are no longer connected.
-		// If the server has a new client connection it will be assigned to a free slot.
-		bool allSlotsOccupied = true;
-		for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
-			if (!clients[i].connected()) {
-				if (clientsConnected[i]) {
-					Serial.print("Client ");
-					Serial.print(i);
-					Serial.println(" disconnected");
-					clients[i].stop();
+		#if defined(MY_GATEWAY_ESP8266)
+			// ESP8266: Go over list of clients and stop any that are no longer connected.
+			// If the server has a new client connection it will be assigned to a free slot.
+			bool allSlotsOccupied = true;
+			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
+				if (!clients[i].connected()) {
+					if (clientsConnected[i]) {
+						debug(PSTR("Client %d disconnected\n"), i);
+						clients[i].stop();
+					}
+					//check if there are any new clients
+					if (_ethernetServer.hasClient()) {
+						clients[i] = _ethernetServer.available();
+						inputString[i].idx = 0;
+						debug(PSTR("Client %d connected\n"), i);
+						gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+					}
 				}
-				//check if there are any new clients
-				if (_ethernetServer.hasClient()) {
-					clients[i] = _ethernetServer.available();
-					inputString[i].idx = 0;
-					Serial.print("Client ");
-					Serial.print(i);
-					Serial.println(" connected");
+				bool connected = clients[i].connected();
+				clientsConnected[i] = connected;
+				allSlotsOccupied &= connected;
+			}
+			if (allSlotsOccupied && _ethernetServer.hasClient()) {
+				//no free/disconnected spot so reject
+				debug(PSTR("No free slot available\n"));
+				EthernetClient c = _ethernetServer.available();
+				c.stop();
+			}
+				// Loop over clients connect and read available data
+			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
+				if (_readFromClient(i))
+					return true;
+			}
+		#else
+			// W5100/ENC module does not have hasClient-method. We can only serve one client at the time.
+			EthernetClient newclient = _ethernetServer.available();
+			// if a new client connects make sure to dispose any previous existing sockets
+			if (newclient) {
+				if (clients[0] != newclient) {
+					clients[0].stop();
+					clients[0] = newclient;
+					debug(PSTR("Client connected\n"));
 					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 				}
 			}
-			bool connected = clients[i].connected();
-			clientsConnected[i] = connected;
-			allSlotsOccupied &= connected;
-		}
-		if (allSlotsOccupied && _ethernetServer.hasClient()) {
-			//no free/disconnected spot so reject
-			Serial.println("No free slot available");
-			EthernetClient c = _ethernetServer.available();
-			c.stop();
-		}
-			// Loop over clients connect and read available data
-		for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
-			while (clients[i].connected() && clients[i].available()) {
-				char inChar = clients[i].read();
-				Serial.print(inChar);
-				if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
-					// if newline then command is complete
-					if (inChar == '\n') {
-						// a command was issued by the client
-						// we will now try to send it to the actuator
-						// echo the string to the serial port
-						Serial.print(PSTR("Client "));
-						Serial.print(i);
-						Serial.print(": ");
-						Serial.println(inputString[i].string);
-
-						// clear the string:
-						inputString[i].idx = 0;
-
-						bool ret = protocolParse(_ethernetMsg, inputString[i].string);
-						inputString[i].string[inputString[i].idx] = 0;
-						if (ret)
-							return ret;
-
-					} else {
-						// add it to the inputString:
-						inputString[i].string[inputString[i].idx++] = inChar;
-					}
+			if (clients[0]) {
+				if (!clients[0].connected()) {
+					debug(PSTR("Client disconnected\n"));
+					clients[0].stop();
 				} else {
-					// Incoming message too long. Throw away
-					Serial.print(PSTR("Client "));
-					Serial.print(i);
-					Serial.println(PSTR(": Message too long"));
-					inputString[i].idx = 0;
-					// Finished with this client's message. Next loop() we'll see if there's more to read.
-					break;
+					if (_readFromClient(0))
+						return true;
 				}
 			}
-		}
-
+		#endif
 	#endif
 	return false;
 }
@@ -259,9 +278,8 @@ void gatewayTransportRenewIP()
 	 3 - rebinf failed
 	 4 - rebind success
 	 */
-	// TODO: Use millis from MyHw ??
-	static unsigned long next_time = millis() + MY_IP_RENEWAL_INTERVAL;
-	unsigned long now = millis();
+	static unsigned long next_time = hwMillis() + MY_IP_RENEWAL_INTERVAL;
+	unsigned long now = hwMillis();
 
 	// http://playground.arduino.cc/Code/TimingRollover
 	if ((long)(now - next_time) < 0)

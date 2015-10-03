@@ -58,6 +58,7 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
+#include <SPI.h>
 #include <MySensor.h>  
 
 

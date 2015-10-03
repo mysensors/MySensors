@@ -35,6 +35,7 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
+#include <SPI.h>
 #include <MySensor.h>
 
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point

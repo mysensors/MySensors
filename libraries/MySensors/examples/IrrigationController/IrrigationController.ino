@@ -92,6 +92,7 @@ Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (p
 
 #include <Wire.h>
 #include <Time.h>
+#include <SPI.h>
 #include <MySensor.h>
 #include <LiquidCrystal.h>
 #include <LiquidCrystal_I2C.h>

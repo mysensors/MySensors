@@ -54,6 +54,7 @@
 // SETTINGS FOR MY_SIGNING_ATSHA204
 #define MY_SIGNING_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
 
+#include <SPI.h>
 #include <MySensor.h>
 
 

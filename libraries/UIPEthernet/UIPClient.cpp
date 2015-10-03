@@ -19,10 +19,10 @@
 
 extern "C"
 {
-#import "utility/uip-conf.h"
-#import "utility/uip.h"
-#import "utility/uip_arp.h"
-#import "string.h"
+#include "utility/uip-conf.h"
+#include "utility/uip.h"
+#include "utility/uip_arp.h"
+#include "string.h"
 }
 #include "UIPEthernet.h"
 #include "UIPClient.h"

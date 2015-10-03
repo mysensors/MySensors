@@ -41,6 +41,7 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
+#include <SPI.h>
 #include <MySensor.h>  
 
 #define DIGITAL_INPUT_SENSOR 3                  // The digital input you attached your sensor.  (Only 2 and 3 generates interrupt!)

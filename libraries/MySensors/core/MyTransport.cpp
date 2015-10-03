@@ -121,7 +121,9 @@ inline void transportProcess() {
 	uint8_t command = mGetCommand(_msg);
 	uint8_t type = _msg.type;
 	uint8_t sender = _msg.sender;
-	uint8_t last = _msg.last;
+	#if defined(MY_REPEATER_FEATURE)
+		uint8_t last = _msg.last;
+	#endif
 	uint8_t destination = _msg.destination;
 	if (destination == _nc.nodeId) {
 		// This message is addressed to this node

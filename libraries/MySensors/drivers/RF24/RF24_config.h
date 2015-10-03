@@ -50,7 +50,7 @@
 		#define _SPI spi
       
 	  #else	    
-		#include "drivers/AVR/SPI/SPI.h"
+		#include <SPI.h>
 		#define _SPI SPI
 	  #endif
 	#endif
