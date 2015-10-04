@@ -318,22 +318,24 @@ void RF24::print_status(uint8_t status) const
   Serial.print(F(" MAX_RT="));  Serial.print((status & _BV(MAX_RT))    ? one : zero );
   Serial.print(F(" RX_P_NO=")); Serial.print((status >> RX_P_NO) & uint8_t(B111));
   Serial.print(F(" TX_FULL=")); Serial.println((status & _BV(TX_FULL)) ? one : zero );
+#else
+  (void)status;
 #endif
 }
 
 /****************************************************************************/
-
 void RF24::print_observe_tx(uint8_t value) const
 {
 #ifdef MY_DEBUG_VERBOSE
   print_hex(value, true);
   Serial.print(F(": POLS_CNT=")); Serial.print((value >> PLOS_CNT)   & uint8_t(B1111));
   Serial.print(F(" ARC_CNT="));   Serial.println((value >> ARC_CNT)  & uint8_t(B1111));
+#else
+  (void)value;
 #endif
 }
 
 /****************************************************************************/
-
 void RF24::print_byte_register(uint8_t reg, uint8_t qty)
 {
 #ifdef MY_DEBUG_VERBOSE
@@ -345,6 +347,9 @@ void RF24::print_byte_register(uint8_t reg, uint8_t qty)
     prefix0x = false;
   }
   Serial.println(space_str_P);
+#else
+  (void)reg;
+  (void)qty;
 #endif
 }
 
@@ -367,6 +372,9 @@ void RF24::print_address_register(uint8_t reg, uint8_t qty)
     Serial.print(space_str_P);
   }
   Serial.println(space_str_P);
+#else
+  (void)reg;
+  (void)qty;
 #endif
 }
 /****************************************************************************/
