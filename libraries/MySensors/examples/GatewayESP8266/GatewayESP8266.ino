@@ -70,7 +70,7 @@
 // Enable debug prints to serial monitor
 #define MY_DEBUG 
 
-// Use a bit lower baudrate here than default
+// Use a bit lower baudrate for serial prints on ESP8266 than default in MyConfig.h
 #define MY_BAUD_RATE 9600
 
 // Enables and select radio type (if attached)
@@ -87,10 +87,10 @@
 //#define MY_USE_UDP
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
-//#define MY_IP_ADDRESS 192,168,98,87
+//#define MY_IP_ADDRESS 192,168,178,87
 
 // If using static ip you need to define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,98,1
+#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
 #define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 // The port to keep open on node server mode 

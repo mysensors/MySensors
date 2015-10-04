@@ -78,19 +78,25 @@ inline void transportProcess() {
 	(void)len; //until somebody makes use of 'len'
 	ledBlinkRx(1);
 
+	uint8_t command = mGetCommand(_msg);
+	uint8_t type = _msg.type;
+	uint8_t sender = _msg.sender;
+	uint8_t last = _msg.last;
+	uint8_t destination = _msg.destination;
+
 	#ifdef MY_SIGNING_FEATURE
 		// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
 		// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
 		#ifdef MY_SIGNING_REQUEST_SIGNATURES
 
-			if ((!MY_IS_GATEWAY || DO_SIGN(msg.sender)) &&
-				msg.destination == nc.nodeId &&
-				mGetLength(msg) &&
-				!mGetAck(msg) &&
-				(mGetCommand(msg) != C_INTERNAL ||
-				 (msg.type != I_GET_NONCE_RESPONSE && msg.type != I_GET_NONCE && msg.type != I_REQUEST_SIGNING &&
-				  msg.type != I_ID_REQUEST && msg.type != I_ID_RESPONSE &&
-				  msg.type != I_FIND_PARENT && msg.type != I_FIND_PARENT_RESPONSE))) {
+			if ((!MY_IS_GATEWAY || DO_SIGN(sender)) &&
+				destination == nc.nodeId &&
+				mGetLength(_msg) &&
+				!mGetAck(_msg) &&
+				(mGetCommand(_msg) != C_INTERNAL ||
+				 (type != I_GET_NONCE_RESPONSE && type != I_GET_NONCE && type != I_REQUEST_SIGNING &&
+				  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
+				  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
 				if (!mGetSigned(_msg)) {
 					// Got unsigned message that should have been signed
 					debug(PSTR("no sign\n"));
@@ -106,10 +112,11 @@ inline void transportProcess() {
 		#endif
 	#endif
 
+
 	// Add string termination, good if we later would want to print it.
 	_msg.data[mGetLength(_msg)] = '\0';
 	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
-				_msg.sender, _msg.last, _msg.destination, _msg.sensor, mGetCommand(_msg), _msg.type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
+				sender, last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
 	mSetSigned(_msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
 
 	if(!(mGetVersion(_msg) == PROTOCOL_VERSION)) {
@@ -118,13 +125,6 @@ inline void transportProcess() {
 		return;
 	}
 
-	uint8_t command = mGetCommand(_msg);
-	uint8_t type = _msg.type;
-	uint8_t sender = _msg.sender;
-	#if defined(MY_REPEATER_FEATURE)
-		uint8_t last = _msg.last;
-	#endif
-	uint8_t destination = _msg.destination;
 	if (destination == _nc.nodeId) {
 		// This message is addressed to this node
 
@@ -142,7 +142,7 @@ inline void transportProcess() {
 			mSetRequestAck(_msgTmp,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
 			mSetAck(_msgTmp,true);
 			_msgTmp.sender = _nc.nodeId;
-			_msgTmp.destination = _msg.sender;
+			_msgTmp.destination = sender;
 			_sendRoute(_msgTmp);
 		}
 
@@ -159,7 +159,7 @@ inline void transportProcess() {
 						if (isValidDistance(distance) && (distance < _nc.distance)) {
 							// Found a neighbor closer to GW than previously found
 							_nc.distance = distance;
-							_nc.parentNodeId = _msg.sender;
+							_nc.parentNodeId = sender;
 							hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _nc.parentNodeId);
 							hwWriteConfig(EEPROM_DISTANCE_ADDRESS, _nc.distance);
 							debug(PSTR("parent=%d, d=%d\n"), _nc.parentNodeId, _nc.distance);
@@ -170,16 +170,16 @@ inline void transportProcess() {
 			#ifdef MY_SIGNING_FEATURE
 			} else if (type == I_GET_NONCE) {
 				if (signerGetNonce(_msg)) {
-					_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
+					_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
 				}
 				return; // Nonce exchange is an internal MySensor protocol message, no need to inform caller about this
 			} else if (type == I_REQUEST_SIGNING) {
 				if (_msg.getBool()) {
 					// We received an indicator that the sender require us to sign all messages we send to it
-					SET_SIGN(_msg.sender);
+					SET_SIGN(sender);
 				} else {
 					// We received an indicator that the sender does not require us to sign all messages we send to it
-					CLEAR_SIGN(_msg.sender);
+					CLEAR_SIGN(sender);
 				}
 				// Save updated table
 				hwWriteConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
@@ -189,12 +189,12 @@ inline void transportProcess() {
 				// to sign it's messages
 				#if defined (MY_GATEWAY_FEATURE)
 					#ifdef MY_SIGNING_REQUEST_SIGNATURES
-						if (DO_SIGN(_msg.sender))
-							_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
+						if (DO_SIGN(sender))
+							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
 						else
-							_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 					#else
-						_sendRoute(build(_msg, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+						_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 					#endif
 				#endif
 				return; // Signing request is an internal MySensor protocol message, no need to inform caller about this
@@ -359,8 +359,6 @@ boolean transportSendWrite(uint8_t to, MyMessage &message) {
 
 
 boolean transportSendRoute(MyMessage &message) {
-	uint8_t sender = message.sender;
-	uint8_t dest = message.destination;
 	#if defined(MY_REPEATER_FEATURE)
 	uint8_t last = message.last;
 	#endif
@@ -383,12 +381,13 @@ boolean transportSendRoute(MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 
 	#ifdef MY_SIGNING_FEATURE
+		uint8_t type = message.type;
 		// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
 		if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) && mGetLength(message) &&
 			(mGetCommand(message) != C_INTERNAL ||
-			 (message.type != I_GET_NONCE && message.type != I_GET_NONCE_RESPONSE && message.type != I_REQUEST_SIGNING &&
-			  message.type != I_ID_REQUEST && message.type != I_ID_RESPONSE &&
-			  message.type != I_FIND_PARENT && message.type != I_FIND_PARENT_RESPONSE))) {
+			 (type != I_GET_NONCE && type != I_GET_NONCE_RESPONSE && type != I_REQUEST_SIGNING &&
+			  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
+			  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
 			bool signing = SIGN_WAITING_FOR_NONCE;
 			// Send nonce-request
 			if (!_sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
@@ -427,6 +426,8 @@ boolean transportSendRoute(MyMessage &message) {
 		// None repeating node... We can only send to our parent
 		ok = transportSendWrite(_nc.parentNodeId, message);
 	#else
+		uint8_t sender = message.sender;
+		uint8_t dest = message.destination;
 		if (dest == GATEWAY_ADDRESS) {
 			// Store this address in routing table (if repeater)
 			hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);

@@ -14,6 +14,7 @@
 static const char space_str_P[] PROGMEM   = " ";
 
 /****************************************************************************/
+#ifdef MY_DEBUG_VERBOSE
 static void print_hex( uint8_t v, const bool prefix0x = false )
 {
   if (prefix0x)
@@ -22,6 +23,7 @@ static void print_hex( uint8_t v, const bool prefix0x = false )
   Serial.print(v >> 4, HEX);
   Serial.print(v & 0x0F, HEX);
 }
+#endif
 
 void RF24::csn(bool mode)
 {
@@ -143,7 +145,7 @@ uint8_t RF24::write_register(uint8_t reg, uint8_t value)
 {
   uint8_t status;
 
-#ifdef MY_DEBUG
+#ifdef MY_DEBUG_VERBOSE
   Serial.print(F("write_register(")); print_hex(reg, true); Serial.print(F(",")); print_hex(value, true); Serial.println(F(")")); 
 #endif
 
@@ -299,7 +301,7 @@ uint8_t RF24::get_status(void)
 /****************************************************************************/
 void RF24::print_feature(void)
 {
-#ifdef MY_DEBUG
+#ifdef MY_DEBUG_VERBOSE
   Serial.print(F("FEATURE="));
   print_hex(read_register(FEATURE), true);
   Serial.println(space_str_P); 
@@ -658,7 +660,7 @@ void RF24::powerUp(void)
 #if defined (FAILURE_HANDLING)
 void RF24::errNotify(){
 #ifdef MY_DEBUG
-  Serial.println(F("HARDWARE FAIL"));
+  Serial.println(F("RF24 HARDWARE FAIL"));
 #endif
   failureDetected = 1;
 }

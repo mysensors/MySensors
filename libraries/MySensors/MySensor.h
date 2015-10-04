@@ -43,6 +43,8 @@
 	// Remove PSTR macros from debug prints
 	#undef PSTR
 	#define PSTR(x) (x)
+	//#undef F
+	//#define F(x) (x)
 	#include "core/MyHwESP8266.cpp"
 	// For ESP8266, we always enable gateway feature
 	#define MY_GATEWAY_ESP8266
@@ -86,11 +88,20 @@
 // GATEWAY - TRANSPORT
 #if defined(MY_GATEWAY_MQTT_CLIENT)
 	// GATEWAY - COMMON FUNCTIONS
-	#include "core/MyGatewayTransport.cpp"
-	#if !defined(MY_GATEWAY_ESP8266)
-		// We only support MQTT on W5100 (and ESP8266) at the moment
-
+	// We only support MQTT Client using W5100 and ESP8266 at the moment
+	#if !defined(MY_CONTROLLER_IP_ADDRESS)
+		#error You must specify MY_CONTROLLER_IP_ADDRESS (MQTT broker address)
 	#endif
+	#if !defined(MY_MQTT_TOPIC_PREFIX)
+		#error You must specify a topic prefix MY_MQTT_TOPIC_PREFIX for this MQTT client
+	#endif
+	#if !defined(MY_MQTT_CLIENT_ID)
+		#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
+	#endif
+
+	#include "drivers/pubsubclient/src/PubSubClient.cpp"
+	#include "core/MyGatewayTransport.cpp"
+	#include "core/MyGatewayTransportMQTTClient.cpp"
 #elif defined(MY_GATEWAY_FEATURE)
 	// GATEWAY - COMMON FUNCTIONS
 	#include "core/MyGatewayTransport.cpp"

@@ -23,7 +23,6 @@ extern boolean transportSendRoute(MyMessage &message);
 
 inline void gatewayTransportProcess() {
 	if (gatewayTransportAvailable()) {
-
 		MyMessage &_msg = gatewayTransportReceive();
 		if (_msg.destination == GATEWAY_ADDRESS) {
 			// Check if sender requests an ack back.
