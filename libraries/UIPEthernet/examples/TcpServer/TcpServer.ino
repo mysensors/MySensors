@@ -18,7 +18,6 @@
  * Adaption to Enc28J60 by Norbert Truchsess <norbert.truchsess@t-online.de>
  */
 
-#include <SPI.h>
 #include <UIPEthernet.h>
 
 EthernetServer server = EthernetServer(1000);

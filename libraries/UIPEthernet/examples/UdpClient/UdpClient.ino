@@ -16,7 +16,6 @@
  * Copyright (C) 2013 by Norbert Truchsess (norbert.truchsess@t-online.de)
  */
 
-#include <SPI.h>
 #include <UIPEthernet.h>
 
 EthernetUDP udp;

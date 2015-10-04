@@ -5,7 +5,7 @@
 #ifndef DNSClient_h
 #define DNSClient_h
 
-#include "UIPUdp.h"
+#include <UIPUdp.h>
 
 class DNSClient
 {

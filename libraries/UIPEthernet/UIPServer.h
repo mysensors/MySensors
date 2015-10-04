@@ -20,8 +20,8 @@
 #define UIPSERVER_H
 
 #include "ethernet_comp.h"
-#include "Server.h"
-#include "UIPClient.h"
+#import "Server.h"
+#import "UIPClient.h"
 
 class UIPServer : public Server {
 

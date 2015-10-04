@@ -95,7 +95,7 @@
 	// GATEWAY - COMMON FUNCTIONS
 	#include "core/MyGatewayTransport.cpp"
 
-	// We currently only support one protocol, enable it.
+	// We currently only support one protocol at the moment, enable it.
 	#include "core/MyProtocolMySensors.cpp"
 
 	// GATEWAY - CONFIGURATION

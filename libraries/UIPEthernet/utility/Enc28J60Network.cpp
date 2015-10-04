@@ -25,19 +25,8 @@
 #include "Enc28J60Network.h"
 #include "Arduino.h"
 
-#if ENC28J60_USE_SPILIB
-#include <SPI.h>
-#endif
-
 extern "C" {
-  #if defined(ARDUINO_ARCH_AVR)
-  // AVR-specific code
-  #include <avr/io.h>
-  #elif defined(ARDUINO_ARCH_SAM)
-  // SAM-specific code
-  #else
-  // generic, non-platform specific code
-  #endif
+#include <avr/io.h>
 #include "enc28j60.h"
 #include "uip.h"
 }
@@ -51,15 +40,7 @@ extern "C" {
 // set CS to 1 = passive
 #define CSPASSIVE digitalWrite(ENC28J60_CONTROL_CS, HIGH)
 //
-#if defined(ARDUINO_ARCH_AVR)
 #define waitspi() while(!(SPSR&(1<<SPIF)))
-#elif defined(ARDUINO_ARCH_SAM)
-#if ENC28J60_CONTROL_CS==BOARD_SPI_SS0 or ENC28J60_CONTROL_CS==BOARD_SPI_SS1 or ENC28J60_CONTROL_CS==BOARD_SPI_SS2 or ENC28J60_CONTROL_CS==BOARD_SPI_SS3
-#define ENC28J60_USE_SPILIB_EXT 1
-#endif
-#endif
-
-
 
 uint16_t Enc28J60Network::nextPacketPtr;
 uint8_t Enc28J60Network::bank=0xff;
@@ -74,34 +55,25 @@ void Enc28J60Network::init(uint8_t* macaddr)
   pinMode(ENC28J60_CONTROL_CS, OUTPUT);
   CSPASSIVE; // ss=0
   //
-
-#if ENC28J60_USE_SPILIB
-  SPI.begin();
-#if defined(ARDUINO_ARCH_AVR)
-  // AVR-specific code
-  SPI.setClockDivider(SPI_CLOCK_DIV2); //results in 8MHZ at 16MHZ system clock.
-#elif defined(ARDUINO_ARCH_SAM)
-  // SAM-specific code
-  SPI.setClockDivider(10); //defaults to 21 which results in aprox. 4MHZ. A 10 should result in a little more than 8MHZ.
-#else
-// generic, non-platform specific code
-#endif
-#else
   pinMode(SPI_MOSI, OUTPUT);
   pinMode(SPI_SCK, OUTPUT);
   pinMode(SPI_MISO, INPUT);
-  //Hardware SS must be configured as OUTPUT to enable SPI-master (regardless of which pin is configured as ENC28J60_CONTROL_CS)
   pinMode(SPI_SS, OUTPUT);
 
   digitalWrite(SPI_MOSI, LOW);
   digitalWrite(SPI_SCK, LOW);
 
+  /*DDRB  |= 1<<PB3 | 1<<PB5; // mosi, sck output
+  cbi(DDRB,PINB4); // MISO is input
+  //
+  cbi(PORTB,PB3); // MOSI low
+  cbi(PORTB,PB5); // SCK low
+  */
+  //
   // initialize SPI interface
   // master mode and Fosc/2 clock:
   SPCR = (1<<SPE)|(1<<MSTR);
   SPSR |= (1<<SPI2X);
-#endif
-
   // perform system reset
   writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
   delay(50);
@@ -326,14 +298,6 @@ uint8_t Enc28J60Network::readByte(uint16_t addr)
   writeRegPair(ERDPTL, addr);
 
   CSACTIVE;
-#if ENC28J60_USE_SPILIB
-  // issue read command
-  SPI.transfer(ENC28J60_READ_BUF_MEM);
-  // read data
-  uint8_t c = SPI.transfer(0x00);
-  CSPASSIVE;
-  return (c);
-#else
   // issue read command
   SPDR = ENC28J60_READ_BUF_MEM;
   waitspi();
@@ -342,7 +306,6 @@ uint8_t Enc28J60Network::readByte(uint16_t addr)
   waitspi();
   CSPASSIVE;
   return (SPDR);
-#endif  
 }
 
 void Enc28J60Network::writeByte(uint16_t addr, uint8_t data)
@@ -350,19 +313,12 @@ void Enc28J60Network::writeByte(uint16_t addr, uint8_t data)
   writeRegPair(EWRPTL, addr);
 
   CSACTIVE;
-#if ENC28J60_USE_SPILIB
-  // issue write command
-  SPI.transfer(ENC28J60_WRITE_BUF_MEM);
-  // write data
-  SPI.transfer(data);
-#else
   // issue write command
   SPDR = ENC28J60_WRITE_BUF_MEM;
   waitspi();
   // write data
   SPDR = data;
   waitspi();
-#endif
   CSPASSIVE;
 }
 
@@ -441,20 +397,6 @@ Enc28J60Network::readOp(uint8_t op, uint8_t address)
 {
   CSACTIVE;
   // issue read command
-#if ENC28J60_USE_SPILIB
-  SPI.transfer(op | (address & ADDR_MASK));
-  // read data
-  if(address & 0x80)
-  {
-  // do dummy read if needed (for mac and mii, see datasheet page 29)
-    SPI.transfer(0x00);
-  }
-  uint8_t c = SPI.transfer(0x00);
-  // release CS
-  CSPASSIVE;
-  return(c);
-#else
-  // issue read command
   SPDR = op | (address & ADDR_MASK);
   waitspi();
   // read data
@@ -469,7 +411,6 @@ Enc28J60Network::readOp(uint8_t op, uint8_t address)
   // release CS
   CSPASSIVE;
   return(SPDR);
-#endif
 }
 
 void
@@ -477,18 +418,11 @@ Enc28J60Network::writeOp(uint8_t op, uint8_t address, uint8_t data)
 {
   CSACTIVE;
   // issue write command
-#if ENC28J60_USE_SPILIB
-  SPI.transfer(op | (address & ADDR_MASK));
-  // write data
-  SPI.transfer(data);
-#else
-  // issue write command
   SPDR = op | (address & ADDR_MASK);
   waitspi();
   // write data
   SPDR = data;
   waitspi();
-#endif
   CSPASSIVE;
 }
 
@@ -497,23 +431,15 @@ Enc28J60Network::readBuffer(uint16_t len, uint8_t* data)
 {
   CSACTIVE;
   // issue read command
-#if ENC28J60_USE_SPILIB  
-  SPI.transfer(ENC28J60_READ_BUF_MEM);
-#else
   SPDR = ENC28J60_READ_BUF_MEM;
   waitspi();
-#endif
   while(len)
   {
     len--;
     // read data
-#if ENC28J60_USE_SPILIB    
-    *data = SPI.transfer(0x00);
-#else
     SPDR = 0x00;
     waitspi();
     *data = SPDR;
-#endif    
     data++;
   }
   //*data='\0';
@@ -525,24 +451,15 @@ Enc28J60Network::writeBuffer(uint16_t len, uint8_t* data)
 {
   CSACTIVE;
   // issue write command
-#if ENC28J60_USE_SPILIB  
-  SPI.transfer(ENC28J60_WRITE_BUF_MEM);
-#else
   SPDR = ENC28J60_WRITE_BUF_MEM;
   waitspi();
-#endif
   while(len)
   {
     len--;
     // write data
-#if ENC28J60_USE_SPILIB  
-    SPI.transfer(*data);
-    data++;
-#else
     SPDR = *data;
     data++;
     waitspi();
-#endif
   }
   CSPASSIVE;
 }
@@ -635,40 +552,27 @@ Enc28J60Network::chksum(uint16_t sum, memhandle handle, memaddress pos, uint16_t
   len = setReadPtr(handle, pos, len)-1;
   CSACTIVE;
   // issue read command
-#if ENC28J60_USE_SPILIB
-  SPI.transfer(ENC28J60_READ_BUF_MEM);
-#else
   SPDR = ENC28J60_READ_BUF_MEM;
   waitspi();
-#endif
   uint16_t i;
   for (i = 0; i < len; i+=2)
   {
     // read data
-#if ENC28J60_USE_SPILIB
-    t = SPI.transfer(0x00) << 8;
-    t += SPI.transfer(0x00);
-#else
     SPDR = 0x00;
     waitspi();
     t = SPDR << 8;
     SPDR = 0x00;
     waitspi();
     t += SPDR;
-#endif
     sum += t;
     if(sum < t) {
       sum++;            /* carry */
     }
   }
   if(i == len) {
-#if ENC28J60_USE_SPILIB  
-    t = (SPI.transfer(0x00) << 8) + 0;
-#else
     SPDR = 0x00;
     waitspi();
     t = (SPDR << 8) + 0;
-#endif    
     sum += t;
     if(sum < t) {
       sum++;            /* carry */

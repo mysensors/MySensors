@@ -48,6 +48,10 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
+// When ENC28J60 is connected we have to move CE/CSN pins for NRF radio
+#define MY_RF24_CE_PIN 5
+#define MY_RF24_CS_PIN 6
+
 // Enable gateway ethernet module type 
 #define MY_GATEWAY_ENC28J60
 
@@ -55,7 +59,7 @@
 #define MY_IP_ADDRESS 192,168,178,66  
 
 // The port to keep open on node server mode / or port to contact in client mode
-#define MY_PORT 5003      
+#define MY_PORT 5003   
 
 // Controller ip address. Enables client mode (default is "server" mode). 
 // Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere. 

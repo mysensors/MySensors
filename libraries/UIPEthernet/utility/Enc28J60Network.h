@@ -27,18 +27,11 @@
 
 #include "mempool.h"
 
-#define ENC28J60_CONTROL_CS     SS // this is pin 10 on Uno and pin 53 on Mega256
-
-#if defined(ARDUINO_ARCH_AVR)
-// AVR-specific code
+#define ENC28J60_CONTROL_CS     SS
 #define SPI_MOSI        MOSI
 #define SPI_MISO        MISO
 #define SPI_SCK         SCK
 #define SPI_SS          SS
-#define ENC28J60_USE_SPILIB 0
-#elif defined(ARDUINO_ARCH_SAM)
-#define ENC28J60_USE_SPILIB 1
-#endif
 
 #define UIP_RECEIVEBUFFERHANDLE 0xff
 

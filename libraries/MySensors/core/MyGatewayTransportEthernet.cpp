@@ -82,16 +82,19 @@ bool gatewayTransportInit() {
 			Serial.print(".");
 			yield();
 		}
-		Serial.println(PSTR("Connected to AP!"));
-		Serial.print(PSTR("IP: "));
+		Serial.print(F("IP: "));
 		Serial.println(WiFi.localIP());
 
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
+			Serial.print(F("IP: "));
+			Serial.println(Ethernet.localIP());
 		#else
 			// Get IP address from DHCP
 			Ethernet.begin(_ethernetGatewayMAC);
+			Serial.print(F("IP: "));
+			Serial.println(Ethernet.localIP());
 		#endif /* IP_ADDRESS_DHCP */
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
@@ -189,7 +192,7 @@ bool gatewayTransportAvailable()
 {
 	bool available = false;
 
-	#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266)
+	#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
 		// renew IP address using DHCP
 		gatewayTransportRenewIP();
 	#endif
@@ -197,8 +200,10 @@ bool gatewayTransportAvailable()
 	#ifdef MY_USE_UDP
 		int packet_size = _ethernetServer.parsePacket();
 
-		if (_ethernetServer.available()) {
+		if (packet_size) {
+			//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
 			_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
+			debug(PSTR("UDP packet received: %s\n"), inputString[0].string);
 			return protocolParse(_ethernetMsg, inputString[0].string);
 		}
 	#else
@@ -286,6 +291,7 @@ void gatewayTransportRenewIP()
 		return;
 
 	if (Ethernet.maintain() & ~(0x06)) {
+		debug(PSTR("IP was not renewed correctly\n"));
 		/* Error occured -> IP was not renewed */
 		return;
 	}

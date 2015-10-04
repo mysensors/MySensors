@@ -20,7 +20,6 @@
 
  */
 
-#include <SPI.h>
 #include <UIPEthernet.h>
 
 // Enter a MAC address and IP address for your controller below.

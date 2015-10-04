@@ -68,15 +68,18 @@ bool protocolParse(MyMessage &message, char *inputString) {
 					}
 				} else {
 					value = str;
-					// Remove ending carriage return character (if it exists)
+					// Remove trailing carriage return and newline character (if it exists)
 					uint8_t lastCharacter = strlen(value)-1;
 					if (value[lastCharacter] == '\r')
+						value[lastCharacter] = 0;
+					if (value[lastCharacter] == '\n')
 						value[lastCharacter] = 0;
 				}
 				break;
 		}
 		i++;
 	}
+	//debug(PSTR("Received %d"), i);
 	// Check for invalid input
 	if (i < 5)
 		return false;
