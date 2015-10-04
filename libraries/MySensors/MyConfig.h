@@ -26,6 +26,10 @@
 // to see what is actually is happening when developing
 #define DEBUG
 
+// Enable MY_DEBUG_VERBOSE flag for verbose debug prints. Requires DEBUG to be enabled.
+// This will add even more to the size of the final sketch!
+//#define MY_DEBUG_VERBOSE
+
 // Disable this line, If you are using TX(1), RX(0) as normal I/O pin
 #define ENABLED_SERIAL
 
@@ -144,6 +148,5 @@
 // Enable this for encryption of packets
 //#define RFM69_ENABLE_ENCRYPTION
 #define RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
-
 
 #endif
