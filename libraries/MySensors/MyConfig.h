@@ -31,6 +31,10 @@
 // final sketch but is helpful to see what is actually is happening during development
 //#define MY_DEBUG
 
+// Enable MY_DEBUG_VERBOSE flag for verbose debug prints. Requires DEBUG to be enabled.
+// This will add even more to the size of the final sketch!
+//#define MY_DEBUG_VERBOSE
+
 // Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
 //#define MY_DISABLED_SERIAL
 

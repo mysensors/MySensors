@@ -10,7 +10,18 @@
 #include "RF24_config.h"
 #include "RF24.h"
 
+// Save some bytes by reusing strings.
+static const char space_str_P[] PROGMEM   = " ";
+
 /****************************************************************************/
+static void print_hex( uint8_t v, const bool prefix0x = false )
+{
+  if (prefix0x)
+    Serial.print(F("0x"));
+  
+  Serial.print(v >> 4, HEX);
+  Serial.print(v & 0x0F, HEX);
+}
 
 void RF24::csn(bool mode)
 {
@@ -132,7 +143,7 @@ uint8_t RF24::write_register(uint8_t reg, uint8_t value)
 {
   uint8_t status;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
   Serial.print(F("write_register(")); print_hex(reg, true); Serial.print(F(",")); print_hex(value, true); Serial.println(F(")")); 
 #endif
 
@@ -286,52 +297,66 @@ uint8_t RF24::get_status(void)
 }
 
 /****************************************************************************/
-#ifdef DEBUG
-void RF24::print_hex( uint8_t v, const bool prefix0x )
+void RF24::print_feature(void)
 {
-  if (prefix0x)
-    Serial.print(F("0x"));
-  
-  Serial.print(v >> 4, HEX);
-  Serial.print(v & 0x0F, HEX);
-} 
+#ifdef MY_DEBUG
+  Serial.print(F("FEATURE="));
+  print_hex(read_register(FEATURE), true);
+  Serial.println(space_str_P); 
+#endif
+}
 
-void RF24::print_status(uint8_t status)
+/****************************************************************************/
+void RF24::print_status(uint8_t status) const
 {
+#ifdef MY_DEBUG_VERBOSE
+  const uint8_t one  = uint8_t(1);
+  const uint8_t zero = uint8_t(0);
   print_hex(status, true);
-  Serial.print(F(" RX_DR=")); Serial.print((status & _BV(RX_DR))?uint8_t(1):uint8_t(0));
-  Serial.print(F(" TX_DS=")); Serial.print((status & _BV(TX_DS))?uint8_t(1):uint8_t(0));
-  Serial.print(F(" MAX_RT=")); Serial.print((status & _BV(MAX_RT))?uint8_t(1):uint8_t(0));
+  Serial.print(F(" RX_DR="));   Serial.print((status & _BV(RX_DR))     ? one : zero );
+  Serial.print(F(" TX_DS="));   Serial.print((status & _BV(TX_DS))     ? one : zero );
+  Serial.print(F(" MAX_RT="));  Serial.print((status & _BV(MAX_RT))    ? one : zero );
   Serial.print(F(" RX_P_NO=")); Serial.print((status >> RX_P_NO) & uint8_t(B111));
-  Serial.print(F(" TX_FULL=")); Serial.println((status & _BV(TX_FULL))?uint8_t(1):uint8_t(0));
+  Serial.print(F(" TX_FULL=")); Serial.println((status & _BV(TX_FULL)) ? one : zero );
+#else
+  (void)status;
+#endif
 }
 
 /****************************************************************************/
-
-void RF24::print_observe_tx(uint8_t value)
+void RF24::print_observe_tx(uint8_t value) const
 {
+#ifdef MY_DEBUG_VERBOSE
   print_hex(value, true);
-  Serial.print(F(": POLS_CNT=")); Serial.print((value >> PLOS_CNT) & uint8_t(B1111));
-  Serial.print(F(" ARC_CNT=")); Serial.println((value >> ARC_CNT) & uint8_t(B1111));
+  Serial.print(F(": POLS_CNT=")); Serial.print((value >> PLOS_CNT)   & uint8_t(B1111));
+  Serial.print(F(" ARC_CNT="));   Serial.println((value >> ARC_CNT)  & uint8_t(B1111));
+#else
+  (void)value;
+#endif
 }
 
 /****************************************************************************/
-
 void RF24::print_byte_register(uint8_t reg, uint8_t qty)
 {
+#ifdef MY_DEBUG_VERBOSE
   bool prefix0x = true;
   while (qty--)
   {
     print_hex(read_register(reg++), prefix0x);
-    Serial.print(F(" ")); 
+    Serial.print(space_str_P); 
     prefix0x = false;
   }
-  Serial.println(F(""));
+  Serial.println(space_str_P);
+#else
+  (void)reg;
+  (void)qty;
+#endif
 }
 
 /****************************************************************************/
 void RF24::print_address_register(uint8_t reg, uint8_t qty)
 {
+#ifdef MY_DEBUG_VERBOSE
   bool prefix0x = true;
   while (qty--)
   {
@@ -344,11 +369,14 @@ void RF24::print_address_register(uint8_t reg, uint8_t qty)
       print_hex(read_register(*bufptr), prefix0x);
       prefix0x = false;
     }
-    Serial.print(F(" "));
+    Serial.print(space_str_P);
   }
-  Serial.println(F(""));
-}
+  Serial.println(space_str_P);
+#else
+  (void)reg;
+  (void)qty;
 #endif
+}
 /****************************************************************************/
 
 RF24::RF24(uint8_t _cepin, uint8_t _cspin):
@@ -380,8 +408,7 @@ uint8_t RF24::getPayloadSize(void)
 }
 
 /****************************************************************************/
-
-#ifdef DEBUG
+#ifdef MY_DEBUG_VERBOSE
 static const char rf24_datarate_e_str_0[] PROGMEM = "1MBPS";
 static const char rf24_datarate_e_str_1[] PROGMEM = "2MBPS";
 static const char rf24_datarate_e_str_2[] PROGMEM = "250KBPS";
@@ -414,6 +441,7 @@ static const char * const rf24_pa_dbm_e_str_P[] PROGMEM = {
   rf24_pa_dbm_e_str_2,
   rf24_pa_dbm_e_str_3,
 };
+#endif
 
 #if (INTPTR_MAX == INT16_MAX)
 // 16-bit architecture -> read word from flash and cast to ptr
@@ -427,6 +455,7 @@ static const char * const rf24_pa_dbm_e_str_P[] PROGMEM = {
 
 void RF24::printDetails(void)
 {
+#ifdef MY_DEBUG_VERBOSE
   Serial.print(F("STATUS\t\t"));      print_status(get_status());
   Serial.print(F("RX_ADDR_P0-1\t"));  print_address_register(RX_ADDR_P0,2);
   Serial.print(F("RX_ADDR_P2-5\t"));  print_byte_register(RX_ADDR_P2,4);
@@ -437,15 +466,15 @@ void RF24::printDetails(void)
   Serial.print(F("EN_RXADDR\t"));     print_byte_register(EN_RXADDR);
   Serial.print(F("RF_CH\t\t"));       print_byte_register(RF_CH);
   Serial.print(F("RF_SETUP\t"));      print_byte_register(RF_SETUP);
-  Serial.print(F("CONFIG\t\t"));      print_byte_register(CONFIG);
+  Serial.print(F("CONFIG\t\t"));      print_byte_register(NRF_CONFIG);
   Serial.print(F("DYNPD/FEATURE\t")); print_byte_register(DYNPD,2);
 
   Serial.print(F("Data Rate\t"));     Serial.println(PGM_READ_PTR(&rf24_datarate_e_str_P[getDataRate()]));
   Serial.print(F("Model\t\t"));       Serial.println(PGM_READ_PTR(&rf24_model_e_str_P[isPVariant()]));
   Serial.print(F("CRC Length\t"));    Serial.println(PGM_READ_PTR(&rf24_crclength_e_str_P[getCRCLength()]));
   Serial.print(F("PA Power\t"));      Serial.println(PGM_READ_PTR(&rf24_pa_dbm_e_str_P[getPALevel()]));
-}
 #endif
+}
 /****************************************************************************/
 
 void RF24::begin(void)
@@ -521,10 +550,8 @@ void RF24::begin(void)
   // PTX should use only 22uA of power
   write_register(NRF_CONFIG, ( read_register(NRF_CONFIG) ) & ~_BV(PRIM_RX) );
 
-#ifdef DEBUG
   // Dump register values
   printDetails();
-#endif
 }
 
 /****************************************************************************/
@@ -630,7 +657,7 @@ void RF24::powerUp(void)
 /******************************************************************/
 #if defined (FAILURE_HANDLING)
 void RF24::errNotify(){
-#ifdef DEBUG
+#ifdef MY_DEBUG
   Serial.println(F("HARDWARE FAIL"));
 #endif
   failureDetected = 1;
@@ -1065,16 +1092,13 @@ void RF24::toggle_features(void)
 }
 
 /****************************************************************************/
-
 void RF24::enableDynamicPayloads(void)
 {
   // Enable dynamic payload throughout the system
   toggle_features();
   write_register(FEATURE,read_register(FEATURE) | _BV(EN_DPL) );
+  print_feature();
 
-#ifdef DEBUG
-  Serial.print(F("FEATURE=")); print_hex(read_register(FEATURE), true); Serial.println(F("")); 
-#endif
   // Enable dynamic payload on all pipes
   //
   // Not sure the use case of only having dynamic payload on certain
@@ -1093,10 +1117,8 @@ void RF24::enableAckPayload(void)
   //
   toggle_features();
   write_register(FEATURE,read_register(FEATURE) | _BV(EN_ACK_PAY) | _BV(EN_DPL) );
+  print_feature();
 
-#ifdef DEBUG
-  Serial.print(F("FEATURE=")); print_hex(read_register(FEATURE), true); Serial.println(F("")); 
-#endif
   //
   // Enable dynamic payload on pipes 0 & 1
   //
@@ -1111,12 +1133,9 @@ void RF24::enableDynamicAck(void){
   //
   // enable dynamic ack features
   //
-    toggle_features();
-    write_register(FEATURE,read_register(FEATURE) | _BV(EN_DYN_ACK) );
-
-#ifdef DEBUG
-    Serial.print(F("FEATURE=")); print_hex(read_register(FEATURE), true); Serial.println(F("")); 
-#endif
+  toggle_features();
+  write_register(FEATURE,read_register(FEATURE) | _BV(EN_DYN_ACK) );
+  print_feature();
 }
 
 /****************************************************************************/
