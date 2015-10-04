@@ -81,7 +81,7 @@ inline void transportProcess() {
 	uint8_t command = mGetCommand(_msg);
 	uint8_t type = _msg.type;
 	uint8_t sender = _msg.sender;
-	uint8_t last = _msg.last;
+	//uint8_t last = _msg.last;
 	uint8_t destination = _msg.destination;
 
 	#ifdef MY_SIGNING_FEATURE
@@ -116,7 +116,7 @@ inline void transportProcess() {
 	// Add string termination, good if we later would want to print it.
 	_msg.data[mGetLength(_msg)] = '\0';
 	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
-				sender, last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
+				sender, _msg.last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
 	mSetSigned(_msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
 
 	if(!(mGetVersion(_msg) == PROTOCOL_VERSION)) {
@@ -129,9 +129,9 @@ inline void transportProcess() {
 		// This message is addressed to this node
 
 		#if defined(MY_REPEATER_FEATURE)
-			if (last != _nc.parentNodeId) {
+			if (_msg.last != _nc.parentNodeId) {
 				// Message is from one of the child nodes. Add it to routing table.
-				hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, last);
+				hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, _msg.last);
 			}
 		#endif
 
@@ -388,7 +388,6 @@ boolean transportSendRoute(MyMessage &message) {
 			 (type != I_GET_NONCE && type != I_GET_NONCE_RESPONSE && type != I_REQUEST_SIGNING &&
 			  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
 			  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
-			bool signing = SIGN_WAITING_FOR_NONCE;
 			// Send nonce-request
 			if (!_sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
 				debug(PSTR("nonce tr err\n"));

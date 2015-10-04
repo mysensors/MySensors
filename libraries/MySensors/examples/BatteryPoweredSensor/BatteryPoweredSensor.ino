@@ -70,10 +70,11 @@ void loop()
    // Sense point is bypassed with 0.1 uF cap to reduce noise at that point
    // ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
    // 3.44/1023 = Volts per bit = 0.003363075
-   float batteryV  = sensorValue * 0.003363075;
+   
    int batteryPcnt = sensorValue / 10;
 
    #ifdef DEBUG
+   float batteryV  = sensorValue * 0.003363075;
    Serial.print("Battery Voltage: ");
    Serial.print(batteryV);
    Serial.println(" V");

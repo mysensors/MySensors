@@ -190,8 +190,6 @@ bool _readFromClient(uint8_t i) {
 
 bool gatewayTransportAvailable()
 {
-	bool available = false;
-
 	#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
 		// renew IP address using DHCP
 		gatewayTransportRenewIP();
