@@ -60,7 +60,7 @@
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-// #define WITH_LEDS_BLINKING
+#define WITH_LEDS_BLINKING
 
 // The following setting allows you to inverse the blinking feature WITH_LEDS_BLINKING
 // When WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
@@ -72,18 +72,18 @@
 // default LEDs blinking period in milliseconds
 #define DEFAULT_LED_BLINK_PERIOD 300
 // The RX LED default pin
-#define DEFAULT_RX_LED_PIN 6
+#define DEFAULT_RX_LED_PIN 8
 // The TX LED default pin
-#define DEFAULT_TX_LED_PIN 5
+#define DEFAULT_TX_LED_PIN 9
 // The Error LED default pin
-#define DEFAULT_ERR_LED_PIN 4
+#define DEFAULT_ERR_LED_PIN 7
 
 
 /**********************************
 *  Message Signing Settings
 ***********************************/
 // Disable to completly disable signing functionality in library
-//#define MY_SIGNING_FEATURE
+#define MY_SIGNING_FEATURE
 
 // Define a suitable timeout for a signature verification session
 // Consider the turnaround from a nonce being generated to a signed message being received

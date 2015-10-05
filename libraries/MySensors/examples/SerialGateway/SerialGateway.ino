@@ -54,18 +54,20 @@
 
 #define INCLUSION_MODE_TIME 1 // Number of minutes inclusion mode is enabled
 #define INCLUSION_MODE_PIN  3 // Digital pin used for inclusion mode button
-#define RADIO_ERROR_LED_PIN 4  // Error led pin
-#define RADIO_RX_LED_PIN    6  // Receive led pin
-#define RADIO_TX_LED_PIN    5  // the PCB, on board LED
+#define RADIO_ERROR_LED_PIN 7  // Error led pin
+#define RADIO_RX_LED_PIN    8  // Receive led pin
+#define RADIO_TX_LED_PIN    9  // the PCB, on board LED
+#define MY_CE_PIN           5  // radio chip enable
+#define MY_SPI_SS_PIN       6  // radio SPI serial select
 
 // NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);
+MyTransportNRF24 transport(MY_CE_PIN, MY_SPI_SS_PIN, RF24_PA_LEVEL_GW);
 //MyTransportRFM69 transport;
 
 // Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 //MySigningNone signer;
 //MySigningAtsha204Soft signer;
-//MySigningAtsha204 signer;
+MySigningAtsha204 signer(false);
 
 // Hardware profile 
 MyHwATMega328 hw;
@@ -73,7 +75,7 @@ MyHwATMega328 hw;
 // Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
 // To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
 #ifdef WITH_LEDS_BLINKING
-MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
+MySensor gw(transport, hw , signer, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
 #else
 MySensor gw(transport, hw /*, signer*/);
 #endif
