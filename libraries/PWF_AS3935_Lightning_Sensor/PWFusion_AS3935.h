@@ -51,7 +51,7 @@
 #include "avr/pgmspace.h"
 #include "util/delay.h"
 #include "stdlib.h"
-#include "drivers/AVR/SPI/SPI.h"
+#include <SPI.h>
 
 class PWF_AS3935
 {

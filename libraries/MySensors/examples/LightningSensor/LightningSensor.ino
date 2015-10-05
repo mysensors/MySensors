@@ -10,9 +10,10 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#include "MySensor.h"  
+#include <SPI.h>
+#include <MySensor.h>
 // include Playing With Fusion AXS3935 libraries
-#include "PWFusion_AS3935.h"
+#include <PWFusion_AS3935.h>
 
 // setup CS pins used for the connection with the lightning sensor
 // other connections are controlled by the SPI library)

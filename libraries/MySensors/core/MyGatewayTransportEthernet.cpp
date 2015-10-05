@@ -50,7 +50,7 @@ typedef struct
 		IPAddress gateway(MY_IP_GATEWAY_ADDRESS);
 		IPAddress subnet(MY_IP_SUBNET_ADDRESS);
 	#endif
-
+	static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 #endif
 
 #if defined(MY_USE_UDP)
@@ -61,7 +61,6 @@ typedef struct
 
 
 static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
-static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
 
 
