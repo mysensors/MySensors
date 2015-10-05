@@ -52,7 +52,7 @@
 #define MY_GATEWAY_W5100
 
 // W5100 Ethernet module SPI enable (optional if using a shield/module that manages SPI_EN signal)
-//#define MY_W5100_SPI_EN        4  
+//#define MY_W5100_SPI_EN 4  
 
 // Enable Soft SPI for NRF radio (note different radio wiring is required)
 // The W5100 ethernet module seems to have a hard time co-operate with 
@@ -62,11 +62,11 @@
   #define MY_SOFT_SPI_SCK_PIN 14
   #define MY_SOFT_SPI_MISO_PIN 16
   #define MY_SOFT_SPI_MOSI_PIN 15
-  
-  // When W5100 is connected we have to move CE/CSN pins for NRF radio
-  #define MY_RF24_CE_PIN 5
-  #define MY_RF24_CS_PIN 6
-#endif
+#endif  
+
+// When W5100 is connected we have to move CE/CSN pins for NRF radio
+#define MY_RF24_CE_PIN 5
+#define MY_RF24_CS_PIN 6
 
 // Enable to UDP          
 //#define MY_USE_UDP
