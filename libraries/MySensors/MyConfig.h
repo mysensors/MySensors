@@ -24,7 +24,7 @@
 
 // Enable debug flag for debug prints. This will add a lot to the size of the final sketch but good
 // to see what is actually is happening when developing
-//#define DEBUG
+#define DEBUG
 
 // Disable this line, If you are using TX(1), RX(0) as normal I/O pin
 #define ENABLED_SERIAL
