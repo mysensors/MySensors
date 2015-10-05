@@ -68,8 +68,32 @@ static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
 	void gatewayTransportRenewIP();
 #endif
 
+// On W5100 boards with SPI_EN exposed we can use the real SPI bus together with radio
+// (if we enable it during usage)
+#ifdef MY_W5100_SPI_EN
+	void _w5100_spi_en(boolean enable)
+	{
+	  if (enable)
+	  {
+	    // Pull up pin
+	    pinMode(MY_W5100_SPI_EN, INPUT);
+	    digitalWrite(MY_W5100_SPI_EN, HIGH);
+	  }
+	  else
+	  {
+	    // Ground pin
+	    pinMode(MY_W5100_SPI_EN, OUTPUT);
+	    digitalWrite(MY_W5100_SPI_EN, LOW);
+	  }
+	}
+#else
+	#define _w5100_spi_en(x)
+#endif
+
+
 
 bool gatewayTransportInit() {
+	_w5100_spi_en(true);
 	#if defined(MY_GATEWAY_ESP8266)
 		(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 		#ifdef MY_IP_ADDRESS
@@ -109,34 +133,36 @@ bool gatewayTransportInit() {
 			_ethernetServer.setNoDelay(true);
 		#endif
 	#endif /* USE_UDP */
+	_w5100_spi_en(false);
 	return true;
 }
 
 bool gatewayTransportSend(MyMessage &message)
 {
+	bool ret = true;
 	char *_ethernetMsg = protocolFormat(message);
 
+	_w5100_spi_en(true);
 	#if defined(MY_CONTROLLER_IP_ADDRESS)
 		#if defined(MY_USE_UDP)
 			_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 			_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
 			// returns 1 if the packet was sent successfully
-			return _ethernetServer.endPacket();
+			ret _ethernetServer.endPacket();
 		#else
 			EthernetClient client;
 			if (client.connect(_ethernetControllerIP, MY_PORT)) {
 				client.write(_ethernetMsg, strlen(_ethernetMsg));
 				client.stop();
-				return true;
 			}
 			else {
 				// connecting to the server failed!
-				return false;
+				ret = false;
 			}
-
 		#endif
 	#else
 		// Send message to connected clients
+		_w5100_spi_en(true);
 		#if defined(MY_GATEWAY_ESP8266)
 			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
 			{
@@ -145,12 +171,13 @@ bool gatewayTransportSend(MyMessage &message)
 					clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
 				}
 			}
-			return true;
 		#else
 			_ethernetServer.write(_ethernetMsg);
-			return true;
 		#endif
 	#endif
+	_w5100_spi_en(false);
+	return ret;
+
 }
 
 bool _readFromClient(uint8_t i) {
@@ -169,8 +196,9 @@ bool _readFromClient(uint8_t i) {
 
 				bool ret = protocolParse(_ethernetMsg, inputString[i].string);
 				inputString[i].string[inputString[i].idx] = 0;
-				if (ret)
+				if (ret) {
 					return ret;
+				}
 
 			} else {
 				// add it to the inputString:
@@ -189,17 +217,20 @@ bool _readFromClient(uint8_t i) {
 
 bool gatewayTransportAvailable()
 {
+	_w5100_spi_en(true);
 	#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
 		// renew IP address using DHCP
 		gatewayTransportRenewIP();
 	#endif
 
 	#ifdef MY_USE_UDP
+
 		int packet_size = _ethernetServer.parsePacket();
 
 		if (packet_size) {
 			//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
 			_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
+			_w5100_spi_en(false);
 			debug(PSTR("UDP packet received: %s\n"), inputString[0].string);
 			return protocolParse(_ethernetMsg, inputString[0].string);
 		}
@@ -219,7 +250,9 @@ bool gatewayTransportAvailable()
 						clients[i] = _ethernetServer.available();
 						inputString[i].idx = 0;
 						debug(PSTR("Client %d connected\n"), i);
+						_w5100_spi_en(false);
 						gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+						_w5100_spi_en(true);
 					}
 				}
 				bool connected = clients[i].connected();
@@ -234,8 +267,10 @@ bool gatewayTransportAvailable()
 			}
 				// Loop over clients connect and read available data
 			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
-				if (_readFromClient(i))
+				if (_readFromClient(i)) {
+					_w5100_spi_en(false);
 					return true;
+				}
 			}
 		#else
 			// W5100/ENC module does not have hasClient-method. We can only serve one client at the time.
@@ -246,6 +281,7 @@ bool gatewayTransportAvailable()
 					clients[0].stop();
 					clients[0] = newclient;
 					debug(PSTR("Client connected\n"));
+					_w5100_spi_en(false);
 					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 				}
 			}
@@ -254,12 +290,15 @@ bool gatewayTransportAvailable()
 					debug(PSTR("Client disconnected\n"));
 					clients[0].stop();
 				} else {
-					if (_readFromClient(0))
+					if (_readFromClient(0)) {
+						_w5100_spi_en(false);
 						return true;
+					}
 				}
 			}
 		#endif
 	#endif
+	_w5100_spi_en(false);
 	return false;
 }
 
@@ -286,13 +325,12 @@ void gatewayTransportRenewIP()
 	// http://playground.arduino.cc/Code/TimingRollover
 	if ((long)(now - next_time) < 0)
 		return;
-
 	if (Ethernet.maintain() & ~(0x06)) {
 		debug(PSTR("IP was not renewed correctly\n"));
 		/* Error occured -> IP was not renewed */
 		return;
 	}
-
+	_w5100_spi_en(false);
 	next_time = now + MY_IP_RENEWAL_INTERVAL;
 }
 #endif /* IP_ADDRESS_DHCP */
