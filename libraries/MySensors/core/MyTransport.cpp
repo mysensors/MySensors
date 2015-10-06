@@ -248,7 +248,8 @@ inline void transportProcess() {
 						_fwLastRequestTime = 0;
 					}
 					return ;
-				} else debug(PSTR("fw update skipped\n"));
+				}
+				debug(PSTR("fw update skipped\n"));
 			} else if (type == ST_FIRMWARE_RESPONSE) {
 				if (_fwUpdateOngoing) {
 					// Save block to flash
