@@ -10,9 +10,6 @@
 #include "RF24_config.h"
 #include "RF24.h"
 
-// Save some bytes by reusing strings.
-static const char space_str_P[] PROGMEM   = " ";
-
 /****************************************************************************/
 #ifdef MY_DEBUG_VERBOSE
 static void print_hex( uint8_t v, const bool prefix0x = false )
@@ -304,7 +301,7 @@ void RF24::print_feature(void)
 #ifdef MY_DEBUG_VERBOSE
   Serial.print(F("FEATURE="));
   print_hex(read_register(FEATURE), true);
-  Serial.println(space_str_P); 
+  Serial.println(F("")); 
 #endif
 }
 
@@ -345,10 +342,10 @@ void RF24::print_byte_register(uint8_t reg, uint8_t qty)
   while (qty--)
   {
     print_hex(read_register(reg++), prefix0x);
-    Serial.print(space_str_P); 
+    Serial.print(F(" ")); 
     prefix0x = false;
   }
-  Serial.println(space_str_P);
+  Serial.println(F(""));
 #else
   (void)reg;
   (void)qty;
@@ -371,9 +368,9 @@ void RF24::print_address_register(uint8_t reg, uint8_t qty)
       print_hex(read_register(*bufptr), prefix0x);
       prefix0x = false;
     }
-    Serial.print(space_str_P);
+    Serial.print(F(" "));
   }
-  Serial.println(space_str_P);
+  Serial.println(F(""));
 #else
   (void)reg;
   (void)qty;
