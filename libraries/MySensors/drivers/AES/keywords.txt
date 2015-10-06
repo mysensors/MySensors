@@ -1,0 +1,7 @@
+AES KEYWORD1
+set_key KEYWORD2
+clean KEYWORD2
+encrypt KEYWORD2
+decrypt KEYWORD2
+cbc_encrypt KEYWORD2
+cbc_decrypt KEYWORD2

@@ -7,9 +7,16 @@
  *
  *  2015-05-25 Bruce Lacey v1.0
  */
- 
-#include <MySensor.h>
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h>
 #include "MYSLog.h"
 
 #define VSN "v1.0"
@@ -19,21 +26,17 @@
 #define YANG 201
 #define CHILD 1
 
-// Sensor objects
-MySensor gw;
-
 MyMessage mPing(CHILD, V_VAR1);   //Ping message
 MyMessage mPong(CHILD, V_VAR2);   //Pong message
 
 void setup() {
+}
 
-  Serial.begin(115200);
-    
-  gw.begin(incomingMessage);    // Node ids are written to EEPROM during sensor node configuration by entering a 0 or 1
-  gw.present(CHILD, S_CUSTOM);  //
+void presentation()  {
+  present(CHILD, S_CUSTOM);  //
   
-  gw.sendSketchInfo( nodeTypeAsCharRepresentation( gw.getNodeId() ), VSN );
-  LOG(F("\n%sReady.\n"), nodeTypeAsCharRepresentation(gw.getNodeId()));
+  sendSketchInfo( nodeTypeAsCharRepresentation( getNodeId() ), VSN );
+  LOG(F("\n%sReady.\n"), nodeTypeAsCharRepresentation(getNodeId()));
 }
 
 void loop() {
@@ -43,7 +46,7 @@ void loop() {
   // Entering T on either node will initiatve a ping-pong test.
   if (Serial.available()) {
     byte inChar = Serial.read();
-    uint8_t node = gw.getNodeId();
+    uint8_t node = getNodeId();
     
     // Manual Test Mode
     if (inChar == 'T' || inChar == 't') {
@@ -60,12 +63,9 @@ void loop() {
       LOG("Invalid input\n");
     }
   }
-
-  // Process sensor messages
-  gw.process();
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   
   LOG(F("Received %s from %s\n"), msgTypeAsCharRepresentation((mysensor_data)message.type), nodeTypeAsCharRepresentation(message.sender));
 
@@ -82,7 +82,7 @@ void sendPingOrPongResponse( MyMessage msg ) {
   // Set payload to current time in millis to ensure each message is unique
   response.set( millis() );
   response.setDestination(msg.sender);
-  gw.send(response);
+  send(response);
 }
 
 void setNodeId(byte nodeID) {

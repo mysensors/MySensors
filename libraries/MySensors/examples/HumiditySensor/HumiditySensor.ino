@@ -27,6 +27,13 @@
  * http://www.mysensors.org/build/humidity
  */
  
+// Enable debug prints
+//#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
 #include <MySensor.h>  
 #include <DHT.h>  
@@ -36,7 +43,6 @@
 #define HUMIDITY_SENSOR_DIGITAL_PIN 3
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
-MySensor gw;
 DHT dht;
 float lastTemp;
 float lastHum;
@@ -47,18 +53,21 @@ MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
 
 void setup()  
 { 
-  gw.begin();
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN); 
 
+  metric = getConfig().isMetric;
+}
+
+void presentation()  
+{ 
   // Send the Sketch Version Information to the Gateway
-  gw.sendSketchInfo("Humidity", "1.0");
+  sendSketchInfo("Humidity", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
-  gw.present(CHILD_ID_HUM, S_HUM);
-  gw.present(CHILD_ID_TEMP, S_TEMP);
-  
-  metric = gw.getConfig().isMetric;
+  present(CHILD_ID_HUM, S_HUM);
+  present(CHILD_ID_TEMP, S_TEMP);
 }
+
 
 void loop()      
 {  
@@ -72,7 +81,7 @@ void loop()
     if (!metric) {
       temperature = dht.toFahrenheit(temperature);
     }
-    gw.send(msgTemp.set(temperature, 1));
+    send(msgTemp.set(temperature, 1));
     Serial.print("T: ");
     Serial.println(temperature);
   }
@@ -82,12 +91,12 @@ void loop()
       Serial.println("Failed reading humidity from DHT");
   } else if (humidity != lastHum) {
       lastHum = humidity;
-      gw.send(msgHum.set(humidity, 1));
+      send(msgHum.set(humidity, 1));
       Serial.print("H: ");
       Serial.println(humidity);
   }
 
-  gw.sleep(SLEEP_TIME); //sleep a bit
+  sleep(SLEEP_TIME); //sleep a bit
 }
 
 

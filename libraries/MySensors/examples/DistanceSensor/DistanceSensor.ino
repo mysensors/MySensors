@@ -26,6 +26,13 @@
  * http://www.mysensors.org/build/distance
  */
 
+// Enable debug prints
+#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
 #include <MySensor.h>  
 #include <NewPing.h>
@@ -36,7 +43,6 @@
 #define MAX_DISTANCE 300 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 unsigned long SLEEP_TIME = 5000; // Sleep time between reads (in milliseconds)
 
-MySensor gw;
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 MyMessage msg(CHILD_ID, V_DISTANCE);
 int lastDist;
@@ -44,14 +50,15 @@ boolean metric = true;
 
 void setup()  
 { 
-  gw.begin();
+  metric = getConfig().isMetric;
+}
 
+void presentation() {
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Distance Sensor", "1.0");
+  sendSketchInfo("Distance Sensor", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
-  gw.present(CHILD_ID, S_DISTANCE);
-  metric = gw.getConfig().isMetric;
+  present(CHILD_ID, S_DISTANCE);
 }
 
 void loop()      
@@ -62,11 +69,11 @@ void loop()
   Serial.println(metric?" cm":" in");
 
   if (dist != lastDist) {
-      gw.send(msg.set(dist));
+      send(msg.set(dist));
       lastDist = dist;
   }
 
-  gw.sleep(SLEEP_TIME);
+  sleep(SLEEP_TIME);
 }
 
 

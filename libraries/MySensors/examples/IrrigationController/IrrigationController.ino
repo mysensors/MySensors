@@ -80,18 +80,26 @@ INSTRUCTIONS:
 Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (pete.will@mysensors.org) and is released to the public domain
 */
 //
+
+// Enable debug prints
+//#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+//#define MY_NODE_ID 1  // Set this to fix your Radio ID or use Auto
+
 #include <Wire.h>
 #include <Time.h>
-#include <MySensor.h>
 #include <SPI.h>
+#include <MySensor.h>
 #include <LiquidCrystal.h>
 #include <LiquidCrystal_I2C.h>
 
 
-//
 #define NUMBER_OF_VALVES 8  // Change this to set your valve count up to 16.
 #define VALVE_RESET_TIME 7500UL   // Change this (in milliseconds) for the time you need your valves to hydraulically reset and change state
-#define RADIO_ID AUTO  // Change this to fix your Radio ID or use Auto
 
 #define SKETCH_NAME "MySprinkler"
 #define SKETCH_VERSION "2.0"
@@ -113,7 +121,6 @@ Contributed by Jim (BulldogLowell@gmail.com) with much contribution from Pete (p
 #ifdef DEBUG_ON
 #define DEBUG_PRINT(x)   Serial.print(x)
 #define DEBUG_PRINTLN(x) Serial.println(x)
-#define SERIAL_START(x)  Serial.begin(x)
 #else
 #define DEBUG_PRINT(x)
 #define DEBUG_PRINTLN(x)
@@ -161,15 +168,15 @@ byte raindrop[8] = {0x4, 0x4, 0xA, 0xA, 0x11, 0xE, 0x0,}; // fetching Valve Data
 // Set the pins on the I2C chip used for LCD connections:
 //                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address to 0x27
-MySensor gw;
 //
 MyMessage msg1valve(CHILD_ID_SPRINKLER, V_LIGHT);
 MyMessage var1valve(CHILD_ID_SPRINKLER, V_VAR1);
 MyMessage var2valve(CHILD_ID_SPRINKLER, V_VAR2);
+
+bool receivedInitialValue = false;
 //
 void setup()
 {
-  SERIAL_START(115200);
   DEBUG_PRINTLN(F("Initialising..."));
   pinMode(latchPin, OUTPUT);
   pinMode(clockPin, OUTPUT);
@@ -191,21 +198,16 @@ void setup()
   //check for saved date in EEPROM
   DEBUG_PRINTLN(F("Checking EEPROM for stored date:"));
   delay(500);
-  if (gw.loadState(0) == 0xFF) // EEPROM flag
+  if (loadState(0) == 0xFF) // EEPROM flag
   {
     DEBUG_PRINTLN(F("Retreiving last run time from EEPROM..."));
     for (int i = 0; i < 4 ; i++)
     {
       lastTimeRun = lastTimeRun << 8;
-      lastTimeRun = lastTimeRun | gw.loadState(i + 1); // assemble 4 bytes into an ussigned long epoch timestamp
+      lastTimeRun = lastTimeRun | loadState(i + 1); // assemble 4 bytes into an ussigned long epoch timestamp
     }
   }
-  gw.begin(getVariables, RADIO_ID, false); // Change 'false' to 'true' to create a Radio repeating node
-  gw.sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
-  for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
-  {
-    gw.present(i, S_LIGHT);
-  }
+
   DEBUG_PRINTLN(F("Sensor Presentation Complete"));
   //
   digitalWrite (ledPin, LOW);
@@ -219,10 +221,9 @@ void setup()
   int clockCounter = 0;
   while (timeStatus() == timeNotSet && clockCounter < 21)
   {
-    gw.process();
-    gw.requestTime(receiveTime);
+    requestTime();
     DEBUG_PRINTLN(F("Requesting time from Gateway:"));
-    delay(1000);
+    wait(1000);
     lcd.print(".");
     clockCounter++;
     if (clockCounter > 16)
@@ -232,7 +233,7 @@ void setup()
       lcd.print(F("  Failed Clock  "));
       lcd.setCursor(0, 1);
       lcd.print(F(" Syncronization "));
-      delay(2000);
+      wait(2000);
       break;
     }
   }
@@ -249,37 +250,49 @@ void setup()
     DEBUG_PRINT(F("Calling for Valve "));
     DEBUG_PRINT(i);
     DEBUG_PRINTLN(F(" Data..."));
-    while (gw.process() == false)
+    while (!receivedInitialValue)
     {
       lcd.setCursor(15, 0);
       flashIcon = !flashIcon;
       flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      gw.request(i, V_VAR1);
-      delay(100);
+      request(i, V_VAR1);
+      wait(500);
     }
-    while (gw.process() == false)
+    receivedInitialValue = false;
+    while (!receivedInitialValue)
     {
       lcd.setCursor(15, 0);
       flashIcon = !flashIcon;
       flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      gw.request(i, V_VAR2);
-      delay(100);
+      request(i, V_VAR2);
+      wait(500);
     }
-    while (gw.process() == false)
+    receivedInitialValue = false;
+    while (!receivedInitialValue)
     {
       lcd.setCursor(15, 0);
       flashIcon = !flashIcon;
       flashIcon ? lcd.write(byte(1)) : lcd.print(F(" "));
-      gw.request(i, V_VAR3);
-      delay(100);
+      request(i, V_VAR3);
+      wait(500);
     }
   }
   lcd.clear();
 }
+
+
+void presentation()  
+{ 
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
+  for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
+  {
+    present(i, S_LIGHT);
+  }
+}
+
 //
 void loop()
 {
-  gw.process();
   updateClock();
   updateDisplay();
   goGetValveTimes();
@@ -316,15 +329,15 @@ void loop()
       DEBUG_PRINTLN(F("State Changed... all Zones off"));
       for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
       {
-        delay(50);
-        gw.send(msg1valve.setSensor(i).set(false), false);
+        wait(50);
+        send(msg1valve.setSensor(i).set(false), false);
       }
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print(F("** Irrigation **"));
       lcd.setCursor(0,1);
       lcd.print(F("**   Halted   **"));
-      delay(2000);
+      wait(2000);
       lastValve = -1;
     }
   }
@@ -337,11 +350,11 @@ void loop()
       {
         if (i == 0 || i == valveNumber)
         {
-          gw.send(msg1valve.setSensor(i).set(true), false);
+          send(msg1valve.setSensor(i).set(true), false);
         }
         else
         {
-          gw.send(msg1valve.setSensor(i).set(false), false);
+          send(msg1valve.setSensor(i).set(false), false);
         }
       }
     }
@@ -377,7 +390,7 @@ void loop()
         saveDateToEEPROM(lastTimeRun);
         for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
         {
-          gw.send(msg1valve.setSensor(i).set(false), false);
+          send(msg1valve.setSensor(i).set(false), false);
         }
         DEBUG_PRINT(F("State = "));
         DEBUG_PRINTLN(state);
@@ -394,11 +407,11 @@ void loop()
       {
         if (i == 0 || i == valveNumber)
         {
-          gw.send(msg1valve.setSensor(i).set(true), false);
+          send(msg1valve.setSensor(i).set(true), false);
         }
         else
         {
-          gw.send(msg1valve.setSensor(i).set(false), false);
+          send(msg1valve.setSensor(i).set(false), false);
         }
       }
       DEBUG_PRINTLN(F("State Changed, Single Zone Running..."));
@@ -419,7 +432,7 @@ void loop()
       updateRelays(ALL_VALVES_OFF);
       for (byte i = 0; i <= NUMBER_OF_VALVES; i++)
       {
-        gw.send(msg1valve.setSensor(i).set(false), false);
+        send(msg1valve.setSensor(i).set(false), false);
       }
       state = CYCLE_COMPLETE;
       startMillis = millis();
@@ -527,7 +540,7 @@ void slowToggleLED ()
   }
 }
 //
-void getVariables(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   boolean zoneTimeUpdate = false;
   if (message.isAck())
@@ -577,6 +590,7 @@ void getVariables(const MyMessage &message)
 
           zoneTimeUpdate = true;
         }
+        receivedInitialValue = true;
       }
       else if (message.type == V_VAR2)
       {
@@ -590,6 +604,7 @@ void getVariables(const MyMessage &message)
           valveSoloTime[i] = variable2;
           zoneTimeUpdate = true;
         }
+        receivedInitialValue = true;
       }
       else if (message.type == V_VAR3)
       {
@@ -611,6 +626,7 @@ void getVariables(const MyMessage &message)
         DEBUG_PRINT(F(" and it is now called: "));
         DEBUG_PRINTLN(valveNickName[i]);
       }
+      receivedInitialValue = true;
     }
   }
   if (zoneTimeUpdate)
@@ -826,7 +842,7 @@ void updateClock()
     lcd.setCursor(15, 0);
     lcd.write(byte(0));
     clockUpdating = true;
-    gw.requestTime(receiveTime);
+    requestTime();
     lastVeraGetTime = millis();
   }
 }
@@ -834,14 +850,14 @@ void updateClock()
 void saveDateToEEPROM(unsigned long theDate)
 {
   DEBUG_PRINTLN(F("Saving Last Run date"));
-  if (gw.loadState(0) != 0xFF)
+  if (loadState(0) != 0xFF)
   {
-    gw.saveState(0, 0xFF); // EEPROM flag for last date saved stored in EEPROM (location zero)
+    saveState(0, 0xFF); // EEPROM flag for last date saved stored in EEPROM (location zero)
   }
   //
   for (int i = 1; i < 5; i++)
   {
-    gw.saveState(5 - i, byte(theDate >> 8 * (i - 1))); // store epoch datestamp in 4 bytes of EEPROM starting in location one
+    saveState(5 - i, byte(theDate >> 8 * (i - 1))); // store epoch datestamp in 4 bytes of EEPROM starting in location one
   }
 }
 //
@@ -854,9 +870,9 @@ void goGetValveTimes()
     DEBUG_PRINTLN(F("Calling for Valve Data..."));
     lcd.setCursor(15, 0);
     lcd.write(byte(1)); //lcd.write(1);
-    gw.request(valveIndex, V_VAR1);
-    gw.request(valveIndex, V_VAR2);
-    gw.request(valveIndex, V_VAR3);
+    request(valveIndex, V_VAR1);
+    request(valveIndex, V_VAR2);
+    request(valveIndex, V_VAR3);
     valveUpdateTime = millis();
     valveIndex++;
     if (valveIndex > NUMBER_OF_VALVES + 1)

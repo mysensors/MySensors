@@ -27,60 +27,59 @@
  * http://www.mysensors.org/build/relay
  */ 
 
-#include <MySigningNone.h>
-#include <MyTransportNRF24.h>
-#include <MyTransportRFM69.h>
-#include <MyHwATMega328.h>
-#include <MySensor.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+// Enable repeater functionality for this node
+#define MY_REPEATER_FEATURE
+
 #include <SPI.h>
+#include <MySensor.h>
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
-// NRFRF24L01 radio driver (set low transmit power by default) 
-MyTransportNRF24 radio(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL_GW);  
-//MyTransportRFM69 radio;
-// Message signing driver (none default)
-//MySigningNone signer;
-// Select AtMega328 hardware profile
-MyHwATMega328 hw;
-// Construct MySensors library
-MySensor gw(radio, hw);
 
 void setup()  
 {   
-  // Initialize library and add callback for incoming messages
-  gw.begin(incomingMessage, AUTO, true);
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Relay", "1.0");
-
-  // Fetch relay status
   for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
-    // Register all sensors to gw (they will be created as child devices)
-    gw.present(sensor, S_LIGHT);
     // Then set relay pins in output mode
     pinMode(pin, OUTPUT);   
     // Set relay to last known state (using eeprom storage) 
-    digitalWrite(pin, gw.loadState(sensor)?RELAY_ON:RELAY_OFF);
+    digitalWrite(pin, loadState(sensor)?RELAY_ON:RELAY_OFF);
+  }
+}
+
+void presentation()  
+{   
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Relay", "1.0");
+
+  for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
+    // Register all sensors to gw (they will be created as child devices)
+    present(sensor, S_LIGHT);
   }
 }
 
 
 void loop() 
 {
-  // Alway process incoming messages whenever possible
-  gw.process();
+  
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
      // Change relay state
      digitalWrite(message.sensor-1+RELAY_1, message.getBool()?RELAY_ON:RELAY_OFF);
      // Store state in eeprom
-     gw.saveState(message.sensor, message.getBool());
+     saveState(message.sensor, message.getBool());
      // Write some debug info
      Serial.print("Incoming change for sensor:");
      Serial.print(message.sensor);

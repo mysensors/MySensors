@@ -38,9 +38,15 @@
 * Contributor: epierre
 **/
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
 
-#include <MySensor.h>  
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h> 
 
 #define CHILD_ID_AIQ 0
 #define AIQ_SENSOR_ANALOG_PIN 6
@@ -50,25 +56,21 @@ unsigned long SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds
 float valAIQ =0.0;
 float lastAIQ =0.0;
 
-MySensor gw;
 MyMessage msg(CHILD_ID_AIQ, V_LEVEL);
 MyMessage msg2(CHILD_ID_AIQ, V_UNIT_PREFIX);
 
 void setup()  
 {
-  gw.begin();
+  pinMode(AIQ_SENSOR_ANALOG_PIN, INPUT);
+}
 
+void presentation() {
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("AIQ Sensor CO2 MH-Z14", "1.0");
+  sendSketchInfo("AIQ Sensor CO2 MH-Z14", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
-  gw.present(CHILD_ID_AIQ, S_AIR_QUALITY);  
-  gw.send(msg2.set("ppm"));
-  
-  gw.sleep(SLEEP_TIME);
-  
-  pinMode(AIQ_SENSOR_ANALOG_PIN, INPUT);
-   
+  present(CHILD_ID_AIQ, S_AIR_QUALITY);  
+  send(msg2.set("ppm"));
 }
 
 void loop() { 
@@ -88,7 +90,7 @@ void loop() {
   long co2ppm = 2 * ((duration/1000) - 2);
   //Serial.print(co2ppm);
   if ((co2ppm != lastAIQ)&&(abs(co2ppm-lastAIQ)>=10)) {
-      gw.send(msg.set((long)ceil(co2ppm)));
+      send(msg.set((long)ceil(co2ppm)));
       lastAIQ = ceil(co2ppm);
   }
   
@@ -96,5 +98,5 @@ void loop() {
   
   // Power down the radio.  Note that the radio will get powered back up
   // on the next write() call.
-  gw.sleep(SLEEP_TIME); //sleep for: sleepTime
+  sleep(SLEEP_TIME); //sleep for: sleepTime
 }

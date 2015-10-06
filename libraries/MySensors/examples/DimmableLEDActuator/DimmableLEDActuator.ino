@@ -35,16 +35,21 @@
  * http://www.mysensors.org/build/dimmer
  */
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+#include <SPI.h>
+#include <MySensor.h> 
+
 #define SN "DimmableLED"
 #define SV "1.1"
 
-#include <MySensor.h> 
-#include <SPI.h>
-
 #define LED_PIN 3      // Arduino pin attached to MOSFET Gate pin
 #define FADE_DELAY 10  // Delay in ms for each percentage fade up/down (10ms = 1s full-range dim)
-
-MySensor gw;
 
 static int currentLevel = 0;  // Current dim level...
 MyMessage dimmerMsg(0, V_DIMMER);
@@ -56,15 +61,15 @@ MyMessage lightMsg(0, V_LIGHT);
  */
 void setup()  
 { 
-  Serial.println( SN ); 
-  gw.begin( incomingMessage );
-  
-  // Register the LED Dimmable Light with the gateway
-  gw.present( 0, S_DIMMER );
-  
-  gw.sendSketchInfo(SN, SV);
   // Pull the gateway's current dim level - restore light level upon sendor node power-up
-  gw.request( 0, V_DIMMER );
+  request( 0, V_DIMMER );
+}
+
+void presentation() {
+  // Register the LED Dimmable Light with the gateway
+  present( 0, S_DIMMER );
+  
+  sendSketchInfo(SN, SV);
 }
 
 /***
@@ -72,12 +77,11 @@ void setup()
  */
 void loop() 
 {
-  gw.process();
 }
 
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   if (message.type == V_LIGHT || message.type == V_DIMMER) {
     
     //  Retrieve the power or dim level from the incoming request message
@@ -98,10 +102,10 @@ void incomingMessage(const MyMessage &message) {
     fadeToLevel( requestedLevel );
     
     // Inform the gateway of the current DimmableLED's SwitchPower1 and LoadLevelStatus value...
-    gw.send(lightMsg.set(currentLevel > 0 ? 1 : 0));
+    send(lightMsg.set(currentLevel > 0 ? 1 : 0));
 
     // hek comment: Is this really nessesary?
-    gw.send( dimmerMsg.set(currentLevel) );
+    send( dimmerMsg.set(currentLevel) );
 
     
     }

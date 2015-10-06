@@ -27,12 +27,19 @@
  */
 
 
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
 #include <MySensor.h>
 
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
 
-MySensor gw;
 unsigned long SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
 
@@ -44,10 +51,11 @@ void setup()
 #else
    analogReference(INTERNAL);
 #endif
-   gw.begin();
+}
 
+void presentation() {
    // Send the sketch version information to the gateway and Controller
-   gw.sendSketchInfo("Battery Meter", "1.0");
+   sendSketchInfo("Battery Meter", "1.0");
 }
 
 void loop()
@@ -62,10 +70,11 @@ void loop()
    // Sense point is bypassed with 0.1 uF cap to reduce noise at that point
    // ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
    // 3.44/1023 = Volts per bit = 0.003363075
-   float batteryV  = sensorValue * 0.003363075;
+   
    int batteryPcnt = sensorValue / 10;
 
    #ifdef DEBUG
+   float batteryV  = sensorValue * 0.003363075;
    Serial.print("Battery Voltage: ");
    Serial.print(batteryV);
    Serial.println(" V");
@@ -77,8 +86,8 @@ void loop()
 
    if (oldBatteryPcnt != batteryPcnt) {
      // Power up radio after sleep
-     gw.sendBatteryLevel(batteryPcnt);
+     sendBatteryLevel(batteryPcnt);
      oldBatteryPcnt = batteryPcnt;
    }
-   gw.sleep(SLEEP_TIME);
+   sleep(SLEEP_TIME);
 }

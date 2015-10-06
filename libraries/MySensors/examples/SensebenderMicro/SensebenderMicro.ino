@@ -37,20 +37,26 @@
  * 
  */
 
+// Enable debug prints to serial monitor
+//#define MY_DEBUG 
 
+// Define a static node address, remove if you want auto address assignment
+//#deine MY_NODE_ID 3
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+#include <SPI.h>
 #include <MySensor.h>
 #include <Wire.h>
 #include <SI7021.h>
-#include <SPI.h>
-#include "utility/SPIFlash.h"
+#include "drivers/SPIFlash/SPIFlash.cpp"
 #include <EEPROM.h>  
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>
 #include <RunningAverage.h>
 //#include <avr/power.h>
-
-// Define a static node address, remove if you want auto address assignment
-//#define NODE_ADDRESS   3
 
 // Uncomment the line below, to transmit battery voltage as a normal sensor value
 //#define BATT_SENSOR    199
@@ -91,8 +97,6 @@ atsha204Class sha204(sha204Pin);
 
 SI7021 humiditySensor;
 SPIFlash flash(8, 0x1F65);
-
-MySensor gw;
 
 // Sensor messages
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
@@ -153,35 +157,31 @@ void setup() {
   
   digitalWrite(LED_PIN, HIGH); 
 
-#ifdef NODE_ADDRESS
-  gw.begin(NULL, NODE_ADDRESS, false);
-#else
-  gw.begin(NULL,AUTO,false);
-#endif
-
   humiditySensor.begin();
 
   digitalWrite(LED_PIN, LOW);
 
   Serial.flush();
   Serial.println(F(" - Online!"));
-  gw.sendSketchInfo("Sensebender Micro", RELEASE);
   
-  gw.present(CHILD_ID_TEMP,S_TEMP);
-  gw.present(CHILD_ID_HUM,S_HUM);
-  
-#ifdef BATT_SENSOR
-  gw.present(BATT_SENSOR, S_POWER);
-#endif
-
-  
-  isMetric = gw.getConfig().isMetric;
+  isMetric = getConfig().isMetric;
   Serial.print(F("isMetric: ")); Serial.println(isMetric);
   raHum.clear();
   sendTempHumidityMeasurements(false);
   sendBattLevel(false);
   if (ota_enabled) Serial.println("OTA FW update enabled");
 
+}
+
+void presentation()  {
+  sendSketchInfo("Sensebender Micro", RELEASE);
+
+  present(CHILD_ID_TEMP,S_TEMP);
+  present(CHILD_ID_HUM,S_HUM);
+    
+#ifdef BATT_SENSOR
+  present(BATT_SENSOR, S_POWER);
+#endif
 }
 
 
@@ -207,8 +207,6 @@ void loop() {
     measureCount = 0;
   }
     
-  gw.process();
-
   sendTempHumidityMeasurements(forceTransmit);
   if (sendBattery > 60) 
   {
@@ -217,10 +215,10 @@ void loop() {
   }
 
   if (ota_enabled & transmission_occured) {
-      gw.wait(OTA_WAIT_PERIOD);
+      wait(OTA_WAIT_PERIOD);
   }
 
-  gw.sleep(MEASURE_INTERVAL);  
+  sleep(MEASURE_INTERVAL);  
 }
 
 
@@ -258,8 +256,8 @@ void sendTempHumidityMeasurements(bool force)
     Serial.print("T: ");Serial.println(temperature);
     Serial.print("H: ");Serial.println(humidity);
     
-    gw.send(msgTemp.set(temperature,1));
-    gw.send(msgHum.set(humidity));
+    send(msgTemp.set(temperature,1));
+    send(msgHum.set(humidity));
     lastTemperature = temperature;
     lastHumidity = humidity;
     transmission_occured = true;
@@ -282,7 +280,7 @@ void sendBattLevel(bool force)
     lastBattery = vcc;
 
 #ifdef BATT_SENSOR
-    gw.send(msgBatt.set(vcc));
+    send(msgBatt.set(vcc));
 #endif
 
     // Calculate percentage
@@ -290,7 +288,7 @@ void sendBattLevel(bool force)
     vcc = vcc - 1900; // subtract 1.9V from vcc, as this is the lowest voltage we will operate at
     
     long percent = vcc / 14.0;
-    gw.sendBatteryLevel(percent);
+    sendBatteryLevel(percent);
     transmission_occured = true;
   }
 }

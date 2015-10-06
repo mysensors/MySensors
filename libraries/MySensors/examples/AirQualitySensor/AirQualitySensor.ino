@@ -34,9 +34,15 @@
  * 
  */
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
 #include <MySensor.h>  
-#include <Wire.h> 
 
 #define 	CHILD_ID_MQ                   0 
 /************************Hardware Related Macros************************************/
@@ -76,22 +82,19 @@ float           SmokeCurve[3] ={2.3,0.53,-0.44};    //two points are taken from 
                                                     //data format:{ x, y, slope}; point1: (lg200, 0.53), point2:(lg10000,-0.22)                                                     
 
 
-MySensor gw;
 MyMessage msg(CHILD_ID_MQ, V_LEVEL);
-
 
 void setup()  
 { 
-  gw.begin();
+  Ro = MQCalibration(MQ_SENSOR_ANALOG_PIN);         //Calibrating the sensor. Please make sure the sensor is in clean air 
+}
 
+void presentation() {
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Air Quality Sensor", "1.0");
+  sendSketchInfo("Air Quality Sensor", "1.0");
 
   // Register all sensors to gateway (they will be created as child devices)
-  gw.present(CHILD_ID_MQ, S_AIR_QUALITY);  
-
-  Ro = MQCalibration(MQ_SENSOR_ANALOG_PIN);         //Calibrating the sensor. Please make sure the sensor is in clean air 
-                                                    //when you perform the calibration  
+  present(CHILD_ID_MQ, S_AIR_QUALITY);  
 }
 
 void loop()      
@@ -113,11 +116,11 @@ void loop()
    Serial.print("\n");
      
   if (valMQ != lastMQ) {
-      gw.send(msg.set((int)ceil(valMQ)));
+      send(msg.set((int)ceil(valMQ)));
       lastMQ = ceil(valMQ);
   }
   
-  gw.sleep(SLEEP_TIME); //sleep for: sleepTime 
+  sleep(SLEEP_TIME); //sleep for: sleepTime 
 }
 
 /****************** MQResistanceCalculation ****************************************

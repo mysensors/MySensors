@@ -25,26 +25,33 @@
  * Example sketch showing how to create a node thay repeates messages
  * from nodes far from gateway back to gateway. 
  * It is important that nodes that has enabled repeater mode calls  
- * gw.process() frequently. Repeaters should never sleep. 
+ * process() frequently. Repeaters should never sleep. 
  */
 
-#include <MySensor.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+// Enabled repeater feature for this node
+#define MY_REPEATER_FEATURE
+
 #include <SPI.h>
+#include <MySensor.h>
 
-MySensor gw;
+void setup() {
+  
+}
 
-void setup()  
+void presentation()  
 {  
-  // The third argument enables repeater mode.
-  gw.begin(NULL, AUTO, true);
-
   //Send the sensor node sketch version information to the gateway
-  gw.sendSketchInfo("Repeater Node", "1.0");
+  sendSketchInfo("Repeater Node", "1.0");
 }
 
 void loop() 
 {
-  // By calling process() you route messages in the background
-  gw.process();
 }
 
