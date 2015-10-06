@@ -148,7 +148,7 @@ bool gatewayTransportSend(MyMessage &message)
 			_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 			_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
 			// returns 1 if the packet was sent successfully
-			ret _ethernetServer.endPacket();
+			ret = _ethernetServer.endPacket();
 		#else
 			EthernetClient client;
 			if (client.connect(_ethernetControllerIP, MY_PORT)) {
@@ -162,7 +162,6 @@ bool gatewayTransportSend(MyMessage &message)
 		#endif
 	#else
 		// Send message to connected clients
-		_w5100_spi_en(true);
 		#if defined(MY_GATEWAY_ESP8266)
 			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++)
 			{
