@@ -244,13 +244,13 @@ public:
 	char* getString(char *buffer) const;
 	const char* getString() const;
 	void* getCustom() const;
-	uint8_t getByte() const;
 	bool getBool() const;
+	uint8_t getByte() const;
 	float getFloat() const;
-	long getLong() const;
-	unsigned long getULong() const;
-	int getInt() const;
-	unsigned int getUInt() const;
+	int16_t getInt() const;
+	uint16_t getUInt() const;
+	int32_t getLong() const;
+	uint32_t getULong() const;
 
 	// Getter for ack-flag. True if this is an ack message.
 	bool isAck() const;
@@ -263,12 +263,12 @@ public:
 	// Setters for payload
 	MyMessage& set(void* payload, uint8_t length);
 	MyMessage& set(const char* value);
-	MyMessage& set(uint8_t value);
 	MyMessage& set(float value, uint8_t decimals);
-	MyMessage& set(unsigned long value);
-	MyMessage& set(long value);
-	MyMessage& set(unsigned int value);
-	MyMessage& set(int value);
+	MyMessage& set(uint8_t value);
+	MyMessage& set(uint32_t value);
+	MyMessage& set(int32_t value);
+	MyMessage& set(uint16_t value);
+	MyMessage& set(int16_t value);
 
 #else
 
@@ -296,10 +296,10 @@ struct
 	// This union is used to simplify the construction of the binary data types transferred.
 	union {
 		uint8_t bValue;
-		unsigned long ulValue;
-		long lValue;
-		unsigned int uiValue;
-		int iValue;
+		uint16_t uiValue;
+		int16_t iValue;
+		uint32_t ulValue;
+		int32_t lValue;
 		struct { // Float messages
 			float fValue;
 			uint8_t fPrecision;   // Number of decimals when serializing
