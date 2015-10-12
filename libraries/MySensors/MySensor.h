@@ -34,7 +34,7 @@
 #endif
 
 // Enable radio "feature" if one of the radio types was enabled
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
 	#define MY_RADIO_FEATURE
 #endif
 
@@ -140,7 +140,7 @@
 
 
 // RADIO
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
 	// SOFTSPI
 	#ifdef MY_SOFTSPI
 		#if defined(ARDUINO_ARCH_ESP8266)
@@ -155,8 +155,8 @@
 		#include "drivers/SPIFlash/SPIFlash.cpp"
 	#endif
 	#include "core/MyTransport.cpp"
-	#if defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)
-		#error Only one radio driver can be activated
+	#if (defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)) || (defined(MY_RADIO_NRF24) && defined(MY_RS485)) || (defined(MY_RADIO_RFM69) && defined(MY_RS485))
+		#error Only one forward link driver can be activated
 	#endif
 	#if defined(MY_RADIO_NRF24)
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
@@ -164,6 +164,9 @@
 		#endif
 		#include "drivers/RF24/RF24.cpp"
 		#include "core/MyTransportNRF24.cpp"
+	#elif defined(MY_RS485)
+		#include "drivers/AltSoftSerial/AltSoftSerial.cpp"
+		#include "core/MyTransportRS485.cpp"
 	#elif defined(MY_RADIO_RFM69)
 		#include "drivers/RFM69/RFM69.cpp"
 		#include "core/MyTransportRFM69.cpp"
@@ -184,7 +187,7 @@
 #endif
 
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
-	#error No radio or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+	#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
 #endif
 
 

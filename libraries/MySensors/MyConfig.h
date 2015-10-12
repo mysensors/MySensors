@@ -53,11 +53,11 @@
 *  Radio selection and node config
 ***********************************/
 
-// Selecting radio transport is optional (for a gateway node).
+// Selecting uplink transport layer is optional (for a gateway node).
 
 //#define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
-
+//#define MY_RS485
 
 // Node id defaults to AUTO (tries to fetch id from controller)
 #ifndef MY_NODE_ID
@@ -231,6 +231,18 @@
 // Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
 #ifndef MY_SIGNING_SOFT_HMAC_KEY
 #define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+#endif
+
+/**********************************
+*  RS485 Driver Defaults
+***********************************/
+
+#ifndef MY_RS485_BAUD_RATE
+#define MY_RS485_BAUD_RATE 9600
+#endif
+
+#ifndef MY_RS485_MAX_MESSAGE_LENGTH
+#define MY_RS485_MAX_MESSAGE_LENGTH 40
 #endif
 
 /**********************************
