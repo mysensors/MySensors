@@ -68,7 +68,7 @@
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEO_PIN, NEO_GRB + NEO_KHZ400);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEO_PIN, NEO_GRB + NEO_KHZ800);
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
@@ -107,7 +107,6 @@ void presentation()  {
 
 void loop() {
   unsigned long now = millis();
-  
   unsigned int fullDist = (sonar.ping_median() / US_ROUNDTRIP_CM);
 //  Serial.println(fullDist);
   int displayDist = min(fullDist, MAX_DISTANCE);
