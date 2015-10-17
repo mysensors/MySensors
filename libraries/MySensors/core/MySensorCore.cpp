@@ -293,7 +293,9 @@ void wait(unsigned long ms) {
 	unsigned long enter = hwMillis();
 	while (hwMillis() - enter < ms) {
 		_process();
-		yield();
+		#if defined(MY_GATEWAY_ESP8266)
+			yield();
+		#endif
 	}
 }
 
