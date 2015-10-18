@@ -31,9 +31,14 @@
  *
  *
  * Version 1.3 - Thomas Bowman Mørch
- * Improved transmission logic, eliminating spurious transmissions (when temperatuere / humidity fluctuates 1 up and down between measurements)
- * 
+ * Improved transmission logic, eliminating spurious transmissions (when temperatuere / humidity fluctuates 1 up and down between measurements) 
  * Added OTA boot mode, need to hold A1 low while applying power. (uses slightly more power as it's waiting for bootloader messages)
+ * 
+ * Version 1.4 - Thomas Bowman Mørch
+ * 
+ * Corrected division in the code deciding whether to transmit or not, that resulted in generating an integer. Now it's generating floats as expected.
+ * Simplified detection for OTA bootloader, now detecting if MY_OTA_FIRMWARE_FEATURE is defined. If this is defined sensebender automaticly waits 300mS after each transmission
+ * Moved Battery status messages, so they are transmitted together with normal sensor updates (but only every 60th minute)
  * 
  */
 
