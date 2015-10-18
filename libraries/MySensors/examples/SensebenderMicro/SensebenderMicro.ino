@@ -61,7 +61,7 @@
 // Uncomment the line below, to transmit battery voltage as a normal sensor value
 //#define BATT_SENSOR    199
 
-#define RELEASE "1.3"
+#define RELEASE "1.4"
 
 #define AVERAGES 2
 
@@ -88,7 +88,6 @@
 
 // Pin definitions
 #define TEST_PIN       A0
-#define OTA_ENABLE     A1
 #define LED_PIN        A2
 #define ATSHA204_PIN   17 // A3
 
@@ -111,7 +110,6 @@ int measureCount = 0;
 int sendBattery = 0;
 boolean isMetric = true;
 boolean highfreq = true;
-boolean ota_enabled = false; 
 boolean transmission_occured = false;
 
 // Storage of old measurements
@@ -142,18 +140,11 @@ void setup() {
   digitalWrite(TEST_PIN, HIGH); // Enable pullup
   if (!digitalRead(TEST_PIN)) testMode();
 
-  pinMode(OTA_ENABLE, INPUT);
-  digitalWrite(OTA_ENABLE, HIGH);
-  if (!digitalRead(OTA_ENABLE)) {
-    ota_enabled = true;
-  }
-
   // Make sure that ATSHA204 is not floating
   pinMode(ATSHA204_PIN, INPUT);
   digitalWrite(ATSHA204_PIN, HIGH);
   
   digitalWrite(TEST_PIN,LOW);
-  digitalWrite(OTA_ENABLE, LOW); // remove pullup, save some power.
   
   digitalWrite(LED_PIN, HIGH); 
 
@@ -169,7 +160,10 @@ void setup() {
   raHum.clear();
   sendTempHumidityMeasurements(false);
   sendBattLevel(false);
-  if (ota_enabled) Serial.println("OTA FW update enabled");
+  
+#ifdef MY_OTA_FIRMWARE_FEATURE  
+  Serial.println("OTA FW update enabled");
+#endif
 
 }
 
@@ -196,11 +190,13 @@ void loop() {
   sendBattery ++;
   bool forceTransmit = false;
   transmission_occured = false;
+#ifndef MY_OTA_FIRMWARE_FEATURE
   if ((measureCount == 5) && highfreq) 
   {
-    if (!ota_enabled) clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
     highfreq = false;
   } 
+#endif
   
   if (measureCount > FORCE_TRANSMIT_INTERVAL) { // force a transmission
     forceTransmit = true; 
@@ -208,15 +204,16 @@ void loop() {
   }
     
   sendTempHumidityMeasurements(forceTransmit);
-  if (sendBattery > 60) 
+/*  if (sendBattery > 60) 
   {
      sendBattLevel(forceTransmit); // Not needed to send battery info that often
      sendBattery = 0;
-  }
-
-  if (ota_enabled & transmission_occured) {
+  }*/
+#ifdef MY_OTA_FIRMWARE_FEATURE
+  if (transmission_occured) {
       wait(OTA_WAIT_PERIOD);
   }
+#endif
 
   sleep(MEASURE_INTERVAL);  
 }
@@ -238,7 +235,7 @@ void sendTempHumidityMeasurements(bool force)
   
   raHum.addValue(data.humidityPercent);
   
-  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
+  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100.0);
   float diffHum = abs(lastHumidity - raHum.getAverage());
 
   Serial.print(F("TempDiff :"));Serial.println(diffTemp);
@@ -261,6 +258,10 @@ void sendTempHumidityMeasurements(bool force)
     lastTemperature = temperature;
     lastHumidity = humidity;
     transmission_occured = true;
+    if (sendBattery > 60) {
+     sendBattLevel(true); // Not needed to send battery info that often
+     sendBattery = 0;
+    }
   }
 }
 
