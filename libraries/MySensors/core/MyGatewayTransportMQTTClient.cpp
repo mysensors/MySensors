@@ -66,7 +66,7 @@ void incomingMQTT(char* topic, byte* payload,
 	debug(PSTR("Message arrived on topic: %s\n"), topic);
 	char *str, *p;
 	uint8_t i = 0;
-	for (str = strtok_r(topic, "/", &p); str && i < 5;
+	for (str = strtok_r(topic, "/", &p); str && i <= 5;
 			str = strtok_r(NULL, "/", &p)) {
 		switch (i) {
 			case 0: {
