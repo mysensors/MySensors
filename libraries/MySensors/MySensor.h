@@ -28,8 +28,10 @@
 	#define MY_IS_GATEWAY (true)
 	#define MY_NODE_TYPE "gateway"
 #elif defined(MY_REPEATER_FEATURE)
+	#define MY_IS_GATEWAY (false)
 	#define MY_NODE_TYPE "repeater"
 #else
+	#define MY_IS_GATEWAY (false)
 	#define MY_NODE_TYPE "sensor"
 #endif
 

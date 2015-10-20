@@ -90,7 +90,7 @@ inline void transportProcess() {
 		#ifdef MY_SIGNING_REQUEST_SIGNATURES
 
 			if ((!MY_IS_GATEWAY || DO_SIGN(sender)) &&
-				destination == nc.nodeId &&
+				destination == _nc.nodeId &&
 				mGetLength(_msg) &&
 				!mGetAck(_msg) &&
 				(mGetCommand(_msg) != C_INTERNAL ||
