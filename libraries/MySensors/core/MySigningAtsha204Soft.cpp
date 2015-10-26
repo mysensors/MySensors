@@ -79,6 +79,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 
 
 bool signerGetNonce(MyMessage &msg) {
+	DEBUG_SIGNING_PRINTLN(F("ATSHA204Soft"));
 	// Set randomseed
 	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
 
@@ -121,12 +122,15 @@ bool signerCheckTimer() {
 }
 
 bool signerPutNonce(MyMessage &msg) {
+	DEBUG_SIGNING_PRINTLN(F("ATSHA204Soft"));
 	if (((uint8_t*)msg.getCustom())[0] != SIGNING_IDENTIFIER) {
 		DEBUG_SIGNING_PRINTLN(F("ISI")); // ISI = Incorrect signing identifier
 		return false; 
 	}
 
 	memcpy(_signing_current_nonce, (uint8_t*)msg.getCustom(), MAX_PAYLOAD);
+	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
+	memset(&_signing_current_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_current_nonce)-MAX_PAYLOAD);
 	return true;
 }
 
@@ -156,6 +160,7 @@ bool signerSignMsg(MyMessage &msg) {
 
 	// Transfer as much signature data as the remaining space in the message permits
 	memcpy(&msg.data[mGetLength(msg)], _signing_hmac, MAX_PAYLOAD-mGetLength(msg));
+	DEBUG_SIGNING_PRINTBUF(F("SIM:"), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg)); // SIM = Signature in message
 
 	return true;
 }
