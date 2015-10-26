@@ -75,6 +75,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 
 
 bool signerGetNonce(MyMessage &msg) {
+	DEBUG_SIGNING_PRINTLN(F("ATSHA204"));
 	// Generate random number for use as nonce
 	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
 	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
@@ -119,6 +120,7 @@ bool signerCheckTimer() {
 }
 
 bool signerPutNonce(MyMessage &msg) {
+	DEBUG_SIGNING_PRINTLN(F("ATSHA204"));
 	if (((uint8_t*)msg.getCustom())[0] != SIGNING_IDENTIFIER) {
 		DEBUG_SIGNING_PRINTLN(F("ISI")); // ISI = Incorrect signing identifier
 		return false; 
@@ -155,6 +157,7 @@ bool signerSignMsg(MyMessage &msg) {
 
 	// Transfer as much signature data as the remaining space in the message permits
 	memcpy(&msg.data[mGetLength(msg)], &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg));
+	DEBUG_SIGNING_PRINTBUF(F("SIM:"), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg)); // SIM = Signature in message
 
 	return true;
 }
