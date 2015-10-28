@@ -24,7 +24,7 @@ bool _autoFindParent;
 uint8_t _failedTransmissions;
 
 #ifdef MY_SIGNING_FEATURE
-	bool _signingNonceStatus;
+	uint8_t _signingNonceStatus;
 #endif
 
 #ifdef MY_OTA_FIRMWARE_FEATURE
@@ -390,6 +390,7 @@ boolean transportSendRoute(MyMessage &message) {
 			  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
 			  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
 			// Send nonce-request
+			_signingNonceStatus=SIGN_WAITING_FOR_NONCE;
 			if (!_sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
 				debug(PSTR("nonce tr err\n"));
 				return false;
