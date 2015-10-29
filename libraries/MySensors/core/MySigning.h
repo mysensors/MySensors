@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include "MyMessage.h"
 #include "drivers/ATSHA204/ATSHA204.h"
+#include "MySensorCore.h"
 
 #ifdef MY_SIGNING_NODE_WHITELISTING
 typedef struct {
