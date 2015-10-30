@@ -78,7 +78,9 @@ do { 																\
 #define hw_writeConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
 
 
-
+// if LowPower.h from LowPowerLab is used, the names will conflict.
+// Please #import LowPower.h BEFORE MySensors.h!
+#ifndef LowPower_h
 enum period_t
 {
 	SLEEP_15Ms,
@@ -93,6 +95,7 @@ enum period_t
 	SLEEP_8S,
 	SLEEP_FOREVER
 };
+#endif
 
 class MyHwATMega328 : public MyHw
 { 
