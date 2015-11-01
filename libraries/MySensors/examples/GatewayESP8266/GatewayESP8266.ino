@@ -46,6 +46,7 @@
  * SCK        GPIO14
  * MISO       GPIO12
  * MOSI       GPIO13
+ * GND        GND
  *            
  * Not all ESP8266 modules have all pins available on their external interface.
  * This code has been tested on an ESP-12 module.
