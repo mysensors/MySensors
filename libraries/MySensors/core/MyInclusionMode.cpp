@@ -34,7 +34,7 @@ inline void inclusionInit() {
 
 
 void inclusionModeSet(boolean newMode) {
-  if (newMode != inclusionMode) {
+  if (newMode != _inclusionMode) {
     _inclusionMode = newMode;
     // Send back mode change to controller
     gatewayTransportSend(buildGw(_msg, I_INCLUSION_MODE).set(_inclusionMode?1:0));
@@ -46,7 +46,7 @@ void inclusionModeSet(boolean newMode) {
 
 inline void inclusionProcess() {
 	#ifdef MY_INCLUSION_BUTTON_FEATURE
-	if (!inclusionMode && digitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == LOW) {
+	if (!_inclusionMode && digitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == MY_INCLUSION_BUTTON_PRESSED) {
 		// Start inclusion mode
 		inclusionModeSet(true);
 	}

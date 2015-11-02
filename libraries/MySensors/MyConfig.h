@@ -187,6 +187,12 @@
 #define MY_INCLUSION_MODE_DURATION 60
 #endif
 
+#if defined(MY_INCLUSION_BUTTON_EXTERNAL_PULLUP)
+#define MY_INCLUSION_BUTTON_PRESSED HIGH
+#else
+#define MY_INCLUSION_BUTTON_PRESSED LOW
+#endif
+
 /**********************************
 *  Message Signing Settings
 ***********************************/

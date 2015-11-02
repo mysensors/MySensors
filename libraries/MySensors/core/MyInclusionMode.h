@@ -22,8 +22,6 @@
 
 #include "MySensorCore.h"
 
-unsigned long inclusionStartTime;
-bool inclusionMode;
 
 extern bool gatewayTransportSend(MyMessage &message);
 
