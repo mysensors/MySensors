@@ -188,7 +188,7 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
   MitsubishiTemplate[17] = checksum;
 
   // 40 kHz PWM frequency
-  IR.setFrequency(40);
+  IR.setFrequency(38);
 
   // The Mitsubishi data is repeated twice
   for (int j=0; j<2; j++) {

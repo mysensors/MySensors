@@ -40,6 +40,7 @@
 #include <MideaHeatpumpIR.h>
 #include <MitsubishiHeatpumpIR.h>
 #include <SamsungHeatpumpIR.h>
+#include <SharpHeatpumpIR.h>
 
 // Timer library, https://github.com/JChristensen/Timer
 #include <Timer.h>
@@ -72,7 +73,8 @@ HeatpumpIR *heatpumpIR[] = { new PanasonicCKPHeatpumpIR(), // 0, keep this if yo
                              new FujitsuHeatpumpIR(),      // 6
                              new MitsubishiFDHeatpumpIR(), // 7
                              new MitsubishiFEHeatpumpIR(), // 8
-                             new SamsungHeatpumpIR()       // 9
+                             new SamsungHeatpumpIR(),      // 9
+                             new SharpHeatpumpIR()         // 10
                            };
 
 // IR led on PWM output-capable digital pin 3
