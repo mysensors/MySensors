@@ -13,6 +13,9 @@ SharpHeatpumpIR::SharpHeatpumpIR() : HeatpumpIR()
 
 void SharpHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
+  (void)swingVCmd;
+  (void)swingHCmd;
+
   // Sensible defaults for the heat pump mode
 
   uint8_t powerMode     = SHARP_AIRCON1_MODE_ON;
