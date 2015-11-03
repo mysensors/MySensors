@@ -176,7 +176,7 @@ void FujitsuHeatpumpIR::sendFujitsuTestRun(IRSender& IR)
 void FujitsuHeatpumpIR::sendFujitsuMsg(IRSender& IR, uint8_t msgSize, uint8_t *msg)
 {
   // 40 kHz PWM frequency
-  IR.setFrequency(40);
+  IR.setFrequency(38);
 
   // Header
   IR.mark(FUJITSU_AIRCON1_HDR_MARK);

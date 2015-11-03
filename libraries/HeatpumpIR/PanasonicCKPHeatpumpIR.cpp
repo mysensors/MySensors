@@ -163,7 +163,7 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKP(IRSender& IR, uint8_t operatingMod
 void PanasonicCKPHeatpumpIR::sendPanasonicCKPraw(IRSender& IR, uint8_t sendBuffer[])
 {
   // 40 kHz PWM frequency
-  IR.setFrequency(40);
+  IR.setFrequency(38);
 
   // Header, two first uint8_ts repeated
   IR.mark(PANASONIC_AIRCON1_HDR_MARK);
@@ -228,7 +228,7 @@ void PanasonicCKPHeatpumpIR::sendPanasonicCKPOnOffTimerCancel(IRSender& IR, bool
   }
 
   // 40 kHz PWM frequency
-  IR.setFrequency(40);
+  IR.setFrequency(38);
 
   for (int i=0; i<6; i++) {
     IR.mark(PANASONIC_AIRCON1_HDR_MARK);

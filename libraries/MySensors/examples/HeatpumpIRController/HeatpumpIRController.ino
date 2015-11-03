@@ -1,6 +1,38 @@
-#include <Arduino.h>
+/**
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2015 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
+ *
+ * REVISION HISTORY
+ * Version 1.0 - Toni A - https://github.com/ToniA/arduino-heatpumpir
+ * 
+ * DESCRIPTION
+ * Heatpump controller
+ */ 
 
-// HeatpumpIR libraries, https://github.com/ToniA/arduino-heatpumpir
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+// HeatpumpIR libraries, 
 #include <FujitsuHeatpumpIR.h>
 #include <PanasonicCKPHeatpumpIR.h>
 #include <PanasonicHeatpumpIR.h>
@@ -8,19 +40,19 @@
 #include <MideaHeatpumpIR.h>
 #include <MitsubishiHeatpumpIR.h>
 #include <SamsungHeatpumpIR.h>
+#include <SharpHeatpumpIR.h>
 
 // Timer library, https://github.com/JChristensen/Timer
 #include <Timer.h>
 
 // MySensors libraries
-#include <MySensor.h>
 #include <SPI.h>
+#include <MySensor.h>
 
 // Child ID's of this node
 #define CHILD_1  1
 
 // MySensors definitions
-MySensor gw;
 MyMessage irMsg(CHILD_1, V_IR_RECEIVE);
 
 // -- Hacks for Domoticz start
@@ -41,7 +73,8 @@ HeatpumpIR *heatpumpIR[] = { new PanasonicCKPHeatpumpIR(), // 0, keep this if yo
                              new FujitsuHeatpumpIR(),      // 6
                              new MitsubishiFDHeatpumpIR(), // 7
                              new MitsubishiFEHeatpumpIR(), // 8
-                             new SamsungHeatpumpIR()       // 9
+                             new SamsungHeatpumpIR(),      // 9
+                             new SharpHeatpumpIR()         // 10
                            };
 
 // IR led on PWM output-capable digital pin 3
@@ -54,6 +87,7 @@ int8_t panasonicCKPTimer = 0;
 // Number of supported models
 byte models = 0;
 
+
 void setup()
 {
   Serial.begin(115200);
@@ -63,33 +97,31 @@ void setup()
   models = sizeof(heatpumpIR) / sizeof(HeatpumpIR*);
   Serial.print(F("Number of supported models: ")); Serial.println(models);
 
-  // Auto-assign the node ID, do not forward messages
-  gw.begin(incomingMessage, AUTO, false);
-
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Heatpump Sensor", "1.0");
-
-  // Register a sensors to the MySensors Gateway
-  gw.present(CHILD_1, S_IR, "IR sender");
-
-  // -- Hacks for Domoticz start
-  gw.present(CHILD_2, S_INFO, "IR data");
-  gw.present(CHILD_3, S_LIGHT, "IR send");
   // The TEXT sensor is not created in Domoticz before data is sent
-  gw.send(textMsg.setSensor(CHILD_2).set("00000000"));
+  send(textMsg.setSensor(CHILD_2).set("00000000"));
   // -- Hacks for Domoticz end
 }
 
+void presentation() {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Heatpump Sensor", "1.0");
+
+  // Register a sensors to the MySensors Gateway
+  present(CHILD_1, S_IR, "IR sender");
+
+  // -- Hacks for Domoticz start
+  present(CHILD_2, S_INFO, "IR data");
+  present(CHILD_3, S_LIGHT, "IR send");
+}
 
 void loop()
 {
-  gw.process();
   timer.update();
 }
 
 
 // Handle incoming messages from the MySensors Gateway
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
 
     const char *irData;
 
@@ -105,7 +137,7 @@ void incomingMessage(const MyMessage &message) {
   else if (message.type==V_LIGHT) {
     // When the button is pressed on Domoticz, request the value of the TEXT sensor
     Serial.println(F("Requesting IR code from Domoticz..."));
-    gw.request(CHILD_2, V_TEXT, 0);
+    request(CHILD_2, V_TEXT, 0);
   } else if (message.type==V_TEXT) {
     // TEXT sensor value is received as a result of the previous step
     Serial.println(F("IR code received from Domoticz..."));
@@ -117,7 +149,7 @@ void incomingMessage(const MyMessage &message) {
     sendHeatpumpIRCommand(irData);
 
     // Set the Domoticz switch back to 'OFF' state
-    gw.send(sendMsg.setSensor(CHILD_3).set(0));
+    send(sendMsg.setSensor(CHILD_3).set(0));
   }
   // -- Hacks for Domoticz end
 }

@@ -141,7 +141,7 @@ void CarrierHeatpumpIR::sendCarrier(IRSender& IR, uint8_t operatingMode, uint8_t
   sendBuffer[8] = IR.bitReverse(checksum);
 
   // 40 kHz PWM frequency
-  IR.setFrequency(40);
+  IR.setFrequency(38);
 
   // Header
   IR.mark(CARRIER_AIRCON1_HDR_MARK);
