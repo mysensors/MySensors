@@ -7,6 +7,7 @@
 #include <MideaHeatpumpIR.h>
 #include <MitsubishiHeatpumpIR.h>
 #include <SamsungHeatpumpIR.h>
+#include <SharpHeatpumpIR.h>
 
 IRSender irSender(3); // IR led on Duemilanove digital pin 3
 
@@ -14,7 +15,7 @@ IRSender irSender(3); // IR led on Duemilanove digital pin 3
 HeatpumpIR *heatpumpIR[] = {new PanasonicCKPHeatpumpIR(), new PanasonicDKEHeatpumpIR(), new PanasonicJKEHeatpumpIR(),
                             new PanasonicNKEHeatpumpIR(), new CarrierHeatpumpIR(), new MideaHeatpumpIR(),
                             new FujitsuHeatpumpIR(), new MitsubishiFDHeatpumpIR(), new MitsubishiFEHeatpumpIR(),
-                            new SamsungHeatpumpIR(), NULL};
+                            new SamsungHeatpumpIR(), new SharpHeatpumpIR(), NULL};
 
 void setup()
 {

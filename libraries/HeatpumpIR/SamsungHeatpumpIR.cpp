@@ -90,8 +90,8 @@ void SamsungHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operati
 void SamsungHeatpumpIR::sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV)
 {
   uint8_t SamsungTemplate[] = { 0x02, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00,   // Header part
-                             0x01, 0xD2, 0x0F, 0x00, 0x00, 0x00, 0x00,   // Always the same data on POWER messages
-                             0x01, 0x00, 0xFE, 0x71, 0x00, 0x00, 0x00 }; // The actual data is in this part, on uint8_ts 14-20
+                                0x01, 0xD2, 0x0F, 0x00, 0x00, 0x00, 0x00,   // Always the same data on POWER messages
+                                0x01, 0x00, 0xFE, 0x71, 0x00, 0x00, 0x00 }; // The actual data is in this part, on uint8_ts 14-20
 
   uint8_t SamsungChecksum = 0;
 
@@ -114,15 +114,15 @@ void SamsungHeatpumpIR::sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t ope
   // Set the vertical swing mode on the template message
   SamsungTemplate[16] = swingV;
 
-  // Calculate the uint8_t 15 checksum
+  // Calculate the byte 15 checksum
   // Count the number of ONE bits on message uint8_ts 15-20
   for (uint8_t j=15; j<21; j++) {
-    uint8_t Samsunguint8_t = SamsungTemplate[j];
+    uint8_t Samsungbyte = SamsungTemplate[j];
     for (uint8_t i=0; i<8; i++) {
-      if ( (Samsunguint8_t & 0x01) == 0x01 ) {
+      if ( (Samsungbyte & 0x01) == 0x01 ) {
         SamsungChecksum++;
       }
-      Samsunguint8_t >>= 1;
+      Samsungbyte >>= 1;
     }
   }
 

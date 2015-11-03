@@ -11,6 +11,7 @@ MitsubishiHeatpumpIR	KEYWORD1
 MitsubishiFDHeatpumpIR	KEYWORD1
 MitsubishiFEHeatpumpIR	KEYWORD1
 SamsungHeatpumpIR	KEYWORD1
+SharpHeatpumpIR	KEYWORD1
 
 IRSender	KEYWORD1
 
