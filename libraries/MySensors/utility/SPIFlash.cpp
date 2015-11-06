@@ -32,7 +32,7 @@
 // Please maintain this license information along with authorship
 // and copyright notices in any redistribution of this code
 
-#include <SPIFlash.h>
+#include "SPIFlash.h"
 
 uint8_t SPIFlash::UNIQUEID[8];
 
