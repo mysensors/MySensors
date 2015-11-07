@@ -142,6 +142,7 @@ typedef enum {
 	V_HVAC_SETPOINT_HEAT, // S_HEATER, S_HVAC. HVAC/Heater setpoint (Integer between 0-100)
 	V_HVAC_FLOW_MODE, // S_HVAC. Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn")
 	V_TEXT, // S_INFO. Text message to display on LCD or controller device
+	V_CUSTOM 		// Custom messages used for controller/inter node specific commands, preferably using S_CUSTOM device type.
 } mysensor_data;
 
 
