@@ -81,7 +81,7 @@ inline void transportProcess() {
 	uint8_t command = mGetCommand(_msg);
 	uint8_t type = _msg.type;
 	uint8_t sender = _msg.sender;
-	//uint8_t last = _msg.last;
+	uint8_t last = _msg.last;
 	uint8_t destination = _msg.destination;
 
 	#ifdef MY_SIGNING_FEATURE
@@ -297,6 +297,23 @@ inline void transportProcess() {
 			receive(_msg);
 		}
 		return;
+	} else if (destination == BROADCAST_ADDRESS) {
+		if (command == C_INTERNAL) {
+			if (type==I_DISCOVER && last==_nc.parentNodeId) {
+				// only process if received from parent
+				debug(PSTR("discovery signal\n"));
+				// random wait to minimize collisions
+				wait(hwMillis() & 0x3ff);
+				_sendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
+				// repeat bc signal
+				#if defined(MY_REPEATER_FEATURE)
+				// controlled repeating
+				debug(PSTR("repeat discovery signal\n"));
+				_sendRoute(_msg);
+				#endif
+				return;
+			}
+		}
 	}
 	#if defined(MY_REPEATER_FEATURE)
 		if (_nc.nodeId != AUTO) {
@@ -437,7 +454,11 @@ boolean transportSendRoute(MyMessage &message) {
 			ok = transportSendWrite(_nc.parentNodeId, message);
 		} else {
 			// Relay the message
-			uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS+dest);
+			uint8_t route;
+			// INTERMEDIATE FIX: make sure corrupted routing table is not interfering with BC - observed several cases -tekka
+			if (dest!=BROADCAST_ADDRESS) {
+				route = hwReadConfig(EEPROM_ROUTES_ADDRESS+dest);
+			} else route = BROADCAST_ADDRESS;
 			if (route > GATEWAY_ADDRESS && route < BROADCAST_ADDRESS) {
 				// This message should be forwarded to a child node. If we send message
 				// to this nodes pipe then all children will receive it because the are
