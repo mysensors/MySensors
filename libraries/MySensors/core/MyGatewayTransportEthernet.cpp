@@ -184,19 +184,17 @@ bool _readFromClient(uint8_t i) {
 		char inChar = clients[i].read();
 		if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
 			// if newline then command is complete
-			if (inChar == '\n') {
-				// a command was issued by the client
+			if (inChar == '\n' || inChar == '\r') {
+				// A command was issued by the client
 				// we will now try to send it to the actuator
 				// echo the string to the serial port
 				debug(PSTR("Client %d: %s\n"), i, inputString[i].string);
 
-				// clear the string:
-				inputString[i].idx = 0;
-
-				bool ret = protocolParse(_ethernetMsg, inputString[i].string);
+				// Add string terminator and prepare for the next message
 				inputString[i].string[inputString[i].idx] = 0;
-				if (ret) {
-					return ret;
+				inputString[i].idx = 0;
+				if (protocolParse(_ethernetMsg, inputString[i].string)) {
+					return true;
 				}
 
 			} else {
