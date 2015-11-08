@@ -82,7 +82,7 @@ typedef enum {
 	S_MOISTURE, // Moisture sensor, V_TRIPPED, V_ARMED, V_LEVEL (water content or moisture in percentage?) 
 	S_INFO, // LCD text device / Simple information device on controller, V_TEXT
 	S_GAS, // Gas meter, V_FLOW, V_VOLUME
-	
+	S_GPS, // GPS Sensor, V_POSITION
 } mysensor_sensor;
 
 // Type of sensor data (for set/req/ack messages)
@@ -142,7 +142,8 @@ typedef enum {
 	V_HVAC_SETPOINT_HEAT, // S_HEATER, S_HVAC. HVAC/Heater setpoint (Integer between 0-100)
 	V_HVAC_FLOW_MODE, // S_HVAC. Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn")
 	V_TEXT, // S_INFO. Text message to display on LCD or controller device
-	V_CUSTOM 		// Custom messages used for controller/inter node specific commands, preferably using S_CUSTOM device type.
+	V_CUSTOM, 		// Custom messages used for controller/inter node specific commands, preferably using S_CUSTOM device type.
+	V_POSITION	    // GPS position and altitude. Payload: latitude;longitude;altitude(m). E.g. "55.722526;13.017972;18"
 } mysensor_data;
 
 
