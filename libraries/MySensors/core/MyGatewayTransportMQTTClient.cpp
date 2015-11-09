@@ -23,7 +23,7 @@
 #include "MyGatewayTransport.h"
 #include "MyMessage.h"
 
-// Topic structure: MY_MQTT_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
+// Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
 
 
@@ -53,7 +53,7 @@ MyMessage _mqttMsg;
 bool gatewayTransportSend(MyMessage &message) {
 	if (!_client.connected())
 		return false;
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR(MY_MQTT_TOPIC_PREFIX "/%d/%d/%d/%d/%d"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR(MY_MQTT_PUBLISH_TOPIC_PREFIX "/%d/%d/%d/%d/%d"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
 	debug(PSTR("Sending message on topic: %s\n"), _fmtBuffer);
 	return _client.publish(_fmtBuffer, message.getString(_convBuffer));
 }
@@ -71,7 +71,7 @@ void incomingMQTT(char* topic, byte* payload,
 		switch (i) {
 			case 0: {
 				// Topic prefix
-				if (strcmp_P(str, MY_MQTT_TOPIC_PREFIX) != 0) {
+				if (strcmp_P(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
 					// Message not for us or malformed!
 					return;
 				}
@@ -126,7 +126,7 @@ bool reconnectMQTT() {
 		// Once connected, publish an announcement...
 		//_client.publish("outTopic","hello world");
 		// ... and resubscribe
-		_client.subscribe(MY_MQTT_TOPIC_PREFIX "/+/+/+/+/+");
+		_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
 		return true;
 	}
 	return false;
