@@ -31,9 +31,15 @@
  * http://www.mysensors.org/build/servo
  */
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
 
-#include <MySensor.h>
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h>
 #include <Servo.h> 
 
 #define SERVO_DIGITAL_OUT_PIN 3
@@ -42,7 +48,6 @@
 #define DETACH_DELAY 900 // Tune this to let your movement finish before detaching the servo
 #define CHILD_ID 10   // Id of the sensor child
 
-MySensor gw;
 MyMessage msg(CHILD_ID, V_DIMMER);
 Servo myservo;  // create servo object to control a servo 
                 // a maximum of eight servo objects can be created Sensor gw(9,10);
@@ -51,29 +56,27 @@ bool attachedServo = false;
             
 void setup() 
 { 
-  // Attach method for incoming messages
-  gw.begin(incomingMessage);
+  // Request last servo state at startup
+  request(CHILD_ID, V_DIMMER);
+} 
 
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Servo", "1.0");
+  sendSketchInfo("Servo", "1.0");
 
   // Register all sensors to gw (they will be created as child devices)
-  gw.present(CHILD_ID, S_COVER);
-
-  // Request last servo state at startup
-  gw.request(CHILD_ID, V_DIMMER);
-} 
+  present(CHILD_ID, S_COVER);
+}
 
 void loop() 
 { 
-  gw.process();
   if (attachedServo && millis() - timeOfLastChange > DETACH_DELAY) {
      myservo.detach();
      attachedServo = false;
   }
 } 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   myservo.attach(SERVO_DIGITAL_OUT_PIN);   
   attachedServo = true;
   if (message.type==V_DIMMER) { // This could be M_ACK_VARIABLE or M_SET_VARIABLE
@@ -85,11 +88,11 @@ void incomingMessage(const MyMessage &message) {
    } else if (message.type==V_UP) {
      Serial.println("Servo UP command");
      myservo.write(SERVO_MIN);
-     gw.send(msg.set(100));
+     send(msg.set(100));
    } else if (message.type==V_DOWN) {
      Serial.println("Servo DOWN command");
      myservo.write(SERVO_MAX); 
-     gw.send(msg.set(0));
+     send(msg.set(0));
    } else if (message.type==V_STOP) {
      Serial.println("Servo STOP command");
      myservo.detach();

@@ -6,16 +6,17 @@
 * Barduino 2015, GizMoCuz 2015
 */
 
-#include <MySigningNone.h>
-#include <MyTransportRFM69.h>
-#include <MyTransportNRF24.h>
-#include <MyHwATMega328.h>
-#include <MySigningAtsha204Soft.h>
-#include <MySigningAtsha204.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+#define MY_NODE_ID 254
 
 #include <SPI.h>
 #include <MySensor.h>  
-#include <MyMessage.h>
 
 #define RADIO_ERROR_LED_PIN 4  // Error led pin
 #define RADIO_RX_LED_PIN    6  // Receive led pin
@@ -88,27 +89,6 @@ unsigned long SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
 boolean metric = true;
 long randNumber;
 
-// Instanciate MySersors Gateway
-MyTransportNRF24 transport(RF24_CE_PIN, RF24_CS_PIN, RF24_PA_LEVEL);
-//MyTransportRFM69 transport;
-
-// Message signing driver (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-//MySigningNone signer;
-//MySigningAtsha204Soft signer;
-//MySigningAtsha204 signer;
-
-// Hardware profile 
-MyHwATMega328 hw;
-
-// Construct MySensors library (signer needed if MY_SIGNING_FEATURE is turned on in MyConfig.h)
-// To use LEDs blinking, uncomment WITH_LEDS_BLINKING in MyConfig.h
-#ifdef WITH_LEDS_BLINKING
-  MySensor gw(transport, hw /*, signer*/, RADIO_RX_LED_PIN, RADIO_TX_LED_PIN, RADIO_ERROR_LED_PIN);
-#else
-  MySensor gw(transport, hw /*, signer*/);
-#endif
-
-//MySensor gw;
 
 //Instanciate Messages objects
 
@@ -354,23 +334,23 @@ void setup()
   // Random SEED
   randomSeed(analogRead(0));
   
-  // Start the gateway
-  gw.begin(incomingMessage,254);
-  gw.wait(LONG_WAIT);
+  wait(LONG_WAIT);
   Serial.println("GW Started");
-  
+}
+
+void presentation()  {
   // Send the Sketch Version Information to the Gateway
   Serial.print("Send Sketch Info: ");
-  gw.sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
   Serial.print(SKETCH_NAME);
   Serial.println(SKETCH_VERSION);
-  gw.wait(LONG_WAIT);
+  wait(LONG_WAIT);
   
   // Get controller configuration
   Serial.print("Get Config: ");
-  metric = gw.getConfig().isMetric;
+  metric = getConfig().isMetric;
   Serial.println(metric ? "Metric":"Imperial");
-  gw.wait(LONG_WAIT);
+  wait(LONG_WAIT);
   
   // Init Armed
   #ifdef ID_S_ARMED
@@ -383,170 +363,170 @@ void setup()
   
   #ifdef ID_S_DOOR
     Serial.println("  S_DOOR");
-    gw.present(ID_S_DOOR,S_DOOR,"Outside Door");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_DOOR,S_DOOR,"Outside Door");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_MOTION
     Serial.println("  S_MOTION");
-    gw.present(ID_S_MOTION,S_MOTION,"Outside Motion");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_MOTION,S_MOTION,"Outside Motion");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_SMOKE
     Serial.println("  S_SMOKE");
-    gw.present(ID_S_SMOKE,S_SMOKE,"Kitchen Smoke");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_SMOKE,S_SMOKE,"Kitchen Smoke");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_LIGHT
     Serial.println("  S_LIGHT");
-    gw.present(ID_S_LIGHT,S_LIGHT,"Hall Light");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_LIGHT,S_LIGHT,"Hall Light");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_DIMMER
     Serial.println("  S_DIMMER");
-    gw.present(ID_S_DIMMER,S_DIMMER,"Living room dimmer");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_DIMMER,S_DIMMER,"Living room dimmer");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_COVER
     Serial.println("  S_COVER");
-    gw.present(ID_S_COVER,S_COVER,"Window cover");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_COVER,S_COVER,"Window cover");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_TEMP
     Serial.println("  S_TEMP");
-    gw.present(ID_S_TEMP,S_TEMP,"House Temperarue");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_TEMP,S_TEMP,"House Temperarue");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_HUM
     Serial.println("  S_HUM");
-    gw.present(ID_S_HUM,S_HUM,"Current Humidity");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_HUM,S_HUM,"Current Humidity");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_BARO
     Serial.println("  S_BARO");
-    gw.present(ID_S_BARO,S_BARO," Air pressure");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_BARO,S_BARO," Air pressure");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_WIND
     Serial.println("  S_WIND");
-    gw.present(ID_S_WIND,S_WIND,"Wind Station");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_WIND,S_WIND,"Wind Station");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_RAIN
     Serial.println("  S_RAIN");
-    gw.present(ID_S_RAIN,S_RAIN,"Rain Station");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_RAIN,S_RAIN,"Rain Station");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_UV
     Serial.println("  S_UV");
-    gw.present(ID_S_UV,S_UV,"Ultra Violet");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_UV,S_UV,"Ultra Violet");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_WEIGHT
     Serial.println("  S_WEIGHT");
-    gw.present(ID_S_WEIGHT,S_WEIGHT,"Outdoor Scale");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_WEIGHT,S_WEIGHT,"Outdoor Scale");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_POWER
     Serial.println("  S_POWER");
-    gw.present(ID_S_POWER,S_POWER,"Power Metric");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_POWER,S_POWER,"Power Metric");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_HEATER
     Serial.println("  S_HEATER");
-    gw.present(ID_S_HEATER,S_HEATER,"Garage Heater");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_HEATER,S_HEATER,"Garage Heater");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_DISTANCE
     Serial.println("  S_DISTANCE");
-    gw.present(ID_S_DISTANCE,S_DISTANCE,"Distance Measure");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_DISTANCE,S_DISTANCE,"Distance Measure");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_LIGHT_LEVEL
     Serial.println("  S_LIGHT_LEVEL");
-    gw.present(ID_S_LIGHT_LEVEL,S_LIGHT_LEVEL,"Outside Light Level");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_LIGHT_LEVEL,S_LIGHT_LEVEL,"Outside Light Level");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_LOCK
     Serial.println("  S_LOCK");
-    gw.present(ID_S_LOCK,S_LOCK,"Front Door Lock");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_LOCK,S_LOCK,"Front Door Lock");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_IR
     Serial.println("  S_IR");
-    gw.present(ID_S_IR,S_IR,"Univeral Command");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_IR,S_IR,"Univeral Command");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_WATER
     Serial.println("  S_WATER");
-    gw.present(ID_S_WATER,S_WATER,"Water Level");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_WATER,S_WATER,"Water Level");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_AIR_QUALITY
     Serial.println("  S_AIR_QUALITY");
-    gw.present(ID_S_AIR_QUALITY,S_AIR_QUALITY,"Air Station");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_AIR_QUALITY,S_AIR_QUALITY,"Air Station");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_DUST  
     Serial.println("  S_DUST");
-    gw.present(ID_S_DUST,S_DUST,"Dust Level");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_DUST,S_DUST,"Dust Level");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_SCENE_CONTROLLER
     Serial.println("  S_SCENE_CONTROLLER");
-    gw.present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER,"Scene Controller");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER,"Scene Controller");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_RGB_LIGHT
     Serial.println("  RGB_LIGHT");
-    gw.present(ID_S_RGB_LIGHT,S_RGB_LIGHT,"Mood Light");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_RGB_LIGHT,S_RGB_LIGHT,"Mood Light");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_RGBW_LIGHT
     Serial.println("  RGBW_LIGHT");
-    gw.present(ID_S_RGBW_LIGHT,S_RGBW_LIGHT,"Mood Light 2");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_RGBW_LIGHT,S_RGBW_LIGHT,"Mood Light 2");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_COLOR_SENSOR
     Serial.println("  COLOR_SENSOR");
-    gw.present(ID_S_COLOR_SENSOR,S_COLOR_SENSOR,"Hall Painting");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_COLOR_SENSOR,S_COLOR_SENSOR,"Hall Painting");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_HVAC
     Serial.println("  HVAC");
-    gw.present(ID_S_HVAC,S_HVAC,"HVAC");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_HVAC,S_HVAC,"HVAC");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_MULTIMETER
     Serial.println("  MULTIMETER");
-    gw.present(ID_S_MULTIMETER,S_MULTIMETER,"Electric Staion");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_MULTIMETER,S_MULTIMETER,"Electric Staion");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_SPRINKLER
@@ -562,14 +542,14 @@ void setup()
 
   #ifdef ID_S_MOISTURE
     Serial.println("  S_MOISTURE");
-    gw.present(ID_S_MOISTURE,S_MOISTURE,"Basement Sensor");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_MOISTURE,S_MOISTURE,"Basement Sensor");
+    wait(SHORT_WAIT);
   #endif
   
   #ifdef ID_S_CUSTOM
     Serial.println("  S_CUSTOM");
-    gw.present(ID_S_CUSTOM,S_CUSTOM,"Other Stuff");
-    gw.wait(SHORT_WAIT);
+    present(ID_S_CUSTOM,S_CUSTOM,"Other Stuff");
+    wait(SHORT_WAIT);
   #endif
 
 
@@ -590,13 +570,13 @@ void loop()
   Serial.println(randNumber);
   // Send fake battery level
   Serial.println("Send Battery Level");
-  gw.sendBatteryLevel(randNumber);
-  gw.wait(LONG_WAIT);
+  sendBatteryLevel(randNumber);
+  wait(LONG_WAIT);
   
   // Request time
   Serial.println("Request Time");
-  gw.requestTime(receiveTime);
-  gw.wait(LONG_WAIT);
+  requestTime();
+  wait(LONG_WAIT);
   
   //Read Sensors
   #ifdef ID_S_DOOR 
@@ -730,11 +710,10 @@ void loop()
     custom();
   #endif
   
-  gw.sendBatteryLevel(randNumber);
-  gw.wait(SHORT_WAIT);
-  gw.process();
+  sendBatteryLevel(randNumber);
+  wait(SHORT_WAIT);
   Serial.println("#########################");
-  gw.wait(SLEEP_TIME); //sleep a bit
+  wait(SLEEP_TIME); //sleep a bit
 }
 
 // This is called when a new time value was received
@@ -754,15 +733,15 @@ void door(){
   
   if (randNumber <= 50) {
     Serial.println("Open");
-    gw.send(msg_S_DOOR_T.set(1));
+    send(msg_S_DOOR_T.set(1));
   } else {
     Serial.println("Closed");
-    gw.send(msg_S_DOOR_T.set(0));
+    send(msg_S_DOOR_T.set(0));
   }
   #ifdef ID_S_ARMED
     Serial.print("System is: " );
     Serial.println((isArmed ? "Armed":"Disarmed"));
-    gw.send(msg_S_DOOR_A.set(isArmed));
+    send(msg_S_DOOR_A.set(isArmed));
   #endif
 }
 #endif
@@ -774,16 +753,16 @@ void motion(){
   
   if (randNumber <= 50) {
     Serial.println("Active");
-    gw.send(msg_S_MOTION_T.set(1));
+    send(msg_S_MOTION_T.set(1));
   } else {
     Serial.println("Quiet");
-    gw.send(msg_S_MOTION_T.set(0));
+    send(msg_S_MOTION_T.set(0));
   }
   
   #ifdef ID_S_ARMED
     Serial.print("System is: " );
     Serial.println((isArmed ? "Armed":"Disarmed"));
-    gw.send(msg_S_MOTION_A.set(isArmed));
+    send(msg_S_MOTION_A.set(isArmed));
   #endif
 }
 #endif
@@ -795,16 +774,16 @@ void smoke(){
   
   if (randNumber <= 50) {
     Serial.println("Active");
-    gw.send(msg_S_SMOKE_T.set(1));
+    send(msg_S_SMOKE_T.set(1));
   } else {
     Serial.println("Quiet");
-    gw.send(msg_S_SMOKE_T.set(0));
+    send(msg_S_SMOKE_T.set(0));
   }
   
   #ifdef ID_S_ARMED
     Serial.print("System is: " );
     Serial.println((isArmed ? "Armed":"Disarmed"));
-    gw.send(msg_S_SMOKE_A.set(isArmed));
+    send(msg_S_SMOKE_A.set(isArmed));
   #endif
   
 }
@@ -816,7 +795,7 @@ void light(){
   Serial.print("Light is: " );
   Serial.println((isLightOn ? "On":"Off"));
   
-  gw.send(msg_S_LIGHT.set(isLightOn));
+  send(msg_S_LIGHT.set(isLightOn));
 
 }
 #endif
@@ -827,7 +806,7 @@ void dimmer(){
   Serial.print("Dimmer is set to: " );
   Serial.println(dimmerVal);
   
-  gw.send(msg_S_DIMMER.set(dimmerVal));
+  send(msg_S_DIMMER.set(dimmerVal));
 
 }
 #endif
@@ -839,15 +818,15 @@ void cover(){
 
   if (coverState == 1){
       Serial.println("Opening");
-      gw.send(msg_S_COVER_U.set(1));
+      send(msg_S_COVER_U.set(1));
   }else if (coverState == -1){
       Serial.println("Closing");
-      gw.send(msg_S_COVER_D.set(0));
+      send(msg_S_COVER_D.set(0));
   }else{
       Serial.println("Idle");
-      gw.send(msg_S_COVER_S.set(-1));
+      send(msg_S_COVER_S.set(-1));
   }
-  gw.send(msg_S_COVER_V.set(coverState));
+  send(msg_S_COVER_V.set(coverState));
 }
 #endif
 
@@ -857,7 +836,7 @@ void temp(){
   Serial.print("Temperature is: " );
   Serial.println(map(randNumber,1,100,0,45));
   
-  gw.send(msg_S_TEMP.set(map(randNumber,1,100,0,45)));
+  send(msg_S_TEMP.set(map(randNumber,1,100,0,45)));
   
 }
 #endif
@@ -868,7 +847,7 @@ void hum(){
   Serial.print("Humitidty is: " );
   Serial.println(randNumber);
   
-  gw.send(msg_S_HUM.set(randNumber));
+  send(msg_S_HUM.set(randNumber));
   
 }
 #endif
@@ -882,11 +861,11 @@ void baro(){
   
   Serial.print("Atmosferic Pressure is: " );
   Serial.println(pressure);
-  gw.send(msg_S_BARO_P.set(pressure));
+  send(msg_S_BARO_P.set(pressure));
   
   Serial.print("Weather forecast: " );
   Serial.println(weather[forecast]);
-  gw.send(msg_S_BARO_F.set(weather[forecast]));
+  send(msg_S_BARO_F.set(weather[forecast]));
  
 }
 #endif
@@ -896,15 +875,15 @@ void wind(){
   
   Serial.print("Wind Speed is: " );
   Serial.println(randNumber);
-  gw.send(msg_S_WIND_S.set(randNumber));
+  send(msg_S_WIND_S.set(randNumber));
   
   Serial.print("Wind Gust is: " );
   Serial.println(randNumber+10);
-  gw.send(msg_S_WIND_G.set(randNumber+10));
+  send(msg_S_WIND_G.set(randNumber+10));
   
   Serial.print("Wind Direction is: " );
   Serial.println(map(randNumber,1,100,0,360));
-  gw.send(msg_S_WIND_D.set(map(randNumber,1,100,0,360)));
+  send(msg_S_WIND_D.set(map(randNumber,1,100,0,360)));
   
 }
 #endif
@@ -915,12 +894,12 @@ void rain(){
   Serial.print("Rain ammount  is: " );
   Serial.println(randNumber);
   
-  gw.send(msg_S_RAIN_A.set(randNumber));
+  send(msg_S_RAIN_A.set(randNumber));
   
   Serial.print("Rain rate  is: " );
   Serial.println(randNumber/60);
   
-  gw.send(msg_S_RAIN_R.set(randNumber/60,1));
+  send(msg_S_RAIN_R.set(randNumber/60,1));
 
 }
 #endif
@@ -931,7 +910,7 @@ void uv(){
   Serial.print("Ultra Violet level is: " );
   Serial.println(map(randNumber,1,100,0,15));
   
-  gw.send(msg_S_UV.set(map(randNumber,1,100,0,15)));
+  send(msg_S_UV.set(map(randNumber,1,100,0,15)));
 
 }
 #endif
@@ -942,7 +921,7 @@ void weight(){
   Serial.print("Weight is: " );
   Serial.println(map(randNumber,1,100,0,150));
   
-  gw.send(msg_S_WEIGHT.set(map(randNumber,1,100,0,150)));
+  send(msg_S_WEIGHT.set(map(randNumber,1,100,0,150)));
 
 }
 #endif
@@ -952,11 +931,11 @@ void power(){
   
   Serial.print("Watt is: " );
   Serial.println(map(randNumber,1,100,0,150));  
-  gw.send(msg_S_POWER_W.set(map(randNumber,1,100,0,150)));
+  send(msg_S_POWER_W.set(map(randNumber,1,100,0,150)));
 
   Serial.print("KWH is: " );
   Serial.println(map(randNumber,1,100,0,150));  
-  gw.send(msg_S_POWER_K.set(map(randNumber,1,100,0,150)));
+  send(msg_S_POWER_K.set(map(randNumber,1,100,0,150)));
 
 }
 #endif
@@ -970,19 +949,19 @@ void heater(){
   
   Serial.print("Heater flow state is: " );
   Serial.println(heater_flow_state);
-  gw.send(msg_S_HEATER_FLOW_STATE.set(heater_flow_state.c_str()));
+  send(msg_S_HEATER_FLOW_STATE.set(heater_flow_state.c_str()));
 
 //  Serial.print("Heater on/off is: " );
 //  Serial.println((heater_status==true)?"On":"Off");
-//  gw.send(msg_S_HEATER_STATUS.set(heater_status));
+//  send(msg_S_HEATER_STATUS.set(heater_status));
   
 //  Serial.print("Heater Temperature is: " );
 //  Serial.println(heater_temp,1);
-//  gw.send(msg_S_HEATER_TEMP.set(heater_temp,1));
+//  send(msg_S_HEATER_TEMP.set(heater_temp,1));
 
   Serial.print("Heater Setpoint: " );
   Serial.println(heater_setpoint,1);
-  gw.send(msg_S_HEATER_SET_POINT.set(heater_setpoint,1));
+  send(msg_S_HEATER_SET_POINT.set(heater_setpoint,1));
 }
 #endif
 
@@ -992,7 +971,7 @@ void distance(){
   Serial.print("Distance is: " );
   Serial.println(map(randNumber,1,100,0,150));
   
-  gw.send(msg_S_DISTANCE.set(map(randNumber,1,100,0,150)));
+  send(msg_S_DISTANCE.set(map(randNumber,1,100,0,150)));
 
 }
 #endif
@@ -1003,7 +982,7 @@ void light_level(){
   Serial.print("Light is: " );
   Serial.println(map(randNumber,1,100,0,150));
   
-  gw.send(msg_S_LIGHT_LEVEL.set(map(randNumber,1,100,0,150)));
+  send(msg_S_LIGHT_LEVEL.set(map(randNumber,1,100,0,150)));
 
 }
 #endif
@@ -1013,7 +992,7 @@ void lock(){
 
   Serial.print("Lock is: " );
   Serial.println((isLocked ? "Locked":"Unlocked"));
-  gw.send(msg_S_LOCK.set(isLocked));
+  send(msg_S_LOCK.set(isLocked));
   
 }
 #endif
@@ -1024,8 +1003,8 @@ void ir(){
   Serial.print("Infrared is: " );
   Serial.println(irVal);
   
-  gw.send(msg_S_IR_S.set(irVal));
-  gw.send(msg_S_IR_R.set(irVal));
+  send(msg_S_IR_S.set(irVal));
+  send(msg_S_IR_R.set(irVal));
   
 }
 #endif
@@ -1036,12 +1015,12 @@ void water(){
   Serial.print("Water flow is: " );
   Serial.println(map(randNumber,1,100,0,150));
   
-  gw.send(msg_S_WATER_F.set(map(randNumber,1,100,0,150)));
+  send(msg_S_WATER_F.set(map(randNumber,1,100,0,150)));
   
   Serial.print("Water volume is: " );
   Serial.println(map(randNumber,1,100,0,150));
   
-  gw.send(msg_S_WATER_V.set(map(randNumber,1,100,0,150)));
+  send(msg_S_WATER_V.set(map(randNumber,1,100,0,150)));
 
 }
 #endif
@@ -1052,7 +1031,7 @@ void air(){
   Serial.print("Air Quality is: " );
   Serial.println(randNumber);
   
-  gw.send(msg_S_AIR_QUALITY.set(randNumber));
+  send(msg_S_AIR_QUALITY.set(randNumber));
 
 }
 #endif
@@ -1063,7 +1042,7 @@ void dust(){
   Serial.print("Dust level is: " );
   Serial.println(randNumber);
   
-  gw.send(msg_S_DUST.set(randNumber));
+  send(msg_S_DUST.set(randNumber));
 
 }
 #endif
@@ -1075,8 +1054,8 @@ void scene(){
   Serial.println(scenes[sceneVal]);
   
   if(sceneValPrevious != sceneVal){
-    gw.send(msg_S_SCENE_CONTROLLER_OF.set(sceneValPrevious));
-    gw.send(msg_S_SCENE_CONTROLLER_ON.set(sceneVal));
+    send(msg_S_SCENE_CONTROLLER_OF.set(sceneValPrevious));
+    send(msg_S_SCENE_CONTROLLER_ON.set(sceneVal));
     sceneValPrevious=sceneVal;
   }
    
@@ -1088,11 +1067,11 @@ void rgbLight(){
   
   Serial.print("RGB Light state is: " );
   Serial.println(rgbState);
-  gw.send(msg_S_RGB_LIGHT_V_RGB.set(rgbState.c_str()));
+  send(msg_S_RGB_LIGHT_V_RGB.set(rgbState.c_str()));
   
   Serial.print("RGB Light Watt is: " );
   Serial.println(map(randNumber,1,100,0,150));  
-  gw.send(msg_S_RGB_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
+  send(msg_S_RGB_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
   
 }
 #endif
@@ -1102,11 +1081,11 @@ void rgbwLight(){
   
   Serial.print("RGBW Light state is: " );
   Serial.println(rgbwState);
-  gw.send(msg_S_RGBW_LIGHT_V_RGBW.set(rgbwState.c_str()));
+  send(msg_S_RGBW_LIGHT_V_RGBW.set(rgbwState.c_str()));
   
   Serial.print("RGBW Light Watt is: " );
   Serial.println(map(randNumber,1,100,0,150));  
-  gw.send(msg_S_RGBW_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
+  send(msg_S_RGBW_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
   
 }
 #endif
@@ -1123,7 +1102,7 @@ void color(){
 
   Serial.print("Color state is: " );
   Serial.println(colorState);
-  gw.send(msg_S_COLOR_SENSOR_V_RGB.set(colorState.c_str()));
+  send(msg_S_COLOR_SENSOR_V_RGB.set(colorState.c_str()));
   
 }
 #endif
@@ -1139,23 +1118,23 @@ void hvac(){
   
   Serial.print("HVAC Set Point Heat is: " );
   Serial.println(hvac_SetPointHeat);
-  gw.send(msg_S_HVAC_V_HVAC_SETPOINT_HEAT.set(hvac_SetPointHeat,1));
+  send(msg_S_HVAC_V_HVAC_SETPOINT_HEAT.set(hvac_SetPointHeat,1));
   
   Serial.print("HVAC Set Point Cool is: " );
   Serial.println(hvac_SetPointCool);
-  gw.send(msg_S_HVAC_V_HVAC_SETPOINT_COOL.set(hvac_SetPointCool,1));
+  send(msg_S_HVAC_V_HVAC_SETPOINT_COOL.set(hvac_SetPointCool,1));
   
   Serial.print("HVAC Flow State is: " );
   Serial.println(hvac_FlowState);
-  gw.send(msg_S_HVAC_V_HVAC_FLOW_STATET.set(hvac_FlowState.c_str()));
+  send(msg_S_HVAC_V_HVAC_FLOW_STATET.set(hvac_FlowState.c_str()));
   
   Serial.print("HVAC Flow Mode is: " );
   Serial.println(hvac_FlowMode);
-  gw.send(msg_S_HVAC_V_HVAC_FLOW_MODE.set(hvac_FlowMode.c_str()));
+  send(msg_S_HVAC_V_HVAC_FLOW_MODE.set(hvac_FlowMode.c_str()));
   
   Serial.print("HVAC Speed is: " );
   Serial.println(hvac_Speed);
-  gw.send(msg_S_HVAC_V_HVAC_SPEED.set(hvac_Speed.c_str()));
+  send(msg_S_HVAC_V_HVAC_SPEED.set(hvac_Speed.c_str()));
   
 }
 #endif
@@ -1168,15 +1147,15 @@ void multimeter(){
   
   Serial.print("Impedance is: " );
   Serial.println(impedance);
-  gw.send(msg_S_MULTIMETER_V_IMPEDANCE.set(impedance));
+  send(msg_S_MULTIMETER_V_IMPEDANCE.set(impedance));
 
   Serial.print("Voltage is: " );
   Serial.println(volt);
-  gw.send(msg_S_MULTIMETER_V_VOLTAGE.set(volt));
+  send(msg_S_MULTIMETER_V_VOLTAGE.set(volt));
 
   Serial.print("Current is: " );
   Serial.println(amps);
-  gw.send(msg_S_MULTIMETER_V_CURRENT.set(amps));  
+  send(msg_S_MULTIMETER_V_CURRENT.set(amps));  
 
 }
 #endif
@@ -1198,7 +1177,7 @@ void moisture(){
   Serial.print("Moisture level is: " );
   Serial.println(randNumber);
   
-  gw.send(msg_S_MOISTURE.set(randNumber));
+  send(msg_S_MOISTURE.set(randNumber));
 }
 #endif
 
@@ -1208,17 +1187,17 @@ void custom(){
   Serial.print("Custom value is: " );
   Serial.println(randNumber);
   
-  gw.send(msg_S_CUSTOM_1.set(randNumber));
-  gw.send(msg_S_CUSTOM_2.set(randNumber));
-  gw.send(msg_S_CUSTOM_3.set(randNumber));
-  gw.send(msg_S_CUSTOM_4.set(randNumber));
-  gw.send(msg_S_CUSTOM_5.set(randNumber));
+  send(msg_S_CUSTOM_1.set(randNumber));
+  send(msg_S_CUSTOM_2.set(randNumber));
+  send(msg_S_CUSTOM_3.set(randNumber));
+  send(msg_S_CUSTOM_4.set(randNumber));
+  send(msg_S_CUSTOM_5.set(randNumber));
 
 }
 #endif
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   switch (message.type) {
     #ifdef ID_S_ARMED
     case V_ARMED:

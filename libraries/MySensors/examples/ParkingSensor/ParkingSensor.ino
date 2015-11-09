@@ -39,6 +39,13 @@
 #include <NewPing.h>
 
 #ifdef SEND_STATUS_TO_CONTROLLER
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
 #include <MySensor.h>
 #endif
@@ -61,13 +68,12 @@
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEO_PIN, NEO_GRB + NEO_KHZ400);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEO_PIN, NEO_GRB + NEO_KHZ800);
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
 #ifdef SEND_STATUS_TO_CONTROLLER
 #define CHILD_ID 1
-MySensor gw;
 MyMessage msg(CHILD_ID,V_TRIPPED);
 #endif
 unsigned long sendInterval = 5000;  // Send park status at maximum every 5 second.
@@ -90,17 +96,18 @@ void setup() {
   Serial.println("Starting distance sensor");
   pixels.begin(); // This initializes the NeoPixel library.
   Serial.println("Neopixels initialized");
-#ifdef SEND_STATUS_TO_CONTROLLER
-  gw.begin();
-  gw.sendSketchInfo("Parking Sensor", "1.0");
-  gw.present(CHILD_ID, S_DOOR, "Parking Status");
-#endif
 }
+
+#ifdef SEND_STATUS_TO_CONTROLLER
+void presentation()  {
+  sendSketchInfo("Parking Sensor", "1.0");
+  present(CHILD_ID, S_DOOR, "Parking Status");
+}
+#endif
 
 void loop() {
   unsigned long now = millis();
-  
-  int fullDist = sonar.ping_cm();
+  unsigned int fullDist = (sonar.ping_median() / US_ROUNDTRIP_CM);
 //  Serial.println(fullDist);
   int displayDist = min(fullDist, MAX_DISTANCE);
   if (displayDist == 0 && skipZero<10) {
@@ -120,7 +127,7 @@ void loop() {
       else
         Serial.println("Car Gone");
 #ifdef SEND_STATUS_TO_CONTROLLER
-      gw.send(msg.set(parked)); 
+      send(msg.set(parked)); 
 #endif
       oldParkedStatus = parked;
       lastSend = now;
@@ -137,7 +144,7 @@ void loop() {
         numLightPixels--;
       } else {
         skipZero = 0;
-        int newLightPixels = NUMPIXELS - (NUMPIXELS*(displayDist-PANIC_DISTANCE)/MAX_DISTANCE);
+        int newLightPixels = NUMPIXELS - (NUMPIXELS*(displayDist-PANIC_DISTANCE)/(MAX_DISTANCE-PANIC_DISTANCE));
         if (newLightPixels>numLightPixels) {
           // Fast raise
           numLightPixels += max((newLightPixels - numLightPixels) / 2, 1);

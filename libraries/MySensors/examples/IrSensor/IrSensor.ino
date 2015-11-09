@@ -31,8 +31,15 @@
  * http://www.mysensors.org/build/ir
  */
 
-#include <MySensor.h>
+// Enable debug prints
+//#define MY_DEBUG
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h>
 #include <IRLib.h>
 
 int RECV_PIN = 8;
@@ -44,26 +51,25 @@ IRrecv irrecv(RECV_PIN);
 IRdecode decoder;
 //decode_results results;
 unsigned int Buffer[RAWBUF];
-MySensor gw;
 MyMessage msg(CHILD_1, V_VAR1);
 
 void setup()  
 {  
   irrecv.enableIRIn(); // Start the ir receiver
   decoder.UseExtnBuf(Buffer);
-  gw.begin(incomingMessage);
 
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("IR Sensor", "1.0");
-
-  // Register a sensors to gw. Use binary light for test purposes.
-  gw.present(CHILD_1, S_LIGHT);
 }
 
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("IR Sensor", "1.0");
+
+  // Register a sensors to  Use binary light for test purposes.
+  present(CHILD_1, S_LIGHT);
+}
 
 void loop() 
 {
-  gw.process();
   if (irrecv.GetResults(&decoder)) {
     irrecv.resume(); 
     decoder.decode();
@@ -72,13 +78,13 @@ void loop()
     char buffer[10];
     sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
-    gw.send(msg.set(buffer));
+    send(msg.set(buffer));
   }
 }
 
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LIGHT) {
      int incomingRelayStatus = message.getInt();

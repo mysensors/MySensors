@@ -31,31 +31,42 @@
  *
  *
  * Version 1.3 - Thomas Bowman Mørch
- * Improved transmission logic, eliminating spurious transmissions (when temperatuere / humidity fluctuates 1 up and down between measurements)
- * 
+ * Improved transmission logic, eliminating spurious transmissions (when temperatuere / humidity fluctuates 1 up and down between measurements) 
  * Added OTA boot mode, need to hold A1 low while applying power. (uses slightly more power as it's waiting for bootloader messages)
+ * 
+ * Version 1.4 - Thomas Bowman Mørch
+ * 
+ * Corrected division in the code deciding whether to transmit or not, that resulted in generating an integer. Now it's generating floats as expected.
+ * Simplified detection for OTA bootloader, now detecting if MY_OTA_FIRMWARE_FEATURE is defined. If this is defined sensebender automaticly waits 300mS after each transmission
+ * Moved Battery status messages, so they are transmitted together with normal sensor updates (but only every 60th minute)
  * 
  */
 
+// Enable debug prints to serial monitor
+//#define MY_DEBUG 
 
+// Define a static node address, remove if you want auto address assignment
+//#deine MY_NODE_ID 3
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+#include <SPI.h>
 #include <MySensor.h>
 #include <Wire.h>
 #include <SI7021.h>
-#include <SPI.h>
-#include "utility/SPIFlash.h"
+#include "drivers/SPIFlash/SPIFlash.cpp"
 #include <EEPROM.h>  
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>
 #include <RunningAverage.h>
 //#include <avr/power.h>
 
-// Define a static node address, remove if you want auto address assignment
-//#define NODE_ADDRESS   3
-
 // Uncomment the line below, to transmit battery voltage as a normal sensor value
 //#define BATT_SENSOR    199
 
-#define RELEASE "1.3"
+#define RELEASE "1.4"
 
 #define AVERAGES 2
 
@@ -82,7 +93,6 @@
 
 // Pin definitions
 #define TEST_PIN       A0
-#define OTA_ENABLE     A1
 #define LED_PIN        A2
 #define ATSHA204_PIN   17 // A3
 
@@ -91,8 +101,6 @@ atsha204Class sha204(sha204Pin);
 
 SI7021 humiditySensor;
 SPIFlash flash(8, 0x1F65);
-
-MySensor gw;
 
 // Sensor messages
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
@@ -107,7 +115,6 @@ int measureCount = 0;
 int sendBattery = 0;
 boolean isMetric = true;
 boolean highfreq = true;
-boolean ota_enabled = false; 
 boolean transmission_occured = false;
 
 // Storage of old measurements
@@ -138,26 +145,13 @@ void setup() {
   digitalWrite(TEST_PIN, HIGH); // Enable pullup
   if (!digitalRead(TEST_PIN)) testMode();
 
-  pinMode(OTA_ENABLE, INPUT);
-  digitalWrite(OTA_ENABLE, HIGH);
-  if (!digitalRead(OTA_ENABLE)) {
-    ota_enabled = true;
-  }
-
   // Make sure that ATSHA204 is not floating
   pinMode(ATSHA204_PIN, INPUT);
   digitalWrite(ATSHA204_PIN, HIGH);
   
   digitalWrite(TEST_PIN,LOW);
-  digitalWrite(OTA_ENABLE, LOW); // remove pullup, save some power.
   
   digitalWrite(LED_PIN, HIGH); 
-
-#ifdef NODE_ADDRESS
-  gw.begin(NULL, NODE_ADDRESS, false);
-#else
-  gw.begin(NULL,AUTO,false);
-#endif
 
   humiditySensor.begin();
 
@@ -165,23 +159,28 @@ void setup() {
 
   Serial.flush();
   Serial.println(F(" - Online!"));
-  gw.sendSketchInfo("Sensebender Micro", RELEASE);
   
-  gw.present(CHILD_ID_TEMP,S_TEMP);
-  gw.present(CHILD_ID_HUM,S_HUM);
-  
-#ifdef BATT_SENSOR
-  gw.present(BATT_SENSOR, S_POWER);
-#endif
-
-  
-  isMetric = gw.getConfig().isMetric;
+  isMetric = getConfig().isMetric;
   Serial.print(F("isMetric: ")); Serial.println(isMetric);
   raHum.clear();
   sendTempHumidityMeasurements(false);
   sendBattLevel(false);
-  if (ota_enabled) Serial.println("OTA FW update enabled");
+  
+#ifdef MY_OTA_FIRMWARE_FEATURE  
+  Serial.println("OTA FW update enabled");
+#endif
 
+}
+
+void presentation()  {
+  sendSketchInfo("Sensebender Micro", RELEASE);
+
+  present(CHILD_ID_TEMP,S_TEMP);
+  present(CHILD_ID_HUM,S_HUM);
+    
+#ifdef BATT_SENSOR
+  present(BATT_SENSOR, S_POWER);
+#endif
 }
 
 
@@ -196,31 +195,32 @@ void loop() {
   sendBattery ++;
   bool forceTransmit = false;
   transmission_occured = false;
+#ifndef MY_OTA_FIRMWARE_FEATURE
   if ((measureCount == 5) && highfreq) 
   {
-    if (!ota_enabled) clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
+    clock_prescale_set(clock_div_8); // Switch to 1Mhz for the reminder of the sketch, save power.
     highfreq = false;
   } 
+#endif
   
   if (measureCount > FORCE_TRANSMIT_INTERVAL) { // force a transmission
     forceTransmit = true; 
     measureCount = 0;
   }
     
-  gw.process();
-
   sendTempHumidityMeasurements(forceTransmit);
-  if (sendBattery > 60) 
+/*  if (sendBattery > 60) 
   {
      sendBattLevel(forceTransmit); // Not needed to send battery info that often
      sendBattery = 0;
+  }*/
+#ifdef MY_OTA_FIRMWARE_FEATURE
+  if (transmission_occured) {
+      wait(OTA_WAIT_PERIOD);
   }
+#endif
 
-  if (ota_enabled & transmission_occured) {
-      gw.wait(OTA_WAIT_PERIOD);
-  }
-
-  gw.sleep(MEASURE_INTERVAL);  
+  sleep(MEASURE_INTERVAL);  
 }
 
 
@@ -240,7 +240,7 @@ void sendTempHumidityMeasurements(bool force)
   
   raHum.addValue(data.humidityPercent);
   
-  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100);
+  float diffTemp = abs(lastTemperature - (isMetric ? data.celsiusHundredths : data.fahrenheitHundredths)/100.0);
   float diffHum = abs(lastHumidity - raHum.getAverage());
 
   Serial.print(F("TempDiff :"));Serial.println(diffTemp);
@@ -258,11 +258,15 @@ void sendTempHumidityMeasurements(bool force)
     Serial.print("T: ");Serial.println(temperature);
     Serial.print("H: ");Serial.println(humidity);
     
-    gw.send(msgTemp.set(temperature,1));
-    gw.send(msgHum.set(humidity));
+    send(msgTemp.set(temperature,1));
+    send(msgHum.set(humidity));
     lastTemperature = temperature;
     lastHumidity = humidity;
     transmission_occured = true;
+    if (sendBattery > 60) {
+     sendBattLevel(true); // Not needed to send battery info that often
+     sendBattery = 0;
+    }
   }
 }
 
@@ -282,7 +286,7 @@ void sendBattLevel(bool force)
     lastBattery = vcc;
 
 #ifdef BATT_SENSOR
-    gw.send(msgBatt.set(vcc));
+    send(msgBatt.set(vcc));
 #endif
 
     // Calculate percentage
@@ -290,7 +294,7 @@ void sendBattLevel(bool force)
     vcc = vcc - 1900; // subtract 1.9V from vcc, as this is the lowest voltage we will operate at
     
     long percent = vcc / 14.0;
-    gw.sendBatteryLevel(percent);
+    sendBatteryLevel(percent);
     transmission_occured = true;
   }
 }

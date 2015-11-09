@@ -36,10 +36,15 @@
  * License: Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)
  */
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
 #include <MySensor.h>  
-#include <MySensor.h>  
-#include <SPI.h>
 
 #define UV_SENSOR_ANALOG_PIN 0
 
@@ -47,7 +52,6 @@
 
 unsigned long SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
 
-MySensor gw;
 MyMessage uvMsg(CHILD_ID_UV, V_UV);
 
 unsigned long lastSend =0; 
@@ -55,15 +59,13 @@ float uvIndex;
 float lastUV = -1;
 uint16_t uvIndexValue [12] = { 50, 227, 318, 408, 503, 606, 696, 795, 881, 976, 1079, 1170};
 
-void setup()  
-{ 
-  gw.begin();
 
+void presentation()  {
   // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("UV Sensor", "1.2");
+  sendSketchInfo("UV Sensor", "1.2");
 
   // Register all sensors to gateway (they will be created as child devices)
-  gw.present(CHILD_ID_UV, S_UV);
+  present(CHILD_ID_UV, S_UV);
 }
 
 void loop()      
@@ -100,9 +102,9 @@ void loop()
   //Send value to gateway if changed, or at least every 5 minutes
   if ((uvIndex != lastUV)||(currentTime-lastSend >= 5UL*60UL*1000UL)) {
       lastSend=currentTime;
-      gw.send(uvMsg.set(uvIndex,2));
+      send(uvMsg.set(uvIndex,2));
       lastUV = uvIndex;
   }
   
-  gw.sleep(SLEEP_TIME);
+  sleep(SLEEP_TIME);
 }

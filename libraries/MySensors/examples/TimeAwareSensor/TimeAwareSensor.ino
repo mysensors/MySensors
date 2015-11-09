@@ -25,24 +25,29 @@
  * Example sketch showing how to request time from controller. 
  */
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
 
 #include <SPI.h>
 #include <MySensor.h>  
 #include <Time.h>  
 
-MySensor gw;
 boolean timeReceived = false;
 unsigned long lastUpdate=0, lastRequest=0;
 
 void setup()  
 {  
-  gw.begin();
-
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Clock", "1.0");
-
   // Request time from controller. 
-  gw.requestTime(receiveTime);  
+  requestTime();  
+}
+
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Clock", "1.0");
 }
 
 // This is called when a new time value was received
@@ -55,15 +60,14 @@ void receiveTime(unsigned long time) {
 void loop()     
 {     
   unsigned long now = millis();
-  gw.process();
-  
-   // If no time has been received yet, request it every 10 second from controller
+
+  // If no time has been received yet, request it every 10 second from controller
   // When time has been received, request update every hour
   if ((!timeReceived && (now-lastRequest) > (10UL*1000UL))
     || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
     // Request time from controller. 
     Serial.println("requesting time");
-    gw.requestTime(receiveTime);  
+    requestTime();  
     lastRequest = now;
   }
   

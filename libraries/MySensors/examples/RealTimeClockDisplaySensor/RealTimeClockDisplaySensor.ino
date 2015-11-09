@@ -39,7 +39,13 @@
  *
  */
 
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
 
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+ 
 #include <SPI.h>
 #include <MySensor.h>  
 #include <Time.h>  
@@ -47,7 +53,6 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-MySensor gw;
 boolean timeReceived = false;
 unsigned long lastUpdate=0, lastRequest=0;
 
@@ -57,19 +62,19 @@ LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 
 void setup()  
 {  
-  gw.begin();
-
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("RTC Clock", "1.0");
-  
   // the function to get the time from the RTC
   setSyncProvider(RTC.get);  
 
   // Request latest time from controller at startup
-  gw.requestTime(receiveTime);  
+  requestTime();  
   
   // initialize the lcd for 16 chars 2 lines and turn on backlight
   lcd.begin(16,2); 
+}
+
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("RTC Clock", "1.0");
 }
 
 // This is called when a new time value was received
@@ -84,7 +89,6 @@ void receiveTime(unsigned long controllerTime) {
 void loop()     
 {     
   unsigned long now = millis();
-  gw.process();
   
   // If no time has been received yet, request it every 10 second from controller
   // When time has been received, request update every hour
@@ -92,7 +96,7 @@ void loop()
     || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
     // Request time from controller. 
     Serial.println("requesting time");
-    gw.requestTime(receiveTime);  
+    requestTime();  
     lastRequest = now;
   }
   

@@ -49,9 +49,17 @@
  * Connect radio according as usual(you can skip IRQ pin) 
  * http://www.mysensors.org/build/connect_radio 
  */
- 
-#include <MySensor.h>  
+
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h>  
 
 
 #define CHILD_ID 99   // Id of the sensor child
@@ -80,10 +88,9 @@ int knockSensorValue = 0;            // Last reading of the knock sensor.
 boolean programModeActive = false;   // True if we're trying to program a new knock.
 
 bool lockStatus;
-MySensor gw;
+
 MyMessage lockMsg(CHILD_ID, V_LOCK_STATUS);
 
- 
 void setup() {
   
   pinMode(ledPin, OUTPUT); 
@@ -92,24 +99,23 @@ void setup() {
   pinMode(programButton, INPUT);
   digitalWrite(programButton, HIGH); // Enable internal pull up 
 
-  gw.begin(incomingMessage);
-  
-  gw.sendSketchInfo("Secret Knock", "1.0");
-  gw.present(CHILD_ID, S_LOCK);
-  
   readSecretKnock();   // Load the secret knock (if any) from EEPROM.
   
   digitalWrite(lockPin, HIGH); // Unlock the door for a bit when we power up. For system check and to allow a way in if the key is forgotten
   delay(500);                  // Wait a short time
   
-  lockStatus = gw.loadState(0);    // Read last lock status from eeprom
+  lockStatus = loadState(0);    // Read last lock status from eeprom
   setLockState(lockStatus, true); // Now set the last known state and send it to controller 
 
   delay(500);          // This delay is here because the solenoid lock returning to place can otherwise trigger and inadvertent knock.
 }
+
+void presentation()  {
+  sendSketchInfo("Secret Knock", "1.0");
+  present(CHILD_ID, S_LOCK);
+}
  
 void loop() {
-  gw.process(); // Process incomming messages
   // Listen for any knock at all.
   knockSensorValue = digitalRead(knockSensor);
   if (digitalRead(programButton) == LOW){  // is the program button pressed?
@@ -219,17 +225,17 @@ void listenToSecretKnock(){
  
  
 // Unlocks the door.
-void setLockState(bool state, bool send){
+void setLockState(bool state, bool doSend){
   if (state) 
      Serial.println("open lock");
   else
      Serial.println("close lock");
-  if (send)
-    gw.send(lockMsg.set(state));
+  if (doSend)
+    send(lockMsg.set(state));
   
   digitalWrite(ledPin, state);
   digitalWrite(lockPin, state);
-  gw.saveState(0,state);
+  saveState(0,state);
   lockStatus = state;
   delay(500);   // This delay is here because releasing the latch can cause a vibration that will be sensed as a knock.
 }
@@ -298,10 +304,10 @@ boolean validateKnock(){
 // reads the secret knock from EEPROM. (if any.)
 void readSecretKnock(){
   byte reading;
-  reading = gw.loadState(1);
+  reading = loadState(1);
   if (reading == eepromValid){    // only read EEPROM if the signature byte is correct.
     for (int i=0; i < maximumKnocks ;i++){
-      secretCode[i] =  gw.loadState(i+2);
+      secretCode[i] =  loadState(i+2);
     }
   }
 }
@@ -309,11 +315,11 @@ void readSecretKnock(){
  
 //saves a new pattern too eeprom
 void saveSecretKnock(){
-  gw.saveState(1, 0); // clear out the signature. That way we know if we didn't finish the write successfully.
+  saveState(1, 0); // clear out the signature. That way we know if we didn't finish the write successfully.
   for (int i=0; i < maximumKnocks; i++){
-    gw.saveState(i+2, secretCode[i]);
+    saveState(i+2, secretCode[i]);
   }
-  gw.saveState(1, eepromValid);  // all good. Write the signature so we'll know it's all good.
+  saveState(1, eepromValid);  // all good. Write the signature so we'll know it's all good.
 }
  
 // Plays back the pattern of the knock in blinks and beeps
@@ -360,7 +366,7 @@ void chirp(int playTime, int delayTime){
 
 
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS) {
      // Change relay state

@@ -1,9 +1,18 @@
 // Sensebender Micro board
 // Simple blinking FW to test OTA updates
 
-#include <MySensor.h>
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable repeater feature
+#define MY_REPEATER_FEATURE
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
-#include "utility/SPIFlash.h"
+#include <MySensor.h>
 
 #define SketchName "Sensebender Blink"
 #define SketchVersion "20150721"
@@ -17,32 +26,27 @@
 unsigned long lastUpdate = 0;
 boolean LED_STATUS = false;
 
-SPIFlash flash(8, 0x1F65);
-MySensor gw;
 MyMessage msgCounter(CHILD_ID_COUNTER, V_VAR1);
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LED_STATUS);
-  
-  // repeater mode on
-  gw.begin(NULL,NODE_ID,true);
-  gw.sendSketchInfo(SketchName, SketchVersion);  
-  
-  gw.present(CHILD_ID_COUNTER, S_CUSTOM,"Millis()"); 
-  
+}
+
+void presentation()  {
+  sendSketchInfo(SketchName, SketchVersion);  
+  present(CHILD_ID_COUNTER, S_CUSTOM,"Millis()"); 
 }
 
 void loop() {
-  gw.wait(BLINK_INTERVAL);
+  wait(BLINK_INTERVAL);
   LED_STATUS ^= true;
   digitalWrite(LED_PIN, LED_STATUS);
   
   if (millis()-lastUpdate > REPORT_TIME) {
-    gw.send(msgCounter.set( millis() ));
+    send(msgCounter.set( millis() ));
     lastUpdate = millis();
   }
-  
 }  
   
 

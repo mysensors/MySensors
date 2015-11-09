@@ -9,7 +9,7 @@
 *   SEN-39001 (universal applications)
 *   ---> http://www.playingwithfusion.com/productview.php?pdid=22
 *
-* Copyright © 2014 Playing With Fusion, Inc.
+* Copyright ï¿½ 2014 Playing With Fusion, Inc.
 * SOFTWARE LICENSE AGREEMENT: This code is released under the MIT License.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
@@ -51,7 +51,7 @@
 #include "avr/pgmspace.h"
 #include "util/delay.h"
 #include "stdlib.h"
-#include "SPI.h"
+#include <SPI.h>
 
 class PWF_AS3935
 {

@@ -42,9 +42,16 @@
  * Attach a optional relay or solonoid lock to pin 4
  * http://www.mysensors.org/build/rfid 
  */
- 
-#include <MySensor.h>  
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h>  
 #include <Wire.h>
 #include <PN532_I2C.h>
 #include <PN532.h>
@@ -62,11 +69,9 @@ int keyCount = sizeof validKeys / maxKeyLength;
 
 #define CHILD_ID 99   // Id of the sensor child
  
-/*Pin definitions*/
+// Pin definition
 const int lockPin = 4;         // (Digital 4) The pin that activates the relay/solenoid lock.
-
 bool lockStatus;
-MySensor gw;
 MyMessage lockMsg(CHILD_ID, V_LOCK_STATUS);
 PN532_I2C pn532i2c(Wire);
 PN532 nfc(pn532i2c);
@@ -92,19 +97,16 @@ void setup() {
   // configure board to read RFID tags
   nfc.SAMConfig();
 
-  // Init mysensors library
-  gw.begin(incomingMessage);
-  
-  gw.sendSketchInfo("RFID Lock", "1.0");
-  gw.present(CHILD_ID, S_LOCK);
-  
-  lockStatus = gw.loadState(0);    // Read last lock status from eeprom
+  lockStatus = loadState(0);    // Read last lock status from eeprom
   setLockState(lockStatus, true); // Now set the last known state and send it to controller 
+}
+
+void presentation()  {
+  sendSketchInfo("RFID Lock", "1.0");
+  present(CHILD_ID, S_LOCK);
 }
  
 void loop() {
-  gw.process(); // Process incomming messages
-
   boolean success;
   uint8_t key[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
   uint8_t currentKeyLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
@@ -155,19 +157,19 @@ void loop() {
  
  
 // Unlocks the door.
-void setLockState(bool state, bool send){
+void setLockState(bool state, bool doSend){
   if (state) 
      Serial.println("open lock");
   else
      Serial.println("close lock");
-  if (send)
-    gw.send(lockMsg.set(state));
+  if (doSend)
+    send(lockMsg.set(state));
   digitalWrite(lockPin, state);
-  gw.saveState(0,state);
+  saveState(0,state);
   lockStatus = state;
 }
  
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS) {
      // Change relay state

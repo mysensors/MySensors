@@ -34,8 +34,15 @@
  * http://www.mysensors.org/build/pulse_water
  */
 
-#include <MySensor.h>  
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
 #include <SPI.h>
+#include <MySensor.h>  
 
 #define DIGITAL_INPUT_SENSOR 3                  // The digital input you attached your sensor.  (Only 2 and 3 generates interrupt!)
 #define SENSOR_INTERRUPT DIGITAL_INPUT_SENSOR-2        // Usually the interrupt = pin -2 (on uno/nano anyway)
@@ -50,7 +57,6 @@
 
 unsigned long SEND_FREQUENCY = 30000;           // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 
-MySensor gw;
 MyMessage flowMsg(CHILD_ID,V_FLOW);
 MyMessage volumeMsg(CHILD_ID,V_VOLUME);
 MyMessage lastCounterMsg(CHILD_ID,V_VAR1);
@@ -71,31 +77,29 @@ unsigned long lastPulse =0;
 
 void setup()  
 {  
-  gw.begin(incomingMessage); 
-
   // initialize our digital pins internal pullup resistor so one pulse switches from high to low (less distortion) 
   pinMode(DIGITAL_INPUT_SENSOR, INPUT_PULLUP);
   
-  // Send the sketch version information to the gateway and Controller
-  gw.sendSketchInfo("Water Meter", "1.1");
-
-  // Register this device as Waterflow sensor
-  gw.present(CHILD_ID, S_WATER);       
-
   pulseCount = oldPulseCount = 0;
 
   // Fetch last known pulse count value from gw
-  gw.request(CHILD_ID, V_VAR1);
+  request(CHILD_ID, V_VAR1);
 
   lastSend = lastPulse = millis();
 
   attachInterrupt(SENSOR_INTERRUPT, onPulse, FALLING);
 }
 
+void presentation()  {
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Water Meter", "1.1");
+
+  // Register this device as Waterflow sensor
+  present(CHILD_ID, S_WATER);       
+}
 
 void loop()     
 { 
-  gw.process();
   unsigned long currentTime = millis();
   
     // Only send values at a maximum frequency or woken up from sleep
@@ -105,7 +109,7 @@ void loop()
     
     if (!pcReceived) {
       //Last Pulsecount not yet received from controller, request it again
-      gw.request(CHILD_ID, V_VAR1);
+      request(CHILD_ID, V_VAR1);
       return;
     }
 
@@ -118,7 +122,7 @@ void loop()
       // Check that we dont get unresonable large flow value. 
       // could hapen when long wraps or false interrupt triggered
       if (flow<((unsigned long)MAX_FLOW)) {
-        gw.send(flowMsg.set(flow, 2));                   // Send flow value to gw
+        send(flowMsg.set(flow, 2));                   // Send flow value to gw
       }  
     }
   
@@ -134,7 +138,7 @@ void loop()
       Serial.print("pulsecount:");
       Serial.println(pulseCount);
 
-      gw.send(lastCounterMsg.set(pulseCount));                  // Send  pulsecount value to gw in VAR1
+      send(lastCounterMsg.set(pulseCount));                  // Send  pulsecount value to gw in VAR1
 
       double volume = ((double)pulseCount/((double)PULSE_FACTOR));     
       if ((volume != oldvolume)||(!SLEEP_MODE)) {
@@ -143,16 +147,16 @@ void loop()
         Serial.print("volume:");
         Serial.println(volume, 3);
         
-        gw.send(volumeMsg.set(volume, 3));               // Send volume value to gw
+        send(volumeMsg.set(volume, 3));               // Send volume value to gw
       } 
     }
   }
   if (SLEEP_MODE) {
-    gw.sleep(SEND_FREQUENCY);
+    sleep(SEND_FREQUENCY);
   }
 }
 
-void incomingMessage(const MyMessage &message) {
+void receive(const MyMessage &message) {
   if (message.type==V_VAR1) {
     unsigned long gwPulseCount=message.getULong();
     pulseCount += gwPulseCount;

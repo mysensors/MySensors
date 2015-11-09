@@ -34,12 +34,21 @@
  by @BulldogLowell and @PeteWill for free public use
 
  */
+
+// Enable debug prints to serial monitor
+#define MY_DEBUG 
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+
+//#define MY_NODE_ID 7
+
 #include <SPI.h>
 #include <MySensor.h>
 #include <math.h>
 #include <Time.h>
 
-#define NODE_ID 24 //or AUTO to let controller assign
 #define SKETCH_NAME "Rain Gauge"
 #define SKETCH_VERSION "1.4.1a"
 
@@ -68,8 +77,6 @@
   #define DEBUG_PRINTLN(x)
   #define SERIAL_START(x)
 #endif
-//
-MySensor gw;
 //
 MyMessage msgRainRate(CHILD_ID_RAIN_LOG, V_RAINRATE);
 MyMessage msgRain(CHILD_ID_RAIN_LOG, V_RAIN);
@@ -139,25 +146,14 @@ void setup()
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   //
-  //Let's get the controller talking to the Arduino
-  gw.begin(getVariables, NODE_ID);
-  gw.sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
-  gw.wait(DWELL_TIME);
-  gw.present(CHILD_ID_RAIN_LOG, S_RAIN);
-  gw.wait(DWELL_TIME);
-  gw.present(CHILD_ID_TRIPPED_INDICATOR, S_MOTION);
-  gw.wait(DWELL_TIME);
-  DEBUG_PRINTLN(F("Sensor Presentation Complete"));
-  //
   //Sync time with the server, this will be called hourly in order to keep time from creeping with the crystal
   //
   unsigned long functionTimeout = millis();
   while (timeStatus() == timeNotSet && millis() - functionTimeout < 30000UL)
   {
-    gw.process();
-    gw.requestTime(receiveTime);
+    requestTime();
     DEBUG_PRINTLN(F("Getting Time"));
-    gw.wait(1000); // call once per second
+    wait(1000); // call once per second
     DEBUG_PRINTLN(F("."));
   }
   currentHour = hour();
@@ -168,7 +164,7 @@ void setup()
   boolean isDataOnEeprom = false;
   for (int i = 0; i < E_BUFFER_LENGTH; i++)
   {
-    byte locator = gw.loadState(EEPROM_BUFFER_LOCATION + i);
+    byte locator = loadState(EEPROM_BUFFER_LOCATION + i);
     if (locator == 0xFE)  // found the EEPROM circular buffer index
     {
       eepromIndex = EEPROM_BUFFER_LOCATION + i;
@@ -185,36 +181,30 @@ void setup()
   {
     DEBUG_PRINTLN(F("I didn't find valid EEPROM Index, so I'm writing one to location 0"));
     eepromIndex = EEPROM_BUFFER_LOCATION;
-    gw.saveState(eepromIndex, 0xFE);
-    gw.saveState(eepromIndex + 1, 0xFE);
+    saveState(eepromIndex, 0xFE);
+    saveState(eepromIndex + 1, 0xFE);
     //then I will clear out any bad data
     for (int i = 2; i <= E_BUFFER_LENGTH; i++)
     {
-      gw.saveState(i, 0x00);
+      saveState(i, 0x00);
     }
   }
   dataMillis = millis();
   lastTipTime = millis() - oneHour; //why is this -oneHour?? Doesn't millis() start at 0 when first powered on?
   //
-  gw.request(CHILD_ID_TRIPPED_INDICATOR, V_VAR1);
-  gw.wait(DWELL_TIME);
-  gw.request(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
-  gw.wait(DWELL_TIME);
+  request(CHILD_ID_TRIPPED_INDICATOR, V_VAR1);
+  wait(DWELL_TIME);
+  request(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
+  wait(DWELL_TIME);
   //
 #ifdef DHT_ON
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN);
-  // Register all sensors to gw (they will be created as child devices)
-  gw.present(CHILD_ID_HUM, S_HUM);
-  gw.wait(DWELL_TIME);
-  gw.present(CHILD_ID_TEMP, S_TEMP);
-  gw.wait(DWELL_TIME);
-  metric = gw.getConfig().isMetric;
-  gw.wait(DWELL_TIME);
+  wait(DWELL_TIME);
+  metric = getConfig().isMetric;
 #endif
   //
 #ifdef LUX_ON
-  gw.present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
-  gw.wait(DWELL_TIME);
+  wait(DWELL_TIME);
   lightSensor.begin();
 #endif
   //
@@ -222,9 +212,33 @@ void setup()
   transmitRainData();
 }
 
+
+void presentation()  {
+  // Register all sensors to gw (they will be created as child devices)
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
+  wait(DWELL_TIME);
+  present(CHILD_ID_RAIN_LOG, S_RAIN);
+  wait(DWELL_TIME);
+  present(CHILD_ID_TRIPPED_INDICATOR, S_MOTION);
+  wait(DWELL_TIME);
+
+#ifdef DHT_ON
+  present(CHILD_ID_HUM, S_HUM);
+  wait(DWELL_TIME);
+  present(CHILD_ID_TEMP, S_TEMP);
+  wait(DWELL_TIME);
+#endif
+
+
+#ifdef LUX_ON
+  present(CHILD_ID_LIGHT, S_LIGHT_LEVEL);
+#endif
+
+  DEBUG_PRINTLN(F("Sensor Presentation Complete"));
+}
+
 void loop()
 {
-  gw.process();
   if (state)
   {
     prettyFade();  // breathe if tripped
@@ -261,8 +275,8 @@ void loop()
   state = (measure >= (rainSensorThreshold * 100));
   if (state != oldState)
   {
-    gw.send(msgTripped.set(state));
-    gw.wait(DWELL_TIME);
+    send(msgTripped.set(state));
+    wait(DWELL_TIME);
     DEBUG_PRINT(F("New Sensor State... Sensor: "));
     DEBUG_PRINTLN(state ? "Tripped" : "Not Tripped");
     oldState = state;
@@ -274,14 +288,14 @@ void loop()
     DEBUG_PRINTLN(F("Sensor Tipped"));
     DEBUG_PRINT(F("rainBucket [0] value: "));
     DEBUG_PRINTLN(rainBucket [0]);
-    gw.send(msgRain.set((float)rainTotal(currentHour) / 100, 1)); //Calculate the total rain for the day
-    gw.wait(DWELL_TIME);
+    send(msgRain.set((float)rainTotal(currentHour) / 100, 1)); //Calculate the total rain for the day
+    wait(DWELL_TIME);
     wasTippedBuffer--;
     rainRate = ((oneHour) / tipDelay);
     if (rainRate != lastRainRate)
     {
-      gw.send(msgRainRate.set(rainRate, 1));
-      gw.wait(DWELL_TIME);
+      send(msgRainRate.set(rainRate, 1));
+      wait(DWELL_TIME);
       DEBUG_PRINT(F("RainRate= "));
       DEBUG_PRINTLN(rainRate);
       lastRainRate = rainRate;
@@ -293,20 +307,20 @@ void loop()
   if (currentHour != lastHour)
   {
     DEBUG_PRINTLN(F("One hour elapsed."));
-    gw.send(msgRain.set((float)rainTotal(currentHour) / 100, 1)); // send today's rainfall
-    gw.wait(DWELL_TIME);
-    gw.saveState(eepromIndex, highByte(rainBucket[0]));
-    gw.saveState(eepromIndex + 1, lowByte(rainBucket[0]));
+    send(msgRain.set((float)rainTotal(currentHour) / 100, 1)); // send today's rainfall
+    wait(DWELL_TIME);
+    saveState(eepromIndex, highByte(rainBucket[0]));
+    saveState(eepromIndex + 1, lowByte(rainBucket[0]));
     DEBUG_PRINT(F("Saving rainBucket[0] to eeprom. rainBucket[0] = "));
     DEBUG_PRINTLN(rainBucket[0]);
     for (int i = RAIN_BUCKET_SIZE - 1; i >= 0; i--)//cascade an hour of values back into the array
     {
       rainBucket [i + 1] = rainBucket [i];
     }
-    gw.request(CHILD_ID_TRIPPED_INDICATOR, V_VAR1);
-    gw.wait(DWELL_TIME);
-    gw.request(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
-    gw.wait(DWELL_TIME);
+    request(CHILD_ID_TRIPPED_INDICATOR, V_VAR1);
+    wait(DWELL_TIME);
+    request(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
+    wait(DWELL_TIME);
     rainBucket[0] = 0;
     eepromIndex = eepromIndex + 2;
     if (eepromIndex > EEPROM_BUFFER_LOCATION + E_BUFFER_LENGTH)
@@ -315,14 +329,14 @@ void loop()
     }
     DEBUG_PRINT(F("Writing to EEPROM.  Index: "));
     DEBUG_PRINTLN(eepromIndex);
-    gw.saveState(eepromIndex, 0xFE);
-    gw.saveState(eepromIndex + 1, 0xFE);
-    gw.requestTime(receiveTime); // sync the time every hour
-    gw.wait(DWELL_TIME);
+    saveState(eepromIndex, 0xFE);
+    saveState(eepromIndex + 1, 0xFE);
+    requestTime(); // sync the time every hour
+    wait(DWELL_TIME);
     transmitRainData();
     rainRate = 0;
-    gw.send(msgRainRate.set(rainRate, 1));
-    gw.wait(DWELL_TIME);
+    send(msgRainRate.set(rainRate, 1));
+    wait(DWELL_TIME);
     DEBUG_PRINTLN(F("Sending rainRate is 0 to controller"));
     lastHour = currentHour;
   }
@@ -352,8 +366,8 @@ void doDHT(void)
       {
         temperature = dht.toFahrenheit(temperature);
       }
-      gw.send(msgTemp.set(temperature, 1));
-      gw.wait(DWELL_TIME);
+      send(msgTemp.set(temperature, 1));
+      wait(DWELL_TIME);
       DEBUG_PRINT(F("Temperature is: "));
       DEBUG_PRINTLN(temperature);
     }
@@ -364,8 +378,8 @@ void doDHT(void)
     } else if (humidity != lastHum) 
     {
       lastHum = humidity;
-      gw.send(msgHum.set(humidity, 1));
-      gw.wait(DWELL_TIME);
+      send(msgHum.set(humidity, 1));
+      wait(DWELL_TIME);
       DEBUG_PRINT(F("Humidity is: "));
       DEBUG_PRINTLN(humidity);
     }
@@ -381,7 +395,7 @@ void doLUX(void)
   heartbeat++;
   if (lux != lastlux || heartbeat > 10) 
   {
-    gw.send(msg.set(lux));
+    send(msg.set(lux));
     lastlux = lux;
   }
   if (heartbeat > 10) 
@@ -437,8 +451,8 @@ void loadRainArray(int value) // retrieve stored rain array from EEPROM on power
     }
     DEBUG_PRINT(F("EEPROM location: "));
     DEBUG_PRINTLN(value);
-    byte rainValueHigh = gw.loadState(value);
-    byte rainValueLow = gw.loadState(value + 1);
+    byte rainValueHigh = loadState(value);
+    byte rainValueLow = loadState(value + 1);
     unsigned int rainValue = rainValueHigh << 8;
     rainValue |= rainValueLow;
     rainBucket[i + 1] = rainValue;
@@ -464,8 +478,8 @@ void transmitRainData(void)
   }
   DEBUG_PRINT(F("TX Day 1: rainUpdateTotal = "));
   DEBUG_PRINTLN((float)rainUpdateTotal / 100.0);
-  gw.send(msgRainVAR1.set((float)rainUpdateTotal / 100.0, 1)); //Send current day rain totals (resets at midnight)
-  gw.wait(DWELL_TIME);
+  send(msgRainVAR1.set((float)rainUpdateTotal / 100.0, 1)); //Send current day rain totals (resets at midnight)
+  wait(DWELL_TIME);
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
@@ -478,8 +492,8 @@ void transmitRainData(void)
   }
   DEBUG_PRINT(F("TX Day 2: rainUpdateTotal = "));
   DEBUG_PRINTLN((float)rainUpdateTotal / 100.0);
-  gw.send(msgRainVAR2.set((float)rainUpdateTotal / 100.0, 1));
-  gw.wait(DWELL_TIME);
+  send(msgRainVAR2.set((float)rainUpdateTotal / 100.0, 1));
+  wait(DWELL_TIME);
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
@@ -492,8 +506,8 @@ void transmitRainData(void)
   }
   DEBUG_PRINT(F("TX Day 3: rainUpdateTotal = "));
   DEBUG_PRINTLN((float)rainUpdateTotal / 100.0);
-  gw.send(msgRainVAR3.set((float)rainUpdateTotal / 100.0, 1));
-  gw.wait(DWELL_TIME);
+  send(msgRainVAR3.set((float)rainUpdateTotal / 100.0, 1));
+  wait(DWELL_TIME);
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
@@ -506,8 +520,8 @@ void transmitRainData(void)
   }
   DEBUG_PRINT(F("TX Day 4: rainUpdateTotal = "));
   DEBUG_PRINTLN((float)rainUpdateTotal / 100.0);
-  gw.send(msgRainVAR4.set((float)rainUpdateTotal / 100.0, 1));
-  gw.wait(DWELL_TIME);
+  send(msgRainVAR4.set((float)rainUpdateTotal / 100.0, 1));
+  wait(DWELL_TIME);
 #ifdef USE_DAILY
   rainUpdateTotal = 0;
 #endif
@@ -520,11 +534,11 @@ void transmitRainData(void)
   }
   DEBUG_PRINT(F("TX Day 5: rainUpdateTotal = "));
   DEBUG_PRINTLN((float)rainUpdateTotal / 100.0);
-  gw.send(msgRainVAR5.set((float)rainUpdateTotal / 100.0, 1));
-  gw.wait(DWELL_TIME);
+  send(msgRainVAR5.set((float)rainUpdateTotal / 100.0, 1));
+  wait(DWELL_TIME);
 }
 
-void getVariables(const MyMessage &message)
+void receive(const MyMessage &message)
 {
   if (message.sensor == CHILD_ID_RAIN_LOG)
   {
@@ -545,7 +559,7 @@ void getVariables(const MyMessage &message)
       }
       if (rainWindow != atoi(message.data))   // if I changed the value back inside the boundries, push that number back to Vera
       {
-        gw.send(msgTrippedVar1.set(rainWindow));
+        send(msgTrippedVar1.set(rainWindow));
       }
     }
     else if (message.type == V_VAR2)
@@ -561,7 +575,7 @@ void getVariables(const MyMessage &message)
       }
       if (rainSensorThreshold != atoi(message.data))  // if I changed the value back inside the boundries, push that number back to Vera
       {
-        gw.send(msgTrippedVar2.set(rainSensorThreshold));
+        send(msgTrippedVar2.set(rainSensorThreshold));
       }
     }
   }
