@@ -94,8 +94,11 @@
 	#if !defined(MY_CONTROLLER_IP_ADDRESS)
 		#error You must specify MY_CONTROLLER_IP_ADDRESS (MQTT broker address)
 	#endif
-	#if !defined(MY_MQTT_TOPIC_PREFIX)
-		#error You must specify a topic prefix MY_MQTT_TOPIC_PREFIX for this MQTT client
+	#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
+		#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
+	#endif
+	#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
+		#error You must specify a topic subscribe prefix MY_MQTT_SUBSCRIBE_TOPIC_PREFIX for this MQTT client
 	#endif
 	#if !defined(MY_MQTT_CLIENT_ID)
 		#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
