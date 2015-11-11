@@ -321,8 +321,10 @@
 #endif
 
 // Enable this if you're running the RFM69HW model
-#ifndef MY_IS_RFM69HW
-#define MY_IS_RFM69HW false
+#ifdef MY_IS_RFM69HW
+	#define MY_RFM69HW true
+#else
+	#define MY_RFM69HW false
 #endif
 
 // Default network id. Use the same for all nodes that will talk to each other

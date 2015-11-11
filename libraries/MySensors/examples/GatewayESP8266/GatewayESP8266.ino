@@ -103,25 +103,27 @@
 // Controller ip address. Enables client mode (default is "server" mode). 
 // Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere. 
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
- /*
-// Flash leds on rx/tx/err
-#define MY_LEDS_BLINKING_FEATURE
-// Set blinking period
-#define MY_DEFAULT_LED_BLINK_PERIOD 300
 
 // Enable inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
+
 // Enable Inclusion mode button on gateway
-#define MY_INCLUSION_BUTTON_FEATURE
+// #define MY_INCLUSION_BUTTON_FEATURE
 // Set inclusion mode duration (in seconds)
 #define MY_INCLUSION_MODE_DURATION 60 
 // Digital pin used for inclusion mode button
 #define MY_INCLUSION_MODE_BUTTON_PIN  3 
 
+ 
+// Flash leds on rx/tx/err
+// #define MY_LEDS_BLINKING_FEATURE
+// Set blinking period
+// #define MY_DEFAULT_LED_BLINK_PERIOD 300
+
+// Led pins used if blinking feature is enabled above
 #define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
 #define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
-*/
 
 #if defined(MY_USE_UDP)
   #include <WiFiUDP.h>
