@@ -44,8 +44,13 @@ volatile byte RFM69::ACK_RECEIVED; /// Should be polled immediately after sendin
 volatile int RFM69::RSSI; //most accurate RSSI during reception (closest to the reception)
 RFM69* RFM69::selfPointer;
 
+// Set time out to 50ms
+ #define TIME_OUT 50
+
+
 bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
 {
+  unsigned long start_to;
   const byte CONFIG[][2] =
   {
     /* 0x01 */ { REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY },
@@ -90,8 +95,14 @@ bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
   pinMode(_slaveSelectPin, OUTPUT);
   SPI.begin();
   
-  do writeReg(REG_SYNCVALUE1, 0xaa); while (readReg(REG_SYNCVALUE1) != 0xaa);
-	do writeReg(REG_SYNCVALUE1, 0x55); while (readReg(REG_SYNCVALUE1) != 0x55);
+
+  start_to = millis();
+  do writeReg(REG_SYNCVALUE1, 0xaa); while (readReg(REG_SYNCVALUE1) != 0xaa && millis()-start_to < TIME_OUT);
+  if (millis()-start_to >= TIME_OUT) return (false);
+
+  start_to = millis()  ;
+  do writeReg(REG_SYNCVALUE1, 0x55); while (readReg(REG_SYNCVALUE1) != 0x55 && millis()-start_to < TIME_OUT);
+  if (millis()-start_to >= TIME_OUT) return (false);
 
   for (byte i = 0; CONFIG[i][0] != 255; i++)
     writeReg(CONFIG[i][0], CONFIG[i][1]);
@@ -102,7 +113,12 @@ bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
 
   setHighPower(_isRFM69HW); //called regardless if it's a RFM69W or RFM69HW
   setMode(RF69_MODE_STANDBY);
-	while ((readReg(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0x00); // Wait for ModeReady
+
+
+  start_to = millis() ;
+  while (((readReg(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0x00) && millis()-start_to < TIME_OUT); // Wait for ModeReady
+  if (millis()-start_to >= TIME_OUT) return (false);
+
   attachInterrupt(_interruptNum, RFM69::isr0, RISING);
 
   selfPointer = this;

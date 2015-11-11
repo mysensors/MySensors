@@ -64,19 +64,22 @@ void _begin() {
 	    hwInit();
     #endif
 
-	debug(PSTR("Starting...\n"));
+	debug(PSTR("Starting " MY_NODE_TYPE " (" LIBRARY_VERSION ")\n"));
+
 	#if defined(MY_RADIO_FEATURE)
 		_failedTransmissions = 0;
 
 		// Setup radio
 		if (!transportInit()) {
-			debug(PSTR("Radio init fail\n"));
+			debug(PSTR("Radio init failed. Check wiring.\n"));
 			// Nothing more we can do
 			while(1) {
 				#if defined(MY_GATEWAY_ESP8266)
 					yield();
 				#endif
 			};
+		} else {
+			debug(PSTR("Radio init successful.\n"));
 		}
 	#endif
 
@@ -159,7 +162,7 @@ void _begin() {
 	#endif
 	if (presentation)
 		presentation();
-	debug(PSTR("%s started, id=%d, parent=%d, distance=%d\n"), MY_NODE_TYPE, _nc.nodeId, _nc.parentNodeId, _nc.distance);
+	debug(PSTR("Init complete, id=%d, parent=%d, distance=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance);
 }
 
 
