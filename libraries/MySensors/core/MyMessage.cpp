@@ -37,6 +37,10 @@ bool MyMessage::isAck() const {
 	return miGetAck();
 }
 
+uint8_t MyMessage::getCommand() const {
+	return miGetCommand();
+}
+
 /* Getters for payload converted to desired form */
 void* MyMessage::getCustom() const {
 	return (void *)data;

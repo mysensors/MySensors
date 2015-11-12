@@ -254,6 +254,9 @@ public:
 	int32_t getLong() const;
 	uint32_t getULong() const;
 
+	// Getter for command type
+	uint8_t getCommand() const;
+
 	// Getter for ack-flag. True if this is an ack message.
 	bool isAck() const;
 
