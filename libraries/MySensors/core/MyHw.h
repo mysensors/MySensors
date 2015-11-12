@@ -22,7 +22,6 @@
 
 #include "MyConfig.h"
 #include "MyMessage.h"
-#include "MyHw.h"
 
 
 #ifdef __cplusplus
@@ -50,4 +49,4 @@ uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t m
 	void hwDebugPrint(const char *fmt, ... );
 #endif
 
-#endif // #ifdef ARDUINO_ARCH_ESP8266
+#endif // #ifdef MyHw_h
