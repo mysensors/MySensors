@@ -89,6 +89,10 @@
 
 // GATEWAY - TRANSPORT
 #if defined(MY_GATEWAY_MQTT_CLIENT)
+	#if defined(MY_RADIO_FEATURE)
+		// We assume that a gateway having a radio also should act as repeater
+		#define MY_REPEATER_FEATURE
+	#endif
 	// GATEWAY - COMMON FUNCTIONS
 	// We only support MQTT Client using W5100 and ESP8266 at the moment
 	#if !defined(MY_CONTROLLER_IP_ADDRESS)
