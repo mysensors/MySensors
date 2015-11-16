@@ -52,11 +52,16 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
+// Enable to support OTA for this node (needs DualOptiBoot boot-loader to fully work)
+#define MY_OTA_FIRMWARE_FEATURE
+
 #include <SPI.h>
 #include <MySensor.h>
 #include <Wire.h>
 #include <SI7021.h>
+#ifndef MY_OTA_FIRMWARE_FEATURE
 #include "drivers/SPIFlash/SPIFlash.cpp"
+#endif
 #include <EEPROM.h>  
 #include <sha204_lib_return_codes.h>
 #include <sha204_library.h>
