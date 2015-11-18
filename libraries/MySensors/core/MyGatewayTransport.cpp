@@ -20,11 +20,13 @@
 #include "MyGatewayTransport.h"
 
 extern boolean transportSendRoute(MyMessage &message);
+extern MyMessage _msg;
 
 inline void gatewayTransportProcess() {
 	if (gatewayTransportAvailable()) {
-		MyMessage &_msg = gatewayTransportReceive();
+		_msg = gatewayTransportReceive();
 		if (_msg.destination == GATEWAY_ADDRESS) {
+
 			// Check if sender requests an ack back.
 			if (mGetRequestAck(_msg)) {
 				// Copy message
