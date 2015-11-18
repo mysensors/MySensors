@@ -143,7 +143,8 @@ typedef enum {
 	V_HVAC_FLOW_MODE, // S_HVAC. Flow mode for HVAC ("Auto", "ContinuousOn", "PeriodicOn")
 	V_TEXT, // S_INFO. Text message to display on LCD or controller device
 	V_CUSTOM, 		// Custom messages used for controller/inter node specific commands, preferably using S_CUSTOM device type.
-	V_POSITION	    // GPS position and altitude. Payload: latitude;longitude;altitude(m). E.g. "55.722526;13.017972;18"
+	V_POSITION,	    // GPS position and altitude. Payload: latitude;longitude;altitude(m). E.g. "55.722526;13.017972;18"
+	V_IR_RECORD         // Record IR codes S_IR for playback
 } mysensor_data;
 
 
