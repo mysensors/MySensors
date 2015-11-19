@@ -113,11 +113,20 @@ inline void transportProcess() {
 	#endif
 
 
-	// Add string termination, good if we later would want to print it.
-	_msg.data[mGetLength(_msg)] = '\0';
-	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
-				sender, _msg.last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
-	mSetSigned(_msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
+	if (destination == _nc.nodeId) {
+		debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+					sender, _msg.last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
+	}
+	else
+	{
+	#if defined(MY_REPEATER_FEATURE)
+		debug(PSTR("read and forward: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d\n"),
+					sender, _msg.last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
+	#else
+		debug(PSTR("read and drop: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+					sender, _msg.last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg),  mGetSigned(_msg), _msg.getString(_convBuf));
+	#endif
+	}
 
 	if(!(mGetVersion(_msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("ver mismatch\n"));
@@ -127,6 +136,7 @@ inline void transportProcess() {
 
 	if (destination == _nc.nodeId) {
 		// This message is addressed to this node
+		mSetSigned(_msg,0); // Clear the sign-flag now as verification is completed
 
 		#if defined(MY_REPEATER_FEATURE)
 			if (_msg.last != _nc.parentNodeId) {
@@ -434,7 +444,7 @@ boolean transportSendRoute(MyMessage &message) {
 			}
 			// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
 			// or signature will become invalid and the message rejected by the receiver
-		} else {
+		} else if (_nc.nodeId == message.sender) {
 			mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
 		}
 	#endif
