@@ -211,7 +211,7 @@ bool updatePressureSensor()
 	bool changed = false;
 
 	//sealevel pressure p0 from absolute pressure.
-	float pressure = bmp.readSealevelPressure(SEALEVEL) / 100;
+	float pressure = bmp.readSealevelPressure(SEALEVEL) / 100.0;
 	float temperature = bmp.readTemperature();
 	if (!metric) 
 	{
