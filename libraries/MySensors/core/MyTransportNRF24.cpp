@@ -35,7 +35,6 @@
 
 RF24 _rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN);
 uint8_t _address;
-uint8_t _paLevel;
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	AES _aes;
 	uint8_t _dataenc[32] = {0};
@@ -53,7 +52,7 @@ bool transportInit() {
 	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
 	_rf24.enableAckPayload();
 	_rf24.setChannel(MY_RF24_CHANNEL);
-	_rf24.setPALevel(_paLevel);
+	_rf24.setPALevel(MY_RF24_PA_LEVEL);
 	if (!_rf24.setDataRate(MY_RF24_DATARATE)) {
 		return false;
 	}
