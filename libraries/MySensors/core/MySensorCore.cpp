@@ -241,7 +241,11 @@ void _processInternalMessages() {
 	} else if (type == I_CONFIG) {
 		// Pick up configuration from controller (currently only metric/imperial)
 		// and store it in eeprom if changed
-		isMetric = _msg.getString()[0] == 'M' ;
+	 	if (_msg.getString() == NULL) {
+                        isMetric = true;
+                } else {
+                        isMetric = _msg.getString()[0] == 'M' ;
+                }
 		_cc.isMetric = isMetric;
 		hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
 	} else if (type == I_PRESENTATION) {
