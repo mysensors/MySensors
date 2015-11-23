@@ -20,19 +20,19 @@
  *
  * REVISION HISTORY
  * Version 1.0 - Toni A - https://github.com/ToniA/arduino-heatpumpir
- * 
+ *
  * DESCRIPTION
  * Heatpump controller
- */ 
+ */
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG 
+#define MY_DEBUG
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-// HeatpumpIR libraries, 
+// HeatpumpIR libraries,
 #include <FujitsuHeatpumpIR.h>
 #include <PanasonicCKPHeatpumpIR.h>
 #include <PanasonicHeatpumpIR.h>
@@ -41,6 +41,7 @@
 #include <MitsubishiHeatpumpIR.h>
 #include <SamsungHeatpumpIR.h>
 #include <SharpHeatpumpIR.h>
+#include <DaikinHeatpumpIR.h>
 
 // Timer library, https://github.com/JChristensen/Timer
 #include <Timer.h>
@@ -74,7 +75,8 @@ HeatpumpIR *heatpumpIR[] = { new PanasonicCKPHeatpumpIR(), // 0, keep this if yo
                              new MitsubishiFDHeatpumpIR(), // 7
                              new MitsubishiFEHeatpumpIR(), // 8
                              new SamsungHeatpumpIR(),      // 9
-                             new SharpHeatpumpIR()         // 10
+                             new SharpHeatpumpIR(),        // 10
+                             new DaikinHeatpumpIR()        // 11
                            };
 
 // IR led on PWM output-capable digital pin 3
