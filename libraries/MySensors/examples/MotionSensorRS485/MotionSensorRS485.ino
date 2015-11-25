@@ -47,6 +47,9 @@
 // Enable RS485 transport layer
 #define MY_RS485
 
+// Define this to enables DE-pin management on defined pin 
+#define MY_RS485_DE_PIN 2
+
 // Set RS485 baud rate to use
 #define MY_RS485_BAUD_RATE 9600
 
