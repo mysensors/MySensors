@@ -91,7 +91,6 @@ inline void transportProcess() {
 
 			if ((!MY_IS_GATEWAY || DO_SIGN(sender)) &&
 				destination == _nc.nodeId &&
-				mGetLength(_msg) &&
 				!mGetAck(_msg) &&
 				(mGetCommand(_msg) != C_INTERNAL ||
 				 (type != I_GET_NONCE_RESPONSE && type != I_GET_NONCE && type != I_REQUEST_SIGNING &&
@@ -411,7 +410,7 @@ boolean transportSendRoute(MyMessage &message) {
 	#ifdef MY_SIGNING_FEATURE
 		uint8_t type = message.type;
 		// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-		if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) && mGetLength(message) &&
+		if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) &&
 			(mGetCommand(message) != C_INTERNAL ||
 			 (type != I_GET_NONCE && type != I_GET_NONCE_RESPONSE && type != I_REQUEST_SIGNING &&
 			  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
