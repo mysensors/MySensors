@@ -53,13 +53,14 @@ MyMessage msg(0,V_TEMP);
 
 void setup()  
 { 
+}
+
+void presentation() {
   // Startup up the OneWire library
   sensors.begin();
   // requestTemperatures() will not block current thread
   sensors.setWaitForConversion(false);
-}
-
-void presentation() {
+  
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Temperature Sensor", "1.1");
 
