@@ -34,7 +34,7 @@ void setup()
   for (int i=0;i<512;i++) {
     EEPROM.write(i, 0xff);
   }
-  Serial.println("Clering done. You're ready to go!");
+  Serial.println("Clearing done. You're ready to go!");
 }
 
 void loop()      
