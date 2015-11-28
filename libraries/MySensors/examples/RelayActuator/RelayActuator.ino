@@ -47,7 +47,7 @@
 
 
 void setup()  
-{   
+{ 
   for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
     // Then set relay pins in output mode
     pinMode(pin, OUTPUT);   

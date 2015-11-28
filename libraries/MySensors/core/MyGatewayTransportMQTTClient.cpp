@@ -71,7 +71,7 @@ void incomingMQTT(char* topic, byte* payload,
 		switch (i) {
 			case 0: {
 				// Topic prefix
-				if (strcmp_P(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
+				if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
 					// Message not for us or malformed!
 					return;
 				}

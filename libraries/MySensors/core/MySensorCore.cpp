@@ -64,7 +64,7 @@ void _begin() {
 	    hwInit();
     #endif
 
-	debug(PSTR("Starting " MY_NODE_TYPE " (" LIBRARY_VERSION ")\n"));
+	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILIIES ", " LIBRARY_VERSION ")\n"));
 
 	#if defined(MY_RADIO_FEATURE)
 		_failedTransmissions = 0;
@@ -157,6 +157,11 @@ void _begin() {
 		}
 	#endif
 
+	// Call sketch setup
+	if (setup)
+		setup();
+
+
 	#if defined(MY_RADIO_FEATURE)
 		transportPresentNode();
 	#endif
@@ -235,26 +240,31 @@ void _processInternalMessages() {
 	bool isMetric;
 	uint8_t type = _msg.type;
 
-	if (type == I_REBOOT) {
-		// Requires MySensors or other bootloader with watchdogs enabled
-		hwReboot();
-	} else if (type == I_CONFIG) {
+	#if !defined(MY_DISABLE_REMOTE_RESET)
+		if (type == I_REBOOT) {
+			// Requires MySensors or other bootloader with watchdogs enabled
+			hwReboot();
+		} else
+	#endif
+		if (type == I_CONFIG) {
 		// Pick up configuration from controller (currently only metric/imperial)
 		// and store it in eeprom if changed
 	 	if (_msg.getString() == NULL) {
-                        isMetric = true;
-                } else {
-                        isMetric = _msg.getString()[0] == 'M' ;
-                }
+			isMetric = true;
+		} else {
+			isMetric = _msg.getString()[0] == 'M';
+		}
 		_cc.isMetric = isMetric;
 		hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, isMetric);
 	} else if (type == I_PRESENTATION) {
-		// Re-send node presentation to controller
-		#if defined(MY_RADIO_FEATURE)
-			transportPresentNode();
-		#endif
-		if (presentation)
-			presentation();
+		if (!mGetAck(_msg)) {
+			// Re-send node presentation to controller
+			#if defined(MY_RADIO_FEATURE)
+				transportPresentNode();
+			#endif
+			if (presentation)
+				presentation();
+		}
 	} else if (type == I_HEARTBEAT) {
 		if (!mGetAck(_msg)) {
 			// Send heartbeat ack message back to sender (with the same payload)
@@ -267,7 +277,8 @@ void _processInternalMessages() {
 		}
 	} else if (type == I_TIME && receiveTime) {
 		// Deliver time to callback
-		receiveTime(_msg.getULong());
+		if (receiveTime)
+			receiveTime(_msg.getULong());
 	}
 	#if defined(MY_REPEATER_FEATURE)
 		if (type == I_CHILDREN && _msg.getString()[0] == 'C') {

@@ -229,6 +229,9 @@ extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces amo
 void receive(const MyMessage &message)  __attribute__((weak));
 void receiveTime(unsigned long)  __attribute__((weak));
 void presentation()  __attribute__((weak));
+void setup() __attribute__((weak));
+void loop() __attribute__((weak));
+
 
 // Inline function and macros
 static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
