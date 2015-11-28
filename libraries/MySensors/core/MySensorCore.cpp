@@ -334,6 +334,12 @@ void sleep(unsigned long ms) {
 	#endif
 }
 
+void smartSleep(unsigned long ms) {
+	wait(MY_SMART_SLEEP_WAIT_DURATION);
+	sleep(ms);
+	sendHeartbeat();
+}
+
 bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (_fwUpdateOngoing) {
@@ -348,6 +354,13 @@ bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	}
 	#endif
+}
+
+bool smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+	wait(MY_SMART_SLEEP_WAIT_DURATION);
+	bool ret = sleep(interrupt, mode, ms);
+	sendHeartbeat();
+	return ret;
 }
 
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
@@ -366,6 +379,11 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 	#endif
 }
 
-
+int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+	wait(MY_SMART_SLEEP_WAIT_DURATION);
+	int8_t ret = sleep(interrupt1, mode1, interrupt2, mode2, ms);
+	sendHeartbeat();
+	return ret;
+}
 
 

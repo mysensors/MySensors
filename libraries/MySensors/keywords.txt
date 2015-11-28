@@ -7,7 +7,6 @@ MySensor	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-setIncomingCallback	KEYWORD2
 present	KEYWORD2
 send	KEYWORD2
 sendSketchInfo	KEYWORD2
@@ -24,6 +23,8 @@ receiveTime	KEYWORD2
 loop	KEYWORD2
 setup	KEYWORD2
 presentation	KEYWORD2
+sleep	KEYWORD2
+smartSleep	KEYWORD2
 
 ######################################
 # Constants (LITERAL1)
@@ -107,3 +108,5 @@ MY_MQTT_CLIENT_ID	LITERAL1
 MY_GATEWAY_MQTT_CLIENT	LITERAL1
 MY_DISABLE_REMOTE_RESET	LITERAL1
 MY_RS485_DE_PIN	LITERAL1
+MY_SIGNING_REQUEST_SIGNATURES	LITERAL1
+MY_SMART_SLEEP_WAIT_DURATION	LITERAL1

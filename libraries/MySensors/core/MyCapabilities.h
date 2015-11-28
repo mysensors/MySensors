@@ -41,7 +41,7 @@
 #elif defined(MY_RS485)
 	#define MY_CAP_RADIO "S"
 #else
-	#define MY_CAP_RADIO "?"
+	#define MY_CAP_RADIO "-"
 #endif
 
 #if defined(MY_GATEWAY_FEATURE)
@@ -59,7 +59,7 @@
 #elif defined(ARDUINO_ARCH_AVR)
 	#define MY_CAP_ARCH "A"
 #else
-	#define MY_CAP_ARCH "?"
+	#define MY_CAP_ARCH "-"
 #endif
 
 #if defined(MY_SIGNING_ATSHA204)
@@ -67,10 +67,10 @@
 #elif defined(MY_SIGNING_SOFT)
 	#define MY_CAP_SIGN "S"
 #else
-	#define MY_CAP_SIGN "?"
+	#define MY_CAP_SIGN "-"
 #endif
 
 
-#define MY_CAPABILIIES MY_CAP_RESET MY_CAP_OTA_FW MY_CAP_TYPE MY_CAP_ARCH MY_CAP_SIGN
+#define MY_CAPABILIIES MY_CAP_RESET MY_CAP_RADIO MY_CAP_OTA_FW MY_CAP_TYPE MY_CAP_ARCH MY_CAP_SIGN
 
 #endif /* MyGatewayTransportEthernet_h */
