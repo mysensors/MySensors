@@ -76,13 +76,18 @@ extern "C"
 #define digitalPinToInterrupt(P)   ( g_APinDescription[P].ulExtInt )
 
 // LEDs
-#define PIN_LED_13           (13u)
-#define PIN_LED_RXL          (25u)
-#define PIN_LED_TXL          (26u)
-#define PIN_LED              PIN_LED_13
-#define PIN_LED2             PIN_LED_RXL
-#define PIN_LED3             PIN_LED_TXL
-#define LED_BUILTIN          PIN_LED_13
+#define PIN_LED_13           (7u)
+#define PIN_LED_RXL          (6u)
+#define PIN_LED_TXL          (12u)
+#define PIN_LED              LED_BLUE
+#define PIN_LED2             LED_RED
+#define PIN_LED4             LED_GREEN
+#define LED_BUILTIN          LED_YELLOW
+
+#define LED_BLUE             (12u)
+#define LED_RED              (6u)
+#define LED_GREEN            (7u)
+#define LED_YELLOW           (44u)
 
 /*
  * Analog pins
@@ -126,9 +131,9 @@ static const uint8_t ATN = PIN_ATN;
  */
 #define SPI_INTERFACES_COUNT 1
 
-#define PIN_SPI_MISO         (22u)
-#define PIN_SPI_MOSI         (23u)
-#define PIN_SPI_SCK          (24u)
+#define PIN_SPI_MISO         (36u)
+#define PIN_SPI_MOSI         (35u)
+#define PIN_SPI_SCK          (37u)
 
 static const uint8_t SS	  = PIN_A2 ;	// SERCOM4 last PAD is present on A2 but HW SS isn't used. Set here only for reference.
 static const uint8_t MOSI = PIN_SPI_MOSI ;
@@ -154,6 +159,28 @@ static const uint8_t SCK  = PIN_SPI_SCK ;
 }
 #endif
 
+
+/*
+ * MYSX pins
+ */
+
+#define MYSX_D1_DFM
+#define MYSX_D2_DTM
+#define MYSX_D3_INT
+#define MYSX_D4_INT
+#define MYSX_D5_PWM
+#define MYSX_D6_PWM
+#define MYSX_D7_SCL
+#define MYSX_D8_SDA
+#define MYSX_D9_A3
+#define MYSX_D10_A4
+#define MYSX_D11_MOSI
+#define MYSX_D12_MISO
+#define MYSX_D13_SCK
+#define MYSX_D14_CS
+#define MYSX_A1
+#define MYSX_A2
+
 /*----------------------------------------------------------------------------
  *        Arduino objects - C++ only
  *----------------------------------------------------------------------------*/
@@ -171,7 +198,7 @@ extern SERCOM sercom3;
 extern SERCOM sercom4;
 extern SERCOM sercom5;
 
-extern Uart Serial;
+//extern Uart Serial;
 extern Uart Serial1;
 
 #endif

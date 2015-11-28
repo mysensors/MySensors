@@ -28,12 +28,11 @@
   /**********************/
   
   // Define _BV for non-Arduino platforms and for Arduino DUE
-#if defined (ARDUINO) && !defined (__arm__)
+#if defined (ARDUINO) && !defined (__arm__) && !defined(_SPI)
 	#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
 		#define RF24_TINY
 		#define _SPI SPI
-	#else
-      #if defined SPI_UART
+	#elif defined SPI_UART
 		#include <SPI_UART.h>
 		#define _SPI uspi
 	  #elif defined MY_SOFTSPI
@@ -46,11 +45,12 @@
 
 		const uint8_t SPI_MODE = 0;
 		#define _SPI spi
-      
+          #elif defined(ARDUINO_ARCH_SAMD)
+                #include <SPI.h>
+                #define _SPI SPI1
 	  #else	    
 		#include <SPI.h>
 		#define _SPI SPI
-	  #endif
 	#endif
 #else
   #include <stdint.h>
@@ -70,10 +70,10 @@
  #else
     #define printf Serial.printf
  #endif
-
+ #if ! defined(_SPI)
   #define _SPI SPI
+ #endif
 #endif
-
  
 // Avoid spurious warnings
 // Arduino DUE is arm and uses traditional PROGMEM constructs
@@ -101,7 +101,7 @@
 #endif
 #endif
 
-#if !defined ( CORE_TEENSY ) && ! defined(ESP8266)
+#if !defined ( CORE_TEENSY ) && ! defined(ESP8266) && ! defined(ARDUINO_ARCH_SAMD)
 	typedef uint16_t prog_uint16_t;
 	#define PSTR(x) (x)
 	#define printf_P printf
