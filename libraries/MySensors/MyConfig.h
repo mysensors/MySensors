@@ -48,6 +48,8 @@
 #define MY_BAUD_RATE 115200
 #endif
 
+// Disables over-the-air reset of node
+//#define MY_DISABLE_REMOTE_RESET
 
 /**********************************
 *  Radio selection and node config

@@ -83,7 +83,6 @@ static void loop_wrapper() {
     static bool setup_done = false;
     if(!setup_done) {
     	_begin(); // Startup MySensors library
-        setup();
         setup_done = true;
     }
     preloop_update_frequency();

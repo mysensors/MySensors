@@ -200,18 +200,9 @@
 #endif
 
 
+#include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
 #include "core/MySensorCore.cpp"
-
-extern void setup();
-// Optional sketch functions called by MySensors library
-void receive(const MyMessage &message)  __attribute__((weak));
-void receiveTime(unsigned long)  __attribute__((weak));
-void presentation()  __attribute__((weak));
-extern "C" void setup()  __attribute__((weak));
-extern "C" void loop()  __attribute__((weak));
-extern "C" void loop2()  __attribute__((weak));
-
 
 #include <Arduino.h>
 
