@@ -16,8 +16,8 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
-#ifndef MyHwESP8266_h
-#define MyHwESP8266_h
+#ifndef MyHwSAMD_h
+#define MyHwSAMD_h
 
 #include "MyHw.h"
 #include "MyConfig.h"
@@ -30,17 +30,19 @@
 //#include <SPI.h>
 #endif
 
-#define SERIALDEVICE Serial
+#include <avr/dtostrf.h>
+
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
 
 // Define these as macros to save valuable space
 
+uint8_t configBlock[1024];
 #define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
-#define hwInit() Serial.begin(MY_BAUD_RATE); Serial.setDebugOutput(true)
-#define hwWatchdogReset() wdt_reset()
-#define hwReboot() wdt_enable(WDTO_15MS); while (1)
+void hwInit();
+void hwWatchdogReset();
+void hwReboot();
 #define hwMillis() millis()
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
@@ -48,5 +50,15 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
+#define SERIALDEVICE SerialUSB
 
-#endif // #ifdef ARDUINO_ARCH_ESP8266
+
+/*
+#define hwReadConfigBlock(__buf, __adr, __length) ( __length = __length)
+#define hwWriteConfigBlock(__buf, __adr, __length) ( __length = __length)
+#define hwWriteConfig(__adr, __value) ( __value = __value)
+#define hwReadConfig(__adr) (0)
+*/
+SPIClass _SPI( &sercom1, PIN_SPI_MISO, PIN_SPI_SCK, PIN_SPI_MOSI );
+#define USBCON
+#endif // #ifdef ARDUINO_ARCH_SAMD
