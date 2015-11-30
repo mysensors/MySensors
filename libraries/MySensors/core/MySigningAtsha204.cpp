@@ -60,7 +60,7 @@ static char i2h(uint8_t i)
 
 static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
 {
-	static char printBuffer[32*2+1];
+	static char printBuffer[300];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(printBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
@@ -74,7 +74,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 	printBuffer[sz * 2] = '\0';
 #ifdef MY_GATEWAY_FEATURE
 	// Truncate message if this is gateway node
-	printBuffer[59-strlen_P((const char*)str)] = '\0';
+	printBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1-strlen_P((const char*)str)] = '\0';
 #endif
 	Serial.print(str);
 	if (sz > 0)
