@@ -200,10 +200,13 @@ MyMessage& MyMessage::set(void* value, uint8_t length) {
 }
 
 MyMessage& MyMessage::set(const char* value) {
-	uint8_t length = min(strlen(value), MAX_PAYLOAD);
+	uint8_t length = value == NULL ? 0 : min(strlen(value), MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
-	strncpy(data, value, length);
+	if (length)
+		strncpy(data, value, length);
+	else
+		data[0] ='\0';
 	return *this;
 }
 
