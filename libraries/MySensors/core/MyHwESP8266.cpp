@@ -119,9 +119,9 @@ void hwDebugPrint(const char *fmt, ... ) {
 	va_end (args);
 	#ifdef MY_GATEWAY_FEATURE
 		// Truncate message if this is gateway node
-		vsnprintf_P(fmtBuffer, 60, fmt, args);
-		fmtBuffer[59] = '\n';
-		fmtBuffer[60] = '\0';
+		vsnprintf_P(fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, fmt, args);
+		fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1] = '\n';
+		fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH] = '\0';
 	#else
 		vsnprintf_P(fmtBuffer, 299, fmt, args);
 	#endif
