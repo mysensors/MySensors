@@ -131,15 +131,23 @@ static const uint8_t ATN = PIN_ATN;
  */
 #define SPI_INTERFACES_COUNT 1
 
-#define PIN_SPI_MISO         (36u)
-#define PIN_SPI_MOSI         (35u)
-#define PIN_SPI_SCK          (37u)
+#define RADIO_SPI_MISO         (36u)
+#define RADIO_SPI_MOSI         (35u)
+#define RADIO_SPI_SCK          (37u)
 
+#define NET_SPI_MISO           (48u)
+#define NET_SPI_MOSI           (47u)
+#define NET_SPI_SCK            (49u)
+
+#define USR_SPI_MISO           (48u)
+#define USR_SPI_MOSI           (47u)
+#define USR_SPI_SCK            (49u)
+/*
 static const uint8_t SS	  = PIN_A2 ;	// SERCOM4 last PAD is present on A2 but HW SS isn't used. Set here only for reference.
 static const uint8_t MOSI = PIN_SPI_MOSI ;
 static const uint8_t MISO = PIN_SPI_MISO ;
 static const uint8_t SCK  = PIN_SPI_SCK ;
-
+*/
 /*
  * Wire Interfaces
  */

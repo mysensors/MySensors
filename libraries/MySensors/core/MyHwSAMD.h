@@ -23,7 +23,7 @@
 #include "MyConfig.h"
 
 #include "MyMessage.h"
-
+#include <Wire.h>
 
 #ifdef __cplusplus
 #include <Arduino.h>
@@ -31,6 +31,7 @@
 #endif
 
 #include <avr/dtostrf.h>
+#define I2C_EEP_ADDRESS 55
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
@@ -59,6 +60,4 @@ uint8_t hwReadConfig(int adr);
 #define hwWriteConfig(__adr, __value) ( __value = __value)
 #define hwReadConfig(__adr) (0)
 */
-SPIClass _SPI( &sercom1, PIN_SPI_MISO, PIN_SPI_SCK, PIN_SPI_MOSI );
-#define USBCON
 #endif // #ifdef ARDUINO_ARCH_SAMD
