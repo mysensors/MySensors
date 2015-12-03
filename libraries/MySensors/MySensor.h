@@ -52,6 +52,8 @@
 	#define MY_GATEWAY_ESP8266
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "core/MyHwATMega328.cpp"
+#elif defined(ARDUINO_ARCH_SAMD)
+        #include "core/MyHwSAMD.cpp"
 #endif
 
 // LEDS

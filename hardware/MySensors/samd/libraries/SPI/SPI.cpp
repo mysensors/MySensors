@@ -197,4 +197,6 @@ void SPIClass::detachInterrupt() {
   // Should be disableInterrupt()
 }
 
-SPIClass SPI( &sercom1, PIN_SPI_MISO, PIN_SPI_SCK, PIN_SPI_MOSI );
+SPIClass SPI( &sercom1, RADIO_SPI_MISO, RADIO_SPI_SCK, RADIO_SPI_MOSI );
+SPIClass SPI_ETH (&sercom4, NET_SPI_MISO, NET_SPI_SCK, NET_SPI_MOSI);
+SPIClass SPI_USER(&sercom5, USR_SPI_MISO, USR_SPI_SCK, USR_SPI_MOSI);

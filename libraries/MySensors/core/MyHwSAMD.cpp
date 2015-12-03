@@ -40,34 +40,45 @@ ISR (WDT_vect)
 }
 */
 
-static void hwInitConfigBlock( size_t length = 1024)
-{
-  static bool initDone = false;
-  if (!initDone)
-  {
-    initDone = true;
-  }
+
+
+void i2c_eeprom_write_byte(unsigned int eeaddress, byte data ) {
+  int rdata = data;
+  Wire.beginTransmission(I2C_EEP_ADDRESS);
+  Wire.write((int)(eeaddress >> 8)); // MSB
+  Wire.write((int)(eeaddress & 0xFF)); // LSB
+  Wire.write(rdata);
+  Wire.endTransmission();
+}
+
+byte i2c_eeprom_read_byte(unsigned int eeaddress ) {
+  byte rdata = 0xFF;
+  Wire.beginTransmission(I2C_EEP_ADDRESS);
+  Wire.write((int)(eeaddress >> 8)); // MSB
+  Wire.write((int)(eeaddress & 0xFF)); // LSB
+  Wire.endTransmission();
+  Wire.requestFrom(I2C_EEP_ADDRESS,1);
+  if (Wire.available()) rdata = Wire.read();
+  return rdata;
 }
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length)
 {
-  hwInitConfigBlock();
   uint8_t* dst = static_cast<uint8_t*>(buf);
   int offs = reinterpret_cast<int>(adr);
   while (length-- > 0)
   {
-    *dst++ = configBlock[offs++]; 
+    *dst++ = i2c_eeprom_read_byte(offs++); 
   }
 }
 
 void hwWriteConfigBlock(void* buf, void* adr, size_t length)
 {
-  hwInitConfigBlock();
   uint8_t* src = static_cast<uint8_t*>(buf);
   int offs = reinterpret_cast<int>(adr);
   while (length-- > 0)
   {
-     configBlock[offs++] =  *src++;
+     i2c_eeprom_write_byte(offs++, *src++);
   }
 }
 
