@@ -199,11 +199,11 @@ inline void transportProcess() {
 				#if defined (MY_GATEWAY_FEATURE)
 					#ifdef MY_SIGNING_REQUEST_SIGNATURES
 						if (DO_SIGN(sender))
-							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
+							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)true));
 						else
-							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
 					#else
-						_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+						_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
 					#endif
 				#endif
 				return; // Signing request is an internal MySensor protocol message, no need to inform caller about this
