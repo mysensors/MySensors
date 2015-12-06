@@ -24,7 +24,6 @@
  * HMAC-SHA256 authentication with a readout-protected key.
  *
  */
-#if defined(ARDUINO_ARCH_AVR)
 
 #include "MySigning.h"
 
@@ -281,4 +280,3 @@ uint8_t* signerSha256(const uint8_t* data, size_t sz) {
 	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 	return &_singning_rx_buffer[SHA204_BUFFER_POS_DATA];
 }
-#endif // #if defined(ARDUINO_ARCH_AVR)
