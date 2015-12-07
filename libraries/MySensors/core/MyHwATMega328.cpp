@@ -40,9 +40,6 @@ ISR (WDT_vect)
 	wdt_disable();
 }
 
-
-
-
 void hwPowerDown(period_t period) {
 
 	// disable ADC for power saving
@@ -55,17 +52,16 @@ void hwPowerDown(period_t period) {
 		// enable WDT interrupt before system reset
 		WDTCSR |= (1 << WDIE);
 	}
-	// maximum power saving
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
 	sleep_enable();
-#if defined __AVR_ATmega328P__
+	#if defined __AVR_ATmega328P__
 	sleep_bod_disable();
-#endif
+	#endif
 	sei();
 	// sleep until WDT or ext. interrupt
 	sleep_cpu();
-	sleep_disable();
+    sleep_disable();	
 	// enable ADC
 	ADCSRA |= (1 << ADEN);
 }
@@ -75,6 +71,7 @@ void hwInternalSleep(unsigned long ms) {
   #ifndef MY_DISABLED_SERIAL
 	  Serial.flush();
   #endif
+	// reset interrupt trigger var
 	pinIntTrigger = 0;
 	while (!pinIntTrigger && ms >= 8000) { hwPowerDown(SLEEP_8S); ms -= 8000; }
 	if (!pinIntTrigger && ms >= 4000)    { hwPowerDown(SLEEP_4S); ms -= 4000; }
@@ -97,10 +94,8 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	// no interrupt triggered
-	int8_t retVal = -1;
-	// reset interrupt trigger
-	pinIntTrigger = 0;	
+	// reset interrupt trigger var
+	pinIntTrigger = 0;
 	// attach interrupts 
 	attachInterrupt(interrupt1, wakeUp, mode1);
 	if (interrupt2!=0xFF) attachInterrupt(interrupt2, wakeUp2, mode2);
@@ -115,16 +110,15 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	
 	detachInterrupt(interrupt1);
 	if (interrupt2!=0xFF) detachInterrupt(interrupt2);
+	
+	// default: no interrupt triggered	
+	int8_t retVal = -1;
 
-	if (pinIntTrigger == 0) {
-		// no interrupt triggered
-		retVal = -1;
-	} else if (pinIntTrigger == 1) {
+	if (pinIntTrigger == 1) {
 		retVal = (int8_t)interrupt1;
 	} else if (pinIntTrigger == 2) {
 		retVal = (int8_t)interrupt2;
 	}
-		
 	return retVal;
 }
 
