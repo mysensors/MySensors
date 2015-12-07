@@ -43,8 +43,8 @@ uint8_t hwReadConfig(int adr);
 */
 
 void hwSleep(unsigned long ms);
-bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
-uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
 #ifdef MY_DEBUG
 	void hwDebugPrint(const char *fmt, ... );
 #endif
