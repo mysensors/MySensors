@@ -37,20 +37,25 @@ void wakeUp2()	 //place to send the second interrupts
 ISR (WDT_vect)
 {
 	// WDIE & WDIF is cleared in hardware upon entering this ISR
-	wdt_disable();
+	//wdt_disable();
 }
 
 void hwPowerDown(period_t period) {
 
 	// disable ADC for power saving
 	ADCSRA &= ~(1 << ADEN);
+	// save WDT settings
+	uint8_t WDTsave = WDTCSR;
 
 	if (period != SLEEP_FOREVER)
 	{
 		// change WDT to waiting period
 		wdt_enable(period);
 		// enable WDT interrupt before system reset
-		WDTCSR |= (1 << WDIE);
+		WDTCSR |= (1 << WDIE) ;
+	} else {
+		// if sleeping forever, wdt should be disabled
+		wdt_disable();
 	}
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
@@ -62,6 +67,9 @@ void hwPowerDown(period_t period) {
 	// sleep until WDT or ext. interrupt
 	sleep_cpu();
     sleep_disable();	
+	// restore previous WDT settings
+	WDTCSR = (1 << WDCE) | (1 << WDE);
+	WDTCSR = WDTsave;
 	// enable ADC
 	ADCSRA |= (1 << ADEN);
 }
