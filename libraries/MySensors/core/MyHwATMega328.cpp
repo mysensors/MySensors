@@ -36,8 +36,6 @@ void wakeUp2()	 //place to send the second interrupts
 // to allow automatic WDIF and WDIE bit clearance in hardware.
 ISR (WDT_vect)
 {
-	// WDIE & WDIF is cleared in hardware upon entering this ISR
-	//wdt_disable();
 }
 
 void hwPowerDown(period_t period) {
@@ -46,30 +44,33 @@ void hwPowerDown(period_t period) {
 	ADCSRA &= ~(1 << ADEN);
 	// save WDT settings
 	uint8_t WDTsave = WDTCSR;
-
 	if (period != SLEEP_FOREVER)
 	{
-		// change WDT to waiting period
 		wdt_enable(period);
 		// enable WDT interrupt before system reset
-		WDTCSR |= (1 << WDIE) ;
+		WDTCSR |= (1 << WDCE) | (1 << WDIE);
 	} else {
-		// if sleeping forever, wdt should be disabled
+		// if sleeping forever, disable WDT
 		wdt_disable();
 	}
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
 	sleep_enable();
-	#if defined __AVR_ATmega328P__
+#if defined __AVR_ATmega328P__
 	sleep_bod_disable();
-	#endif
+#endif
 	sei();
 	// sleep until WDT or ext. interrupt
 	sleep_cpu();
     sleep_disable();	
 	// restore previous WDT settings
-	WDTCSR = (1 << WDCE) | (1 << WDE);
+	cli();
+	wdt_reset();
+	// enable WDT changes
+	WDTCSR |= (1 << WDCE) | (1 << WDE);
+	// restore saved WDT settings
 	WDTCSR = WDTsave;
+	sei();
 	// enable ADC
 	ADCSRA |= (1 << ADEN);
 }
