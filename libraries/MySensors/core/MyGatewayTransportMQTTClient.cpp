@@ -25,6 +25,7 @@
 
 // Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
+uint8_t protocolH2i(char c);
 
 
 IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
@@ -64,8 +65,11 @@ void incomingMQTT(char* topic, byte* payload,
                         unsigned int length)
 {
 	debug(PSTR("Message arrived on topic: %s\n"), topic);
-	char *str, *p;
+	char *str, *p, *value=NULL;
 	uint8_t i = 0;
+	uint8_t bvalue[MAX_PAYLOAD];
+	uint8_t blen = 0;
+	uint8_t command = 0;
 	for (str = strtok_r(topic, "/", &p); str && i <= 5;
 			str = strtok_r(NULL, "/", &p)) {
 		switch (i) {
@@ -89,7 +93,8 @@ void incomingMQTT(char* topic, byte* payload,
 			}
 			case 3: {
 				// Command type
-				mSetCommand(_mqttMsg, atoi(str));
+        command = atoi(str);
+				mSetCommand(_mqttMsg, command);
 				break;
 			}
 			case 4: {
@@ -100,12 +105,25 @@ void incomingMQTT(char* topic, byte* payload,
 			case 5: {
 				// Sub type
 				_mqttMsg.type = atoi(str);
-				// Add payload
-				char* ca;
-				ca = (char *) payload;
-				ca += length;
-				*ca = '\0';
-				_mqttMsg.set((const char*) payload);
+        
+        // Add payload
+        if (command == C_STREAM) {
+					blen = 0;
+					uint8_t val;
+					while (*payload) {
+						val = protocolH2i(*payload++) << 4;
+						val += protocolH2i(*payload++);
+						bvalue[blen] = val;
+						blen++;
+					}
+          _mqttMsg.set(bvalue, blen);
+				} else {
+          char* ca;
+          ca = (char *) payload;
+          ca += length;
+          *ca = '\0';
+          _mqttMsg.set((const char*) payload);
+       }
 				_available = true;
 			}
 		}
@@ -181,4 +199,16 @@ MyMessage & gatewayTransportReceive() {
 	// Return the last parsed message
 	_available = false;
 	return _mqttMsg;
+}
+
+
+uint8_t protocolH2i(char c) {
+	uint8_t i = 0;
+	if (c <= '9')
+		i += c - '0';
+	else if (c >= 'a')
+		i += c - 'a' + 10;
+	else
+		i += c - 'A' + 10;
+	return i;
 }
