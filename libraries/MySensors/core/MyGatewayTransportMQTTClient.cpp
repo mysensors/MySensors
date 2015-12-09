@@ -93,7 +93,7 @@ void incomingMQTT(char* topic, byte* payload,
 			}
 			case 3: {
 				// Command type
-        command = atoi(str);
+				command = atoi(str);
 				mSetCommand(_mqttMsg, command);
 				break;
 			}
@@ -105,9 +105,8 @@ void incomingMQTT(char* topic, byte* payload,
 			case 5: {
 				// Sub type
 				_mqttMsg.type = atoi(str);
-        
-        // Add payload
-        if (command == C_STREAM) {
+				// Add payload
+				if (command == C_STREAM) {
 					blen = 0;
 					uint8_t val;
 					while (*payload) {
@@ -116,14 +115,14 @@ void incomingMQTT(char* topic, byte* payload,
 						bvalue[blen] = val;
 						blen++;
 					}
-          _mqttMsg.set(bvalue, blen);
+					_mqttMsg.set(bvalue, blen);
 				} else {
-          char* ca;
-          ca = (char *) payload;
-          ca += length;
-          *ca = '\0';
-          _mqttMsg.set((const char*) payload);
-       }
+					char* ca;
+					ca = (char *) payload;
+					ca += length;
+					*ca = '\0';
+					_mqttMsg.set((const char*) payload);
+				}
 				_available = true;
 			}
 		}
