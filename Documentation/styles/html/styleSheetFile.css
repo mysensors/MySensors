@@ -1,7 +1,31 @@
 /* The standard CSS for doxygen 1.8.6 */
 
+@font-face {
+    font-family: kg_second_chances_sketchRg;
+    src: url('http://static-ci.mysensors.org/font/kgsecondchancessketch-webfont.eot');
+    src: url('http://static-ci.mysensors.org/font/kgsecondchancessketch-webfont.eot?#iefix') format('embedded-opentype'),
+    url('http://static-ci.mysensors.org/font/kgsecondchancessketch-webfont.woff') format('woff'),
+    url('http://static-ci.mysensors.org/font/kgsecondchancessketch-webfont.ttf') format('truetype'),
+    url('http://static-ci.mysensors.org/font/kgsecondchancessketch-webfont.svg#kg_second_chances_sketchRg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: kg_second_chances_solidRg;
+    src: url('http://static-ci.mysensors.org/font/kgsecondchancessolid-webfont.eot');
+    src: url('http://static-ci.mysensors.org/font/kgsecondchancessolid-webfont.eot?#iefix') format('embedded-opentype'),
+    url('http://static-ci.mysensors.org/font/kgsecondchancessolid-webfont.woff') format('woff'),
+    url('http://static-ci.mysensors.org/font/kgsecondchancessolid-webfont.ttf') format('truetype'),
+    url('http://static-ci.mysensors.org/font/kgsecondchancessolid-webfont.svg#kg_second_chances_solidRg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 body, table, div, p, dl {
-	font: 400 14px/22px Roboto,sans-serif;
+	font: 400 14px/22px "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* @group Heading Levels */
@@ -11,9 +35,9 @@ h1.groupheader {
 }
 
 .title {
-	font: 400 14px/28px Roboto,sans-serif;
-	font-size: 150%;
-	font-weight: bold;
+	font: 400 14px/38px kg_second_chances_sketchRg;
+	font-size: 3em;
+	font-weight: normal;
 	margin: 10px 2px;
 }
 
@@ -627,7 +651,7 @@ dl.reflist dd {
 }       
         
 .params .paramdir {
-        font-family: "courier new",courier,monospace;
+        font-family: monospace, fixed;
         vertical-align: top;
 }
 
