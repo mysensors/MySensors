@@ -18,6 +18,7 @@
  */
 /**
  * @defgroup MySigninggrp MySigning
+ * @ingroup internals
  * @{
  *
  * @brief The signing driver provides a generic API for various signing backends to offer

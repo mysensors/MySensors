@@ -349,6 +349,7 @@ class AES
 
 /**
  * @defgroup aeslib AES library for Arduino and Raspberry pi
+ * @ingroup internals
  *
  * @section Goals design Goals
  *

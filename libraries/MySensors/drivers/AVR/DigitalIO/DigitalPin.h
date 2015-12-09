@@ -22,6 +22,7 @@
  * @brief Fast Digital Pin functions
  *
  * @defgroup digitalPin Fast Pin I/O
+ * @ingroup internals
  * @details  Fast Digital I/O functions and template class.
  * @{
  */

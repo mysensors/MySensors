@@ -22,6 +22,7 @@
  * @brief  Software SPI.
  *
  * @defgroup softSPI Software SPI
+ * @ingroup internals
  * @details  Software SPI Template Class.
  * @{
  */

@@ -21,6 +21,11 @@
  * @file MyMessage.h
  *
  * @brief API and type declarations for MySensors messages
+ * @defgroup MyMessagegrp MyMessage
+ * @{
+ *
+ * @brief Here you can find all message types used my the MySensors protocol as well as macros for
+ * parsing and manipulating messages.
  */
 #ifndef MyMessage_h
 #define MyMessage_h
@@ -334,3 +339,4 @@ uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];
 #endif
 
 #endif
+/** @}*/

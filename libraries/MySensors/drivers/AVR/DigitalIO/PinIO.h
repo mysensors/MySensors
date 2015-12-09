@@ -22,6 +22,7 @@
  * @brief Digital AVR port I/O with runtime pin number.
  *
  * @defgroup runtimeDigital Runtime Pin I/O
+ * @ingroup internals
  * @details  Two Wire Interface library.
  * @{
  */

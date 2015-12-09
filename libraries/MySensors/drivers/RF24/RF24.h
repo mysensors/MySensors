@@ -1000,6 +1000,7 @@ private:
 
 /**
  * @defgroup rf24 Optimized High Speed Driver for nRF24L01(+) 2.4GHz Wireless Transceiver
+ * @ingroup internals
  *
  * @section Goals Design Goals
  *
