@@ -240,7 +240,9 @@ class ATSHA204Class
 {
 private:
 	uint8_t device_pin;
-//	volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
+	#ifdef ARDUINO_ARCH_AVR
+	volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
+	#endif
 	void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc);
 	uint8_t sha204c_check_crc(uint8_t *response);
 	void swi_set_signal_pin(uint8_t is_high);

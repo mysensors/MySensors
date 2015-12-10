@@ -7,7 +7,19 @@
 // As well as the bit value for each of those registers
 ATSHA204Class::ATSHA204Class(uint8_t pin)
 {	
-	device_pin = pin;	// Find the bit value of the pin
+#if defined(ARDUINO_ARCH_AVR)
+	device_pin = digitalPinToBitMask(pin);	// Find the bit value of the pin
+	uint8_t port = digitalPinToPort(pin);	// temoporarily used to get the next three registers
+	
+	// Point to data direction register port of pin
+	device_port_DDR = portModeRegister(port);
+	// Point to output register of pin
+	device_port_OUT = portOutputRegister(port);
+	// Point to input register of pin
+	device_port_IN = portInputRegister(port);
+#else
+	device_pin = pin;
+#endif
 }
 
 void ATSHA204Class::getSerialNumber(uint8_t * response)
@@ -71,21 +83,21 @@ uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
     {
       if (bit_mask & buffer[i]) 
       {
-        SHA204_POUT_LOW() //*device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_POUT_HIGH() //*device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(7*BIT_DELAY);  //BIT_DELAY_7;
       }
       else 
       {
         // Send a zero bit.
-        SHA204_POUT_LOW() //*device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_POUT_HIGH() //*device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_POUT_LOW() //*device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_POUT_HIGH() //*device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(5*BIT_DELAY);  //BIT_DELAY_5;
       }
     }
