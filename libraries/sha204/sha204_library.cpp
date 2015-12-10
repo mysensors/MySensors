@@ -5,11 +5,25 @@
 
 // atsha204Class Constructor
 // Feed this function the Arduino-ized pin number you want to assign to the ATSHA204's SDA pin
-// This will find the DDRX, PORTX, and PINX registrs it'll need to point to to control that pin
+// For AVR ARCH, this will find the DDRX, PORTX, and PINX registrs it'll need to point to to control that pin
 // As well as the bit value for each of those registers
+// For others it will only store the pin number which is used in subsequent functions
+
 atsha204Class::atsha204Class(uint8_t pin)
 {	
-	device_pin = pin;	// Find the bit value of the pin
+#if defined(ARDUINO_ARCH_AVR)
+	device_pin = digitalPinToBitMask(pin);	// Find the bit value of the pin
+	uint8_t port = digitalPinToPort(pin);	// temoporarily used to get the next three registers
+	
+	// Point to data direction register port of pin
+	device_port_DDR = portModeRegister(port);
+	// Point to output register of pin
+	device_port_OUT = portOutputRegister(port);
+	// Point to input register of pin
+	device_port_IN = portInputRegister(port);
+#else
+	device_pin = pin;
+#endif
 }
 
 /* 	Puts a the ATSHA204's unique, 4-byte serial number in the response array 
@@ -73,12 +87,14 @@ uint16_t atsha204Class::calculateAndUpdateCrc(uint8_t length, uint8_t *data, uin
 
 void atsha204Class::swi_set_signal_pin(uint8_t is_high)
 {
-  pinMode(device_pin, OUTPUT);
+  SHA204_SET_OUTPUT();
+  if (is_high) {
+    SHA204_SET_HIGH();
+  }
+  else {
+    SHA204_SET_LOW();
+  }
 
-  if (is_high)
-    digitalWrite(device_pin, HIGH);
-  else
-    digitalWrite(device_pin, LOW);
 }
 
 uint8_t atsha204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
@@ -89,9 +105,8 @@ uint8_t atsha204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
   noInterrupts();  //swi_disable_interrupts();
 
   // Set signal pin as output.
-  pinMode(device_pin, OUTPUT);
-  digitalWrite(device_pin, HIGH);
-
+  SHA204_SET_HIGH();
+  SHA204_SET_OUTPUT();	
   // Wait turn around time.
   delayMicroseconds(RX_TX_DELAY);  //RX_TX_DELAY;
 
@@ -101,22 +116,22 @@ uint8_t atsha204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
     {
       if (bit_mask & buffer[i]) 
       {
-		digitalWrite(device_pin, LOW);
+        SHA204_SET_LOW();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-		digitalWrite(device_pin, HIGH);
+        SHA204_SET_HIGH();
         delayMicroseconds(7*BIT_DELAY);  //BIT_DELAY_7;
       }
       else 
       {
         // Send a zero bit.
-		digitalWrite(device_pin, LOW);
+        SHA204_SET_LOW();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-		digitalWrite(device_pin, HIGH);
+        SHA204_SET_HIGH();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        digitalWrite(device_pin, LOW);
+        SHA204_SET_LOW();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-		digitalWrite(device_pin, HIGH);
-		delayMicroseconds(5*BIT_DELAY);  //BIT_DELAY_5;
+        SHA204_SET_HIGH();
+        delayMicroseconds(5*BIT_DELAY);  //BIT_DELAY_5;
       }
     }
   }
@@ -140,9 +155,9 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
   // Disable interrupts while receiving.
   noInterrupts(); //swi_disable_interrupts();
 
-  // Configure signal pin as input.
-  pinMode(device_pin,INPUT);
-	
+  // Configure signal pin as input
+  SHA204_SET_INPUT();
+
   // Receive bits and store in buffer.
   for (i = 0; i < count; i++)
   {
@@ -159,7 +174,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       while (--timeout_count > 0) 
       {
         // Wait for falling edge.
-        if (digitalRead(device_pin) == 0)
+        if (SHA204_READ_PIN() == 0)
           break;
       }
 
@@ -172,7 +187,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       do 
       {
         // Wait for rising edge.
-        if (digitalRead(device_pin) != 0) 
+        if (SHA204_READ_PIN() != 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 1;
@@ -195,7 +210,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       // Detect possible edge indicating zero bit.
       do 
       {
-        if (digitalRead(device_pin) == 0) 
+        if (SHA204_READ_PIN() == 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 2;
@@ -209,7 +224,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       {
         do 
         {
-          if (digitalRead(device_pin) != 0)
+          if (SHA204_READ_PIN() != 0)
             break;
         } while (timeout_count-- > 0);
       }
