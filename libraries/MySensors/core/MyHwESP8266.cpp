@@ -96,12 +96,12 @@ void hwSleep(unsigned long ms) {
   // TODO: Not supported!
 }
 
-bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
   // TODO: Not supported!
 	return false;
 }
 
-uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
   // TODO: Not supported!
 	return 0;
 }
