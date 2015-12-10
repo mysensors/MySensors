@@ -42,12 +42,12 @@ void ATSHA204Class::getSerialNumber(uint8_t * response)
 
 void ATSHA204Class::swi_set_signal_pin(uint8_t is_high)
 {
-  pinMode(device_pin, OUTPUT);
+  SHA204_SET_OUTPUT();
 
   if (is_high)
-	digitalWrite(device_pin, HIGH);
+	SHA204_POUT_HIGH();
   else
-	digitalWrite(device_pin, LOW);
+	SHA204_POUT_LOW();
 }
 
 uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
@@ -58,8 +58,9 @@ uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
   noInterrupts();  //swi_disable_interrupts();
 
   // Set signal pin as output.
-  pinMode(device_pin, OUTPUT);
-  digitalWrite(device_pin, HIGH);
+  SHA204_POUT_HIGH();
+  SHA204_SET_OUTPUT();
+  
 
   // Wait turn around time.
   delayMicroseconds(RX_TX_DELAY);  //RX_TX_DELAY;
@@ -70,21 +71,21 @@ uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
     {
       if (bit_mask & buffer[i]) 
       {
-        digitalWrite(device_pin, LOW); //*device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW() //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        digitalWrite(device_pin, HIGH); //*device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH() //*device_port_OUT |= device_pin;
         delayMicroseconds(7*BIT_DELAY);  //BIT_DELAY_7;
       }
       else 
       {
         // Send a zero bit.
-        digitalWrite(device_pin, LOW); //*device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW() //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        digitalWrite(device_pin, HIGH); //*device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH() //*device_port_OUT |= device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        digitalWrite(device_pin, LOW); //*device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW() //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        digitalWrite(device_pin, HIGH); //*device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH() //*device_port_OUT |= device_pin;
         delayMicroseconds(5*BIT_DELAY);  //BIT_DELAY_5;
       }
     }
@@ -110,8 +111,8 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
   noInterrupts(); //swi_disable_interrupts();
 
   // Configure signal pin as input.
-  pinMode(device_pin, INPUT);
-
+  SHA204_SET_INPUT();
+	
   // Receive bits and store in buffer.
   for (i = 0; i < count; i++)
   {
@@ -128,7 +129,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       while (--timeout_count > 0) 
       {
         // Wait for falling edge.
-        if (digitalRead(device_pin) == 0)
+        if (SHA204_PIN_READ() == 0)
           break;
       }
 
@@ -141,7 +142,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       do 
       {
         // Wait for rising edge.
-        if (digitalRead(device_pin) != 0) 
+        if (SHA204_PIN_READ() != 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 1;
@@ -164,7 +165,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       // Detect possible edge indicating zero bit.
       do 
       {
-        if (digitalRead(device_pin) == 0) 
+        if (SHA204_PIN_READ() == 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 2;
@@ -178,7 +179,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       {
         do 
         {
-          if (digitalRead(device_pin) != 0)
+          if (SHA204_PIN_READ() != 0)
             break;
         } while (timeout_count-- > 0);
       }

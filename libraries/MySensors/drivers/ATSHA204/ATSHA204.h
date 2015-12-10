@@ -220,6 +220,22 @@
 
 #define SHA204_SERIAL_SZ    9   // The number of bytes the serial number consists of
 
+/* Low level HW access macros */
+/* function calls is not working, as it will have too much overhead */
+#if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
+#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
+#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
+#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
+#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
+#define SHA204_PIN_READ() digitalRead(device_pin)
+#else
+#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
+#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
+#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
+#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
+#define SHA204_PIN_READ() (*device_port_IN & device_pin)
+#endif
+
 class ATSHA204Class
 {
 private:

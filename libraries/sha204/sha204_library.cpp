@@ -89,10 +89,10 @@ void atsha204Class::swi_set_signal_pin(uint8_t is_high)
 {
   SHA204_SET_OUTPUT();
   if (is_high) {
-    SHA204_SET_HIGH();
+    SHA204_POUT_HIGH();
   }
   else {
-    SHA204_SET_LOW();
+    SHA204_POUT_LOW();
   }
 
 }
@@ -105,7 +105,7 @@ uint8_t atsha204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
   noInterrupts();  //swi_disable_interrupts();
 
   // Set signal pin as output.
-  SHA204_SET_HIGH();
+  SHA204_POUT_HIGH();
   SHA204_SET_OUTPUT();	
   // Wait turn around time.
   delayMicroseconds(RX_TX_DELAY);  //RX_TX_DELAY;
@@ -116,21 +116,21 @@ uint8_t atsha204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
     {
       if (bit_mask & buffer[i]) 
       {
-        SHA204_SET_LOW();
+        SHA204_POUT_LOW();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_SET_HIGH();
+        SHA204_POUT_HIGH();
         delayMicroseconds(7*BIT_DELAY);  //BIT_DELAY_7;
       }
       else 
       {
         // Send a zero bit.
-        SHA204_SET_LOW();
+        SHA204_POUT_LOW();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_SET_HIGH();
+        SHA204_POUT_HIGH();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_SET_LOW();
+        SHA204_POUT_LOW();
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        SHA204_SET_HIGH();
+        SHA204_POUT_HIGH();
         delayMicroseconds(5*BIT_DELAY);  //BIT_DELAY_5;
       }
     }
@@ -174,7 +174,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       while (--timeout_count > 0) 
       {
         // Wait for falling edge.
-        if (SHA204_READ_PIN() == 0)
+        if (SHA204_PIN_READ() == 0)
           break;
       }
 
@@ -187,7 +187,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       do 
       {
         // Wait for rising edge.
-        if (SHA204_READ_PIN() != 0) 
+        if (SHA204_PIN_READ() != 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 1;
@@ -210,7 +210,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       // Detect possible edge indicating zero bit.
       do 
       {
-        if (SHA204_READ_PIN() == 0) 
+        if (SHA204_PIN_READ() == 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 2;
@@ -224,7 +224,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       {
         do 
         {
-          if (SHA204_READ_PIN() != 0)
+          if (SHA204_PIN_READ() != 0)
             break;
         } while (timeout_count-- > 0);
       }
