@@ -31,7 +31,7 @@ MyMessage _serialMsg;
 
 
 bool gatewayTransportSend(MyMessage &message) {
-	Serial.print(protocolFormat(message));
+	SERIALDEVICE.print(protocolFormat(message));
 	// Serial print is always successful
 	return true;
 }
@@ -45,9 +45,9 @@ bool gatewayTransportInit() {
 bool gatewayTransportAvailable() {
 	bool available = false;
 
-	while (Serial.available()) {
+	while (SERIALDEVICE.available()) {
 		// get the new byte:
-		char inChar = (char) Serial.read();
+		char inChar = (char) SERIALDEVICE.read();
 		// if the incoming character is a newline, set a flag
 		// so the main loop can do something about it:
 		if (_serialInputPos < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1 && !available) {

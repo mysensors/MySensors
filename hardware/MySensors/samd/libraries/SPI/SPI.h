@@ -136,6 +136,8 @@ void SPIClass::transfer(void *buf, size_t count)
 
 #if SPI_INTERFACES_COUNT > 0
   extern SPIClass SPI;
+  extern SPIClass SPI_ETH;
+  extern SPIClass SPI_USER;
 #endif
 
 // For compatibility with sketches designed for AVR @ 16 MHz

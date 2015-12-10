@@ -66,7 +66,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(printBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
-	Serial.print(printBuffer);
+	SERIALDEVICE.print(printBuffer);
 #endif
 	for (int i=0; i<sz; i++)
 	{
@@ -78,12 +78,12 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 	// Truncate message if this is gateway node
 	printBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1-strlen_P((const char*)str)] = '\0';
 #endif
-	Serial.print(str);
+	SERIALDEVICE.print(str);
 	if (sz > 0)
 	{
-		Serial.print(printBuffer);
+		SERIALDEVICE.print(printBuffer);
 	}
-	Serial.println("");
+	SERIALDEVICE.println("");
 }
 #else
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)

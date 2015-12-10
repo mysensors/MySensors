@@ -51,7 +51,7 @@ void RF24::csn(bool mode)
 			delayMicroseconds(11);  // allow csn to settle
 		}
 	}		
-#elif !defined  (__arm__) || defined (CORE_TEENSY)
+#elif !defined  (__arm__) || defined (CORE_TEENSY) || defined(ARDUINO_ARCH_SAMD)
 	digitalWrite(csn_pin,mode);		
 #endif
 
@@ -71,7 +71,7 @@ uint8_t RF24::read_register(uint8_t reg, uint8_t* buf, uint8_t len)
 {
   uint8_t status;
 
-#if defined (__arm__) && !defined ( CORE_TEENSY )
+#if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   status = _SPI.transfer(csn_pin, R_REGISTER | ( REGISTER_MASK & reg ), SPI_CONTINUE );
   while ( len-- > 1 ){
     *buf++ = _SPI.transfer(csn_pin,0xff, SPI_CONTINUE);
@@ -96,7 +96,7 @@ uint8_t RF24::read_register(uint8_t reg, uint8_t* buf, uint8_t len)
 uint8_t RF24::read_register(uint8_t reg)
 {
 
-  #if defined (__arm__) && !defined ( CORE_TEENSY )
+  #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   _SPI.transfer(csn_pin, R_REGISTER | ( REGISTER_MASK & reg ) , SPI_CONTINUE);
   uint8_t result = _SPI.transfer(csn_pin,0xff);
   #else
@@ -116,7 +116,7 @@ uint8_t RF24::write_register(uint8_t reg, const uint8_t* buf, uint8_t len)
 {
   uint8_t status;
 
-  #if defined (__arm__) && !defined ( CORE_TEENSY )
+  #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   	status = _SPI.transfer(csn_pin, W_REGISTER | ( REGISTER_MASK & reg ), SPI_CONTINUE );
     while ( --len){
     	_SPI.transfer(csn_pin,*buf++, SPI_CONTINUE);
@@ -146,7 +146,7 @@ uint8_t RF24::write_register(uint8_t reg, uint8_t value)
   Serial.print(F("write_register(")); print_hex(reg, true); Serial.print(F(",")); print_hex(value, true); Serial.println(F(")")); 
 #endif
 
-#if defined (__arm__) && !defined ( CORE_TEENSY )
+#if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   status = _SPI.transfer(csn_pin, W_REGISTER | ( REGISTER_MASK & reg ), SPI_CONTINUE);
   _SPI.transfer(csn_pin,value);
 #else
@@ -171,7 +171,7 @@ uint8_t RF24::write_payload(const void* buf, uint8_t data_len, const uint8_t wri
   
   //printf("[Writing %u bytes %u blanks]",data_len,blank_len);
 
- #if defined (__arm__) && !defined ( CORE_TEENSY )
+ #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
 
   status = _SPI.transfer(csn_pin, writeType , SPI_CONTINUE);
 
@@ -220,7 +220,7 @@ uint8_t RF24::read_payload(void* buf, uint8_t data_len)
   //printf("[Reading %u bytes %u blanks]",data_len,blank_len);
 
 
-  #if defined (__arm__) && !defined ( CORE_TEENSY )
+  #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
 
   status = _SPI.transfer(csn_pin, R_RX_PAYLOAD, SPI_CONTINUE );
 
@@ -276,7 +276,7 @@ uint8_t RF24::flush_tx(void)
 uint8_t RF24::spiTrans(uint8_t cmd){
 
   uint8_t status;
-  #if defined (__arm__) && !defined ( CORE_TEENSY )
+  #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
 	status = _SPI.transfer(csn_pin, cmd );
   #else
 
@@ -481,7 +481,7 @@ void RF24::begin(void)
   // Initialize pins
   if (ce_pin != csn_pin) pinMode(ce_pin,OUTPUT);
 
-  #if defined(__arm__) && ! defined( CORE_TEENSY )
+  #if defined(__arm__) && ! defined( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   	_SPI.begin(csn_pin);					// Using the extended SPI features of the DUE
 	_SPI.setClockDivider(csn_pin, 9);   // Set the bus speed to 8.4mhz on Due
 	_SPI.setBitOrder(csn_pin,MSBFIRST);	// Set the bit order and mode specific to this device
@@ -888,7 +888,7 @@ uint8_t RF24::getDynamicPayloadSize(void)
 {
   uint8_t result = 0;
 
-  #if defined (__arm__) && ! defined( CORE_TEENSY )
+  #if defined (__arm__) && ! defined( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   _SPI.transfer(csn_pin, R_RX_PL_WID, SPI_CONTINUE );
   result = _SPI.transfer(csn_pin,0xff);
   #else
@@ -1079,7 +1079,7 @@ void RF24::closeReadingPipe( uint8_t pipe )
 void RF24::toggle_features(void)
 {
 
-  #if defined (__arm__) && ! defined( CORE_TEENSY )
+  #if defined (__arm__) && ! defined( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   _SPI.transfer(csn_pin, ACTIVATE, SPI_CONTINUE );
   _SPI.transfer(csn_pin, 0x73 );
   #else
@@ -1145,7 +1145,7 @@ void RF24::writeAckPayload(uint8_t pipe, const void* buf, uint8_t len)
 
   uint8_t data_len = min(len,32);
 
-  #if defined (__arm__) && ! defined( CORE_TEENSY )
+  #if defined (__arm__) && ! defined( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
 	_SPI.transfer(csn_pin, W_ACK_PAYLOAD | ( pipe & B111 ), SPI_CONTINUE);
 	while ( data_len-- > 1 ){
 		_SPI.transfer(csn_pin,*current++, SPI_CONTINUE);

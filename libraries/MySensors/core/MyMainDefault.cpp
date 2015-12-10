@@ -3,7 +3,8 @@
 int main(void) {
 	init();
 	#if defined(USBCON)
-		USBDevice.attach();
+		USBDevice.init();
+    		USBDevice.attach();
 	#endif
 	_begin(); // Startup MySensors library
 

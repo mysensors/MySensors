@@ -109,7 +109,7 @@ recipe.size.regex=\.text\s+([0-9]+).*
 #
 # BOSSA
 #
-tools.bossac.path={runtime.tools.bossac-1.6-arduino.path}
+tools.bossac.path={runtime.tools.bossac-1.6.1-arduino.path}
 tools.bossac.cmd=bossac
 tools.bossac.cmd.windows=bossac.exe
 

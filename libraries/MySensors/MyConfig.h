@@ -276,6 +276,8 @@
 #ifndef MY_RF24_CE_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF24_CE_PIN 4
+	#elif defined(ARDUINO_ARCH_SAMD)
+		#define MY_RF24_CE_PIN 27
 	#else
 		#define MY_RF24_CE_PIN 9
 	#endif
@@ -284,6 +286,8 @@
 #ifndef MY_RF24_CS_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF24_CS_PIN 15
+	#elif defined(ARDUINO_ARCH_SAMD)
+		#define MY_RF24_CS_PIN 3
 	#else
 		#define MY_RF24_CS_PIN 10
 	#endif
