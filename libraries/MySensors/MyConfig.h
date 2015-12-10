@@ -351,7 +351,11 @@
 #define MY_RF69_SPI_CS RF69_SPI_CS
 #endif
 #ifndef MY_RF69_IRQ_NUM
-#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
+	#else
+		#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+	#endif
 #endif
 
 // Enable this for encryption of packets

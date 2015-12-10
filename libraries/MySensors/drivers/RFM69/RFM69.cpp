@@ -44,8 +44,8 @@ volatile byte RFM69::ACK_RECEIVED; /// Should be polled immediately after sendin
 volatile int RFM69::RSSI; //most accurate RSSI during reception (closest to the reception)
 RFM69* RFM69::selfPointer;
 
-// Set time out to 50ms
- #define TIME_OUT 50
+// Set time out to 100ms
+ #define TIME_OUT 100
 
 
 bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
@@ -97,11 +97,19 @@ bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
   
 
   start_to = millis();
-  do writeReg(REG_SYNCVALUE1, 0xaa); while (readReg(REG_SYNCVALUE1) != 0xaa && millis()-start_to < TIME_OUT);
+  do {
+	  writeReg(REG_SYNCVALUE1, 0xaa);
+	  yield();
+  } while (readReg(REG_SYNCVALUE1) != 0xaa && millis()-start_to < TIME_OUT);
+
   if (millis()-start_to >= TIME_OUT) return (false);
 
   start_to = millis()  ;
-  do writeReg(REG_SYNCVALUE1, 0x55); while (readReg(REG_SYNCVALUE1) != 0x55 && millis()-start_to < TIME_OUT);
+  do {
+	  writeReg(REG_SYNCVALUE1, 0x55);
+	  yield();
+  } while (readReg(REG_SYNCVALUE1) != 0x55 && millis()-start_to < TIME_OUT);
+
   if (millis()-start_to >= TIME_OUT) return (false);
 
   for (byte i = 0; CONFIG[i][0] != 255; i++)
@@ -116,7 +124,9 @@ bool RFM69::initialize(byte freqBand, byte nodeID, byte networkID)
 
 
   start_to = millis() ;
-  while (((readReg(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0x00) && millis()-start_to < TIME_OUT); // Wait for ModeReady
+  while (((readReg(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0x00) && millis()-start_to < TIME_OUT) {
+	  yield();
+  } // Wait for ModeReady
   if (millis()-start_to >= TIME_OUT) return (false);
 
   attachInterrupt(_interruptNum, RFM69::isr0, RISING);
