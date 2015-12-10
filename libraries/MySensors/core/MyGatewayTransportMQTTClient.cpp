@@ -65,7 +65,7 @@ void incomingMQTT(char* topic, byte* payload,
                         unsigned int length)
 {
 	debug(PSTR("Message arrived on topic: %s\n"), topic);
-	char *str, *p, *value=NULL;
+	char *str, *p;
 	uint8_t i = 0;
 	uint8_t bvalue[MAX_PAYLOAD];
 	uint8_t blen = 0;
