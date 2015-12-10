@@ -35,8 +35,8 @@
  * Alice sends a message to Bob. This message can be heard by anyone who wants to listen (and also by anyone that is within “hearing”
  * distance). Normally, this is perhaps not a big issue. Nothing Alice says to Bob may be secret or sensitive in any way.
  * However, sometimes (or perhaps always) Bob want to be sure that the message Bob receives actually came from Alice. In cryptography,
- * this is known as <i>authenticity</i>. Bob need some way of determining that the message is authentic from Alice, when Bob receives it.
- * This prevent an eavesdropper, Eve, to trick Bob into thinking it was Alice that sent a message Eve in fact transmitted. Bob also need
+ * this is known as <i>authenticity</i>. Bob needs some way of determining that the message is authentic from Alice, when Bob receives it.
+ * This prevents an eavesdropper, Eve, to trick Bob into thinking it was Alice that sent a message Eve in fact transmitted. Bob also needs
  * to know how to determine if the message has been repeated. Eve could record a message sent by Alice that Bob accepted and then send
  * the same message again. Eve could also in some way prevent Bob from receiving the message and delay it in order to permit the message
  * to arrive to Bob at a time Eve chooses, instead of Alice. Such an attack is known as a <b>replay attack</b>.<br>
@@ -156,7 +156,11 @@
  * This has to be set by at least one of the node in a "pair" or nobody will actually start calculating a signature for a message.
  * Just set the flag @ref MY_SIGNING_REQUEST_SIGNATURES and the node will inform the gateway that it expects the gateway to sign all
  * messages sent to the node. If this is set in a gateway, it will @b NOT force all nodes to sign messages to it. It will only require
- * signatures from nodes that in turn require signatures.
+ * signatures from nodes that in turn require signatures.<br>
+ * A node can have three "states" with respect to signing:
+ * 1. Node does not support signing in any way (neither @ref MY_SIGNING_ATSHA204 nor @ref MY_SIGNING_SOFT is set)
+ * 2. Node does support signing but don't require messages sent to it to be signed (@ref MY_SIGNING_REQUEST_SIGNATURES is not set)
+ * 3. Node does support signing and require messages sent to it to be signed (@ref MY_SIGNING_REQUEST_SIGNATURES is set)
  *
  * <b>Secondly</b>, you need to verify the configuration for the backend.<br>
  * For hardware backed signing it is the pin the device is connected to. In MyConfig.h there are defaults which you might need to adjust to
@@ -180,7 +184,7 @@
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
- * #defune MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #include <MySensor.h>
@@ -267,7 +271,7 @@
  *
  * Consider the situation when you have set up your secure topology. We use the remotely operated garage door as an example:
  * - You have a node inside your garage (therefore secure and out of reach from prying eyes) that controls your garage door motor.\n
- *   This node require signing since you do not want an unauthorized person sending it orders to open the door.
+ *   This node requires signing since you do not want an unauthorized person sending it orders to open the door.
  * - You have a keyfob node with a signing backend that uses the same PSK as your door opener node.
  *
  * In this setup, your keyfob can securely transmit messages to your door node since the keyfob will sign the messages it sends and the door node
@@ -276,7 +280,7 @@
  *
  * One day your keyfob gets stolen or you lost it or it simply broke down.
  *
- * You know end up with a problem; you need some way of telling your door node that the keyfob in question cannot be trusted any more. Furthermore,
+ * You now end up with a problem; you need some way of telling your door node that the keyfob in question cannot be trusted any more. Furthermore,
  * you maybe locked the data region in your door nodes ATSHA device and is not able to revoke/change your PSK, or you have some other reason for
  * not wanting to replace the PSK. How do you make sure that the "rogue" keyfob can be removed from the "trusted chain"?
  *
@@ -290,7 +294,7 @@
  * The whitelist is stored on the node that require signatures. When a received message is verified, the serial of the sender is looked up in a
  * list stored on the receiving node, and the corresponding serial stored in the list for that sender is then included in the signature verification
  * process. The list is stored as the value of the flag that enables whitelisting, @ref MY_SIGNING_NODE_WHITELISTING.<br>
- * For whitelisting to work, the sending node also need to have whitelisting enabled.<br>
+ * For whitelisting to work, the sending node also needs to have whitelisting enabled.<br>
  * 
  * Whitelisting is achieved by 'salting' the signature with some node-unique information known to the receiver. In the case of ATSHA204A this is the
  * unique serial number programmed into the circuit. This unique number is never transmitted over the air in clear text, so Eve will not be able to
@@ -317,7 +321,7 @@
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
- * #defune MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}},{.nodeId = 2,.serial = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09}}}
@@ -369,11 +373,11 @@
  *
  * Due to the limiting factor of our cheapest Arduino nodes, the use of diversified keys is not implemented. That mean that all nodes in your
  * network share the same PSK (at least the ones that are supposed to exchange signed data). It is important to understand the implications of
- * this, and that is covered in the "Typical usecases" chapter below.<br>
+ * this, and that is covered in the "Typical use cases" chapter below.<br>
  * Also be reminded that the strength of the signature is inversely proportional to the size of the message. The larger the message, the weaker
  * the signature.
  *
- * @section MySigningusecases Typical usecases
+ * @section MySigningusecases Typical use cases
  *
  * "Securely located" in this context mean a node which is not physically publicly accessible. Typically at least your gateway.<br>
  * "Public" in this context mean a node that is located outside your "trusted environment". This includes sensors located outdoors, keyfobs etc.
@@ -383,23 +387,75 @@
  * You have a securely located gateway and a lock somewhere inside your "trusted environment" (e.g. inside your house door, the door to your
  * dungeon or similar).<br>
  * You should then keep the data section of your gateway and your lock node unlocked. Locking the data (and therefore the PSK) will require you
- * to replace at least the signing circuit in case you need to revoke the PSK because some other node in your network gets compromised.
+ * to replace at least the signing circuit in case you need to revoke the PSK because some other node in your network gets compromised.<br>
+ * You need to make your node require signed messages but you do not necessarily need to make your gateway require signed messsages (unless you
+ * are concerned that someone might spoof the lock status of your lock).<br>
+ * Configuration example for the secure lock node:<br>
+ * @code{.cpp}
+ * #define MY_SIGNING_ATSHA204
+ * #define MY_SIGNING_REQUEST_SIGNATURES
+ * #include <MySensor.h>
+ * ...
+ * @endcode
+ * If you do also want your gateway to require signatures from your lock you just enable the same (or similar if using software signing) settings
+ * in the gateway.
  *
  * @subsection MySigningpatio Patio motion sensor
  *
  * Your gateway is securely located inside your house, but your motion sensor is located outside your house. You have for some reason elected
- * that this node should sign the messages it send to your gateway.You should lock the data (PSK) in this node then, because if someone were
+ * that this node should sign the messages it send to your gateway. You should lock the data (PSK) in this node then, because if someone were
  * to steal your patio motion sensor, they could rewrite the firmware and spoof your gateway to use it to transmit a correctly signed message
  * to your secure lock inside your house. But if you revoke your gateway (and lock) PSK the outside sensor cannot be used for this anymore.
  * Nor can it be changed in order to do it in the future. You can also use whitelisting to revoke your lost node.<br>
- * This is an unlikely usecase because it is really no reason to sign sensor values. If you for some reason want to obfuscate sensor data,
- * encryption is a better alternative.
+ * This is an unlikely use case because there really is no reason to sign sensor values. If you for some reason want to obfuscate sensor data,
+ * encryption is a better alternative.<br>
+ * Configuration example for a motion sensor with whitelisting (it has to have the gateway whitelisted since the gateway will send signed messages to the node):<br>
+ * @code{.cpp}
+ * #define MY_SIGNING_SOFT
+ * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+ * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
+ * #define MY_SIGNING_REQUEST_SIGNATURES
+ * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88}}}
+ * #include <MySensor.h>
+ * ...
+ * @endcode
  *
+ * The gateway needs to configured with a whitelist (and it have to have an entry for all nodes that send and/or require signed messages):<br>
+ * @code{.cpp}
+ * #define MY_SIGNING_SOFT
+ * #define MY_SIGNING_SOFT_SERIAL 0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+ * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
+ * #define MY_SIGNING_REQUEST_SIGNATURES
+ * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = MOTION_SENSOR_ID,.serial = {0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78}}}
+ * #include <MySensor.h>
+ * ...
+ * @endcode
+
  * @subsection MySigningkeyfob Keyfob for garage door opener
  *
  * Perhaps the most typical usecase for signed messages. Your keyfob should be totally locked down. If the garage door opener is secured
  * (and it should be) it can be unlocked. That way, if you loose your keyfob, you can revoke the PSK in both the opener and your gateway,
- * thus rendering the keyfob useless without having to replace your nodes. You can also use whitelisting to revoke your lost keyfob.
+ * thus rendering the keyfob useless without having to replace your nodes. You can also use whitelisting to revoke your lost keyfob.<br>
+ * Configuration example for the keyfob (keyfob will only transmit to another node and not receive anything):<br>
+ * @code{.cpp}
+ * #define MY_SIGNING_ATSHA204
+ * #define MY_SIGNING_NODE_WHITELISTING {}
+ * #include <MySensor.h>
+ * ...
+ * @endcode
+ * Configuration example for the door controller node (should require signing from anyone who wants to control it):<br>
+ * @code{.cpp}
+ * #define MY_SIGNING_SOFT
+ * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+ * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
+ * #define MY_SIGNING_REQUEST_SIGNATURES
+ * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88}},{.nodeId = KEYFOB_ID,.serial = {<FROM ATSHA ON KEYFOB>}}}
+ * #include <MySensor.h>
+ * ...
+ * @endcode
  *
  * @subsection MySigningsketches Relevant sketches
  *
