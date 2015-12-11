@@ -50,7 +50,6 @@ boolean metric = true;
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
 
-
 void setup()  
 { 
   dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN); 
@@ -68,11 +67,11 @@ void presentation()
   present(CHILD_ID_TEMP, S_TEMP);
 }
 
-
 void loop()      
 {  
   delay(dht.getMinimumSamplingPeriod());
-
+ 
+  // Fetch temperatures from DHT sensor
   float temperature = dht.getTemperature();
   if (isnan(temperature)) {
       Serial.println("Failed reading temperature from DHT");
@@ -82,21 +81,24 @@ void loop()
       temperature = dht.toFahrenheit(temperature);
     }
     send(msgTemp.set(temperature, 1));
+    #if MY_DEBUG
     Serial.print("T: ");
     Serial.println(temperature);
+    #endif
   }
   
+  // Fetch humidity from DHT sensor
   float humidity = dht.getHumidity();
   if (isnan(humidity)) {
       Serial.println("Failed reading humidity from DHT");
   } else if (humidity != lastHum) {
       lastHum = humidity;
       send(msgHum.set(humidity, 1));
+      #if MY_DEBUG
       Serial.print("H: ");
       Serial.println(humidity);
+      #endif
   }
-
+  
   sleep(SLEEP_TIME); //sleep a bit
 }
-
-
