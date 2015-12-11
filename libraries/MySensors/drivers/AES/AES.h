@@ -80,15 +80,15 @@ class AES
 	void copy_n_bytes (byte * AESt, byte * src, byte n) ;
 
 	/** Encrypt a single block of 16 bytes .
-	 *  @param plain[N_BLOCK] Array of the plaintext.
-	 *  @param cipher[N_BLOCK] Array of the ciphertext.
+	 *  @param plain Array of the plaintext.
+	 *  @param cipher Array of the ciphertext.
 	 *  @note The N_BLOCK is defined in AES_config.h as,
 	 *  @code #define N_ROW                   4
 	 *		  #define N_COL                   4
 	 *		  #define N_BLOCK   (N_ROW * N_COL)
 	 *	@endcode
 	 *  Changed to that will change the Block_size.
-	 *  @Return 0 if SUCCESS or -1 if FAILURE
+	 *  @return 0 if SUCCESS or -1 if FAILURE
 	 *
 	 */
 	byte encrypt (byte plain [N_BLOCK], byte cipher [N_BLOCK]) ;
@@ -98,8 +98,8 @@ class AES
 	 *  @param *plain Pointer, points to the plaintex.
 	 *  @param *cipher Pointer, points to the ciphertext that will be created.
 	 *  @param n_block integer, indicated the number of blocks to be ciphered.
-	 *  @param iv[N_BLOCK] byte Array that holds the IV (initialization vector).
-	 *  @Return 0 if SUCCESS or -1 if FAILURE
+	 *  @param iv byte Array that holds the IV (initialization vector).
+	 *  @return 0 if SUCCESS or -1 if FAILURE
 	 *
 	 */
 	byte cbc_encrypt (byte * plain, byte * cipher, int n_block, byte iv [N_BLOCK]) ;
@@ -109,22 +109,22 @@ class AES
 	 *  @param *plain Pointer, points to the plaintex.
 	 *  @param *cipher Pointer, points to the ciphertext that will be created.
 	 *  @param n_block integer, indicated the number of blocks to be ciphered.
-	 *  @Return 0 if SUCCESS or -1 if FAILURE
+	 *  @return 0 if SUCCESS or -1 if FAILURE
 	 *
 	 */
 	byte cbc_encrypt (byte * plain, byte * cipher, int n_block) ;
 
 
 	/**  Decrypt a single block of 16 bytes 
-	 *  @param cipher[N_BLOCK] Array of the ciphertext.
-	 *  @param plain[N_BLOCK] Array of the plaintext.
+	 *  @param cipher Array of the ciphertext.
+	 *  @param plain Array of the plaintext.
 	 *  @note The N_BLOCK is defined in AES_config.h as,
 	 *  @code #define N_ROW                   4
 	 *		  #define N_COL                   4
 	 *		  #define N_BLOCK   (N_ROW * N_COL)
 	 *	@endcode
 	 *  Changed to that will change the Block_size.
-	 *  @Return 0 if SUCCESS or -1 if FAILURE
+	 *  @return 0 if SUCCESS or -1 if FAILURE
 	 *
 	 */
 	byte decrypt (byte cipher [N_BLOCK], byte plain [N_BLOCK]) ;
@@ -134,8 +134,8 @@ class AES
 	 *  @param *cipher Pointer, points to the ciphertext that will be created.
 	 *  @param *plain Pointer, points to the plaintex.
 	 *  @param n_block integer, indicated the number of blocks to be ciphered.
-	 *  @param iv[N_BLOCK] byte Array that holds the IV (initialization vector).
-	 *  @Return 0 if SUCCESS or -1 if FAILURE
+	 *  @param iv byte Array that holds the IV (initialization vector).
+	 *  @return 0 if SUCCESS or -1 if FAILURE
 	 *
 	 */
 	byte cbc_decrypt (byte * cipher, byte * plain, int n_block, byte iv [N_BLOCK]) ;
@@ -145,7 +145,7 @@ class AES
 	 *  @param *cipher Pointer, points to the ciphertext that will be created.
 	 *  @param *plain Pointer, points to the plaintex.
 	 *  @param n_block integer, indicated the number of blocks to be ciphered.
-	 *  @Return 0 if SUCCESS or -1 if FAILURE
+	 *  @return 0 if SUCCESS or -1 if FAILURE
 	 *
 	 */
 	byte cbc_decrypt (byte * cipher, byte * plain, int n_block) ;
@@ -246,7 +246,7 @@ class AES
 	 * @param *cipher pointer to the ciphertext
 	 * @param *key pointer to the key that will be used.
 	 * @param bits bits of the encryption/decrpytion
-	 * @param ivl[N_BLOCK] the initialization vector IV that will be used for encryption.
+	 * @param ivl the initialization vector IV that will be used for encryption.
 	 * @note The key will be stored in class variable.
 	 */
 	void do_aes_encrypt(byte *plain,int size_p,byte *cipher,byte *key, int bits, byte ivl [N_BLOCK]);
@@ -269,7 +269,7 @@ class AES
 	 * @param *plain pointer to the plaintext
 	 * @param *key pointer to the key that will be used.
 	 * @param bits bits of the encryption/decrpytion
-	 * @param ivl[N_BLOCK] the initialization vector IV that will be used for decryption.
+	 * @param ivl the initialization vector IV that will be used for decryption.
 	 * @note The key will be stored in class variable.
 	 */
 	void do_aes_decrypt(byte *cipher,int size_c,byte *plain,byte *key, int bits, byte ivl [N_BLOCK]);
@@ -312,7 +312,7 @@ class AES
 #endif
 
 /**
- * @example aes.ino
+ * @example aes.pde
  * <b>For Arduino</b><br>
  * <b>Updated: spaniakos 2015 </b><br>
  *
@@ -330,7 +330,7 @@ class AES
  */
  
  /**
- * @example test_vectors.ino
+ * @example test_vectors.pde
  * <b>For Arduino</b><br>
  * <b>Updated: spaniakos 2015 </b><br>
  *
@@ -348,7 +348,8 @@ class AES
  */
 
 /**
- * @mainpage AES library for Arduino and Raspberry pi.
+ * @defgroup aeslib AES library for Arduino and Raspberry pi
+ * @ingroup internals
  *
  * @section Goals design Goals
  *
@@ -384,13 +385,13 @@ class AES
  * make<br /><br />
  * <b>What to do after changes to a sketch</b><br /><br />
  * cd examples_Rpi<br />
- * make <sketch><br /><br />
+ * make \<sketch\><br /><br />
  * or <br />
  * make clean<br />
  * make<br /><br /><br />
  * <b>How to start a sketch</b><br /><br />
  * cd examples_Rpi<br />
- * sudo ./<sketch><br /><br />
+ * sudo ./\<sketch\><br /><br />
  * 
  * @section News News
  *

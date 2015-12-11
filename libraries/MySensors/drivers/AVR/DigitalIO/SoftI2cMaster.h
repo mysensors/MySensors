@@ -24,6 +24,7 @@
  * @brief Software I2C library
  *
  * @defgroup softI2C Software I2C
+ * @ingroup internals
  * @details  Software Two Wire Interface library.
  * @{
  */

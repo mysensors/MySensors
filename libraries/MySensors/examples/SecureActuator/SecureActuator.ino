@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -17,51 +17,66 @@
  * version 2 as published by the Free Software Foundation.
  *
  *******************************
+ */
+/**
+ * @ingroup MySigninggrp
+ * @{
+ * @file SecureActuator.ino
+ * @brief Example sketch showing how to securely control locks.
+ *
+ * This example will remember lock state even after power failure.
  *
  * REVISION HISTORY
- * Version 1.0 - Patrick "Anticimex" Fallberg <patrick@fallberg.net>
- * 
- * DESCRIPTION
- * Example sketch showing how to securely control locks. 
- * This example will remember lock state even after power failure.
+ *  - See git log (git log libraries/MySensors/examples/SecureActuator/SecureActuator.ino)
  */
 
-// Enable debug prints to serial monitor
-#define MY_DEBUG 
+/**
+ * @example SecureActuator.ino
+ * This example implements a secure actuator in the form of a IO controlled electrical lock.<br>
+ * Multiple locks are supported as long as they are on subsequent IO pin indices. The first lock pin
+ * is defined by @ref LOCK_1. The number of locks is controlled by @ref NOF_LOCKS .<br>
+ * The sketch will require incoming messages to be signed and the use of signing backend is selected
+ * by @ref MY_SIGNING_ATSHA204 or @ref MY_SIGNING_SOFT. Hard or soft ATSHA204 signing is supported.<br>
+ * If soft signing is chosen, make sure to use a correct HMAC key (see @ref MY_SIGNING_SOFT_HMAC_KEY).<br>
+ * Whitelisting can be enabled through @ref MY_SIGNING_NODE_WHITELISTING in which case a single entry
+ * is provided in this example which typically should map to the gateway of the network.
+ */
+
+#define MY_DEBUG //!< Enable debug prints to serial monitor
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24
-//#define MY_RADIO_RFM69
+#define MY_RADIO_NRF24 //!< NRF24L01 radio driver
+//#define MY_RADIO_RFM69 //!< RFM69 radio driver
  
 // Select soft/hardware signing method
-#define MY_SIGNING_SOFT // Software signing enabled
-//#define MY_SIGNING_ATSHA204 // Hardware signing using ATSHA204A
+#define MY_SIGNING_SOFT //!< Software signing
+//#define MY_SIGNING_ATSHA204 //!< Hardware signing using ATSHA204A
 
 // Enable node whitelisting
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
-// Enable this if you want destination node to sign all messages sent to this node. Default is not to require signing. 
+// Enable this if you want destination node to sign all messages sent to this node.
 #define MY_SIGNING_REQUEST_SIGNATURES
 
 
 // SETTINGS FOR MY_SIGNING_SOFT
-// Set the soft_serial value to an arbitrary value for proper security (9 bytes)
+/// Set the soft_serial value to an arbitrary value for proper security (9 bytes)
 #define MY_SIGNING_SOFT_SERIAL 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
-// Key to use for HMAC calculation in soft signing (32 bytes)
+/// Key to use for HMAC calculation in soft signing (32 bytes)
 #define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 //!< Unconnected analog pin for random seed
 
 // SETTINGS FOR MY_SIGNING_ATSHA204
-#define MY_SIGNING_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
+#define MY_SIGNING_ATSHA204_PIN 17 //!< A3 - pin where ATSHA204 is attached
 
 #include <SPI.h>
 #include <MySensor.h>
 
 
-#define LOCK_1  3  // Arduino Digital I/O pin number for first lock (second on pin+1 etc)
-#define NOF_LOCKS 1 // Total number of attached locks
-#define LOCK_LOCK 1  // GPIO value to write to lock attached lock
-#define LOCK_UNLOCK 0 // GPIO value to write to unlock attached lock
+#define LOCK_1  3     //!< Arduino Digital I/O pin number for first lock (second on pin+1 etc)
+#define NOF_LOCKS 1   //!< Total number of attached locks
+#define LOCK_LOCK 1   //!< GPIO value to write to lock attached lock
+#define LOCK_UNLOCK 0 //!< GPIO value to write to unlock attached lock
 
 void setup() {
   for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS;lock++, pin++) {
@@ -84,10 +99,16 @@ void presentation()
   }
 }
 
+/** @brief Sketch execution code */
 void loop() 
 {
 }
 
+/**
+ * @brief Incoming message handler
+ *
+ * @param message The message to handle.
+ */
 void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS) {
@@ -102,4 +123,4 @@ void receive(const MyMessage &message) {
      Serial.println(message.getBool());
    } 
 }
-
+/** @}*/

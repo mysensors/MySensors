@@ -22,6 +22,7 @@
  * @brief  Two Wire Interface constants.
  *
  * @defgroup twoWire I2C constants
+ * @ingroup internals
  * @details  Two Wire Interface library.
  * @{
  */

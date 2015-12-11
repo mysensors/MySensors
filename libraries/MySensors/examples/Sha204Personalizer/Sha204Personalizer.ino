@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -17,21 +17,27 @@
  * version 2 as published by the Free Software Foundation.
  *
  *******************************
+ */
+/**
+ * @ingroup MySigninggrp
+ * @{
+ * @file Sha204Personalizer.ino
+ * @brief SHA204 personalization sketch
  *
  * REVISION HISTORY
- * Version 1.0 - Patrick Fallberg, January 10, 2015
- * 
- * DESCRIPTION
- * SHA204 personalization sketch
- *
+ *  - See git log (git log libraries/MySensors/examples/Sha204Personalizer/Sha204Personalizer.ino)
+ */
+
+/**
+ * @example Sha204Personalizer.ino
  * This sketch will write factory default settings to the configuration zone
- * and then lock it.
- * It will then either
- * a. Generate a random value to use as a key which will be stored in
+ * and then lock it.<br>
+ * It will then either<br>
+ * -# Generate a random value to use as a key which will be stored in
  * slot 0. The key is printed on UART (115200) in clear text for the user to be
  * able to use it as a user-supplied key in other personalization executions
  * where the same key is needed.
- * b. Use a user-supplied value to use as a key which will be stored in
+ * -# Use a user-supplied value to use as a key which will be stored in
  * slot 0.
  * Finally it will lock the data zone.
  *
@@ -39,40 +45,65 @@
  * turn on the locking. Furthermore, user have to send a SPACE character on serial
  * console when prompted to do any locking. On boards that does not provide UART
  * input it is possible to configure the sketch to skip this confirmation.
- * Default settings use ATSHA204 on pin 17 (A3).
+ * Default settings use ATSHA204 on @ref ATSHA204_PIN.
+ *
+ * Details on personalization procedure is given in @ref perzonalization.
  */
 
 #include <sha204_library.h>
 #include <sha204_lib_return_codes.h>
 
-// The pin the ATSHA204 is connected on
-#define ATSHA204_PIN 17 // A3
+// Doxygen specific constructs, not included when built normally
+// This is used to enable disabled macros/definitions to be included in the documentation as well.
+#if DOXYGEN
+#define LOCK_CONFIGURATION
+#define LOCK_DATA
+#define SKIP_KEY_STORAGE
+#define USER_KEY_DATA
+#define SKIP_UART_CONFIRMATION
+#endif
 
-// Uncomment this to enable locking the configuration zone.
-// *** BE AWARE THAT THIS PREVENTS ANY FUTURE CONFIGURATION CHANGE TO THE CHIP ***
-// It is still possible to change the key, and this also enable random key generation
+#define ATSHA204_PIN 17 //!< The pin the ATSHA204 is connected on (A3).
+
+/**
+ * @def LOCK_CONFIGURATION
+ * @brief Uncomment this to enable locking the configuration zone.
+ *
+ * It is still possible to change the key, and this also enable random key generation.
+ * @warning BE AWARE THAT THIS PREVENTS ANY FUTURE CONFIGURATION CHANGE TO THE CHIP
+ */
 //#define LOCK_CONFIGURATION
 
-// Uncomment this to enable locking the data zone.
-// *** BE AWARE THAT THIS PREVENTS THE KEY TO BE CHANGED ***
-// It is not required to lock data, key cannot be retrieved anyway, but by locking
-// data, it can be guaranteed that nobody even with physical access to the chip,
-// will be able to change the key.
+/**
+ * @def LOCK_DATA
+ * @brief Uncomment this to enable locking the data zone.
+ *
+ * It is not required to lock data, key cannot be retrieved anyway, but by locking
+ * data, it can be guaranteed that nobody even with physical access to the chip,
+ * will be able to change the key.
+ * @warning BE AWARE THAT THIS PREVENTS THE KEY TO BE CHANGED
+ */
 //#define LOCK_DATA
 
-// Uncomment this to skip key storage (typically once key has been written once)
+/**
+ * @def SKIP_KEY_STORAGE
+ * @brief Uncomment this to skip key storage (typically once key has been written once)
+ */
 //#define SKIP_KEY_STORAGE
 
-// Uncomment this to skip key data storage (once configuration is locked, key
-// will aways randomize)
-// Uncomment this to skip key generation and use 'user_key_data' as key instead.
+/**
+ * @def USER_KEY_DATA
+ * @brief Uncomment this to skip key generation and use @ref user_key_data as key instead.
+ */
 //#define USER_KEY_DATA
 
-// Uncomment this for boards that lack UART
-// IMPORTANT: No confirmation will be required for locking any zones with this
-// configuration!
-// Also, key generation is not permitted in this mode as there is no way of
-// presenting the generated key.
+/**
+ * @def SKIP_UART_CONFIRMATION
+ * @brief Uncomment this for boards that lack UART
+ *
+ * @b Important<br> No confirmation will be required for locking any zones with this configuration!
+ * Also, key generation is not permitted in this mode as there is no way of presenting the generated key.
+ */
 //#define SKIP_UART_CONFIRMATION
 
 #if defined(SKIP_UART_CONFIRMATION) && !defined(USER_KEY_DATA)
@@ -80,19 +111,26 @@
 #endif
 
 #ifdef USER_KEY_DATA
+/** @brief The user-defined HMAC key to use for personalization */
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+/** @brief The data to store in key slot 0 */
 const uint8_t user_key_data[32] = {MY_HMAC_KEY};
 #endif
 
-const int sha204Pin = ATSHA204_PIN;
+const int sha204Pin = ATSHA204_PIN; //!< The IO pin to use for ATSHA204
 atsha204Class sha204(sha204Pin);
 
+/** @brief Print a error notice and halt the execution */
 void halt()
 {
   Serial.println(F("Halting!"));
   while(1);
 }
 
+/**
+ * @brief Write default configuration and return CRC of the configuration bits
+ * @returns CRC over the configuration bits
+ */
 uint16_t write_config_and_get_crc()
 {
   uint16_t crc = 0;
@@ -217,6 +255,10 @@ uint16_t write_config_and_get_crc()
   return crc;
 }
 
+/**
+ * @brief Write provided key to slot 0
+ * @param key The key data to write
+ */
 void write_key(uint8_t* key)
 {
   uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
@@ -234,6 +276,7 @@ void write_key(uint8_t* key)
   }
 }
 
+/** @brief Dump current configuration to UART */
 void dump_configuration()
 {
   uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
@@ -671,6 +714,7 @@ void dump_configuration()
   }
 }
 
+/** @brief Sketch setup code */
 void setup()
 {
   uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
@@ -876,6 +920,7 @@ void setup()
     }
     Serial.print(key[i], HEX);
     if (i < 31) Serial.print(',');
+    if (i+1 == 16) Serial.print("\\\n                    ");
   }
   Serial.println();
 
@@ -1000,6 +1045,7 @@ void setup()
   }
 }
 
+/** @brief Sketch execution code */
 void loop()
 {
 }
