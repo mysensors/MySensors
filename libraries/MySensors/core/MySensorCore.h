@@ -154,7 +154,7 @@ ControllerConfig getConfig();
  * of writes the EEPROM can handle (~100 000 cycles on ATMega328).
  *
  * @param pos The position to store value in (0-255)
- * @param Value to store in position
+ * @param value to store in position
  */
 void saveState(uint8_t pos, uint8_t value);
 

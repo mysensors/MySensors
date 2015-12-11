@@ -25,6 +25,7 @@
 
 // Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
+uint8_t protocolH2i(char c);
 
 
 IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
@@ -66,6 +67,9 @@ void incomingMQTT(char* topic, byte* payload,
 	debug(PSTR("Message arrived on topic: %s\n"), topic);
 	char *str, *p;
 	uint8_t i = 0;
+	uint8_t bvalue[MAX_PAYLOAD];
+	uint8_t blen = 0;
+	uint8_t command = 0;
 	for (str = strtok_r(topic, "/", &p); str && i <= 5;
 			str = strtok_r(NULL, "/", &p)) {
 		switch (i) {
@@ -89,7 +93,8 @@ void incomingMQTT(char* topic, byte* payload,
 			}
 			case 3: {
 				// Command type
-				mSetCommand(_mqttMsg, atoi(str));
+				command = atoi(str);
+				mSetCommand(_mqttMsg, command);
 				break;
 			}
 			case 4: {
@@ -101,11 +106,23 @@ void incomingMQTT(char* topic, byte* payload,
 				// Sub type
 				_mqttMsg.type = atoi(str);
 				// Add payload
-				char* ca;
-				ca = (char *) payload;
-				ca += length;
-				*ca = '\0';
-				_mqttMsg.set((const char*) payload);
+				if (command == C_STREAM) {
+					blen = 0;
+					uint8_t val;
+					while (*payload) {
+						val = protocolH2i(*payload++) << 4;
+						val += protocolH2i(*payload++);
+						bvalue[blen] = val;
+						blen++;
+					}
+					_mqttMsg.set(bvalue, blen);
+				} else {
+					char* ca;
+					ca = (char *) payload;
+					ca += length;
+					*ca = '\0';
+					_mqttMsg.set((const char*) payload);
+				}
 				_available = true;
 			}
 		}
@@ -144,21 +161,21 @@ bool gatewayTransportInit() {
 		while (WiFi.status() != WL_CONNECTED)
 		{
 			delay(500);
-			Serial.print(".");
+			SERIALDEVICE.print(".");
 			yield();
 		}
-		Serial.print(F("IP: "));
-		Serial.println(WiFi.localIP());
+		SERIALDEVICE.print(F("IP: "));
+		SERIALDEVICE.println(WiFi.localIP());
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_clientMAC, _clientIp);
-			Serial.print(F("IP: "));
-			Serial.println(Ethernet.localIP());
+			SERIALDEVICE.print(F("IP: "));
+			SERIALDEVICE.println(Ethernet.localIP());
 		#else
 			// Get IP address from DHCP
 			Ethernet.begin(_clientMAC);
-			Serial.print(F("IP: "));
-			Serial.println(Ethernet.localIP());
+			SERIALDEVICE.print(F("IP: "));
+			SERIALDEVICE.println(Ethernet.localIP());
 		#endif /* IP_ADDRESS_DHCP */
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
@@ -181,4 +198,16 @@ MyMessage & gatewayTransportReceive() {
 	// Return the last parsed message
 	_available = false;
 	return _mqttMsg;
+}
+
+
+uint8_t protocolH2i(char c) {
+	uint8_t i = 0;
+	if (c <= '9')
+		i += c - '0';
+	else if (c >= 'a')
+		i += c - 'a' + 10;
+	else
+		i += c - 'A' + 10;
+	return i;
 }

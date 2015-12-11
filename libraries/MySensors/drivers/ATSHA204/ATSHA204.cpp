@@ -1,5 +1,3 @@
-#if defined(ARDUINO_ARCH_AVR)
-
 #include "Arduino.h"
 #include "ATSHA204.h"
 
@@ -9,6 +7,7 @@
 // As well as the bit value for each of those registers
 ATSHA204Class::ATSHA204Class(uint8_t pin)
 {	
+#if defined(ARDUINO_ARCH_AVR)
 	device_pin = digitalPinToBitMask(pin);	// Find the bit value of the pin
 	uint8_t port = digitalPinToPort(pin);	// temoporarily used to get the next three registers
 	
@@ -18,6 +17,9 @@ ATSHA204Class::ATSHA204Class(uint8_t pin)
 	device_port_OUT = portOutputRegister(port);
 	// Point to input register of pin
 	device_port_IN = portInputRegister(port);
+#else
+	device_pin = pin;
+#endif
 }
 
 void ATSHA204Class::getSerialNumber(uint8_t * response)
@@ -52,12 +54,12 @@ void ATSHA204Class::getSerialNumber(uint8_t * response)
 
 void ATSHA204Class::swi_set_signal_pin(uint8_t is_high)
 {
-  *device_port_DDR |= device_pin;
+  SHA204_SET_OUTPUT();
 
   if (is_high)
-    *device_port_OUT |= device_pin;
+	SHA204_POUT_HIGH();
   else
-    *device_port_OUT &= ~device_pin;
+	SHA204_POUT_LOW();
 }
 
 uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
@@ -68,8 +70,9 @@ uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
   noInterrupts();  //swi_disable_interrupts();
 
   // Set signal pin as output.
-  *device_port_OUT |= device_pin;
-  *device_port_DDR |= device_pin;
+  SHA204_POUT_HIGH();
+  SHA204_SET_OUTPUT();
+  
 
   // Wait turn around time.
   delayMicroseconds(RX_TX_DELAY);  //RX_TX_DELAY;
@@ -80,21 +83,21 @@ uint8_t ATSHA204Class::swi_send_bytes(uint8_t count, uint8_t *buffer)
     {
       if (bit_mask & buffer[i]) 
       {
-        *device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        *device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(7*BIT_DELAY);  //BIT_DELAY_7;
       }
       else 
       {
         // Send a zero bit.
-        *device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        *device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        *device_port_OUT &= ~device_pin;
+        SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
-        *device_port_OUT |= device_pin;
+        SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(5*BIT_DELAY);  //BIT_DELAY_5;
       }
     }
@@ -120,8 +123,8 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
   noInterrupts(); //swi_disable_interrupts();
 
   // Configure signal pin as input.
-  *device_port_DDR &= ~device_pin;
-
+  SHA204_SET_INPUT();
+	
   // Receive bits and store in buffer.
   for (i = 0; i < count; i++)
   {
@@ -138,7 +141,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       while (--timeout_count > 0) 
       {
         // Wait for falling edge.
-        if ((*device_port_IN & device_pin) == 0)
+        if (SHA204_PIN_READ() == 0)
           break;
       }
 
@@ -151,7 +154,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       do 
       {
         // Wait for rising edge.
-        if ((*device_port_IN & device_pin) != 0) 
+        if (SHA204_PIN_READ() != 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 1;
@@ -174,7 +177,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       // Detect possible edge indicating zero bit.
       do 
       {
-        if ((*device_port_IN & device_pin) == 0) 
+        if (SHA204_PIN_READ() == 0) 
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 2;
@@ -188,7 +191,7 @@ uint8_t ATSHA204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
       {
         do 
         {
-          if ((*device_port_IN & device_pin) != 0)
+          if (SHA204_PIN_READ() != 0)
             break;
         } while (timeout_count-- > 0);
       }
@@ -575,4 +578,3 @@ uint8_t ATSHA204Class::sha204c_check_crc(uint8_t *response)
     ? SHA204_SUCCESS : SHA204_BAD_CRC;
 }
 
-#endif // defined(ARDUINO_ARCH_AVR)

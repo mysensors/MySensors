@@ -22,6 +22,7 @@
 #include "MyHwATMega328.h"
 
 int8_t pinIntTrigger = 0;
+
 void wakeUp()	 //place to send the interrupts
 {
 	pinIntTrigger = 1;
@@ -35,45 +36,42 @@ void wakeUp2()	 //place to send the second interrupts
 // to allow automatic WDIF and WDIE bit clearance in hardware.
 ISR (WDT_vect)
 {
-	// WDIE & WDIF is cleared in hardware upon entering this ISR
-	wdt_disable();
 }
-
-
-
 
 void hwPowerDown(period_t period) {
 
+	// disable ADC for power saving
 	ADCSRA &= ~(1 << ADEN);
-
+	// save WDT settings
+	uint8_t WDTsave = WDTCSR;
 	if (period != SLEEP_FOREVER)
 	{
 		wdt_enable(period);
-		WDTCSR |= (1 << WDIE);
+		// enable WDT interrupt before system reset
+		WDTCSR |= (1 << WDCE) | (1 << WDIE);
+	} else {
+		// if sleeping forever, disable WDT
+		wdt_disable();
 	}
-	#if defined __AVR_ATmega328P__
-		do {
-			set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-			cli();
-			sleep_enable();
-			sleep_bod_disable();
-			sei();
-			sleep_cpu();
-			sleep_disable();
-			sei();
-		} while (0);
-	#else
-		do {
-			set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-			cli();
-			sleep_enable();
-			sei();
-			sleep_cpu();
-			sleep_disable();
-			sei();
-		} while (0);
-	#endif
-
+	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+	cli();
+	sleep_enable();
+#if defined __AVR_ATmega328P__
+	sleep_bod_disable();
+#endif
+	sei();
+	// sleep until WDT or ext. interrupt
+	sleep_cpu();
+    sleep_disable();	
+	// restore previous WDT settings
+	cli();
+	wdt_reset();
+	// enable WDT changes
+	WDTCSR |= (1 << WDCE) | (1 << WDE);
+	// restore saved WDT settings
+	WDTCSR = WDTsave;
+	sei();
+	// enable ADC
 	ADCSRA |= (1 << ADEN);
 }
 
@@ -82,6 +80,7 @@ void hwInternalSleep(unsigned long ms) {
   #ifndef MY_DISABLED_SERIAL
 	  Serial.flush();
   #endif
+	// reset interrupt trigger var
 	pinIntTrigger = 0;
 	while (!pinIntTrigger && ms >= 8000) { hwPowerDown(SLEEP_8S); ms -= 8000; }
 	if (!pinIntTrigger && ms >= 4000)    { hwPowerDown(SLEEP_4S); ms -= 4000; }
@@ -99,48 +98,34 @@ void hwSleep(unsigned long ms) {
 	hwInternalSleep(ms);
 }
 
-bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	// Let serial prints finish (debug, log etc)
-	bool pinTriggeredWakeup = true;
-	attachInterrupt(interrupt, wakeUp, mode);
-	if (ms>0) {
-		pinIntTrigger = 0;
-		hwInternalSleep(ms);
-		if (0 == pinIntTrigger) {
-			pinTriggeredWakeup = false;
-		}
-	} else {
-    #ifndef MY_DISABLED_SERIAL
-		  Serial.flush();
-    #endif
-		hwPowerDown(SLEEP_FOREVER);
-	}
-	detachInterrupt(interrupt);
-	return pinTriggeredWakeup;
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+	return hwSleep(interrupt,mode,0xFF,0x00,ms);
 }
 
-uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	int8_t retVal = 1;
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+	// reset interrupt trigger var
+	pinIntTrigger = 0;
+	// attach interrupts 
 	attachInterrupt(interrupt1, wakeUp, mode1);
-	attachInterrupt(interrupt2, wakeUp2, mode2);
+	if (interrupt2!=0xFF) attachInterrupt(interrupt2, wakeUp2, mode2);
+	
 	if (ms>0) {
-		pinIntTrigger = 0;
+		// sleep for defined time
 		hwInternalSleep(ms);
-		if (0 == pinIntTrigger) {
-			retVal = -1;
-		}
 	} else {
-    #ifndef MY_DISABLED_SERIAL
-		  Serial.flush();
-    #endif
-		hwPowerDown(SLEEP_FOREVER);
+		// sleep until ext interrupt triggered
+    	hwPowerDown(SLEEP_FOREVER);
 	}
+	
 	detachInterrupt(interrupt1);
-	detachInterrupt(interrupt2);
+	if (interrupt2!=0xFF) detachInterrupt(interrupt2);
+	
+	// default: no interrupt triggered	
+	int8_t retVal = -1;
 
-	if (1 == pinIntTrigger) {
+	if (pinIntTrigger == 1) {
 		retVal = (int8_t)interrupt1;
-	} else if (2 == pinIntTrigger) {
+	} else if (pinIntTrigger == 2) {
 		retVal = (int8_t)interrupt2;
 	}
 	return retVal;

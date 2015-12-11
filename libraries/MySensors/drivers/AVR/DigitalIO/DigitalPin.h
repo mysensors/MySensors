@@ -22,6 +22,7 @@
  * @brief Fast Digital Pin functions
  *
  * @defgroup digitalPin Fast Pin I/O
+ * @ingroup internals
  * @details  Fast Digital I/O functions and template class.
  * @{
  */
@@ -30,6 +31,8 @@
 #include <avr/io.h>
 #include <util/atomic.h>
 #include <Arduino.h>
+/** @brief Helper macro for complex inline attributes */
+#define ALWAYS_INLINE inline __attribute__((always_inline))
 //------------------------------------------------------------------------------
 /**
  * @class pin_map_t
@@ -399,8 +402,7 @@ void badPinNumber(void)
 /** Check for valid pin number
  * @param[in] pin Number of pin to be checked.
  */
-static inline __attribute__((always_inline))
-void badPinCheck(uint8_t pin) {
+static ALWAYS_INLINE void badPinCheck(uint8_t pin) {
   if (!__builtin_constant_p(pin) || pin >= digitalPinCount) {
      badPinNumber();
   }
@@ -411,8 +413,7 @@ void badPinCheck(uint8_t pin) {
  * @param[in] bit bit number to write
  * @param[in] level value for bit
  */
-static inline __attribute__((always_inline))
-void fastBitWriteSafe(volatile uint8_t* address, uint8_t bit, bool level) {
+static ALWAYS_INLINE void fastBitWriteSafe(volatile uint8_t* address, uint8_t bit, bool level) {
   uint8_t oldSREG;
   if (address > (uint8_t*)0X5F) {
     oldSREG = SREG;
@@ -432,8 +433,7 @@ void fastBitWriteSafe(volatile uint8_t* address, uint8_t bit, bool level) {
  * @param[in] pin Arduino pin number
  * @return value read
  */
-static inline __attribute__((always_inline))
-bool fastDigitalRead(uint8_t pin) {
+static ALWAYS_INLINE bool fastDigitalRead(uint8_t pin) {
   badPinCheck(pin);
   return (*pinMap[pin].pin >> pinMap[pin].bit) & 1;
 }
@@ -444,8 +444,7 @@ bool fastDigitalRead(uint8_t pin) {
  * If the pin is in output mode toggle the pin level.
  * If the pin is in input mode toggle the state of the 20K pullup.
  */
-static inline __attribute__((always_inline))
-void fastDigitalToggle(uint8_t pin) {
+static ALWAYS_INLINE void fastDigitalToggle(uint8_t pin) {
   badPinCheck(pin);
     if (pinMap[pin].pin > (uint8_t*)0X5F) {
       // must write bit to high address port
@@ -460,8 +459,7 @@ void fastDigitalToggle(uint8_t pin) {
  * @param[in] pin Arduino pin number
  * @param[in] level value to write
  */
-static inline __attribute__((always_inline))
-void fastDigitalWrite(uint8_t pin, bool level) {
+static ALWAYS_INLINE void fastDigitalWrite(uint8_t pin, bool level) {
   badPinCheck(pin);
   fastBitWriteSafe(pinMap[pin].port, pinMap[pin].bit, level);
 }
@@ -472,8 +470,7 @@ void fastDigitalWrite(uint8_t pin, bool level) {
  *
  * fastPinMode does not enable or disable the 20K pullup for input mode.
  */
-static inline __attribute__((always_inline))
-void fastPinMode(uint8_t pin, bool mode) {
+static ALWAYS_INLINE void fastPinMode(uint8_t pin, bool mode) {
   badPinCheck(pin);
   fastBitWriteSafe(pinMap[pin].ddr, pinMap[pin].bit, mode);
 }
@@ -484,8 +481,7 @@ void fastPinMode(uint8_t pin, bool mode) {
  * @param[in] level If mode is output, set level high/low.
  *                  If mode is input, enable or disable the pin's 20K pullup.
  */
-static inline __attribute__((always_inline))
-void fastPinConfig(uint8_t pin, bool mode, bool level) {
+static ALWAYS_INLINE void fastPinConfig(uint8_t pin, bool mode, bool level) {
   fastPinMode(pin, mode);
   fastDigitalWrite(pin, level);
 }
@@ -540,22 +536,19 @@ class DigitalPin {
    * @param[in] level If mode is output, set level high/low.
    *                  If mode is input, enable or disable the pin's 20K pullup.
    */
-  inline __attribute__((always_inline))
-  void config(bool mode, bool level) {
+  ALWAYS_INLINE void config(bool mode, bool level) {
     fastPinConfig(PinNumber, mode, level);
   }
   //----------------------------------------------------------------------------
   /**
    * Set pin level high if output mode or enable 20K pullup if input mode.
    */
-  inline __attribute__((always_inline))
-  void high() {write(true);}
+  ALWAYS_INLINE void high() {write(true);}
   //----------------------------------------------------------------------------
   /**
    * Set pin level low if output mode or disable 20K pullup if input mode.
    */
-  inline __attribute__((always_inline))
-  void low() {write(false);}
+  ALWAYS_INLINE void low() {write(false);}
   //----------------------------------------------------------------------------
   /**
    * Set pin mode
@@ -563,14 +556,12 @@ class DigitalPin {
    *
    * mode() does not enable or disable the 20K pullup for input mode.
    */
-  inline __attribute__((always_inline))
-  void mode(bool pinMode) {
+  ALWAYS_INLINE void mode(bool pinMode) {
     fastPinMode(PinNumber, pinMode);
   }
   //----------------------------------------------------------------------------
   /** @return Pin's level */
-  inline __attribute__((always_inline))
-  bool read() const {
+  ALWAYS_INLINE bool read() const {
     return fastDigitalRead(PinNumber);
   }
   //----------------------------------------------------------------------------
@@ -579,8 +570,7 @@ class DigitalPin {
    * If the pin is in output mode toggle the pin's level.
    * If the pin is in input mode toggle the state of the 20K pullup.
    */
-  inline __attribute__((always_inline))
-  void toggle() {
+  ALWAYS_INLINE void toggle() {
     fastDigitalToggle(PinNumber);
   }
   //----------------------------------------------------------------------------
@@ -588,8 +578,7 @@ class DigitalPin {
    * @param[in] value If true set the pin's level high else set the
    *  pin's level low.
    */
-  inline __attribute__((always_inline))
-  void write(bool value) {
+  ALWAYS_INLINE void write(bool value) {
     fastDigitalWrite(PinNumber, value);
   }
 };

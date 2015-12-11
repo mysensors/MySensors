@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -17,7 +17,11 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-
+/**
+ * @file MyConfig.h
+ *
+ * MySensors specific configurations
+ */
 #ifndef MyConfig_h
 #define MyConfig_h
 #include <stdint.h>
@@ -205,45 +209,92 @@
 /**********************************
 *  Message Signing Settings
 ***********************************/
-
-// Enable one of these in sketch to use the signing functionality
+/**
+ * @def MY_SIGNING_ATSHA204
+ * @brief Enables HW backed signing functionality in library.
+ *
+ * For any signing related functionality to be included, this define or @ref MY_SIGNING_SOFT has to be enabled.
+ */
 //#define MY_SIGNING_ATSHA204
+
+/**
+ * @def MY_SIGNING_SOFT
+ * @brief Enables SW backed signing functionality in library.
+ *
+ * For any signing related functionality to be included, this define or @ref MY_SIGNING_ATSHA204 has to be enabled.
+ */
 //#define MY_SIGNING_SOFT
 
-// Define a suitable timeout for a signature verification session
-// Consider the turn-around from a nonce being generated to a signed message being received
-// which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
+/**
+ * @def MY_SIGNING_REQUEST_SIGNATURES
+ * @brief Enable this to inform gateway to sign all messages sent to this node.
+ *
+ * If used for a gateway, gateway will only request signatures from nodes that in turn
+ * request signatures from gateway.
+ */
+//#define MY_SIGNING_REQUEST_SIGNATURES
+
+/**
+ * @def MY_VERIFICATION_TIMEOUT_MS
+ * @brief Define a suitable timeout for a signature verification session
+ *
+ * Consider the turnaround from a nonce being generated to a signed message being received
+ * which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
+ */
 #ifndef MY_VERIFICATION_TIMEOUT_MS
 #define MY_VERIFICATION_TIMEOUT_MS 5000
 #endif
 
-// Enable to turn on white-listing
-// When enabled, a signing node will salt the signature with it's unique signature and nodeId.
-// The verifying node will look up the sender in a local table of trusted nodes and
-// do the corresponding salting in order to verify the signature.
-// For this reason, if white listing is enabled on one of the nodes in a sign-verify pair, both
-// nodes have to implement white listing for this to work.
-// Note that a node can still transmit a non-salted message (i.e. have white listing disabled)
-// to a node that has white listing enabled (assuming the receiver does not have a matching entry
-// for the sender in it's white list)
+/**
+ * @def MY_SIGNING_NODE_WHITELISTING
+ * @brief Enable to turn on whitelisting
+ *
+ * When enabled, a signing node will salt the signature with it's unique signature and nodeId.<br>
+ * The verifying node will look up the sender in a local table of trusted nodes and
+ * do the corresponding salting in order to verify the signature.<br>
+ * For this reason, if whitelisting is enabled on one of the nodes in a sign-verify pair, both
+ * nodes have to implement whitelisting for this to work.<br>
+ * Note that a node can still transmit a non-salted message (i.e. have whitelisting disabled)
+ * to a node that has whitelisting enabled (assuming the receiver does not have a matching entry
+ * for the sender in it's whitelist). The whitelist to use is defined as the value of the flag.
+ */
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 
-// Atsha204 default pin setting
+/**
+ * @def MY_SIGNING_ATSHA204_PIN
+ * @brief Atsha204 default pin setting
+ *
+ * Pin where ATSHA204 is attached
+ */
 #ifndef MY_SIGNING_ATSHA204_PIN
-#define MY_SIGNING_ATSHA204_PIN 17 // A3 - pin where ATSHA204 is attached
+#define MY_SIGNING_ATSHA204_PIN 17
 #endif
 
-// Pin used for random generation in soft signing (do not connect anything to this when enabled)
+/**
+ * @def MY_SIGNING_SOFT_RANDOMSEED_PIN
+ * @brief Pin used for random generation in soft signing
+ *
+ * Do not connect anything to this when soft signing is enabled
+ */
 #ifndef MY_SIGNING_SOFT_RANDOMSEED_PIN
-#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 // A7 -
+#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
 #endif
 
-// Set the soft_serial value to an arbitrary value for proper security
+/**
+ * @def MY_SIGNING_SOFT_SERIAL
+ * @brief Serial number for SW signing enabled node
+ *
+ * Set the soft_serial value to an arbitrary value for proper security.
+ * It should be random and unique for each node.
+ */
 #ifndef MY_SIGNING_SOFT_SERIAL
 #define MY_SIGNING_SOFT_SERIAL 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
 #endif
 
-// Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
+/**
+ * @def MY_SIGNING_SOFT_HMAC_KEY
+ * @brief Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
+ */
 #ifndef MY_SIGNING_SOFT_HMAC_KEY
 #define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 #endif
@@ -276,6 +327,8 @@
 #ifndef MY_RF24_CE_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF24_CE_PIN 4
+	#elif defined(ARDUINO_ARCH_SAMD)
+		#define MY_RF24_CE_PIN 27
 	#else
 		#define MY_RF24_CE_PIN 9
 	#endif
@@ -284,6 +337,8 @@
 #ifndef MY_RF24_CS_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF24_CS_PIN 15
+	#elif defined(ARDUINO_ARCH_SAMD)
+		#define MY_RF24_CS_PIN 3
 	#else
 		#define MY_RF24_CS_PIN 10
 	#endif
@@ -347,7 +402,11 @@
 #define MY_RF69_SPI_CS RF69_SPI_CS
 #endif
 #ifndef MY_RF69_IRQ_NUM
-#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
+	#else
+		#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+	#endif
 #endif
 
 // Enable this for encryption of packets
@@ -389,4 +448,11 @@
 // If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server allowing incoming connections.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 
+#endif
+// Doxygen specific constructs, not included when built normally
+// This is used to enable disabled macros/definitions to be included in the documentation as well.
+#if DOXYGEN
+#define MY_SIGNING_ATSHA204
+#define MY_SIGNING_SOFT
+#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 #endif

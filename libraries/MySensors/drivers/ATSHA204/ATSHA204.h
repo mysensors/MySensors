@@ -1,5 +1,6 @@
 #ifndef ATSHA204_H
 #define ATSHA204_H
+#if !DOXYGEN
 #include "Arduino.h"
 
 /* This is a scaled down variant of the ATSHA204 library, tweaked to meet the specific needs of MySensors. */
@@ -220,11 +221,29 @@
 
 #define SHA204_SERIAL_SZ    9   // The number of bytes the serial number consists of
 
+/* Low level HW access macros */
+/* function calls is not working, as it will have too much overhead */
+#if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
+#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
+#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
+#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
+#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
+#define SHA204_PIN_READ() digitalRead(device_pin)
+#else
+#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
+#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
+#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
+#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
+#define SHA204_PIN_READ() (*device_port_IN & device_pin)
+#endif
+
 class ATSHA204Class
 {
 private:
 	uint8_t device_pin;
+	#ifdef ARDUINO_ARCH_AVR
 	volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
+	#endif
 	void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc);
 	uint8_t sha204c_check_crc(uint8_t *response);
 	void swi_set_signal_pin(uint8_t is_high);
@@ -244,4 +263,5 @@ public:
 	void getSerialNumber(uint8_t *response);
 };
 
+#endif
 #endif

@@ -753,7 +753,7 @@ public:
   void disableCRC( void ) ;
   
    /**
-   * Enable error detection by un-commenting #define FAILURE_HANDLING in RF24_config.h
+   * Enable error detection by un-commenting \#define FAILURE_HANDLING in RF24_config.h
    * If a failure has been detected, it usually indicates a hardware issue. By default the library
    * will cease operation when a failure is detected.  
    * This should allow advanced users to detect and resolve intermittent hardware issues.  
@@ -999,158 +999,8 @@ private:
 };
 
 /**
- * @example GettingStarted.ino
- * <b>Updated: TMRh20 2014 </b><br>
- *
- * This is an example of how to use the RF24 class to communicate on a basic level.  Write this sketch to two
- * different nodes. Put one of the nodes into 'transmit' mode by connecting with the serial monitor and <br>
- * sending a 'T'. The ping node sends the current time to the pong node, which responds by sending the value
- * back. The ping node can then see how long the whole cycle took. <br>
- * @note For a more efficient call-response scenario see the GettingStarted_CallResponse.ino example.
- * @note When switching between sketches, the radio may need to be powered down to clear settings that are not "un-set" otherwise
- */
-
-/**
- * @example GettingStarted_CallResponse.ino
- * <b>New: TMRh20 2014</b><br>
- *
- * This example continues to make use of all the normal functionality of the radios including
- * the auto-ack and auto-retry features, but allows ack-payloads to be written optionlly as well. <br>
- * This allows very fast call-response communication, with the responding radio never having to
- * switch out of Primary Receiver mode to send back a payload, but having the option to switch to <br>
- * primary transmitter if wanting to initiate communication instead of respond to a commmunication.
- */
-
-/**
- * @example Transfer.ino
- * <b>New: TMRh20 </b><br>
- * This example demonstrates half-rate transfer using the FIFO buffers<br>
- *
- * It is an example of how to use the RF24 class.  Write this sketch to two
- * different nodes.  Put one of the nodes into 'transmit' mode by connecting <br>
- * with the serial monitor and sending a 'T'.  The data transfer will begin,
- * with the receiver displaying the payload count. (32Byte Payloads) <br>
- */
-
-/**
- * @example TransferTimeouts.ino
- * <b>New: TMRh20 </b><br>
- * This example demonstrates the use of and extended timeout period and
- * auto-retries/auto-reUse to increase reliability in noisy or low signal scenarios. <br>
- *
- * Write this sketch to two different nodes.  Put one of the nodes into 'transmit'
- * mode by connecting with the serial monitor and sending a 'T'.  The data <br>
- * transfer will begin, with the receiver displaying the payload count and the
- * data transfer rate.
- */
-
-/**
- * @example starping.pde
- *
- * This sketch is a more complex example of using the RF24 library for Arduino.
- * Deploy this on up to six nodes.  Set one as the 'pong receiver' by tying the
- * role_pin low, and the others will be 'ping transmit' units.  The ping units
- * unit will send out the value of millis() once a second.  The pong unit will
- * respond back with a copy of the value.  Each ping unit can get that response
- * back, and determine how long the whole cycle took.
- *
- * This example requires a bit more complexity to determine which unit is which.
- * The pong receiver is identified by having its role_pin tied to ground.
- * The ping senders are further differentiated by a byte in eeprom.
- */
-
-/**
- * @example pingpair_ack.ino
- * <b>Update: TMRh20</b><br>
- * This example continues to make use of all the normal functionality of the radios including
- * the auto-ack and auto-retry features, but allows ack-payloads to be written optionlly as well.<br>
- * This allows very fast call-response communication, with the responding radio never having to
- * switch out of Primary Receiver mode to send back a payload, but having the option to if wanting<br>
- * to initiate communication instead of respond to a commmunication.
- */
-
-/**
- * @example pingpair_irq.ino
- * <b>Update: TMRh20</b><br>
- * This is an example of how to user interrupts to interact with the radio, and a demonstration
- * of how to use them to sleep when receiving, and not miss any payloads.<br>
- * The pingpair_sleepy example expands on sleep functionality with a timed sleep option for the transmitter.
- * Sleep functionality is built directly into my fork of the RF24Network library<br>
- */
-
-/**
- * @example pingpair_sleepy.ino
- * <b>Update: TMRh20</b><br>
- * This is an example of how to use the RF24 class to create a battery-
- * efficient system.  It is just like the GettingStarted_CallResponse example, but the<br>
- * ping node powers down the radio and sleeps the MCU after every
- * ping/pong cycle, and the receiver sleeps between payloads. <br>
- */
-
- /**
- * @example rf24ping85.ino
- * <b>New: Contributed by https://github.com/tong67</b><br>
- * This is an example of how to use the RF24 class to communicate with ATtiny85 and other node. <br>
- */
- 
- /**
- * @example timingSearch3pin.ino
- * <b>New: Contributed by https://github.com/tong67</b><br>
- * This is an example of how to determine the correct timing for ATtiny when using only 3-pins
- */
-  
-/**
- * @example pingpair_dyn.ino
- *
- * This is an example of how to use payloads of a varying (dynamic) size.
- */
-
-/**
- * @example pingpair_maple.pde
- *
- * This is an example of how to use the RF24 class on the Maple.  For a more
- * detailed explanation, see my blog post:
- * <a href="http://maniacbug.wordpress.com/2011/12/14/nrf24l01-running-on-maple-3/">nRF24L01+ Running on Maple</a>
- *
- * It will communicate well to an Arduino-based unit as well, so it's not for only Maple-to-Maple communication.
- *
- * Write this sketch to two different nodes,
- * connect the role_pin to ground on one.  The ping node sends the current time to the pong node,
- * which responds by sending the value back.  The ping node can then see how long the whole cycle
- * took.
- */
-
-/**
- * @example nordic_fob.pde
- *
- * This is an example of how to use the RF24 class to receive signals from the
- * Sparkfun Nordic FOB.  See http://www.sparkfun.com/products/8602 .
- * Thanks to Kirk Mower for providing test hardware.
- */
-
-/**
- * @example led_remote.pde
- *
- * This is an example of how to use the RF24 class to control a remote
- * bank of LED's using buttons on a remote control.
- *
- * Every time the buttons change on the remote, the entire state of
- * buttons is send to the led board, which displays the state.
- */
-
-/**
- * @example scanner.ino
- *
- * Example to detect interference on the various channels available.
- * This is a good diagnostic tool to check whether you're picking a
- * good channel for your application.
- *
- * Inspired by cpixip.
- * See http://arduino.cc/forum/index.php/topic,54795.0.html
- */
-
-/**
- * @mainpage Optimized High Speed Driver for nRF24L01(+) 2.4GHz Wireless Transceiver
+ * @defgroup rf24 Optimized High Speed Driver for nRF24L01(+) 2.4GHz Wireless Transceiver
+ * @ingroup internals
  *
  * @section Goals Design Goals
  *

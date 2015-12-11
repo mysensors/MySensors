@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -35,8 +35,8 @@
  *	  - response time is less than 30 s
  *   - 3 minute warm up time
  *	datasheet: http://www.futurlec.com/Datasheet/Sensor/MH-Z14.pdf
-* Contributor: epierre
-**/
+ * Contributor: epierre
+ */
 
 // Enable debug prints to serial monitor
 #define MY_DEBUG 
