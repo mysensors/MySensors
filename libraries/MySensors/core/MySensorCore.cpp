@@ -63,6 +63,11 @@ void _begin() {
 	#if !defined(MY_DISABLED_SERIAL)
 	    hwInit();
     #endif
+	
+	#if defined(MY_SIGNING_SOFT)
+		// initialize pseudo-RNG
+		randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+	#endif
 
 	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILIIES ", " LIBRARY_VERSION ")\n"));
 
