@@ -94,8 +94,9 @@ inline void transportProcess() {
 				!mGetAck(_msg) &&
 				(mGetCommand(_msg) != C_INTERNAL ||
 				 (type != I_GET_NONCE_RESPONSE && type != I_GET_NONCE && type != I_REQUEST_SIGNING &&
-				  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
-				  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
+				  type != I_ID_REQUEST && type != I_ID_RESPONSE && 
+				  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE &&
+				  type != I_HEARTBEAT))) {
 				if (!mGetSigned(_msg)) {
 					// Got unsigned message that should have been signed
 					debug(PSTR("no sign\n"));

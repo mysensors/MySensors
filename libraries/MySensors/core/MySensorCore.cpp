@@ -215,7 +215,7 @@ void sendBatteryLevel(uint8_t value, bool enableAck) {
 }
 
 void sendHeartbeat(void) {
-	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT, false).set(_heartbeat++));
+	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(_heartbeat++));
 
 }
 
@@ -271,15 +271,8 @@ void _processInternalMessages() {
 				presentation();
 		}
 	} else if (type == I_HEARTBEAT) {
-		if (!mGetAck(_msg)) {
-			// Send heartbeat ack message back to sender (with the same payload)
-			_msgTmp = _msg;
-			mSetRequestAck(_msgTmp,false); // Reply without ack flag (otherwise we would end up in an eternal loop)
-			mSetAck(_msgTmp,true);
-			_msgTmp.sender = _nc.nodeId;
-			_msgTmp.destination = _msg.sender;
-			_sendRoute(_msgTmp);
-		}
+		// Send heartbeat ack message back to sender (with the same payload)
+		_sendRoute(build(_msg, _nc.nodeId, _msg.sender, _msg.sensor, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(_heartbeat++));
 	} else if (type == I_TIME && receiveTime) {
 		// Deliver time to callback
 		if (receiveTime)
