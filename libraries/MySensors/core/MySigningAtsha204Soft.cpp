@@ -91,14 +91,12 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 
 bool signerGetNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
-	// Set randomseed
-	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
 
 	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
 	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
 	_signing_sha256.init();
 	for (int i = 0; i < 32; i++) {
-		_signing_sha256.write(random(255));
+		_signing_sha256.write(random(256));
 	}
 	memcpy(_signing_current_nonce, _signing_sha256.result(), MAX_PAYLOAD);
 	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_current_nonce, 32);
