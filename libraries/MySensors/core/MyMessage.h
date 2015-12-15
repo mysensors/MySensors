@@ -163,10 +163,10 @@ typedef enum {
 	I_INCLUSION_MODE, I_CONFIG, I_FIND_PARENT, I_FIND_PARENT_RESPONSE,
 	I_LOG_MESSAGE, I_CHILDREN, I_SKETCH_NAME, I_SKETCH_VERSION,
 	I_REBOOT, I_GATEWAY_READY,
-	I_REQUEST_SIGNING,    /*!< Indicates senter require signed messages (bool param) */
+	I_REQUEST_SIGNING,    /*!< Indicates sender require signed messages (bool param) */
 	I_GET_NONCE,          /*!< Request for a nonce */
 	I_GET_NONCE_RESPONSE, /*!< Payload is nonce data */
-	I_HEARTBEAT, I_PRESENTATION, I_DISCOVER, I_DISCOVER_RESPONSE
+	I_HEARTBEAT, I_PRESENTATION, I_DISCOVER, I_DISCOVER_RESPONSE, I_HEARTBEAT_RESPONSE
 } mysensor_internal;
 
 
