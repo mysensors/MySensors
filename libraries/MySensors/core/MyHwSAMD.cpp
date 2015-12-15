@@ -111,9 +111,10 @@ void hwReboot() {
  // TODO: Not supported!
 }
 
-void hwSleep(unsigned long ms) {
+int8_t hwSleep(unsigned long ms) {
   // TODO: Not supported!
   ms = ms + 1;
+  return -2;
 }
 
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
@@ -121,7 +122,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
   interrupt = interrupt;
   mode = mode;
   ms = ms;
-	return false;
+  return -2;
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
@@ -131,7 +132,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
   interrupt2 = interrupt2;
   mode2 = mode2;
   ms = ms;
-  return 0;
+  return -2;
 }
 
 #ifdef MY_DEBUG

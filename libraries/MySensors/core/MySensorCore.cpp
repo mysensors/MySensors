@@ -315,49 +315,47 @@ void wait(unsigned long ms) {
 	}
 }
 
-void sleep(unsigned long ms) {
-	#if defined(MY_OTA_FIRMWARE_FEATURE)
-		if (_fwUpdateOngoing) {
-			// Do not sleep node while fw update is ongoing
-			_process();
-			return;
-		} else {
-	#endif
-		#if defined(MY_RADIO_FEATURE)
-			transportPowerDown();
-		#endif
-			hwSleep(ms);
-	#if defined(MY_OTA_FIRMWARE_FEATURE)
-		}
-	#endif
-}
-
-void smartSleep(unsigned long ms) {
-	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	sleep(ms);
-	sendHeartbeat();
-}
-
-bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+int8_t sleep(unsigned long ms) {
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (_fwUpdateOngoing) {
 		// Do not sleep node while fw update is ongoing
-		return false;
-	} else {
-	#endif
-		#if defined(MY_RADIO_FEATURE)
-			transportPowerDown();
-		#endif
-		return hwSleep(interrupt, mode, ms) ;
-	#if defined(MY_OTA_FIRMWARE_FEATURE)
+		return -2;
 	}
 	#endif
+	#if defined(MY_RADIO_FEATURE)
+		transportPowerDown();
+	#endif
+	return hwSleep(ms);
 }
 
-bool smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	bool ret = sleep(interrupt, mode, ms);
+int8_t smartSleep(unsigned long ms) {
+	int8_t ret = sleep(ms);
+	// notifiy controller about wake up
 	sendHeartbeat();
+	// listen for incoming messages
+	wait(MY_SMART_SLEEP_WAIT_DURATION);
+	return ret;
+}
+
+int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+	#if defined(MY_OTA_FIRMWARE_FEATURE)
+	if (_fwUpdateOngoing) {
+		// Do not sleep node while fw update is ongoing
+		return -2;
+	}
+	#endif
+	#if defined(MY_RADIO_FEATURE)
+		transportPowerDown();
+	#endif
+	return hwSleep(interrupt, mode, ms);
+}
+
+int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+	int8_t ret = sleep(interrupt, mode, ms);
+	// notifiy controller about wake up
+	sendHeartbeat();
+	// listen for incoming messages
+	wait(MY_SMART_SLEEP_WAIT_DURATION);
 	return ret;
 }
 
@@ -365,22 +363,21 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (_fwUpdateOngoing) {
 		// Do not sleep node while fw update is ongoing
-		return -1;
-	} else {
-	#endif
-		#if defined(MY_RADIO_FEATURE)
-			transportPowerDown();
-		#endif
-		return hwSleep(interrupt1, mode1, interrupt2, mode2, ms) ;
-	#if defined(MY_OTA_FIRMWARE_FEATURE)
+		return -2;
 	}
 	#endif
+	#if defined(MY_RADIO_FEATURE)
+		transportPowerDown();
+	#endif
+	return hwSleep(interrupt1, mode1, interrupt2, mode2, ms);
 }
 
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	wait(MY_SMART_SLEEP_WAIT_DURATION);
 	int8_t ret = sleep(interrupt1, mode1, interrupt2, mode2, ms);
+	// notifiy controller about wake up
 	sendHeartbeat();
+	// listen for incoming messages
+	wait(MY_SMART_SLEEP_WAIT_DURATION);
 	return ret;
 }
 
