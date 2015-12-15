@@ -28,7 +28,7 @@ MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among other
 	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
-unsigned long _heartbeat = 0;
+uint32_t _heartbeat = 0;
 void (*_timeCallback)(unsigned long); // Callback for requested time messages
 
 
