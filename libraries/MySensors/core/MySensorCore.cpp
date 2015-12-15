@@ -353,6 +353,9 @@ int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	#endif
 	#if defined(MY_REPEATER_FEATURE)
 		// not supported
+		interrupt = interrupt;
+		mode = mode;
+		ms = ms;
 		return -2;
 	#else
 		#if defined(MY_RADIO_FEATURE)
@@ -380,6 +383,11 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 	#endif
 	#if defined(MY_REPEATER_FEATURE)
 		// not supported
+		interrupt1 = interrupt1;
+		mode1 = mode1;
+		interrupt2 = interrupt2;
+		mode2 = mode2;
+		ms = ms;
 		return -2;
 	#else
 		#if defined(MY_RADIO_FEATURE)
