@@ -28,7 +28,7 @@ MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among other
 	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
-uint16_t _heartbeat;
+uint32_t _heartbeat = 0;
 void (*_timeCallback)(unsigned long); // Callback for requested time messages
 
 
@@ -188,6 +188,8 @@ ControllerConfig getConfig() {
 
 
 boolean _sendRoute(MyMessage &message) {
+	// increment heartbeat counter
+	_heartbeat++;
 	#if defined(MY_GATEWAY_FEATURE)
 		if (message.destination == _nc.nodeId) {
 			// This is a message sent from a sensor attached on the gateway node.
@@ -215,7 +217,7 @@ void sendBatteryLevel(uint8_t value, bool enableAck) {
 }
 
 void sendHeartbeat(void) {
-	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(_heartbeat++));
+	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(_heartbeat));
 
 }
 
@@ -271,8 +273,7 @@ void _processInternalMessages() {
 				presentation();
 		}
 	} else if (type == I_HEARTBEAT) {
-		// Send heartbeat ack message back to sender (with the same payload)
-		_sendRoute(build(_msg, _nc.nodeId, _msg.sender, _msg.sensor, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(_heartbeat++));
+		sendHeartbeat();
 	} else if (type == I_TIME && receiveTime) {
 		// Deliver time to callback
 		if (receiveTime)
