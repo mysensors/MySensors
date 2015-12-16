@@ -29,7 +29,7 @@
 
 #define SIGNING_IDENTIFIER (1)
 
-// Define MY_DEBUG in your sketch to enable signing backend debugprints
+// Define MY_DEBUG_VERBOSE in your sketch to enable signing backend debugprints
 
 ATSHA204Class atsha204(MY_SIGNING_ATSHA204_PIN);
 unsigned long _signing_timestamp;
@@ -43,11 +43,11 @@ uint8_t _singning_tx_buffer[SHA204_CMD_SIZE_MAX];
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
 
-void signerCalculateSignature(MyMessage &msg);
-uint8_t* signerSha256(const uint8_t* data, size_t sz);
+static void signerCalculateSignature(MyMessage &msg);
+static uint8_t* signerSha256(const uint8_t* data, size_t sz);
 
 
-#ifdef MY_DEBUG
+#ifdef MY_DEBUG_VERBOSE
 static char i2h(uint8_t i)
 {
 	uint8_t k = i & 0x0F;
@@ -57,8 +57,7 @@ static char i2h(uint8_t i)
 		return 'A' + k - 10;
 }
 
-static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
-{
+static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz) {
 	static char printBuffer[300];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
@@ -86,7 +85,20 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif
 
-bool signerGetNonce(MyMessage &msg) {
+bool signerAtsha204CheckTimer(void) {
+	if (_signing_verification_ongoing) {
+		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
+			// Purge nonce
+			memset(_signing_current_nonce, 0x00, NONCE_NUMIN_SIZE_PASSTHROUGH);
+			_signing_verification_ongoing = false;
+			return false; 
+		}
+	}
+	return true;
+}
+
+bool signerAtsha204GetNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204"), NULL, 0);
 	// Generate random number for use as nonce
 	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
@@ -118,20 +130,7 @@ bool signerGetNonce(MyMessage &msg) {
 	return true;
 }
 
-bool signerCheckTimer() {
-	if (_signing_verification_ongoing) {
-		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
-			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
-			// Purge nonce
-			memset(_signing_current_nonce, 0x00, NONCE_NUMIN_SIZE_PASSTHROUGH);
-			_signing_verification_ongoing = false;
-			return false; 
-		}
-	}
-	return true;
-}
-
-bool signerPutNonce(MyMessage &msg) {
+bool signerAtsha204PutNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204"), NULL, 0);
 	if (((uint8_t*)msg.getCustom())[0] != SIGNING_IDENTIFIER) {
 		DEBUG_SIGNING_PRINTBUF(F("Incorrect signing identifier"), NULL, 0);
@@ -144,7 +143,7 @@ bool signerPutNonce(MyMessage &msg) {
 	return true;
 }
 
-bool signerSignMsg(MyMessage &msg) {
+bool signerAtsha204SignMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_SIGNING_PRINTBUF(F("Message too large"), NULL, 0);
@@ -174,7 +173,7 @@ bool signerSignMsg(MyMessage &msg) {
 	return true;
 }
 
-bool signerVerifyMsg(MyMessage &msg) {
+bool signerAtsha204VerifyMsg(MyMessage &msg) {
 	if (!_signing_verification_ongoing) {
 		DEBUG_SIGNING_PRINTBUF(F("No active verification session"), NULL, 0);
 		return false; 
@@ -226,7 +225,7 @@ bool signerVerifyMsg(MyMessage &msg) {
 }
 
 // Helper to calculate signature of msg (returned in _singning_rx_buffer[SHA204_BUFFER_POS_DATA])
-void signerCalculateSignature(MyMessage &msg) {
+static void signerCalculateSignature(MyMessage &msg) {
 	memset(_signing_temp_message, 0, 32);
 	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
 
@@ -259,7 +258,7 @@ void signerCalculateSignature(MyMessage &msg) {
 
 // Helper to calculate a generic SHA256 digest of provided buffer (only supports one block)
 // The pointer to the hash is returned, but the hash is also stored in _singning_rx_buffer[SHA204_BUFFER_POS_DATA])
-uint8_t* signerSha256(const uint8_t* data, size_t sz) {
+static uint8_t* signerSha256(const uint8_t* data, size_t sz) {
 	// Initiate SHA256 calculator
 	(void)atsha204.sha204m_execute(SHA204_SHA, SHA_INIT, 0, 0, NULL,
 									SHA_COUNT_SHORT, _singning_tx_buffer, SHA_RSP_SIZE_SHORT, _singning_rx_buffer);

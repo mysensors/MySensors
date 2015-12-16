@@ -23,10 +23,6 @@
 bool _autoFindParent;
 uint8_t _failedTransmissions;
 
-#ifdef MY_SIGNING_FEATURE
-	uint8_t _signingNonceStatus;
-#endif
-
 #ifdef MY_OTA_FIRMWARE_FEATURE
 	SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 	NodeFirmwareConfig _fc;
@@ -70,9 +66,7 @@ inline void transportProcess() {
 		return;
 	}
 
-	#ifdef MY_SIGNING_FEATURE
 	(void)signerCheckTimer(); // Manage signing timeout
-	#endif
 
 	uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
 	(void)payloadLength; //until somebody makes use of it
@@ -86,34 +80,12 @@ inline void transportProcess() {
 	uint8_t destination = _msg.destination;
 	
 
-	#ifdef MY_SIGNING_FEATURE
-		// Before processing message, reject unsigned messages if signing is required and check signature (if it is signed and addressed to us)
-		// Note that we do not care at all about any signature found if we do not require signing, nor do we care about ACKs (they are never signed)
-		#ifdef MY_SIGNING_REQUEST_SIGNATURES
-
-			if ((!MY_IS_GATEWAY || DO_SIGN(sender)) &&
-				destination == _nc.nodeId &&
-				!mGetAck(_msg) &&
-				(mGetCommand(_msg) != C_INTERNAL ||
-				 (type != I_GET_NONCE_RESPONSE && type != I_GET_NONCE && type != I_REQUEST_SIGNING &&
-				  type != I_ID_REQUEST && type != I_ID_RESPONSE && 
-				  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE &&
-				  type != I_HEARTBEAT && type != I_HEARTBEAT_RESPONSE))) {
-				if (!mGetSigned(_msg)) {
-					// Got unsigned message that should have been signed
-					debug(PSTR("no sign\n"));
-					ledBlinkErr(1);
-					return;
-				}
-				else if (!signerVerifyMsg(_msg)) {
-					debug(PSTR("verify fail\n"));
-					ledBlinkErr(1);
-					return; // This signed message has been tampered with!
-				}
-			}
-		#endif
-	#endif
-
+	// Reject massages that do not pass verification
+	if (!signerVerifyMsg(_msg)) {
+		debug(PSTR("verify fail\n"));
+		ledBlinkErr(1);
+		return;	
+	}
 
 	if (destination == _nc.nodeId) {
 		debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
@@ -138,7 +110,6 @@ inline void transportProcess() {
 
 	if (destination == _nc.nodeId) {
 		// This message is addressed to this node
-		mSetSigned(_msg,0); // Clear the sign-flag now as verification is completed
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
 		mSetLength(_msg, min(mGetLength(_msg),MAX_PAYLOAD));
 		// null terminate data
@@ -163,6 +134,10 @@ inline void transportProcess() {
 		}
 
 		if (command == C_INTERNAL) {
+			// Process signing related internal messages
+			if (signerProcessInternal(_msg)) {
+				return; // Signer processing indicated no further action needed
+			}
 			if (type == I_FIND_PARENT_RESPONSE) {
 				if (_autoFindParent) {
 					// We've received a reply to a FIND_PARENT message. Check if the distance is
@@ -183,44 +158,6 @@ inline void transportProcess() {
 					}
 				}
 				return;
-			#ifdef MY_SIGNING_FEATURE
-			} else if (type == I_GET_NONCE) {
-				if (signerGetNonce(_msg)) {
-					_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_GET_NONCE_RESPONSE, false));
-				}
-				return; // Nonce exchange is an internal MySensor protocol message, no need to inform caller about this
-			} else if (type == I_REQUEST_SIGNING) {
-				if (_msg.getBool()) {
-					// We received an indicator that the sender require us to sign all messages we send to it
-					SET_SIGN(sender);
-				} else {
-					// We received an indicator that the sender does not require us to sign all messages we send to it
-					CLEAR_SIGN(sender);
-				}
-				// Save updated table
-				hwWriteConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
-
-				// Inform sender about our preference if we are a gateway, but only require signing if the sender required signing
-				// We do not currently want a gateway to require signing from all nodes in a network just because it wants one node
-				// to sign it's messages
-				#if defined (MY_GATEWAY_FEATURE)
-					#ifdef MY_SIGNING_REQUEST_SIGNATURES
-						if (DO_SIGN(sender))
-							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)true));
-						else
-							_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
-					#else
-						_sendRoute(build(_msg, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
-					#endif
-				#endif
-				return; // Signing request is an internal MySensor protocol message, no need to inform caller about this
-			} else if (type == I_GET_NONCE_RESPONSE) {
-				// Proceed with signing if nonce has been received
-				if (signerPutNonce(_msg) && signerSignMsg(_msgSign)) {
-					_signingNonceStatus = SIGN_OK;
-				}
-				return; // Just pass along nonce silently (no need to call callback for these)
-			#endif
 			} else if (sender == GATEWAY_ADDRESS) {
 				if (type == I_ID_RESPONSE && _nc.nodeId == AUTO) {
 					_nc.nodeId = _msg.getByte();
@@ -414,47 +351,10 @@ boolean transportSendRoute(MyMessage &message) {
 
 	mSetVersion(message, PROTOCOL_VERSION);
 
-	#ifdef MY_SIGNING_FEATURE
-		uint8_t type = message.type;
-		// If destination is known to require signed messages and we are the sender, sign this message unless it is an ACK or a handshake message
-		if (DO_SIGN(message.destination) && message.sender == _nc.nodeId && !mGetAck(message) &&
-			(mGetCommand(message) != C_INTERNAL ||
-			 (type != I_GET_NONCE && type != I_GET_NONCE_RESPONSE && type != I_REQUEST_SIGNING &&
-			  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
-			  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE &&
-			  type != I_HEARTBEAT && type != I_HEARTBEAT_RESPONSE))) {
-			// Send nonce-request
-			_signingNonceStatus=SIGN_WAITING_FOR_NONCE;
-			if (!_sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
-				debug(PSTR("nonce tr err\n"));
-				return false;
-			}
-			// We have to wait for the nonce to arrive before we can sign our original message
-			// Other messages could come in-between. We trust process() takes care of them
-			unsigned long enter = hwMillis();
-			_msgSign = message; // Copy the message to sign since message buffer might be touched in process()
-
-			while (hwMillis() - enter < MY_VERIFICATION_TIMEOUT_MS && _signingNonceStatus==SIGN_WAITING_FOR_NONCE) {
-				_process();
-			}
-			if (hwMillis() - enter > MY_VERIFICATION_TIMEOUT_MS) {
-				debug(PSTR("nonce tmo\n"));
-				ledBlinkErr(1);
-				return false;
-			}
-			if (_signingNonceStatus == SIGN_OK) {
-				message = _msgSign; // Write the signed message back
-			} else {
-				debug(PSTR("sign fail\n"));
-				ledBlinkErr(1);
-				return false;
-			}
-			// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
-			// or signature will become invalid and the message rejected by the receiver
-		} else if (_nc.nodeId == message.sender) {
-			mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
-		}
-	#endif
+	if (!signerSignMsg(message)) {
+		debug(PSTR("sign fail\n"));
+		ledBlinkErr(1);
+	}
 
 	#if !defined(MY_REPEATER_FEATURE)
 
@@ -552,19 +452,8 @@ void transportPresentNode() {
 	// Present node and request config
 	#ifndef MY_GATEWAY_FEATURE
 		if (_nc.nodeId != AUTO) {
-			#ifdef MY_SIGNING_FEATURE
-				// Notify gateway (and possibly controller) about the signing preferences of this node
-				#if defined(MY_SIGNING_REQUEST_SIGNATURES)
-					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
-					// If we do require signing, wait for the gateway to tell us how it prefer us to transmit our messages
-					wait(2000);
-				#else
-					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
-				#endif
-			#else
-				// We do not support signing, make sure gateway knows this
-				_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
-			#endif
+			// Send signing preferences for this node
+			signerPresentation(_msg);
 
 			// Send presentation for this radio node
 			#ifdef MY_REPEATER_FEATURE
