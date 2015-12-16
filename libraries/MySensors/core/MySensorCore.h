@@ -178,9 +178,10 @@ void wait(unsigned long ms);
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
  * @param ms Number of milliseconds to sleep.
+ * @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
  */
-void sleep(unsigned long ms);
-void smartSleep(unsigned long ms);
+int8_t sleep(unsigned long ms);
+int8_t smartSleep(unsigned long ms);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change.
@@ -189,10 +190,10 @@ void smartSleep(unsigned long ms);
  * @param interrupt Interrupt that should trigger the wakeup
  * @param mode RISING, FALLING, CHANGE
  * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return true if wake up was triggered by pin change and false means timer woke it up.
+ * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
  */
-bool sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
-bool smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
+int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
+int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
@@ -203,7 +204,7 @@ bool smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
  * @param interrupt2 Second interrupt that should trigger the wakeup
  * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
  * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number wake up was triggered by pin change and negative if timer woke it up.
+ * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
  */
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
