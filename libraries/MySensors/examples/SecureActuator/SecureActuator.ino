@@ -102,7 +102,8 @@ void loop()
 
 void incomingMessage(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
-  if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS) {
+  // And acks are not accepted as control messages
+  if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS && !mGetAck(message)) {
      // Change relay state
      digitalWrite(message.sensor-1+LOCK_1, message.getBool()?LOCK_LOCK:LOCK_UNLOCK);
      // Store state in eeprom
