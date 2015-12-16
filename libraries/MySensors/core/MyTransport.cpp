@@ -555,6 +555,9 @@ void transportPresentNode() {
 				#else
 					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 				#endif
+			#else
+				// We do not support signing, make sure gateway knows this
+				_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 			#endif
 
 			// Send presentation for this radio node
