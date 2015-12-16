@@ -364,8 +364,8 @@
  * <a href="http://www.atmel.com/Images/Atmel-8885-CryptoAuth-ATSHA204A-Datasheet.pdf">datasheet</a>.
  * In the MySensors protocol, the following internal messagetypes handles signature requirements and nonce requests:<br>
  * @ref I_REQUEST_SIGNING <br>
- * @ref I_GET_NONCE <br>
- * @ref I_GET_NONCE_RESPONSE <br>
+ * @ref I_NONCE_REQUEST <br>
+ * @ref I_NONCE_RESPONSE <br>
  *
  * Also, the version field in the header has been reduced from 3 to 2 bits in order to fit a single bit to indicate that a message is signed.
  *
@@ -484,29 +484,42 @@ typedef struct {
 } whitelist_entry_t;
 #endif
 
-// Macros for manipulating signing requirement table
-/** @brief Return 'true' if provided node ID is requiring signed messages */
-#define DO_SIGN(node) (~_doSign[node>>3]&(1<<(node%8)))
-/** @brief Mark provided node ID to require signed messages in table */
-#define SET_SIGN(node) (_doSign[node>>3]&=~(1<<(node%8)))
-/** @brief Mark provided node ID to not require signed messages in table */
-#define CLEAR_SIGN(node) (_doSign[node>>3]|=(1<<(node%8)))
 /** @brief Helper macro to determine the number of elements in a array */
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
 /**
- * @brief Stores signing identifier and a new nonce in provided message for signing operations.
+ * @brief Initializes signing infrastructure and associated backend.
  *
- * All space in message payload buffer is used for signing identifier and nonce.<br>
- * Returns @c false if subsystem is busy processing an ongoing signing operation.<br>
- * If successful, this marks the start of a signing operation at the receiving side so
- * implementation is expected to do any necessary initializations within this call.
- * \n@b Usage: This function is typically called as action when receiving a @ref I_GET_NONCE message.
- *
- * @param msg The message to put the nonce in.
- * @returns @c true if nonce is successfully put in provided message.
+ * This function makes sure that the internal states of the signing infrastructure
+ * is set to a known initial state.
+ * \n@b Usage: This fuction should be called before any signing related operations take place.
  */
-bool signerGetNonce(MyMessage &msg);
+void signerInit(void);
+
+/**
+ * @brief Does signing specific presentation for a node.
+ *
+ * This function makes sure any signing related presentation info is shared with the gateway.
+ * The presentation of the gateways signing preferences is done in @ref signerProcessInternal().
+ * \n@b Usage: This function should be called by the presentation routine of the mysensors library.
+ * There is no need to call this directly from a sketch.
+ *
+ * @param msg Message buffer to use.
+ */
+void signerPresentation(MyMessage &msg);
+ 
+/**
+ * @brief Manages internal signing message handshaking.
+ *
+ * This function takes care of signing related message handshaknig such as nonce exchange.
+ * \n@b Usage: This function should be called by the incoming message handler before any further message
+ * processing is performed on internal messages. This function should only be called for @ref C_INTERNAL class
+ * messages.
+ *
+ * @param msg Message buffer to process.
+ * @returns @c true if caller should stop further message processing.
+ */
+bool signerProcessInternal(MyMessage &msg);
 
 /**
  * @brief Check timeout of verification session.
@@ -525,7 +538,7 @@ bool signerCheckTimer(void);
  * Returns @c false if signing identifier found in message is not supported by the used backend.<br>
  * If successful, this marks the start of a signing operation at the sending side so
  * implementation is expected to do any necessary initializations within this call.
- * \n@b Usage: This function is typically called as action when receiving a @ref I_GET_NONCE_RESPONSE
+ * \n@b Usage: This function is typically called as action when receiving a @ref I_NONCE_RESPONSE
  * message.
  *
  * @param msg The message to get the nonce from.
@@ -537,13 +550,13 @@ bool signerPutNonce(MyMessage &msg);
  * @brief Signs provided message. All remaining space in message payload buffer is used for
  * signing identifier and signature.
  *
- * Nonce used for signature calculation is the one generated previously using @ref signerGetNonce().<br>
+ * Nonce used for signature calculation is the one generated previously within @ref signerProcessInternal().<br>
  * Nonce will be cleared when this function is called to prevent re-use of nonce.<br>
  * Returns @c false if subsystem is busy processing an ongoing signing operation.<br>
  * Returns @c false if not two bytes or more of free payload space is left in provided message.<br>
  * This ends a signing operation at the sending side so implementation is expected to do any
  * deinitializations and enter a power saving state within this call.
- * \n@b Usage: This function is typically called as action when receiving a @ref I_GET_NONCE_RESPONSE
+ * \n@b Usage: This function is typically called as action when receiving a @ref I_NONCE_RESPONSE
  * message and after @ref signerPutNonce() has successfully been executed.
  * 
  * @param msg The message to sign.

@@ -95,9 +95,11 @@
 
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-	// SIGNING COMMON FUNCTIONS
-	#include "core/MySigning.cpp"
 	#define MY_SIGNING_FEATURE
+#endif
+#include "core/MySigning.cpp"
+#if defined(MY_SIGNING_FEATURE)
+	// SIGNING COMMON FUNCTIONS
 	#if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)
 		#error Only one signing engine can be activated
 	#endif

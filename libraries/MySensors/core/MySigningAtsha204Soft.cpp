@@ -33,7 +33,7 @@
 
 #define SIGNING_IDENTIFIER (1)
 
-// Define MY_DEBUG in your sketch to enable signing backend debugprints
+// Define MY_DEBUG_VERBOSE in your sketch to enable signing backend debugprints
 
 Sha256Class _signing_sha256;
 unsigned long _signing_timestamp;
@@ -48,9 +48,9 @@ uint8_t _signing_hmac[32];
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
 
-void signerCalculateSignature(MyMessage &msg);
+static void signerCalculateSignature(MyMessage &msg);
 
-#ifdef MY_DEBUG
+#ifdef MY_DEBUG_VERBOSE
 static char i2h(uint8_t i)
  {
 	uint8_t k = i & 0x0F;
@@ -60,8 +60,7 @@ static char i2h(uint8_t i)
 		return 'A' + k - 10;
 }
 
-static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
-{
+static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz) {
 	static char printBuffer[300];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
@@ -89,7 +88,20 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif
 
-bool signerGetNonce(MyMessage &msg) {
+bool signerAtsha204SoftCheckTimer(void) {
+	if (_signing_verification_ongoing) {
+		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
+			// Purge nonce
+			memset(_signing_current_nonce, 0xAA, 32);
+			_signing_verification_ongoing = false;
+			return false; 
+		}
+	}
+	return true;
+}
+
+bool signerAtsha204SoftGetNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 
 	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
@@ -118,20 +130,7 @@ bool signerGetNonce(MyMessage &msg) {
 	return true;
 }
 
-bool signerCheckTimer() {
-	if (_signing_verification_ongoing) {
-		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
-			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
-			// Purge nonce
-			memset(_signing_current_nonce, 0xAA, 32);
-			_signing_verification_ongoing = false;
-			return false; 
-		}
-	}
-	return true;
-}
-
-bool signerPutNonce(MyMessage &msg) {
+bool signerAtsha204SoftPutNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 	if (((uint8_t*)msg.getCustom())[0] != SIGNING_IDENTIFIER) {
 		DEBUG_SIGNING_PRINTBUF(F("Incorrect signing identifier"), NULL, 0);
@@ -144,7 +143,7 @@ bool signerPutNonce(MyMessage &msg) {
 	return true;
 }
 
-bool signerSignMsg(MyMessage &msg) {
+bool signerAtsha204SoftSignMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_SIGNING_PRINTBUF(F("Message too large"), NULL, 0);
@@ -176,7 +175,7 @@ bool signerSignMsg(MyMessage &msg) {
 	return true;
 }
 
-bool signerVerifyMsg(MyMessage &msg) {
+bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 	if (!_signing_verification_ongoing) {
 		DEBUG_SIGNING_PRINTBUF(F("No active verification session"), NULL, 0);
 		return false; 
@@ -231,7 +230,7 @@ bool signerVerifyMsg(MyMessage &msg) {
 }
 
 // Helper to calculate signature of msg (returned in hmac)
-void signerCalculateSignature(MyMessage &msg) {
+static void signerCalculateSignature(MyMessage &msg) {
 	memset(_signing_temp_message, 0, 32);
 	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
 	DEBUG_SIGNING_PRINTBUF(F("Message to process: "), (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
