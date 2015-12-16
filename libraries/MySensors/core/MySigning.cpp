@@ -20,6 +20,6 @@
 #include "MySigning.h"
 
 
-uint16_t _doSign[16]; // Bitfield indicating which sensors require signed communication
+uint8_t _doSign[32]; // Bitfield indicating which sensors require signed communication
 MyMessage _msgSign;  // Buffer for message to sign.
 
