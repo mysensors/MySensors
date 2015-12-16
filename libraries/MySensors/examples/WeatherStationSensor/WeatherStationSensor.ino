@@ -37,7 +37,7 @@
 */
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG 
+//#define MY_DEBUG 
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -227,9 +227,11 @@ bool updatePressureSensor()
 	{
 		changed = true;
 		lastPressureTemp = temperature;
+		#ifdef MY_DEBUG
 		Serial.print(F("Temperature = "));
 		Serial.print(temperature);
 		Serial.println(metric ? F(" *C") : F(" *F"));
+		#endif
 		if (!send(tempMsg.set(lastPressureTemp, 1)))
 		{
 			lastPressureTemp = -1.0;
@@ -240,9 +242,11 @@ bool updatePressureSensor()
 	{
 		changed = true;
 		lastPressure = pressure;
+		#ifdef MY_DEBUG
 		Serial.print(F("sealevel Pressure = "));
 		Serial.print(pressure);
 		Serial.println(F(" hPa"));
+		#endif
 		if (!send(pressureMsg.set(lastPressure, 1)))
 		{
 			lastPressure = -1.0;
@@ -253,8 +257,10 @@ bool updatePressureSensor()
 	{
 		changed = true;
 		lastForecast = forecast;
+		#ifdef MY_DEBUG
 		Serial.print(F("Forecast = "));
 		Serial.println(weatherStrings[forecast]);
+		#endif
 		if (send(forecastMsg.set(weatherStrings[lastForecast])))
 		{
 			if (!send(forecastMsg2.set(lastForecast)))
@@ -271,8 +277,10 @@ bool updatePressureSensor()
 	{
 		changed = true;
 		lastSituation = situation;
+		#ifdef MY_DEBUG
 		Serial.print(F("Situation = "));
 		Serial.println(situationStrings[situation]);
+		#endif
 		if (!send(situationMsg.set(lastSituation, 0)))
 		{
 			lastSituation = -1.0;
@@ -302,8 +310,10 @@ bool updateHumiditySensor()
 			}
 
 			changed = true;
+			#ifdef MY_DEBUG
 			Serial.print(F("T: "));
 			Serial.println(temperature);
+			#endif
 			if (!send(msgTemp.set(temperature, 1)))
 			{
 				lastTemp = -1.0;
@@ -322,8 +332,10 @@ bool updateHumiditySensor()
 		{
 			lastHum = humidity;
 			changed = true;
+			#ifdef MY_DEBUG
 			Serial.print(F("H: "));
 			Serial.println(humidity);
+			#endif
 			if (!send(msgHum.set(lastHum, 1)))
 			{
 				lastHum = -1.0;
