@@ -45,6 +45,8 @@ uint8_t hwReadConfig(int adr);
 int8_t hwSleep(unsigned long ms);
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
+uint16_t hwCPUVoltage(); 
+uint16_t hwCPUFrequency(); 
 #ifdef MY_DEBUG
 	void hwDebugPrint(const char *fmt, ... );
 #endif

@@ -135,6 +135,16 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
   return -2;
 }
 
+uint16_t hwCPUVoltage() {
+	// TODO: not supported
+	return 0;
+}
+
+uint16_t hwCPUFrequency() {
+	// TODO: not supported
+	return 0;
+}
+
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];

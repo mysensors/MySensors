@@ -79,7 +79,7 @@ do { 																\
 
 enum period_t
 {
-	SLEEP_15Ms,
+	SLEEP_15MS,
 	SLEEP_30MS,
 	SLEEP_60MS,
 	SLEEP_120MS,

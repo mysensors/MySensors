@@ -107,6 +107,16 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return -2;
 }
 
+ADC_MODE(ADC_VCC);
+
+uint16_t hwCPUVoltage() {
+	return ESP.getVcc();
+}
+
+uint16_t hwCPUFrequency() {
+	return ESP.getCpuFreqMHz();
+}
+
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
