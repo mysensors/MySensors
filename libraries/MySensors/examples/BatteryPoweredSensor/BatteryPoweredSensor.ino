@@ -62,7 +62,7 @@ void loop()
 {
    // get the battery Voltage
    int sensorValue = analogRead(BATTERY_SENSE_PIN);
-   #ifdef DEBUG
+   #ifdef MY_DEBUG
    Serial.println(sensorValue);
    #endif
    
@@ -73,7 +73,7 @@ void loop()
    
    int batteryPcnt = sensorValue / 10;
 
-   #ifdef DEBUG
+   #ifdef MY_DEBUG
    float batteryV  = sensorValue * 0.003363075;
    Serial.print("Battery Voltage: ");
    Serial.print(batteryV);

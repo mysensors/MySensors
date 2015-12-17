@@ -94,8 +94,9 @@ void hwInternalSleep(unsigned long ms) {
 	if (!pinIntTrigger && ms >= 16)      { hwPowerDown(SLEEP_15Ms); ms -= 15; }
 }
 
-void hwSleep(unsigned long ms) {
+int8_t hwSleep(unsigned long ms) {
 	hwInternalSleep(ms);
+	return -1;
 }
 
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
@@ -120,7 +121,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	detachInterrupt(interrupt1);
 	if (interrupt2!=0xFF) detachInterrupt(interrupt2);
 	
-	// default: no interrupt triggered	
+	// default: no interrupt triggered, timer wake up	
 	int8_t retVal = -1;
 
 	if (pinIntTrigger == 1) {

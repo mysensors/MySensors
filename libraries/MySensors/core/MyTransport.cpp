@@ -94,8 +94,9 @@ inline void transportProcess() {
 				!mGetAck(_msg) &&
 				(mGetCommand(_msg) != C_INTERNAL ||
 				 (type != I_GET_NONCE_RESPONSE && type != I_GET_NONCE && type != I_REQUEST_SIGNING &&
-				  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
-				  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
+				  type != I_ID_REQUEST && type != I_ID_RESPONSE && 
+				  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE &&
+				  type != I_HEARTBEAT && type != I_HEARTBEAT_RESPONSE))) {
 				if (!mGetSigned(_msg)) {
 					// Got unsigned message that should have been signed
 					debug(PSTR("no sign\n"));
@@ -414,7 +415,8 @@ boolean transportSendRoute(MyMessage &message) {
 			(mGetCommand(message) != C_INTERNAL ||
 			 (type != I_GET_NONCE && type != I_GET_NONCE_RESPONSE && type != I_REQUEST_SIGNING &&
 			  type != I_ID_REQUEST && type != I_ID_RESPONSE &&
-			  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE))) {
+			  type != I_FIND_PARENT && type != I_FIND_PARENT_RESPONSE &&
+			  type != I_HEARTBEAT && type != I_HEARTBEAT_RESPONSE))) {
 			// Send nonce-request
 			_signingNonceStatus=SIGN_WAITING_FOR_NONCE;
 			if (!_sendRoute(build(_msgTmp, _nc.nodeId, message.destination, message.sensor, C_INTERNAL, I_GET_NONCE, false).set(""))) {
@@ -553,6 +555,9 @@ void transportPresentNode() {
 				#else
 					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 				#endif
+			#else
+				// We do not support signing, make sure gateway knows this
+				_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 			#endif
 
 			// Send presentation for this radio node

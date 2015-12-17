@@ -485,12 +485,12 @@ typedef struct {
 #endif
 
 // Macros for manipulating signing requirement table
-/** @brief Return 'true' if provided node ID is requiering signed messages */
-#define DO_SIGN(node) (node == 0 ? (~_doSign[0]&1) : (~_doSign[node>>4]&(node%16)))
+/** @brief Return 'true' if provided node ID is requiring signed messages */
+#define DO_SIGN(node) (~_doSign[node>>3]&(1<<(node%8)))
 /** @brief Mark provided node ID to require signed messages in table */
-#define SET_SIGN(node) (node == 0 ? (_doSign[0]&=~1) : (_doSign[node>>4]&=~(node%16)))
+#define SET_SIGN(node) (_doSign[node>>3]&=~(1<<(node%8)))
 /** @brief Mark provided node ID to not require signed messages in table */
-#define CLEAR_SIGN(node) (node == 0 ? (_doSign[0]|=1) : (_doSign[node>>4]|=(node%16)))
+#define CLEAR_SIGN(node) (_doSign[node>>3]|=(1<<(node%8)))
 /** @brief Helper macro to determine the number of elements in a array */
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 

@@ -92,18 +92,19 @@ void hwWriteConfig(int adr, uint8_t value)
 
 
 
-void hwSleep(unsigned long ms) {
-  // TODO: Not supported!
+int8_t hwSleep(unsigned long ms) {
+	// TODO: Not supported!
+	return -2;
 }
 
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-  // TODO: Not supported!
-	return false;
+	// TODO: Not supported!
+	return -2;
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
   // TODO: Not supported!
-	return 0;
+	return -2;
 }
 
 #ifdef MY_DEBUG
