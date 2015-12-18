@@ -113,7 +113,7 @@ uint16_t hwCPUVoltage() {
 	return ESP.getVcc();
 }
 
-uint16_t hwCPUFrequency() {
+uint8_t hwCPUFrequency() {
 	return ESP.getCpuFreqMHz();
 }
 

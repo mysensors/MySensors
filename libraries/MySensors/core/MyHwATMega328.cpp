@@ -152,7 +152,7 @@ uint16_t hwCPUVoltage() {
 	return (1125300UL) / ADC;
 }
 
-uint16_t hwCPUFrequency() {
+uint8_t hwCPUFrequency() {
 	noInterrupts();
 	// setup timer1
 	TIFR1 = 0xFF;   
