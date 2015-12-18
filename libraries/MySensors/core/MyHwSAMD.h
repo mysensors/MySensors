@@ -35,6 +35,7 @@
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
+#define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 
 
 // Define these as macros to save valuable space
