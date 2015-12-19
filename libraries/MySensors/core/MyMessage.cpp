@@ -111,7 +111,7 @@ char* MyMessage::getString(char *buffer) const {
 }
 
 bool MyMessage::getBool() const {
-	return getInt();
+	return getByte();
 }
 
 uint8_t MyMessage::getByte() const {
