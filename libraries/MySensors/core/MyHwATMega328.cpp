@@ -148,7 +148,7 @@ uint16_t hwCPUVoltage() {
 	// Do conversion
 	ADCSRA |= _BV(ADSC);
 	while (bit_is_set(ADCSRA,ADSC));
-	// return value in mV
+	// return Vcc in mV
 	return (1125300UL) / ADC;
 }
 
@@ -176,8 +176,8 @@ uint8_t hwCPUFrequency() {
 	WDTCSR |= (1 << WDCE) | (1 << WDE);
 	WDTCSR = WDTsave;
 	interrupts();	
-	// return frequency in MHz (accuracy +- 10%)
-	return TCNT1 * 2048UL / 1000000UL;
+	// return frequency in 1/10MHz (accuracy +- 10%)
+	return TCNT1 * 2048UL / 100000UL;
 }
 
 

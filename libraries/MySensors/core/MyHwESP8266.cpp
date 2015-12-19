@@ -110,11 +110,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 ADC_MODE(ADC_VCC);
 
 uint16_t hwCPUVoltage() {
+	// in mV
 	return ESP.getVcc();
 }
 
-uint8_t hwCPUFrequency() {
-	return ESP.getCpuFreqMHz();
+uint16_t hwCPUFrequency() {
+	// in 1/10Mhz
+	return ESP.getCpuFreqMHz()*10;
 }
 
 #ifdef MY_DEBUG
