@@ -111,7 +111,7 @@ char* MyMessage::getString(char *buffer) const {
 }
 
 bool MyMessage::getBool() const {
-	return getInt();
+	return getByte();
 }
 
 uint8_t MyMessage::getByte() const {
@@ -207,6 +207,13 @@ MyMessage& MyMessage::set(const char* value) {
 		strncpy(data, value, length);
 	else
 		data[0] ='\0';
+	return *this;
+}
+
+MyMessage& MyMessage::set(bool value) {
+	miSetLength(1);
+	miSetPayloadType(P_BYTE);
+	data[0] = value;
 	return *this;
 }
 
