@@ -48,6 +48,8 @@ extern "C"
 /*----------------------------------------------------------------------------
  *        Pins
  *----------------------------------------------------------------------------*/
+#define MY_W5100_SPI_EN 4
+#define MY_SIGNING_ATSHA204_PIN 17
 
 // Number of pins defined in PinDescription array
 #define PINS_COUNT           (26u)
