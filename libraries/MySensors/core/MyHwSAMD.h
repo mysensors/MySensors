@@ -52,7 +52,7 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
-#define SERIALDEVICE SerialUSB
+#define MY_SERIALDEVICE SerialUSB
 
 
 /*
