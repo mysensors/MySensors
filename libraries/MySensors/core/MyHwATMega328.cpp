@@ -91,7 +91,7 @@ void hwInternalSleep(unsigned long ms) {
 	if (!pinIntTrigger && ms >= 125)     { hwPowerDown(SLEEP_120MS); ms -= 120; }
 	if (!pinIntTrigger && ms >= 64)      { hwPowerDown(SLEEP_60MS); ms -= 60; }
 	if (!pinIntTrigger && ms >= 32)      { hwPowerDown(SLEEP_30MS); ms -= 30; }
-	if (!pinIntTrigger && ms >= 16)      { hwPowerDown(SLEEP_15Ms); ms -= 15; }
+	if (!pinIntTrigger && ms >= 16)      { hwPowerDown(SLEEP_15MS); ms -= 15; }
 }
 
 int8_t hwSleep(unsigned long ms) {
@@ -130,6 +130,54 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 		retVal = (int8_t)interrupt2;
 	}
 	return retVal;
+}
+
+uint16_t hwCPUVoltage() {
+	// Measure Vcc against 1.1V Vref 
+	#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+		ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+	#elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+		ADMUX = (_BV(MUX5) | _BV(MUX0));
+	#elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+		ADMUX = (_BV(MUX3) | _BV(MUX2));
+	#else
+		ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+	#endif 
+	// Vref settle
+	delay(70); 
+	// Do conversion
+	ADCSRA |= _BV(ADSC);
+	while (bit_is_set(ADCSRA,ADSC));
+	// return Vcc in mV
+	return (1125300UL) / ADC;
+}
+
+uint8_t hwCPUFrequency() {
+	noInterrupts();
+	// setup timer1
+	TIFR1 = 0xFF;   
+	TCNT1 = 0; 
+	TCCR1A = 0;
+	TCCR1C = 0;
+	// save WDT settings
+	uint8_t WDTsave = WDTCSR;
+	wdt_enable(WDTO_500MS);
+	// enable WDT interrupt mode => first timeout WDIF, 2nd timeout reset
+	WDTCSR |= (1 << WDIE);
+	wdt_reset();
+	// start timer1 with 1024 prescaling
+	TCCR1B = _BV(CS12) | _BV(CS10);   
+	// wait until wdt interrupt
+	while (bit_is_clear(WDTCSR,WDIF));
+	// stop timer
+	TCCR1B = 0;
+	// restore WDT settings
+	wdt_reset();
+	WDTCSR |= (1 << WDCE) | (1 << WDE);
+	WDTCSR = WDTsave;
+	interrupts();	
+	// return frequency in 1/10MHz (accuracy +- 10%)
+	return TCNT1 * 2048UL / 100000UL;
 }
 
 
