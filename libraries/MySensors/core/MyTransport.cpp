@@ -141,7 +141,7 @@ inline void transportProcess() {
 		// This message is addressed to this node
 		mSetSigned(_msg,0); // Clear the sign-flag now as verification is completed
 		// clear bytes after message end
-		memset((uint8_t*)&_msg.data[messageLength],0x00,MAX_PAYLOAD-messageLength);
+		memset((uint8_t*)&_msg.data[messageLength],0x00,MAX_PAYLOAD-messageLength+1);
 		
 		#if defined(MY_REPEATER_FEATURE)
 			if (_msg.last != _nc.parentNodeId) {
