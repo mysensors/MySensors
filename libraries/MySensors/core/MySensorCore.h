@@ -248,7 +248,7 @@ static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destinati
 static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
 	msg.sender = GATEWAY_ADDRESS;
 	msg.destination = GATEWAY_ADDRESS;
-	msg.sensor = 0;
+	msg.sensor = 255;
 	msg.type = type;
 	mSetCommand(msg, C_INTERNAL);
 	mSetRequestAck(msg, false);
