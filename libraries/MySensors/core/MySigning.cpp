@@ -18,6 +18,7 @@
  */
 
 #include "MySigning.h"
+#include "drivers/ATSHA204/sha256.h"
 
 #if defined(MY_DEBUG_VERBOSE)
 #define SIGN_DEBUG(x,...) debug(x, ##__VA_ARGS__)
@@ -307,4 +308,23 @@ bool signerVerifyMsg(MyMessage &msg) {
 	(void)msg;
 #endif // MY_SIGNING_REQUEST_SIGNATURES
 	return verificationResult;
+}
+
+static uint8_t sha256_hash[32];
+Sha256Class _soft_sha256;
+
+void signerSha256Init(void) {
+	memset(sha256_hash, 0, 32);
+	_soft_sha256.init();
+}
+
+void signerSha256Update(const uint8_t* data, size_t sz) {
+	for (size_t i = 0; i < sz; i++) {
+		_soft_sha256.write(data[i]);
+	}
+}
+
+uint8_t* signerSha256Final(void) {
+	memcpy(sha256_hash, _soft_sha256.result(), 32);
+	return sha256_hash;
 }
