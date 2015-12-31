@@ -581,5 +581,32 @@ bool signerSignMsg(MyMessage &msg);
  */
 bool signerVerifyMsg(MyMessage &msg);
 
+/**
+ * @brief Initialize a hash calculation session.
+ *
+ * Any ongoing calculation session will be terminated/reset.
+ */
+void signerSha256Init(void);
+
+/**
+ * @brief Add data to an ongoing hash calculation session.
+ *
+ * More data can be added by repeated calls to this function.
+ *
+ * @param data Buffer with data to add.
+ * @param sz Size of data buffer.
+ */
+void signerSha256Update(const uint8_t* data, size_t sz);
+
+/**
+ * @brief Finalize an ongong hash calculation session and return the hash.
+ *
+ * The returned hash size is always 32 bytes. Buffer can be assumed to be valid
+ * until @ref signerSha256Init() is called again.
+ *
+ * @returns Buffer with 32-byte hash.
+ */
+uint8_t* signerSha256Final(void);
+
 #endif
 /** @}*/
