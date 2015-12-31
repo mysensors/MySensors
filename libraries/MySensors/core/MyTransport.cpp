@@ -140,7 +140,7 @@ inline void transportProcess() {
 		// This message is addressed to this node
 		mSetSigned(_msg,0); // Clear the sign-flag now as verification is completed
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
-		mSetLength(_msg) = min(mGetLength(_msg),MAX_PAYLOAD);
+		mSetLength(_msg, min(mGetLength(_msg),MAX_PAYLOAD));
 		// null terminate data
 		_msg.data[mGetLength(_msg)] = 0x00;
 		
