@@ -78,9 +78,8 @@ inline void transportProcess() {
 	(void)payloadLength; //until somebody makes use of it
 	ledBlinkRx(1);
 
+	
 	uint8_t command = mGetCommand(_msg);
-	// prevent buffer overflow by limiting message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
-	uint8_t messageLength = min(mGetLength(_msg),MAX_PAYLOAD);
 	uint8_t type = _msg.type;
 	uint8_t sender = _msg.sender;
 	uint8_t last = _msg.last;
@@ -140,8 +139,11 @@ inline void transportProcess() {
 	if (destination == _nc.nodeId) {
 		// This message is addressed to this node
 		mSetSigned(_msg,0); // Clear the sign-flag now as verification is completed
+		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
+		mSetLength(_msg) = min(mGetLength(_msg),MAX_PAYLOAD);
 		// null terminate data
-		_msg.data[messageLength] = 0x00;
+		_msg.data[mGetLength(_msg)] = 0x00;
+		
 		#if defined(MY_REPEATER_FEATURE)
 			if (_msg.last != _nc.parentNodeId) {
 				// Message is from one of the child nodes. Add it to routing table.
