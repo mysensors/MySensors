@@ -42,9 +42,10 @@ uint8_t _signing_current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];
 uint8_t _signing_temp_message[32];
 static uint8_t _signing_hmac_key[32] = { MY_SIGNING_SOFT_HMAC_KEY };
 uint8_t _signing_hmac[32];
+extern uint8_t _doWhitelist[32];
 
+const uint8_t _signing_node_serial_info[SHA204_SERIAL_SZ] = {MY_SIGNING_SOFT_SERIAL};
 #ifdef MY_SIGNING_NODE_WHITELISTING
-	const uint8_t _signing_node_serial_info[SHA204_SERIAL_SZ] = {MY_SIGNING_SOFT_SERIAL};
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
 
@@ -154,16 +155,16 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg) {
 	mSetSigned(msg, 1); // make sure signing flag is set before signature is calculated
 	signerCalculateSignature(msg);
 
-#ifdef MY_SIGNING_NODE_WHITELISTING
-	// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has provided
-	_signing_sha256.init();
-	for (int i=0; i<32; i++) _signing_sha256.write(_signing_hmac[i]);
-	_signing_sha256.write(msg.sender);
-	for (int i=0; i<SHA204_SERIAL_SZ; i++) _signing_sha256.write(_signing_node_serial_info[i]);
-	memcpy(_signing_hmac, _signing_sha256.result(), 32);
-	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_hmac, 32);
-	DEBUG_SIGNING_PRINTBUF(F("Signature salted with serial"), NULL, 0);
-#endif
+	if (DO_WHITELIST(msg.destination)) {
+		// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has provided
+		_signing_sha256.init();
+		for (int i=0; i<32; i++) _signing_sha256.write(_signing_hmac[i]);
+		_signing_sha256.write(msg.sender);
+		for (int i=0; i<SHA204_SERIAL_SZ; i++) _signing_sha256.write(_signing_node_serial_info[i]);
+		memcpy(_signing_hmac, _signing_sha256.result(), 32);
+		DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_hmac, 32);
+		DEBUG_SIGNING_PRINTBUF(F("Signature salted with serial"), NULL, 0);
+	}
 
 	// Overwrite the first byte in the signature with the signing identifier
 	_signing_hmac[0] = SIGNING_IDENTIFIER;
@@ -198,7 +199,8 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 
 #ifdef MY_SIGNING_NODE_WHITELISTING
 		// Look up the senders nodeId in our whitelist and salt the signature with that data
-		for (int j=0; j < NUM_OF(_signing_whitelist); j++) {
+		size_t j;
+		for (j=0; j < NUM_OF(_signing_whitelist); j++) {
 			if (_signing_whitelist[j].nodeId == msg.sender) {
 				DEBUG_SIGNING_PRINTBUF(F("Sender found in whitelist"), NULL, 0);
 				_signing_sha256.init();
@@ -209,6 +211,10 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 				DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_hmac, 32);
 				break;
 			}
+		}
+		if (j == NUM_OF(_signing_whitelist)) {
+			DEBUG_SIGNING_PRINTBUF(F("Sender not found in whitelist, message rejected!"), NULL, 0);
+			return false;
 		}
 #endif
 
