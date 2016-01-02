@@ -20,6 +20,10 @@
 #include "MySigning.h"
 #include "drivers/ATSHA204/sha256.h"
 
+#define SIGNING_PRESENTATION_VERSION_1 1
+#define SIGNING_PRESENTATION_REQUIRE_SIGNATURES   (1 << 0)
+#define SIGNING_PRESENTATION_REQUIRE_WHITELISTING (1 << 1)
+
 #if defined(MY_DEBUG_VERBOSE)
 #define SIGN_DEBUG(x,...) debug(x, ##__VA_ARGS__)
 #else
@@ -30,8 +34,9 @@
 #error You have to pick either MY_SIGNING_ATSHA204 or MY_SIGNING_SOFT in order to require signatures!
 #endif
 #ifdef MY_SIGNING_FEATURE
-uint8_t _doSign[32]; // Bitfield indicating which sensors require signed communication
-MyMessage _msgSign;  // Buffer for message to sign.
+uint8_t _doSign[32];      // Bitfield indicating which sensors require signed communication
+uint8_t _doWhitelist[32]; // Bitfield indicating which sensors require serial salted signatures
+MyMessage _msgSign;       // Buffer for message to sign.
 uint8_t _signingNonceStatus;
 
 // Status when waiting for signing nonce in signerProcessInternal
@@ -72,7 +77,7 @@ static bool skipSign(MyMessage &msg) {
 		SIGN_DEBUG(PSTR("Skipping security for ACK on command %d type %d\n"), mGetCommand(msg), msg.type);
 		return true;
 	}	else if (mGetCommand(msg) == C_INTERNAL &&
-		(msg.type == I_NONCE_REQUEST || msg.type == I_NONCE_RESPONSE       || msg.type == I_REQUEST_SIGNING ||
+		(msg.type == I_NONCE_REQUEST || msg.type == I_NONCE_RESPONSE       || msg.type == I_SIGNING_PRESENTATION ||
 	   msg.type == I_ID_REQUEST    || msg.type == I_ID_RESPONSE          ||
 	   msg.type == I_FIND_PARENT   || msg.type == I_FIND_PARENT_RESPONSE ||
 	   msg.type == I_HEARTBEAT     || msg.type == I_HEARTBEAT_RESPONSE)) {
@@ -89,10 +94,24 @@ static bool skipSign(MyMessage &msg) {
 }
 #endif // MY_SIGNING_FEATURE
 
+// Helper to prepare a signing presentation message
+static void prepareSigningPresentation(MyMessage &msg, uint8_t destination) {
+	// Only supports version 1 for now
+	build(msg, _nc.nodeId, destination, NODE_SENSOR_ID, C_INTERNAL, I_SIGNING_PRESENTATION, false).set("");
+	mSetLength(msg, 2);
+	msg.data[0] = SIGNING_PRESENTATION_VERSION_1;
+	msg.data[1] = 0;
+}
+
 void signerInit(void) {
 #if defined(MY_SIGNING_FEATURE)
 	// Read out the signing requirements from EEPROM
-	hwReadConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
+	hwReadConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS,
+		sizeof(_doSign));
+
+	// Read out the whitelist requirements from EEPROM
+	hwReadConfigBlock((void*)_doWhitelist, (void*)EEPROM_WHITELIST_REQUIREMENT_TABLE_ADDRESS,
+		sizeof(_doWhitelist));
 
 #if defined(MY_SIGNING_SOFT)
 	// initialize pseudo-RNG
@@ -102,21 +121,23 @@ void signerInit(void) {
 }
 
 void signerPresentation(MyMessage &msg) {
-#ifdef MY_SIGNING_FEATURE
+	prepareSigningPresentation(msg, GATEWAY_ADDRESS);
+
 #if defined(MY_SIGNING_REQUEST_SIGNATURES)
-	_sendRoute(build(msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID,
-		C_INTERNAL, I_REQUEST_SIGNING, false).set(true));
-	// If we do require signing, wait for the gateway to tell us how it prefer us to transmit our messages
-	SIGN_DEBUG(PSTR("Request for signing sent, waiting for GW response...\n"));
-	wait(2000);
-#else
-	_sendRoute(build(msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID,
-		C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
+	SIGN_DEBUG(PSTR("Signing required\n"));
 #endif
-#else
-	// Ww do not support signing, make sure gateway knows this
-	_sendRoute(build(msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID,
-		C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
+#if defined(MY_SIGNING_NODE_WHITELISTING)
+	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
+	SIGN_DEBUG(PSTR("Whitelisting required\n"));
+#endif
+
+	_sendRoute(msg);
+
+#if defined(MY_SIGNING_FEATURE)
+	// If we do support signing, wait for the gateway to tell us how it prefer us to transmit our messages
+	SIGN_DEBUG(PSTR("Waiting for GW to send signing preferences...\n"));
+	wait(2000);
 #endif
 }
 
@@ -125,12 +146,12 @@ bool signerProcessInternal(MyMessage &msg) {
 #if !defined(MY_SIGNING_FEATURE) && defined(MY_GATEWAY_FEATURE)
 		// If we act as gateway and do not have the signing feature and receive a signing request we still
 		// need to do make sure the requester does not believe the gateway still require signatures
-		if (msg.type == I_REQUEST_SIGNING) {
-			_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
-				C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
+		if (msg.type == I_SIGNING_PRESENTATION) {
+			prepareSigningPresentation(msg, msg.sender);
 			SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures because we do not support it\n"),
 				msg.sender);
-			return true; // No need to further process I_REQUEST_SIGNING in this case
+			_sendRoute(msg);
+			return true; // No need to further process I_SIGNING_PRESENTATION in this case
 		}
 #elif defined(MY_SIGNING_FEATURE)
 		if (msg.type == I_NONCE_REQUEST) {
@@ -147,8 +168,14 @@ bool signerProcessInternal(MyMessage &msg) {
 				SIGN_DEBUG(PSTR("Failed to generate nonce!\n"));
 			}
 			return true; // No need to further process I_NONCE_REQUEST
-		} else if (msg.type == I_REQUEST_SIGNING) {
-			if (msg.getBool()) {
+		} else if (msg.type == I_SIGNING_PRESENTATION) {
+			if (msg.data[0] != SIGNING_PRESENTATION_VERSION_1) {
+				SIGN_DEBUG(PSTR("Unsupported signing presentation version (%d)!\n"), msg.data[0]);
+				return true; // Just drop this presentation message
+			}
+
+			// We only handle version 1 here...
+			if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_SIGNATURES) {
 				// We received an indicator that the sender require us to sign all messages we send to it
 				SIGN_DEBUG(PSTR("Mark node %d as one that require signed messages\n"), msg.sender);
 				SET_SIGN(msg.sender);
@@ -157,32 +184,52 @@ bool signerProcessInternal(MyMessage &msg) {
 				SIGN_DEBUG(PSTR("Mark node %d as one that do not require signed messages\n"), msg.sender);
 				CLEAR_SIGN(msg.sender);
 			}
-			// Save updated table
-			hwWriteConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
+
+			if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_WHITELISTING) {
+				// We received an indicator that the sender require us to salt signatures with serial
+				SIGN_DEBUG(PSTR("Mark node %d as one that require whitelisting\n"), msg.sender);
+				SET_WHITELIST(msg.sender);
+			} else {
+				// We received an indicator that the sender does not require us to sign all messages we send to it
+				SIGN_DEBUG(PSTR("Mark node %d as one that do not require whitelisting\n"), msg.sender);
+				CLEAR_WHITELIST(msg.sender);
+			}
+
+			// Save updated tables
+			hwWriteConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS,
+				sizeof(_doSign));
+			hwWriteConfigBlock((void*)_doWhitelist, (void*)EEPROM_WHITELIST_REQUIREMENT_TABLE_ADDRESS,
+				sizeof(_doWhitelist));
 
 			// Inform sender about our preference if we are a gateway, but only require signing if the sender
 			// required signing
 			// We do not want a gateway to require signing from all nodes in a network just because it wants one node
 			// to sign it's messages
-#if defined (MY_GATEWAY_FEATURE)
-#ifdef MY_SIGNING_REQUEST_SIGNATURES
+#if defined(MY_GATEWAY_FEATURE)
+			prepareSigningPresentation(msg, msg.sender);
+#if defined(MY_SIGNING_REQUEST_SIGNATURES)
 			if (DO_SIGN(msg.sender)) {
-				_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
-					C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)true));
-				SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), msg.sender);
+				msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
 			}
-			else {
-				_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
-					C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
+#endif
+#if defined(MY_SIGNING_NODE_WHITELISTING)
+			if (DO_WHITELIST(msg.sender)) {
+				msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
+			}
+#endif
+			if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_SIGNATURES) {
+				SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), msg.sender);
+			} else {
 				SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures\n"), msg.sender);
 			}
-#else // no MY_SIGNING_REQUEST_SIGNATURES
-			_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
-				C_INTERNAL, I_REQUEST_SIGNING, false).set((uint8_t)false));
-			SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures\n"), msg.sender);
-#endif
+			if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_WHITELISTING) {
+				SIGN_DEBUG(PSTR("Informing node %d that we require whitelisting\n"), msg.sender);
+			} else {
+				SIGN_DEBUG(PSTR("Informing node %d that we do not require whitelisting\n"), msg.sender);
+			}
+			_sendRoute(msg);
 #endif // MY_GATEWAY_FEATURE
-			return true; // No need to further process I_REQUEST_SIGNING
+			return true; // No need to further process I_SIGNING_PRESENTATION
 		} else if (msg.type == I_NONCE_RESPONSE) {
 			// Proceed with signing if nonce has been received
 			SIGN_DEBUG(PSTR("Nonce received from %d. Proceeding with signing...\n"), msg.sender);

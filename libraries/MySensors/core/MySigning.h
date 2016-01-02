@@ -251,9 +251,9 @@
  * This also applies to the gateway. However, the difference is that the gateway will only require signed messages from nodes it knows in turn
  * require signed messages.<br>
  * A node can also inform a different node that it expects to receive signed messages from it. This is done by transmitting an internal message
- * of type @ref I_REQUEST_SIGNING and provide a boolean for payload, set to @c true.<br>
+ * of type @ref I_SIGNING_PRESENTATION and provide flags as payload that inform the receiver of the signing preferences of the sender.<br>
  * All nodes and gateways in a network maintain a table where the signing preferences of all nodes are stored. This is also stored in EEPROM so
- * if the gateway reboots, the nodes does not have to retransmit a signing request to the gateway for the gateway to realize that the node
+ * if the gateway reboots, the nodes does not have to retransmit a signing presentation to the gateway for the gateway to realize that the node
  * expect signed messages.<br>
  * Also, the nodes that do not require signed messages will also inform gateway of this, so if you reprogram a node to stop require signing,
  * the gateway will adhere to this as soon as the new node has presented itself to the gateway.
@@ -294,7 +294,6 @@
  * The whitelist is stored on the node that require signatures. When a received message is verified, the serial of the sender is looked up in a
  * list stored on the receiving node, and the corresponding serial stored in the list for that sender is then included in the signature verification
  * process. The list is stored as the value of the flag that enables whitelisting, @ref MY_SIGNING_NODE_WHITELISTING.<br>
- * For whitelisting to work, the sending node also needs to have whitelisting enabled.<br>
  * 
  * Whitelisting is achieved by 'salting' the signature with some node-unique information known to the receiver. In the case of ATSHA204A this is the
  * unique serial number programmed into the circuit. This unique number is never transmitted over the air in clear text, so Eve will not be able to
@@ -303,8 +302,8 @@
  * the originating NodeId of the signed message and do the corresponding calculation with the serial it has stored in it's whitelist if it finds a
  * matching entry in it's whitelist.
  *
- * Whitelisting is an optional alternative because it adds some code which might not be desirable for every user. So if you want the ability to
- * provide and use whitelists, as well as transmitting to a node with a whitelist, you need to enable @ref MY_SIGNING_NODE_WHITELISTING.<br>
+ * Whitelisting is an optional alternative because it adds some code and configuration options which might not be desirable for every user. So if
+ * you want the ability to use whitelists, you need to enable @ref MY_SIGNING_NODE_WHITELISTING.<br>
  * The whitelist is provided as value of the flag that enable it as follows (example is a node that require signing as well):
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
@@ -314,10 +313,10 @@
  * ...
  * @endcode
  * In this example, there are two nodes in the whitelist; the gateway, and a separate node that communicates directly with this node (with signed
- * messages).
+ * messages). You do not need to do anything special for the sending nodes, apart from making sure they support signing.
  *
  * The "soft" backend of course also support whitelisting. However, since it does not contain a unique identifier, you have to provide an additional
- * setting (@ref MY_SIGNING_SOFT_SERIAL) when you enable whitelisting as illustrated in this example:
+ * setting (@ref MY_SIGNING_SOFT_SERIAL) for all nodes that communicate to a node which has whitelisting enabled. Example:
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
@@ -329,16 +328,16 @@
  * ...
  * @endcode
  *
- * For a node that should transmit whitelisted messages but not receive whitelisted messages, you can set the whitelist flag as follows:
+ * For a node that should transmit whitelisted messages but not receive whitelisted messages, you do not need any special configurations except to define
+ * a unique serial if using the software backend:
  * @code{.cpp}
- * #define MY_SIGNING_NODE_WHITELISTING {}
+ * #define MY_SIGNING_SOFT
+ * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+ * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * @endcode
- * Remember that for the software backend, you still need to set @ref MY_SIGNING_SOFT_SERIAL (a default is set in MyConfig.h if you do not provide one
- * in your sketch.
- *
- * It is important to emphasize that you do not have to provide a whitelist that has entries for all nodes that transmit signed messages to the node
- * in question. You only need to have entries for the nodes that in turn have enabled @ref MY_SIGNING_NODE_WHITELISTING. Nodes that does not have
- * this option enabled can still transmit "regular" signed messages as long as they do not match a NodeId in the receivers whitelist.
+ * Remember that you always need to select a signing backend for all nodes that communicate to a node that require whitelisting.
+ * Also, note that a node that use whitelisting will not accept messages from nodes that are not present in it's whitelist.
  *
  * @section MySigningtechnical The technical stuff
  *
@@ -363,7 +362,7 @@
  * Exactly how this is done can be reviewd in the source for the ATSHA204SOFT backend and the ATSHA204A
  * <a href="http://www.atmel.com/Images/Atmel-8885-CryptoAuth-ATSHA204A-Datasheet.pdf">datasheet</a>.
  * In the MySensors protocol, the following internal messagetypes handles signature requirements and nonce requests:<br>
- * @ref I_REQUEST_SIGNING <br>
+ * @ref I_SIGNING_PRESENTATION <br>
  * @ref I_NONCE_REQUEST <br>
  * @ref I_NONCE_RESPONSE <br>
  *
@@ -409,14 +408,13 @@
  * Nor can it be changed in order to do it in the future. You can also use whitelisting to revoke your lost node.<br>
  * This is an unlikely use case because there really is no reason to sign sensor values. If you for some reason want to obfuscate sensor data,
  * encryption is a better alternative.<br>
- * Configuration example for a motion sensor with whitelisting (it has to have the gateway whitelisted since the gateway will send signed messages to the node):<br>
+ * Configuration example for a motion sensor:<br>
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
- * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88}}}
  * #include <MySensor.h>
  * ...
  * @endcode
@@ -441,10 +439,10 @@
  * Configuration example for the keyfob (keyfob will only transmit to another node and not receive anything):<br>
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
- * #define MY_SIGNING_NODE_WHITELISTING {}
  * #include <MySensor.h>
  * ...
  * @endcode
+ *
  * Configuration example for the door controller node (should require signing from anyone who wants to control it):<br>
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
@@ -486,6 +484,14 @@ typedef struct {
 
 /** @brief Helper macro to determine the number of elements in a array */
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
+
+/** @brief Helper macro to determine if node require serial salted signatures */
+#define DO_WHITELIST(node) (~_doWhitelist[node>>3]&(1<<node%8))
+/** @brief Helper macro to set that node require serial salted signatures */
+#define SET_WHITELIST(node) (_doWhitelist[node>>3]&=~(1<<node%8))
+/** @brief Helper macro to set that node does not require serial salted signatures */
+#define CLEAR_WHITELIST(node) (_doWhitelist[node>>3]|=(1<<node%8))
+
 
 /**
  * @brief Initializes signing infrastructure and associated backend.
