@@ -99,8 +99,11 @@ void hwWriteConfig(int adr, uint8_t value)
 }
 
 void hwInit() {
-  SERIALDEVICE.begin(MY_BAUD_RATE);
-  while (!SERIALDEVICE) {}
+  MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+  #ifndef MY_GATEWAY_W5100
+  while (!MY_SERIALDEVICE) {}
+  #endif
+  Wire.begin();
 }
 
 void hwWatchdogReset() {
@@ -137,11 +140,12 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {
+  if (MY_SERIALDEVICE) {
 	char fmtBuffer[300];
 	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 		snprintf(fmtBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
-		SERIALDEVICE.print(fmtBuffer);
+		MY_SERIALDEVICE.print(fmtBuffer);
 	#endif
 	va_list args;
 	va_start (args, fmt );
@@ -155,9 +159,10 @@ void hwDebugPrint(const char *fmt, ... ) {
 		vsnprintf(fmtBuffer, 299, fmt, args);
 	#endif
 	va_end (args);
-	SERIALDEVICE.print(fmtBuffer);
-//	SERIALDEVICE.flush();
+	MY_SERIALDEVICE.print(fmtBuffer);
+//	MY_SERIALDEVICE.flush();
 
 	//Serial.write(freeRam());
+    }
 }
 #endif

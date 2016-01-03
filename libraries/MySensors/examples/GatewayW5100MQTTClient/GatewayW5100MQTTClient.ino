@@ -57,7 +57,6 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
-#include <EEPROM.h>
 #include <SPI.h>
 
 // Enable debug prints to serial monitor
@@ -82,7 +81,7 @@
 // Enable Soft SPI for NRF radio (note different radio wiring is required)
 // The W5100 ethernet module seems to have a hard time co-operate with 
 // radio on the same spi bus.
-#if !defined(MY_W5100_SPI_EN)
+#if !defined(MY_W5100_SPI_EN) && !defined(ARDUINO_ARCH_SAMD)
   #define MY_SOFTSPI
   #define MY_SOFT_SPI_SCK_PIN 14
   #define MY_SOFT_SPI_MISO_PIN 16
