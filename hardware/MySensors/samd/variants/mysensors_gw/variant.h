@@ -190,7 +190,6 @@ static const uint8_t SCK  = PIN_SPI_SCK ;
 #define MYSX_A2
 
 
-#define MY_W5100_SPI_EN 4
 #define MY_SIGNING_ATSHA204_PIN 17
 #define MY_DEFAULT_ERR_LED_PIN LED_RED
 #define MY_DEFAULT_RX_LED_PIN  LED_YELLOW
@@ -239,5 +238,6 @@ extern Uart Serial1;
 //#define SERIAL_PORT_HARDWARE        Serial1
 //#define SERIAL_PORT_HARDWARE_OPEN   Serial1
 
+#define Serial SerialUSB
 #endif /* _VARIANT_ARDUINO_ZERO_ */
 
