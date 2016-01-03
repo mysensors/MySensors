@@ -29,7 +29,7 @@
 
 #define SIGNING_IDENTIFIER (1)
 
-// Define MY_DEBUG_VERBOSE in your sketch to enable signing backend debugprints
+// Define MY_DEBUG_VERBOSE_SIGNING in your sketch to enable signing backend debugprints
 
 ATSHA204Class atsha204(MY_SIGNING_ATSHA204_PIN);
 unsigned long _signing_timestamp;
@@ -48,7 +48,7 @@ static void signerCalculateSignature(MyMessage &msg);
 static uint8_t* signerSha256(const uint8_t* data, size_t sz);
 
 
-#ifdef MY_DEBUG_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_SIGNING
 static char i2h(uint8_t i)
 {
 	uint8_t k = i & 0x0F;
