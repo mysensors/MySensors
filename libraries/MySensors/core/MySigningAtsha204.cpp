@@ -117,9 +117,6 @@ bool signerAtsha204GetNonce(MyMessage &msg) {
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 	memset(&_signing_current_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_current_nonce)-MAX_PAYLOAD);
 
-	// Replace the first byte in the nonce with our signing identifier
-	_signing_current_nonce[0] = SIGNING_IDENTIFIER;
-
 	// Transfer the first part of the nonce to the message
 	msg.set(_signing_current_nonce, MAX_PAYLOAD);
 	_signing_verification_ongoing = true;
@@ -131,17 +128,12 @@ bool signerAtsha204GetNonce(MyMessage &msg) {
 	return true;
 }
 
-bool signerAtsha204PutNonce(MyMessage &msg) {
+void signerAtsha204PutNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204"), NULL, 0);
-	if (((uint8_t*)msg.getCustom())[0] != SIGNING_IDENTIFIER) {
-		DEBUG_SIGNING_PRINTBUF(F("Incorrect signing identifier"), NULL, 0);
-		return false; 
-	}
 
 	memcpy(_signing_current_nonce, (uint8_t*)msg.getCustom(), MAX_PAYLOAD);
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 	memset(&_signing_current_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_current_nonce)-MAX_PAYLOAD);
-	return true;
 }
 
 bool signerAtsha204SignMsg(MyMessage &msg) {
