@@ -33,7 +33,7 @@
 
 #define SIGNING_IDENTIFIER (1)
 
-// Define MY_DEBUG_VERBOSE in your sketch to enable signing backend debugprints
+// Define MY_DEBUG_VERBOSE_SIGNING in your sketch to enable signing backend debugprints
 
 Sha256Class _signing_sha256;
 unsigned long _signing_timestamp;
@@ -51,7 +51,7 @@ const uint8_t _signing_node_serial_info[SHA204_SERIAL_SZ] = {MY_SIGNING_SOFT_SER
 
 static void signerCalculateSignature(MyMessage &msg);
 
-#ifdef MY_DEBUG_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_SIGNING
 static char i2h(uint8_t i)
  {
 	uint8_t k = i & 0x0F;

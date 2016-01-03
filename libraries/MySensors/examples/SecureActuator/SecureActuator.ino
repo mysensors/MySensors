@@ -43,6 +43,7 @@
  */
 
 #define MY_DEBUG //!< Enable debug prints to serial monitor
+#define MY_DEBUG_VERBOSE_SIGNING //!< Enable signing related debug prints to serial monitor
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24 //!< NRF24L01 radio driver

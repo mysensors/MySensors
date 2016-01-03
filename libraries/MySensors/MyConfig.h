@@ -35,9 +35,15 @@
 // final sketch but is helpful to see what is actually is happening during development
 //#define MY_DEBUG
 
-// Enable MY_DEBUG_VERBOSE flag for verbose debug prints. Requires DEBUG to be enabled.
+// Enable MY_DEBUG_VERBOSE flag for verbose debug prints related to RF24 radio.
+// Requires DEBUG to be enabled.
 // This will add even more to the size of the final sketch!
 //#define MY_DEBUG_VERBOSE
+
+// Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
+// Requires DEBUG to be enabled.
+// This will add even more to the size of the final sketch!
+//#define MY_DEBUG_VERBOSE_SIGNING
 
 // Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
 //#define MY_DISABLED_SERIAL
