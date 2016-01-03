@@ -253,6 +253,9 @@ byte channel(const byte* data)
         case 0x40:
             channel = 3;
             break;
+        default:
+            channel = 0;
+            break;
      }
      #ifdef MY_DEBUG
        Serial.println("Oregon channel: " + String(channel));
@@ -302,8 +305,8 @@ const byte* DataToDecoder (class DecodeOOK& decoder)
 
 int FindSensor (const int id, int maxsensor)
 {
-  int i;
-  for (i=0; i<maxsensor; i++){
+  int EepromId;
+  for (int i=0; i<maxsensor; i++){
     #ifdef MySensor_h
       int SensorID = loadState(i);
     #else
@@ -323,7 +326,8 @@ int FindSensor (const int id, int maxsensor)
         Serial.print(" has been saved in position EEPROM: ");
         Serial.println(i);
       #endif
-      return i;
+      EepromId = i;
+      break;
     }
 
     if(id == SensorID){
@@ -333,9 +337,11 @@ int FindSensor (const int id, int maxsensor)
         Serial.print(" has been find in position EEPROM: ");
         Serial.println(i);
       #endif
-      return i;
+      EepromId = i;
+      break;
     }
   }
+  return EepromId;
 }
 
 #endif
