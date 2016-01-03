@@ -305,7 +305,7 @@ const byte* DataToDecoder (class DecodeOOK& decoder)
 
 int FindSensor (const int id, int maxsensor)
 {
-  int EepromId;
+  int EepromId=0;
   for (int i=0; i<maxsensor; i++){
     #ifdef MySensor_h
       int SensorID = loadState(i);
