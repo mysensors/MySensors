@@ -140,7 +140,7 @@ void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf(fmtBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+		snprintf(fmtBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		SERIALDEVICE.print(fmtBuffer);
 	#endif
 	va_list args;
