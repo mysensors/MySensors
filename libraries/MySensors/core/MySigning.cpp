@@ -59,14 +59,14 @@ enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
 #if defined(MY_SIGNING_SOFT)
 extern bool signerAtsha204SoftCheckTimer(void);
 extern bool signerAtsha204SoftGetNonce(MyMessage &msg);
-extern bool signerAtsha204SoftPutNonce(MyMessage &msg);
+extern void signerAtsha204SoftPutNonce(MyMessage &msg);
 extern bool signerAtsha204SoftVerifyMsg(MyMessage &msg);
 extern bool signerAtsha204SoftSignMsg(MyMessage &msg);
 #endif
 #if defined(MY_SIGNING_ATSHA204)
 extern bool signerAtsha204CheckTimer(void);
 extern bool signerAtsha204GetNonce(MyMessage &msg);
-extern bool signerAtsha204PutNonce(MyMessage &msg);
+extern void signerAtsha204PutNonce(MyMessage &msg);
 extern bool signerAtsha204VerifyMsg(MyMessage &msg);
 extern bool signerAtsha204SignMsg(MyMessage &msg);
 #endif
@@ -240,17 +240,16 @@ bool signerProcessInternal(MyMessage &msg) {
 				return true; // No need to further process I_NONCE_RESPONSE
 			}
 #if defined(MY_SIGNING_SOFT)
-			if (!signerAtsha204SoftPutNonce(msg)) {
+			signerAtsha204SoftPutNonce(msg);
 #endif
 #if defined(MY_SIGNING_ATSHA204)
-			if (!signerAtsha204PutNonce(msg)) {
+			signerAtsha204PutNonce(msg);
 #endif
-				SIGN_DEBUG(PSTR("Failed to store nonce to signing backend!\n"));
 #if defined(MY_SIGNING_SOFT)
-			} else if (!signerAtsha204SoftSignMsg(_msgSign)) {
+			if (!signerAtsha204SoftSignMsg(_msgSign)) {
 #endif
 #if defined(MY_SIGNING_ATSHA204)
-			} else if (!signerAtsha204SignMsg(_msgSign)) {
+			if (!signerAtsha204SignMsg(_msgSign)) {
 #endif
 				SIGN_DEBUG(PSTR("Failed to sign message!\n"));
 			} else {
