@@ -107,22 +107,22 @@ bool gatewayTransportInit() {
 		while (WiFi.status() != WL_CONNECTED)
 		{
 			delay(500);
-			SERIALDEVICE.print(".");
+			MY_SERIALDEVICE.print(".");
 			yield();
 		}
-		SERIALDEVICE.print(F("IP: "));
-		SERIALDEVICE.println(WiFi.localIP());
+		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.println(WiFi.localIP());
 
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
-			SERIALDEVICE.print(F("IP: "));
-			SERIALDEVICE.println(Ethernet.localIP());
+			MY_SERIALDEVICE.print(F("IP: "));
+			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#else
 			// Get IP address from DHCP
 			Ethernet.begin(_ethernetGatewayMAC);
-			SERIALDEVICE.print(F("IP: "));
-			SERIALDEVICE.println(Ethernet.localIP());
+			MY_SERIALDEVICE.print(F("IP: "));
+			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#endif /* IP_ADDRESS_DHCP */
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay

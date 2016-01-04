@@ -31,7 +31,7 @@
 #endif
 
 #include <avr/dtostrf.h>
-#define I2C_EEP_ADDRESS 55
+#define I2C_EEP_ADDRESS 0x50
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
@@ -52,7 +52,7 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
-#define SERIALDEVICE SerialUSB
+#define MY_SERIALDEVICE SerialUSB
 
 
 /*

@@ -57,7 +57,7 @@
 // Enable Soft SPI for NRF radio (note different radio wiring is required)
 // The W5100 ethernet module seems to have a hard time co-operate with 
 // radio on the same spi bus.
-#if !defined(MY_W5100_SPI_EN)
+#if !defined(MY_W5100_SPI_EN) && !defined(ARDUINO_ARCH_SAMD)
   #define MY_SOFTSPI
   #define MY_SOFT_SPI_SCK_PIN 14
   #define MY_SOFT_SPI_MISO_PIN 16
@@ -100,9 +100,11 @@
 // Digital pin used for inclusion mode button
 #define MY_INCLUSION_MODE_BUTTON_PIN  3 
 
+#ifndef MY_DEFAULT_ERR_LED_PIN
 #define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
 #define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
+#endif
 
 #include <SPI.h>
 
