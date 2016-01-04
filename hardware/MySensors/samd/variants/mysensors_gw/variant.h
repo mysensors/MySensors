@@ -191,9 +191,9 @@ static const uint8_t SCK  = PIN_SPI_SCK ;
 
 
 #define MY_SIGNING_ATSHA204_PIN 17
-#define MY_DEFAULT_ERR_LED_PIN LED_RED
-#define MY_DEFAULT_RX_LED_PIN  LED_YELLOW
-#define MY_DEFAULT_TX_LED_PIN  LED_GREEN
+#define MY_HW_ERR_LED_PIN LED_RED
+#define MY_HW_RX_LED_PIN  LED_YELLOW
+#define MY_HW_TX_LED_PIN  LED_GREEN
 
 /*----------------------------------------------------------------------------
  *        Arduino objects - C++ only
