@@ -48,8 +48,10 @@
 	//#undef F
 	//#define F(x) (x)
 	#include "core/MyHwESP8266.cpp"
-	// For ESP8266, we always enable gateway feature
-	#define MY_GATEWAY_ESP8266
+	// Enable gateway feature
+	#if !defined(MY_CORE_ONLY)
+		#define MY_GATEWAY_ESP8266
+	#endif
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
@@ -219,10 +221,11 @@
 	#undef MY_INCLUSION_BUTTON_FEATURE
 #endif
 
-#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
-	#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+#if !defined(MY_CORE_ONLY)
+	#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
+		#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+	#endif
 #endif
-
 
 #include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
@@ -230,11 +233,12 @@
 
 #include <Arduino.h>
 
-#if defined(MY_GATEWAY_ESP8266)
-	#include "core/MyMainESP8266.cpp"
-#else
-	#include "core/MyMainDefault.cpp"
+#if !defined(MY_CORE_ONLY)
+	#if defined(MY_GATEWAY_ESP8266)
+		#include "core/MyMainESP8266.cpp"
+	#else
+		#include "core/MyMainDefault.cpp"
+	#endif
 #endif
-
 
 #endif
