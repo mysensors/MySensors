@@ -32,7 +32,7 @@ void setup()
   Serial.begin(MY_BAUD_RATE);
   Serial.println("Started clearing. Please wait...");
   for (int i=0;i<512;i++) {
-    EEPROM.write(i, 0xff);
+    EEPROM.update(i, 0xff);
   }
   Serial.println("Clearing done. You're ready to go!");
 }
