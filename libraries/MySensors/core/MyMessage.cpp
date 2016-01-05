@@ -203,10 +203,11 @@ MyMessage& MyMessage::set(const char* value) {
 	uint8_t length = value == NULL ? 0 : min(strlen(value), MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
-	if (length)
+	if (length) {		
 		strncpy(data, value, length);
-	else
-		data[0] ='\0';
+	}
+	// null terminate string
+	data[length] = 0;
 	return *this;
 }
 
