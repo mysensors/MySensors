@@ -202,6 +202,20 @@ int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
+#ifdef MY_NODE_LOCK_FEATURE
+/**
+ * @ingroup MyLockgrp
+ * @ingroup internals
+ * @brief Lock a node and transmit provided message with 30m intervals
+ *
+ * This function is called if suspicious activity has exceeded the threshold (see
+ * @ref ATTACK_COUNTER_MAX). Unlocking with a normal Arduino bootloader require erasing the EEPROM
+ * while unlocking with a custom bootloader require holding @ref UNLOCK_PIN low during power on/reset.
+ *
+ * @param str The string to transmit.
+ */
+void nodeLock(const char* str);
+#endif
 
 /******  PRIVATE ********/
 
