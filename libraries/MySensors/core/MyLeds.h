@@ -22,11 +22,11 @@
 
 
 #ifdef MY_WITH_LEDS_BLINKING_INVERSE
-#define LED_ON 0x1
-#define LED_OFF 0x0
-#else
 #define LED_ON 0x0
 #define LED_OFF 0x1
+#else
+#define LED_ON 0x1
+#define LED_OFF 0x0
 #endif
 
 #ifdef MY_LEDS_BLINKING_FEATURE
