@@ -60,8 +60,7 @@ private:
   bool dynamic_payloads_enabled; /**< Whether dynamic payloads are enabled. */
   uint8_t pipe0_reading_address[5]; /**< Last address set on pipe 0 for reading. */
   uint8_t addr_width; /**< The address width to use - 3,4 or 5 bytes. */
-  uint32_t lastAvailableCheck; /**< Limits the amount of time between reading data, only when switching between modes */
-  boolean listeningStarted; /**< Var for delaying available() after start listening */
+
   
 public:
 
@@ -183,6 +182,9 @@ public:
    * @see openWritingPipe
    * @see setAddressWidth
    *
+   * @note Pipes 0 and 1 will store a full 5-byte address. Pipes 2-5 will technically 
+   * only store a single byte, borrowing up to 4 additional bytes from pipe #1 per the
+   * assigned address width.
    * @warning Pipes 1-5 should share the same address, except the first byte.
    * Only the first byte in the array should be unique, e.g.
    * @code
@@ -462,9 +464,10 @@ public:
    * @param buf Pointer to the data to be sent
    * @param len Number of bytes to be sent
    * @param multicast Request ACK (0) or NOACK (1)
+   * @param startTx Start transmission (1) or store in FIFO (0)
    * @return True if the payload was delivered successfully false if not
    */
-  void startFastWrite( const void* buf, uint8_t len, const bool multicast );
+  void startFastWrite( const void* buf, uint8_t len, const bool multicast, bool startTx = 1 );
 
   /**
    * Non-blocking write to the open writing pipe
@@ -604,6 +607,12 @@ public:
    * @param channel Which RF channel to communicate on, 0-127
    */
   void setChannel(uint8_t channel);
+ /**
+   * Get RF communication channel
+   *
+   * @return The currently configured RF Channel
+   */
+  uint8_t getChannel(void);
 
   /**
    * Set Static Payload Size

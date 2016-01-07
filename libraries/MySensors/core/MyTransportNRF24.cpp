@@ -48,9 +48,12 @@ bool transportInit() {
 	if (!_rf24.isPVariant()) {
 		return false;
 	}
-	_rf24.setAutoAck(1);
-	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
+	// define ACK handling
+	_rf24.setAutoAck(WRITE_PIPE,true);
+	_rf24.setAutoAck(CURRENT_NODE_PIPE,true);
+	_rf24.setAutoAck(BROADCAST_PIPE,false); 
 	_rf24.enableAckPayload();
+	
 	_rf24.setChannel(MY_RF24_CHANNEL);
 	_rf24.setPALevel(MY_RF24_PA_LEVEL);
 	if (!_rf24.setDataRate(MY_RF24_DATARATE)) {
@@ -67,9 +70,10 @@ bool transportInit() {
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		_aes.set_key(_psk, 16); //set up AES-key
 	#endif
-
-	//_rf24.printDetails();
-
+	
+	#if defined(MY_DEBUG_RF24_VERBOSE)
+		_rf24.printDetails();
+	#endif
 	return true;
 }
 
