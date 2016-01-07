@@ -56,6 +56,28 @@
         #include "core/MyHwSAMD.cpp"
 #endif
 
+#if !defined(MY_DEFAULT_ERR_LED_PIN) & defined(MY_HW_ERR_LED_PIN)
+	#define MY_DEFAULT_ERR_LED_PIN MY_HW_ERR_LED_PIN
+#endif
+
+#if !defined(MY_DEFAULT_TX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
+	#define MY_DEFAULT_TX_LED_PIN MY_HW_TX_LED_PIN
+#endif
+
+#if !defined(MY_DEFAULT_RX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
+	#define MY_DEFAULT_TX_LED_PIN MY_HW_TX_LED_PIN
+#endif
+
+// Not necessary to include blinking feature if no LED's are defined!
+#if defined(MY_LEDS_BLINKING_FEATURE) && !defined(MY_DEFAULT_RX_LED_PIN) && !defined(MU_DEFAULT_TX_LED_PIN) && !defined(MY_ERR_LED_PIN)
+	#undef MY_LEDS_BLINKING_FEATURE
+#endif
+
+// Enable LED BLINKING FEATURE, if there are any LEDs defined.
+#if defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED) || defined(MY_DEFAULT_TX_LED_PIN)
+	#define MY_LEDS_BLINKING_FEATURE
+#endif
+
 // LEDS
 #if defined(MY_LEDS_BLINKING_FEATURE)
 	#include "core/MyLeds.cpp"

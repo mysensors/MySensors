@@ -72,11 +72,10 @@
 // Digital pin used for inclusion mode button
 #define MY_INCLUSION_MODE_BUTTON_PIN  3 
 
-#ifndef MY_DEFAULT_ERR_LED_PIN
-#define MY_DEFAULT_ERR_LED_PIN 4  // Error led pin
-#define MY_DEFAULT_RX_LED_PIN  6  // Receive led pin
-#define MY_DEFAULT_TX_LED_PIN  5  // the PCB, on board LED
-#endif
+// Uncomment to override default HW configurations
+//#define MY_DEFAULT_ERR_LED_PIN 4  // Error led pin
+//#define MY_DEFAULT_RX_LED_PIN  6  // Receive led pin
+//#define MY_DEFAULT_TX_LED_PIN  5  // the PCB, on board LED
 
 #include <SPI.h>
 #include <MySensor.h>  
