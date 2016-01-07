@@ -142,7 +142,7 @@ void presentation() {
 
 
 void loop() {
-  // Send locally attech sensors data here
+  // Send locally attached sensors data here
 }
 
 
