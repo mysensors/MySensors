@@ -89,7 +89,7 @@ void loop()
     float temperature = static_cast<float>(static_cast<int>((getConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
  
     // Only send data if temperature has changed and no error
-    #if COMPARE_TEMP == 1
+    #ifdef COMPARE_TEMP == 1
     if (lastTemperature[i] != temperature && temperature != -127.00 && temperature != 85.00) {
     #else
     if (temperature != -127.00 && temperature != 85.00) {
