@@ -57,6 +57,7 @@ enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
  * This function is typically called as action when receiving a I_NONCE_REQUEST message.
  */
 #if defined(MY_SIGNING_SOFT)
+extern void signerAtsha204SoftInit(void);
 extern bool signerAtsha204SoftCheckTimer(void);
 extern bool signerAtsha204SoftGetNonce(MyMessage &msg);
 extern void signerAtsha204SoftPutNonce(MyMessage &msg);
@@ -64,6 +65,7 @@ extern bool signerAtsha204SoftVerifyMsg(MyMessage &msg);
 extern bool signerAtsha204SoftSignMsg(MyMessage &msg);
 #endif
 #if defined(MY_SIGNING_ATSHA204)
+extern void signerAtsha204Init(void);
 extern bool signerAtsha204CheckTimer(void);
 extern bool signerAtsha204GetNonce(MyMessage &msg);
 extern void signerAtsha204PutNonce(MyMessage &msg);
@@ -114,8 +116,10 @@ void signerInit(void) {
 		sizeof(_doWhitelist));
 
 #if defined(MY_SIGNING_SOFT)
-	// initialize pseudo-RNG
-	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+	signerAtsha204SoftInit();
+#endif
+#if defined(MY_SIGNING_ATSHA204)
+	signerAtsha204Init();
 #endif
 #endif
 }

@@ -35,7 +35,7 @@
  /* code was modified by george spanos <spaniakos@gmail.com>
  * 16/12/14
  */
-
+/** AES class */
 class AES
 {
  public:
@@ -351,7 +351,7 @@ class AES
  * @defgroup aeslib AES library for Arduino and Raspberry pi
  * @ingroup internals
  *
- * @section Goals design Goals
+ * @section AesGoals design Goals
  *
  * This library is AESigned to be...
  * @li Fast and efficient.
@@ -393,10 +393,10 @@ class AES
  * cd examples_Rpi<br />
  * sudo ./\<sketch\><br /><br />
  * 
- * @section News News
+ * @section AesNews News
  *
  * If issues are discovered with the documentation, please report them <a href="https://github.com/spaniakos/spaniakos.github.io/issues"> here</a>
- * @section Useful Useful References
+ * @section AesUseful Useful References
  *
  * Please refer to:
  *
@@ -405,7 +405,7 @@ class AES
  * @li <a href="https://github.com/spaniakos/AES/"><b>Source Code</b></a>
  * @li <a href="http://spaniakos.github.io/">All spaniakos Documentation Main Page</a>
  *
- * @section Board_Support Board Support
+ * @section AesBoard_Support Board Support
  *
  * Most standard Arduino based boards are supported:
  * - Arduino

@@ -40,11 +40,11 @@ unsigned long _signing_timestamp;
 bool _signing_verification_ongoing = false;
 uint8_t _signing_current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];
 uint8_t _signing_temp_message[32];
-static uint8_t _signing_hmac_key[32] = { MY_SIGNING_SOFT_HMAC_KEY };
+static uint8_t _signing_hmac_key[32];
 uint8_t _signing_hmac[32];
 extern uint8_t _doWhitelist[32];
 
-const uint8_t _signing_node_serial_info[SHA204_SERIAL_SZ] = {MY_SIGNING_SOFT_SERIAL};
+static uint8_t _signing_node_serial_info[9];
 #ifdef MY_SIGNING_NODE_WHITELISTING
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
@@ -88,6 +88,14 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 #else
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif
+
+void signerAtsha204SoftInit(void) {
+	// initialize pseudo-RNG
+	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+	// Set secrets
+	hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+	hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+}
 
 bool signerAtsha204SoftCheckTimer(void) {
 	if (_signing_verification_ongoing) {
