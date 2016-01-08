@@ -86,6 +86,9 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif
 
+void signerAtsha204Init(void) {
+}
+
 bool signerAtsha204CheckTimer(void) {
 	if (_signing_verification_ongoing) {
 		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
