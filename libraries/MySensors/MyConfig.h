@@ -312,8 +312,12 @@
 #endif
 
 /**********************************
-*  NRF24L01 Driver Defaults
+*  NRF24L01+ Driver Defaults
 ***********************************/
+
+// Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints. Requires DEBUG to be enabled.
+// This will add even more to the size of the final sketch!
+//#define MY_DEBUG_VERBOSE_RF24
 
 // Enables RF24 encryption (all nodes and gateway must have this enabled)
 //#define MY_RF24_ENABLE_ENCRYPTION

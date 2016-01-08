@@ -10,7 +10,7 @@ version 2 as published by the Free Software Foundation.
 #include "RF24.h"
 
 /****************************************************************************/
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 static void print_hex( uint8_t v, const bool prefix0x = false )
 {
 	if (prefix0x)
@@ -130,7 +130,7 @@ uint8_t RF24::write_register(uint8_t reg, uint8_t value)
 {
 	uint8_t status;
 
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	MY_SERIALDEVICE.print(F("write_register(")); print_hex(reg, true); MY_SERIALDEVICE.print(F(",")); print_hex(value, true); MY_SERIALDEVICE.println(F(")")); 
 #endif
 
@@ -286,7 +286,7 @@ uint8_t RF24::get_status(void)
 /****************************************************************************/
 void RF24::print_feature(void)
 {
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	MY_SERIALDEVICE.print(F("FEATURE="));
 	print_hex(read_register(FEATURE), true);
 	MY_SERIALDEVICE.println(F("")); 
@@ -296,7 +296,7 @@ void RF24::print_feature(void)
 /****************************************************************************/
 void RF24::print_status(uint8_t status) const
 {
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	const uint8_t one  = uint8_t(1);
 	const uint8_t zero = uint8_t(0);
 	print_hex(status, true);
@@ -313,7 +313,7 @@ void RF24::print_status(uint8_t status) const
 /****************************************************************************/
 void RF24::print_observe_tx(uint8_t value) const
 {
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	print_hex(value, true);
 	MY_SERIALDEVICE.print(F(": POLS_CNT=")); MY_SERIALDEVICE.print((value >> PLOS_CNT)   & uint8_t(B1111));
 	MY_SERIALDEVICE.print(F(" ARC_CNT="));   MY_SERIALDEVICE.println((value >> ARC_CNT)  & uint8_t(B1111));
@@ -325,7 +325,7 @@ void RF24::print_observe_tx(uint8_t value) const
 /****************************************************************************/
 void RF24::print_byte_register(uint8_t reg, uint8_t qty)
 {
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	bool prefix0x = true;
 	while (qty--)
 	{
@@ -343,7 +343,7 @@ void RF24::print_byte_register(uint8_t reg, uint8_t qty)
 /****************************************************************************/
 void RF24::print_address_register(uint8_t reg, uint8_t qty)
 {
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	bool prefix0x = true;
 	while (qty--)
 	{
@@ -400,7 +400,7 @@ uint8_t RF24::getPayloadSize(void)
 }
 
 /****************************************************************************/
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 static const char rf24_datarate_e_str_0[] PROGMEM = "1MBPS";
 static const char rf24_datarate_e_str_1[] PROGMEM = "2MBPS";
 static const char rf24_datarate_e_str_2[] PROGMEM = "250KBPS";
@@ -447,7 +447,7 @@ static const char * const rf24_pa_dbm_e_str_P[] PROGMEM = {
 
 void RF24::printDetails(void)
 {
-#ifdef MY_DEBUG_RF24_VERBOSE
+#ifdef MY_DEBUG_VERBOSE_RF24
 	MY_SERIALDEVICE.print(F("STATUS\t\t"));      print_status(get_status());
 	MY_SERIALDEVICE.print(F("RX_ADDR_P0-1\t"));  print_address_register(RX_ADDR_P0,2);
 	MY_SERIALDEVICE.print(F("RX_ADDR_P2-5\t"));  print_byte_register(RX_ADDR_P2,4);

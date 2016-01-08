@@ -214,7 +214,7 @@ public:
   /**
    * Print a giant block of debugging information to serial
    *
-   * @warning Does nothing if MY_DEBUG_VERBOSE is not defined
+   * @warning Does nothing if MY_DEBUG_VERBOSE_RF24 is not defined
    */
   void printDetails(void);
 
@@ -942,7 +942,7 @@ private:
   /**
    * Decode and print the given status to serial
    *
-   * @warning Does nothing if MY_DEBUG_VERBOSE is not defined
+   * @warning Does nothing if MY_DEBUG_VERBOSE_RF24 is not defined
    *
    * @param status Status value to print
    */
@@ -951,7 +951,7 @@ private:
   /**
    * Decode and print the given 'observe_tx' value to serial
    *
-   * @warning Does nothing if MY_DEBUG_VERBOSE is not defined
+   * @warning Does nothing if MY_DEBUG_VERBOSE_RF24 is not defined
    *
    * @param value The observe_tx value to print
    */
@@ -964,7 +964,7 @@ private:
    * registers on the same line.  This is useful for printing a group
    * of related registers on one line.
    *
-   * @warning Does nothing if MY_DEBUG_VERBOSE is not defined
+   * @warning Does nothing if MY_DEBUG_VERBOSE_RF24 is not defined
    *
    * @param reg Which register. Use constants from nRF24L01.h
    * @param qty How many successive registers to print
@@ -978,7 +978,7 @@ private:
    * registers on the same line.  This is useful for printing a group
    * of related registers on one line.
    *
-   * @warning Does nothing if MY_DEBUG_VERBOSE is not defined
+   * @warning Does nothing if MY_DEBUG_VERBOSE_RF24 is not defined
    *
    * @param reg Which register. Use constants from nRF24L01.h
    * @param qty How many successive registers to print

@@ -71,7 +71,7 @@ bool transportInit() {
 		_aes.set_key(_psk, 16); //set up AES-key
 	#endif
 	
-	#if defined(MY_DEBUG_RF24_VERBOSE)
+	#if defined(MY_DEBUG_VERBOSE_RF24)
 		_rf24.printDetails();
 	#endif
 	return true;
