@@ -268,6 +268,9 @@ void MySensor::setupNode() {
 		if (signer.requestSignatures()) {
 			wait(2000);
 		}
+#else
+		// We do not support signing, make sure gateway knows this
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 #endif
 
 		// Send presentation for this radio node (attach
