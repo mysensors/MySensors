@@ -366,7 +366,7 @@ class MySensor
 
 	MyTransport& radio;
 #ifdef MY_SIGNING_FEATURE
-	uint16_t doSign[16]; // Bitfield indicating which sensors require signed communication
+	uint8_t doSign[32]; // Bitfield indicating which sensors require signed communication
 	MyMessage msgSign;  // Buffer for message to sign.
 	MySigning& signer;
 #endif
