@@ -42,6 +42,9 @@
 // Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
 //#define MY_DISABLED_SERIAL
 
+// Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+//#define MY_CORE_ONLY
+
 // Turn off debug if serial pins is used for other stuff
 #ifdef MY_DISABLED_SERIAL
 #undef MY_DEBUG
