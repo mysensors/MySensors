@@ -190,6 +190,9 @@ ControllerConfig getConfig() {
 boolean _sendRoute(MyMessage &message) {
 	// increment heartbeat counter
 	_heartbeat++;
+	#if defined(MY_CORE_ONLY)
+		(void)message;
+	#endif
 	#if defined(MY_GATEWAY_FEATURE)
 		if (message.destination == _nc.nodeId) {
 			// This is a message sent from a sensor attached on the gateway node.
