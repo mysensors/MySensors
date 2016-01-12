@@ -152,35 +152,12 @@
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
-
-// default LEDs blinking period in milliseconds
-#ifndef MY_DEFAULT_LED_BLINK_PERIOD
-#define MY_DEFAULT_LED_BLINK_PERIOD 300
-#endif
-// The RX LED default pin
-#ifndef MY_DEFAULT_RX_LED_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_DEFAULT_RX_LED_PIN 8
-	#else
-		#define MY_DEFAULT_RX_LED_PIN 6
-	#endif
-#endif
-// The TX LED default pin
-#ifndef MY_DEFAULT_TX_LED_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_DEFAULT_TX_LED_PIN 9
-	#else
-		#define MY_DEFAULT_TX_LED_PIN 5
-	#endif
-#endif
-// The Error LED default pin
-#ifndef MY_DEFAULT_ERR_LED_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_DEFAULT_ERR_LED_PIN 7
-	#else
-		#define MY_DEFAULT_ERR_LED_PIN 4
-	#endif
-#endif
+// The following defines can be used to set the port pin, that the LED is connected to
+// If one of the following is defined here, or in the sketch, MY_LEDS_BLINKING_FEATURE will be
+// enabled by default. (Replace x with the pin number you have the LED on)
+//#define MY_DEFAULT_ERR_LED x
+//#define MY_DEFAULT_TX_LED x
+//#define MY_DEFAULT_RX_LED x
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
