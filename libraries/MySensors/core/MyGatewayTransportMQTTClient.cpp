@@ -187,8 +187,8 @@ bool gatewayTransportInit() {
 			}
 		#endif 
 		
-		MY_SERIALDEVICE.print("IP: ");
-		MY_SERIALDEVICE.println(Ethernet.localIP());
+		//MY_SERIALDEVICE.print("IP: ");
+		//MY_SERIALDEVICE.println(Ethernet.localIP());
 		
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
