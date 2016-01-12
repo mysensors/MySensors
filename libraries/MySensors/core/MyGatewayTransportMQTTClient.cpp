@@ -28,7 +28,6 @@
 uint8_t protocolH2i(char c);
 
 
-IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 
 #if defined(MY_GATEWAY_ESP8266)
 	#define EthernetClient WiFiClient
@@ -150,7 +149,12 @@ bool reconnectMQTT() {
 }
 
 bool gatewayTransportInit() {
-	_client.setServer(_brokerIp, MY_PORT);
+	#if defined(MY_CONTROLLER_IP_ADDRESS)
+		_client.setServer(MY_CONTROLLER_IP_ADDRESS, MY_PORT);
+	#else
+		_client.setServer(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
+	#endif
+	
 	_client.setCallback(incomingMQTT);
 
   	#if defined(MY_GATEWAY_ESP8266)
