@@ -35,9 +35,15 @@
 // final sketch but is helpful to see what is actually is happening during development
 //#define MY_DEBUG
 
-// Enable MY_DEBUG_VERBOSE flag for verbose debug prints. Requires DEBUG to be enabled.
+// Enable MY_DEBUG_VERBOSE flag for verbose debug prints related to RF24 radio.
+// Requires DEBUG to be enabled.
 // This will add even more to the size of the final sketch!
 //#define MY_DEBUG_VERBOSE
+
+// Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
+// Requires DEBUG to be enabled.
+// This will add even more to the size of the final sketch!
+//#define MY_DEBUG_VERBOSE_SIGNING
 
 // Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
 //#define MY_DISABLED_SERIAL
@@ -283,25 +289,6 @@
 #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
 #endif
 
-/**
- * @def MY_SIGNING_SOFT_SERIAL
- * @brief Serial number for SW signing enabled node
- *
- * Set the soft_serial value to an arbitrary value for proper security.
- * It should be random and unique for each node.
- */
-#ifndef MY_SIGNING_SOFT_SERIAL
-#define MY_SIGNING_SOFT_SERIAL 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
-#endif
-
-/**
- * @def MY_SIGNING_SOFT_HMAC_KEY
- * @brief Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
- */
-#ifndef MY_SIGNING_SOFT_HMAC_KEY
-#define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-#endif
-
 /**********************************
 *  RS485 Driver Defaults
 ***********************************/
@@ -318,13 +305,8 @@
 *  NRF24L01 Driver Defaults
 ***********************************/
 
-// Enables RF24 encryption (all nodes and gateway must have this enabled)
+// Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RF24_ENABLE_ENCRYPTION
-
-// Default encryption key. Override in sketch if needed.
-#ifndef MY_RF24_ENCRYPTKEY
-#define MY_RF24_ENCRYPTKEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16
-#endif
 
 // Default pin settings. Override in sketch if needed.
 #ifndef MY_RF24_CE_PIN
@@ -412,11 +394,8 @@
 	#endif
 #endif
 
-// Enable this for encryption of packets
+// Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RFM69_ENABLE_ENCRYPTION
-#ifndef MY_RFM69_ENCRYPTKEY
-#define MY_RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
-#endif
 
 /**************************************
 * Ethernet Gateway Transport  Defaults

@@ -37,12 +37,12 @@
  * is defined by @ref LOCK_1. The number of locks is controlled by @ref NOF_LOCKS .<br>
  * The sketch will require incoming messages to be signed and the use of signing backend is selected
  * by @ref MY_SIGNING_ATSHA204 or @ref MY_SIGNING_SOFT. Hard or soft ATSHA204 signing is supported.<br>
- * If soft signing is chosen, make sure to use a correct HMAC key (see @ref MY_SIGNING_SOFT_HMAC_KEY).<br>
  * Whitelisting can be enabled through @ref MY_SIGNING_NODE_WHITELISTING in which case a single entry
  * is provided in this example which typically should map to the gateway of the network.
  */
 
 #define MY_DEBUG //!< Enable debug prints to serial monitor
+#define MY_DEBUG_VERBOSE_SIGNING //!< Enable signing related debug prints to serial monitor
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24 //!< NRF24L01 radio driver
@@ -59,11 +59,6 @@
 
 
 // SETTINGS FOR MY_SIGNING_SOFT
-/// Set the soft_serial value to an arbitrary value for proper security (9 bytes)
-#define MY_SIGNING_SOFT_SERIAL 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
-/// Key to use for HMAC calculation in soft signing (32 bytes)
-#define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-
 #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 //!< Unconnected analog pin for random seed
 
 // SETTINGS FOR MY_SIGNING_ATSHA204

@@ -23,7 +23,7 @@ class Sha256Class
     void initHmac(const uint8_t* secret, int secretLength);
     uint8_t* result(void);
     uint8_t* resultHmac(void);
-    virtual void write(uint8_t);
+    void write(uint8_t);
   private:
     void pad();
     void addUncounted(uint8_t data);

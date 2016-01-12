@@ -30,7 +30,10 @@ bool transportInit() {
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
 		#ifdef MY_RFM69_ENABLE_ENCRYPTION
-			_radio.encrypt(RFM69_ENCRYPTKEY);
+			uint8_t _psk[16];
+			hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+			_radio.encrypt(_psk);
+			memset(_psk, 0, 16); // Make sure it is purged from memory when set
 		#endif
 		return true;
 	}
