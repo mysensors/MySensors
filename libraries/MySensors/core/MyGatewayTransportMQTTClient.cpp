@@ -173,7 +173,7 @@ bool gatewayTransportInit() {
 			MY_SERIALDEVICE.print(".");
 			yield();
 		}
-		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.print("IP: ");
 		MY_SERIALDEVICE.println(WiFi.localIP());
 	#else
 		#ifdef MY_IP_ADDRESS
@@ -181,12 +181,12 @@ bool gatewayTransportInit() {
 		#else
 			// Get IP address from DHCP
 			if (!Ethernet.begin(_clientMAC)) {
-				MY_SERIALDEVICE.print(F("DHCP FAILURE..."));
+				MY_SERIALDEVICE.print("DHCP FAILURE...");
 				_connecting = false;
 				return false;
 			}
 		#endif /* IP_ADDRESS_DHCP */
-		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.print("IP: ");
 		MY_SERIALDEVICE.println(Ethernet.localIP());
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
