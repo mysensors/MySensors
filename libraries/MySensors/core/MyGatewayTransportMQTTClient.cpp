@@ -27,7 +27,9 @@
 
 uint8_t protocolH2i(char c);
 
-
+#if defined MY_CONTROLLER_IP_ADDRESS
+IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
+#endif
 
 #if defined(MY_GATEWAY_ESP8266)
 	#define EthernetClient WiFiClient
@@ -43,6 +45,7 @@ uint8_t protocolH2i(char c);
 
 EthernetClient _ethClient;
 PubSubClient _client(_ethClient);
+bool _connecting = true;
 bool _available = false;
 char _convBuffer[MAX_PAYLOAD*2+1];
 char _fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH];
@@ -137,6 +140,7 @@ bool reconnectMQTT() {
 		#if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
 			, MY_MQTT_USER, MY_MQTT_PASSWORD
 		#endif
+	,0,0,0,0
 	)) {
 		debug(PSTR("MQTT connected\n"));
 		// Once connected, publish an announcement...
@@ -149,6 +153,7 @@ bool reconnectMQTT() {
 }
 
 bool gatewayTransportInit() {
+	_connecting = true;
 	#if defined(MY_CONTROLLER_IP_ADDRESS)
 		_client.setServer(MY_CONTROLLER_IP_ADDRESS, MY_PORT);
 	#else
@@ -172,26 +177,39 @@ bool gatewayTransportInit() {
 		MY_SERIALDEVICE.println(WiFi.localIP());
 	#else
 		#ifdef MY_IP_ADDRESS
-			Ethernet.begin(_clientMAC, _clientIp);
-			MY_SERIALDEVICE.print(F("IP: "));
-			MY_SERIALDEVICE.println(Ethernet.localIP());
+			Ethernet.begin(_clientMAC, _clientIp)
 		#else
 			// Get IP address from DHCP
-			Ethernet.begin(_clientMAC);
-			MY_SERIALDEVICE.print(F("IP: "));
-			MY_SERIALDEVICE.println(Ethernet.localIP());
+			if (!Ethernet.begin(_clientMAC)) {
+				MY_SERIALDEVICE.print(F("DHCP FAILURE..."));
+				_connecting = false;
+				return false;
+			}
 		#endif /* IP_ADDRESS_DHCP */
+		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.println(Ethernet.localIP());
+		// give the Ethernet interface a second to initialize
+		// TODO: use HW delay
+		//this processes all incoming messages 
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
 		wait(1000);
 	#endif
+	_connecting = false;
 	return true;
 }
 
 
 bool gatewayTransportAvailable() {
+	if (_connecting)
+		return false;
+	
+	//keep lease on dhcp address
+	//Ethernet.maintain();
 	if (!_client.connected()) {
-		reconnectMQTT();
+		//reinitialise client
+		if (gatewayTransportInit())
+			reconnectMQTT();
 		return false;
 	}
 	_client.loop();

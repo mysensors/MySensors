@@ -19,9 +19,7 @@
 
 #include "MyGatewayTransport.h"
 
-#if defined(MY_CONTROLLER_IP_ADDRESS)
-	IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
-#endif
+
 
 #if defined(MY_IP_ADDRESS)
 	IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
@@ -150,13 +148,17 @@ bool gatewayTransportSend(MyMessage &message)
 	_w5100_spi_en(true);
 	#if defined(MY_CONTROLLER_IP_ADDRESS)
 		#if defined(MY_USE_UDP)
-			_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
+			_ethernetServer.beginPacket(MY_CONTROLLER_IP_ADDRESS, MY_PORT);
 			_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
 			// returns 1 if the packet was sent successfully
 			ret = _ethernetServer.endPacket();
 		#else
 			EthernetClient client;
-			if (client.connect(_ethernetControllerIP, MY_PORT)) {
+			#if defined(MY_CONTROLLER_URL_ADDRESS)
+				if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+			#else
+				if (client.connect(MY_CONTROLLER_IP_ADDRESS, MY_PORT)) {
+			#endif
 				client.write(_ethernetMsg, strlen(_ethernetMsg));
 				client.stop();
 			}
@@ -249,7 +251,7 @@ bool gatewayTransportSend(MyMessage &message)
 bool gatewayTransportAvailable()
 {
 	_w5100_spi_en(true);
-	#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
+	#if (!defined(MY_URL_ADDRESS) && !defined(MY_IP_ADDRESS)) && defined(MY_GATEWAY_W5100)
 		// renew IP address using DHCP
 		gatewayTransportRenewIP();
 	#endif
