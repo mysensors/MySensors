@@ -58,6 +58,7 @@
         #include "core/MyHwSAMD.cpp"
 #endif
 
+// LEDS
 #if !defined(MY_DEFAULT_ERR_LED_PIN) & defined(MY_HW_ERR_LED_PIN)
 	#define MY_DEFAULT_ERR_LED_PIN MY_HW_ERR_LED_PIN
 #endif
@@ -67,7 +68,7 @@
 #endif
 
 #if !defined(MY_DEFAULT_RX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
-	#define MY_DEFAULT_TX_LED_PIN MY_HW_TX_LED_PIN
+	#define MY_DEFAULT_RX_LED_PIN MY_HW_TX_LED_PIN
 #endif
 
 // Not necessary to include blinking feature if no LED's are defined!
@@ -80,12 +81,41 @@
 	#define MY_LEDS_BLINKING_FEATURE
 #endif
 
-// LEDS
 #if defined(MY_LEDS_BLINKING_FEATURE)
 	#include "core/MyLeds.cpp"
 #else
 	#include "core/MyLeds.h"
 #endif
+
+// default LEDs blinking period in milliseconds
+#ifndef MY_DEFAULT_LED_BLINK_PERIOD
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
+#endif
+// The RX LED default pin
+#ifndef MY_DEFAULT_RX_LED_PIN
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_RX_LED_PIN 8
+	#else
+		#define MY_DEFAULT_RX_LED_PIN 6
+	#endif
+#endif
+// The TX LED default pin
+#ifndef MY_DEFAULT_TX_LED_PIN
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_TX_LED_PIN 9
+	#else
+		#define MY_DEFAULT_TX_LED_PIN 5
+	#endif
+#endif
+// The Error LED default pin
+#ifndef MY_DEFAULT_ERR_LED_PIN
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_ERR_LED_PIN 7
+	#else
+		#define MY_DEFAULT_ERR_LED_PIN 4
+	#endif
+#endif
+
 
 // INCLUSION MODE
 #if defined(MY_INCLUSION_MODE_FEATURE)
