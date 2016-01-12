@@ -155,7 +155,7 @@ bool reconnectMQTT() {
 bool gatewayTransportInit() {
 	_connecting = true;
 	#if defined(MY_CONTROLLER_IP_ADDRESS)
-		_client.setServer(MY_CONTROLLER_IP_ADDRESS, MY_PORT);
+		_client.setServer(_brokerIp, MY_PORT);
 	#else
 		_client.setServer(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
 	#endif
