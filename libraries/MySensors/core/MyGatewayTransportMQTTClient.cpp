@@ -185,9 +185,11 @@ bool gatewayTransportInit() {
 				_connecting = false;
 				return false;
 			}
-		#endif /* IP_ADDRESS_DHCP */
+		#endif 
+		
 		MY_SERIALDEVICE.print("IP: ");
 		MY_SERIALDEVICE.println(Ethernet.localIP());
+		
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
 		//this processes all incoming messages 
