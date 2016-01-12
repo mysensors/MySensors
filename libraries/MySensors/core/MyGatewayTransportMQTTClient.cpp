@@ -180,15 +180,16 @@ bool gatewayTransportInit() {
 			Ethernet.begin(_clientMAC, _clientIp);
 		#else
 			// Get IP address from DHCP
-			if (!Ethernet.begin(_clientMAC)) {
+			if (!Ethernet.begin(_clientMAC)) 
+			{
 				MY_SERIALDEVICE.print("DHCP FAILURE...");
 				_connecting = false;
 				return false;
 			}
+			MY_SERIALDEVICE.print("IP: ");
+			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#endif 
 		
-		//MY_SERIALDEVICE.print("IP: ");
-		//MY_SERIALDEVICE.println(Ethernet.localIP());
 		
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
