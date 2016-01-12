@@ -177,7 +177,7 @@ bool gatewayTransportInit() {
 		MY_SERIALDEVICE.println(WiFi.localIP());
 	#else
 		#ifdef MY_IP_ADDRESS
-			Ethernet.begin(_clientMAC, _clientIp)
+			Ethernet.begin(_clientMAC, _clientIp);
 		#else
 			// Get IP address from DHCP
 			if (!Ethernet.begin(_clientMAC)) {
@@ -190,9 +190,6 @@ bool gatewayTransportInit() {
 		//MY_SERIALDEVICE.print("IP: ");
 		//MY_SERIALDEVICE.println(Ethernet.localIP());
 		
-		// give the Ethernet interface a second to initialize
-		// TODO: use HW delay
-		//this processes all incoming messages 
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
 		wait(1000);
