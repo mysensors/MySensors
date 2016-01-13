@@ -38,7 +38,7 @@ uint8_t _address;
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	AES _aes;
 	uint8_t _dataenc[32] = {0};
-	uint8_t _psk[] = { MY_RF24_ENCRYPTKEY };
+	uint8_t _psk[16];
 #endif
 
 bool transportInit() {
@@ -65,7 +65,9 @@ bool transportInit() {
 
 
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
+		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 		_aes.set_key(_psk, 16); //set up AES-key
+		memset(_psk, 0, 16); // Make sure it is purged from memory when set
 	#endif
 
 	//_rf24.printDetails();

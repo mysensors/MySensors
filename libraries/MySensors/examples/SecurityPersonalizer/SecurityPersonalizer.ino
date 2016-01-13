@@ -21,16 +21,20 @@
 /**
  * @ingroup MySigninggrp
  * @{
- * @file Sha204Personalizer.ino
- * @brief SHA204 personalization sketch
+ * @file SecurityPersonalizer.ino
+ * @brief Security personalization sketch
  *
  * REVISION HISTORY
- *  - See git log (git log libraries/MySensors/examples/Sha204Personalizer/Sha204Personalizer.ino)
+ *  - See git log (git log libraries/MySensors/examples/SecurityPersonalizer/SecurityPersonalizer.ino)
  */
 
 /**
- * @example Sha204Personalizer.ino
- * This sketch will write factory default settings to the configuration zone
+ * @example SecurityPersonalizer.ino
+ * This sketch will personalize either none-volatile memory or ATSHA204A for security functions
+ * available in the MySensors library.
+ *
+ * For ATSHA204A:
+ * It will write factory default settings to the configuration zone
  * and then lock it.<br>
  * It will then either<br>
  * -# Generate a random value to use as a key which will be stored in
@@ -45,13 +49,41 @@
  * turn on the locking. Furthermore, user have to send a SPACE character on serial
  * console when prompted to do any locking. On boards that does not provide UART
  * input it is possible to configure the sketch to skip this confirmation.
- * Default settings use ATSHA204 on @ref ATSHA204_PIN.
+ * Default settings use ATSHA204A on @ref MY_SIGNING_ATSHA204_PIN.
+ *
+ * For Soft signing:
+ * It will<br>
+ * -# Generate a random value to use as a key which will be stored in EEPROM.
+ * The key is printed on UART (115200) in clear text for the user to be ablle to
+ * use it as a user-supplied key in other personalization executions where the same
+ * key is needed.
+ * -# Use a user-supplied value to use as a key which will be stored in EEPROM.
+ * -# Generate a random value to use as a serial number which will be stored in EEPROM.
+ * The serial number is printed on UART (115200) in clear text for the user to be ablle to
+ * use it as a user-supplied serial number in other personalization executions where the
+ * serial is needed (typically for a whitelist).
+ * -# Use a user-supplied value to use as a serial which will be stored in EEPROM.
+ *
+ * For Encryption support:
+ * -# Generate a random value to use as a AES key which will be stored in EEPROM.
+ * The AES key is printed on UART (115200) in clear text for the user to be ablle to
+ * use it as a user-supplied AES key in other personalization executions where the
+ * AES key is needed (typically for RF encryption).
+ * -# Use a user-supplied value to use as a AES key which will be stored in EEPROM.
+ *
+ * Personalizing EEPROM or ATSHA204A still require the appropriate configuration of the
+ * library to actually have an effect. There is no problem personalizing EEPROM and
+ * ATSHA204A at the same time. There is however a security risk with using the same
+ * data for EEPROM and ATSHA204A so it is recommended to use different serial and HMAC
+ * keys on the same device for ATSHA204A vs soft signing settings.
  *
  * Details on personalization procedure is given in @ref perzonalization.
  */
 
 #include <sha204_library.h>
 #include <sha204_lib_return_codes.h>
+#define MY_CORE_ONLY
+#include <MySensor.h>
 
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
@@ -59,11 +91,16 @@
 #define LOCK_CONFIGURATION
 #define LOCK_DATA
 #define SKIP_KEY_STORAGE
-#define USER_KEY_DATA
+#define USER_KEY
 #define SKIP_UART_CONFIRMATION
+#define USE_SOFT_SIGNING
+#define STORE_SOFT_KEY
+#define USER_SOFT_KEY
+#define STORE_SOFT_SERIAL
+#define USER_SOFT_SERIAL
+#define STORE_AES_KEY
+#define USER_AES_KEY
 #endif
-
-#define ATSHA204_PIN 17 //!< The pin the ATSHA204 is connected on (A3).
 
 /**
  * @def LOCK_CONFIGURATION
@@ -89,13 +126,13 @@
  * @def SKIP_KEY_STORAGE
  * @brief Uncomment this to skip key storage (typically once key has been written once)
  */
-//#define SKIP_KEY_STORAGE
+#define SKIP_KEY_STORAGE
 
 /**
- * @def USER_KEY_DATA
+ * @def USER_KEY
  * @brief Uncomment this to skip key generation and use @ref user_key_data as key instead.
  */
-//#define USER_KEY_DATA
+//#define USER_KEY
 
 /**
  * @def SKIP_UART_CONFIRMATION
@@ -106,19 +143,84 @@
  */
 //#define SKIP_UART_CONFIRMATION
 
-#if defined(SKIP_UART_CONFIRMATION) && !defined(USER_KEY_DATA)
-#error You have to define USER_KEY_DATA for boards that does not have UART
+/**
+ * @def USE_SOFT_SIGNING
+ * @brief Uncomment this to store data to EEPROM instead of ATSHA204A
+ */
+//#define USE_SOFT_SIGNING
+
+/**
+ * @def STORE_SOFT_KEY
+ * @brief Uncomment this to store soft HMAC key to EEPROM
+ */
+//#define STORE_SOFT_KEY
+
+/**
+ * @def USER_SOFT_KEY
+ * @brief Uncomment this to skip soft HMAC key generation and use @ref user_soft_key_data as HMAC key instead.
+ */
+//#define USER_SOFT_KEY
+
+/**
+ * @def STORE_SOFT_SERIAL
+ * @brief Uncomment this to store soft serial to EEPROM
+ */
+//#define STORE_SOFT_SERIAL
+
+/**
+ * @def USER_SOFT_SERIAL
+ * @brief Uncomment this to skip soft serial generation and use @ref user_soft_serial as serial instead.
+ */
+//#define USER_SOFT_SERIAL
+
+/**
+ * @def STORE_AES_KEY
+ * @brief Uncomment this to store AES key to EEPROM
+ */
+//#define STORE_AES_KEY
+
+/**
+ * @def USER_AES_KEY
+ * @brief Uncomment this to skip AES key generation and use @ref user_aes_key as key instead.
+ */
+//#define USER_AES_KEY
+
+#if defined(SKIP_UART_CONFIRMATION) && !defined(USER_KEY)
+#error You have to define USER_KEY for boards that does not have UART
 #endif
 
-#ifdef USER_KEY_DATA
+#ifdef USER_KEY
 /** @brief The user-defined HMAC key to use for personalization */
 #define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 /** @brief The data to store in key slot 0 */
 const uint8_t user_key_data[32] = {MY_HMAC_KEY};
 #endif
 
-const int sha204Pin = ATSHA204_PIN; //!< The IO pin to use for ATSHA204
+#ifdef USER_SOFT_KEY
+/** @brief The user-defined soft HMAC key to use for EEPROM personalization */
+#define MY_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+/** @brief The data to store as soft HMAC key in EEPROM */
+const uint8_t user_soft_key_data[32] = {MY_SOFT_HMAC_KEY};
+#endif
+
+#ifdef USER_SOFT_SERIAL
+/** @brief The user-defined soft serial to use for EEPROM personalization */
+#define MY_SOFT_SERIAL 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+/** @brief The data to store as soft serial in EEPROM */
+const uint8_t user_soft_serial[9] = {MY_SOFT_SERIAL};
+#endif
+
+#ifdef USER_AES_KEY
+/** @brief The user-defined AES key to use for EEPROM personalization */
+#define MY_AES_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+/** @brief The data to store as AES key in EEPROM */
+const uint8_t user_aes_key[16] = {MY_AES_KEY};
+#endif
+
+#ifndef USE_SOFT_SIGNING
+const int sha204Pin = MY_SIGNING_ATSHA204_PIN; //!< The IO pin to use for ATSHA204A
 atsha204Class sha204(sha204Pin);
+#endif
 
 /** @brief Print a error notice and halt the execution */
 void halt()
@@ -127,6 +229,7 @@ void halt()
   while(1);
 }
 
+#ifndef USE_SOFT_SIGNING
 /**
  * @brief Write default configuration and return CRC of the configuration bits
  * @returns CRC over the configuration bits
@@ -275,14 +378,53 @@ void write_key(uint8_t* key)
     halt();
   }
 }
+#endif // not USE_SOFT_SIGNING
 
 /** @brief Dump current configuration to UART */
 void dump_configuration()
 {
+  uint8_t buffer[32];
+#ifndef USE_SOFT_SIGNING
+  Serial.println(F("EEPROM DATA:"));
+#endif
+  hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+  Serial.print(F("SOFT_HMAC_KEY | "));
+  for (int j=0; j<32; j++)
+  {
+    if (buffer[j] < 0x10)
+    {
+      Serial.print('0'); // Because Serial.print does not 0-pad HEX
+    }
+    Serial.print(buffer[j], HEX);
+  }
+  Serial.println();
+  hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+  Serial.print(F("SOFT_SERIAL   | "));
+  for (int j=0; j<9; j++)
+  {
+    if (buffer[j] < 0x10)
+    {
+      Serial.print('0'); // Because Serial.print does not 0-pad HEX
+    }
+    Serial.print(buffer[j], HEX);
+  }
+  Serial.println();
+  hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+  Serial.print(F("AES_KEY       | "));
+  for (int j=0; j<16; j++)
+  {
+    if (buffer[j] < 0x10)
+    {
+      Serial.print('0'); // Because Serial.print does not 0-pad HEX
+    }
+    Serial.print(buffer[j], HEX);
+  }
+  Serial.println();
+#ifndef USE_SOFT_SIGNING
   uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
   uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
   uint8_t ret_code;
-
+  Serial.println(F("ATSHA204A DATA:"));
   for (int i=0; i < 88; i += 4)
   {
     ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, i);
@@ -712,25 +854,36 @@ void dump_configuration()
       Serial.println();
     }
   }
+#endif // not USE_SOFT_SIGNING
 }
 
 /** @brief Sketch setup code */
 void setup()
 {
+  // Delay startup a bit for serial consoles to catch up
+  unsigned long enter = hwMillis();
+  while (hwMillis() - enter < (unsigned long)500);
+#ifndef USE_SOFT_SIGNING
   uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
   uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
-  uint8_t key[32];
   uint8_t ret_code;
   uint8_t lockConfig = 0;
   uint8_t lockValue = 0;
   uint16_t crc;
   (void)crc;
+#else
+  // initialize pseudo-RNG
+  randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+#endif
+  uint8_t key[32];
+  (void)key;
 
   Serial.begin(115200);
 
-  Serial.println(F("ATSHA204 personalization sketch for MySensors usage."));
-  Serial.println(F("----------------------------------------------------"));
+  Serial.println(F("Personalization sketch for MySensors usage."));
+  Serial.println(F("-------------------------------------------"));
 
+#ifndef USE_SOFT_SIGNING
   // Wake device before starting operations
   ret_code = sha204.sha204c_wakeup(rx_buffer);
   if (ret_code != SHA204_SUCCESS)
@@ -738,7 +891,171 @@ void setup()
     Serial.print(F("Failed to wake device. Response: ")); Serial.println(ret_code, HEX);
     halt();
   }
+  // Read out lock config bits to determine if locking is possible
+  ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, 0x15<<2);
+  if (ret_code != SHA204_SUCCESS)
+  {
+    Serial.print(F("Failed to determine device lock status. Response: ")); Serial.println(ret_code, HEX);
+    halt();
+  }
+  else
+  {
+    lockConfig = rx_buffer[SHA204_BUFFER_POS_DATA+3];
+    lockValue = rx_buffer[SHA204_BUFFER_POS_DATA+2];
+  }
+#endif
 
+#ifdef STORE_SOFT_KEY
+#ifdef USER_SOFT_KEY
+  memcpy(key, user_soft_key_data, 32);
+  Serial.println(F("Using this user supplied soft HMAC key:"));
+#else
+  // Retrieve random value to use as soft HMAC key
+#ifdef USE_SOFT_SIGNING
+  for (int i = 0; i < 32; i++) {
+    key[i] = random(256) ^ micros();
+    unsigned long enter = hwMillis();
+    while (hwMillis() - enter < (unsigned long)2);
+  }
+  Serial.println(F("This value will be stored in EEPROM as soft HMAC key:"));
+#else
+  ret_code = sha204.sha204m_random(tx_buffer, rx_buffer, RANDOM_SEED_UPDATE);
+  if (ret_code != SHA204_SUCCESS)
+  {
+    Serial.print(F("Random key generation failed. Response: ")); Serial.println(ret_code, HEX);
+    halt();
+  }
+  else
+  {
+    memcpy(key, rx_buffer+SHA204_BUFFER_POS_DATA, 32);
+  }
+  if (lockConfig == 0x00)
+  {
+    Serial.println(F("This value will be stored in EEPROM as soft HMAC key:"));
+  }
+  else
+  {
+    Serial.println(F("Key is not randomized (configuration not locked):"));
+  }
+#endif // not USE_SOFT_SIGNING
+#endif // not USER_SOFT_KEY
+  Serial.print("#define MY_SOFT_HMAC_KEY ");
+  for (int i=0; i<32; i++)
+  {
+    Serial.print("0x");
+    if (key[i] < 0x10)
+    {
+      Serial.print('0'); // Because Serial.print does not 0-pad HEX
+    }
+    Serial.print(key[i], HEX);
+    if (i < 31) Serial.print(',');
+  }
+  Serial.println();
+  hwWriteConfigBlock((void*)key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+#endif // STORE_SOFT_KEY
+
+#ifdef STORE_SOFT_SERIAL
+#ifdef USER_SOFT_SERIAL
+  memcpy(key, user_soft_serial, 9);
+  Serial.println(F("Using this user supplied soft serial:"));
+#else
+  // Retrieve random value to use as serial
+#ifdef USE_SOFT_SIGNING
+  for (int i = 0; i < 9; i++) {
+    key[i] = random(256) ^ micros();
+    unsigned long enter = hwMillis();
+    while (hwMillis() - enter < (unsigned long)2);
+  }
+  Serial.println(F("This value will be stored in EEPROM as soft serial:"));
+#else
+  ret_code = sha204.sha204m_random(tx_buffer, rx_buffer, RANDOM_SEED_UPDATE);
+  if (ret_code != SHA204_SUCCESS)
+  {
+    Serial.print(F("Random serial generation failed. Response: ")); Serial.println(ret_code, HEX);
+    halt();
+  }
+  else
+  {
+    memcpy(key, rx_buffer+SHA204_BUFFER_POS_DATA, 9);
+  }
+  if (lockConfig == 0x00)
+  {
+    Serial.println(F("This value will be stored in EEPROM as soft serial:"));
+  }
+  else
+  {
+    Serial.println(F("Serial is not randomized (configuration not locked):"));
+  }
+#endif // not USE_SOFT_SIGNING
+#endif // not USER_SOFT_SERIAL
+  Serial.print("#define MY_SOFT_SERIAL ");
+  for (int i=0; i<9; i++)
+  {
+    Serial.print("0x");
+    if (key[i] < 0x10)
+    {
+      Serial.print('0'); // Because Serial.print does not 0-pad HEX
+    }
+    Serial.print(key[i], HEX);
+    if (i < 8) Serial.print(',');
+  }
+  Serial.println();
+  hwWriteConfigBlock((void*)key, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+#endif // STORE_SOFT_SERIAL
+
+#ifdef STORE_AES_KEY
+#ifdef USER_AES_KEY
+  memcpy(key, user_aes_key, 16);
+  Serial.println(F("Using this user supplied AES key:"));
+#else
+  // Retrieve random value to use as key
+#ifdef USE_SOFT_SIGNING
+  for (int i = 0; i < 16; i++) {
+    key[i] = random(256) ^ micros();
+    unsigned long enter = hwMillis();
+    while (hwMillis() - enter < (unsigned long)2);
+  }
+  Serial.println(F("This key will be stored in EEPROM as AES key:"));
+#else
+  ret_code = sha204.sha204m_random(tx_buffer, rx_buffer, RANDOM_SEED_UPDATE);
+  if (ret_code != SHA204_SUCCESS)
+  {
+    Serial.print(F("Random key generation failed. Response: ")); Serial.println(ret_code, HEX);
+    halt();
+  }
+  else
+  {
+    memcpy(key, rx_buffer+SHA204_BUFFER_POS_DATA, 32);
+  }
+  if (lockConfig == 0x00)
+  {
+    Serial.println(F("This key will be stored in EEPROM as AES key:"));
+  }
+  else
+  {
+    Serial.println(F("Key is not randomized (configuration not locked):"));
+  }
+#endif // not USE_SOFT_SIGNING
+#endif // not USER_AES_KEY
+  Serial.print("#define MY_AES_KEY ");
+  for (int i=0; i<16; i++)
+  {
+    Serial.print("0x");
+    if (key[i] < 0x10)
+    {
+      Serial.print('0'); // Because Serial.print does not 0-pad HEX
+    }
+    Serial.print(key[i], HEX);
+    if (i < 15) Serial.print(',');
+  }
+  Serial.println();
+  hwWriteConfigBlock((void*)key, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+#endif // STORE_AES_KEY
+
+#ifdef USE_SOFT_SIGNING
+    Serial.println(F("EEPROM configuration:"));
+    dump_configuration();
+#else
   // Output device revision on console
   ret_code = sha204.sha204m_dev_rev(tx_buffer, rx_buffer);
   if (ret_code != SHA204_SUCCESS)
@@ -792,19 +1109,6 @@ void setup()
       Serial.print(rx_buffer[i], HEX);
     }
     Serial.println();
-  }
-
-  // Read out lock config bits to determine if locking is possible
-  ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, 0x15<<2);
-  if (ret_code != SHA204_SUCCESS)
-  {
-    Serial.print(F("Failed to determine device lock status. Response: ")); Serial.println(ret_code, HEX);
-    halt();
-  }
-  else
-  {
-    lockConfig = rx_buffer[SHA204_BUFFER_POS_DATA+3];
-    lockValue = rx_buffer[SHA204_BUFFER_POS_DATA+2];
   }
 
   if (lockConfig != 0x00)
@@ -886,9 +1190,9 @@ void setup()
 #ifdef SKIP_KEY_STORAGE
   Serial.println(F("Disable SKIP_KEY_STORAGE to store key."));
 #else
-#ifdef USER_KEY_DATA
+#ifdef USER_KEY
   memcpy(key, user_key_data, 32);
-  Serial.println(F("Using this user supplied key:"));
+  Serial.println(F("Using this user supplied HMAC key:"));
 #else
   // Retrieve random value to use as key
   ret_code = sha204.sha204m_random(tx_buffer, rx_buffer, RANDOM_SEED_UPDATE);
@@ -1022,9 +1326,11 @@ void setup()
   {
     Serial.println(F("Skipping OTP/data zone lock (zone already locked)."));
   }
+#endif // not USE_SOFT_SIGNING
 
   Serial.println(F("--------------------------------"));
   Serial.println(F("Personalization is now complete."));
+#ifndef USE_SOFT_SIGNING
   Serial.print(F("Configuration is "));
   if (lockConfig == 0x00)
   {
@@ -1043,6 +1349,7 @@ void setup()
   {
     Serial.println("UNLOCKED");
   }
+#endif
 }
 
 /** @brief Sketch execution code */

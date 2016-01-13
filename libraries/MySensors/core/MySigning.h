@@ -178,14 +178,10 @@
  * signatures. The setting is defined using @ref MY_SIGNING_SOFT_RANDOMSEED_PIN and the default is to use pin A7. The same configuration
  * possibilities exist as with the other configuration options.
  *
- * <b>Thirdly</b>, if you use the software backend, you need to create/set a HMAC key to use. This key is 32 bytes wide and should
- * be an arbitrarily chosen value. A string is OK, but as this key never needs to be “parsed” a completely random number is recommended. The
- * key is stored in software and can be set "globally" in @ref MyConfig.h or locally in your sketch. The define is @ref MY_SIGNING_SOFT_HMAC_KEY.
+ * <b>Thirdly</b>, if you use the software backend, you need to personalize the node (see @ref perzonalization).
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
- * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
- * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #include <MySensor.h>
  * ...
@@ -195,7 +191,8 @@
  *
  * @anchor perzonalization If you use the “real” ATSHA204A, before any signing operations can be done, the device needs to be <i>personalized</i>.
  * This can be a daunting process as it involves irreversibly writing configurations to the device, which cannot be undone. I have however tried
- * to simplify the process as much as possibly by creating a helper-sketch specifically for this purpose in @ref Sha204Personalizer.ino
+ * to simplify the process as much as possibly by creating a helper-sketch specifically for this purpose in @ref SecurityPersonalizer.ino
+ * Note that you also need to do personalization for software signing, but then the values are stored in EEPROM (described below).
  *
  * The process of personalizing the ATSHA204A involves
  * - Writing and locking chip configuration
@@ -211,15 +208,15 @@
  * if this is desired.<br>
  * Now it is possible to execute the sketch to lock the configuration and enable the RNG.<br>
  * Next step is to decide if a new key should be generated or an existing key should be stored to the device. This is determined using
- * @ref USER_KEY_DATA, which, if defined, will use the data in the variable user_key_data.<br>
- * If @ref USER_KEY_DATA is disabled, the RNG will be used to generate a key. This key obviously need to be made available to you so you can use
+ * @ref USER_KEY, which, if defined, will use the data in the variable user_key_data.<br>
+ * If @ref USER_KEY is disabled, the RNG will be used to generate a key. This key obviously need to be made available to you so you can use
  * it in other devices in the network, and this key is therefore also printed on the serial console when it has been generated.<br>
  * The key (generated or provided) will be written to the device unless @ref SKIP_KEY_STORAGE is set. As long as the data zone is kept unlocked
  * the key can be replaced at any time. However, Atmel suggests the data region to be locked for maximum security. On the other hand, they also
  * claim that the key is not readable from the device even if the data zone remains unlocked so the need for locking the data region is optional
  * for MySensors usage.<br>
  * For devices that does not have serial debug possibilities, it is possible to set @ref SKIP_UART_CONFIRMATION, but it is required to set
- * @ref USER_KEY_DATA if this option is enabled since a generated and potentially unknown key could be written to the device and thus rendering
+ * @ref USER_KEY if this option is enabled since a generated and potentially unknown key could be written to the device and thus rendering
  * it useless (if the data zone is also locked).<br>
  * For devices with serial debug possibilities it is recommended to not use @ref SKIP_UART_CONFIRMATION as the sketch without that setting will
  * ask user to send a ‘space’ character on the serial terminal before any locking operations are executed as an additional confirmation that
@@ -232,7 +229,7 @@
  *  -# Disable @ref LOCK_DATA
  *  -# Enable @ref SKIP_KEY_STORAGE
  *  -# Disable @ref SKIP_UART_CONFIRMATION
- *  -# Disable @ref USER_KEY_DATA
+ *  -# Disable @ref USER_KEY
  * - Execute the sketch on the “master” device to obtain a randomized key. Save this key to a secure location and keep it confidential so that\n
      you can retrieve it if you need to personalize more devices later on.
  * - Now reconfigure the sketch with these settings:
@@ -241,9 +238,28 @@
  *     according to Atmel, but they also claim that key is not readable even if data region remains unlocked from the slot we are using)
  *  -# Disable @ref SKIP_KEY_STORAGE
  *  -# Enable @ref SKIP_UART_CONFIRMATION
- *  -# Enable @ref USER_KEY_DATA
+ *  -# Enable @ref USER_KEY
  * - Put the saved key in the user_key_data variable.
  * - Now execute the sketch on all devices you want to personalize with this secret key.
+ *
+ * For software signing the personalization procedure looks slightly different.<br>
+ * - If you do not have the ATSHA204A device and need to generate random keys:
+ *  -# Enable @ref USE_SOFT_SIGNING
+ * - If you do have the ATSHA204A and want to use it to generate random keys for soft signing:
+ *  -# Disable @ref USE_SOFT_SIGNING
+ * - If you want to review existing EEPROM configuration to determine if anything needs to be updated:
+ *  -# Make sure to disable any ATSHA204A update features if you use it (enable @ref SKIP_KEY_STORAGE, disable @ref LOCK_CONFIGURATION and @ref LOCK_DATA)
+ *  -# Disable @ref STORE_SOFT_KEY
+ *  -# Disable @ref STORE_SOFT_SERIAL
+ *  -# Disable @ref STORE_AES_KEY
+ * - Execute the sketch and the EEPROM configuration will be printed on the serial console.
+ * - Decide what you want to update and enable the corresponding flags (@ref STORE_SOFT_KEY, @ref STORE_SOFT_SERIAL, @ref STORE_AES_KEY).
+ * - If you have existing keys and want to use them instead of having the values randomized:
+ * - Enable the corresponding flag (@ref USER_SOFT_KEY, @ref USER_SOFT_SERIAL, @ref USER_AES_KEY) and also set the appropriate values
+ *   (@ref user_soft_key_data, @ref user_soft_serial, @ref user_aes_key)
+ *
+ * The personalizer also takes care of generation and storage of the AES key used for RF traffic encryption.
+ * See the software signing personalization flow for how to manage it.
  *
  * That’s it. Personalization is done and the device is ready to execute signing operations which are valid only on your personal network.
  *
@@ -251,9 +267,9 @@
  * This also applies to the gateway. However, the difference is that the gateway will only require signed messages from nodes it knows in turn
  * require signed messages.<br>
  * A node can also inform a different node that it expects to receive signed messages from it. This is done by transmitting an internal message
- * of type @ref I_REQUEST_SIGNING and provide a boolean for payload, set to @c true.<br>
+ * of type @ref I_SIGNING_PRESENTATION and provide flags as payload that inform the receiver of the signing preferences of the sender.<br>
  * All nodes and gateways in a network maintain a table where the signing preferences of all nodes are stored. This is also stored in EEPROM so
- * if the gateway reboots, the nodes does not have to retransmit a signing request to the gateway for the gateway to realize that the node
+ * if the gateway reboots, the nodes does not have to retransmit a signing presentation to the gateway for the gateway to realize that the node
  * expect signed messages.<br>
  * Also, the nodes that do not require signed messages will also inform gateway of this, so if you reprogram a node to stop require signing,
  * the gateway will adhere to this as soon as the new node has presented itself to the gateway.
@@ -288,13 +304,11 @@
  * remove it from the nodes whitelist, and it will no longer be able to communicate signed messages to the door node.
  *
  * In case you want to be able to "whitelist" trusted nodes (in order to be able to revoke them in case they are lost) you also need to take note
- * of the serial number of the ATSHA device. This is unique for each device. The serial number is printed in a copy+paste friendly format by the
- * personalizer for this purpose. For the software backend, it is defined by @ref MY_SIGNING_SOFT_SERIAL. You should keep this value unique for each
- * node in the network.<br>
+ * of the serial number of the ATSHA device or the software value stored in EEPROM. This is unique for each device. The serial number is printed
+ * in a copy+paste friendly format by the personalizer for this purpose.<br>
  * The whitelist is stored on the node that require signatures. When a received message is verified, the serial of the sender is looked up in a
  * list stored on the receiving node, and the corresponding serial stored in the list for that sender is then included in the signature verification
  * process. The list is stored as the value of the flag that enables whitelisting, @ref MY_SIGNING_NODE_WHITELISTING.<br>
- * For whitelisting to work, the sending node also needs to have whitelisting enabled.<br>
  * 
  * Whitelisting is achieved by 'salting' the signature with some node-unique information known to the receiver. In the case of ATSHA204A this is the
  * unique serial number programmed into the circuit. This unique number is never transmitted over the air in clear text, so Eve will not be able to
@@ -303,8 +317,8 @@
  * the originating NodeId of the signed message and do the corresponding calculation with the serial it has stored in it's whitelist if it finds a
  * matching entry in it's whitelist.
  *
- * Whitelisting is an optional alternative because it adds some code which might not be desirable for every user. So if you want the ability to
- * provide and use whitelists, as well as transmitting to a node with a whitelist, you need to enable @ref MY_SIGNING_NODE_WHITELISTING.<br>
+ * Whitelisting is an optional alternative because it adds some code and configuration options which might not be desirable for every user. So if
+ * you want the ability to use whitelists, you need to enable @ref MY_SIGNING_NODE_WHITELISTING.<br>
  * The whitelist is provided as value of the flag that enable it as follows (example is a node that require signing as well):
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
@@ -314,31 +328,26 @@
  * ...
  * @endcode
  * In this example, there are two nodes in the whitelist; the gateway, and a separate node that communicates directly with this node (with signed
- * messages).
+ * messages). You do not need to do anything special for the sending nodes, apart from making sure they support signing.
  *
- * The "soft" backend of course also support whitelisting. However, since it does not contain a unique identifier, you have to provide an additional
- * setting (@ref MY_SIGNING_SOFT_SERIAL) when you enable whitelisting as illustrated in this example:
+ * The "soft" backend of course also support whitelisting. Example:
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
- * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
- * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}},{.nodeId = 2,.serial = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09}}}
  * #include <MySensor.h>
  * ...
  * @endcode
  *
- * For a node that should transmit whitelisted messages but not receive whitelisted messages, you can set the whitelist flag as follows:
+ * For a node that should transmit whitelisted messages but not receive whitelisted messages, you do not need any special configurations:
  * @code{.cpp}
- * #define MY_SIGNING_NODE_WHITELISTING {}
+ * #define MY_SIGNING_SOFT
+ * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * @endcode
- * Remember that for the software backend, you still need to set @ref MY_SIGNING_SOFT_SERIAL (a default is set in MyConfig.h if you do not provide one
- * in your sketch.
- *
- * It is important to emphasize that you do not have to provide a whitelist that has entries for all nodes that transmit signed messages to the node
- * in question. You only need to have entries for the nodes that in turn have enabled @ref MY_SIGNING_NODE_WHITELISTING. Nodes that does not have
- * this option enabled can still transmit "regular" signed messages as long as they do not match a NodeId in the receivers whitelist.
+ * Remember that you always need to select a signing backend for all nodes that communicate to a node that require whitelisting.
+ * Also, note that a node that use whitelisting will not accept messages from nodes that are not present in it's whitelist.
+ * And you have to personalize all nodes that use signing with a common HMAC key but different serial numbers (ATSHA204A always has unique serials).
  *
  * @section MySigningtechnical The technical stuff
  *
@@ -363,9 +372,9 @@
  * Exactly how this is done can be reviewd in the source for the ATSHA204SOFT backend and the ATSHA204A
  * <a href="http://www.atmel.com/Images/Atmel-8885-CryptoAuth-ATSHA204A-Datasheet.pdf">datasheet</a>.
  * In the MySensors protocol, the following internal messagetypes handles signature requirements and nonce requests:<br>
- * @ref I_REQUEST_SIGNING <br>
- * @ref I_GET_NONCE <br>
- * @ref I_GET_NONCE_RESPONSE <br>
+ * @ref I_SIGNING_PRESENTATION <br>
+ * @ref I_NONCE_REQUEST <br>
+ * @ref I_NONCE_RESPONSE <br>
  *
  * Also, the version field in the header has been reduced from 3 to 2 bits in order to fit a single bit to indicate that a message is signed.
  *
@@ -409,14 +418,11 @@
  * Nor can it be changed in order to do it in the future. You can also use whitelisting to revoke your lost node.<br>
  * This is an unlikely use case because there really is no reason to sign sensor values. If you for some reason want to obfuscate sensor data,
  * encryption is a better alternative.<br>
- * Configuration example for a motion sensor with whitelisting (it has to have the gateway whitelisted since the gateway will send signed messages to the node):<br>
+ * Configuration example for a motion sensor:<br>
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
- * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
- * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
- * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88}}}
  * #include <MySensor.h>
  * ...
  * @endcode
@@ -424,9 +430,7 @@
  * The gateway needs to configured with a whitelist (and it have to have an entry for all nodes that send and/or require signed messages):<br>
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
- * #define MY_SIGNING_SOFT_SERIAL 0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
- * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = MOTION_SENSOR_ID,.serial = {0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78}}}
  * #include <MySensor.h>
@@ -441,16 +445,14 @@
  * Configuration example for the keyfob (keyfob will only transmit to another node and not receive anything):<br>
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
- * #define MY_SIGNING_NODE_WHITELISTING {}
  * #include <MySensor.h>
  * ...
  * @endcode
+ *
  * Configuration example for the door controller node (should require signing from anyone who wants to control it):<br>
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
- * #define MY_SIGNING_SOFT_SERIAL 0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
- * #define MY_SIGNING_SOFT_HMAC_KEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0,0x11,0x22
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88}},{.nodeId = KEYFOB_ID,.serial = {<FROM ATSHA ON KEYFOB>}}}
  * #include <MySensor.h>
@@ -460,7 +462,7 @@
  * @subsection MySigningsketches Relevant sketches
  *
  * - @ref SecureActuator.ino
- * - @ref Sha204Personalizer.ino
+ * - @ref SecurityPersonalizer.ino
  */
 
 /**
@@ -484,29 +486,50 @@ typedef struct {
 } whitelist_entry_t;
 #endif
 
-// Macros for manipulating signing requirement table
-/** @brief Return 'true' if provided node ID is requiring signed messages */
-#define DO_SIGN(node) (~_doSign[node>>3]&(1<<(node%8)))
-/** @brief Mark provided node ID to require signed messages in table */
-#define SET_SIGN(node) (_doSign[node>>3]&=~(1<<(node%8)))
-/** @brief Mark provided node ID to not require signed messages in table */
-#define CLEAR_SIGN(node) (_doSign[node>>3]|=(1<<(node%8)))
 /** @brief Helper macro to determine the number of elements in a array */
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
+/** @brief Helper macro to determine if node require serial salted signatures */
+#define DO_WHITELIST(node) (~_doWhitelist[node>>3]&(1<<node%8))
+/** @brief Helper macro to set that node require serial salted signatures */
+#define SET_WHITELIST(node) (_doWhitelist[node>>3]&=~(1<<node%8))
+/** @brief Helper macro to set that node does not require serial salted signatures */
+#define CLEAR_WHITELIST(node) (_doWhitelist[node>>3]|=(1<<node%8))
+
+
 /**
- * @brief Stores signing identifier and a new nonce in provided message for signing operations.
+ * @brief Initializes signing infrastructure and associated backend.
  *
- * All space in message payload buffer is used for signing identifier and nonce.<br>
- * Returns @c false if subsystem is busy processing an ongoing signing operation.<br>
- * If successful, this marks the start of a signing operation at the receiving side so
- * implementation is expected to do any necessary initializations within this call.
- * \n@b Usage: This function is typically called as action when receiving a @ref I_GET_NONCE message.
- *
- * @param msg The message to put the nonce in.
- * @returns @c true if nonce is successfully put in provided message.
+ * This function makes sure that the internal states of the signing infrastructure
+ * is set to a known initial state.
+ * \n@b Usage: This fuction should be called before any signing related operations take place.
  */
-bool signerGetNonce(MyMessage &msg);
+void signerInit(void);
+
+/**
+ * @brief Does signing specific presentation for a node.
+ *
+ * This function makes sure any signing related presentation info is shared with the gateway.
+ * The presentation of the gateways signing preferences is done in @ref signerProcessInternal().
+ * \n@b Usage: This function should be called by the presentation routine of the mysensors library.
+ * There is no need to call this directly from a sketch.
+ *
+ * @param msg Message buffer to use.
+ */
+void signerPresentation(MyMessage &msg);
+ 
+/**
+ * @brief Manages internal signing message handshaking.
+ *
+ * This function takes care of signing related message handshaknig such as nonce exchange.
+ * \n@b Usage: This function should be called by the incoming message handler before any further message
+ * processing is performed on internal messages. This function should only be called for @ref C_INTERNAL class
+ * messages.
+ *
+ * @param msg Message buffer to process.
+ * @returns @c true if caller should stop further message processing.
+ */
+bool signerProcessInternal(MyMessage &msg);
 
 /**
  * @brief Check timeout of verification session.
@@ -525,7 +548,7 @@ bool signerCheckTimer(void);
  * Returns @c false if signing identifier found in message is not supported by the used backend.<br>
  * If successful, this marks the start of a signing operation at the sending side so
  * implementation is expected to do any necessary initializations within this call.
- * \n@b Usage: This function is typically called as action when receiving a @ref I_GET_NONCE_RESPONSE
+ * \n@b Usage: This function is typically called as action when receiving a @ref I_NONCE_RESPONSE
  * message.
  *
  * @param msg The message to get the nonce from.
@@ -537,13 +560,13 @@ bool signerPutNonce(MyMessage &msg);
  * @brief Signs provided message. All remaining space in message payload buffer is used for
  * signing identifier and signature.
  *
- * Nonce used for signature calculation is the one generated previously using @ref signerGetNonce().<br>
+ * Nonce used for signature calculation is the one generated previously within @ref signerProcessInternal().<br>
  * Nonce will be cleared when this function is called to prevent re-use of nonce.<br>
  * Returns @c false if subsystem is busy processing an ongoing signing operation.<br>
  * Returns @c false if not two bytes or more of free payload space is left in provided message.<br>
  * This ends a signing operation at the sending side so implementation is expected to do any
  * deinitializations and enter a power saving state within this call.
- * \n@b Usage: This function is typically called as action when receiving a @ref I_GET_NONCE_RESPONSE
+ * \n@b Usage: This function is typically called as action when receiving a @ref I_NONCE_RESPONSE
  * message and after @ref signerPutNonce() has successfully been executed.
  * 
  * @param msg The message to sign.
@@ -567,6 +590,33 @@ bool signerSignMsg(MyMessage &msg);
  * @returns @c true if successful, else @c false.
  */
 bool signerVerifyMsg(MyMessage &msg);
+
+/**
+ * @brief Initialize a hash calculation session.
+ *
+ * Any ongoing calculation session will be terminated/reset.
+ */
+void signerSha256Init(void);
+
+/**
+ * @brief Add data to an ongoing hash calculation session.
+ *
+ * More data can be added by repeated calls to this function.
+ *
+ * @param data Buffer with data to add.
+ * @param sz Size of data buffer.
+ */
+void signerSha256Update(const uint8_t* data, size_t sz);
+
+/**
+ * @brief Finalize an ongong hash calculation session and return the hash.
+ *
+ * The returned hash size is always 32 bytes. Buffer can be assumed to be valid
+ * until @ref signerSha256Init() is called again.
+ *
+ * @returns Buffer with 32-byte hash.
+ */
+uint8_t* signerSha256Final(void);
 
 #endif
 /** @}*/

@@ -48,8 +48,10 @@
 	//#undef F
 	//#define F(x) (x)
 	#include "core/MyHwESP8266.cpp"
-	// For ESP8266, we always enable gateway feature
-	#define MY_GATEWAY_ESP8266
+	// Enable gateway feature
+	#if !defined(MY_CORE_ONLY)
+		#define MY_GATEWAY_ESP8266
+	#endif
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
@@ -93,9 +95,12 @@
 
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-	// SIGNING COMMON FUNCTIONS
-	#include "core/MySigning.cpp"
 	#define MY_SIGNING_FEATURE
+#endif
+#include "core/MySigning.cpp"
+#include "drivers/ATSHA204/sha256.cpp"
+#if defined(MY_SIGNING_FEATURE)
+	// SIGNING COMMON FUNCTIONS
 	#if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)
 		#error Only one signing engine can be activated
 	#endif
@@ -105,7 +110,6 @@
 		#include "drivers/ATSHA204/ATSHA204.cpp"
 	#elif defined(MY_SIGNING_SOFT)
 		#include "core/MySigningAtsha204Soft.cpp"
-		#include "drivers/ATSHA204/sha256.cpp"
 	#endif
 #endif
 
@@ -219,10 +223,11 @@
 	#undef MY_INCLUSION_BUTTON_FEATURE
 #endif
 
-#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
-	#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+#if !defined(MY_CORE_ONLY)
+	#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
+		#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+	#endif
 #endif
-
 
 #include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
@@ -230,11 +235,12 @@
 
 #include <Arduino.h>
 
-#if defined(MY_GATEWAY_ESP8266)
-	#include "core/MyMainESP8266.cpp"
-#else
-	#include "core/MyMainDefault.cpp"
+#if !defined(MY_CORE_ONLY)
+	#if defined(MY_GATEWAY_ESP8266)
+		#include "core/MyMainESP8266.cpp"
+	#else
+		#include "core/MyMainDefault.cpp"
+	#endif
 #endif
-
 
 #endif
