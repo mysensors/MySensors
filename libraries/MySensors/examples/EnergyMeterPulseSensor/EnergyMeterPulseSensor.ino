@@ -73,7 +73,7 @@ void setup()
 
   // Use the internal pullup to be able to hook up this sketch directly to an energy meter with S0 output
   // If no pullup is used, the reported usage will be too high because of the floating pin
-  digitalWrite(DIGITAL_INPUT_SENSOR,HIGH);
+  pinMode(DIGITAL_INPUT_SENSOR,INPUT_PULLUP);
   
   attachInterrupt(INTERRUPT, onPulse, RISING);
   lastSend=millis();
