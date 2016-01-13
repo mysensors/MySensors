@@ -81,11 +81,6 @@
 	#define MY_LEDS_BLINKING_FEATURE
 #endif
 
-#if defined(MY_LEDS_BLINKING_FEATURE)
-	#include "core/MyLeds.cpp"
-#else
-	#include "core/MyLeds.h"
-#endif
 
 // default LEDs blinking period in milliseconds
 #ifndef MY_DEFAULT_LED_BLINK_PERIOD
@@ -114,6 +109,12 @@
 	#else
 		#define MY_DEFAULT_ERR_LED_PIN 4
 	#endif
+#endif
+
+#if defined(MY_LEDS_BLINKING_FEATURE)
+	#include "core/MyLeds.cpp"
+#else
+	#include "core/MyLeds.h"
 #endif
 
 
