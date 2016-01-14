@@ -62,14 +62,11 @@ static inline bool isValidParent( const uint8_t parent ) {
 void _begin() {
 	#if !defined(MY_DISABLED_SERIAL)
 	    hwInit();
-    #endif
-	
-	#if defined(MY_SIGNING_SOFT)
-		// initialize pseudo-RNG
-		randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
 	#endif
 
 	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILIIES ", " LIBRARY_VERSION ")\n"));
+
+	signerInit();
 
 	#if defined(MY_RADIO_FEATURE)
 		_failedTransmissions = 0;
@@ -106,11 +103,6 @@ void _begin() {
 
 	#endif
 
-
-	#if defined(MY_SIGNING_FEATURE)
-		// Read out the signing requirements from EEPROM
-		hwReadConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS, sizeof(_doSign));
-	#endif
 
 	#if defined(MY_LEDS_BLINKING_FEATURE)
 		ledsInit();
@@ -190,6 +182,9 @@ ControllerConfig getConfig() {
 boolean _sendRoute(MyMessage &message) {
 	// increment heartbeat counter
 	_heartbeat++;
+	#if defined(MY_CORE_ONLY)
+		(void)message;
+	#endif
 	#if defined(MY_GATEWAY_FEATURE)
 		if (message.destination == _nc.nodeId) {
 			// This is a message sent from a sensor attached on the gateway node.

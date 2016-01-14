@@ -40,12 +40,6 @@
 // Pin used for random generation in soft signing (do not connect anything to this when enabled)
 #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 // A7 -
 
-// Set the soft_serial value to an arbitrary value for proper security
-#define MY_SIGNING_SOFT_SERIAL 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
-
-// Key to use for HMAC calculation in MySigningAtsha204Soft (32 bytes)
-#define MY_SIGNING_SOFT_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-
 // Enable node whitelisting
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 
@@ -55,9 +49,6 @@
 // Enables RF24 encryption (all nodes and gateway must have this enabled)
 //#define MY_RF24_ENABLE_ENCRYPTION
 
-// Default encryption key
-#define MY_RF24_ENCRYPTKEY 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x10,0x11,0x12,0x13,0x14,0x15,0x16
-
 /**********************************
 *  RFM69 Driver Defaults
 ***********************************/
@@ -66,6 +57,5 @@
 
 // Enable this for encryption of packets
 //#define MY_RFM69_ENABLE_ENCRYPTION
-#define MY_RFM69_ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
 
 #endif
