@@ -601,7 +601,7 @@ public:
   /**
    * Set RF communication channel
    *
-   * @param channel Which RF channel to communicate on, 0-127
+   * @param channel Which RF channel to communicate on, 0-126
    */
   void setChannel(uint8_t channel);
 
