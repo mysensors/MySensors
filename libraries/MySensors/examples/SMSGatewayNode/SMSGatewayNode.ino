@@ -341,7 +341,7 @@ void setup()
 
   smsnum = fona.getNumSMS();
 
-  if (smsnum = 0)
+  if (smsnum == 0)
   {
 #ifdef MY_DEBUG
     Serial.println(F("SMS Memory cleared"));
