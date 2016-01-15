@@ -119,6 +119,18 @@ boolean Adafruit_FONA::setBaudrate(uint16_t baud) {
 
 boolean Adafruit_FONA::readRTC(uint8_t *year, uint8_t *month, uint8_t *date, uint8_t *hr, uint8_t *min, uint8_t *sec) {
   uint16_t v;
+  uint8_t mm = 0;
+  uint8_t dd = 0;
+  uint8_t hh = 0;
+  uint8_t nn = 0;
+  uint8_t ss = 0;
+
+  *month = mm;
+  *date = dd;
+  *hr = hh;
+  *min = nn;
+  *sec = ss;
+
   boolean b = sendParseReply(F("AT+CCLK?"), F("+CCLK: "), &v, '/', 0);
   *year = v;
   Serial.println(*year);
@@ -167,12 +179,16 @@ uint8_t Adafruit_FONA::unlockSIM(char *pin)
   sendbuff[10] = pin[2];
   sendbuff[11] = pin[3];
   sendbuff[12] = 0;
+  char sendOK[3] = "OK";
 
-  return sendCheckReply(sendbuff, "OK");
+//  return sendCheckReply(sendbuff, "OK");
+  return sendCheckReply(sendbuff, sendOK);
 }
 
-uint8_t Adafruit_FONA::getSIMCCID(char *ccid) {
-  getReply("AT+CCID");
+uint8_t Adafruit_FONA::getSIMCCID(char *ccid)
+{
+	
+	getReply(F("AT+CCID"));
   // up to 28 chars for reply, 20 char total ccid
   if (replybuffer[0] == '+') {
     // fona 3g?
@@ -191,7 +207,7 @@ uint8_t Adafruit_FONA::getSIMCCID(char *ccid) {
 /********* IMEI **********************************************************/
 
 uint8_t Adafruit_FONA::getIMEI(char *imei) {
-  getReply("AT+GSN");
+  getReply(F("AT+GSN"));
 
   // up to 15 chars
   strncpy(imei, replybuffer, 15);
@@ -349,8 +365,11 @@ boolean Adafruit_FONA::callPhone(char *number) {
   sendbuff[x] = ';';
   sendbuff[x+1] = 0;
   //Serial.println(sendbuff);
+  char sendOK[3] = "OK";
 
-  return sendCheckReply(sendbuff, "OK");
+//  return sendCheckReply(sendbuff, "OK");
+  return sendCheckReply(sendbuff, sendOK);
+
 }
 
 boolean Adafruit_FONA::hangUp(void) {
@@ -504,14 +523,19 @@ boolean Adafruit_FONA::getSMSSender(uint8_t i, char *sender, int senderlen) {
   return result;
 }
 
-boolean Adafruit_FONA::sendSMS(char *smsaddr, char *smsmsg) {
-  if (! sendCheckReply("AT+CMGF=1", "OK")) return -1;
+boolean Adafruit_FONA::sendSMS(char *smsaddr, char *smsmsg)
+{
+//	char sendOK[3] = "OK";
+//	if (!sendCheckReply("AT+CMGF=1", "OK")) return -1;
+	if (!sendCheckReply(F("AT+CMGF=1"), F("OK"))) return -1;
 
   char sendcmd[30] = "AT+CMGS=\"";
+  char sendgreater[3] = "> ";
   strncpy(sendcmd+9, smsaddr, 30-9-2);  // 9 bytes beginning, 2 bytes for close quote + null
   sendcmd[strlen(sendcmd)] = '\"';
 
-  if (! sendCheckReply(sendcmd, "> ")) return false;
+//  if (!sendCheckReply(sendcmd, "> ")) return false;
+  if (!sendCheckReply(sendcmd, sendgreater)) return false;
 #ifdef ADAFRUIT_FONA_DEBUG
   Serial.print(F("> ")); Serial.println(smsmsg);
 #endif
@@ -544,17 +568,21 @@ boolean Adafruit_FONA::sendSMS(char *smsaddr, char *smsmsg) {
 }
 
 
-boolean Adafruit_FONA::deleteSMS(uint8_t i) {
-    if (! sendCheckReply("AT+CMGF=1", "OK")) return -1;
-  // read an sms
+boolean Adafruit_FONA::deleteSMS(uint8_t i)
+{
+//	if (!sendCheckReply("AT+CMGF=1", "OK")) return -1;
+	if (!sendCheckReply(F("AT+CMGF=1"), F("OK"))) return -1;
+	// read an sms
   char sendbuff[12] = "AT+CMGD=000";
+  char sendOK[3] = "OK";
   sendbuff[8] = (i / 100) + '0';
   i %= 100;
   sendbuff[9] = (i / 10) + '0';
   i %= 10;
   sendbuff[10] = i + '0';
 
-  return sendCheckReply(sendbuff, "OK", 2000);
+//  return sendCheckReply(sendbuff, "OK", 2000);
+  return sendCheckReply(sendbuff, sendOK, 2000);
 }
 
 /********* TIME **********************************************************/
@@ -735,7 +763,7 @@ uint8_t Adafruit_FONA::getGPS(uint8_t arg, char *buffer, uint8_t maxbuff) {
 
   p+=6;
 
-  uint8_t len = max(maxbuff-1, strlen(p));
+  uint8_t len = max((unsigned)maxbuff-1, (unsigned) strlen(p));
   strncpy(buffer, p, len);
   buffer[len] = 0;
 
@@ -762,7 +790,9 @@ boolean Adafruit_FONA::getGPS(float *lat, float *lon, float *speed_kph, float *h
     // Parse 3G respose
     // +CGPSINFO:4043.000000,N,07400.000000,W,151015,203802.1,-12.0,0.0,0
     // skip beginning
-    char *tok;
+	  char *tok = {};
+	  strcpy(tok, "");
+
 
    // grab the latitude
     char *latp = strtok(gpsbuffer, ",");
@@ -836,7 +866,8 @@ boolean Adafruit_FONA::getGPS(float *lat, float *lon, float *speed_kph, float *h
 
     *lon = degrees;
 
-  } else if (_type == FONA808_V2) {
+  } else if (_type == FONA808_V2)
+  {
     // Parse 808 V2 response.  See table 2-3 from here for format:
     // http://www.adafruit.com/datasheets/SIM800%20Series_GNSS_Application%20Note%20V1.00.pdf
 
@@ -1011,6 +1042,7 @@ boolean Adafruit_FONA::getGPS(float *lat, float *lon, float *speed_kph, float *h
 boolean Adafruit_FONA::enableGPSNMEA(uint8_t i) {
 
   char sendbuff[15] = "AT+CGPSOUT=000";
+  char sendOK[3] = "OK";
   sendbuff[11] = (i / 100) + '0';
   i %= 100;
   sendbuff[12] = (i / 10) + '0';
@@ -1023,7 +1055,8 @@ boolean Adafruit_FONA::enableGPSNMEA(uint8_t i) {
     else
       return sendCheckReply(F("AT+CGNSTST=0"), F("OK"));
   } else {
-    return sendCheckReply(sendbuff, "OK", 2000);
+//	  return sendCheckReply(sendbuff, "OK", 2000);
+	  return sendCheckReply(sendbuff, sendOK, 2000);
   }
 }
 
@@ -1119,8 +1152,10 @@ boolean Adafruit_FONA_3G::enableGPRS(boolean onoff) {
 	  strp[0] = 0;
 	}
 
-	if (! sendCheckReply(authstring, "OK", 10000))
-	  return false;
+	char sendOK[3] = "OK";
+//	if (!sendCheckReply(authstring, "OK", 10000))
+		if (!sendCheckReply(authstring, sendOK, 10000))
+			return false;
       }
     }
 
