@@ -81,7 +81,7 @@ void loop()
       temperature = dht.toFahrenheit(temperature);
     }
     send(msgTemp.set(temperature, 1));
-    #if MY_DEBUG
+    #ifdef MY_DEBUG
     Serial.print("T: ");
     Serial.println(temperature);
     #endif
@@ -94,7 +94,7 @@ void loop()
   } else if (humidity != lastHum) {
       lastHum = humidity;
       send(msgHum.set(humidity, 1));
-      #if MY_DEBUG
+      #ifdef MY_DEBUG
       Serial.print("H: ");
       Serial.println(humidity);
       #endif
