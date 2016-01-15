@@ -119,10 +119,10 @@ boolean Adafruit_FONA::setBaudrate(uint16_t baud) {
 
 boolean Adafruit_FONA::readRTC(uint8_t *year, uint8_t *month, uint8_t *date, uint8_t *hr, uint8_t *min, uint8_t *sec) {
   uint16_t v;
-  sendParseReply(F("AT+CCLK?"), F("+CCLK: "), &v, '/', 0);
+  boolean b = sendParseReply(F("AT+CCLK?"), F("+CCLK: "), &v, '/', 0);
   *year = v;
-
   Serial.println(*year);
+  return b;
 }
 
 boolean Adafruit_FONA::enableRTC(uint8_t i) {
@@ -166,7 +166,7 @@ uint8_t Adafruit_FONA::unlockSIM(char *pin)
   sendbuff[9] = pin[1];
   sendbuff[10] = pin[2];
   sendbuff[11] = pin[3];
-  sendbuff[12] = NULL;
+  sendbuff[12] = 0;
 
   return sendCheckReply(sendbuff, "OK");
 }
