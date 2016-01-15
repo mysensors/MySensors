@@ -260,7 +260,7 @@ boolean Adafruit_FONA_3G::playToolkitTone(uint8_t t, uint16_t len) {
   if (! sendCheckReply(F("AT+CPTONE="), t, F("OK")))
     return false;
   delay(len);
-  sendCheckReply(F("AT+CPTONE=0"), F("OK"));
+  return sendCheckReply(F("AT+CPTONE=0"), F("OK"));
 }
 
 boolean Adafruit_FONA::setMicVolume(uint8_t a, uint8_t level) {
@@ -1232,7 +1232,8 @@ boolean Adafruit_FONA::TCPconnect(char *server, uint16_t port) {
   mySerial->println(F("\""));
 
   if (! expectReply(F("OK"))) return false;
-  if (! expectReply(F("CONNECT OK"))) return false;
+  return (expectReply(F("CONNECT OK")));
+
 }
 
 boolean Adafruit_FONA::TCPclose(void) {
