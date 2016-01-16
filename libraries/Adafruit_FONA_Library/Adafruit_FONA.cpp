@@ -790,7 +790,7 @@ boolean Adafruit_FONA::getGPS(float *lat, float *lon, float *speed_kph, float *h
     // Parse 3G respose
     // +CGPSINFO:4043.000000,N,07400.000000,W,151015,203802.1,-12.0,0.0,0
     // skip beginning
-	  char *tok;
+	  char *tok = {0};
 	  strcpy(tok, "");
 
 
