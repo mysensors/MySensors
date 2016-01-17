@@ -156,7 +156,11 @@ bool gatewayTransportSend(MyMessage &message)
 			ret = _ethernetServer.endPacket();
 		#else
 			EthernetClient client;
-			if (client.connect(_ethernetControllerIP, MY_PORT)) {
+			#if defined(MY_CONTROLLER_URL_ADDRESS)
+				if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+			#else
+				if (client.connect(_ethernetControllerIP, MY_PORT)) {
+			#endif
 				client.write(_ethernetMsg, strlen(_ethernetMsg));
 				client.stop();
 			}
@@ -249,7 +253,7 @@ bool gatewayTransportSend(MyMessage &message)
 bool gatewayTransportAvailable()
 {
 	_w5100_spi_en(true);
-	#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
+	#if (!defined(MY_URL_ADDRESS) && !defined(MY_IP_ADDRESS)) && defined(MY_GATEWAY_W5100)
 		// renew IP address using DHCP
 		gatewayTransportRenewIP();
 	#endif
