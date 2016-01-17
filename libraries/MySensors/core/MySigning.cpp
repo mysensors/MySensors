@@ -102,7 +102,7 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination) {
 	build(msg, _nc.nodeId, destination, NODE_SENSOR_ID, C_INTERNAL, I_SIGNING_PRESENTATION, false).set("");
 	mSetLength(msg, 2);
 	msg.data[0] = SIGNING_PRESENTATION_VERSION_1;
-	msg.data[1] = 0;
+//	msg.data[1] = 0;
 }
 
 void signerInit(void) {
