@@ -8,8 +8,11 @@
 #define STATIC_ALWAYS_INLINE static inline __attribute__((always_inline))
 //------------------------------------------------------------------------------
 template<uint8_t ClkPin, uint8_t ConvPin, uint8_t DataPin>
+/** ADS7818 class */
 class ADS7818 {
  public:
+  //----------------------------------------------------------------------------
+  /** Set pin modes and initial levels. */
   void begin() {
     fastPinMode(ClkPin, 1);
     fastDigitalWrite(ClkPin, 0);
@@ -18,6 +21,9 @@ class ADS7818 {
     fastPinMode(DataPin, 0);
   }  
   //----------------------------------------------------------------------------
+  /** Read ADS7818 12-bit ADC
+   * \return 16-bit value read.
+   */
   inline __attribute__((always_inline))
   uint16_t read() {
     uint16_t v = 0;

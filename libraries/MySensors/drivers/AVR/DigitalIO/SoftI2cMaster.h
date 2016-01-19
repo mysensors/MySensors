@@ -91,9 +91,45 @@ class I2cMasterBase {
    */
   virtual void stop() = 0;
 
+/**
+ * Start an I2C transfer with possible continuation.
+ *
+ * @param[in] addressRW I2C slave address plus R/W bit.
+ *                      The I2C slave address is in the high seven bits
+ *                      and is ORed with on of the following:
+ *                      - I2C_READ for a read transfer.
+ *                      - I2C_WRITE for a write transfer.
+ *                      .
+ * @param[in,out] buf   Source or destination for transfer.
+ * @param[in] nbyte     Number of bytes to transfer (may be zero).
+ * @param[in] option    Option for ending the transfer, one of:
+ *                      - I2C_STOP end the transfer with an I2C stop
+ *                        condition.
+ *                      - I2C_REP_START end the transfer with an I2C
+ *                        repeated start condition.
+ *                      - I2C_CONTINUE allow additional transferContinue()
+ *                        calls.
+ *                      .
+ * @return true for success else false.
+ */
   bool transfer(uint8_t addressRW, void *buf,
                 size_t nbyte, uint8_t option = I2C_STOP);
 
+/**
+ * Continue an I2C transfer.
+ *
+ * @param[in,out] buf   Source or destination for transfer.
+ * @param[in] nbyte     Number of bytes to transfer (may be zero).
+ * @param[in] option    Option for ending the transfer, one of:
+ *                      - I2C_STOP end the transfer with an I2C stop
+ *                        condition.
+ *                      - I2C_REP_START end the transfer with an I2C
+ *                        repeated start condition.
+ *                      - I2C_CONTINUE allow additional transferContinue()
+ *                        calls.
+ *                      .
+ * @return true for success else false.
+ */
   bool transferContinue(void *buf, size_t nbyte, uint8_t option = I2C_STOP);
   /** Write a byte
    *
@@ -115,7 +151,21 @@ class I2cMasterBase {
 class SoftI2cMaster : public I2cMasterBase {
  public:
   SoftI2cMaster() {}
+  /**
+   * Constructor, initialize SCL/SDA pins and set the bus high.
+   *
+   * @param[in] sdaPin The software SDA pin number.
+   *
+   * @param[in] sclPin The software SCL pin number.
+   */
   SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin);
+  /**
+   * Initialize SCL/SDA pins and set the bus high.
+   *
+   * @param[in] sdaPin The software SDA pin number.
+   *
+   * @param[in] sclPin The software SCL pin number.
+   */
   void begin(uint8_t sclPin, uint8_t sdaPin);
   uint8_t read(uint8_t last);
   void start();

@@ -41,8 +41,24 @@ class PinIO {
  public:
   /** Create a PinIO object with no assigned pin. */
   PinIO() : bit_(0), mask_(0XFF) {}
+  /** Constructor
+   * @param[in] pin Pin assigned to this object.
+   */
   explicit PinIO(uint8_t pin);
+  /** Initialize pin bit mask and port address.
+   * @param[in] pin Arduino board pin number.
+   * @return true for success or false if invalid pin number.
+   */
   bool begin(uint8_t pin);
+  /** Configure the pin
+   *
+   * @param[in] mode Configure as output mode if true else input mode.
+   * @param[in] data For output mode set pin high if true else low.
+   *                 For input mode enable 20K pullup if true else Hi-Z.
+   *
+   * This function may be used with interrupts enabled or disabled.
+   * The previous interrupt state will be restored.
+   */
   void config(bool mode, bool data);
   //----------------------------------------------------------------------------
   /** @return Pin's level */
