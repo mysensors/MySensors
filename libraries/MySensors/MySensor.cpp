@@ -24,9 +24,9 @@
 
 #ifdef MY_SIGNING_FEATURE
 // Macros for manipulating signing requirement table
-#define DO_SIGN(node) (node == 0 ? (~doSign[0]&1) : (~doSign[node>>4]&(node%16)))
-#define SET_SIGN(node) (node == 0 ? (doSign[0]&=~1) : (doSign[node>>4]&=~(node%16)))
-#define CLEAR_SIGN(node) (node == 0 ? (doSign[0]|=1) : (doSign[node>>4]|=(node%16)))
+#define DO_SIGN(node) (~_doSign[node>>3]&(1<<(node%8)))
+#define SET_SIGN(node) (_doSign[node>>3]&=~(1<<(node%8)))
+#define CLEAR_SIGN(node) (_doSign[node>>3]|=(1<<(node%8)))
 #endif
 
 // Inline function and macros
@@ -268,6 +268,9 @@ void MySensor::setupNode() {
 		if (signer.requestSignatures()) {
 			wait(2000);
 		}
+#else
+		// We do not support signing, make sure gateway knows this
+		sendRoute(build(msg, nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REQUEST_SIGNING, false).set(false));
 #endif
 
 		// Send presentation for this radio node (attach
@@ -393,7 +396,9 @@ boolean MySensor::sendRoute(MyMessage &message) {
 		}
 		// After this point, only the 'last' member of the message structure is allowed to be altered if the message has been signed,
 		// or signature will become invalid and the message rejected by the receiver
-	} else mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
+	} else if (nc.nodeId == message.sender) {
+		mSetSigned(message, 0); // Message is not supposed to be signed, make sure it is marked unsigned
+	}
 #endif
 
 	if (dest == GATEWAY_ADDRESS || !repeaterMode) {
@@ -585,11 +590,18 @@ boolean MySensor::process() {
 	}
 #endif
 
-	// Add string termination, good if we later would want to print it.
-	msg.data[mGetLength(msg)] = '\0';
-	debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+	if (msg.destination == nc.nodeId) {
+		debug(PSTR("read: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+			msg.sender, msg.last, msg.destination, msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), mGetSigned(msg), msg.getString(convBuf));
+	} else {
+		if (repeaterMode && nc.nodeId != AUTO) {
+			debug(PSTR("read and forward: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 				msg.sender, msg.last, msg.destination, msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), mGetSigned(msg), msg.getString(convBuf));
-	mSetSigned(msg,0); // Clear the sign-flag now as verification (and debug printing) is completed
+		} else {
+			debug(PSTR("read and drop: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+				msg.sender, msg.last, msg.destination, msg.sensor, mGetCommand(msg), msg.type, mGetPayloadType(msg), mGetLength(msg), mGetSigned(msg), msg.getString(convBuf));
+		}
+	}
 
 	if(!(mGetVersion(msg) == PROTOCOL_VERSION)) {
 		debug(PSTR("ver mismatch\n"));
@@ -607,6 +619,7 @@ boolean MySensor::process() {
 
 	if (destination == nc.nodeId) {
 		// This message is addressed to this node
+		mSetSigned(msg,0);
 
 		if (repeaterMode && last != nc.parentNodeId) {
 			// Message is from one of the child nodes. Add it to routing table.
