@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -45,7 +45,7 @@
  *   Reinier van der Lee and Theodore Kaskalis
  *   www.vanderleevineyard.com
  * Contributor: epierre
-**/
+ */
 
 // Copyright (C) 2015, Reinier van der Lee
 // www.vanderleevineyard.com
@@ -81,9 +81,10 @@ unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 long buffer[NUM_READS];
 int index;
 
-typedef struct {        // Structure to be used in percentage and resistance values matrix to be filtered (have to be in pairs)
-  int moisture;
-  long resistance;
+/// @brief Structure to be used in percentage and resistance values matrix to be filtered (have to be in pairs)
+typedef struct {
+  int moisture; //!< Moisture
+  long resistance; //!< Resistance
 } values;
 
 const long knownResistor = 4700;  // Constant value of known resistor in Ohms
