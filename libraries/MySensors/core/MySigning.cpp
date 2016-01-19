@@ -146,14 +146,16 @@ void signerPresentation(MyMessage &msg) {
 }
 
 bool signerProcessInternal(MyMessage &msg) {
+	uint8_t sender = msg.sender;
+	(void)sender;
 	if (mGetCommand(msg) == C_INTERNAL) {
 #if !defined(MY_SIGNING_FEATURE) && defined(MY_GATEWAY_FEATURE)
 		// If we act as gateway and do not have the signing feature and receive a signing request we still
 		// need to do make sure the requester does not believe the gateway still require signatures
 		if (msg.type == I_SIGNING_PRESENTATION) {
-			prepareSigningPresentation(msg, msg.sender);
+			prepareSigningPresentation(msg, sender);
 			SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures because we do not support it\n"),
-				msg.sender);
+				sender);
 			_sendRoute(msg);
 			return true; // No need to further process I_SIGNING_PRESENTATION in this case
 		}
@@ -210,36 +212,36 @@ bool signerProcessInternal(MyMessage &msg) {
 			// We do not want a gateway to require signing from all nodes in a network just because it wants one node
 			// to sign it's messages
 #if defined(MY_GATEWAY_FEATURE)
-			prepareSigningPresentation(msg, msg.sender);
+			prepareSigningPresentation(msg, sender);
 #if defined(MY_SIGNING_REQUEST_SIGNATURES)
-			if (DO_SIGN(msg.sender)) {
+			if (DO_SIGN(sender)) {
 				msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
 			}
 #endif
 #if defined(MY_SIGNING_NODE_WHITELISTING)
-			if (DO_WHITELIST(msg.sender)) {
+			if (DO_WHITELIST(sender)) {
 				msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
 			}
 #endif
 			if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_SIGNATURES) {
-				SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), msg.sender);
+				SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), sender);
 			} else {
-				SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures\n"), msg.sender);
+				SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures\n"), sender);
 			}
 			if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_WHITELISTING) {
-				SIGN_DEBUG(PSTR("Informing node %d that we require whitelisting\n"), msg.sender);
+				SIGN_DEBUG(PSTR("Informing node %d that we require whitelisting\n"), sender);
 			} else {
-				SIGN_DEBUG(PSTR("Informing node %d that we do not require whitelisting\n"), msg.sender);
+				SIGN_DEBUG(PSTR("Informing node %d that we do not require whitelisting\n"), sender);
 			}
 			_sendRoute(msg);
 #endif // MY_GATEWAY_FEATURE
 			return true; // No need to further process I_SIGNING_PRESENTATION
 		} else if (msg.type == I_NONCE_RESPONSE) {
 			// Proceed with signing if nonce has been received
-			SIGN_DEBUG(PSTR("Nonce received from %d. Proceeding with signing...\n"), msg.sender);
-			if (msg.sender != _msgSign.destination) {
+			SIGN_DEBUG(PSTR("Nonce received from %d. Proceeding with signing...\n"), sender);
+			if (sender != _msgSign.destination) {
 				SIGN_DEBUG(PSTR("Nonce did not come from the destination (%d) of the message to be signed! "
-					"It came from %d.\n"), _msgSign.destination, msg.sender);
+					"It came from %d.\n"), _msgSign.destination, sender);
 				SIGN_DEBUG(PSTR("Silently discarding this nonce\n"));
 				return true; // No need to further process I_NONCE_RESPONSE
 			}
