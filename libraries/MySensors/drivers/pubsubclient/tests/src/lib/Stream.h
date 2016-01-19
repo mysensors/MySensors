@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "Buffer.h"
 
+/** Stream class */
 class Stream {
 private:
     Buffer* expectBuffer;
@@ -12,11 +13,11 @@ private:
 
 public:
     Stream();
-    virtual size_t write(uint8_t);
+    virtual size_t write(uint8_t); //!< write
     
-    virtual bool error();
-    virtual void expect(uint8_t *buf, size_t size);
-    virtual uint16_t length();
+    virtual bool error(); //!< error
+    virtual void expect(uint8_t *buf, size_t size); //!< expect
+    virtual uint16_t length(); //!< length
 };
 
 #endif

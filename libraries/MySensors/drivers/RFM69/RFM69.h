@@ -72,19 +72,20 @@
 #define RF69_BROADCAST_ADDR 255
 #define RF69_CSMA_LIMIT_MS 1000
 
+/** RFM69 class */
 class RFM69 {
   public:
-    static volatile byte DATA[RF69_MAX_DATA_LEN];          // recv/xmit buf, including hdr & crc bytes
-    static volatile byte DATALEN;
-    static volatile byte SENDERID;
-    static volatile byte TARGETID; //should match _address
-    static volatile byte PAYLOADLEN;
-    static volatile byte ACK_REQUESTED;
-    static volatile byte ACK_RECEIVED; /// Should be polled immediately after sending a packet with ACK request
-    static volatile int RSSI; //most accurate RSSI during reception (closest to the reception)
-    static volatile byte _mode; //should be protected?
+    static volatile byte DATA[RF69_MAX_DATA_LEN]; //!< recv/xmit buf, including hdr & crc bytes
+    static volatile byte DATALEN; //!< DATALEN
+    static volatile byte SENDERID; //!< SENDERID
+    static volatile byte TARGETID; //!<  should match _address
+    static volatile byte PAYLOADLEN; //!< PAYLOADLEN
+    static volatile byte ACK_REQUESTED; //!< ACK_REQUESTED
+    static volatile byte ACK_RECEIVED; //!< Should be polled immediately after sending a packet with ACK request
+    static volatile int RSSI; //!<  most accurate RSSI during reception (closest to the reception)
+    static volatile byte _mode; //!<  should be protected?
     
-    RFM69(byte slaveSelectPin=RF69_SPI_CS, byte interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false, byte interruptNum=RF69_IRQ_NUM) {
+    RFM69(byte slaveSelectPin=RF69_SPI_CS, byte interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false, byte interruptNum=RF69_IRQ_NUM) { //!< Constructor
       _slaveSelectPin = slaveSelectPin;
       _interruptPin = interruptPin;
       _interruptNum = interruptNum;
@@ -94,52 +95,52 @@ class RFM69 {
       _isRFM69HW = isRFM69HW;
     }
 
-    bool initialize(byte freqBand, byte ID, byte networkID=1);
-    void setAddress(byte addr);
-    bool canSend();
-    void send(byte toAddress, const void* buffer, byte bufferSize, bool requestACK=false);
-    bool sendWithRetry(byte toAddress, const void* buffer, byte bufferSize, byte retries=2, byte retryWaitTime=40); //40ms roundtrip req for  61byte packets
-    bool receiveDone();
-    bool ACKReceived(byte fromNodeID);
-    bool ACKRequested();
-    void sendACK(const void* buffer = "", uint8_t bufferSize=0);
-    void setFrequency(uint32_t FRF);
-    void encrypt(const char* key);
-    void setCS(byte newSPISlaveSelect);
-    int readRSSI(bool forceTrigger=false);
-    void promiscuous(bool onOff=true);
-    void setHighPower(bool onOFF=true); //have to call it after initialize for RFM69HW
-    void setPowerLevel(byte level); //reduce/increase transmit power level
-    void sleep();
-    byte readTemperature(byte calFactor=0); //get CMOS temperature (8bit)
-    void rcCalibration(); //calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy]
+    bool initialize(byte freqBand, byte ID, byte networkID=1); //!< initialize
+    void setAddress(byte addr); //!< setAddress
+    bool canSend(); //!< canSend
+    void send(byte toAddress, const void* buffer, byte bufferSize, bool requestACK=false); //!< send
+    bool sendWithRetry(byte toAddress, const void* buffer, byte bufferSize, byte retries=2, byte retryWaitTime=40); //!< sendWithRetry (40ms roundtrip req for 61byte packets)
+    bool receiveDone(); //!< receiveDone
+    bool ACKReceived(byte fromNodeID); //!< ACKReceived
+    bool ACKRequested(); //!< ACKRequested
+    void sendACK(const void* buffer = "", uint8_t bufferSize=0); //!< sendACK
+    void setFrequency(uint32_t FRF); //!< setFrequency
+    void encrypt(const char* key); //!< encrypt
+    void setCS(byte newSPISlaveSelect); //!< setCS
+    int readRSSI(bool forceTrigger=false); //!< readRSSI
+    void promiscuous(bool onOff=true); //!< promiscuous
+    void setHighPower(bool onOFF=true); //!< setHighPower (have to call it after initialize for RFM69HW)
+    void setPowerLevel(byte level); //!< setPowerLevel (reduce/increase transmit power level)
+    void sleep(); //!< sleep
+    byte readTemperature(byte calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
+    void rcCalibration(); //!< rcCalibration (calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy])
 
     // allow hacking registers by making these public
-    byte readReg(byte addr);
-    void writeReg(byte addr, byte val);
-    void readAllRegs();
+    byte readReg(byte addr); //!< readReg
+    void writeReg(byte addr, byte val); //!< writeReg
+    void readAllRegs(); //!< readAllRegs
 
   protected:
-    static void isr0();
-    void virtual interruptHandler();
-    void sendFrame(byte toAddress, const void* buffer, byte size, bool requestACK=false, bool sendACK=false);
+    static void isr0(); //!< isr0
+    void virtual interruptHandler(); //!< interruptHandler
+    void sendFrame(byte toAddress, const void* buffer, byte size, bool requestACK=false, bool sendACK=false); //!< sendFrame
 
-    static RFM69* selfPointer;
-    byte _slaveSelectPin;
-    byte _interruptPin;
-    byte _interruptNum;
-    byte _address;
-    bool _promiscuousMode;
-    byte _powerLevel;
-    bool _isRFM69HW;
-    byte _SPCR;
-    byte _SPSR;
+    static RFM69* selfPointer; //!< selfPointer
+    byte _slaveSelectPin; //!< _slaveSelectPin
+    byte _interruptPin; //!< _interruptPin
+    byte _interruptNum; //!< _interruptNum
+    byte _address; //!< _address
+    bool _promiscuousMode; //!< _promiscuousMode
+    byte _powerLevel; //!< _powerLevel
+    bool _isRFM69HW; //!< _isRFM69HW
+    byte _SPCR; //!< _SPCR
+    byte _SPSR; //!< _SPSR
 
-    void receiveBegin();
-    void setMode(byte mode);
-    void setHighPowerRegs(bool onOff);
-    void select();
-    void unselect();
+    void receiveBegin(); //!< receiveBegin
+    void setMode(byte mode); //!< setMode
+    void setHighPowerRegs(bool onOff); //!< setHighPowerRegs
+    void select(); //!< select
+    void unselect(); //!< unselect
 };
 
 #endif
