@@ -56,7 +56,10 @@
 #undef MY_DEBUG
 #endif
 
-// Serial output baud rate (debug prints and serial gateway speed)
+/**
+ * @def MY_BAUD_RATE
+ * @brief Serial output baud rate (debug prints and serial gateway speed).
+ */
 #ifndef MY_BAUD_RATE
 #define MY_BAUD_RATE 115200
 #endif
@@ -74,12 +77,18 @@
 //#define MY_RADIO_RFM69
 //#define MY_RS485
 
-// Node id defaults to AUTO (tries to fetch id from controller)
+/**
+ * @def MY_NODE_ID
+ * @brief Node id defaults to AUTO (tries to fetch id from controller).
+ */
 #ifndef MY_NODE_ID
 #define MY_NODE_ID AUTO
 #endif
 
-// Node parent defaults to AUTO (tries to find a parent automatically)
+/**
+ * @def MY_PARENT_NODE_ID
+ * @brief Node parent defaults to AUTO (tries to find a parent automatically).
+ */
 #ifndef MY_PARENT_NODE_ID
 #define MY_PARENT_NODE_ID AUTO
 #endif
@@ -87,9 +96,13 @@
 // Enables repeater functionality (relays messages from other nodes)
 // #define MY_REPEATER_FEATURE
 
-// The wait period before going to sleep when using smartSleep-functions
-// This period has to be long enough for controller to be able to send out
-// potential buffered messages.
+/**
+ * @def MY_SMART_SLEEP_WAIT_DURATION
+ * @brief The wait period before going to sleep when using smartSleep-functions.
+ *
+ * This period has to be long enough for controller to be able to send out
+ * potential buffered messages.
+ */
 #ifndef MY_SMART_SLEEP_WAIT_DURATION
 #define MY_SMART_SLEEP_WAIT_DURATION 500
 #endif
@@ -104,12 +117,18 @@
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
 //#define MY_OTA_FIRMWARE_FEATURE
 
-// Slave select pin for external flash
+/**
+ * @def MY_OTA_FLASH_SS
+ * @brief Slave select pin for external flash.
+ */
 #ifndef MY_OTA_FLASH_SS
 #define MY_OTA_FLASH_SS 8
 #endif
 
-// Flash jdecid
+/**
+ * @def MY_OTA_FLASH_JDECID
+ * @brief Flash jdecid.
+ */
 #ifndef MY_OTA_FLASH_JDECID
 #define MY_OTA_FLASH_JDECID 0x1F65
 #endif
@@ -119,17 +138,26 @@
 *  Gateway config
 ***********************************/
 
-// Max buffersize needed for messages coming from controller
+/**
+ * @def MY_GATEWAY_MAX_RECEIVE_LENGTH
+ * @brief Max buffersize needed for messages coming from controller.
+ */
 #ifndef MY_GATEWAY_MAX_RECEIVE_LENGTH
 #define MY_GATEWAY_MAX_RECEIVE_LENGTH 100
 #endif
 
-// Max buffer size when sending messages
+/**
+ * @def MY_GATEWAY_MAX_SEND_LENGTH
+ * @brief Max buffer size when sending messages.
+ */
 #ifndef MY_GATEWAY_MAX_SEND_LENGTH
 #define MY_GATEWAY_MAX_SEND_LENGTH 120
 #endif
 
-// Max number of parallel clients (sever mode)
+/**
+ * @def MY_GATEWAY_MAX_CLIENTS
+ * @brief Max number of parallel clients (sever mode).
+ */
 #ifndef MY_GATEWAY_MAX_CLIENTS
 #define MY_GATEWAY_MAX_CLIENTS 1
 #endif
@@ -173,7 +201,10 @@
 #undef MY_INCLUSION_BUTTON_FEATURE
 #endif
 
-// The default input pin used for the inclusion mode button
+/**
+ * @def MY_INCLUSION_MODE_BUTTON_PIN
+ * @brief The default input pin used for the inclusion mode button.
+ */
 #ifndef MY_INCLUSION_MODE_BUTTON_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_INCLUSION_MODE_BUTTON_PIN 5
@@ -181,11 +212,20 @@
 		#define MY_INCLUSION_MODE_BUTTON_PIN 3
 	#endif
 #endif
-// Number of seconds (default one minute) inclusion mode should be enabled
+
+/**
+ * @def MY_INCLUSION_MODE_DURATION
+ * @brief Number of seconds (default one minute) inclusion mode should be enabled.
+ */
+
 #ifndef MY_INCLUSION_MODE_DURATION
 #define MY_INCLUSION_MODE_DURATION 60
 #endif
 
+/**
+ * @def MY_INCLUSION_BUTTON_PRESSED
+ * @brief The logical level indicating a pressed inclusion mode button.
+ */
 #if defined(MY_INCLUSION_BUTTON_EXTERNAL_PULLUP)
 #define MY_INCLUSION_BUTTON_PRESSED HIGH
 #else
@@ -270,10 +310,18 @@
 *  RS485 Driver Defaults
 ***********************************/
 
+/**
+ * @def MY_RS485_BAUD_RATE
+ * @brief The RS485 BAUD rate.
+ */
 #ifndef MY_RS485_BAUD_RATE
 #define MY_RS485_BAUD_RATE 9600
 #endif
 
+/**
+ * @def MY_RS485_MAX_MESSAGE_LENGTH
+ * @brief The maximum message length used for RS485.
+ */
 #ifndef MY_RS485_MAX_MESSAGE_LENGTH
 #define MY_RS485_MAX_MESSAGE_LENGTH 40
 #endif
@@ -285,7 +333,10 @@
 // Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RF24_ENABLE_ENCRYPTION
 
-// Default pin settings. Override in sketch if needed.
+/**
+ * @def MY_RF24_CE_PIN
+ * @brief Default RF24 chip enable pin setting. Override in sketch if needed.
+ */
 #ifndef MY_RF24_CE_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF24_CE_PIN 4
@@ -296,6 +347,10 @@
 	#endif
 #endif
 
+/**
+ * @def MY_RF24_CS_PIN
+ * @brief Default RF24 chip select pin setting. Override in sketch if needed.
+ */
 #ifndef MY_RF24_CS_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF24_CS_PIN 15
@@ -306,18 +361,36 @@
 	#endif
 #endif
 
+/**
+ * @def MY_RF24_PA_LEVEL
+ * @brief Default RF24 PA level. Override in sketch if needed.
+ */
 #ifndef MY_RF24_PA_LEVEL
 #define MY_RF24_PA_LEVEL RF24_PA_MAX
 #endif
-// RF channel for the sensor net, 0-127
+
+/**
+ * @def MY_RF24_CHANNEL
+ * @brief RF channel for the sensor net, 0-127.
+ */
 #ifndef MY_RF24_CHANNEL
 #define MY_RF24_CHANNEL	76
 #endif
-//RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
+
+/**
+ * @def MY_RF24_DATARATE
+ * @brief RF24 datarate (RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps or RF24_2MBPS for 2Mbps).
+ */
 #ifndef MY_RF24_DATARATE
 #define MY_RF24_DATARATE RF24_250KBPS
 #endif
-// This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+
+/**
+ * @def MY_RF24_BASE_RADIO_ID
+ * @brief RF24 radio network identifier.
+ *
+ * This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+ */
 #ifndef MY_RF24_BASE_RADIO_ID
 #define MY_RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
 #endif
@@ -325,12 +398,26 @@
 // Enable SOFTSPI for NRF24L01, useful for the W5100 Ethernet module
 //#define MY_SOFTSPI
 
+/**
+ * @def MY_SOFT_SPI_SCK_PIN
+ * @brief Soft SPI SCK pin.
+ */
 #ifndef MY_SOFT_SPI_SCK_PIN
 #define MY_SOFT_SPI_SCK_PIN 14
 #endif
+
+/**
+ * @def MY_SOFT_SPI_MISO_PIN
+ * @brief Soft SPI MISO pin.
+ */
 #ifndef MY_SOFT_SPI_MISO_PIN
 #define MY_SOFT_SPI_MISO_PIN 16
 #endif
+
+/**
+ * @def MY_SOFT_SPI_MOSI_PIN
+ * @brief Soft SPI MOSI pin.
+ */
 #ifndef MY_SOFT_SPI_MOSI_PIN
 #define MY_SOFT_SPI_MOSI_PIN 15
 #endif
@@ -339,30 +426,60 @@
 *  RFM69 Driver Defaults
 ***********************************/
 
-// Default frequency to use. This must match the hardware version of the RFM69 radio (uncomment one):
+/**
+ * @def MY_RFM69_FREQUENCY
+ * @brief RFM69 frequency to use (RF69_433MHZ for 433MHz, RF69_868MHZ for 868MHz or RF69_915MHZ for 915MHz).
+ *
+ * This must match the hardware version of the RFM69 radio.
+ */
 #ifndef MY_RFM69_FREQUENCY
-// #define MY_RFM69_FREQUENCY   RF69_433MHZ
 #define MY_RFM69_FREQUENCY   RF69_868MHZ
-//#define MY_RFM69_FREQUENCY     RF69_915MHZ
 #endif
 
-// Enable this if you're running the RFM69HW model
+/**
+ * @def MY_IS_RFM69HW
+ * @brief Enable this if you're running the RFM69HW model.
+ */
+//#define MY_IS_RFM69HW
+
+/**
+ * @def MY_RFM69HW
+ * @brief Set to true if @ref MY_IS_RFM69HW is set.
+ */
 #ifdef MY_IS_RFM69HW
 	#define MY_RFM69HW true
 #else
 	#define MY_RFM69HW false
 #endif
 
-// Default network id. Use the same for all nodes that will talk to each other
+/**
+ * @def MY_RFM69_NETWORKID
+ * @brief RFM69 Network ID. Use the same for all nodes that will talk to each other.
+ */
 #ifndef MY_RFM69_NETWORKID
 #define MY_RFM69_NETWORKID     100
 #endif
+
+/**
+ * @def MY_RF69_IRQ_PIN
+ * @brief RF69 IRQ pin.
+ */
 #ifndef MY_RF69_IRQ_PIN
 #define MY_RF69_IRQ_PIN RF69_IRQ_PIN
 #endif
+
+/**
+ * @def MY_RF69_SPI_CS
+ * @brief RF69 SPI chip select pin.
+ */
 #ifndef MY_RF69_SPI_CS
 #define MY_RF69_SPI_CS RF69_SPI_CS
 #endif
+
+/**
+ * @def MY_RF69_IRQ_NUM
+ * @brief RF69 IRQ pin number.
+ */
 #ifndef MY_RF69_IRQ_NUM
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
@@ -383,7 +500,10 @@
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
 
-// The port to open on controller or gateway
+/**
+ * @def MY_PORT
+ * @brief The Ethernet TCP/UDP port to open on controller or gateway.
+ */
 #ifndef MY_PORT
 #define MY_PORT 5003
 #endif
@@ -394,11 +514,20 @@
 // Enables UDP mode for Ethernet gateway (W5100)
 //#define MY_USE_UDP
 
-// DHCP, default renewal setting
+/**
+ * @def MY_IP_RENEWAL_INTERVAL
+ * @brief DHCP, default renewal setting in milliseconds.
+ */
 #ifndef MY_IP_RENEWAL_INTERVAL
 #define MY_IP_RENEWAL_INTERVAL 60000
 #endif
 
+/**
+ * @def MY_MAC_ADDRESS
+ * @brief Ethernet MAC address.
+ *
+ * This needs to be unique on the network.
+ */
 #ifndef MY_MAC_ADDRESS
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 #endif
@@ -414,4 +543,5 @@
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_IS_RFM69HW
 #endif
