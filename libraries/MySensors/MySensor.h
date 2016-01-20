@@ -40,7 +40,7 @@
  * @def MY_NODE_TYPE
  * @brief Contain a string describing the class of sketch/node (gateway/repeater/sensor).
  */
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(ARDUINO_ARCH_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
 	#define MY_NODE_TYPE "gateway"
@@ -292,7 +292,7 @@
 #include <Arduino.h>
 
 #if !defined(MY_CORE_ONLY)
-	#if defined(MY_GATEWAY_ESP8266)
+	#if defined(ARDUINO_ARCH_ESP8266)
 		#include "core/MyMainESP8266.cpp"
 	#else
 		#include "core/MyMainDefault.cpp"
