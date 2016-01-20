@@ -8,6 +8,7 @@
     "type": "git",
     "url": "https://github.com/mysensors/Arduino.git"
   },
+  "version": "1.5.3",
   "frameworks": "arduino",
   "platforms": "*"
 }
