@@ -20,10 +20,6 @@
 #define MyHwESP8266_h
 
 #include "MyHw.h"
-#include "MyConfig.h"
-
-#include "MyMessage.h"
-
 
 #ifdef __cplusplus
 #include <Arduino.h>

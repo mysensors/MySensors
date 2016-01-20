@@ -20,9 +20,6 @@
 #define MyHwSAMD_h
 
 #include "MyHw.h"
-#include "MyConfig.h"
-
-#include "MyMessage.h"
 #include <Wire.h>
 
 #ifdef __cplusplus

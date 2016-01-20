@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -44,15 +44,24 @@
 #define NODE_SENSOR_ID 0xFF
 
 
-struct NodeConfig
-{
-	uint8_t nodeId; // Current node id
-	uint8_t parentNodeId; // Where this node sends its messages
-	uint8_t distance; // This nodes distance to sensor net gateway (number of hops)
+/**
+ * @brief Node configuration
+ *
+ * This structure stores node-related configurations
+ */
+struct NodeConfig {
+	uint8_t nodeId; //!< Current node id
+	uint8_t parentNodeId; //!< Where this node sends its messages
+	uint8_t distance; //!< This nodes distance to sensor net gateway (number of hops)
 };
 
+/**
+ * @brief Controller configuration
+ *
+ * This structure stores controllerrelated configurations
+ */
 struct ControllerConfig {
-	uint8_t isMetric;
+	uint8_t isMetric; //!< Flag indicating if metric or imperial measurements are used
 };
 
 
