@@ -473,11 +473,8 @@
 #ifndef MySigning_h
 #define MySigning_h
 
-#include "MyConfig.h"
-#include <stdint.h>
-#include "MyMessage.h"
-#include "drivers/ATSHA204/ATSHA204.h"
 #include "MySensorCore.h"
+#include "drivers/ATSHA204/ATSHA204.h"
 
 #ifdef MY_SIGNING_NODE_WHITELISTING
 typedef struct {

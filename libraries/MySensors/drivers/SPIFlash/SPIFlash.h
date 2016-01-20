@@ -87,34 +87,35 @@
                                               // Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
 #define SPIFLASH_MACREAD          0x4B        // read unique ID number (MAC)
                                               
+/** SPIFlash class */
 class SPIFlash {
 public:
-  static uint8_t UNIQUEID[8];
-  SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0);
-  boolean initialize();
-  void command(uint8_t cmd, boolean isWrite=false);
-  uint8_t readStatus();
-  uint8_t readByte(uint32_t addr);
-  void readBytes(uint32_t addr, void* buf, uint16_t len);
-  void writeByte(uint32_t addr, uint8_t byt);
-  void writeBytes(uint32_t addr, const void* buf, uint16_t len);
-  boolean busy();
-  void chipErase();
-  void blockErase4K(uint32_t address);
-  void blockErase32K(uint32_t address);
-  uint16_t readDeviceId();
-  uint8_t* readUniqueId();
+  static uint8_t UNIQUEID[8]; //!< Storage for unique identifier
+  SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0); //!< Constructor
+  boolean initialize(); //!< setup SPI, read device ID etc...
+  void command(uint8_t cmd, boolean isWrite=false); //!< Send a command to the flash chip, pass TRUE for isWrite when its a write command
+  uint8_t readStatus(); //!< return the STATUS register
+  uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
+  void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read unlimited # of bytes
+  void writeByte(uint32_t addr, uint8_t byt); //!< Write 1 byte to flash memory
+  void writeBytes(uint32_t addr, const void* buf, uint16_t len); //!< write multiple bytes to flash memory (up to 64K)
+  boolean busy(); //!< check if the chip is busy erasing/writing
+  void chipErase(); //!< erase entire flash memory array
+  void blockErase4K(uint32_t address); //!< erase a 4Kbyte block
+  void blockErase32K(uint32_t address); //!< erase a 32Kbyte block
+  uint16_t readDeviceId(); //!< Get the manufacturer and device ID bytes (as a short word)
+  uint8_t* readUniqueId(); //!< Get the 64 bit unique identifier, stores it in @ref UNIQUEID[8]
   
-  void sleep();
-  void wakeup();
-  void end();
+  void sleep(); //!< Put device to sleep
+  void wakeup(); //!< Wake device
+  void end(); //!< end
 protected:
-  void select();
-  void unselect();
-  uint8_t _slaveSelectPin;
-  uint16_t _jedecID;
-  uint8_t _SPCR;
-  uint8_t _SPSR;
+  void select(); //!< select
+  void unselect(); //!< unselect
+  uint8_t _slaveSelectPin; //!< Slave select pin
+  uint16_t _jedecID; //!< JEDEC ID
+  uint8_t _SPCR; //!< SPCR
+  uint8_t _SPSR; //!< SPSR
 #ifdef SPI_HAS_TRANSACTION
   SPISettings _settings;
 #endif

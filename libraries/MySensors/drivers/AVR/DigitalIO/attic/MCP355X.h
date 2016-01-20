@@ -8,6 +8,7 @@ const int32_t MCP355X_ERR = 0X80000000;
 const uint8_t MCP355X_TO_MS = 100;
 //==============================================================================
 template<uint8_t CsPin, uint8_t SckPin, uint8_t SdoPin>
+/** MCP355X class */
 class MCP355X {
  public:
   //----------------------------------------------------------------------------

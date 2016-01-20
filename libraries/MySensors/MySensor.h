@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -16,13 +16,30 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
+
+/**
+ * @file MySensor.h
+ *
+ * MySensors main interface (includes all necessary code for the library)
+ */
 #ifndef MySensor_h
 #define MySensor_h
 
-#include "MyConfig.h"
 #include "core/MySensorCore.h"
 
 // Detect node type
+/**
+ * @def MY_GATEWAY_FEATURE
+ * @brief Is set for gateway sketches.
+ */
+/**
+ * @def MY_IS_GATEWAY
+ * @brief Is true when @ref MY_GATEWAY_FEATURE is set.
+ */
+/**
+ * @def MY_NODE_TYPE
+ * @brief Contain a string describing the class of sketch/node (gateway/repeater/sensor).
+ */
 #if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(ARDUINO_ARCH_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
@@ -82,11 +99,17 @@
 #endif
 
 
-// default LEDs blinking period in milliseconds
+/**
+ * @def MY_DEFAULT_LED_BLINK_PERIOD
+ * @brief Default LEDs blinking period in milliseconds.
+ */
 #ifndef MY_DEFAULT_LED_BLINK_PERIOD
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 #endif
-// The RX LED default pin
+/**
+ * @def MY_DEFAULT_RX_LED_PIN
+ * @brief The RX LED default pin.
+ */
 #ifndef MY_DEFAULT_RX_LED_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_DEFAULT_RX_LED_PIN 8
@@ -94,7 +117,10 @@
 		#define MY_DEFAULT_RX_LED_PIN 6
 	#endif
 #endif
-// The TX LED default pin
+/**
+ * @def MY_DEFAULT_TX_LED_PIN
+ * @brief The TX LED default pin.
+ */
 #ifndef MY_DEFAULT_TX_LED_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_DEFAULT_TX_LED_PIN 9
@@ -102,7 +128,10 @@
 		#define MY_DEFAULT_TX_LED_PIN 5
 	#endif
 #endif
-// The Error LED default pin
+/**
+ * @def MY_DEFAULT_ERR_LED_PIN
+ * @brief The Error LED default pin.
+ */
 #ifndef MY_DEFAULT_ERR_LED_PIN
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#define MY_DEFAULT_ERR_LED_PIN 7
@@ -274,4 +303,9 @@
 	#endif
 #endif
 
+#endif
+// Doxygen specific constructs, not included when built normally
+// This is used to enable disabled macros/definitions to be included in the documentation as well.
+#if DOXYGEN
+#define MY_GATEWAY_FEATURE
 #endif
