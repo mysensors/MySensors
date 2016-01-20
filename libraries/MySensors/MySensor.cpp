@@ -24,9 +24,9 @@
 
 #ifdef MY_SIGNING_FEATURE
 // Macros for manipulating signing requirement table
-#define DO_SIGN(node) (~_doSign[node>>3]&(1<<(node%8)))
-#define SET_SIGN(node) (_doSign[node>>3]&=~(1<<(node%8)))
-#define CLEAR_SIGN(node) (_doSign[node>>3]|=(1<<(node%8)))
+#define DO_SIGN(node) (~doSign[node>>3]&(1<<(node%8)))
+#define SET_SIGN(node) (doSign[node>>3]&=~(1<<(node%8)))
+#define CLEAR_SIGN(node) (doSign[node>>3]|=(1<<(node%8)))
 #endif
 
 // Inline function and macros
