@@ -71,6 +71,7 @@
 //#define MY_RADIO_RFM69
 
 #define MY_GATEWAY_MQTT_CLIENT
+#define MY_GATEWAY_ESP8266
 
 // Set this nodes subscripe and publish topic prefix
 #define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
