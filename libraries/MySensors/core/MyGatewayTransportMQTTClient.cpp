@@ -32,8 +32,10 @@ IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 
 #if defined(MY_GATEWAY_ESP8266)
 	#define EthernetClient WiFiClient
-	IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
-	IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+	#if defined(MY_IP_ADDRESS)
+		IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+		IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+	#endif
 #else
 	byte _clientMAC[] = { MY_MAC_ADDRESS };
 #endif
