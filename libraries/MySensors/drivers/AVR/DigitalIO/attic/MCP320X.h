@@ -3,6 +3,7 @@
 #include <DigitalIO.h>
 //==============================================================================
 template<uint8_t CsPin, uint8_t ClkPin, uint8_t DoutPin, uint8_t UsecDelay = 0>
+/** MCP3201 class */
 class MCP3201 {
  public:
   //----------------------------------------------------------------------------
@@ -81,6 +82,7 @@ class MCP3201 {
 //==============================================================================
 template<uint8_t CsPin, uint8_t ClkPin,
          uint8_t DoutPin, uint8_t DinPin, uint8_t UsecDelay = 0>
+/** MCP3202 class */
 class MCP3202 {
  public:
   //----------------------------------------------------------------------------
@@ -165,6 +167,7 @@ class MCP3202 {
 //==============================================================================
 template<uint8_t CsPin, uint8_t ClkPin,
          uint8_t DoutPin, uint8_t DinPin, uint8_t UsecDelay = 0>
+/** MCP3204 class */
 class MCP3204 {
  public:
   //----------------------------------------------------------------------------

@@ -35,11 +35,10 @@
 
 RF24 _rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN);
 uint8_t _address;
-uint8_t _paLevel;
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	AES _aes;
 	uint8_t _dataenc[32] = {0};
-	uint8_t _psk[] = { MY_RF24_ENCRYPTKEY };
+	uint8_t _psk[16];
 #endif
 
 bool transportInit() {
@@ -53,7 +52,7 @@ bool transportInit() {
 	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
 	_rf24.enableAckPayload();
 	_rf24.setChannel(MY_RF24_CHANNEL);
-	_rf24.setPALevel(_paLevel);
+	_rf24.setPALevel(MY_RF24_PA_LEVEL);
 	if (!_rf24.setDataRate(MY_RF24_DATARATE)) {
 		return false;
 	}
@@ -66,7 +65,9 @@ bool transportInit() {
 
 
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
+		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 		_aes.set_key(_psk, 16); //set up AES-key
+		memset(_psk, 0, 16); // Make sure it is purged from memory when set
 	#endif
 
 	//_rf24.printDetails();

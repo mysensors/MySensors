@@ -37,7 +37,7 @@ void inclusionModeSet(boolean newMode) {
   if (newMode != _inclusionMode) {
     _inclusionMode = newMode;
     // Send back mode change to controller
-    gatewayTransportSend(buildGw(_msg, I_INCLUSION_MODE).set(_inclusionMode?1:0));
+    gatewayTransportSend(buildGw(_msg, I_INCLUSION_MODE).set((uint8_t)(_inclusionMode?1:0)));
     if (_inclusionMode) {
     	_inclusionStartTime = hwMillis();
     }

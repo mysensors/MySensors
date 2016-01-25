@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -16,14 +16,31 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
+
+/**
+ * @file MySensor.h
+ *
+ * MySensors main interface (includes all necessary code for the library)
+ */
 #ifndef MySensor_h
 #define MySensor_h
 
-#include "MyConfig.h"
 #include "core/MySensorCore.h"
 
 // Detect node type
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(ARDUINO_ARCH_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
+/**
+ * @def MY_GATEWAY_FEATURE
+ * @brief Is set for gateway sketches.
+ */
+/**
+ * @def MY_IS_GATEWAY
+ * @brief Is true when @ref MY_GATEWAY_FEATURE is set.
+ */
+/**
+ * @def MY_NODE_TYPE
+ * @brief Contain a string describing the class of sketch/node (gateway/repeater/sensor).
+ */
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
 	#define MY_NODE_TYPE "gateway"
@@ -48,18 +65,83 @@
 	//#undef F
 	//#define F(x) (x)
 	#include "core/MyHwESP8266.cpp"
-	// For ESP8266, we always enable gateway feature
-	#define MY_GATEWAY_ESP8266
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "core/MyHwATMega328.cpp"
+#elif defined(ARDUINO_ARCH_SAMD)
+        #include "core/MyHwSAMD.cpp"
 #endif
 
 // LEDS
+#if !defined(MY_DEFAULT_ERR_LED_PIN) & defined(MY_HW_ERR_LED_PIN)
+	#define MY_DEFAULT_ERR_LED_PIN MY_HW_ERR_LED_PIN
+#endif
+
+#if !defined(MY_DEFAULT_TX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
+	#define MY_DEFAULT_TX_LED_PIN MY_HW_TX_LED_PIN
+#endif
+
+#if !defined(MY_DEFAULT_RX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
+	#define MY_DEFAULT_RX_LED_PIN MY_HW_TX_LED_PIN
+#endif
+
+// Not necessary to include blinking feature if no LED's are defined!
+#if defined(MY_LEDS_BLINKING_FEATURE) && !defined(MY_DEFAULT_RX_LED_PIN) && !defined(MU_DEFAULT_TX_LED_PIN) && !defined(MY_ERR_LED_PIN)
+	#undef MY_LEDS_BLINKING_FEATURE
+#endif
+
+// Enable LED BLINKING FEATURE, if there are any LEDs defined.
+#if defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED) || defined(MY_DEFAULT_TX_LED_PIN)
+	#define MY_LEDS_BLINKING_FEATURE
+#endif
+
+
+/**
+ * @def MY_DEFAULT_LED_BLINK_PERIOD
+ * @brief Default LEDs blinking period in milliseconds.
+ */
+#ifndef MY_DEFAULT_LED_BLINK_PERIOD
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
+#endif
+/**
+ * @def MY_DEFAULT_RX_LED_PIN
+ * @brief The RX LED default pin.
+ */
+#ifndef MY_DEFAULT_RX_LED_PIN
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_RX_LED_PIN 8
+	#else
+		#define MY_DEFAULT_RX_LED_PIN 6
+	#endif
+#endif
+/**
+ * @def MY_DEFAULT_TX_LED_PIN
+ * @brief The TX LED default pin.
+ */
+#ifndef MY_DEFAULT_TX_LED_PIN
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_TX_LED_PIN 9
+	#else
+		#define MY_DEFAULT_TX_LED_PIN 5
+	#endif
+#endif
+/**
+ * @def MY_DEFAULT_ERR_LED_PIN
+ * @brief The Error LED default pin.
+ */
+#ifndef MY_DEFAULT_ERR_LED_PIN
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#define MY_DEFAULT_ERR_LED_PIN 7
+	#else
+		#define MY_DEFAULT_ERR_LED_PIN 4
+	#endif
+#endif
+
 #if defined(MY_LEDS_BLINKING_FEATURE)
 	#include "core/MyLeds.cpp"
 #else
 	#include "core/MyLeds.h"
 #endif
+
 
 // INCLUSION MODE
 #if defined(MY_INCLUSION_MODE_FEATURE)
@@ -69,9 +151,12 @@
 
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-	// SIGNING COMMON FUNCTIONS
-	#include "core/MySigning.cpp"
 	#define MY_SIGNING_FEATURE
+#endif
+#include "core/MySigning.cpp"
+#include "drivers/ATSHA204/sha256.cpp"
+#if defined(MY_SIGNING_FEATURE)
+	// SIGNING COMMON FUNCTIONS
 	#if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)
 		#error Only one signing engine can be activated
 	#endif
@@ -81,7 +166,6 @@
 		#include "drivers/ATSHA204/ATSHA204.cpp"
 	#elif defined(MY_SIGNING_SOFT)
 		#include "core/MySigningAtsha204Soft.cpp"
-		#include "drivers/ATSHA204/sha256.cpp"
 	#endif
 #endif
 
@@ -89,13 +173,20 @@
 
 // GATEWAY - TRANSPORT
 #if defined(MY_GATEWAY_MQTT_CLIENT)
+	#if defined(MY_RADIO_FEATURE)
+		// We assume that a gateway having a radio also should act as repeater
+		#define MY_REPEATER_FEATURE
+	#endif
 	// GATEWAY - COMMON FUNCTIONS
 	// We only support MQTT Client using W5100 and ESP8266 at the moment
 	#if !defined(MY_CONTROLLER_IP_ADDRESS)
 		#error You must specify MY_CONTROLLER_IP_ADDRESS (MQTT broker address)
 	#endif
-	#if !defined(MY_MQTT_TOPIC_PREFIX)
-		#error You must specify a topic prefix MY_MQTT_TOPIC_PREFIX for this MQTT client
+	#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
+		#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
+	#endif
+	#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
+		#error You must specify a topic subscribe prefix MY_MQTT_SUBSCRIBE_TOPIC_PREFIX for this MQTT client
 	#endif
 	#if !defined(MY_MQTT_CLIENT_ID)
 		#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
@@ -188,31 +279,29 @@
 	#undef MY_INCLUSION_BUTTON_FEATURE
 #endif
 
-#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
-	#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+#if !defined(MY_CORE_ONLY)
+	#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
+		#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
+	#endif
 #endif
 
-
+#include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
 #include "core/MySensorCore.cpp"
 
-extern void setup();
-// Optional sketch functions called by MySensors library
-void receive(const MyMessage &message)  __attribute__((weak));
-void receiveTime(unsigned long)  __attribute__((weak));
-void presentation()  __attribute__((weak));
-extern "C" void setup()  __attribute__((weak));
-extern "C" void loop()  __attribute__((weak));
-extern "C" void loop2()  __attribute__((weak));
-
-
 #include <Arduino.h>
 
-#if defined(MY_GATEWAY_ESP8266)
-	#include "core/MyMainESP8266.cpp"
-#else
-	#include "core/MyMainDefault.cpp"
+#if !defined(MY_CORE_ONLY)
+	#if defined(ARDUINO_ARCH_ESP8266)
+		#include "core/MyMainESP8266.cpp"
+	#else
+		#include "core/MyMainDefault.cpp"
+	#endif
 #endif
 
-
+#endif
+// Doxygen specific constructs, not included when built normally
+// This is used to enable disabled macros/definitions to be included in the documentation as well.
+#if DOXYGEN
+#define MY_GATEWAY_FEATURE
 #endif

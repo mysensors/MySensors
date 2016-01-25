@@ -65,7 +65,7 @@ void SPIClass::config(SPISettings settings)
 {
   _p_sercom->disableSPI();
 
-  _p_sercom->initSPI(SPI_PAD_2_SCK_3, SERCOM_RX_PAD_0, SPI_CHAR_SIZE_8_BITS, settings.bitOrder);
+  _p_sercom->initSPI(SPI_PAD_0_SCK_1, SERCOM_RX_PAD_2, SPI_CHAR_SIZE_8_BITS, settings.bitOrder);
   _p_sercom->initSPIClock(settings.dataMode, settings.clockFreq);
 
   _p_sercom->enableSPI();
@@ -197,4 +197,6 @@ void SPIClass::detachInterrupt() {
   // Should be disableInterrupt()
 }
 
-SPIClass SPI( &sercom4, PIN_SPI_MISO, PIN_SPI_SCK, PIN_SPI_MOSI );
+SPIClass SPI( &sercom1, RADIO_SPI_MISO, RADIO_SPI_SCK, RADIO_SPI_MOSI );
+SPIClass SPI_ETH (&sercom4, NET_SPI_MISO, NET_SPI_SCK, NET_SPI_MOSI);
+SPIClass SPI_USER(&sercom5, USR_SPI_MISO, USR_SPI_SCK, USR_SPI_MOSI);

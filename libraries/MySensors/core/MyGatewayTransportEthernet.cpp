@@ -60,8 +60,13 @@ typedef struct
 #endif
 
 
-static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
-static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+#if defined(MY_GATEWAY_ESP8266)
+	static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
+	static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+#else
+	static EthernetClient client = EthernetClient();
+	static inputBuffer inputString;
+#endif
 
 
 #ifndef MY_IP_ADDRESS
@@ -102,22 +107,22 @@ bool gatewayTransportInit() {
 		while (WiFi.status() != WL_CONNECTED)
 		{
 			delay(500);
-			Serial.print(".");
+			MY_SERIALDEVICE.print(".");
 			yield();
 		}
-		Serial.print(F("IP: "));
-		Serial.println(WiFi.localIP());
+		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.println(WiFi.localIP());
 
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
-			Serial.print(F("IP: "));
-			Serial.println(Ethernet.localIP());
+			MY_SERIALDEVICE.print(F("IP: "));
+			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#else
 			// Get IP address from DHCP
 			Ethernet.begin(_ethernetGatewayMAC);
-			Serial.print(F("IP: "));
-			Serial.println(Ethernet.localIP());
+			MY_SERIALDEVICE.print(F("IP: "));
+			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#endif /* IP_ADDRESS_DHCP */
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
@@ -179,34 +184,67 @@ bool gatewayTransportSend(MyMessage &message)
 
 }
 
-bool _readFromClient(uint8_t i) {
-	while (clients[i].connected() && clients[i].available()) {
-		char inChar = clients[i].read();
-		if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
-			// if newline then command is complete
-			if (inChar == '\n' || inChar == '\r') {
-				// Add string terminator and prepare for the next message
-				inputString[i].string[inputString[i].idx] = 0;
-				debug(PSTR("Client %d: %s\n"), i, inputString[i].string);
-				inputString[i].idx = 0;
-				if (protocolParse(_ethernetMsg, inputString[i].string)) {
-					return true;
-				}
 
+#if defined(MY_GATEWAY_ESP8266)
+	bool _readFromClient(uint8_t i) {
+		while (clients[i].connected() && clients[i].available()) {
+			char inChar = clients[i].read();
+			if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
+				// if newline then command is complete
+				if (inChar == '\n' || inChar == '\r') {
+					// Add string terminator and prepare for the next message
+					inputString[i].string[inputString[i].idx] = 0;
+					debug(PSTR("Client %d: %s\n"), i, inputString[i].string);
+					inputString[i].idx = 0;
+					if (protocolParse(_ethernetMsg, inputString[i].string)) {
+						return true;
+					}
+
+				} else {
+					// add it to the inputString:
+					inputString[i].string[inputString[i].idx++] = inChar;
+				}
 			} else {
-				// add it to the inputString:
-				inputString[i].string[inputString[i].idx++] = inChar;
+				// Incoming message too long. Throw away
+				debug(PSTR("Client %d: Message too long\n"), i);
+				inputString[i].idx = 0;
+				// Finished with this client's message. Next loop() we'll see if there's more to read.
+				break;
 			}
-		} else {
-			// Incoming message too long. Throw away
-			debug(PSTR("Client %d: Message too long\n"), i);
-			inputString[i].idx = 0;
-			// Finished with this client's message. Next loop() we'll see if there's more to read.
-			break;
 		}
+		return false;
 	}
-	return false;
-}
+#else
+	bool _readFromClient() {
+		while (client.connected() && client.available()) {
+			char inChar = client.read();
+			if (inputString.idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
+				// if newline then command is complete
+				if (inChar == '\n' || inChar == '\r') {
+					// Add string terminator and prepare for the next message
+					inputString.string[inputString.idx] = 0;
+					debug(PSTR("Eth: %s\n"), inputString.string);
+					inputString.idx = 0;
+					if (protocolParse(_ethernetMsg, inputString.string)) {
+						return true;
+					}
+
+				} else {
+					// add it to the inputString:
+					inputString.string[inputString.idx++] = inChar;
+				}
+			} else {
+				// Incoming message too long. Throw away
+				debug(PSTR("Eth: Message too long\n"));
+				inputString.idx = 0;
+				// Finished with this client's message. Next loop() we'll see if there's more to read.
+				break;
+			}
+		}
+		return false;
+	}
+#endif
+
 
 bool gatewayTransportAvailable()
 {
@@ -270,20 +308,20 @@ bool gatewayTransportAvailable()
 			EthernetClient newclient = _ethernetServer.available();
 			// if a new client connects make sure to dispose any previous existing sockets
 			if (newclient) {
-				if (clients[0] != newclient) {
-					clients[0].stop();
-					clients[0] = newclient;
-					debug(PSTR("Client connected\n"));
+				if (client != newclient) {
+					client.stop();
+					client = newclient;
+					debug(PSTR("Eth: connect\n"));
 					_w5100_spi_en(false);
 					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 				}
 			}
-			if (clients[0]) {
-				if (!clients[0].connected()) {
-					debug(PSTR("Client disconnected\n"));
-					clients[0].stop();
+			if (client) {
+				if (!client.connected()) {
+					debug(PSTR("Eth: disconnect\n"));
+					client.stop();
 				} else {
-					if (_readFromClient(0)) {
+					if (_readFromClient()) {
 						_w5100_spi_en(false);
 						return true;
 					}

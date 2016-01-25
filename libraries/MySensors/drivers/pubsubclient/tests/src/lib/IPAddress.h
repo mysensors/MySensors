@@ -29,6 +29,7 @@
 
 // A class to make it easier to handle and pass around IP addresses
 
+/** IPAddress class */
 class IPAddress {
 private:
     uint8_t _address[4];  // IPv4 address
@@ -40,23 +41,30 @@ private:
 
 public:
     // Constructors
-    IPAddress();
-    IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet);
-    IPAddress(uint32_t address);
-    IPAddress(const uint8_t *address);
+    IPAddress(); //!< IPAddress
+    IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet); //!< IPAddress
+    IPAddress(uint32_t address); //!< IPAddress
+    IPAddress(const uint8_t *address); //!< IPAddress
 
     // Overloaded cast operator to allow IPAddress objects to be used where a pointer
     // to a four-byte uint8_t array is expected
+    /** @brief operator overload */
     operator uint32_t() { return *((uint32_t*)_address); };
+    /** @brief operator overload */
     bool operator==(const IPAddress& addr) { return (*((uint32_t*)_address)) == (*((uint32_t*)addr._address)); };
+    /** @brief operator overload */
     bool operator==(const uint8_t* addr);
 
     // Overloaded index operator to allow getting and setting individual octets of the address
+    /** @brief operator overload */
     uint8_t operator[](int index) const { return _address[index]; };
+    /** @brief operator overload */
     uint8_t& operator[](int index) { return _address[index]; };
 
     // Overloaded copy operators to allow initialisation of IPAddress objects from other types
+    /** @brief operator overload */
     IPAddress& operator=(const uint8_t *address);
+    /** @brief operator overload */
     IPAddress& operator=(uint32_t address);
 
 

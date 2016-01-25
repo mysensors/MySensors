@@ -66,6 +66,16 @@
 
 #include "MyTransport.h"
 
+
+#if defined(MY_RS485_DE_PIN)
+	#define assertDE() digitalWrite(MY_RS485_DE_PIN, HIGH); delayMicroseconds(5)
+	#define deassertDE() digitalWrite(MY_RS485_DE_PIN, LOW)
+
+#else
+	#define assertDE()
+	#define deassertDE()
+#endif
+
 // We only use SYS_PACK in this application
 #define	ICSC_SYS_PACK	0x58
 
@@ -252,7 +262,12 @@ bool transportSend(uint8_t to, const void* data, uint8_t len)
 		}
 	}
 
-     // Start of header by writing multiple SOH
+	#if defined(MY_RS485_DE_PIN)
+		digitalWrite(MY_RS485_DE_PIN, HIGH);
+		delayMicroseconds(5);
+	#endif
+
+		// Start of header by writing multiple SOH
     for(byte w=0;w<1;w++)  _dev.write(SOH);
     _dev.write(to);  // Destination address
     cs += to;
@@ -270,6 +285,28 @@ bool transportSend(uint8_t to, const void* data, uint8_t len)
     _dev.write(ETX);      // End of text
     _dev.write(cs);
     _dev.write(EOT);
+
+	#if defined(MY_RS485_DE_PIN)
+		#ifdef __PIC32MX__
+			// MPIDE has nothing yet for this.  It uses the hardware buffer, which
+			// could be up to 8 levels deep.  For now, let's just delay for 8
+			// characters worth.
+			delayMicroseconds((F_CPU/9600)+1);
+		#else
+		#if defined(ARDUINO) && ARDUINO >= 100
+			#if ARDUINO >= 104
+				// Arduino 1.0.4 and upwards does it right
+				_dev.flush();
+			#else
+				// Between 1.0.0 and 1.0.3 it almost does it - need to compensate
+				// for the hardware buffer. Delay for 2 bytes worth of transmission.
+				_dev.flush();
+				delayMicroseconds((20000000UL/9600)+1);
+			#endif
+			#endif
+		#endif
+		digitalWrite(MY_RS485_DE_PIN, LOW);
+	#endif
     return true;
 }
 
@@ -279,6 +316,10 @@ bool transportInit() {
     // Reset the state machine
 	_dev.begin(MY_RS485_BAUD_RATE);
     _serialReset();
+	#if defined(MY_RS485_DE_PIN)
+    	pinMode(MY_RS485_DE_PIN, OUTPUT);
+        digitalWrite(MY_RS485_DE_PIN, LOW);
+	#endif
     return true;
 }
 

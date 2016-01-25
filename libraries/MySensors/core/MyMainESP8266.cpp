@@ -42,12 +42,12 @@ static os_event_t g_loop_queue[LOOP_QUEUE_SIZE];
 
 static uint32_t g_micros_at_task_start;
 
-
+/*
 extern "C" void abort() {
     do {
         *((int*)0) = 0;
     } while(true);
-}
+}*/
 
 extern "C" void esp_yield() {
     if (cont_can_yield(&g_cont)) {
@@ -83,7 +83,6 @@ static void loop_wrapper() {
     static bool setup_done = false;
     if(!setup_done) {
     	_begin(); // Startup MySensors library
-        setup();
         setup_done = true;
     }
     preloop_update_frequency();

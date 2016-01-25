@@ -70,6 +70,10 @@ void setup()
 {  
   // Fetch last known pulse count value from gw
   request(CHILD_ID, V_VAR1);
+
+  // Use the internal pullup to be able to hook up this sketch directly to an energy meter with S0 output
+  // If no pullup is used, the reported usage will be too high because of the floating pin
+  pinMode(DIGITAL_INPUT_SENSOR,INPUT_PULLUP);
   
   attachInterrupt(INTERRUPT, onPulse, RISING);
   lastSend=millis();

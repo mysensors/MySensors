@@ -20,10 +20,7 @@
 #ifndef MyGatewayTransport_h
 #define MyGatewayTransport_h
 
-#include "MyConfig.h"
-#include "MyMessage.h"
 #include "MyProtocol.h"
-#include "MySensorCore.h"
 
 // Common gateway functions
 

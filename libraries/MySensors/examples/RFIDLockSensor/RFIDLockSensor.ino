@@ -135,7 +135,7 @@ void loop() {
     boolean valid = false;
     // Compare this key to the valid once registered here in sketch 
     for (int i=0;i<keyCount && !valid;i++) {
-      for (int j=0;i<currentKeyLength && !valid;j++) {
+      for (int j=0;j<currentKeyLength && !valid;j++) {
         if (key[j] != validKeys[i][j]) {
           break;
         }

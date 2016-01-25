@@ -20,17 +20,13 @@
 #define MyHwESP8266_h
 
 #include "MyHw.h"
-#include "MyConfig.h"
-
-#include "MyMessage.h"
-
 
 #ifdef __cplusplus
 #include <Arduino.h>
 //#include <SPI.h>
 #endif
 
-
+#define MY_SERIALDEVICE Serial
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 

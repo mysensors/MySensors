@@ -21,8 +21,6 @@
 #define MyHwATMega328_h
 
 #include "MyHw.h"
-#include "MyConfig.h"
-#include "MyMessage.h"
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
@@ -36,6 +34,7 @@
 #include <Arduino.h>
 #endif
 
+#define MY_SERIALDEVICE Serial
 #if defined __AVR_ATmega328P__
 #ifndef sleep_bod_disable
 #define sleep_bod_disable() 										\
@@ -78,7 +77,7 @@ do { 																\
 
 enum period_t
 {
-	SLEEP_15Ms,
+	SLEEP_15MS,
 	SLEEP_30MS,
 	SLEEP_60MS,
 	SLEEP_120MS,

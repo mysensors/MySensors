@@ -18,7 +18,7 @@
  */
 
 #include "MyHwESP8266.h"
-
+#include <EEPROM.h>
 
 /*
 int8_t pinIntTrigger = 0;
@@ -92,18 +92,31 @@ void hwWriteConfig(int adr, uint8_t value)
 
 
 
-void hwSleep(unsigned long ms) {
-  // TODO: Not supported!
+int8_t hwSleep(unsigned long ms) {
+	// TODO: Not supported!
+	return -2;
 }
 
-bool hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-  // TODO: Not supported!
-	return false;
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+	// TODO: Not supported!
+	return -2;
 }
 
-uint8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
   // TODO: Not supported!
-	return 0;
+	return -2;
+}
+
+ADC_MODE(ADC_VCC);
+
+uint16_t hwCPUVoltage() {
+	// in mV
+	return ESP.getVcc();
+}
+
+uint16_t hwCPUFrequency() {
+	// in 1/10Mhz
+	return ESP.getCpuFreqMHz()*10;
 }
 
 #ifdef MY_DEBUG
@@ -111,7 +124,7 @@ void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf_P(fmtBuffer, 299, PSTR("0;0;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+		snprintf_P(fmtBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		Serial.print(fmtBuffer);
 	#endif
 	va_list args;
@@ -119,9 +132,9 @@ void hwDebugPrint(const char *fmt, ... ) {
 	va_end (args);
 	#ifdef MY_GATEWAY_FEATURE
 		// Truncate message if this is gateway node
-		vsnprintf_P(fmtBuffer, 60, fmt, args);
-		fmtBuffer[59] = '\n';
-		fmtBuffer[60] = '\0';
+		vsnprintf_P(fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, fmt, args);
+		fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1] = '\n';
+		fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH] = '\0';
 	#else
 		vsnprintf_P(fmtBuffer, 299, fmt, args);
 	#endif

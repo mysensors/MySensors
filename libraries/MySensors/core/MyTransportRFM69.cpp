@@ -22,17 +22,22 @@
 #include <stdint.h>
 #include "drivers/RFM69/RFM69.h"
 
-RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_IS_RFM69HW, MY_RF69_IRQ_NUM);
+RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM);
 uint8_t _address;
 
 
 bool transportInit() {
 	// Start up the radio library (_address will be set later by the MySensors library)
-	_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID);
-#ifdef MY_RFM69_ENABLE_ENCRYPTION
-    _radio.encrypt(RFM69_ENCRYPTKEY);
-#endif
-	return true;
+	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
+		#ifdef MY_RFM69_ENABLE_ENCRYPTION
+			uint8_t _psk[16];
+			hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+			_radio.encrypt(_psk);
+			memset(_psk, 0, 16); // Make sure it is purged from memory when set
+		#endif
+		return true;
+	}
+	return false;
 }
 
 void transportSetAddress(uint8_t address) {

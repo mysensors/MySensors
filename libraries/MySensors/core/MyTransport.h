@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -41,37 +41,37 @@
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5
 
-// Status when waiting for signing nonce in process
-enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
 
-
-// FW config structure, stored in eeprom
+/// @brief FW config structure, stored in eeprom
 typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t blocks;
-	uint16_t crc;
+	uint16_t type; //!< Type of config
+	uint16_t version; //!< Version of config
+	uint16_t blocks; //!< Number of blocks
+	uint16_t crc; //!< CRC of block data
 } __attribute__((packed)) NodeFirmwareConfig;
 
+/// @brief FW config request structure
 typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t blocks;
-	uint16_t crc;
-	uint16_t BLVersion;
+	uint16_t type; //!< Type of config
+	uint16_t version; //!< Version of config
+	uint16_t blocks; //!< Number of blocks
+	uint16_t crc; //!< CRC of block data
+	uint16_t BLVersion; //!< Bootloader version
 } __attribute__((packed)) RequestFirmwareConfig;
 
+/// @brief FW block request structure
 typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t block;
+	uint16_t type; //!< Type of config
+	uint16_t version; //!< Version of config
+	uint16_t block; //!< Block index
 } __attribute__((packed)) RequestFWBlock;
 
+/// @brief FW block reply structure
 typedef struct {
-	uint16_t type;
-	uint16_t version;
-	uint16_t block;
-	uint8_t data[FIRMWARE_BLOCK_SIZE];
+	uint16_t type; //!< Type of config
+	uint16_t version; //!< Version of config
+	uint16_t block; //!< Block index
+	uint8_t data[FIRMWARE_BLOCK_SIZE]; //!< Block data
 } __attribute__((packed)) ReplyFWBlock;
 
 
