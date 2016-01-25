@@ -388,7 +388,7 @@ RF24::RF24(uint8_t _cepin, uint8_t _cspin):
 
 void RF24::setChannel(uint8_t channel)
 {
-  const uint8_t max_channel = 127;
+  const uint8_t max_channel = 125;
   write_register(RF_CH,min(channel,max_channel));
 }
 
