@@ -123,8 +123,6 @@ void _begin() {
 	#elif defined(MY_RADIO_FEATURE)
 		// Read settings from eeprom
 		hwReadConfigBlock((void*)&_nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
-		// Read latest received controller configuration from EEPROM
-		hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 		#ifdef MY_OTA_FIRMWARE_FEATURE
 			// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
 			hwReadConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
