@@ -39,24 +39,28 @@
 // Enable debug prints to serial monitor
 #define MY_DEBUG 
 
+//Set the CE and CSN pins for the radio 
 #define MY_RF24_CE_PIN 4
 #define MY_RF24_CS_PIN 5
-#define MY_RF24_CHANNEL  111
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level. 
 #define MY_RF24_PA_LEVEL RF24_PA_LOW
 
-// Enable serial gateway
+// Enable CC3000 gateway
 #define MY_GATEWAY_CC3000
 #include <Adafruit_CC3000.h>
 #include <Adafruit_CC3000_Server.h>
+
+//change to match your network
 #define MY_CC3000_SSID "MySSID"
 #define MY_CC3000_PASSWORD "MyVerySecretPassword"
 #define MY_WLAN_SECURITY   WLAN_SEC_WPA2
+//default port and max clients. 
 #define MY_PORT 5003  
 #define MY_GATEWAY_MAX_CLIENTS 2
 
@@ -75,12 +79,13 @@
 
 // Set inclusion mode duration (in seconds)
 #define MY_INCLUSION_MODE_DURATION 60 
-// Digital pin used for inclusion mode button
-#define MY_INCLUSION_MODE_BUTTON_PIN  A3 
 
+#define MY_INCLUSION_MODE_BUTTON_PIN  A3 // Digital pin used for inclusion mode button
 #define MY_DEFAULT_ERR_LED_PIN A0  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  A1  // Receive led pin
 #define MY_DEFAULT_TX_LED_PIN  A2  // the PCB, on board LED
+
+//Set the CE and CSN and IRQ pins for the Wifi Module 
 #define MY_CC3000_CS 6
 #define MY_CC3000_VBAT 7
 #define MY_CC3000_IRQ 3

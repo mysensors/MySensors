@@ -172,7 +172,7 @@
 // but now can be used in any sensor node. Also the LEDs can now be
 // disabled in the gateway.
 
-#define MY_LEDS_BLINKING_FEATURE
+//#define MY_LEDS_BLINKING_FEATURE
 
 // The following setting allows you to inverse the blinking feature MY_LEDS_BLINKING_FEATURE
 // When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
@@ -183,9 +183,9 @@
 // The following defines can be used to set the port pin, that the LED is connected to
 // If one of the following is defined here, or in the sketch, MY_LEDS_BLINKING_FEATURE will be
 // enabled by default. (Replace x with the pin number you have the LED on)
-#define MY_DEFAULT_ERR_LED 4
-#define MY_DEFAULT_TX_LED 5
-#define MY_DEFAULT_RX_LED x6
+//#define MY_DEFAULT_ERR_LED x
+//#define MY_DEFAULT_TX_LED x
+//#define MY_DEFAULT_RX_LED x
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
