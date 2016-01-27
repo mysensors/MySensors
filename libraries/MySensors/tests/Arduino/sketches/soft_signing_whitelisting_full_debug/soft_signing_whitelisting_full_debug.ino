@@ -30,3 +30,15 @@
 
 #include <SPI.h>
 #include <MySensor.h>
+
+void setup() {
+}
+
+void presentation() {
+  // Present locally attached sensors here
+}
+
+
+void loop() {
+  // Send locally attached sensors data here
+}
