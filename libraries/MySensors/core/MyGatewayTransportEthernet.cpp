@@ -51,6 +51,22 @@ typedef struct
 		IPAddress subnet(MY_IP_SUBNET_ADDRESS);
 	#endif
 	static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
+
+#elif defined(MY_GATEWAY_CC3000)
+	// Some re-defines to make code more readable below
+	//WiFi module settings and defines
+	Adafruit_CC3000 cc3000 = Adafruit_CC3000(MY_CC3000_CS, MY_CC3000_IRQ, MY_CC3000_VBAT,
+                                         SPI_CLOCK_DIVIDER); // you can change this clock speed but DI
+	#define EthernetServer Adafruit_CC3000_Server
+	#define EthernetClient Adafruit_CC3000_ClientRef
+	//EthernetClient client = new Adafruit_CC3000_Client();
+	//#define EthernetUDP WiFiUDP
+
+	#if defined(MY_IP_ADDRESS)
+		IPAddress gateway(MY_IP_GATEWAY_ADDRESS);
+		IPAddress subnet(MY_IP_SUBNET_ADDRESS);
+	#endif
+	static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 #endif
 
 #if defined(MY_USE_UDP)
@@ -63,6 +79,9 @@ typedef struct
 #if defined(MY_GATEWAY_ESP8266)
 	static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 	static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+#elif defined(MY_GATEWAY_CC3000)
+	static EthernetClient client = new Adafruit_CC3000_Client();
+	static inputBuffer inputString;
 #else
 	static EthernetClient client = EthernetClient();
 	static inputBuffer inputString;
@@ -112,6 +131,18 @@ bool gatewayTransportInit() {
 		}
 		MY_SERIALDEVICE.print(F("IP: "));
 		MY_SERIALDEVICE.println(WiFi.localIP());
+	#elif defined(MY_GATEWAY_CC3000)
+	//init the cc3000
+		uint32_t ipAddress, netmask, gateway, dhcpserv, dnsserv;
+		MY_SERIALDEVICE.println(F("Starting WiFi"));
+		cc3000.begin();
+		MY_SERIALDEVICE.println(F("CC3000 Started"));
+		cc3000.connectToAP(MY_CC3000_SSID, MY_CC3000_PASSWORD, MY_WLAN_SECURITY);
+		MY_SERIALDEVICE.println(F("Connected"));
+		cc3000.checkDHCP();
+		cc3000.getIPAddress(&ipAddress, &netmask, &gateway, &dhcpserv, &dnsserv);
+		MY_SERIALDEVICE.println(F("Got IP"));
+		delay(1000);
 
 	#else
 		#ifdef MY_IP_ADDRESS
@@ -340,7 +371,7 @@ MyMessage& gatewayTransportReceive()
 }
 
 
-#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266)
+#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_CC3000)
 void gatewayTransportRenewIP()
 {
 	/* renew/rebind IP address
