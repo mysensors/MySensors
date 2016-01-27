@@ -65,10 +65,6 @@
 	//#undef F
 	//#define F(x) (x)
 	#include "core/MyHwESP8266.cpp"
-	// Enable gateway feature
-	#if !defined(MY_CORE_ONLY)
-		#define MY_GATEWAY_ESP8266
-	#endif
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
