@@ -85,7 +85,7 @@
 #endif
 
 // Not necessary to include blinking feature if no LED's are defined!
-#if defined(MY_LEDS_BLINKING_FEATURE) && !defined(MY_DEFAULT_RX_LED_PIN) && !defined(MU_DEFAULT_TX_LED_PIN) && !defined(MY_ERR_LED_PIN)
+#if defined(MY_LEDS_BLINKING_FEATURE) && !defined(MY_DEFAULT_RX_LED_PIN) && !defined(MY_DEFAULT_TX_LED_PIN) && !defined(MY_ERR_LED_PIN)
 	#undef MY_LEDS_BLINKING_FEATURE
 #endif
 
@@ -179,9 +179,10 @@
 	#endif
 	// GATEWAY - COMMON FUNCTIONS
 	// We only support MQTT Client using W5100 and ESP8266 at the moment
-	#if !defined(MY_CONTROLLER_IP_ADDRESS)
-		#error You must specify MY_CONTROLLER_IP_ADDRESS (MQTT broker address)
+	#if !(defined(MY_CONTROLLER_URL_ADDRESS) || defined(MY_CONTROLLER_IP_ADDRESS))
+		#error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS
 	#endif
+
 	#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
 		#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
 	#endif
