@@ -142,9 +142,10 @@ static const uint8_t ATN = PIN_ATN;
 #define USR_SPI_MISO           (48u)
 #define USR_SPI_MOSI           (47u)
 #define USR_SPI_SCK            (49u)
-/*
+
+
 static const uint8_t SS	  = PIN_A2 ;	// SERCOM4 last PAD is present on A2 but HW SS isn't used. Set here only for reference.
-static const uint8_t MOSI = PIN_SPI_MOSI ;
+/*static const uint8_t MOSI = PIN_SPI_MOSI ;
 static const uint8_t MISO = PIN_SPI_MISO ;
 static const uint8_t SCK  = PIN_SPI_SCK ;
 */
@@ -194,6 +195,9 @@ static const uint8_t SCK  = PIN_SPI_SCK ;
 #define MY_HW_ERR_LED_PIN LED_RED
 #define MY_HW_RX_LED_PIN  LED_YELLOW
 #define MY_HW_TX_LED_PIN  LED_GREEN
+#define MY_RF69_SPI_CS    22
+#define MY_RF69_IRQ_PIN   2
+#define MY_RF69_IRQ_NUM   3
 
 /*----------------------------------------------------------------------------
  *        Arduino objects - C++ only
