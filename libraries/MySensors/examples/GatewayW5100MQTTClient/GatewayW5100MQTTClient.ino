@@ -103,8 +103,8 @@
 #define MY_IP_GATEWAY_ADDRESS 192,168,178,1
 #define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
-
-// MQTT broker ip address.  
+// MQTT broker ip address or url. Define one or the other. 
+//#define MY_CONTROLLER_URL_ADDRESS "m20.cloudmqtt.com"
 #define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
 
 // The MQTT broker port to to open 

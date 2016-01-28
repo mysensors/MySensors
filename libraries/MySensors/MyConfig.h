@@ -371,7 +371,17 @@
 
 /**
  * @def MY_RF24_CHANNEL
- * @brief RF channel for the sensor net, 0-127.
+ * @brief RF channel for the sensor net, 0-125.
+ * Frequence: 2400 Mhz - 2525 Mhz Channels: 126
+ * http://www.mysensors.org/radio/nRF24L01Plus.pdf
+ * 0 => 2400 Mhz (RF24 channel 1)
+ * 1 => 2401 Mhz (RF24 channel 2)
+ * 76 => 2476 Mhz (RF24 channel 77)
+ * 83 => 2483 Mhz (RF24 channel 84)
+ * 124 => 2524 Mhz (RF24 channel 125)
+ * 125 => 2525 Mhz (RF24 channel 126)
+ * In some countries there might be limitations, in Germany for example only the range 2400,0 - 2483,5 Mhz is allowed
+ * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
  */
 #ifndef MY_RF24_CHANNEL
 #define MY_RF24_CHANNEL	76

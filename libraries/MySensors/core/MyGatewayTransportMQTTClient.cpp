@@ -28,12 +28,16 @@
 uint8_t protocolH2i(char c);
 
 
-IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
+#if defined MY_CONTROLLER_IP_ADDRESS
+  IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
+#endif
 
 #if defined(MY_GATEWAY_ESP8266)
 	#define EthernetClient WiFiClient
-	IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
-	IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+	#if defined(MY_IP_ADDRESS)
+ 		IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+ 		IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+ 	#endif
 #else
 	byte _clientMAC[] = { MY_MAC_ADDRESS };
 #endif
@@ -44,6 +48,7 @@ IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 
 EthernetClient _ethClient;
 PubSubClient _client(_ethClient);
+bool _connecting = true;
 bool _available = false;
 char _convBuffer[MAX_PAYLOAD*2+1];
 char _fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH];
@@ -150,7 +155,13 @@ bool reconnectMQTT() {
 }
 
 bool gatewayTransportInit() {
-	_client.setServer(_brokerIp, MY_PORT);
+	_connecting = true;
+	#if defined(MY_CONTROLLER_IP_ADDRESS)
+		_client.setServer(_brokerIp, MY_PORT);
+	#else
+		_client.setServer(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
+	#endif
+
 	_client.setCallback(incomingMQTT);
 
   	#if defined(MY_GATEWAY_ESP8266)
@@ -164,30 +175,42 @@ bool gatewayTransportInit() {
 			MY_SERIALDEVICE.print(".");
 			yield();
 		}
-		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.print("IP: ");
 		MY_SERIALDEVICE.println(WiFi.localIP());
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_clientMAC, _clientIp);
-			MY_SERIALDEVICE.print(F("IP: "));
-			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#else
 			// Get IP address from DHCP
-			Ethernet.begin(_clientMAC);
-			MY_SERIALDEVICE.print(F("IP: "));
+			if (!Ethernet.begin(_clientMAC))
+			{
+				MY_SERIALDEVICE.print("DHCP FAILURE...");
+				_connecting = false;
+				return false;
+			}
+			MY_SERIALDEVICE.print("IP: ");
 			MY_SERIALDEVICE.println(Ethernet.localIP());
-		#endif /* IP_ADDRESS_DHCP */
+		#endif
+
 		// give the Ethernet interface a second to initialize
 		// TODO: use HW delay
 		wait(1000);
 	#endif
+	_connecting = false;
 	return true;
 }
 
 
 bool gatewayTransportAvailable() {
+	if (_connecting)
+		return false;
+
+	//keep lease on dhcp address
+	//Ethernet.maintain();
 	if (!_client.connected()) {
-		reconnectMQTT();
+		//reinitialise client
+		if (gatewayTransportInit())
+			reconnectMQTT();
 		return false;
 	}
 	_client.loop();
