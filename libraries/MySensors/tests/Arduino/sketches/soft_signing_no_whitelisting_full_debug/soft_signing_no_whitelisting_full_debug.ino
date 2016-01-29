@@ -20,25 +20,13 @@
  */
 #define MY_DEBUG
 #define MY_DEBUG_VERBOSE_SIGNING
-#define MY_RADIO_NRF24 //!< NRF24L01 radio driver
-#define MY_SIGNING_SOFT //!< Software signing
-//#define MY_SIGNING_ATSHA204 //!< Hardware signing using ATSHA204A
+#define MY_RADIO_NRF24
+#define MY_SIGNING_SOFT
+//#define MY_SIGNING_ATSHA204
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 #define MY_SIGNING_REQUEST_SIGNATURES
-#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 //!< Unconnected analog pin for random seed
-#define MY_SIGNING_ATSHA204_PIN 17 //!< A3 - pin where ATSHA204 is attached
+#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+#define MY_SIGNING_ATSHA204_PIN 17
 
 #include <SPI.h>
 #include <MySensor.h>
-
-void setup() {
-}
-
-void presentation() {
-  // Present locally attached sensors here
-}
-
-
-void loop() {
-  // Send locally attached sensors data here
-}
