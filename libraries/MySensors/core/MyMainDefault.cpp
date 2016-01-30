@@ -3,7 +3,9 @@
 int main(void) {
 	init();
 	#if defined(USBCON)
-		USBDevice.init();
+		#if defined(ARDUINO_ARCH_SAMD)
+			USBDevice.init();
+		#endif
     		USBDevice.attach();
 	#endif
 	_begin(); // Startup MySensors library
