@@ -546,7 +546,64 @@
 // If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server allowing incoming connections.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 
+/**
+ * @defgroup MyLockgrp MyNodeLock
+ * @ingroup internals
+ * @{
+ * @brief The node lock feature is a security related feature. It locks a node that suspect itself for being
+ * under some form of attack.
+ *
+ * This is achieved by having a counter stored in EEPROM which decrements when suspicious activity is detected.
+ * If the counter reaches 0, node will not work anymore and will transmit a @ref I_LOCKED message to the
+ * gateway/controller with 30m intervals. Payload is a string with a reason for the locking.
+ * The string is abbreviated to accomodate a signature. The following abbreviations exist at the moment:
+ * - LDB (Locked During Boot)
+ * - TMNR (Too Many Nonce Requests)
+ * - TMFV (Too Many Failed Verifications)
+ *
+ * Typically, the counter only decrements when suspicious activity happens in a row.
+ * It is reset if legit traffic is present.
+
+ * Examples of malicious activity are:
+ * - Repeatedly incorrectly checksummed OTA firmware
+ * - Repeated requests for signing nonces without properly signed messages arriving
+ * - Repeatedly failed signature verifications
+ *
+ * If counter reaches zero, node locks down and EEPROM has to be erased/reset to reactivate node.
+ * Node can also be unlocked by grounding a pin (see @ref MY_NODE_UNLOCK_PIN).
+ *
+ * The size of the counter can be adjusted using @ref MY_NODE_LOCK_COUNTER_MAX.
+ *
+ * @def MY_NODE_LOCK_FEATURE
+ * @brief Enable this to activate intrusion prevention mechanisms on the node.
+ */
+//#define MY_NODE_LOCK_FEATURE
+
+/**
+ * @def MY_NODE_UNLOCK_PIN
+ * @brief By grounding this pin durig reset of a locked node, the node will unlock.
+ *
+ * If using a secure bootloader, grounding the pin is the only option to reactivate the node.
+ * If using stock Android bootloader or a DualOptiBoot it is also possible to download a sketch
+ * using serial protocol to erase EEPROM to unlock the node. 
+ */
+#ifndef MY_NODE_UNLOCK_PIN
+#define MY_NODE_UNLOCK_PIN 14
 #endif
+
+/**
+ * @def MY_NODE_LOCK_COUNTER_MAX
+ * @brief Maximum accepted occurances of suspected malicious activity in a node.
+ *
+ * Counter decrements on reoccuring incidents but resets if legitimate behaviour is identified.
+ */
+#ifndef MY_NODE_LOCK_COUNTER_MAX
+#define MY_NODE_LOCK_COUNTER_MAX 5
+#endif
+/** @}*/ // Node lock group
+
+#endif
+
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN

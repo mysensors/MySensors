@@ -170,7 +170,8 @@ typedef enum {
 	I_SIGNING_PRESENTATION, //!< Provides signing related preferences (first byte is preference version)
 	I_NONCE_REQUEST,        //!< Request for a nonce
 	I_NONCE_RESPONSE,       //!< Payload is nonce data
-	I_HEARTBEAT, I_PRESENTATION, I_DISCOVER, I_DISCOVER_RESPONSE, I_HEARTBEAT_RESPONSE
+	I_HEARTBEAT, I_PRESENTATION, I_DISCOVER, I_DISCOVER_RESPONSE, I_HEARTBEAT_RESPONSE,
+	I_LOCKED                //!< Node is locked (reason in string-payload)
 } mysensor_internal;
 
 

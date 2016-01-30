@@ -39,6 +39,11 @@ uint8_t _doWhitelist[32]; // Bitfield indicating which sensors require serial sa
 MyMessage _msgSign;       // Buffer for message to sign.
 uint8_t _signingNonceStatus;
 
+#ifdef MY_NODE_LOCK_FEATURE
+static uint8_t nof_nonce_requests = 0;
+static uint8_t nof_failed_verifications = 0;
+#endif
+
 // Status when waiting for signing nonce in signerProcessInternal
 enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
 
@@ -161,6 +166,13 @@ bool signerProcessInternal(MyMessage &msg) {
 		}
 #elif defined(MY_SIGNING_FEATURE)
 		if (msg.type == I_NONCE_REQUEST) {
+#if defined(MY_NODE_LOCK_FEATURE)
+			nof_nonce_requests++;
+			SIGN_DEBUG(PSTR("Nonce requests left until lockdown: %d\n"), MY_NODE_LOCK_COUNTER_MAX-nof_nonce_requests);
+			if (nof_nonce_requests >= MY_NODE_LOCK_COUNTER_MAX) {
+				nodeLock("TMNR"); //Too many nonces requested
+			}
+#endif
 #if defined(MY_SIGNING_SOFT)
 			if (signerAtsha204SoftGetNonce(msg)) {
 #endif
@@ -353,6 +365,19 @@ bool signerVerifyMsg(MyMessage &msg) {
 			if (!verificationResult) {
 				SIGN_DEBUG(PSTR("Signature verification failed!\n"));
 			}
+#if defined(MY_NODE_LOCK_FEATURE)
+			if (verificationResult) {
+				// On successful verification, clear lock counters
+				nof_nonce_requests = 0;
+				nof_failed_verifications = 0;
+			} else {
+				nof_failed_verifications++;
+				SIGN_DEBUG(PSTR("Failed verification attempts left until lockdown: %d\n"), MY_NODE_LOCK_COUNTER_MAX-nof_failed_verifications);
+				if (nof_failed_verifications >= MY_NODE_LOCK_COUNTER_MAX) {
+					nodeLock("TMFV"); //Too many failed verifications
+				}
+			}
+#endif
 			mSetSigned(msg,0); // Clear the sign-flag now as verification is completed
 		}
 	}
