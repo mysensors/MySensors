@@ -288,6 +288,8 @@ bool gatewayTransportAvailable()
 						_w5100_spi_en(false);
 						gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 						_w5100_spi_en(true);
+						if (presentation)
+							presentation();
 					}
 				}
 				bool connected = clients[i].connected();
@@ -318,6 +320,8 @@ bool gatewayTransportAvailable()
 					debug(PSTR("Eth: connect\n"));
 					_w5100_spi_en(false);
 					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+					if (presentation)
+						presentation();
 				}
 			}
 			if (client) {
