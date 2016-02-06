@@ -236,6 +236,7 @@ extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces amo
 void receive(const MyMessage &message)  __attribute__((weak));
 void receiveTime(unsigned long)  __attribute__((weak));
 void presentation()  __attribute__((weak));
+void before() __attribute__((weak));
 void setup() __attribute__((weak));
 void loop() __attribute__((weak));
 

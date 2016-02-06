@@ -64,6 +64,9 @@ void _begin() {
 	    hwInit();
 	#endif
 
+	// Call before() in sketch (if it exists)
+	if (before) before();
+
 	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILIIES ", " LIBRARY_VERSION ")\n"));
 
 	signerInit();
