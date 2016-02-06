@@ -46,14 +46,17 @@
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
 
-void setup()  
-{ 
+void before() { 
   for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
     // Then set relay pins in output mode
     pinMode(pin, OUTPUT);   
     // Set relay to last known state (using eeprom storage) 
     digitalWrite(pin, loadState(sensor)?RELAY_ON:RELAY_OFF);
   }
+}
+
+void setup() {
+  
 }
 
 void presentation()  
