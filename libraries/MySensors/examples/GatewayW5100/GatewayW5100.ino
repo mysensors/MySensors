@@ -69,7 +69,7 @@
 #define MY_RF24_CS_PIN 6
 
 // Enable to UDP          
-#define MY_USE_UDP
+//#define MY_USE_UDP
 
 #define MY_IP_ADDRESS 192,168,178,66   // If this is disabled, DHCP is used to retrieve address
 // Renewal period if using DHCP
