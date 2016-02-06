@@ -165,6 +165,8 @@ bool gatewayTransportInit() {
 	_client.setCallback(incomingMQTT);
 
   	#if defined(MY_GATEWAY_ESP8266)
+		// Turn off access point
+		WiFi.mode (WIFI_STA);
 		(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 		#ifdef MY_IP_ADDRESS
 			WiFi.config(_clientIp, _gatewayIp, _subnetIp);
