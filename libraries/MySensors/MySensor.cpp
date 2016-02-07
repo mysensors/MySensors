@@ -620,6 +620,7 @@ boolean MySensor::process() {
 	if (destination == nc.nodeId) {
 		// This message is addressed to this node
 		mSetSigned(msg,0);
+		msg.data[mGetLength(msg)] = '\0'; // Add NULL termination so that "getters" works as expected
 
 		if (repeaterMode && last != nc.parentNodeId) {
 			// Message is from one of the child nodes. Add it to routing table.
