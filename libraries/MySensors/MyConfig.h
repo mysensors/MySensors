@@ -30,7 +30,11 @@
 #define ENABLED_SERIAL
 
 // Serial output baud rate (for debug prints and serial gateway)
+#if F_CPU == 8000000L
+#define BAUD_RATE 38400
+#else
 #define BAUD_RATE 115200
+#endif
 
 
 /**********************************
