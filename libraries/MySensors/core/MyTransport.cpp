@@ -443,7 +443,7 @@ void transportRequestNodeId() {
 	transportSetAddress(_nc.nodeId);
 	build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
 	transportSendWrite(_nc.parentNodeId, _msg);
-	wait(2000);
+	wait(2000, C_INTERNAL, I_ID_RESPONSE);
 }
 
 void transportPresentNode() {
@@ -467,7 +467,7 @@ void transportPresentNode() {
 			_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
 
 			// Wait configuration reply.
-			wait(2000);
+			wait(2000, C_INTERNAL, I_CONFIG);
 
 			#ifdef MY_OTA_FIRMWARE_FEATURE
 				RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)_msg.data;
