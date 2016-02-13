@@ -338,6 +338,19 @@ void wait(unsigned long ms) {
 	}
 }
 
+void wait(unsigned long ms, uint8_t cmd, uint8_t msgtype) {
+	unsigned long enter = hwMillis();
+	// invalidate msg type
+	_msg.type = !msgtype;
+	while ( (hwMillis() - enter < ms) && !(mGetCommand(_msg)==cmd && _msg.type==msgtype) ) {
+		_process();
+		#if defined(MY_GATEWAY_ESP8266)
+			yield();
+		#endif
+	}
+}
+
+
 int8_t sleep(unsigned long ms) {
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (_fwUpdateOngoing) {

@@ -169,6 +169,17 @@ uint8_t loadState(uint8_t pos);
 void wait(unsigned long ms);
 
 /**
+ * Wait for a specified amount of time to pass or until specified message received.  Keeps process()ing.
+ * This does not power-down the radio nor the Arduino.
+ * Because this calls process() in a loop, it is a good way to wait
+ * in your loop() on a repeater node or sensor that listens to messages.
+ * @param ms Number of milliseconds to sleep.
+ * @param cmd Command of incoming message.
+ * @param msgtype Message type.
+ */
+void wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
+
+/**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
  * @param ms Number of milliseconds to sleep.
  * @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
