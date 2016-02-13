@@ -251,7 +251,10 @@ bool RFM69::ACKRequested() {
 /// Should be called immediately after reception in case sender wants ACK
 void RFM69::sendACK(const void* buffer, byte bufferSize) {
   byte sender = SENDERID;
-  while (!canSend()) receiveDone();
+  while (!canSend()) {
+    receiveDone();
+    yield();
+  }
   sendFrame(sender, buffer, bufferSize, false, true);
 }
 
