@@ -413,7 +413,7 @@ void RFM69::writeReg(byte addr, byte value)
 void RFM69::select() {
   noInterrupts();
   //save current SPI settings
-#ifndef ESP8266
+#if !defined(ESP8266) && !defined(ARDUINO_ARCH_SAMD)
   _SPCR = SPCR;
   _SPSR = SPSR;
 #endif
@@ -428,7 +428,7 @@ void RFM69::select() {
 void RFM69::unselect() {
   digitalWrite(_slaveSelectPin, HIGH);
   //restore SPI settings to what they were before talking to RFM69
-#ifndef ESP8266
+#if !defined(ESP8266) && !defined(ARDUINO_ARCH_SAMD)
   SPCR = _SPCR;
   SPSR = _SPSR;
 #endif
