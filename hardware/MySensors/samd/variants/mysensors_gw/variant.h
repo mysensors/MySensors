@@ -196,8 +196,8 @@ static const uint8_t SCK  = PIN_SPI_SCK ;
 #define MY_HW_RX_LED_PIN  LED_YELLOW
 #define MY_HW_TX_LED_PIN  LED_GREEN
 #define MY_RF69_SPI_CS    22
-#define MY_RF69_IRQ_PIN   2
-#define MY_RF69_IRQ_NUM   3
+#define MY_RF69_IRQ_PIN   38
+#define MY_RF69_IRQ_NUM   38
 
 /*----------------------------------------------------------------------------
  *        Arduino objects - C++ only
