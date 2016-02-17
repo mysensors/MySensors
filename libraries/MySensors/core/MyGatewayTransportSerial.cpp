@@ -54,6 +54,7 @@ bool gatewayTransportAvailable() {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
 				available = true;
+				return true;
 			} else {
 				// add it to the inputString:
 				_serialInputString[_serialInputPos] = inChar;
