@@ -52,8 +52,7 @@ bool gatewayTransportAvailable() {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
 				bool ok = protocolParse(_serialMsg, _serialInputString);
-				if (ok)
-					_serialInputPos = 0;
+				_serialInputPos = 0;
 				return ok;
 			} else {
 				// add it to the inputString:
