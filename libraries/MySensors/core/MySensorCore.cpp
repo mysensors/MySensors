@@ -51,6 +51,11 @@ void _process() {
 	#if defined(MY_RADIO_FEATURE)
 		transportProcess();
 	#endif
+	
+	#if defined(LINUX_ARCH_GENERIC)
+		// To avoid high cpu usage
+		usleep(10000); // 10ms
+	#endif
 }
 
 #if defined(MY_RADIO_FEATURE)

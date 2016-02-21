@@ -20,8 +20,10 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 #include <stdint.h>
-#include "drivers/RF24/RF24.h"
-#include "drivers/RF24/RF24_config.h"
+#ifndef RASPBERRYPI_ARCH
+	#include "drivers/RF24/RF24.h"
+	#include "drivers/RF24/RF24_config.h"
+#endif
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 #include "drivers/AES/AES.h"
 #endif

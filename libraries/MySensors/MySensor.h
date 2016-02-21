@@ -40,7 +40,7 @@
  * @def MY_NODE_TYPE
  * @brief Contain a string describing the class of sketch/node (gateway/repeater/sensor).
  */
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_RASPBERRYPI) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
 	#define MY_NODE_TYPE "gateway"
@@ -68,7 +68,19 @@
 #elif defined(ARDUINO_ARCH_AVR)
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
-        #include "core/MyHwSAMD.cpp"
+	#include "core/MyHwSAMD.cpp"
+#elif defined(LINUX_ARCH_GENERIC)
+	// Remove PSTR macros from debug prints
+	#undef PSTR
+	#define PSTR(x) (x)
+	//#undef F
+	//#define F(x) (x)
+	#define PROGMEM
+	#define vsnprintf_P(...) vsnprintf( __VA_ARGS__ )
+	#define snprintf_P(...) snprintf( __VA_ARGS__ )
+	#define memcpy_P memcpy
+	#define pgm_read_dword(x) (*x)
+	#include "core/MyHwLinuxGeneric.cpp"
 #endif
 
 // LEDS
@@ -208,6 +220,9 @@
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
 	#endif
+	#if defined(MY_GATEWAY_RASPBERRYPI)
+		#define MY_GATEWAY_LINUX
+	#endif
 	#if defined(MY_CONTROLLER_IP_ADDRESS)
 		#define MY_GATEWAY_CLIENT_MODE
 	#endif
@@ -217,6 +232,9 @@
 	#if defined(MY_GATEWAY_ESP8266)
 		// GATEWAY - ESP8266
 		#include "core/MyGatewayTransportEthernet.cpp"
+	#elif defined(MY_GATEWAY_LINUX)
+		// GATEWAY - Generic Linux (RaspberryPi, BBB)
+		#include "core/MyGatewayTransportEthernetLinux.cpp"
 	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100
 		#include "core/MyGatewayTransportEthernet.cpp"
@@ -229,6 +247,7 @@
 	#elif defined(MY_GATEWAY_SERIAL)
 		// GATEWAY - SERIAL
 		#include "core/MyGatewayTransportSerial.cpp"
+	
 	#endif
 #endif
 
@@ -256,7 +275,9 @@
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
 			#include "drivers/AES/AES.cpp"
 		#endif
-		#include "drivers/RF24/RF24.cpp"
+		#if !defined(RASPBERRYPI_ARCH)
+			#include "drivers/RF24/RF24.cpp"
+		#endif
 		#include "core/MyTransportNRF24.cpp"
 	#elif defined(MY_RS485)
 		#include "drivers/AltSoftSerial/AltSoftSerial.cpp"
@@ -295,6 +316,8 @@
 #if !defined(MY_CORE_ONLY)
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#include "core/MyMainESP8266.cpp"
+	#elif defined(LINUX_ARCH_GENERIC)
+		#include "core/MyMainLinux.cpp"
 	#else
 		#include "core/MyMainDefault.cpp"
 	#endif

@@ -342,6 +342,17 @@
 		#define MY_RF24_CE_PIN 4
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CE_PIN 27
+	#elif defined(RASPBERRYPI_ARCH)
+		#include <RF24.h>
+		#include <RF24_config.h>
+		#ifdef __PI_BPLUS
+			#define MY_RF24_CE_PIN RPI_BPLUS_GPIO_J8_22
+			#define MY_RF24_CS_PIN RPI_BPLUS_GPIO_J8_24
+		#else
+			#define MY_RF24_CE_PIN RPI_V2_GPIO_P1_22
+			#define MY_RF24_CS_PIN BCM2835_SPI_CS0
+		#endif
+		#define MY_RF24_SPI_SPEED BCM2835_SPI_SPEED_8MHZ
 	#else
 		#define MY_RF24_CE_PIN 9
 	#endif
@@ -509,6 +520,8 @@
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
+//#define MY_GATEWAY_RASPBERRYPI
+//#define MY_GATEWAY_LINUX
 
 /**
  * @def MY_PORT
@@ -545,6 +558,10 @@
 // Controller ip-address, if this is defined, gateway will act as a client trying to contact controller on MY_PORT.
 // If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server allowing incoming connections.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
+
+/**************************************
+* Node Locking
+***************************************/
 
 /**
  * @defgroup MyLockgrp MyNodeLock
@@ -603,6 +620,27 @@
 /** @}*/ // Node lock group
 
 #endif
+
+/**************************************
+* RaspberryPi Settings
+***************************************/
+
+/**
+ * @def MY_RASPBERRYPI_TTY_NAME
+ * @brief Set the name of predictable tty
+ */
+#ifndef MY_RASPBERRYPI_TTY_NAME
+#define MY_RASPBERRYPI_TTY_NAME /dev/ttyMySensorsGateway
+#endif
+
+/**
+ * @def MY_RASPBERRYPI_TTY_GROUPNAME
+ * @brief Set the group name for the raw tty
+ */
+#ifndef MY_RASPBERRYPI_TTY_GROUPNAME
+#define MY_RASPBERRYPI_TTY_GROUPNAME tty
+#endif
+
 
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
