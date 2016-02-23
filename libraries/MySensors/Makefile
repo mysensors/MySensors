@@ -33,7 +33,9 @@ ifeq ($(PIREV),$(filter $(PIREV),a01041 a21041 0010))
 	CXXFLAGS+=-D__PI_BPLUS
 endif 
 
+COMPILER_FLAGS=examples_RPi/compiler_flags
 GATEWAY=examples_RPi/PiGateway
+GATEWAYMQTT=examples_RPi/PiGatewayMQTT
 GATEWAY_SOURCES=examples_RPi/PiGateway.cpp $(wildcard ./utility/*.cpp)
 GATEWAY_OBJECTS=$(patsubst %.cpp,%.o,$(GATEWAY_SOURCES))
 DEPS+=$(patsubst %.cpp,%.d,$(GATEWAY_SOURCES))
@@ -41,24 +43,37 @@ DEPS+=$(patsubst %.cpp,%.d,$(GATEWAY_SOURCES))
 RF24H = /usr/local/include/RF24
 CINCLUDE=-I. -I./core -I$(RF24H)
 
-.PHONY: all clean install uninstall
+.PHONY: all gateway gatewaymqtt clean install uninstall force
 
 all: $(GATEWAY)
+
+mqtt: $(GATEWAYMQTT)
+
+$(COMPILER_FLAGS): force
+	echo '$(CXXFLAGS)' | cmp -s - $@ || echo '$(CXXFLAGS)' > $@
+
+$(GATEWAY_OBJECTS): $(COMPILER_FLAGS)
 
 # Basic Gateway Build
 $(GATEWAY): LDFLAGS += -pthread
 $(GATEWAY): $(GATEWAY_OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $(GATEWAY_OBJECTS)
+	
+# MQTT Gateway Build
+$(GATEWAYMQTT): CXXFLAGS += -DMY_GATEWAY_MQTT_CLIENT
+$(GATEWAYMQTT): LDFLAGS += -pthread -lmosquitto
+$(GATEWAYMQTT): $(GATEWAY_OBJECTS)
+	$(CXX) $(LDFLAGS) -o $@ $(GATEWAY_OBJECTS)
 
 # Include all .d files
 -include $(DEPS)
-
+	
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(CINCLUDE) -MMD -c -o $@ $<
 
 # The Cleaner
 clean:
-	rm -rf build $(GATEWAY_OBJECTS) $(GATEWAY) $(DEPS)
+	rm -rf build $(GATEWAY_OBJECTS) $(GATEWAY) $(GATEWAYMQTT) $(DEPS) $(COMPILER_FLAGS)
 
 install: all install-gatewaybasic install-gatewayserial install-gatewayethernet install-initscripts
 

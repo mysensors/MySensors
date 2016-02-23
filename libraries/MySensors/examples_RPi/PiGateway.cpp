@@ -39,6 +39,19 @@
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 2
 
+/* MQTT BUILD */
+#ifdef MY_GATEWAY_MQTT_CLIENT
+//Linux MQTT Defines - Uncomment and modify as needed.  Written as defaults.
+//#define MQTT_IP "127.0.0.1"
+//#define MQTT_PORT 1883
+//#define MQTT_KEEPALIVE 60
+// Enable these if your MQTT broker requires usenrame/password
+//#define MY_MQTT_USER "username"
+//#define MY_MQTT_PASSWORD "password"
+//#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
+//#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
+#endif
+
 #include <MySensor.h>
 
 using namespace std;
