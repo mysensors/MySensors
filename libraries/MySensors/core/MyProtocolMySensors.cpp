@@ -110,6 +110,73 @@ char * protocolFormatMQTTSubscribe(const char* prefix) {
 	return _fmtBuffer;
 }
 
+void protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsigned int length) {
+	//TODO: Not sure if we should copy the topic and payload into a buffer so we are not modifying original.
+	char *str, *p;
+	uint8_t i = 0;
+	uint8_t bvalue[MAX_PAYLOAD];
+	uint8_t blen = 0;
+	uint8_t command = 0;
+	for (str = strtok_r(topic, "/", &p); str && i <= 5;
+			str = strtok_r(NULL, "/", &p)) {
+		switch (i) {
+			case 0: {
+				// Topic prefix
+				//TODO: Should be checking the topic prefix
+				//if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
+					// Message not for us or malformed!
+				//	return;
+				//}
+				break;
+			}
+			case 1: {
+				// Node id
+				message.destination = atoi(str);
+				break;
+			}
+			case 2: {
+				// Sensor id
+				message.sensor = atoi(str);
+				break;
+			}
+			case 3: {
+				// Command type
+				command = atoi(str);
+				mSetCommand(message, command);
+				break;
+			}
+			case 4: {
+				// Ack flag
+				mSetRequestAck(message, atoi(str)?1:0);
+				break;
+			}
+			case 5: {
+				// Sub type
+				message.type = atoi(str);
+				// Add payload
+				if (command == C_STREAM) {
+					blen = 0;
+					uint8_t val;
+					while (*payload) {
+						val = protocolH2i(*payload++) << 4;
+						val += protocolH2i(*payload++);
+						bvalue[blen] = val;
+						blen++;
+					}
+					message.set(bvalue, blen);
+				} else {
+					char* ca;
+					ca = (char *) payload;
+					ca += length;
+					*ca = '\0';
+					message.set((const char*) payload);
+				}
+			}
+		}
+		i++;
+	}
+}
+
 uint8_t protocolH2i(char c) {
 	uint8_t i = 0;
 	if (c <= '9')

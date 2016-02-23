@@ -71,7 +71,6 @@ void *connected_controller(void* thread_arg);
 
 #ifdef MY_GATEWAY_MQTT_CLIENT
 void *mqtt_thread(void *);
-void parsemqtt_and_send(char *topic, const char *payload);
 struct mosquitto *mosq;
 #endif
 
@@ -355,15 +354,35 @@ void mqtt_message_callback(struct mosquitto *mosq, void *userdata, const struct 
 	
 	if(message->payloadlen){
 		printf("Got a MQTT message %s %s\n", message->topic, (char*)message->payload);
-		
-		std::string strpayload((char *)message->payload);
-		strpayload = strpayload.substr(0,(int)message->payloadlen);
-	
-		parsemqtt_and_send(message->topic, strpayload.c_str());
 	}else{
-		printf("%s (null)\n", message->topic);
+		printf("Got a MQTT message %s (null)\n", message->topic);
 	}
-	fflush(stdout);
+	
+	MyMessage msg;
+	protocolMQTTParse(msg, message->topic, (uint8_t*)message->payload, message->payloadlen);
+	
+	if(msg.destination != 0 && msg.sensor != 0 && msg.type != 255)
+	{
+		ethernetMsg_q.push_back(msg);
+
+		// Forward the data to Ethernet
+		// Likely this is a duplicate from a C_SET that we received and published
+		// in msg_callback.  Not much we can do to avoid the duplicate as there is 
+		// no way to tell if we performed the publish that is triggering  this callback.
+		char *ethernetMsg = protocolFormat(msg);
+
+		for (uint8_t i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
+			if (controllers[i] == -1)
+				continue;
+			if (send(controllers[i], ethernetMsg, strlen(ethernetMsg), 0) == -1)
+				perror("send");
+		}
+	}	
+	else
+	{
+		printf("Recieved a bad MQTT message: '%s':'%s'\n destination:%i, sensor:%i, type:%i\n", 
+		message->topic, (char*)message->payload, msg.destination, msg.sensor, msg.type);
+	}
 }
 
 void mqtt_connect_callback(struct mosquitto *mosq, void *userdata, int result)
@@ -432,91 +451,4 @@ void *mqtt_thread(void *)
 	return NULL;
 }
 
-void parsemqtt_and_send(char *topic, const char *payload)
-{
-	//Buffer for parsemqtt_and_send.  Do not want to re-create it every time we get a message
-	MyMessage msg;
-	char *str, *p;
-
-	char* topic_copy = strdup(topic);
-	
-
-	// TODO: Check if we should send ack or not.
-	int i = 0;
-	for (str = strtok_r(topic_copy,"/",&p) ; str && i<4 ; str = strtok_r(NULL,"/",&p))
-	{
-		// Example: /mySensors/105/4/V_LIGHT
-		// 0: mySensors - Prefix
-		// 1: 105 - node
-		// 2: 4 - sensor
-		// 3: V_LIGHT - type
-		if (i == 0) {
-			//TODO: Add warning when we receive a message from an unexpected broker prefix.
-			//if (strcmp_P(str,broker)!=0) {  //look for MQTT_BROKER_PREFIX
-			//	return;                 //Message not for us or malformatted!
-			//}
-		} else if (i==1) {
-			printf("Destination parse %s\n", str);
-			msg.destination = atoi(str);    //NodeID
-		} else if (i==2) {
-			msg.sensor = atoi(str);         //SensorID
-		} else if (i==3) {
-			unsigned char match=255;         //SensorType
-			
-			//Support for numeric types
-			if ( atoi(str)!=0 || (str[0]=='0' && str[1] =='\0') ) {
-				match=atoi(str);
-			}
-			
-			/*
-			//Check through all the data type string attary to find a match.
-			//? Not sure if there is any need to be checking for other types like sensor and internal
-			//? as those don't seem like they should be outside settable thought MQTT.
-			for (uint8_t j=0; match == 255 && j<sizeof(mysensor_data_str)/sizeof(mysensor_data_str[0]); j++) {
-				if (strcmp(str,mysensor_data_str[j])==0) { //compare sensors
-					match=j;
-				}
-			}
-			*/
-			
-			msg.type = match;
-		} else if (i==4) {
-			mSetAck(msg, atoi(str)); //Ack
-		}
-		
-		i++;
-	}
-	
-	msg.sender = GATEWAY_ADDRESS;
-	msg.last = GATEWAY_ADDRESS;
-	mSetCommand(msg, C_SET);
-	mSetRequestAck(msg, 0);
-	msg.set(payload);
-	
-	if(msg.destination != 0 && msg.sensor != 0 && msg.type != 255)
-	{
-		ethernetMsg_q.push_back(msg);
-			printf("Message not sent!\n");
-
-		// Forward the data to Ethernet
-		// Likely this is a duplicate from a C_SET that we received and published
-		// in msg_callback.  Not much we can do to avoid the duplicate as there is 
-		// no way to tell if we performed the publish that is triggering  this callback.
-		char *ethernetMsg = protocolFormat(msg);
-
-		for (uint8_t i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
-			if (controllers[i] == -1)
-				continue;
-			if (send(controllers[i], ethernetMsg, strlen(ethernetMsg), 0) == -1)
-				perror("send");
-		}
-	}	
-	else
-	{
-		printf("Recieved a bad MQTT message: '%s':'%s'\n destination:%i, sensor:%i, type:%i\n", 
-		topic, payload, msg.destination, msg.sensor, msg.type);
-	}
-		
-	free(topic_copy);
-}
 #endif

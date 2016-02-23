@@ -70,69 +70,8 @@ void incomingMQTT(char* topic, byte* payload,
                         unsigned int length)
 {
 	debug(PSTR("Message arrived on topic: %s\n"), topic);
-	char *str, *p;
-	uint8_t i = 0;
-	uint8_t bvalue[MAX_PAYLOAD];
-	uint8_t blen = 0;
-	uint8_t command = 0;
-	for (str = strtok_r(topic, "/", &p); str && i <= 5;
-			str = strtok_r(NULL, "/", &p)) {
-		switch (i) {
-			case 0: {
-				// Topic prefix
-				if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
-					// Message not for us or malformed!
-					return;
-				}
-				break;
-			}
-			case 1: {
-				// Node id
-				_mqttMsg.destination = atoi(str);
-				break;
-			}
-			case 2: {
-				// Sensor id
-				_mqttMsg.sensor = atoi(str);
-				break;
-			}
-			case 3: {
-				// Command type
-				command = atoi(str);
-				mSetCommand(_mqttMsg, command);
-				break;
-			}
-			case 4: {
-				// Ack flag
-				mSetRequestAck(_mqttMsg, atoi(str)?1:0);
-				break;
-			}
-			case 5: {
-				// Sub type
-				_mqttMsg.type = atoi(str);
-				// Add payload
-				if (command == C_STREAM) {
-					blen = 0;
-					uint8_t val;
-					while (*payload) {
-						val = protocolH2i(*payload++) << 4;
-						val += protocolH2i(*payload++);
-						bvalue[blen] = val;
-						blen++;
-					}
-					_mqttMsg.set(bvalue, blen);
-				} else {
-					char* ca;
-					ca = (char *) payload;
-					ca += length;
-					*ca = '\0';
-					_mqttMsg.set((const char*) payload);
-				}
-				_available = true;
-			}
-		}
-		i++;
-	}
+	protocolMQTTParse(_mqttMsg, topic, payload, length);
+	_available = true;
 }
 
 
