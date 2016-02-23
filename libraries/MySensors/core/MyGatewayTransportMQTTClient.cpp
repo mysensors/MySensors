@@ -59,9 +59,9 @@ MyMessage _mqttMsg;
 bool gatewayTransportSend(MyMessage &message) {
 	if (!_client.connected())
 		return false;
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR(MY_MQTT_PUBLISH_TOPIC_PREFIX "/%d/%d/%d/%d/%d"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
-	debug(PSTR("Sending message on topic: %s\n"), _fmtBuffer);
-	return _client.publish(_fmtBuffer, message.getString(_convBuffer));
+	char *mqttMsg = protocolFormatMQTT(message);
+	debug(PSTR("Sending message on topic: %s\n"), mqttMsg);
+	return _client.publish(mqttMsg, message.getString(_convBuffer));
 }
 
 

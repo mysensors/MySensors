@@ -100,6 +100,16 @@ char * protocolFormat(MyMessage &message) {
 	return _fmtBuffer;
 }
 
+char * protocolFormatMQTTTopic(const char* prefix, MyMessage &message) {
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%s/%d/%d/%d/%d/%d"), prefix, message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
+	return _fmtBuffer;
+}
+
+char * protocolFormatMQTTSubscribe(const char* prefix) {
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%s/+/+/+/+/+"), prefix);
+	return _fmtBuffer;
+}
+
 uint8_t protocolH2i(char c) {
 	uint8_t i = 0;
 	if (c <= '9')
