@@ -181,34 +181,7 @@
 	#endif
 #endif
 
-
-
-// GATEWAY - TRANSPORT
-#if defined(MY_GATEWAY_MQTT_CLIENT)
-	#if defined(MY_RADIO_FEATURE)
-		// We assume that a gateway having a radio also should act as repeater
-		#define MY_REPEATER_FEATURE
-	#endif
-	// GATEWAY - COMMON FUNCTIONS
-	// We only support MQTT Client using W5100 and ESP8266 at the moment
-	#if !(defined(MY_CONTROLLER_URL_ADDRESS) || defined(MY_CONTROLLER_IP_ADDRESS))
-		#error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS
-	#endif
-
-	#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
-		#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
-	#endif
-	#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
-		#error You must specify a topic subscribe prefix MY_MQTT_SUBSCRIBE_TOPIC_PREFIX for this MQTT client
-	#endif
-	#if !defined(MY_MQTT_CLIENT_ID)
-		#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
-	#endif
-
-	#include "drivers/pubsubclient/src/PubSubClient.cpp"
-	#include "core/MyGatewayTransport.cpp"
-	#include "core/MyGatewayTransportMQTTClient.cpp"
-#elif defined(MY_GATEWAY_FEATURE)
+#if defined(MY_GATEWAY_FEATURE)
 	// GATEWAY - COMMON FUNCTIONS
 	#include "core/MyGatewayTransport.cpp"
 
@@ -231,13 +204,23 @@
 	#endif
 	#if defined(MY_GATEWAY_ESP8266)
 		// GATEWAY - ESP8266
-		#include "core/MyGatewayTransportEthernet.cpp"
+		#if defined(MY_GATEWAY_MQTT_CLIENT)
+			#include "drivers/pubsubclient/src/PubSubClient.cpp"
+			#include "core/MyGatewayTransportMQTTClient.cpp"
+		#else
+			#include "core/MyGatewayTransportEthernet.cpp"
+		#endif
 	#elif defined(MY_GATEWAY_LINUX)
 		// GATEWAY - Generic Linux (RaspberryPi, BBB)
 		#include "core/MyGatewayTransportEthernetLinux.cpp"
 	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100
-		#include "core/MyGatewayTransportEthernet.cpp"
+		#if defined(MY_GATEWAY_MQTT_CLIENT)
+			#include "drivers/pubsubclient/src/PubSubClient.cpp"
+			#include "core/MyGatewayTransportMQTTClient.cpp"
+		#else
+			#include "core/MyGatewayTransportEthernet.cpp"
+		#endif
 	#elif defined(MY_GATEWAY_ENC28J60)
 		// GATEWAY - ENC28J60
 		#if defined(MY_USE_UDP)
@@ -251,6 +234,28 @@
 	#endif
 #endif
 
+// GATEWAY - MQTT
+#if defined(MY_GATEWAY_MQTT_CLIENT) && !defined(MY_GATEWAY_LINUX)
+	// GATEWAY - COMMON FUNCTIONS
+	// We only support MQTT Client using W5100, ESP8266 or Linux/RasperryPi at the moment
+	#if !(defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_LINUX))
+		#error We only support MQTT Client using W5100, ESP8266 or Linux/RasperryPi at the moment
+	#endif
+	
+	#if !(defined(MY_CONTROLLER_URL_ADDRESS) || defined(MY_CONTROLLER_IP_ADDRESS))
+		#error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS
+	#endif
+
+	#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
+		#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
+	#endif
+	#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
+		#error You must specify a topic subscribe prefix MY_MQTT_SUBSCRIBE_TOPIC_PREFIX for this MQTT client
+	#endif
+	#if !defined(MY_MQTT_CLIENT_ID)
+		#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
+	#endif
+#endif
 
 // RADIO
 #if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
