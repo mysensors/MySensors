@@ -164,7 +164,9 @@ inline void transportProcess() {
 					if (_nc.nodeId == AUTO) {
 						// sensor net gateway will return max id if all sensor id are taken
 						debug(PSTR("full\n"));
-						while (1); // Wait here. Nothing else we can do...
+						// Nothing else we can do...
+						_infiniteLoop();
+						
 					}
 					transportPresentNode();
 					// Write id to EEPROM

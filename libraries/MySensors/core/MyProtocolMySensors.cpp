@@ -96,7 +96,7 @@ bool protocolParse(MyMessage &message, char *inputString) {
 }
 
 char * protocolFormat(MyMessage &message) {
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type, message.getString(_convBuffer));
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender, message.sensor, (uint8_t)mGetCommand(message), (uint8_t)mGetAck(message), message.type, message.getString(_convBuffer));
 	return _fmtBuffer;
 }
 
