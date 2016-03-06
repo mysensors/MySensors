@@ -32,7 +32,7 @@ bool transportInit() {
 		#ifdef MY_RFM69_ENABLE_ENCRYPTION
 			uint8_t _psk[16];
 			hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-			_radio.encrypt(_psk);
+			_radio.encrypt((const char*)_psk);
 			memset(_psk, 0, 16); // Make sure it is purged from memory when set
 		#endif
 		return true;
