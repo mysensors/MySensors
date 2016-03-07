@@ -236,6 +236,8 @@ void _process(void);
 
 void _processInternalMessages();
 
+void _infiniteLoop();
+
 boolean _sendRoute(MyMessage &message);
 
 extern NodeConfig _nc;
