@@ -22,15 +22,16 @@
 
 #include "MyHw.h"
 #include <stdlib.h>
+#include <iostream>
 
 #define MY_SERIALDEVICE Serial
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
 
 // Define these as macros (do nothing)
 #define hwDigitalWrite(__pin, __value)
 #define hwWatchdogReset()
 #define hwReboot()
+
+using namespace std;
 
 void hwInit();
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
