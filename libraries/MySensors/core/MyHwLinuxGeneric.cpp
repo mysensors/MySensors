@@ -22,11 +22,50 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <string.h>
+#include <fstream>
+#include <sys/stat.h>
 
+static const char* CONFIG_FILE = "/etc/MySensorGateway.cfg";
 static const size_t _length = 1024;	// ATMega328 has 1024 bytes
-//TODO store _config to a file
 static uint8_t _config[_length];	
 static unsigned long millis_at_start;
+
+bool CheckConfigFile() {
+    struct stat fileInfo;
+	
+	if(stat(CONFIG_FILE, &fileInfo) != 0)
+	{
+		//File does not exist.  Create it.
+		debug("Config file %s does not exist, creating new config file.\n", CONFIG_FILE);
+		ofstream myFile(CONFIG_FILE, ios::out | ios::binary);
+		if(!myFile)
+		{
+			debug("Unable to create config file %s.\n", CONFIG_FILE);
+			return false;
+		}
+		myFile.write((const char*)_config, _length);
+		myFile.close();
+	}
+	else if(fileInfo.st_size != _length)
+	{
+		debug("Config file %s is not the correct size of %i.  Please remove the file and a new one will be created.\n", CONFIG_FILE, _length);
+		return false;
+	}
+	else
+	{
+		//Read config into local memory.
+		ifstream myFile(CONFIG_FILE, ios::in | ios::binary);
+		if(!myFile)
+		{
+			debug("Unable to open config to file %s for reading.\n", CONFIG_FILE);
+			return false;
+		}
+		myFile.read((char*)_config, _length);
+		myFile.close();
+	}
+	
+	return true;
+}
 
 void hwInit()
 {
@@ -34,6 +73,11 @@ void hwInit()
 
 	for (size_t i = 0; i < _length; i++)
 		_config[i] = 0xFF;
+		
+	if (!CheckConfigFile())
+	{
+		exit(1);
+	}
 
 	gettimeofday(&curTime, NULL);
 	millis_at_start = curTime.tv_sec;
@@ -51,23 +95,35 @@ void hwReadConfigBlock(void* buf, void* addr, size_t length)
 void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 {
 	unsigned long int offs = reinterpret_cast<unsigned long int>(addr);
-
+	
 	if (length && offs + length <= _length) {
 		memcpy(_config+offs, buf, length);
+		
+		ofstream myFile(CONFIG_FILE, ios::out | ios::binary);
+		if(!myFile)
+		{
+			debug("Unable to write config to file %s.\n", CONFIG_FILE);
+			return;
+		}
+		myFile.write((const char*)buf+offs, _length);
+		myFile.close();
 	}
 }
 
-uint8_t hwReadConfig(int addr)
+uint8_t hwReadConfig(int adr)
 {
-	if (addr >= 0 && (unsigned)addr < _length)
-		return _config[addr];
-	return 0xFF;
+	uint8_t value = 0xFF;
+	hwReadConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
+	return value;
 }
 
-void hwWriteConfig(int addr, uint8_t value)
+void hwWriteConfig(int adr, uint8_t value)
 {
-	if (addr >= 0 && (unsigned)addr < _length)
-		_config[addr] = value;
+	uint8_t curr = hwReadConfig(adr);
+	if (curr != value)
+	{
+		hwWriteConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
+	}
 }
 
 unsigned long hwMillis()
