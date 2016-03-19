@@ -266,6 +266,25 @@ void requestTime() {
 	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
+void sendDiscoverInfo(uint8_t recipient, uint8_t page) {
+	if (page == 0) {
+		// general information
+		_msgTmp.data[0] = 0b001 << 5 | 0b00000;
+		_msgTmp.data[1] = 0b0001 << 4 | 0b0000;
+		_msgTmp.data[2] = 0;
+		_msgTmp.data[3] = 0;
+		_msgTmp.data[4] = 0;
+		_msgTmp.data[5] = _nc.parentNodeId;
+		_msgTmp.data[6] = _nc.distance;
+		
+		
+	} else if (page == 1) {
+		
+	}
+	_sendRoute(build(_msgTmp, _nc.nodeId, recipient, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
+				
+}
+
 // Message delivered through _msg
 void _processInternalMessages() {
 	bool isMetric;
@@ -302,9 +321,11 @@ void _processInternalMessages() {
 		// Deliver time to callback
 		if (receiveTime)
 			receiveTime(_msg.getULong());
+	} else if (type == I_DISCOVER) {
+		sendDiscoverInfo(_msg.sender, _msg.getByte());	
 	}
 	#if defined(MY_REPEATER_FEATURE)
-		if (type == I_CHILDREN) {
+		else if (type == I_CHILDREN) {
 			if (_msg.getString()[0] == 'C') {
 				// Clears child relay data for this node
 				debug(PSTR("clear routing table\n"));

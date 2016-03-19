@@ -259,7 +259,7 @@ inline void transportProcess() {
 				debug(PSTR("discovery signal\n"));
 				// random wait to minimize collisions
 				wait(hwMillis() & 0x3ff);
-				_sendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
+				sendDiscoverInfo(sender, _msg.getByte());
 				// repeat bc signal
 				#if defined(MY_REPEATER_FEATURE)
 				// controlled repeating

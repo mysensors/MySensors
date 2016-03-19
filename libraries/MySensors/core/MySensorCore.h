@@ -131,12 +131,15 @@ void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GA
  *
  */
 void requestTime();
-
-
-
+/**
+ * Send Disover info / tbd
+ *
+ */
+void sendDiscoverInfo(uint8_t recipient, uint8_t page);
 /**
  * Returns the most recent node configuration received from controller
  */
+ 
 ControllerConfig getConfig();
 
 /**
