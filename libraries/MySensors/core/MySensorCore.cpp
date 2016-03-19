@@ -23,12 +23,12 @@ ControllerConfig _cc; // Configuration coming from controller
 NodeConfig _nc; // Essential settings for node to work
 MyMessage _msg;  // Buffer for incoming messages.
 MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among others).
+uint32_t _heartbeat = 0;
 
 #ifdef MY_DEBUG
 	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
-uint32_t _heartbeat = 0;
 void (*_timeCallback)(unsigned long); // Callback for requested time messages
 
 
@@ -267,22 +267,10 @@ void requestTime() {
 }
 
 void sendDiscoverInfo(uint8_t recipient, uint8_t page) {
-	if (page == 0) {
-		// general information
-		_msgTmp.data[0] = 0b001 << 5 | 0b00000;
-		_msgTmp.data[1] = 0b0001 << 4 | 0b0000;
-		_msgTmp.data[2] = 0;
-		_msgTmp.data[3] = 0;
-		_msgTmp.data[4] = 0;
-		_msgTmp.data[5] = _nc.parentNodeId;
-		_msgTmp.data[6] = _nc.distance;
-		
-		
-	} else if (page == 1) {
-		
-	}
-	_sendRoute(build(_msgTmp, _nc.nodeId, recipient, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
-				
+	uint8_t buffer[MAX_PAYLOAD];
+	uint8_t len = 0;
+	generateDiscoverResponse(page,&buffer[0],&len);
+	_sendRoute(build(_msgTmp, _nc.nodeId, recipient, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(buffer,len));		
 }
 
 // Message delivered through _msg
