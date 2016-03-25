@@ -335,6 +335,12 @@
 //#define MY_DEBUG_VERBOSE_RF24
 
 /**
+ * @def MY_RF24_SPI_MAX_SPEED
+ * @brief MY_RF24_SPI_MAX_SPEED to overrule default nRF24L01+ SPI speed.
+ */ 
+//#define MY_RF24_SPI_MAX_SPEED 4000000
+
+/**
  * @def MY_RF24_CE_PIN
  * @brief Default RF24 chip enable pin setting. Override in sketch if needed.
  */

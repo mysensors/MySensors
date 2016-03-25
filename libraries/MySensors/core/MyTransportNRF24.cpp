@@ -22,10 +22,8 @@
 #include "drivers/RF24/RF24.h"
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.h"
+	#include "drivers/AES/AES.h"
 #endif
-
-
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	AES _aes;

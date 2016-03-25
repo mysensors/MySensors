@@ -1,4 +1,4 @@
-/**
+/*
 * The MySensors Arduino library handles the wireless radio link and protocol
 * between your home built sensors/actuators and HA controller of choice.
 * The sensors forms a self healing radio network with optional repeaters. Each
@@ -17,7 +17,7 @@
 * version 2 as published by the Free Software Foundation.
 *
 * Based on maniacbug's RF24 library, copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
-* Driver refactored and optimized for speed and size by Olivier Mauti <olivier@mysensors.org>
+* RF24 driver refactored and optimized for speed and size, copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
 */
 
 #ifndef __RF24_H__
@@ -29,10 +29,18 @@
 	#include <DigitalIO.h>
 #endif
 
+// SPI settings
+#if !defined(MY_RF24_SPI_MAX_SPEED)
+	// default 2Mhz - safe for nRF24L01+ clones
+	#define MY_RF24_SPI_MAX_SPEED 2000000	
+#endif
+#define MY_RF24_SPI_DATA_ORDER MSBFIRST
+#define MY_RF24_SPI_DATA_MODE SPI_MODE0
+
 // settings
-#define _CONFIGURATION (uint8_t) (RF24_CRC_16 << 1)
-#define _FEATURE (uint8_t)( _BV(EN_DPL) | _BV(EN_ACK_PAY) )
-#define _RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 // +1 for Si24R1
+#define MY_RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 1)
+#define MY_RF24_FEATURE (uint8_t)( _BV(EN_DPL) | _BV(EN_ACK_PAY) )
+#define MY_RF24_RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 // +1 for Si24R1
 
 // pipes
 #define BROADCAST_PIPE 1
@@ -60,6 +68,12 @@
 #define RF24_CRC_DISABLED 	0 
 #define RF24_CRC_8 			2 
 #define RF24_CRC_16 		3
+
+// ARD, auto retry delay
+#define RF24_ARD 5 //=1500us
+
+// ARD, auto retry count
+#define RF24_ARC 15
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 	#if defined(SPI_UART)
@@ -106,8 +120,6 @@
 #elif defined (SPI_UART)
 	SPIUARTClass uspi;
 #endif
-
-
 
 // nRF24L01(+) register definitions
 #define NRF_CONFIG  0x00
@@ -215,8 +227,6 @@
 #define RF_DR_HIGH  3
 #define RF_PWR_LOW  1
 #define RF_PWR_HIGH 2
-
-
 
 #endif // __RF24_H__
 
