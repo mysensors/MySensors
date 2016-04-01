@@ -52,47 +52,47 @@ typedef enum {
 
 /// @brief Type of sensor (used when presenting sensors)
 typedef enum {
-	S_DOOR, // Door sensor, V_TRIPPED, V_ARMED
-	S_MOTION,  // Motion sensor, V_TRIPPED, V_ARMED 
-	S_SMOKE,  // Smoke sensor, V_TRIPPED, V_ARMED
-	S_LIGHT, // Binary light or relay, V_STATUS (or V_LIGHT), V_WATT
-	S_BINARY=3, // Binary light or relay, V_STATUS (or V_LIGHT), V_WATT (same as S_LIGHT)
-	S_DIMMER, // Dimmable light or fan device, V_STATUS (on/off), V_DIMMER (dimmer level 0-100), V_WATT
-	S_COVER, // Blinds or window cover, V_UP, V_DOWN, V_STOP, V_DIMMER (open/close to a percentage)
-	S_TEMP, // Temperature sensor, V_TEMP
-	S_HUM, // Humidity sensor, V_HUM
-	S_BARO, // Barometer sensor, V_PRESSURE, V_FORECAST
-	S_WIND, // Wind sensor, V_WIND, V_GUST
-	S_RAIN, // Rain sensor, V_RAIN, V_RAINRATE
-	S_UV, // Uv sensor, V_UV
-	S_WEIGHT, // Personal scale sensor, V_WEIGHT, V_IMPEDANCE
-	S_POWER, // Power meter, V_WATT, V_KWH
-	S_HEATER, // Header device, V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
-	S_DISTANCE, // Distance sensor, V_DISTANCE
-	S_LIGHT_LEVEL, // Light level sensor, V_LIGHT_LEVEL (uncalibrated in percentage),  V_LEVEL (light level in lux)
-	S_ARDUINO_NODE, // Used (internally) for presenting a non-repeating Arduino node
-	S_ARDUINO_REPEATER_NODE, // Used (internally) for presenting a repeating Arduino node 
-	S_LOCK, // Lock device, V_LOCK_STATUS
-	S_IR, // Ir device, V_IR_SEND, V_IR_RECEIVE
-	S_WATER, // Water meter, V_FLOW, V_VOLUME
-	S_AIR_QUALITY, // Air quality sensor, V_LEVEL
-	S_CUSTOM, // Custom sensor 
-	S_DUST, // Dust sensor, V_LEVEL
-	S_SCENE_CONTROLLER, // Scene controller device, V_SCENE_ON, V_SCENE_OFF. 
-	S_RGB_LIGHT, // RGB light. Send color component data using V_RGB. Also supports V_WATT 
-	S_RGBW_LIGHT, // RGB light with an additional White component. Send data using V_RGBW. Also supports V_WATT
-	S_COLOR_SENSOR,  // Color sensor, send color information using V_RGB
-	S_HVAC, // Thermostat/HVAC device. V_HVAC_SETPOINT_HEAT, V_HVAC_SETPOINT_COLD, V_HVAC_FLOW_STATE, V_HVAC_FLOW_MODE, V_TEMP
-	S_MULTIMETER, // Multimeter device, V_VOLTAGE, V_CURRENT, V_IMPEDANCE 
-	S_SPRINKLER,  // Sprinkler, V_STATUS (turn on/off), V_TRIPPED (if fire detecting device)
-	S_WATER_LEAK, // Water leak sensor, V_TRIPPED, V_ARMED
-	S_SOUND, // Sound sensor, V_TRIPPED, V_ARMED, V_LEVEL (sound level in dB)
-	S_VIBRATION, // Vibration sensor, V_TRIPPED, V_ARMED, V_LEVEL (vibration in Hz)
-	S_MOISTURE, // Moisture sensor, V_TRIPPED, V_ARMED, V_LEVEL (water content or moisture in percentage?) 
-	S_INFO, // LCD text device / Simple information device on controller, V_TEXT
-	S_GAS, // Gas meter, V_FLOW, V_VOLUME
-	S_GPS, // GPS Sensor, V_POSITION
-	S_WATER_QUALITY,// V_TEMP, V_PH, V_ORP, V_EC, V_STATUS 
+	S_DOOR 									= 0,  // Door sensor: V_TRIPPED, V_ARMED
+	S_MOTION 								= 1,  // Motion sensor: V_TRIPPED, V_ARMED 
+	S_SMOKE 								= 2,  // Smoke sensor: V_TRIPPED, V_ARMED
+	S_LIGHT 								= 3,  // Binary light or relay: V_STATUS (or V_LIGHT), V_WATT
+	S_BINARY 								= 3,  // Binary light or relay: V_STATUS (or V_LIGHT), V_WATT (same as S_LIGHT)
+	S_DIMMER 								= 4,  // Dimmable light or fan device: V_STATUS (on/off), V_DIMMER (dimmer level 0-100), V_WATT
+	S_COVER 								= 5,  // Blinds or window cover: V_UP, V_DOWN, V_STOP, V_DIMMER (open/close to a percentage)
+	S_TEMP 									= 6,  // Temperature sensor: V_TEMP
+	S_HUM 									= 7,  // Humidity sensor: V_HUM
+	S_BARO 									= 8,  // Barometer sensor: V_PRESSURE, V_FORECAST
+	S_WIND 									= 9,  // Wind sensor: V_WIND, V_GUST
+	S_RAIN 									= 10, // Rain sensor: V_RAIN, V_RAINRATE
+	S_UV 										= 11, // Uv sensor: V_UV
+	S_WEIGHT 								= 12, // Personal scale sensor: V_WEIGHT, V_IMPEDANCE
+	S_POWER 								= 13, // Power meter: V_WATT, V_KWH
+	S_HEATER 								= 14, // Header device: V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
+	S_DISTANCE 							= 15, // Distance sensor: V_DISTANCE
+	S_LIGHT_LEVEL 					= 16, // Light level sensor: V_LIGHT_LEVEL (uncalibrated in percentage), V_LEVEL (light level in lux)
+	S_ARDUINO_NODE 					= 17, // Used (internally) for presenting a non-repeating Arduino node
+	S_ARDUINO_REPEATER_NODE = 18, // Used (internally) for presenting a repeating Arduino node 
+	S_LOCK 									= 19, // Lock device: V_LOCK_STATUS
+	S_IR 										= 20, // Ir device: V_IR_SEND, V_IR_RECEIVE
+	S_WATER 								= 21, // Water meter: V_FLOW, V_VOLUME
+	S_AIR_QUALITY 					= 22, // Air quality sensor: V_LEVEL
+	S_CUSTOM 								= 23, // Custom sensor 
+	S_DUST 									= 24, // Dust sensor: V_LEVEL
+	S_SCENE_CONTROLLER 			= 25, // Scene controller device: V_SCENE_ON, V_SCENE_OFF
+	S_RGB_LIGHT 						= 26, // RGB light. Send color component data using V_RGB. Also supports V_WATT 
+	S_RGBW_LIGHT 						= 27, // RGB light with an additional White component. Send data using V_RGBW. Also supports V_WATT
+	S_COLOR_SENSOR 					= 28, // Color sensor, send color information using V_RGB
+	S_HVAC 									= 29, // Thermostat/HVAC device: V_HVAC_SETPOINT_HEAT, V_HVAC_SETPOINT_COLD, V_HVAC_FLOW_STATE, V_HVAC_FLOW_MODE, V_TEMP
+	S_MULTIMETER 						= 30, // Multimeter device: V_VOLTAGE, V_CURRENT, V_IMPEDANCE 
+	S_SPRINKLER 						= 31, // Sprinkler: V_STATUS (turn on/off), V_TRIPPED (if fire detecting device)
+	S_WATER_LEAK 						= 32, // Water leak sensor: V_TRIPPED, V_ARMED
+	S_SOUND 								= 33, // Sound sensor: V_TRIPPED, V_ARMED, V_LEVEL (sound level in dB)
+	S_VIBRATION 						= 34, // Vibration sensor: V_TRIPPED, V_ARMED, V_LEVEL (vibration in Hz)
+	S_MOISTURE 							= 35, // Moisture sensor: V_TRIPPED, V_ARMED, V_LEVEL (water content or moisture in percentage?) 
+	S_INFO 									= 36, // LCD text device / Simple information device on controller: V_TEXT
+	S_GAS 									= 37, // Gas meter: V_FLOW, V_VOLUME
+	S_GPS 									= 38, // GPS Sensor: V_POSITION
+	S_WATER_QUALITY 				= 39, // Water quality: V_TEMP, V_PH, V_ORP, V_EC, V_STATUS 
 } mysensor_sensor;
 
 /// @brief Type of sensor data (for set/req/ack messages)
