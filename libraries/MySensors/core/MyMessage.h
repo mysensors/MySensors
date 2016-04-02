@@ -116,7 +116,7 @@ typedef enum {
 	V_IMPEDANCE, // S_MULTIMETER, S_WEIGHT. Impedance value
 	V_ARMED, // S_DOOR, S_MOTION, S_SMOKE, S_SPRINKLER. Armed status of a security sensor. 1 = Armed, 0 = Bypassed
 	V_TRIPPED, // S_DOOR, S_MOTION, S_SMOKE, S_SPRINKLER, S_WATER_LEAK, S_SOUND, S_VIBRATION, S_MOISTURE. Tripped status of a security sensor. 1 = Tripped, 0
-	V_WATT, // S_POWER, S_LIGHT, S_DIMMER, S_RGB, S_RGBW. Watt value for power meters
+	V_WATT, // S_POWER, S_LIGHT, S_DIMMER, S_RGB_LIGHT, S_RGBW_LIGHT. Watt value for power meters
 	V_KWH, // S_POWER. Accumulated number of KWH for a power meter
 	V_SCENE_ON, // S_SCENE_CONTROLLER. Turn on a scene
 	V_SCENE_OFF, // S_SCENE_CONTROLLER. Turn of a scene
