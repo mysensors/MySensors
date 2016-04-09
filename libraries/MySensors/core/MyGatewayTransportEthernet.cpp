@@ -134,9 +134,6 @@ bool gatewayTransportInit() {
 	#else
 		// we have to use pointers due to the constructor of EthernetServer
 		_ethernetServer.begin();
-		#if defined(MY_GATEWAY_ESP8266)
-			_ethernetServer.setNoDelay(true);
-		#endif
 	#endif /* USE_UDP */
 	_w5100_spi_en(false);
 	return true;
