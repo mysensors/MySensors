@@ -35,11 +35,6 @@
 // final sketch but is helpful to see what is actually is happening during development
 //#define MY_DEBUG
 
-// Enable MY_DEBUG_VERBOSE flag for verbose debug prints related to RF24 radio.
-// Requires DEBUG to be enabled.
-// This will add even more to the size of the final sketch!
-//#define MY_DEBUG_VERBOSE
-
 // Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
 // Requires DEBUG to be enabled.
 // This will add even more to the size of the final sketch!
@@ -327,11 +322,23 @@
 #endif
 
 /**********************************
-*  NRF24L01 Driver Defaults
+*  NRF24L01P Driver Defaults
 ***********************************/
 
 // Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RF24_ENABLE_ENCRYPTION
+
+/**
+ * @def MY_DEBUG_VERBOSE_RF24
+ * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled.
+ */ 
+//#define MY_DEBUG_VERBOSE_RF24
+
+/**
+ * @def MY_RF24_SPI_MAX_SPEED
+ * @brief MY_RF24_SPI_MAX_SPEED to overrule default nRF24L01+ SPI speed.
+ */ 
+//#define MY_RF24_SPI_MAX_SPEED 4000000
 
 /**
  * @def MY_RF24_CE_PIN
@@ -399,11 +406,29 @@
  * @def MY_RF24_BASE_RADIO_ID
  * @brief RF24 radio network identifier.
  *
- * This is also act as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+ * This acts as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
  */
 #ifndef MY_RF24_BASE_RADIO_ID
-#define MY_RF24_BASE_RADIO_ID ((uint64_t)0xA8A8E1FC00LL)
+#define MY_RF24_BASE_RADIO_ID 0x00,0xFC,0xE1,0xA8,0xA8
 #endif
+
+/**
+ * @def MY_RF24_ADDR_WIDTH
+ * @brief RF24 address width.
+ *
+ * This defines the width of the base address.
+ */
+#ifndef MY_RF24_ADDR_WIDTH
+#define MY_RF24_ADDR_WIDTH 5
+#endif
+
+/**
+ * @def MY_RF24_SANITY_CHECK
+ * @brief RF24 sanity check to verify functional RF module
+ *
+ * This reads back and compares configuration registers. Disable if using non-P modules
+ */
+#define MY_RF24_SANITY_CHECK
 
 // Enable SOFTSPI for NRF24L01, useful for the W5100 Ethernet module
 //#define MY_SOFTSPI

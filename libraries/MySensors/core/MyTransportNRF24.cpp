@@ -19,22 +19,12 @@
 
 #include "MyConfig.h"
 #include "MyTransport.h"
-#include <stdint.h>
 #include "drivers/RF24/RF24.h"
-#include "drivers/RF24/RF24_config.h"
+
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.h"
+	#include "drivers/AES/AES.h"
 #endif
 
-#define TO_ADDR(x) (MY_RF24_BASE_RADIO_ID + x)
-
-#define WRITE_PIPE ((uint8_t)0)
-#define CURRENT_NODE_PIPE ((uint8_t)1)
-#define BROADCAST_PIPE ((uint8_t)2)
-
-
-RF24 _rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN);
-uint8_t _address;
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	AES _aes;
 	uint8_t _dataenc[32] = {0};
@@ -42,95 +32,60 @@ uint8_t _address;
 #endif
 
 bool transportInit() {
-	// Start up the radio library
-	_rf24.begin();
-
-	if (!_rf24.isPVariant()) {
-		return false;
-	}
-	_rf24.setAutoAck(1);
-	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
-	_rf24.enableAckPayload();
-	_rf24.setChannel(MY_RF24_CHANNEL);
-	_rf24.setPALevel(MY_RF24_PA_LEVEL);
-	if (!_rf24.setDataRate(MY_RF24_DATARATE)) {
-		return false;
-	}
-	_rf24.setRetries(5,15);
-	_rf24.setCRCLength(RF24_CRC_16);
-	_rf24.enableDynamicPayloads();
-
-	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
-	_rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
-
-
+	
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-		_aes.set_key(_psk, 16); //set up AES-key
-		memset(_psk, 0, 16); // Make sure it is purged from memory when set
+		//set up AES-key
+		_aes.set_key(_psk, 16);
+		// Make sure it is purged from memory when set
+		memset(_psk, 0, 16);
 	#endif
-
-	//_rf24.printDetails();
-
-	return true;
+	
+	return initializeRF24();
 }
 
 void transportSetAddress(uint8_t address) {
-	_address = address;
-	_rf24.openReadingPipe(WRITE_PIPE, TO_ADDR(address));
-	_rf24.openReadingPipe(CURRENT_NODE_PIPE, TO_ADDR(address));
-	_rf24.startListening();
+	setNodeAddress(address);
+	startListening();
 }
 
 uint8_t transportGetAddress() {
-	return _address;
+	return getNodeID();
 }
 
-bool transportSend(uint8_t to, const void* data, uint8_t len) {
+bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
-		memcpy(_dataenc,data,len); // copy input data because it is read-only
-
-		_aes.set_IV(0);//not sure if necessary
+		// copy input data because it is read-only
+		memcpy(_dataenc,data,len); 
+		// has to be adjusted, WIP!
+		_aes.set_IV(0);
 		len = len > 16 ? 32 : 16;
-		_aes.cbc_encrypt(_dataenc, _dataenc, len/16); //encrypt
-	#endif
-
-	// Make sure radio has powered up
-
-	_rf24.powerUp();
-	_rf24.stopListening();
-	_rf24.openWritingPipe(TO_ADDR(to));
-	#if defined(MY_RF24_ENABLE_ENCRYPTION)
-		bool ok = _rf24.write(_dataenc, len, to == BROADCAST_ADDRESS);
+		//encrypt data
+		_aes.cbc_encrypt(_dataenc, _dataenc, len/16); 
+		bool status = sendMessage( recipient, _dataenc, len );
 	#else
-		bool ok = _rf24.write(data, len, to == BROADCAST_ADDRESS);
+		bool status = sendMessage( recipient, data, len );
 	#endif
-	_rf24.startListening();
-	return ok;
+	
+	return status;
 }
 
 bool transportAvailable(uint8_t *to) {
-	uint8_t pipe = 255;
-	boolean avail = _rf24.available(&pipe);
-
-	(void)avail; //until somebody makes use of 'avail'
-	if (pipe == CURRENT_NODE_PIPE)
-		*to = _address;
-	else if (pipe == BROADCAST_PIPE)
-		*to = BROADCAST_ADDRESS;
-	return (_rf24.available() && pipe < 6);
+	bool avail = IsDataAvailable(to);
+	return avail;
 }
 
 uint8_t transportReceive(void* data) {
-	uint8_t len = _rf24.getDynamicPayloadSize();
-	_rf24.read(data, len);
+	uint8_t len = readMessage(data);
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
-		_aes.set_IV(0);//not sure if necessary
-		_aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1); // decrypt
+		// has to be adjusted, WIP!
+		_aes.set_IV(0);
+		// decrypt data
+		_aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1);
 	#endif
 	return len;
 }
 
 void transportPowerDown() {
-	_rf24.powerDown();
+	powerDown();
 }
