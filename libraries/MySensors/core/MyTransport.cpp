@@ -452,7 +452,10 @@ void transportPresentNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	transportSetAddress(_nc.nodeId);
 	// Present node and request config
-	#ifndef MY_GATEWAY_FEATURE
+	#ifdef MY_GATEWAY_FEATURE
+            //present the gateway itself as an arduino node as it may have child sensors
+                present(NODE_SENSOR_ID, S_ARDUINO_NODE);
+        #else
 		if (_nc.nodeId != AUTO) {
 			// Send signing preferences for this node
 			signerPresentation(_msg);
