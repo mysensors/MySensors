@@ -169,6 +169,8 @@ inline void transportProcess() {
 						
 					}
 					transportPresentNode();
+					if (presentation)
+						presentation();
 					// Write id to EEPROM
 					hwWriteConfig(EEPROM_NODE_ID_ADDRESS, _nc.nodeId);
 					debug(PSTR("id=%d\n"), _nc.nodeId);
