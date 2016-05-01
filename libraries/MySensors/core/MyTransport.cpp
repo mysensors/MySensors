@@ -454,7 +454,14 @@ void transportPresentNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	transportSetAddress(_nc.nodeId);
 	// Present node and request config
-	#ifndef MY_GATEWAY_FEATURE
+	#ifdef MY_GATEWAY_FEATURE
+		// Send presentation for this gateway device
+		#ifdef MY_REPEATER_FEATURE
+			present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
+		#else
+			present(NODE_SENSOR_ID, S_ARDUINO_NODE);
+		#endif
+	else
 		if (_nc.nodeId != AUTO) {
 			// Send signing preferences for this node
 			signerPresentation(_msg);
