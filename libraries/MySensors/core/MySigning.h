@@ -157,6 +157,8 @@
  * Just set the flag @ref MY_SIGNING_REQUEST_SIGNATURES and the node will inform the gateway that it expects the gateway to sign all
  * messages sent to the node. If this is set in a gateway, it will @b NOT force all nodes to sign messages to it. It will only require
  * signatures from nodes that in turn require signatures.<br>
+ * If you want to have two nodes communicate securely directly with each other, the nodes that require signatures must send a presentation
+ * message to all nodes it expect signed messages from (only the gateway is informed automatically). See @ref signerPresentation().<br>
  * A node can have three "states" with respect to signing:
  * 1. Node does not support signing in any way (neither @ref MY_SIGNING_ATSHA204 nor @ref MY_SIGNING_SOFT is set)
  * 2. Node does support signing but don't require messages sent to it to be signed (@ref MY_SIGNING_REQUEST_SIGNATURES is not set)
@@ -506,14 +508,19 @@ void signerInit(void);
 /**
  * @brief Does signing specific presentation for a node.
  *
- * This function makes sure any signing related presentation info is shared with the gateway.
+ * This function makes sure any signing related presentation info is shared with the other part.
  * The presentation of the gateways signing preferences is done in @ref signerProcessInternal().
  * \n@b Usage: This function should be called by the presentation routine of the mysensors library.
- * There is no need to call this directly from a sketch.
+ * You only need to call this directly from a sketch to set up a node to node signed message exchange.
+ * If you do call this directly from a sketch, and you at some point change your sketch to go from
+ * requireing signing to not requireing signatures, you need to present this change to the node at least
+ * once, so it can update its requirements tables accordingly. Or it will keep believing that this node
+ * require signatures and attempt to send signed messages to it.
  *
  * @param msg Message buffer to use.
+ * @param destination Node ID of the destination.
  */
-void signerPresentation(MyMessage &msg);
+void signerPresentation(MyMessage &msg, uint8_t destination);
  
 /**
  * @brief Manages internal signing message handshaking.
