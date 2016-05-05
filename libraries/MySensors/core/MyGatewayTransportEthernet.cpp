@@ -156,17 +156,16 @@ bool gatewayTransportSend(MyMessage &message)
 		#else
 			EthernetClient client;
 			#if defined(MY_CONTROLLER_URL_ADDRESS)
-				if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
-			#else
-				if (client.connect(_ethernetControllerIP, MY_PORT)) {
-			#endif
-				client.write(_ethernetMsg, strlen(_ethernetMsg));
-				client.stop();
-			}
-			else {
-				// connecting to the server failed!
-				ret = false;
-			}
+	                	if (client.connected() || client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+	        	#else
+	                	if (client.connected() || client.connect(_ethernetControllerIP, MY_PORT)) {
+	        	#endif
+	                	client.write(_ethernetMsg, strlen(_ethernetMsg));
+	                }
+	                else {
+	                	// connecting to the server failed!
+	                	ret = false;
+	                }
 		#endif
 	#else
 		// Send message to connected clients
