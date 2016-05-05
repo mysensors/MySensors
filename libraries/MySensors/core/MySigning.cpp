@@ -129,8 +129,8 @@ void signerInit(void) {
 #endif
 }
 
-void signerPresentation(MyMessage &msg) {
-	prepareSigningPresentation(msg, GATEWAY_ADDRESS);
+void signerPresentation(MyMessage &msg, uint8_t destination) {
+	prepareSigningPresentation(msg, destination);
 
 #if defined(MY_SIGNING_REQUEST_SIGNATURES)
 	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
@@ -145,8 +145,10 @@ void signerPresentation(MyMessage &msg) {
 
 #if defined(MY_SIGNING_FEATURE)
 	// If we do support signing, wait for the gateway to tell us how it prefer us to transmit our messages
-	SIGN_DEBUG(PSTR("Waiting for GW to send signing preferences...\n"));
-	wait(2000);
+	if (destination == GATEWAY_ADDRESS) {
+		SIGN_DEBUG(PSTR("Waiting for GW to send signing preferences...\n"));
+		wait(2000);
+	}
 #endif
 }
 

@@ -463,8 +463,8 @@ void transportPresentNode() {
 		#endif
 	else
 		if (_nc.nodeId != AUTO) {
-			// Send signing preferences for this node
-			signerPresentation(_msg);
+			// Send signing preferences for this node to the GW
+			signerPresentation(_msg, GATEWAY_ADDRESS);
 
 			// Send presentation for this radio node
 			#ifdef MY_REPEATER_FEATURE
