@@ -461,7 +461,7 @@ void transportPresentNode() {
 		#else
 			present(NODE_SENSOR_ID, S_ARDUINO_NODE);
 		#endif
-	else
+	#else
 		if (_nc.nodeId != AUTO) {
 			// Send signing preferences for this node to the GW
 			signerPresentation(_msg, GATEWAY_ADDRESS);
