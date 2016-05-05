@@ -22,13 +22,8 @@
 
 #include "RF24.h"
 
-static uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
-static uint8_t MY_RF24_NODE_ADDRESS = AUTO;
-
-#if (MY_RF24_IRQ_PIN != MY_RF24_IRQ_PIN_UNUSED)
-typedef void (*receiveCallbackType)(const uint8_t);
-static receiveCallbackType receiveCallback = NULL;
-#endif
+uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
+uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 
 void csn(bool level) {
 	digitalWrite(MY_RF24_CS_PIN, level);		
@@ -209,45 +204,14 @@ uint8_t getNodeID(void) {
 	return MY_RF24_NODE_ADDRESS;
 }
 
-#if (MY_RF24_IRQ_PIN != MY_RF24_IRQ_PIN_UNUSED)
-static void irqHandler( void )
-{
-    if (receiveCallback)
-    {
-        uint8_t to;
-        (void)IsDataAvailable(&to);
-        receiveCallback(to);
-    } else {
-        // clear RX interrupt
-        writeByteRegister(RF24_STATUS, _BV(RX_DR) );
-    }
-}
-
-void registerReceiveCallback( receiveCallbackType cb )
-{
-    noInterrupts();
-    receiveCallback = cb;
-    interrupts();
-}
-#endif
-
 bool initializeRF24(void) {
 	// Initialize pins
 	pinMode(MY_RF24_CE_PIN,OUTPUT);
 	pinMode(MY_RF24_CS_PIN,OUTPUT);
-    #if (MY_RF24_IRQ_PIN != MY_RF24_IRQ_PIN_UNUSED)	
-        pinMode(MY_RF24_IRQ_PIN,INPUT);
-    #endif
 	// Initialize SPI
 	_SPI.begin();
 	ce(LOW);
 	csn(HIGH);
-    #if (MY_RF24_IRQ_PIN != MY_RF24_IRQ_PIN_UNUSED)
-	    // assure SPI can be used from interrupt context
-	    _SPI.usingInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
-        // attach interrupt
-        attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), irqHandler, FALLING);
-    #endif
 	// CRC and power up
 	writeByteRegister(NRF_CONFIG, MY_RF24_CONFIGURATION | _BV(PWR_UP) ) ;
 	// settle >2ms

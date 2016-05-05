@@ -369,24 +369,6 @@
 #endif
 
 /**
- * @def MY_RF24_IRQ_PIN
- * @brief Disable RF24 interrupt pin usage by default. Override in sketch if needed.
- */
-#define MY_RF24_IRQ_PIN_UNUSED  0
-#ifndef MY_RF24_IRQ_PIN
-    #define MY_RF24_IRQ_PIN  MY_RF24_IRQ_PIN_UNUSED
-#endif
-
-/**
- * @def MY_RF24_MESSAGE_BUFFER_SIZE
- * @brief Declare the amount of messages that can be buffered. Override in sketch if needed.
- */
-#ifndef MY_RF24_MESSAGE_BUFFER_SIZE
-    #define MY_RF24_MESSAGE_BUFFER_SIZE  (20)
-#endif
-
-
-/**
  * @def MY_RF24_PA_LEVEL
  * @brief Default RF24 PA level. Override in sketch if needed.
  */

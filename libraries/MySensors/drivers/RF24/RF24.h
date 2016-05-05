@@ -38,11 +38,7 @@
 #define MY_RF24_SPI_DATA_MODE SPI_MODE0
 
 // settings
-#if (MY_RF24_IRQ_PIN != MY_RF24_IRQ_PIN_UNUSED)
-    #define MY_RF24_CONFIGURATION (uint8_t)((RF24_CRC_16 << 1) | (1 << MASK_TX_DS) | (1 << MASK_MAX_RT)) 
-#else
-    #define MY_RF24_CONFIGURATION (uint8_t)((RF24_CRC_16 << 1) | (1 << MASK_RX_DR) | (1 << MASK_TX_DS) | (1 << MASK_MAX_RT)) 
-#endif
+#define MY_RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 1)
 #define MY_RF24_FEATURE (uint8_t)( _BV(EN_DPL) | _BV(EN_ACK_PAY) )
 #define MY_RF24_RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 // +1 for Si24R1
 
