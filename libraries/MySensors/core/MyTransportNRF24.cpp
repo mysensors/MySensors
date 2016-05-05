@@ -41,16 +41,16 @@ bool transportInit() {
 		memset(_psk, 0, 16);
 	#endif
 	
-	return initializeRF24();
+	return RF24_initialize();
 }
 
 void transportSetAddress(uint8_t address) {
-	setNodeAddress(address);
-	startListening();
+	RF24_setNodeAddress(address);
+	RF24_startListening();
 }
 
 uint8_t transportGetAddress() {
-	return getNodeID();
+	return RF24_getNodeID();
 }
 
 bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
@@ -62,21 +62,21 @@ bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
 		len = len > 16 ? 32 : 16;
 		//encrypt data
 		_aes.cbc_encrypt(_dataenc, _dataenc, len/16); 
-		bool status = sendMessage( recipient, _dataenc, len );
+		bool status = RF24_sendMessage( recipient, _dataenc, len );
 	#else
-		bool status = sendMessage( recipient, data, len );
+		bool status = RF24_sendMessage( recipient, data, len );
 	#endif
 	
 	return status;
 }
 
 bool transportAvailable(uint8_t *to) {
-	bool avail = IsDataAvailable(to);
+	bool avail = RF24_isDataAvailable(to);
 	return avail;
 }
 
 uint8_t transportReceive(void* data) {
-	uint8_t len = readMessage(data);
+	uint8_t len = RF24_readMessage(data);
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		// has to be adjusted, WIP!
 		_aes.set_IV(0);
@@ -87,5 +87,5 @@ uint8_t transportReceive(void* data) {
 }
 
 void transportPowerDown() {
-	powerDown();
+	RF24_powerDown();
 }
