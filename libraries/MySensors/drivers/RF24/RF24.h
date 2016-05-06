@@ -23,6 +23,8 @@
 #ifndef __RF24_H__
 #define __RF24_H__
 
+#define LOCAL static
+
 // SPI settings
 #if !defined(MY_RF24_SPI_MAX_SPEED)
 	// default 2Mhz - safe for nRF24L01+ clones
@@ -206,31 +208,31 @@
 
 // functions
 
-void RF24_csn(bool level); 
-void RF24_ce(bool level); 
-uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode);
-uint8_t RF24_spiByteTransfer(uint8_t cmd);
-uint8_t RF24_RAW_readByteRegister(uint8_t cmd);
-uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value);
+LOCAL void RF24_csn(bool level); 
+LOCAL void RF24_ce(bool level); 
+LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode);
+LOCAL uint8_t RF24_spiByteTransfer(uint8_t cmd);
+LOCAL uint8_t RF24_RAW_readByteRegister(uint8_t cmd);
+LOCAL uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value);
 
 #define RF24_readByteRegister(reg) RF24_RAW_readByteRegister( R_REGISTER | ( REGISTER_MASK & (reg) ) )
 #define RF24_writeByteRegister(reg, value) RF24_RAW_writeByteRegister( W_REGISTER | ( REGISTER_MASK & (reg) ), value )
 #define RF24_writeMultiByteRegister(reg, buf, len) RF24_spiMultiByteTransfer( W_REGISTER | ( REGISTER_MASK & (reg) ), (uint8_t*)buf, len, false )
 
-void RF24_flushRX(void);
-void RF24_flushTX(void);
-uint8_t RF24_getStatus(void);
-void RF24_openWritingPipe(uint8_t recipient);
-void RF24_startListening(void);
-void RF24_stopListening(void);
-void RF24_powerDown(void); 
-bool RF24_sendMessage(uint8_t recipient, const void* buf, uint8_t len);
-uint8_t RF24_getDynamicPayloadSize(void);
-bool RF24_isDataAvailable(uint8_t* to);
-uint8_t RF24_readMessage(void* buf); 
-void RF24_setNodeAddress(uint8_t address);
-uint8_t RF24_getNodeID(void);
-bool RF24_initialize(void);
+LOCAL void RF24_flushRX(void);
+LOCAL void RF24_flushTX(void);
+LOCAL uint8_t RF24_getStatus(void);
+LOCAL void RF24_openWritingPipe(uint8_t recipient);
+LOCAL void RF24_startListening(void);
+LOCAL void RF24_stopListening(void);
+LOCAL void RF24_powerDown(void); 
+LOCAL bool RF24_sendMessage(uint8_t recipient, const void* buf, uint8_t len);
+LOCAL uint8_t RF24_getDynamicPayloadSize(void);
+LOCAL bool RF24_isDataAvailable(uint8_t* to);
+LOCAL uint8_t RF24_readMessage(void* buf); 
+LOCAL void RF24_setNodeAddress(uint8_t address);
+LOCAL uint8_t RF24_getNodeID(void);
+LOCAL bool RF24_initialize(void);
 
 #endif // __RF24_H__
 

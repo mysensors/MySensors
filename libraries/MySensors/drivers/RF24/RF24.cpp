@@ -22,18 +22,18 @@
 
 #include "RF24.h"
 
-static uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
-static uint8_t MY_RF24_NODE_ADDRESS = AUTO;
+LOCAL uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
+LOCAL uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 
-void RF24_csn(bool level) {
+LOCAL void RF24_csn(bool level) {
 	digitalWrite(MY_RF24_CS_PIN, level);		
 }
 
-void RF24_ce(bool level) {
+LOCAL void RF24_ce(bool level) {
 	digitalWrite(MY_RF24_CE_PIN, level);
 }
 
-uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode) {
+LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode) {
 	uint8_t* current = buf;
 	#if !defined(MY_SOFTSPI)
 		_SPI.beginTransaction(SPISettings(MY_RF24_SPI_MAX_SPEED, MY_RF24_SPI_DATA_ORDER, MY_RF24_SPI_DATA_MODE));
@@ -57,43 +57,43 @@ uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool a
 	return status;
 } 
 
-uint8_t RF24_spiByteTransfer(uint8_t cmd) {
+LOCAL uint8_t RF24_spiByteTransfer(uint8_t cmd) {
 	return RF24_spiMultiByteTransfer( cmd, NULL, 0, false);
 }
 
-uint8_t RF24_RAW_readByteRegister(uint8_t cmd) {
+LOCAL uint8_t RF24_RAW_readByteRegister(uint8_t cmd) {
 	uint8_t value = RF24_spiMultiByteTransfer( cmd, NULL, 1, true);
 	RF24_DEBUG(PSTR("read register, reg=%d, value=%d\n"), cmd & (R_REGISTER ^ 0xFF), value);
 	return value;
 }
 
-uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value) {
+LOCAL uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value) {
 	RF24_DEBUG(PSTR("write register, reg=%d, value=%d\n"), cmd & (W_REGISTER ^ 0xFF), value);
 	return RF24_spiMultiByteTransfer( cmd , &value, 1, false);
 }
 
-void RF24_flushRX(void) {
+LOCAL void RF24_flushRX(void) {
 	RF24_DEBUG(PSTR("RF24_flushRX\n"));
 	RF24_spiByteTransfer( FLUSH_RX );
 }
 
-void RF24_flushTX(void) {
+LOCAL void RF24_flushTX(void) {
 	RF24_DEBUG(PSTR("RF24_flushTX\n"));
 	RF24_spiByteTransfer( FLUSH_TX );
 }
 
-uint8_t RF24_getStatus(void) {
+LOCAL uint8_t RF24_getStatus(void) {
 	return RF24_spiByteTransfer( NOP );
 }
 
-void RF24_openWritingPipe(uint8_t recipient) {	
+LOCAL void RF24_openWritingPipe(uint8_t recipient) {	
 	RF24_DEBUG(PSTR("open writing pipe, recipient=%d\n"), recipient);	
 	// only write LSB of RX0 and TX pipe
 	RF24_writeByteRegister(RX_ADDR_P0, recipient);
 	RF24_writeByteRegister(TX_ADDR, recipient);		
 }
 
-void RF24_startListening(void) {
+LOCAL void RF24_startListening(void) {
 	RF24_DEBUG(PSTR("start listening\n"));
 	// toggle PRX		
 	RF24_writeByteRegister(NRF_CONFIG, MY_RF24_CONFIGURATION | _BV(PWR_UP) | _BV(PRIM_RX) );	
@@ -103,7 +103,7 @@ void RF24_startListening(void) {
 	RF24_ce(HIGH);
 }
 
-void RF24_stopListening(void) {
+LOCAL void RF24_stopListening(void) {
 	RF24_DEBUG(PSTR("stop listening\n"));
 	RF24_ce(LOW);
 	// timing
@@ -113,13 +113,13 @@ void RF24_stopListening(void) {
 	delayMicroseconds(100);
 }
 
-void RF24_powerDown(void) {
+LOCAL void RF24_powerDown(void) {
 	RF24_ce(LOW);
 	RF24_writeByteRegister(NRF_CONFIG, 0x00);
 	RF24_DEBUG(PSTR("power down\n"));
 }
 
-bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
+LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 	uint8_t status;
 
 	RF24_stopListening();
@@ -153,7 +153,7 @@ bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 	return (status & _BV(TX_DS));
 }
 
-uint8_t RF24_getDynamicPayloadSize(void) {
+LOCAL uint8_t RF24_getDynamicPayloadSize(void) {
 	uint8_t result = RF24_spiMultiByteTransfer(R_RX_PL_WID,NULL,1,true);
 	// check if payload size invalid
 	if(result > 32) { 
@@ -165,7 +165,7 @@ uint8_t RF24_getDynamicPayloadSize(void) {
 }
 
 
-bool RF24_isDataAvailable(uint8_t* to) {
+LOCAL bool RF24_isDataAvailable(uint8_t* to) {
 	uint8_t pipe_num = ( RF24_getStatus() >> RX_P_NO ) & 0b0111;
 	#if defined(MY_DEBUG_VERBOSE_RF24)
 		if(pipe_num <= 5)
@@ -179,7 +179,7 @@ bool RF24_isDataAvailable(uint8_t* to) {
 }
 
 
-uint8_t RF24_readMessage( void* buf) {
+LOCAL uint8_t RF24_readMessage( void* buf) {
 	uint8_t len = RF24_getDynamicPayloadSize();
 	RF24_DEBUG(PSTR("read message, len=%d\n"), len);
 	RF24_spiMultiByteTransfer( R_RX_PAYLOAD , (uint8_t*)buf, len, true ); 
@@ -188,7 +188,7 @@ uint8_t RF24_readMessage( void* buf) {
 	return len;
 }
 
-void RF24_setNodeAddress(uint8_t address) {
+LOCAL void RF24_setNodeAddress(uint8_t address) {
 	if(address!=AUTO){
 		MY_RF24_NODE_ADDRESS = address;
 		// enable node pipe
@@ -198,11 +198,11 @@ void RF24_setNodeAddress(uint8_t address) {
 	}
 }
 
-uint8_t RF24_getNodeID(void) {
+LOCAL uint8_t RF24_getNodeID(void) {
 	return MY_RF24_NODE_ADDRESS;
 }
 
-bool RF24_initialize(void) {
+LOCAL bool RF24_initialize(void) {
 	// Initialize pins
 	pinMode(MY_RF24_CE_PIN,OUTPUT);
 	pinMode(MY_RF24_CS_PIN,OUTPUT);
