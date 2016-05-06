@@ -57,7 +57,7 @@ do { 																\
 // Define these as macros to save valuable space
 
 #define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
-#define hwInit() Serial.begin(MY_BAUD_RATE)
+#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE)
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
 #define hwMillis() millis()

@@ -162,7 +162,7 @@ void hwDebugPrint(const char *fmt, ... ) {
 	MY_SERIALDEVICE.print(fmtBuffer);
 //	MY_SERIALDEVICE.flush();
 
-	//Serial.write(freeRam());
+	//MY_SERIALDEVICE.write(freeRam());
     }
 }
 #endif

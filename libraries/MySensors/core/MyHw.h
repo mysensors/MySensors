@@ -31,7 +31,7 @@
 // Implement these as functions or macros
 /*
 #define hwDigitalWrite(__pin, __value)
-#define hwInit() Serial.begin(BAUD_RATE)
+#define hwInit() MY_SERIALDEVICE.begin(BAUD_RATE)
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
 #define hwMillis() millis()
