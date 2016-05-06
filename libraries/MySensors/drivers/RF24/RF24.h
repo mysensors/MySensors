@@ -23,11 +23,7 @@
 #ifndef __RF24_H__
 #define __RF24_H__
 
-#include <Arduino.h>
-#include <stddef.h>
-#if defined SOFTSPI
-	#include <DigitalIO.h>
-#endif
+#define LOCAL static
 
 // SPI settings
 #if !defined(MY_RF24_SPI_MAX_SPEED)
@@ -37,7 +33,35 @@
 #define MY_RF24_SPI_DATA_ORDER MSBFIRST
 #define MY_RF24_SPI_DATA_MODE SPI_MODE0
 
-// settings
+#if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
+	#if defined(MY_SOFTSPI)
+		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE> _SPI;
+	#elif defined(ARDUINO_ARCH_SAMD)
+		#include <SPI.h>
+		#define _SPI SPI1
+	#else	    
+		#include <SPI.h>
+		#define _SPI SPI
+	#endif
+#else
+	#include <stdint.h>
+	#include <stdio.h>
+	#include <string.h>
+	
+	#define _BV(x) (1<<(x))
+	
+	#if defined(__arm__)
+		#include <SPI.h>
+	#else
+		extern HardwareSPI SPI;
+	#endif
+	
+	#if !defined(_SPI)
+		#define _SPI SPI
+	#endif
+#endif
+
+// RF24 settings
 #define MY_RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)
 #define MY_RF24_FEATURE (uint8_t)( _BV(EN_DPL) | _BV(EN_ACK_PAY) )
 #define MY_RF24_RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 // +1 for Si24R1
@@ -74,52 +98,6 @@
 
 // ARD, auto retry count
 #define RF24_ARC 15
-
-#if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
-	#if defined(SPI_UART)
-		#include <SPI_UART.h>
-		#define _SPI uspi
-	#elif defined(MY_SOFTSPI)
-		#include "drivers/AVR/DigitalIO/DigitalIO.h"
-		// change these pins to your liking
-		const uint8_t SOFT_SPI_MISO_PIN = MY_SOFT_SPI_MOSI_PIN;
-		const uint8_t SOFT_SPI_MOSI_PIN = MY_SOFT_SPI_MISO_PIN;
-		const uint8_t SOFT_SPI_SCK_PIN = MY_SOFT_SPI_SCK_PIN;
-		const uint8_t SPI_MODE = 0;
-		#define _SPI spi
-	#elif defined(ARDUINO_ARCH_SAMD)
-		#include <SPI.h>
-		#define _SPI SPI1
-	#else	    
-		#include <SPI.h>
-		#define _SPI SPI
-	#endif
-#else
-	#include <stdint.h>
-	#include <stdio.h>
-	#include <string.h>
-	#if defined(__arm__) || defined (CORE_TEENSY)
-		#include <SPI.h>
-	#endif
-
-	#if !defined(CORE_TEENSY)
-		#define _BV(x) (1<<(x))
-		#if !defined(__arm__)
-			extern HardwareSPI SPI;
-		#endif
-	#else
-		#define printf MY_SERIALDEVICE.printf
-	#endif
-	#if !defined(_SPI)
-		#define _SPI SPI
-	#endif
-#endif
-
-#if defined(MY_SOFTSPI)
-	SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, SPI_MODE> spi;
-#elif defined (SPI_UART)
-	SPIUARTClass uspi;
-#endif
 
 // nRF24L01(+) register definitions
 #define NRF_CONFIG  0x00
@@ -227,6 +205,34 @@
 #define RF_DR_HIGH  3
 #define RF_PWR_LOW  1
 #define RF_PWR_HIGH 2
+
+// functions
+
+LOCAL void RF24_csn(bool level); 
+LOCAL void RF24_ce(bool level); 
+LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode);
+LOCAL uint8_t RF24_spiByteTransfer(uint8_t cmd);
+LOCAL uint8_t RF24_RAW_readByteRegister(uint8_t cmd);
+LOCAL uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value);
+
+#define RF24_readByteRegister(reg) RF24_RAW_readByteRegister( R_REGISTER | ( REGISTER_MASK & (reg) ) )
+#define RF24_writeByteRegister(reg, value) RF24_RAW_writeByteRegister( W_REGISTER | ( REGISTER_MASK & (reg) ), value )
+#define RF24_writeMultiByteRegister(reg, buf, len) RF24_spiMultiByteTransfer( W_REGISTER | ( REGISTER_MASK & (reg) ), (uint8_t*)buf, len, false )
+
+LOCAL void RF24_flushRX(void);
+LOCAL void RF24_flushTX(void);
+LOCAL uint8_t RF24_getStatus(void);
+LOCAL void RF24_openWritingPipe(uint8_t recipient);
+LOCAL void RF24_startListening(void);
+LOCAL void RF24_stopListening(void);
+LOCAL void RF24_powerDown(void); 
+LOCAL bool RF24_sendMessage(uint8_t recipient, const void* buf, uint8_t len);
+LOCAL uint8_t RF24_getDynamicPayloadSize(void);
+LOCAL bool RF24_isDataAvailable(uint8_t* to);
+LOCAL uint8_t RF24_readMessage(void* buf); 
+LOCAL void RF24_setNodeAddress(uint8_t address);
+LOCAL uint8_t RF24_getNodeID(void);
+LOCAL bool RF24_initialize(void);
 
 #endif // __RF24_H__
 
