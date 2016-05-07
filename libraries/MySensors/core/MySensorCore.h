@@ -72,6 +72,11 @@ struct ControllerConfig {
 uint8_t getNodeId();
 
 /**
+ * Return the parent node id.
+ */
+uint8_t getParentNodeId();
+
+/**
 * Each node must present all attached sensors before any values can be handled correctly by the controller.
 * It is usually good to present all attached sensors after power-up in setup().
 *

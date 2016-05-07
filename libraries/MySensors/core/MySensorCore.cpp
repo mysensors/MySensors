@@ -203,6 +203,10 @@ uint8_t getNodeId() {
 	return _nc.nodeId;
 }
 
+uint8_t getParentNodeId() {
+	return _nc.parentNodeId;
+}
+
 ControllerConfig getConfig() {
 	return _cc;
 }
