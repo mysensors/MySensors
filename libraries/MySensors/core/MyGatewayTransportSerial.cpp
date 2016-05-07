@@ -43,17 +43,17 @@ bool gatewayTransportInit() {
 
 
 bool gatewayTransportAvailable() {
-	bool available = false;
-
 	while (MY_SERIALDEVICE.available()) {
 		// get the new byte:
 		char inChar = (char) MY_SERIALDEVICE.read();
 		// if the incoming character is a newline, set a flag
 		// so the main loop can do something about it:
-		if (_serialInputPos < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1 && !available) {
+		if (_serialInputPos < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
-				available = true;
+				bool ok = protocolParse(_serialMsg, _serialInputString);
+				_serialInputPos = 0;
+				return ok;
 			} else {
 				// add it to the inputString:
 				_serialInputString[_serialInputPos] = inChar;
@@ -64,12 +64,7 @@ bool gatewayTransportAvailable() {
 			_serialInputPos = 0;
 		}
 	}
-	if (available) {
-		// Parse message and return parse result
-		available = protocolParse(_serialMsg, _serialInputString);
-		_serialInputPos = 0;
-	}
-	return available;
+	return false;
 }
 
 MyMessage & gatewayTransportReceive() {
