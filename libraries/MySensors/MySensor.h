@@ -246,6 +246,7 @@
 	// FLASH
 	#ifdef MY_OTA_FIRMWARE_FEATURE
 		#include "drivers/SPIFlash/SPIFlash.cpp"
+		#include "core/MyOTAFirmwareUpdate.cpp"
 	#endif
 	#include "core/MyTransport.cpp"
 	#if (defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)) || (defined(MY_RADIO_NRF24) && defined(MY_RS485)) || (defined(MY_RADIO_RFM69) && defined(MY_RS485))

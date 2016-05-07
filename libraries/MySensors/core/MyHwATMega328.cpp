@@ -152,7 +152,7 @@ uint16_t hwCPUVoltage() {
 	return (1125300UL) / ADC;
 }
 
-uint8_t hwCPUFrequency() {
+uint16_t hwCPUFrequency() {
 	noInterrupts();
 	// setup timer1
 	TIFR1 = 0xFF;   
@@ -180,7 +180,11 @@ uint8_t hwCPUFrequency() {
 	return TCNT1 * 2048UL / 100000UL;
 }
 
-
+uint16_t hwFreeMem() {
+	extern int __heap_start, *__brkval; 
+	int v; 
+	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {

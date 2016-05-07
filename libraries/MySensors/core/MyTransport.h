@@ -20,61 +20,12 @@
 #ifndef MyTransport_h
 #define MyTransport_h
 
-#include <stdint.h>
-#include "MySensorCore.h"
-
-// Size of each firmware block
-#define FIRMWARE_BLOCK_SIZE	16
-// Number of times a firmware block should be requested before giving up
-#define FIRMWARE_MAX_REQUESTS 5
-// Number of times to request a fw block before giving up
-#define MY_OTA_RETRY 5
-// Number of millisecons before re-request a fw block
-#define MY_OTA_RETRY_DELAY 500
-// Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
-#define FIRMWARE_START_OFFSET 10
-// Bootloader version
-#define MY_OTA_BOOTLOADER_MAJOR_VERSION 3
-#define MY_OTA_BOOTLOADER_MINOR_VERSION 0
-#define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)
-
+#define TIMEOUT_FAILURE_STATE 10000
 // Search for a new parent node after this many transmission failures
-#define SEARCH_FAILURES  5
-
-
-/// @brief FW config structure, stored in eeprom
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t blocks; //!< Number of blocks
-	uint16_t crc; //!< CRC of block data
-} __attribute__((packed)) NodeFirmwareConfig;
-
-/// @brief FW config request structure
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t blocks; //!< Number of blocks
-	uint16_t crc; //!< CRC of block data
-	uint16_t BLVersion; //!< Bootloader version
-} __attribute__((packed)) RequestFirmwareConfig;
-
-/// @brief FW block request structure
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t block; //!< Block index
-} __attribute__((packed)) RequestFWBlock;
-
-/// @brief FW block reply structure
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t block; //!< Block index
-	uint8_t data[FIRMWARE_BLOCK_SIZE]; //!< Block data
-} __attribute__((packed)) ReplyFWBlock;
-
-
+#define TRANSMISSION_FAILURES 5	// max 15
+// maximal mumber of hops for ping/pong
+#define MAX_HOPS 254
+#define INVALID_HOPS 255
 
 #define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
 
@@ -83,22 +34,52 @@ typedef struct {
 // invalid distance when searching for parent
 #define DISTANCE_INVALID (0xFF)
 
+#define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)
+#define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)
+#define isValidParent(parent) (bool)(parent != AUTO)
+
+/// @brief Type of transport fsm
+typedef enum {
+	tsTRANSPORT_INIT, //!< tbd
+	tsPARENT, //!< tbd
+	tsID, //!< tbd
+	tsLINK, //!< tbd
+	tsREGISTER, //!< tbd
+	tsOK, //!< tbd
+	tsFAILURE
+} transportStates;
+
+/// @brief transport status
+typedef struct {
+	transportStates transportState:3; //!< fsm status
+	bool nodeRegistered:1; //!< flag indicating node registered at GW, i.e. (for the moment) I_CONFIG received
+	bool findingParentNode:1; //!< 	flag finding parent node is active
+	bool preferredParentFound:1; //!< flag preferred parent found
+	bool pingActive:1; //!< flag ping active
+	bool pongReceived:1; //!< flag pong received
+	uint8_t failedDownlinkTransmissions:4; //!< counter for failed downlink transmissions
+	uint8_t failedUplinkTransmissions:4; //!< counter for failed uplink transmissions
+	uint32_t heartbeat; //!< heartbeat counter, increments with every message sent
+} __attribute__((packed)) transportStatus;
+
+
 // Common functions in all radio drivers
-#ifdef MY_OTA_FIRMWARE_FEATURE
-	// do a crc16 on the whole received firmware
-	bool transportIsValidFirmware();
-#endif
-
-
+void transportInitialize();
+void transportStateMachine();
 void transportProcess();
-void transportRequestNodeId();
-void transportPresentNode();
-void transportFindParentNode();
-boolean transportSendRoute(MyMessage &message);
-boolean transportSendWrite(uint8_t to, MyMessage &message);
+
+bool transportRequestNodeId();
+bool transportPresentNode();
+bool transportFindParentNode();
+
+bool transportSendRoute(MyMessage &message);
+bool transportSendWrite(uint8_t to, MyMessage &message);
+uint32_t transportGetHeartbeat();
+void transportWait(unsigned long ms);
+void transportWait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
 
 // "Interface" functions for radio driver
-bool transportInit();
+bool transportInit();	// rename
 void transportSetAddress(uint8_t address);
 uint8_t transportGetAddress();
 bool transportSend(uint8_t to, const void* data, uint8_t len);

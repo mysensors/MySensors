@@ -25,24 +25,19 @@
 #include "MyConfig.h"
 #include "MyEepromAddresses.h"
 #include "MyMessage.h"
-#ifdef MY_OTA_FIRMWARE_FEATURE
-#include "drivers/SPIFlash/SPIFlash.h"
-#endif
-
 #include <stddef.h>
 #include <stdarg.h>
 
 #ifdef MY_DEBUG
-#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
 #else
-#define debug(x,...)
+	#define debug(x,...)
 #endif
 
 // This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
 #define GATEWAY_ADDRESS ((uint8_t)0)
 // Node child is always created/presented when a node is started
 #define NODE_SENSOR_ID 0xFF
-
 
 /**
  * @brief Node configuration
@@ -243,7 +238,7 @@ void _processInternalMessages();
 
 void _infiniteLoop();
 
-boolean _sendRoute(MyMessage &message);
+bool _sendRoute(MyMessage &message);
 
 extern NodeConfig _nc;
 extern MyMessage _msg;  // Buffer for incoming messages.

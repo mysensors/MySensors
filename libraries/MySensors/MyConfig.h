@@ -82,14 +82,23 @@
 
 /**
  * @def MY_PARENT_NODE_ID
- * @brief Node parent defaults to AUTO (tries to find a parent automatically).
+ * @brief Preferred parent node, default is AUTO (tries to find closest parent node automatically).
  */
 #ifndef MY_PARENT_NODE_ID
 #define MY_PARENT_NODE_ID AUTO
 #endif
 
-// Enables repeater functionality (relays messages from other nodes)
-// #define MY_REPEATER_FEATURE
+/**
+ * @def MY_PARENT_NODE_IS_STATIC
+ * @brief If enabled, parent node assignment is static.
+ */
+ //#define MY_PARENT_NODE_IS_STATIC
+
+/**
+ * @def MY_REPEATER_FEATURE
+ * @brief Enables repeater functionality (relays messages from other nodes)
+ */
+//#define MY_REPEATER_FEATURE
 
 /**
  * @def MY_SMART_SLEEP_WAIT_DURATION
@@ -328,10 +337,8 @@
 // Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RF24_ENABLE_ENCRYPTION
 
-/**
- * @def MY_DEBUG_VERBOSE_RF24
- * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled.
- */ 
+
+//Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled. 
 //#define MY_DEBUG_VERBOSE_RF24
 
 /**
