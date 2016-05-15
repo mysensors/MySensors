@@ -26,6 +26,18 @@
 #define MyConfig_h
 #include <stdint.h>
 
+/**
+ *	MAX_MESSAGE_LENGTH default is 32 in MySensor networks for all radios.
+ *		It can be increase as needed for special needs, but at a cost of Global variables (RAM) usage,
+ *		a 1 byte increase will add 11 bytes to your Global variables allocation, so use with great caution!
+ *      All devices in the same network will need to use the same value!
+ *  RF24  max is 32
+ *  RFM69 max is 61
+ *	RFM95 max is 255
+ */
+#ifndef	MAX_MESSAGE_LENGTH
+#define MAX_MESSAGE_LENGTH 32 			//!< The maximum size of a message (including header)
+#endif
 
 /**********************************
 *  Serial and debug options

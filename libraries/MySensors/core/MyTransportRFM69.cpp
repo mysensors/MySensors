@@ -21,10 +21,16 @@
 #include "MyTransport.h"
 #include <stdint.h>
 #include "drivers/RFM69/RFM69.h"
+#include "drivers/RFM69/RFM69_ATC.h"
 
-RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM);
+
+#ifdef MY_RFM69_Enable_ATC
+RFM69_ATC 	_radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM);
+#else
+RFM69 		_radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM);
+#endif
+
 uint8_t _address;
-
 
 bool transportInit() {
 	// Start up the radio library (_address will be set later by the MySensors library)
