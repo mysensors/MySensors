@@ -60,8 +60,8 @@ MyMessage vibrationMsg(CHILD_ID_VIBRATION, V_LEVEL);
 void setup()  
 {
   pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
-  attachInterrupt(1, blink, FALLING);// Trigger the blink function when the falling edge is detected
-  pinMode(SensorLED, OUTPUT);  
+  attachInterrupt(digitalPinToInterrupt(VIBRATION_SENSOR_DIGITAL_PIN), blink, FALLING); // Trigger the blink function when the falling edge is detected
+  pinMode(SensorLED, OUTPUT);
 }
 
 void presentation()  {

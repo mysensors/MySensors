@@ -59,6 +59,8 @@
 #define LUX_ON // uncomment out this line to enable BH1750 sensor
 //#define USE_DAILY // displays each time segment as an accumulation of prior periods inclusive.  Comment out to display individual daily rainfall totals in the variables sent to your controller.
 
+#define TIP_SENSOR_PIN 3
+
 #define CALIBRATE_FACTOR 60 // amount of rain per rain bucket tip e.g. 5 is .05mm
 #define DHT_LUX_DELAY 300000  //Delay in milliseconds that the DHT and LUX sensors will wait before sending data
 
@@ -116,7 +118,6 @@ MyMessage msgTrippedVar2(CHILD_ID_TRIPPED_INDICATOR, V_VAR2);
 #endif
 unsigned long sensorPreviousMillis;
 int eepromIndex;
-int tipSensorPin = 3; // Pin the tipping bucket is connected to. Must be interrupt capable pin
 int ledPin = 5; // Pin the LED is connected to.  PWM capable pin required
 unsigned long dataMillis;
 unsigned long serialInterval = 600000UL;
@@ -141,8 +142,8 @@ void setup()
   SERIAL_START(115200);
   //
   // Set up the IO
-  pinMode(tipSensorPin, INPUT_PULLUP);
-  attachInterrupt (1, sensorTipped, FALLING);  // depending on location of the hall effect sensor may need CHANGE
+  pinMode(TIP_SENSOR_PIN, INPUT_PULLUP);
+  attachInterrupt (digitalPinToInterrupt(TIP_SENSOR_PIN), sensorTipped, FALLING);  // depending on location of the hall effect sensor may need CHANGE
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   //

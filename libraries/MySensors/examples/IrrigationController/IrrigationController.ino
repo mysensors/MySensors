@@ -184,7 +184,7 @@ void setup()
   pinMode(ledPin, OUTPUT);
   pinMode(waterButtonPin, INPUT_PULLUP);
   //pinMode(waterButtonPin, INPUT);
-  attachInterrupt(1, PushButton, RISING); //May need to change for your Arduino model
+  attachInterrupt(digitalPinToInterrupt(waterButtonPin), PushButton, RISING); //May need to change for your Arduino model
   digitalWrite (ledPin, HIGH);
   DEBUG_PRINTLN(F("Turning All Valves Off..."));
   updateRelays(ALL_VALVES_OFF);
