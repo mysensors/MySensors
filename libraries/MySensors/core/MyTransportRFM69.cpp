@@ -56,7 +56,7 @@ uint8_t transportGetAddress() {
 }
 
 bool transportSend(uint8_t to, const void* data, uint8_t len) {
-	return _radio.sendWithRetry(to,data,len);
+	return _radio.sendWithRetry(to,data,len,5);
 }
 
 bool transportAvailable(uint8_t *to) {
