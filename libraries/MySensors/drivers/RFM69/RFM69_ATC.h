@@ -35,6 +35,11 @@
 
 #define RFM69_CTL_RESERVE1  0x20
 
+
+/**
+ * RFM69_ATC class definition
+ *
+ */
 class RFM69_ATC: public RFM69 {
   public:
     static volatile uint8_t ACK_RSSI_REQUESTED;  // new flag in CTL byte to request RSSI with ACK (could potentially be merged with ACK_REQUESTED)

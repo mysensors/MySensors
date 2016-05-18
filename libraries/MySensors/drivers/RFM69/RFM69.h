@@ -84,6 +84,10 @@
 #define RFM69_CTL_SENDACK   0x80
 #define RFM69_CTL_REQACK    0x40
 
+/**
+ * RFM69 class definition
+ *
+ */
 class RFM69 {
   public:
     static volatile uint8_t DATA[RF69_MAX_DATA_LEN]; // recv/xmit buf, including header & crc bytes
