@@ -39,30 +39,36 @@
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
   #define RF69_IRQ_PIN          2
   #define RF69_IRQ_NUM          0
+  
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
   #define RF69_IRQ_PIN          2
   #define RF69_IRQ_NUM          2
+  
 #elif defined(__AVR_ATmega32U4__)
   #define RF69_IRQ_PIN          3
   #define RF69_IRQ_NUM          0
+  
 #elif defined(__arm__)//Use pin 10 or any pin you want
   #define RF69_IRQ_PIN          10
   #define RF69_IRQ_NUM          10
+  
 #else 
   #define RF69_IRQ_PIN          2
   #define RF69_IRQ_NUM          0  
 #endif
 
+#ifndef	CSMA_LIMIT
+#define CSMA_LIMIT              -90 	// upper RX signal sensitivity threshold in dBm for carrier sense access 
+#endif
 
-#define CSMA_LIMIT              -90 // upper RX signal sensitivity threshold in dBm for carrier sense access
-#define RF69_MODE_SLEEP         0 // XTAL OFF
-#define RF69_MODE_STANDBY       1 // XTAL ON
-#define RF69_MODE_SYNTH         2 // PLL ON
-#define RF69_MODE_RX            3 // RX MODE
-#define RF69_MODE_TX            4 // TX MODE
+#define RF69_MODE_SLEEP         0 		// XTAL OFF
+#define RF69_MODE_STANDBY       1 		// XTAL ON
+#define RF69_MODE_SYNTH         2 		// PLL ON
+#define RF69_MODE_RX            3 		// RX MODE
+#define RF69_MODE_TX            4 		// TX MODE
 
 // available frequency bands
-#define RF69_315MHZ            31 // non trivial values to avoid misconfiguration
+#define RF69_315MHZ            31 		// non trivial values to avoid misconfiguration
 #define RF69_433MHZ            43
 #define RF69_868MHZ            86
 #define RF69_915MHZ            91
