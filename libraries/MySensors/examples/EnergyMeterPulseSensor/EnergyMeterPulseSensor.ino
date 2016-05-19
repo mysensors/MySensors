@@ -48,7 +48,6 @@
 #define PULSE_FACTOR 1000       // Nummber of blinks per KWH of your meeter
 #define SLEEP_MODE false        // Watt-value can only be reported when sleep mode is false.
 #define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
-#define INTERRUPT DIGITAL_INPUT_SENSOR-2 // Usually the interrupt = pin -2 (on uno/nano anyway)
 #define CHILD_ID 1              // Id of the sensor child
 
 unsigned long SEND_FREQUENCY = 20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
@@ -74,8 +73,8 @@ void setup()
   // Use the internal pullup to be able to hook up this sketch directly to an energy meter with S0 output
   // If no pullup is used, the reported usage will be too high because of the floating pin
   pinMode(DIGITAL_INPUT_SENSOR,INPUT_PULLUP);
-  
-  attachInterrupt(INTERRUPT, onPulse, RISING);
+
+  attachInterrupt(digitalPinToInterrupt(DIGITAL_INPUT_SENSOR), onPulse, RISING);
   lastSend=millis();
 }
 

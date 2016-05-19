@@ -17,9 +17,9 @@
 
 // setup CS pins used for the connection with the lightning sensor
 // other connections are controlled by the SPI library)
-int8_t CS_PIN  = 8;
-int8_t SI_PIN  = 7;
-int8_t IRQ_PIN = 3;                      
+#define CS_PIN 8
+#define SI_PIN 7
+#define IRQ_PIN 3
 volatile int8_t AS3935_ISR_Trig = 0;
 
 // #defines
@@ -60,7 +60,7 @@ void setup()
                   // function also powers up the chip
                   
   // enable interrupt (hook IRQ pin to Arduino Uno/Mega interrupt input: 1 -> pin 3 )
-  attachInterrupt(1, AS3935_ISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(IRQ_PIN), AS3935_ISR, RISING);
   // dump the registry data to the serial port for troubleshooting purposes
   lightning0.AS3935_PrintAllRegs();
   
