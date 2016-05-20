@@ -80,7 +80,7 @@
 #define RF69_TX_LIMIT_MS   1000
 #define RF69_FSTEP  61.03515625 		// == FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
 
-#define CTLbyte bits
+// define CTLbyte bits
 #define RFM69_CTL_SENDACK   0x80
 #define RFM69_CTL_REQACK    0x40
 
@@ -140,7 +140,7 @@ class RFM69 {
   protected:
     static void isr0();														//!< isr0
     void virtual interruptHandler();										//!< interruptHandler
-    virtual void interruptHook(uint8_t CTLbyte) { 							//!< interruptHook 
+    virtual void interruptHook(uint8_t CTLbyte1) { 							//!< interruptHook 
     	};	
     virtual void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, bool requestACK=false, bool sendACK=false);		//!< sendFrame
 
