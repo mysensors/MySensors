@@ -80,7 +80,7 @@
 #define RF69_TX_LIMIT_MS   1000
 #define RF69_FSTEP  61.03515625 		// == FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
 
-// TWS: define CTLbyte bits
+#define CTLbyte bits
 #define RFM69_CTL_SENDACK   0x80
 #define RFM69_CTL_REQACK    0x40
 
