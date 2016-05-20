@@ -37,7 +37,7 @@
 #endif
 
 #define PROTOCOL_VERSION 2    //!< The version of the protocol
-#define MAX_MESSAGE_LENGTH 32 //!< The maximum size of a message (including header)
+//#define MAX_MESSAGE_LENGTH 32 //!< The maximum size of a message (including header)  // <--------- moved to MyConfig.h
 #define HEADER_SIZE 7         //!< The size of the header
 #define MAX_PAYLOAD (MAX_MESSAGE_LENGTH - HEADER_SIZE) //!< The maximum size of a payload depends on #MAX_MESSAGE_LENGTH and #HEADER_SIZE
 
@@ -298,6 +298,7 @@ struct
 {
 
 #endif
+
 	uint8_t last;            	 // 8 bit - Id of last node this message passed
 	uint8_t sender;          	 // 8 bit - Id of sender node (origin)
 	uint8_t destination;     	 // 8 bit - Id of destination node
@@ -331,13 +332,15 @@ struct
 		};
 		char data[MAX_PAYLOAD + 1];
 	} __attribute__((packed));
-#ifdef __cplusplus
-} __attribute__((packed));
-#else
-};
-uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];	
-} __attribute__((packed)) MyMessage;
-#endif
+	
+        #ifdef __cplusplus
+        } __attribute__((packed));
+        #else
+        };
+        uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];	
+        } __attribute__((packed)) MyMessage;
+        #endif
+
 #endif
 
 #endif

@@ -25,6 +25,8 @@
 
 #define LOCAL static
 
+#define RF24_MAX_DATA_LEN	32
+
 // SPI settings
 #if !defined(MY_RF24_SPI_MAX_SPEED)
 	// default 2Mhz - safe for nRF24L01+ clones

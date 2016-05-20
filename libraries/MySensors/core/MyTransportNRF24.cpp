@@ -27,7 +27,7 @@
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	AES _aes;
-	uint8_t _dataenc[32] = {0};
+	uint8_t _dataenc[RF24_MAX_DATA_LEN] = {0};
 	uint8_t _psk[16];
 #endif
 
@@ -56,6 +56,7 @@ uint8_t transportGetAddress() {
 bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		// copy input data because it is read-only
+		if (len > RF24_MAX_DATA_LEN) len = RF24_MAX_DATA_LEN;				// <-------- data len check
 		memcpy(_dataenc,data,len); 
 		// has to be adjusted, WIP!
 		_aes.set_IV(0);
