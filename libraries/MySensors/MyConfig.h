@@ -73,6 +73,19 @@
 //#define MY_RS485
 
 /**
+ * @def MY_REGISTER_NODE
+ * @brief If enabled, node has to register to gateway/controller before allowed to send sensor data.
+ */
+
+#define MY_REGISTER_NODE
+
+/**
+ * @def MY_ENABLE_COMPATIBILITY_CHECK
+ * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
+ */
+#define MY_ENABLE_COMPATIBILITY_CHECK
+
+/**
  * @def MY_NODE_ID
  * @brief Node id defaults to AUTO (tries to fetch id from controller).
  */

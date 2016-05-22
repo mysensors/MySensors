@@ -43,12 +43,13 @@ inline void firmwareOTAUpdateRequest() {
 		_fwRetry--;
 		_fwLastRequestTime = enter;
 		// Time to (re-)request firmware block from controller
-		RequestFWBlock *firmwareRequest = (RequestFWBlock *)_msg.data;
-		mSetLength(_msg, sizeof(RequestFWBlock));
-		firmwareRequest->type = _fc.type;
-		firmwareRequest->version = _fc.version;
-		firmwareRequest->block = (_fwBlock - 1);
-		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
+		RequestFWBlock firmwareRequest;
+		firmwareRequest.type = _fc.type;
+		firmwareRequest.version = _fc.version;
+		firmwareRequest.block = (_fwBlock - 1);
+		debug(PSTR("req FW: T=%02X, V=%02X, B=%04X\n"),_fc.type,_fc.version,_fwBlock - 1);
+		//_transportSendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false));
+		_transportSendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false).set(&firmwareRequest,sizeof(RequestFWBlock)));
 	}
 }
 
@@ -117,16 +118,16 @@ inline bool firmwareOTAUpdateProcess() {
 }
 
 inline void presentBootloaderInformation(){
-	RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)_msg.data;
-	mSetLength(_msg, sizeof(RequestFirmwareConfig));
-	mSetCommand(_msg, C_STREAM);
-	mSetPayloadType(_msg,P_CUSTOM);
+	RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)_msgTmp.data;
+	mSetLength(_msgTmp, sizeof(RequestFirmwareConfig));
+	mSetCommand(_msgTmp, C_STREAM);
+	mSetPayloadType(_msgTmp,P_CUSTOM);
 	// copy node settings to reqFWConfig
 	memcpy(reqFWConfig,&_fc,sizeof(NodeFirmwareConfig));
 	// add bootloader information
 	reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
 	_fwUpdateOngoing = false;
-	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));	
+	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));	
 }
 // do a crc16 on the whole received firmware
 inline bool transportIsValidFirmware() {

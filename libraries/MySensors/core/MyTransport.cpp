@@ -21,15 +21,81 @@
 
 static transportStatus _transportStatus;
 
-inline void transportInitialize() {
+void transportInitialize() {
 	// initialize status variables
-	_transportStatus.failedDownlinkTransmissions = 0;
 	_transportStatus.failedUplinkTransmissions = 0;
 	_transportStatus.heartbeat = 0;
 	_transportStatus.nodeRegistered = false;
 	_transportStatus.pingActive = false;
 	_transportStatus.transportState = tsTRANSPORT_INIT;
 }
+
+bool transportSendWrite(uint8_t to, MyMessage &message) {
+	// set protocol version and update last
+	mSetVersion(message, PROTOCOL_VERSION);
+	message.last = _nc.nodeId;
+	// sign message if required
+	if (!signerSignMsg(message)) {
+		debug(PSTR("sign fail\n"));
+		ledBlinkErr(1);
+	}
+	// msg length changes if signed
+	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
+	// increase heartbeat counter
+	_transportStatus.heartbeat++;
+	// send
+	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
+	ledBlinkTx(1);
+	
+	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
+			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
+			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(_convBuf));
+	
+	return (ok || to==BROADCAST_ADDRESS);
+}
+bool transportRouteMessage(MyMessage &message) {
+	uint8_t destination = message.destination;
+	uint8_t route;
+	// GW and BC are fix
+	if(destination==GATEWAY_ADDRESS) {
+		route = _nc.parentNodeId;
+	} else if (destination==BROADCAST_ADDRESS) {
+		route = BROADCAST_ADDRESS;
+	} else {
+		route = hwReadConfig(EEPROM_ROUTES_ADDRESS+destination);
+		if(route==AUTO) {
+			debug(PSTR("Destination %d unknown, send to parent\n"), destination);
+			route = _nc.parentNodeId;
+		}
+	}
+	bool ok = transportSendWrite(route, message);
+	
+	if (!ok) {
+		// Failure when sending to parent node. The parent node might be down and we
+		// need to find another route to gateway.
+		ledBlinkErr(1);
+	
+		if(route==_nc.parentNodeId){
+			_transportStatus.failedUplinkTransmissions++;
+		}
+	} else {
+		if(route==_nc.parentNodeId){
+			_transportStatus.failedUplinkTransmissions = 0;
+		} 
+	}
+		
+	return ok;
+}
+
+bool transportSendRoute(MyMessage &message) {
+	if ( (isTransportOK() && _transportStatus.nodeRegistered) || mGetCommand(message) == C_INTERNAL) {
+		return transportRouteMessage(message);
+	} else {
+		debug(PSTR("node not ready to send\n"));
+		return false;
+	}
+}
+
 
 bool transportRequestNodeId() {
 	debug(PSTR("req id\n"));
@@ -56,7 +122,7 @@ bool transportFindParentNode() {
 
 		// Wait for responses
 		transportWait(2000);
-
+		
 		ok = _nc.parentNodeId != AUTO;
 	
 		_transportStatus.findingParentNode = false;
@@ -75,6 +141,10 @@ bool transportPresentNode() {
 		#endif
 	#else
 		if (_nc.nodeId != AUTO) {
+			#ifdef MY_OTA_FIRMWARE_FEATURE
+				presentBootloaderInformation();
+			#endif
+
 			// Send signing preferences for this node to the GW
 			signerPresentation(_msg, GATEWAY_ADDRESS);
 
@@ -87,26 +157,22 @@ bool transportPresentNode() {
 			// Send a configuration exchange request to controller
 			// Node sends parent node. Controller answers with latest node configuration
 			// which is picked up in process()
-			transportSendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
+			transportRouteMessage(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
 
 			// Wait configuration reply
 			transportWait(2000, C_INTERNAL, I_CONFIG);
-			#ifdef MY_OTA_FIRMWARE_FEATURE
-				presentBootloaderInformation();
-			#endif
 		}
 	#endif
 	return true;
 }
 
-uint8_t transportPingNode(uint8_t nodeID) {
+uint8_t transportPingNode(uint8_t nodeId) {
 	uint8_t hopsCnt = INVALID_HOPS;
 	if(!_transportStatus.pingActive){	
-		debug(PSTR("pinging node %d\n"),nodeID);
+		debug(PSTR("pinging node %d\n"),nodeId);
 		_transportStatus.pingActive = true;
 		_transportStatus.pongReceived = false;
-		transportSendRoute(build(_msgTmp, _nc.nodeId, nodeID, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)0x01));
-	
+		transportRouteMessage(build(_msgTmp, _nc.nodeId, nodeId, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)0x01));
 		// Wait ping reply
 		transportWait(2000, C_INTERNAL, I_PONG);
 		_transportStatus.pingActive = false;
@@ -120,10 +186,15 @@ uint8_t transportPingNode(uint8_t nodeID) {
 }
 
 bool transportRegisterNode() {
-	debug(PSTR("register node\n"));
-	_transportStatus.nodeRegistered = false;
-	transportSendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTER_REQUEST, false).set(_transportStatus.heartbeat));
-	transportWait(2000, C_INTERNAL, I_REGISTER_RESPONSE);
+	#if defined (MY_REGISTER_NODE)
+		debug(PSTR("register node\n"));
+		_transportStatus.nodeRegistered = false;
+		transportRouteMessage(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTER_REQUEST, false).set(MY_TRANSPORT_VERSION));
+		transportWait(2000, C_INTERNAL, I_REGISTER_RESPONSE);
+	#else
+		// skip registration request and set flag
+		_transportStatus.nodeRegistered = true;
+	#endif
 	return _transportStatus.nodeRegistered;
 }
 
@@ -142,32 +213,27 @@ void transportWait(unsigned long ms) {
 void transportWait(unsigned long ms, uint8_t cmd, uint8_t msgtype){
 	unsigned long enter = hwMillis();
 	_msg.type = !msgtype;
-	while ( (hwMillis() - enter < ms) && !(mGetCommand(_msg)==cmd && _msg.type==msgtype) ) {
+	while ( (hwMillis() - enter < ms) && !(mGetCommand(_msg) == cmd && _msg.type == msgtype) ) {
 		hwWatchdogReset();
 		transportProcess();
 		yield();
 	}
 }
 
-
-
-
 void transportStateMachine(){
 	if (_transportStatus.transportState == tsOK) {
+		// process incoming messages
 		transportProcess();
-		#if !defined(MY_GATEWAY_FEATURE)
-		if (_transportStatus.failedDownlinkTransmissions > TRANSMISSION_FAILURES) {
-
-		}
-		if (_transportStatus.failedUplinkTransmissions > TRANSMISSION_FAILURES) {
-			#if !defined(MY_PARENT_NODE_IS_STATIC)
-				debug(PSTR("uplink msgs fail, search new parent\n"));
-				_transportStatus.transportState = tsPARENT; 
-			#else
-				debug(PSTR("uplink msgs fail, but parent assignment is static\n"));
-				_transportStatus.failedUplinkTransmissions = 0;
-			#endif
-		}
+		#if !defined(MY_GATEWAY_FEATURE)		
+			if (_transportStatus.failedUplinkTransmissions > TRANSMISSION_FAILURES) {
+				#if !defined(MY_PARENT_NODE_IS_STATIC)
+					debug(PSTR("uplink msgs fail, search new parent\n"));
+					_transportStatus.transportState = tsPARENT; 
+				#else
+					debug(PSTR("uplink msgs fail, but parent assignment is static\n"));
+					_transportStatus.failedUplinkTransmissions = 0;
+				#endif
+			}
 		#endif
 		return;
 	}
@@ -178,36 +244,19 @@ void transportStateMachine(){
 		return;
 	}
 	#if !defined(MY_GATEWAY_FEATURE)
-
-		// register node
-		if (_transportStatus.transportState == tsREGISTER) {
-			debug(PSTR("Registering node\n"));
-			if(transportRegisterNode()) {
-				debug(PSTR("reg ok\n"));
-				_transportStatus.transportState=tsOK;	
+	
+		// find parent
+		if(_transportStatus.transportState == tsPARENT) {
+			if(transportFindParentNode()){
+				_transportStatus.transportState = tsID;
 			} else {
-				debug(PSTR("reg fail\n"));
-				_transportStatus.transportState = tsPARENT;
+				_transportStatus.heartbeat = millis();
+				_transportStatus.transportState = tsFAILURE;	
+				return;
 			}
-			return;
-		}
-		// test link to GW
-		if(_transportStatus.transportState == tsLINK) {
-			debug(PSTR("Check GW link\n"));
-			uint8_t hopsCnt = transportPingNode(GATEWAY_ADDRESS);
-			if( _msg.sender == GATEWAY_ADDRESS && hopsCnt == _nc.distance) {				
-				_transportStatus.transportState=tsREGISTER;	
-				_transportStatus.failedUplinkTransmissions = 0; 
-			} else {
-				_transportStatus.failedUplinkTransmissions++; 
-				debug(PSTR("I_PONG: hops from GW %d, but distance %d\n"), hopsCnt, _nc.distance);
-				_transportStatus.transportState = tsPARENT;
-			}
-			return;
 		}
 		// request id if necessary
 		if(_transportStatus.transportState == tsID) {
-			debug(PSTR("Verify ID\n"));
 			if(_nc.nodeId == AUTO){
 				debug(PSTR("req ID\n"));
 				transportRequestNodeId();		
@@ -218,19 +267,37 @@ void transportStateMachine(){
 			} else {
 				debug(PSTR("req ID fail\n"));
 				_transportStatus.transportState = tsPARENT;
+				return;
 			}
-			return;
-		}	
-		// find parent
-		if(_transportStatus.transportState == tsPARENT) {
-			if(transportFindParentNode()){
-				_transportStatus.transportState = tsID;
-			} else {
-				_transportStatus.heartbeat = millis();
-				_transportStatus.transportState = tsFAILURE;	
-			}
-			return;
+
 		}
+		
+		// test link to GW
+		if(_transportStatus.transportState == tsLINK) {
+			debug(PSTR("check GW link\n"));
+			uint8_t hopsCnt = transportPingNode(GATEWAY_ADDRESS);
+			if( _msg.sender == GATEWAY_ADDRESS && hopsCnt == _nc.distance) {				
+				_transportStatus.transportState=tsREGISTER;	
+			} else {
+				debug(PSTR("I_PONG: hops from GW %d, but distance %d\n"), hopsCnt, _nc.distance);
+				_transportStatus.transportState = tsPARENT;
+				return;
+			}
+		}
+
+		// register node
+		if (_transportStatus.transportState == tsREGISTER) {
+			debug(PSTR("reg req\n"));
+			if(transportRegisterNode()) {
+				debug(PSTR("reg ok\n"));
+				_transportStatus.transportState=tsOK;	
+			} else {
+				debug(PSTR("reg fail\n"));
+				_transportStatus.transportState = tsLINK;
+			}
+			return; // return in any case
+		}
+					
 	#endif
 	// GW does not require all of the above
 	if(_transportStatus.transportState == tsTRANSPORT_INIT) {
@@ -252,6 +319,10 @@ void transportStateMachine(){
 	}
 }
 
+inline bool isTransportOK() {
+	return (_transportStatus.transportState==tsOK);
+}
+
 inline void transportAssignNodeID(){
 	_nc.nodeId = _msg.getByte();
 	// verify if ID valid
@@ -271,7 +342,7 @@ inline void transportAssignNodeID(){
 	}	
 }
 
-inline void transportClearRoutingTable() {
+void transportClearRoutingTable() {
 	debug(PSTR("clear routing table\n"));
 	uint8_t i = 255;
 	do {
@@ -279,7 +350,7 @@ inline void transportClearRoutingTable() {
 	} while (i--);
 }
 
-inline void transportProcess() {
+void transportProcess() {
 	uint8_t to = 0;
 	while(transportAvailable(&to)){
 		// Manage signing timeout
@@ -330,7 +401,7 @@ inline void transportProcess() {
 				mSetAck(_msgTmp,true);
 				_msgTmp.sender = _nc.nodeId;
 				_msgTmp.destination = sender;
-				transportSendRoute(_msgTmp);
+				transportRouteMessage(_msgTmp);
 			}
 			if (command == C_INTERNAL) {
 				// Process signing related internal messages
@@ -341,7 +412,17 @@ inline void transportProcess() {
 				#if defined(MY_GATEWAY_FEATURE)
 					if (type == I_REGISTER_REQUEST) {
 						debug(PSTR("Node=%d request registering\n"),sender);
-						transportSendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTER_RESPONSE, false).set(true));
+						#if defined(MY_ENABLE_COMPATIBILITY_CHECK)
+							if(_msg.getByte()>=MY_TRANSPORT_MIN_VERSION) 
+							{
+								transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTER_RESPONSE, false).set(true));
+							} else {
+								debug(PSTR("Node has incompatible library version\n"),sender);
+								transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTER_RESPONSE, false).set(false));
+							}
+						#else
+							transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTER_RESPONSE, false).set(true));
+						#endif
 						break;	
 					}
 				#else
@@ -388,11 +469,11 @@ inline void transportProcess() {
 				if (type == I_PING) {
 					debug(PSTR("node pinged by %d, hops=%d\n"), sender, _msg.getByte());
 					transportWait(hwMillis() & 0x3ff);
-					transportSendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PONG, false).set((uint8_t)0x01));
+					transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PONG, false).set((uint8_t)0x01));
 					break; // no further processing required
 				} 
 				if (type == I_PONG) {
-					debug(PSTR("pong received, hops=%d\n"), _msg.getByte());
+					debug(PSTR("I_PONG, hops=%d\n"), _msg.getByte());
 					_transportStatus.pongReceived = true;
 					break; // no further processing required
 				} 
@@ -431,19 +512,19 @@ inline void transportProcess() {
 							// routing corrected via re-registering after findparent
 							hwWriteConfig(EEPROM_ROUTES_ADDRESS+sender, sender);
 							
-							// check if parent responding **********************************************************************************
+							// check if parent responding
 							#if !defined(MY_GATEWAY_FEATURE)
 								if(transportPingNode(GATEWAY_ADDRESS)!=INVALID_HOPS) {
 								// random wait to minimize collisions
 								transportWait(hwMillis() & 0x3ff);
-								transportSendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
+								transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
 								} else {
 									// parent not responding, search new parent
 									_transportStatus.transportState = tsPARENT;
 								}
 							#else
 								transportWait(hwMillis() & 0x3ff);
-								transportSendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
+								transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
 								
 							#endif							
 						}
@@ -455,7 +536,7 @@ inline void transportProcess() {
 						debug(PSTR("I_DISCOVER\n"));
 						// random wait to minimize collisions
 						transportWait(hwMillis() & 0x3ff);
-						transportSendRoute(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
+						transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
 					}
 				}
 			}
@@ -464,7 +545,7 @@ inline void transportProcess() {
 				if(last == _nc.parentNodeId && sender != _nc.nodeId){
 					debug(PSTR("fwd BC: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 						sender, last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
-					transportSendRoute(_msg);
+					transportRouteMessage(_msg);
 				}
 			#endif
 			// Call incoming message callback if available
@@ -486,7 +567,7 @@ inline void transportProcess() {
 					if (type == I_PING || type == I_PONG) {
 						uint8_t hopsCnt = _msg.getByte(); 
 						if(hopsCnt!=MAX_HOPS) {
-							debug(PSTR("ping/pong hops=%d\n"),hopsCnt);
+							debug(PSTR("incr. ping/pong hops=%d\n"),hopsCnt);
 							_msg.set((uint8_t)(hopsCnt + 1));	
 						}
 					}
@@ -494,7 +575,7 @@ inline void transportProcess() {
 				// We should try to relay this message to another node
 				debug(PSTR("fwd msg: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 					sender, last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
-				transportSendRoute(_msg);
+				transportRouteMessage(_msg);
 			#else
 				debug(PSTR("drop msg: %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 					sender, last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
@@ -510,79 +591,11 @@ inline void transportProcess() {
 }
 
 
-bool transportSendWrite(uint8_t to, MyMessage &message) {
-	// set protocol version and update last
-	mSetVersion(message, PROTOCOL_VERSION);
-	message.last = _nc.nodeId;
-	// sign message if required
-	if (!signerSignMsg(message)) {
-		debug(PSTR("sign fail\n"));
-		ledBlinkErr(1);
-	}
-	// msg length changes if signed
-	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
-	// increase heartbeat counter
-	_transportStatus.heartbeat++;
-	// send
-	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
-	
-	ledBlinkTx(1);
-	
-	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
-			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
-			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(_convBuf));
 
-	return (ok || to==BROADCAST_ADDRESS);
-}
 
-bool _transportSendRoute(MyMessage &message) {
-	//if (_transportStatus.transportState == tsOK && _transportStatus.nodeRegistered) {
-		return transportSendRoute(message);
-	//} else {
-	//	debug(PSTR("node not ready to send\n"));
-	//	return false;
-	//}
-	
-}
 
-bool transportSendRoute(MyMessage &message) {
-	uint8_t destination = message.destination;
-	uint8_t route;
-	// intermediate and safe if routing table corrupt
-	if(destination==GATEWAY_ADDRESS) {
-		route = _nc.parentNodeId;
-	} else if (destination==BROADCAST_ADDRESS) {
-		route = BROADCAST_ADDRESS;
-	} else {
-		route = hwReadConfig(EEPROM_ROUTES_ADDRESS+destination);
-		if(route==AUTO) {
-			debug(PSTR("Destination %d unknown, send to parent\n"), destination);
-			route = _nc.parentNodeId;
-		}
-	}
-	bool ok = transportSendWrite(route, message);
-	
-	if (!ok) {
-		// Failure when sending to parent node. The parent node might be down and we
-		// need to find another route to gateway.
-		ledBlinkErr(1);
-		debug(PSTR("ok=%d, route=%d, UpFail=%d, DownFail=%d\n"),ok,route,_transportStatus.failedUplinkTransmissions,_transportStatus.failedDownlinkTransmissions );
 
-		if(route==_nc.parentNodeId){
-			_transportStatus.failedUplinkTransmissions++;
-		} else {
-			_transportStatus.failedDownlinkTransmissions++;
-		}
-	} else {
-		if(route==_nc.parentNodeId){
-			_transportStatus.failedUplinkTransmissions = 0;
-		} else {
-			_transportStatus.failedDownlinkTransmissions = 0;
-		}
-	}
-		
-	return ok;
-}
+
 
 
 

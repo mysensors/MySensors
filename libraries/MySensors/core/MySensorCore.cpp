@@ -47,18 +47,13 @@ void _process() {
 
 	#if defined(MY_RADIO_FEATURE)
 		transportStateMachine();
-		//transportProcess();
-	#endif
-	
+	#endif	
 }
-
 
 
 void _infiniteLoop() {
 	while(1) {
-		#if defined(MY_GATEWAY_ESP8266)
-			yield();
-		#endif
+		yield();
 	}
 }
 
@@ -86,7 +81,6 @@ void _begin() {
 			// Nothing more we can do
 			_infiniteLoop();
 		}
-
 	#endif
 
 
@@ -94,13 +88,75 @@ void _begin() {
 		ledsInit();
 	#endif
 
-	// Read latest received controller configuration from EEPROM
+	// Read node configuration
+	readNodeConfig();
+	
+	#if defined(MY_RADIO_FEATURE)
+		while (!isTransportOK()) {
+			transportStateMachine();
+			hwWatchdogReset();
+			yield();
+		}
+	#endif
+	
+	#if defined(MY_NODE_LOCK_FEATURE)
+		// Check if node has been locked down
+		if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {
+			// Node is locked, check if unlock pin is asserted, else hang the node
+			pinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
+			// Make a short delay so we are sure any large external nets are fully pulled
+			unsigned long enter = hwMillis();
+			while (hwMillis() - enter < 2);
+			if (digitalRead(MY_NODE_UNLOCK_PIN) == 0) {
+				// Pin is grounded, reset lock counter
+				hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
+				// Disable pullup
+				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
+				debug(PSTR("Node is unlocked.\n"));
+			} else {
+				// Disable pullup
+				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
+				nodeLock("LDB"); //Locked during boot
+			}
+		} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
+			// Reset walue
+			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
+		}
+	#endif
+	
+	// Call sketch setup
+	if (setup)
+		setup();
+
+
+	#if defined(MY_RADIO_FEATURE)
+		transportPresentNode();
+	#endif
+	
+	if (presentation)
+		presentation();
+
+	debug(PSTR("Init complete, id=%d, parent=%d, distance=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance);
+}
+
+
+uint8_t getNodeId() {
+	return _nc.nodeId;
+}
+
+uint8_t getParentNodeId() {
+	return _nc.parentNodeId;
+}
+
+ControllerConfig getConfig() {
+	return _cc;
+}
+void readNodeConfig() {
 	hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 	if (_cc.isMetric > 0x01) {
 		// Eeprom empty, set default to metric
 		_cc.isMetric = true;
 	}
-
 	#if defined(MY_GATEWAY_FEATURE)
 		// Set configuration for gateway
 		_nc.parentNodeId = GATEWAY_ADDRESS;
@@ -108,8 +164,7 @@ void _begin() {
 		_nc.nodeId = GATEWAY_ADDRESS;
 		
 	#elif defined(MY_RADIO_FEATURE)
-		
-		#ifdef MY_OTA_FIRMWARE_FEATURE
+		#if defined(MY_OTA_FIRMWARE_FEATURE)
 			// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
 			readFirmwareSettings();
 		#endif
@@ -138,69 +193,6 @@ void _begin() {
 	hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _nc.parentNodeId);
 	hwWriteConfig(EEPROM_DISTANCE_ADDRESS, _nc.distance);
 	hwWriteConfig(EEPROM_NODE_ID_ADDRESS, _nc.nodeId);
-	
-
-	
-
-	#if defined(MY_NODE_LOCK_FEATURE)
-		// Check if node has been locked down
-		if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {
-			// Node is locked, check if unlock pin is asserted, else hang the node
-			pinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
-			// Make a short delay so we are sure any large external nets are fully pulled
-			unsigned long enter = hwMillis();
-			while (hwMillis() - enter < 2);
-			if (digitalRead(MY_NODE_UNLOCK_PIN) == 0) {
-				// Pin is grounded, reset lock counter
-				hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
-				// Disable pullup
-				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
-				debug(PSTR("Node is unlocked.\n"));
-			} else {
-				// Disable pullup
-				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
-				nodeLock("LDB"); //Locked during boot
-			}
-		} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
-			// Reset walue
-			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
-		}
-	#endif
-	#if defined(MY_RADIO_FEATURE)
-		while (_transportStatus.transportState!=tsOK) {
-			transportStateMachine();
-			hwWatchdogReset();
-		}
-	#endif
-
-	// Call sketch setup
-	if (setup)
-		setup();
-
-
-	#if defined(MY_RADIO_FEATURE)
-		transportPresentNode();
-	#endif
-	
-	if (presentation)
-		presentation();
-
-	debug(PSTR("Init complete, id=%d, parent=%d, distance=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance);
-}
-
-
-
-
-uint8_t getNodeId() {
-	return _nc.nodeId;
-}
-
-uint8_t getParentNodeId() {
-	return _nc.parentNodeId;
-}
-
-ControllerConfig getConfig() {
-	return _cc;
 }
 
 
@@ -217,7 +209,7 @@ bool _sendRoute(MyMessage &message) {
 		}
 	#endif
 	#if defined(MY_RADIO_FEATURE)
-		return _transportSendRoute(message);
+		return transportSendRoute(message);
 	#else
 		return false;
 	#endif
@@ -293,6 +285,7 @@ void _processInternalMessages() {
 	} else if (type == I_CHILDREN) {
 		#if defined(MY_REPEATER_FEATURE)
 			if (_msg.data[0] == 'C') {
+				// acknowledge
 				_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set("ok"));
 				// Clears child relay data for this node
 				transportClearRoutingTable();			
@@ -307,7 +300,9 @@ void _processInternalMessages() {
 				uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS+cnt);
 				if (route!=255){
 					debug(PSTR("ID: %d via %d\n"),cnt,route);
-					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, cnt, C_INTERNAL, I_DEBUG,false).set(route));
+					 uint8_t OutBuf[2] = {cnt,route};
+					 //sprintf(OutBuf,"%d<%d",cnt,route);
+					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(OutBuf,2));
 					transportWait(100);
 				}
 			}
@@ -318,6 +313,13 @@ void _processInternalMessages() {
 			_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(hwCPUFrequency()));
 		} else if (debug_msg=='M') {
 			_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(hwFreeMem()));
+		} else if (debug_msg=='E') {
+			// acknowledge
+			_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set("ok"));
+			for (int i=EEPROM_START;i<EEPROM_LOCAL_CONFIG_ADDRESS;i++) {
+				hwWriteConfig(i,0xFF);  
+			}
+			
 		}
 	}
 }

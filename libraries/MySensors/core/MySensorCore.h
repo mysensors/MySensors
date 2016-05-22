@@ -140,6 +140,12 @@ void requestTime();
 ControllerConfig getConfig();
 
 /**
+ * Reads node configurations stored in EEPROM
+ */
+void readNodeConfig();
+
+
+/**
  * Save a state (in local EEPROM). Good for actuators to "remember" state between
  * power cycles.
  *
