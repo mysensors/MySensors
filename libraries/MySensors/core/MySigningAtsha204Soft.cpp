@@ -222,7 +222,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 		// Compare the caluclated signature with the provided signature
-		if (memcmp(&msg.data[mGetLength(msg)], _signing_hmac, MAX_PAYLOAD-mGetLength(msg))) {
+		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac, MAX_PAYLOAD-mGetLength(msg))) {
 			DEBUG_SIGNING_PRINTBUF(F("Signature bad: "), _signing_hmac, MAX_PAYLOAD-mGetLength(msg));
 #ifdef MY_SIGNING_NODE_WHITELISTING
 			DEBUG_SIGNING_PRINTBUF(F("Is the sender whitelisted and serial correct?"), NULL, 0);
