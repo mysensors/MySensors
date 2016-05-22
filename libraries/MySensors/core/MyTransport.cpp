@@ -159,7 +159,7 @@ inline void transportProcess() {
 				}
 				return;
 			} else if (sender == GATEWAY_ADDRESS) {
-				if (type == I_ID_RESPONSE && _nc.nodeId == AUTO) {
+				if (type == I_ID_RESPONSE) {
 					_nc.nodeId = _msg.getByte();
 					if (_nc.nodeId == AUTO) {
 						// sensor net gateway will return max id if all sensor id are taken
