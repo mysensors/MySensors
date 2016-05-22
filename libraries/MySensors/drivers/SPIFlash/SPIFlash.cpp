@@ -8,7 +8,7 @@
 // > Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
 // > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02, 
-// >                             use #define SPIFLASH_SST25TYPE for SST25 Type Flash Memory
+// >                             use define SPIFLASH_SST25TYPE for SST25 Type Flash Memory
 // **********************************************************************************
 // License
 // **********************************************************************************
@@ -233,7 +233,7 @@ void SPIFlash::writeByte(uint32_t addr, uint8_t byt) {
 ///          use the block erase commands to first clear memory (write 0xFFs)
 /// This version handles both page alignment and data blocks larger than 256 bytes.
 /// SST25 Family Flash does not support programming multiple Bytes with opcode 0x02 SPIFLASH_BYTEPROGRAM,
-/// If #define SPIFLASH_SST25TYPE is set and writeBytes is called, it calls writeByte to do the job
+/// If define SPIFLASH_SST25TYPE is set and writeBytes is called, it calls writeByte to do the job
 /// (i.e. before each bytes the address where it goes to is sent, use writeWords for better performance with SST25.
 void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
 #ifdef SPIFLASH_SST25TYPE

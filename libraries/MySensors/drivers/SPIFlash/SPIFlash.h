@@ -8,7 +8,7 @@
 // > Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
 // > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02, 
-// >                             use #define SPIFLASH_SST25TYPE for SST25 Type Flash Memory
+// >                             use define SPIFLASH_SST25TYPE for SST25 Type Flash Memory
 // **********************************************************************************
 // License
 // **********************************************************************************
@@ -85,7 +85,7 @@
 #define SPIFLASH_WAKE             0xAB        // deep power wake up
 #define SPIFLASH_BYTEPAGEPROGRAM  0x02        // write (1 to 256bytes)
 #define SPIFLASH_AAIWORDPROGRAM   0xAD        // Auto Address Increment Programming on Microchip SST Family Devices which do not support page program
-                                              // use #define SPIFLASH_SST25TYPE to use AAI prog instead of Bytepageprogram which does not work on SST Family Chips
+                                              // use define SPIFLASH_SST25TYPE to use AAI prog instead of Bytepageprogram which does not work on SST Family Chips
                                               // tested with SST25PF020B80 http://ww1.microchip.com/downloads/en/DeviceDoc/20005135B.pdf
 #define SPIFLASH_IDREAD           0x9F        // read JEDEC manufacturer and device ID (2 bytes, specific bytes for each manufacturer and device)
                                               // Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
@@ -103,7 +103,7 @@ public:
   uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
   void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read unlimited # of bytes
   void writeByte(uint32_t addr, uint8_t byt); //!< Write 1 byte to flash memory
-  void writeBytes(uint32_t addr, const void* buf, uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if #define SPIFLASH_SST25TYPE is set AAI Word Programming will be used 
+  void writeBytes(uint32_t addr, const void* buf, uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if define SPIFLASH_SST25TYPE is set AAI Word Programming will be used 
   boolean busy(); //!< check if the chip is busy erasing/writing
   void chipErase(); //!< erase entire flash memory array
   void blockErase4K(uint32_t address); //!< erase a 4Kbyte block
