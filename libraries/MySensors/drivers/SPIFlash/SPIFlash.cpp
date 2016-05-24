@@ -7,6 +7,8 @@
 // > Updated Jan. 5, 2015, TomWS1, modified writeBytes to allow blocks > 256 bytes and handle page misalignment.
 // > Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
+// > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02, 
+// >                             use define MY_SPIFLASH_SST25TYPE for SST25 Type Flash Memory
 // **********************************************************************************
 // License
 // **********************************************************************************
@@ -230,8 +232,48 @@ void SPIFlash::writeByte(uint32_t addr, uint8_t byt) {
 /// WARNING: you can only write to previously erased memory locations (see datasheet)
 ///          use the block erase commands to first clear memory (write 0xFFs)
 /// This version handles both page alignment and data blocks larger than 256 bytes.
-///
+/// See documentation of #MY_SPIFLASH_SST25TYPE define for more information
 void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
+#ifdef MY_SPIFLASH_SST25TYPE
+   //SST25 Type of Flash does not support Page Programming but AAI Word Programming
+   uint16_t i=0;
+   uint8_t oddAdr=0;
+   char s[5];
+   
+   command(SPIFLASH_AAIWORDPROGRAM, true);  // Byte/Page Program
+   SPI.transfer(addr >> 16);
+   SPI.transfer(addr >> 8);
+   SPI.transfer(addr);
+   
+   if (addr%2){
+     //start address is not even, i.e. first byte of word must be 0xff
+     SPI.transfer(0xff);
+     SPI.transfer(((uint8_t*) buf)[0]);
+     unselect();
+     oddAdr=1; //following addresses must all be shifted one off
+     len--;
+     if (len > 0) command(SPIFLASH_AAIWORDPROGRAM); //If for loop will run issue Wordprogram command
+   }
+   
+   for (i=0;i<(len/2);i++){
+     //AAI command must be set before every new word
+     if (i>0) command(SPIFLASH_AAIWORDPROGRAM); //Wordprogram command for first write has been issued before
+     SPI.transfer(((uint8_t*) buf)[i*2+oddAdr]);
+     SPI.transfer(((uint8_t*) buf)[i*2+1+oddAdr]);
+     unselect();
+   }
+   
+   if (len-i*2 == 1){
+     //There is one byte (i.e. half word) left. This happens if len was odd or (len was even and addr odd)
+     if (i>0) command(SPIFLASH_AAIWORDPROGRAM); //if for loop had not run wordprogram command from before is still valid
+     SPI.transfer(((uint8_t*) buf)[i*2+oddAdr]);
+     SPI.transfer(0xff);
+     unselect();
+   }
+   
+   command(SPIFLASH_WRITEDISABLE); //end AAI programming
+   unselect();
+#else
   uint16_t n;
   uint16_t maxBytes = 256-(addr%256);  // force the first set of bytes to stay within the first page
   uint16_t offset = 0;
@@ -244,7 +286,7 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
     SPI.transfer(addr);
     
     for (uint16_t i = 0; i < n; i++)
-      SPI.transfer(((uint8_t*) buf)[offset + i]);
+    SPI.transfer(((uint8_t*) buf)[offset + i]);
     unselect();
     
     addr+=n;  // adjust the addresses and remaining bytes by what we've just transferred.
@@ -252,6 +294,7 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
     len -= n;
     maxBytes = 256;   // now we can do up to 256 bytes per loop
   }
+#endif
 }
 
 /// erase entire flash memory array
