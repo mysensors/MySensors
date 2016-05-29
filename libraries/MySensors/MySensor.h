@@ -153,6 +153,7 @@
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
 	#define MY_SIGNING_FEATURE
 #endif
+#include "core/MyTransport.h"
 #include "core/MySigning.cpp"
 #include "drivers/ATSHA204/sha256.cpp"
 #if defined(MY_SIGNING_FEATURE)
@@ -246,7 +247,8 @@
 	// FLASH
 	#ifdef MY_OTA_FIRMWARE_FEATURE
 		#include "drivers/SPIFlash/SPIFlash.cpp"
-	#endif
+		#include "core/MyOTAFirmwareUpdate.cpp"
+	#endif	
 	#include "core/MyTransport.cpp"
 	#if (defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)) || (defined(MY_RADIO_NRF24) && defined(MY_RS485)) || (defined(MY_RADIO_RFM69) && defined(MY_RS485))
 		#error Only one forward link driver can be activated
