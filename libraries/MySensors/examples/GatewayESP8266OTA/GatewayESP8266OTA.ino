@@ -85,6 +85,10 @@
 #define MY_ESP8266_SSID "MySSID"
 #define MY_ESP8266_PASSWORD "MyVerySecretPassword"
 
+// Set the hostname for the WiFi Client. This is the hostname
+// it will pass to the DHCP server if not static.
+// #define MY_ESP8266_HOSTNAME "sensor-ota-gateway"
+
 // Enable UDP communication
 //#define MY_USE_UDP
 
