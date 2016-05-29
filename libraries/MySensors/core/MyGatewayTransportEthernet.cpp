@@ -103,6 +103,9 @@ bool gatewayTransportInit() {
 		#if defined(MY_ESP8266_SSID)
 			// Turn off access point
 			WiFi.mode (WIFI_STA);
+			#if defined(MY_ESP8266_HOSTNAME)
+				WiFi.hostname(MY_EPS8266_HOSTNAME);
+			#endif
 			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 			#ifdef MY_IP_ADDRESS
 				WiFi.config(_ethernetGatewayIP, gateway, subnet);
