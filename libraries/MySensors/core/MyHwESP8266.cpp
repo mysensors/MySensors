@@ -126,6 +126,10 @@ uint16_t hwCPUFrequency() {
 	return ESP.getCpuFreqMHz()*10;
 }
 
+uint16_t hwFreeMem() {
+	return ESP.getFreeHeap();
+}
+
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
