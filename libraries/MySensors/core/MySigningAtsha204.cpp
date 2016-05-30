@@ -107,6 +107,7 @@ bool signerAtsha204GetNonce(MyMessage &msg) {
 	// Generate random number for use as nonce
 	// We used a basic whitening technique that XORs each byte in a 32byte random value with current hwMillis() counter
 	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	(void)atsha204_wakeup(_signing_temp_message);
 	if (atsha204_execute(SHA204_RANDOM, RANDOM_SEED_UPDATE, 0, 0, NULL,
 								RANDOM_COUNT, _singning_tx_buffer, RANDOM_RSP_SIZE, _singning_rx_buffer) != SHA204_SUCCESS) {
 		DEBUG_SIGNING_PRINTBUF(F("Failed to generate nonce"), NULL, 0);
@@ -116,6 +117,8 @@ bool signerAtsha204GetNonce(MyMessage &msg) {
 		_signing_current_nonce[i] = _singning_rx_buffer[SHA204_BUFFER_POS_DATA+i] ^ (hwMillis()&0xFF);
 	}
 	memcpy(_signing_current_nonce, signerSha256(_signing_current_nonce, 32), MAX_PAYLOAD);
+
+	atsha204_idle(); // We just idle the chip now since we expect to use it soon when the signed message arrives
 
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 	memset(&_signing_current_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_current_nonce)-MAX_PAYLOAD);
@@ -158,6 +161,9 @@ bool signerAtsha204SignMsg(MyMessage &msg) {
 		(void)signerSha256(_signing_current_nonce, 32+1+SHA204_SERIAL_SZ); // we can 'void' sha256 because the hash is already put in the correct place
 		DEBUG_SIGNING_PRINTBUF(F("Signature salted with serial"), NULL, 0);
 	}
+
+	// Put device back to sleep
+	atsha204_sleep();
 
 	// Overwrite the first byte in the signature with the signing identifier
 	_singning_rx_buffer[SHA204_BUFFER_POS_DATA] = SIGNING_IDENTIFIER;
@@ -204,9 +210,14 @@ bool signerAtsha204VerifyMsg(MyMessage &msg) {
 		}
 		if (j == NUM_OF(_signing_whitelist)) {
 			DEBUG_SIGNING_PRINTBUF(F("Sender not found in whitelist, message rejected!"), NULL, 0);
+			// Put device back to sleep
+			atsha204_sleep();
 			return false;
 		}
 #endif
+
+		// Put device back to sleep
+		atsha204_sleep();
 
 		// Overwrite the first byte in the signature with the signing identifier
 		_singning_rx_buffer[SHA204_BUFFER_POS_DATA] = SIGNING_IDENTIFIER;
@@ -227,6 +238,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg) {
 
 // Helper to calculate signature of msg (returned in _singning_rx_buffer[SHA204_BUFFER_POS_DATA])
 static void signerCalculateSignature(MyMessage &msg) {
+	(void)atsha204_wakeup(_signing_temp_message);
 	memset(_signing_temp_message, 0, 32);
 	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
 
@@ -251,9 +263,6 @@ static void signerCalculateSignature(MyMessage &msg) {
 	(void)atsha204_execute(SHA204_HMAC, HMAC_MODE_SOURCE_FLAG_MATCH, 0, 0, NULL,
 									HMAC_COUNT, _singning_tx_buffer, HMAC_RSP_SIZE, _singning_rx_buffer);
 
-	// Put device back to sleep
-	atsha204_sleep();
-
 	DEBUG_SIGNING_PRINTBUF(F("HMAC: "), &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 }
 
@@ -273,9 +282,6 @@ static uint8_t* signerSha256(const uint8_t* data, size_t sz) {
 	_signing_temp_message[SHA_MSG_SIZE-1] = (sz << 3);
 	(void)atsha204_execute(SHA204_SHA, SHA_CALC, 0, SHA_MSG_SIZE, _signing_temp_message,
 									SHA_COUNT_LONG, _singning_tx_buffer, SHA_RSP_SIZE_LONG, _singning_rx_buffer);
-
-	// Put device back to sleep
-	atsha204_sleep();
 
 	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], 32);
 	return &_singning_rx_buffer[SHA204_BUFFER_POS_DATA];

@@ -15,7 +15,6 @@ static uint8_t swi_send_bytes(uint8_t count, uint8_t *buffer);
 static uint8_t swi_send_byte(uint8_t value);
 static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response);
 static uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
-static uint8_t sha204c_wakeup(uint8_t *response);
 static uint8_t sha204c_resync(uint8_t size, uint8_t *response);  
 static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
 
@@ -218,34 +217,6 @@ static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response)
 
 /* Communication functions */
 
-static uint8_t sha204c_wakeup(uint8_t *response)
-{
-  swi_set_signal_pin(0);
-  delayMicroseconds(10*SHA204_WAKEUP_PULSE_WIDTH);
-  swi_set_signal_pin(1);
-  delay(SHA204_WAKEUP_DELAY);
-
-  uint8_t ret_code = sha204p_receive_response(SHA204_RSP_SIZE_MIN, response);
-  if (ret_code != SHA204_SUCCESS)
-    return ret_code;
-
-  // Verify status response.
-  if (response[SHA204_BUFFER_POS_COUNT] != SHA204_RSP_SIZE_MIN)
-    ret_code = SHA204_INVALID_SIZE;
-  else if (response[SHA204_BUFFER_POS_STATUS] != SHA204_STATUS_BYTE_WAKEUP)
-    ret_code = SHA204_COMM_FAIL;
-  else 
-  {
-    if ((response[SHA204_RSP_SIZE_MIN - SHA204_CRC_SIZE] != 0x33)
-      || (response[SHA204_RSP_SIZE_MIN + 1 - SHA204_CRC_SIZE] != 0x43))
-      ret_code = SHA204_BAD_CRC;
-  }
-  if (ret_code != SHA204_SUCCESS)
-    delay(SHA204_COMMAND_EXEC_MAX);
-
-  return ret_code;
-}
-
 static uint8_t sha204c_resync(uint8_t size, uint8_t *response)
 {
   // Try to re-synchronize without sending a Wake token
@@ -259,7 +230,7 @@ static uint8_t sha204c_resync(uint8_t size, uint8_t *response)
   // to receive a response (steps 2 and 3 of the
   // re-synchronization process).
   atsha204_sleep();
-  ret_code = sha204c_wakeup(response);
+  ret_code = atsha204_wakeup(response);
 
   // Translate a return value of success into one
   // that indicates that the device had to be woken up
@@ -486,9 +457,42 @@ void atsha204_init(uint8_t pin)
 #endif
 }
 
+void atsha204_idle(void)
+{
+  swi_send_byte(SHA204_SWI_FLAG_IDLE);
+}
+
 void atsha204_sleep(void)
 {
   swi_send_byte(SHA204_SWI_FLAG_SLEEP);
+}
+
+uint8_t atsha204_wakeup(uint8_t *response)
+{
+  swi_set_signal_pin(0);
+  delayMicroseconds(10*SHA204_WAKEUP_PULSE_WIDTH);
+  swi_set_signal_pin(1);
+  delay(SHA204_WAKEUP_DELAY);
+
+  uint8_t ret_code = sha204p_receive_response(SHA204_RSP_SIZE_MIN, response);
+  if (ret_code != SHA204_SUCCESS)
+    return ret_code;
+
+  // Verify status response.
+  if (response[SHA204_BUFFER_POS_COUNT] != SHA204_RSP_SIZE_MIN)
+    ret_code = SHA204_INVALID_SIZE;
+  else if (response[SHA204_BUFFER_POS_STATUS] != SHA204_STATUS_BYTE_WAKEUP)
+    ret_code = SHA204_COMM_FAIL;
+  else 
+  {
+    if ((response[SHA204_RSP_SIZE_MIN - SHA204_CRC_SIZE] != 0x33)
+      || (response[SHA204_RSP_SIZE_MIN + 1 - SHA204_CRC_SIZE] != 0x43))
+      ret_code = SHA204_BAD_CRC;
+  }
+  if (ret_code != SHA204_SUCCESS)
+    delay(SHA204_COMMAND_EXEC_MAX);
+
+  return ret_code;
 }
 
 uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
