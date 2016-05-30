@@ -21,7 +21,7 @@
 
 #include "MyHwATMega328.h"
 
-int8_t pinIntTrigger = 0;
+volatile int8_t pinIntTrigger = 0;
 
 void wakeUp()	 //place to send the interrupts
 {
