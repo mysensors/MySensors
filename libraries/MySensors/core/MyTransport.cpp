@@ -159,7 +159,7 @@ inline void transportProcess() {
 				}
 				return;
 			} else if (sender == GATEWAY_ADDRESS) {
-				if (type == I_ID_RESPONSE && _nc.nodeId == AUTO) {
+				if (type == I_ID_RESPONSE) {
 					_nc.nodeId = _msg.getByte();
 					if (_nc.nodeId == AUTO) {
 						// sensor net gateway will return max id if all sensor id are taken
@@ -169,6 +169,8 @@ inline void transportProcess() {
 						
 					}
 					transportPresentNode();
+					if (presentation)
+						presentation();
 					// Write id to EEPROM
 					hwWriteConfig(EEPROM_NODE_ID_ADDRESS, _nc.nodeId);
 					debug(PSTR("id=%d\n"), _nc.nodeId);
@@ -452,10 +454,17 @@ void transportPresentNode() {
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	transportSetAddress(_nc.nodeId);
 	// Present node and request config
-	#ifndef MY_GATEWAY_FEATURE
+	#ifdef MY_GATEWAY_FEATURE
+		// Send presentation for this gateway device
+		#ifdef MY_REPEATER_FEATURE
+			present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
+		#else
+			present(NODE_SENSOR_ID, S_ARDUINO_NODE);
+		#endif
+	#else
 		if (_nc.nodeId != AUTO) {
-			// Send signing preferences for this node
-			signerPresentation(_msg);
+			// Send signing preferences for this node to the GW
+			signerPresentation(_msg, GATEWAY_ADDRESS);
 
 			// Send presentation for this radio node
 			#ifdef MY_REPEATER_FEATURE

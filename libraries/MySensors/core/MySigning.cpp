@@ -129,8 +129,8 @@ void signerInit(void) {
 #endif
 }
 
-void signerPresentation(MyMessage &msg) {
-	prepareSigningPresentation(msg, GATEWAY_ADDRESS);
+void signerPresentation(MyMessage &msg, uint8_t destination) {
+	prepareSigningPresentation(msg, destination);
 
 #if defined(MY_SIGNING_REQUEST_SIGNATURES)
 	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
@@ -145,8 +145,10 @@ void signerPresentation(MyMessage &msg) {
 
 #if defined(MY_SIGNING_FEATURE)
 	// If we do support signing, wait for the gateway to tell us how it prefer us to transmit our messages
-	SIGN_DEBUG(PSTR("Waiting for GW to send signing preferences...\n"));
-	wait(2000);
+	if (destination == GATEWAY_ADDRESS) {
+		SIGN_DEBUG(PSTR("Waiting for GW to send signing preferences...\n"));
+		wait(2000);
+	}
 #endif
 }
 
@@ -404,4 +406,33 @@ void signerSha256Update(const uint8_t* data, size_t sz) {
 uint8_t* signerSha256Final(void) {
 	memcpy(sha256_hash, _soft_sha256.result(), 32);
 	return sha256_hash;
+}
+
+int signerMemcmp(const void* a, const void* b, size_t sz) {
+	int retVal;
+	size_t i;
+	int done = 0;
+	const uint8_t* ptrA = (const uint8_t*)a;
+	const uint8_t* ptrB = (const uint8_t*)b;
+	for (i=0; i < sz; i++) {
+		if (ptrA[i] == ptrB[i]) {
+			if (done > 0) {
+				done = 1;
+			} else {
+				done = 0;
+			}
+		}	else {
+			if (done > 0) {
+				done = 2;
+			} else {
+				done = 3;
+			}
+		}
+	}
+	if (done > 0) {
+		retVal = -1;
+	} else {
+		retVal = 0;
+	}
+	return retVal;
 }

@@ -7,6 +7,8 @@
 // > Updated Jan. 5, 2015, TomWS1, modified writeBytes to allow blocks > 256 bytes and handle page misalignment.
 // > Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
+// > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02, 
+// >                             use define MY_SPIFLASH_SST25TYPE for SST25 Type Flash Memory. Added / changed comments to better suit doxygen
 // **********************************************************************************
 // License
 // **********************************************************************************
@@ -32,6 +34,35 @@
 // Please maintain this license information along with authorship
 // and copyright notices in any redistribution of this code
 
+///
+/// @file SPIFlash.h
+///
+/// @brief SPIFlash provides access to a SPI Flash IC for OTA update or storing data
+///
+/// IMPORTANT: NAND FLASH memory requires erase before write, because
+///            it can only transition from 1s to 0s and only the erase command can reset all 0s to 1s
+/// See http://en.wikipedia.org/wiki/Flash_memory
+/// The smallest range that can be erased is a sector (4K, 32K, 64K); there is also a chip erase command
+///
+/// Standard SPI flash commands <BR>
+/// Assuming the WP pin is pulled up (to disable hardware write protection).<BR>
+/// To use any write commands the WEL bit in the status register must be set to 1.<BR>
+/// This is accomplished by sending a 0x06 command before any such write/erase command.<BR>
+/// The WEL bit in the status register resets to the logical ?0? state after a device power-up or reset.
+/// In addition, the WEL bit will be reset to the logical ?0? state automatically under the following conditions:<BR>
+/// - Write Disable operation completes successfully<BR>
+/// - Write Status Register operation completes successfully or aborts<BR>
+/// - Protect Sector operation completes successfully or aborts<BR>
+/// - Unprotect Sector operation completes successfully or aborts<BR>
+/// - Byte/Page Program operation completes successfully or aborts<BR>
+/// - Sequential Program Mode reaches highest unprotected memory location<BR>
+/// - Sequential Program Mode reaches the end of the memory array<BR>
+/// - Sequential Program Mode aborts<BR>
+/// - Block Erase operation completes successfully or aborts<BR>
+/// - Chip Erase operation completes successfully or aborts<BR>
+/// - Hold condition aborts
+///
+
 #ifndef _SPIFLASH_H_
 #define _SPIFLASH_H_
 
@@ -44,49 +75,42 @@
 
 #include <SPI.h>
 
-/// IMPORTANT: NAND FLASH memory requires erase before write, because
-///            it can only transition from 1s to 0s and only the erase command can reset all 0s to 1s
-/// See http://en.wikipedia.org/wiki/Flash_memory
-/// The smallest range that can be erased is a sector (4K, 32K, 64K); there is also a chip erase command
+#define SPIFLASH_WRITEENABLE      0x06        //!< write enable
+#define SPIFLASH_WRITEDISABLE     0x04        //!< write disable
 
-/// Standard SPI flash commands
-/// Assuming the WP pin is pulled up (to disable hardware write protection)
-/// To use any write commands the WEL bit in the status register must be set to 1.
-/// This is accomplished by sending a 0x06 command before any such write/erase command.
-/// The WEL bit in the status register resets to the logical ?0? state after a
-/// device power-up or reset. In addition, the WEL bit will be reset to the logical ?0? state automatically under the following conditions:
-/// ? Write Disable operation completes successfully
-/// ? Write Status Register operation completes successfully or aborts
-/// ? Protect Sector operation completes successfully or aborts
-/// ? Unprotect Sector operation completes successfully or aborts
-/// ? Byte/Page Program operation completes successfully or aborts
-/// ? Sequential Program Mode reaches highest unprotected memory location
-/// ? Sequential Program Mode reaches the end of the memory array
-/// ? Sequential Program Mode aborts
-/// ? Block Erase operation completes successfully or aborts
-/// ? Chip Erase operation completes successfully or aborts
-/// ? Hold condition aborts
-#define SPIFLASH_WRITEENABLE      0x06        // write enable
-#define SPIFLASH_WRITEDISABLE     0x04        // write disable
+#define SPIFLASH_BLOCKERASE_4K    0x20        //!< erase one 4K block of flash memory
+#define SPIFLASH_BLOCKERASE_32K   0x52        //!< erase one 32K block of flash memory
+#define SPIFLASH_BLOCKERASE_64K   0xD8        //!< erase one 64K block of flash memory
+#define SPIFLASH_CHIPERASE        0x60        //!< @brief chip erase (may take several seconds depending on size)
+                                              //!< Chip is erased but not actually waited for completion (instead need to check the status register BUSY bit)
+#define SPIFLASH_STATUSREAD       0x05        //!< read status register
+#define SPIFLASH_STATUSWRITE      0x01        //!< write status register
+#define SPIFLASH_ARRAYREAD        0x0B        //!< read array (fast, need to add 1 dummy byte after 3 address bytes)
+#define SPIFLASH_ARRAYREADLOWFREQ 0x03        //!< read array (low frequency)
 
-#define SPIFLASH_BLOCKERASE_4K    0x20        // erase one 4K block of flash memory
-#define SPIFLASH_BLOCKERASE_32K   0x52        // erase one 32K block of flash memory
-#define SPIFLASH_BLOCKERASE_64K   0xD8        // erase one 64K block of flash memory
-#define SPIFLASH_CHIPERASE        0x60        // chip erase (may take several seconds depending on size)
-                                              // but no actual need to wait for completion (instead need to check the status register BUSY bit)
-#define SPIFLASH_STATUSREAD       0x05        // read status register
-#define SPIFLASH_STATUSWRITE      0x01        // write status register
-#define SPIFLASH_ARRAYREAD        0x0B        // read array (fast, need to add 1 dummy byte after 3 address bytes)
-#define SPIFLASH_ARRAYREADLOWFREQ 0x03        // read array (low frequency)
-
-#define SPIFLASH_SLEEP            0xB9        // deep power down
-#define SPIFLASH_WAKE             0xAB        // deep power wake up
-#define SPIFLASH_BYTEPAGEPROGRAM  0x02        // write (1 to 256bytes)
-#define SPIFLASH_IDREAD           0x9F        // read JEDEC manufacturer and device ID (2 bytes, specific bytes for each manufacturer and device)
-                                              // Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
-                                              // Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
-#define SPIFLASH_MACREAD          0x4B        // read unique ID number (MAC)
+#define SPIFLASH_SLEEP            0xB9        //!< deep power down
+#define SPIFLASH_WAKE             0xAB        //!< deep power wake up
+#define SPIFLASH_BYTEPAGEPROGRAM  0x02        //!< write (1 to 256bytes). Writing more than one Byte is not supported on all devices (e.g. SST25 Series)
+#define SPIFLASH_AAIWORDPROGRAM   0xAD        //!< @brief Auto Address Increment Programming on Microchip SST Family Devices which do not support page program. <BR>
+                                              //!< Use define #MY_SPIFLASH_SST25TYPE to use AAI prog instead of Bytepageprogram which does not work on SST Family Chips
+                                              //!< tested with SST25PF020B80 http://ww1.microchip.com/downloads/en/DeviceDoc/20005135B.pdf
+#define SPIFLASH_IDREAD           0x9F        //!< @brief read JEDEC manufacturer and device ID (2 bytes, specific bytes for each manufacturer and device)
+                                              //!< Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
+                                              //!< Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
+#define SPIFLASH_MACREAD          0x4B        //!< read unique ID number (MAC)
                                               
+///
+/// @def MY_SPIFLASH_SST25TYPE
+/// @brief If set AAI Word Programming is used to support SST25 Family SPI Flash.
+///
+/// SST25 Family Flash does not support programming multiple Bytes with opcode 0x02 #SPIFLASH_BYTEPAGEPROGRAM. <BR>
+/// If SPIFLASH_SST25TYPE is set and writeBytes is called, it will use opcode 0xAD #SPIFLASH_AAIWORDPROGRAM and care for Byte alignment.<BR>
+/// Note: AAI Wordprogramming is independent of Pages, so pagebreaking is not an issue when using AAI Wordprogramming.
+///
+ #ifdef DOXYGEN //needed to tell doxygen not to ignore the define which is actually made somewhere else
+	#define MY_SPIFLASH_SST25TYPE
+ #endif
+											  
 /** SPIFlash class */
 class SPIFlash {
 public:
@@ -98,7 +122,7 @@ public:
   uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
   void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read unlimited # of bytes
   void writeByte(uint32_t addr, uint8_t byt); //!< Write 1 byte to flash memory
-  void writeBytes(uint32_t addr, const void* buf, uint16_t len); //!< write multiple bytes to flash memory (up to 64K)
+  void writeBytes(uint32_t addr, const void* buf, uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if define SPIFLASH_SST25TYPE is set AAI Word Programming will be used 
   boolean busy(); //!< check if the chip is busy erasing/writing
   void chipErase(); //!< erase entire flash memory array
   void blockErase4K(uint32_t address); //!< erase a 4Kbyte block

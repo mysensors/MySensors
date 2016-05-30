@@ -100,18 +100,25 @@ typedef struct
 bool gatewayTransportInit() {
 	_w5100_spi_en(true);
 	#if defined(MY_GATEWAY_ESP8266)
-		(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
-		#ifdef MY_IP_ADDRESS
-			WiFi.config(_ethernetGatewayIP, gateway, subnet);
+		#if defined(MY_ESP8266_SSID)
+			// Turn off access point
+			WiFi.mode (WIFI_STA);
+			#if defined(MY_ESP8266_HOSTNAME)
+				WiFi.hostname(MY_ESP8266_HOSTNAME);
+			#endif
+			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
+			#ifdef MY_IP_ADDRESS
+				WiFi.config(_ethernetGatewayIP, gateway, subnet);
+			#endif
+			while (WiFi.status() != WL_CONNECTED)
+			{
+				delay(500);
+				MY_SERIALDEVICE.print(".");
+				yield();
+			}
+			MY_SERIALDEVICE.print(F("IP: "));
+			MY_SERIALDEVICE.println(WiFi.localIP());
 		#endif
-		while (WiFi.status() != WL_CONNECTED)
-		{
-			delay(500);
-			MY_SERIALDEVICE.print(".");
-			yield();
-		}
-		MY_SERIALDEVICE.print(F("IP: "));
-		MY_SERIALDEVICE.println(WiFi.localIP());
 
 	#else
 		#ifdef MY_IP_ADDRESS
@@ -154,17 +161,16 @@ bool gatewayTransportSend(MyMessage &message)
 		#else
 			EthernetClient client;
 			#if defined(MY_CONTROLLER_URL_ADDRESS)
-				if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
-			#else
-				if (client.connect(_ethernetControllerIP, MY_PORT)) {
-			#endif
-				client.write(_ethernetMsg, strlen(_ethernetMsg));
-				client.stop();
-			}
-			else {
-				// connecting to the server failed!
-				ret = false;
-			}
+	                	if (client.connected() || client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+	        	#else
+	                	if (client.connected() || client.connect(_ethernetControllerIP, MY_PORT)) {
+	        	#endif
+	                	client.write(_ethernetMsg, strlen(_ethernetMsg));
+	                }
+	                else {
+	                	// connecting to the server failed!
+	                	ret = false;
+	                }
 		#endif
 	#else
 		// Send message to connected clients
@@ -263,11 +269,13 @@ bool gatewayTransportAvailable()
 			//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
 			#if defined(MY_GATEWAY_ESP8266)
 				_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
+				inputString[0].string[packet_size] = 0;
 				debug(PSTR("UDP packet received: %s\n"), inputString[0].string);
 				return protocolParse(_ethernetMsg, inputString[0].string);
 			#else
 				_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 				_w5100_spi_en(false);
+				inputString.string[packet_size] = 0;
 				debug(PSTR("UDP packet received: %s\n"), inputString.string);
 				return protocolParse(_ethernetMsg, inputString.string);
 			#endif

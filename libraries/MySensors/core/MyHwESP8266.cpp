@@ -126,13 +126,17 @@ uint16_t hwCPUFrequency() {
 	return ESP.getCpuFreqMHz()*10;
 }
 
+uint16_t hwFreeMem() {
+	return ESP.getFreeHeap();
+}
+
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {
 	char fmtBuffer[300];
 	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 		snprintf_P(fmtBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
-		Serial.print(fmtBuffer);
+		MY_SERIALDEVICE.print(fmtBuffer);
 	#endif
 	va_list args;
 	va_start (args, fmt );
@@ -146,9 +150,9 @@ void hwDebugPrint(const char *fmt, ... ) {
 		vsnprintf_P(fmtBuffer, 299, fmt, args);
 	#endif
 	va_end (args);
-	Serial.print(fmtBuffer);
-	Serial.flush();
+	MY_SERIALDEVICE.print(fmtBuffer);
+	MY_SERIALDEVICE.flush();
 
-	//Serial.write(freeRam());
+	//MY_SERIALDEVICE.write(freeRam());
 }
 #endif

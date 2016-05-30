@@ -212,7 +212,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg) {
 		_singning_rx_buffer[SHA204_BUFFER_POS_DATA] = SIGNING_IDENTIFIER;
 
 		// Compare the caluclated signature with the provided signature
-		if (memcmp(&msg.data[mGetLength(msg)], &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg))) {
+		if (signerMemcmp(&msg.data[mGetLength(msg)], &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg))) {
 			DEBUG_SIGNING_PRINTBUF(F("Signature bad: "), &_singning_rx_buffer[SHA204_BUFFER_POS_DATA], MAX_PAYLOAD-mGetLength(msg));
 #ifdef MY_SIGNING_NODE_WHITELISTING
 			DEBUG_SIGNING_PRINTBUF(F("Is the sender whitelisted and serial correct?"), NULL, 0);

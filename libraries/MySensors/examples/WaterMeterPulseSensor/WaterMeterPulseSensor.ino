@@ -45,7 +45,6 @@
 #include <MySensor.h>  
 
 #define DIGITAL_INPUT_SENSOR 3                  // The digital input you attached your sensor.  (Only 2 and 3 generates interrupt!)
-#define SENSOR_INTERRUPT DIGITAL_INPUT_SENSOR-2        // Usually the interrupt = pin -2 (on uno/nano anyway)
 
 #define PULSE_FACTOR 1000                       // Nummber of blinks per m3 of your meter (One rotation/liter)
 
@@ -87,7 +86,7 @@ void setup()
 
   lastSend = lastPulse = millis();
 
-  attachInterrupt(SENSOR_INTERRUPT, onPulse, FALLING);
+  attachInterrupt(digitalPinToInterrupt(DIGITAL_INPUT_SENSOR), onPulse, FALLING);
 }
 
 void presentation()  {
