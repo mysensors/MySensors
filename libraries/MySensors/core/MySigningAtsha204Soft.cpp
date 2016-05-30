@@ -99,7 +99,7 @@ void signerAtsha204SoftInit(void) {
 
 bool signerAtsha204SoftCheckTimer(void) {
 	if (_signing_verification_ongoing) {
-		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+		if (hwMillis() < _signing_timestamp || hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
 			// Purge nonce
 			memset(_signing_current_nonce, 0xAA, 32);
@@ -113,11 +113,11 @@ bool signerAtsha204SoftCheckTimer(void) {
 bool signerAtsha204SoftGetNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 
-	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
-	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter and then the byte is 
+	// hashed (SHA256) to produce the resulting nonce
 	_signing_sha256.init();
 	for (int i = 0; i < 32; i++) {
-		_signing_sha256.write(random(256));
+		_signing_sha256.write(random(256) ^ (hwMillis()&0xFF));
 	}
 	memcpy(_signing_current_nonce, _signing_sha256.result(), MAX_PAYLOAD);
 	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_current_nonce, 32);
@@ -128,11 +128,11 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg) {
 	// Transfer the first part of the nonce to the message
 	msg.set(_signing_current_nonce, MAX_PAYLOAD);
 	_signing_verification_ongoing = true;
-	_signing_timestamp = millis(); // Set timestamp to determine when to purge nonce
+	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
 	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
 	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < millis()) _signing_timestamp = 0;
+	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < hwMillis()) _signing_timestamp = 0;
 	return true;
 }
 

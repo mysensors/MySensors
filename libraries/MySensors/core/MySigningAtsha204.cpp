@@ -91,7 +91,7 @@ void signerAtsha204Init(void) {
 
 bool signerAtsha204CheckTimer(void) {
 	if (_signing_verification_ongoing) {
-		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+		if (hwMillis() < _signing_timestamp || hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
 			// Purge nonce
 			memset(_signing_current_nonce, 0x00, NONCE_NUMIN_SIZE_PASSTHROUGH);
@@ -105,15 +105,15 @@ bool signerAtsha204CheckTimer(void) {
 bool signerAtsha204GetNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204"), NULL, 0);
 	// Generate random number for use as nonce
-	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
+	// We used a basic whitening technique that XORs each byte in a 32byte random value with current hwMillis() counter
 	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	if (atsha204.sha204m_execute(SHA204_RANDOM, RANDOM_SEED_UPDATE, 0, 0, NULL,
+										RANDOM_COUNT, _singning_tx_buffer, RANDOM_RSP_SIZE, _singning_rx_buffer) != SHA204_SUCCESS) {
+		DEBUG_SIGNING_PRINTBUF(F("Failed to generate nonce"), NULL, 0);
+		return false;
+	}
 	for (int i = 0; i < 32; i++) {
-		if (atsha204.sha204m_execute(SHA204_RANDOM, RANDOM_NO_SEED_UPDATE, 0, 0, NULL,
-											RANDOM_COUNT, _singning_tx_buffer, RANDOM_RSP_SIZE, _singning_rx_buffer) != SHA204_SUCCESS) {
-			DEBUG_SIGNING_PRINTBUF(F("Failed to generate nonce"), NULL, 0);
-			return false;
-		}
-		_signing_current_nonce[i] = _singning_rx_buffer[SHA204_BUFFER_POS_DATA];
+		_signing_current_nonce[i] = _singning_rx_buffer[SHA204_BUFFER_POS_DATA+i] ^ (hwMillis()&0xFF);
 	}
 	memcpy(_signing_current_nonce, signerSha256(_signing_current_nonce, 32), MAX_PAYLOAD);
 
@@ -123,11 +123,11 @@ bool signerAtsha204GetNonce(MyMessage &msg) {
 	// Transfer the first part of the nonce to the message
 	msg.set(_signing_current_nonce, MAX_PAYLOAD);
 	_signing_verification_ongoing = true;
-	_signing_timestamp = millis(); // Set timestamp to determine when to purge nonce
+	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
 	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
 	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < millis()) _signing_timestamp = 0;
+	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < hwMillis()) _signing_timestamp = 0;
 	return true;
 }
 
