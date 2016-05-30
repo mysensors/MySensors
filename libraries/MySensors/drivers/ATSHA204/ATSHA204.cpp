@@ -222,6 +222,11 @@ void ATSHA204Class::sha204c_sleep()
   swi_send_byte(SHA204_SWI_FLAG_SLEEP);
 }
 
+void ATSHA204Class::sha204c_idle()
+{
+  swi_send_byte(SHA204_SWI_FLAG_IDLE);
+}
+
 uint8_t ATSHA204Class::sha204p_receive_response(uint8_t size, uint8_t *response)
 {
   uint8_t count_byte;
