@@ -18,9 +18,15 @@
  *
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2013, Majenko Technologies and S.J.Hoeksma
+ * Copyright (c) 2013, Majenko Technologies and S.J.Hoeksma * 
  * Copyright (c) 2015, LeoDesigner
  * https://github.com/leodesigner/mysensors-serial-transport
+ * Copyright (c) 2016, 4ib3r 
+ * https://github.com/4ib3r/Arduino
+ * Based on PJON (Padded Jittering Operative Network) Arduino compatible, 
+ * multi-master, multi-media communications bus system. 
+ * https://github.com/gioblu/PJON
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,10 +53,6 @@
  * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of Majenko Technologies.
  ********************************************************************************/
-
-// transport(Serial,0,-1); // serial port, node, dePin (-1 disabled)
-
-// Serial Transport
 
 
 #include "MyConfig.h"
