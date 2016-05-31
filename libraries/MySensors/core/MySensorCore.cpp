@@ -128,9 +128,9 @@ void _begin() {
 	#elif defined(MY_RADIO_FEATURE)
 		// Read settings from eeprom
 		hwReadConfigBlock((void*)&_nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
-		#ifdef MY_OTA_FIRMWARE_FEATURE
+		#if defined(MY_OTA_FIRMWARE_FEATURE)
 			// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
-			hwReadConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
+			readFirmwareSettings();
 		#endif
 
 		_autoFindParent = MY_PARENT_NODE_ID == AUTO;

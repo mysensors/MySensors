@@ -23,58 +23,8 @@
 #include <stdint.h>
 #include "MySensorCore.h"
 
-// Size of each firmware block
-#define FIRMWARE_BLOCK_SIZE	16
-// Number of times a firmware block should be requested before giving up
-#define FIRMWARE_MAX_REQUESTS 5
-// Number of times to request a fw block before giving up
-#define MY_OTA_RETRY 5
-// Number of millisecons before re-request a fw block
-#define MY_OTA_RETRY_DELAY 500
-// Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
-#define FIRMWARE_START_OFFSET 10
-// Bootloader version
-#define MY_OTA_BOOTLOADER_MAJOR_VERSION 3
-#define MY_OTA_BOOTLOADER_MINOR_VERSION 0
-#define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)
-
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5
-
-
-/// @brief FW config structure, stored in eeprom
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t blocks; //!< Number of blocks
-	uint16_t crc; //!< CRC of block data
-} __attribute__((packed)) NodeFirmwareConfig;
-
-/// @brief FW config request structure
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t blocks; //!< Number of blocks
-	uint16_t crc; //!< CRC of block data
-	uint16_t BLVersion; //!< Bootloader version
-} __attribute__((packed)) RequestFirmwareConfig;
-
-/// @brief FW block request structure
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t block; //!< Block index
-} __attribute__((packed)) RequestFWBlock;
-
-/// @brief FW block reply structure
-typedef struct {
-	uint16_t type; //!< Type of config
-	uint16_t version; //!< Version of config
-	uint16_t block; //!< Block index
-	uint8_t data[FIRMWARE_BLOCK_SIZE]; //!< Block data
-} __attribute__((packed)) ReplyFWBlock;
-
-
 
 #define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
 
