@@ -287,6 +287,7 @@
 
 #include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
+#include "core/MyDiscover.cpp"
 #include "core/MySensorCore.cpp"
 
 #include <Arduino.h>

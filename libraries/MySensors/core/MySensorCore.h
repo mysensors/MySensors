@@ -65,7 +65,6 @@ struct ControllerConfig {
 };
 
 
-
 /**
  * Return this nodes id.
  */
@@ -136,12 +135,15 @@ void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GA
  *
  */
 void requestTime();
-
-
-
+/**
+ * Send Disover info / tbd
+ *
+ */
+void sendDiscoverInfo(uint8_t recipient, uint8_t page);
 /**
  * Returns the most recent node configuration received from controller
  */
+ 
 ControllerConfig getConfig();
 
 /**
@@ -248,6 +250,8 @@ boolean _sendRoute(MyMessage &message);
 extern NodeConfig _nc;
 extern MyMessage _msg;  // Buffer for incoming messages.
 extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces among others).
+extern uint32_t _heartbeat;
+
 #ifdef MY_DEBUG
 	extern char _convBuf[MAX_PAYLOAD*2+1];
 #endif

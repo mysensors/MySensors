@@ -23,12 +23,12 @@ ControllerConfig _cc; // Configuration coming from controller
 NodeConfig _nc; // Essential settings for node to work
 MyMessage _msg;  // Buffer for incoming messages.
 MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among others).
+uint32_t _heartbeat = 0;
 
 #ifdef MY_DEBUG
 	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
-uint32_t _heartbeat = 0;
 void (*_timeCallback)(unsigned long); // Callback for requested time messages
 
 
@@ -270,6 +270,13 @@ void requestTime() {
 	_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
+void sendDiscoverInfo(uint8_t recipient, uint8_t page) {
+	uint8_t buffer[MAX_PAYLOAD];
+	uint8_t len = 0;
+	generateDiscoverResponse(page,&buffer[0],&len);
+	_sendRoute(build(_msgTmp, _nc.nodeId, recipient, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(buffer,len));		
+}
+
 // Message delivered through _msg
 void _processInternalMessages() {
 	bool isMetric;
@@ -306,9 +313,11 @@ void _processInternalMessages() {
 		// Deliver time to callback
 		if (receiveTime)
 			receiveTime(_msg.getULong());
+	} else if (type == I_DISCOVER) {
+		sendDiscoverInfo(_msg.sender, _msg.getByte());	
 	}
 	#if defined(MY_REPEATER_FEATURE)
-		if (type == I_CHILDREN) {
+		else if (type == I_CHILDREN) {
 			if (_msg.getString()[0] == 'C') {
 				// Clears child relay data for this node
 				debug(PSTR("clear routing table\n"));

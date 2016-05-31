@@ -26,6 +26,13 @@
 #define MyConfig_h
 #include <stdint.h>
 
+/**********************************
+*  Power options
+***********************************/
+// Enable to indicate power options 
+//#define MY_POWER_PSU
+//#define MY_POWER_BATTERY
+//#define MY_POWER_SOLAR
 
 /**********************************
 *  Serial and debug options
@@ -609,7 +616,7 @@
  * @brief By grounding this pin durig reset of a locked node, the node will unlock.
  *
  * If using a secure bootloader, grounding the pin is the only option to reactivate the node.
- * If using stock Android bootloader or a DualOptiBoot it is also possible to download a sketch
+ * If using stock Arduino bootloader or a DualOptiBoot it is also possible to download a sketch
  * using serial protocol to erase EEPROM to unlock the node. 
  */
 #ifndef MY_NODE_UNLOCK_PIN
