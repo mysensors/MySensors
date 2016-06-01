@@ -25,10 +25,6 @@
 #include "MyConfig.h"
 #include "MyEepromAddresses.h"
 #include "MyMessage.h"
-#ifdef MY_OTA_FIRMWARE_FEATURE
-#include "drivers/SPIFlash/SPIFlash.h"
-#endif
-
 #include <stddef.h>
 #include <stdarg.h>
 
