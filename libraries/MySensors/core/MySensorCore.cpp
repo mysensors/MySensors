@@ -306,25 +306,58 @@ void _processInternalMessages() {
 		// Deliver time to callback
 		if (receiveTime)
 			receiveTime(_msg.getULong());
-	}
-	#if defined(MY_REPEATER_FEATURE)
-		if (type == I_CHILDREN) {
-			if (_msg.getString()[0] == 'C') {
-				// Clears child relay data for this node
-				debug(PSTR("clear routing table\n"));
-				uint8_t i = 255;
-				do {
-					hwWriteConfig(EEPROM_ROUTES_ADDRESS+i, BROADCAST_ADDRESS);
-				} while (i--);
-				// Clear parent node id & distance to gw
-				hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, AUTO);
-				hwWriteConfig(EEPROM_DISTANCE_ADDRESS, DISTANCE_INVALID);
-				// Find parent node
-				transportFindParentNode();
-				_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set(""));
+	} else if (type == I_CHILDREN) {
+			#if defined(MY_REPEATER_FEATURE)
+				if (_msg.data[0] == 'C') {
+					// Clears child relay data for this node
+					debug(PSTR("clear routing table\n"));
+					uint8_t i = 255;
+					do {
+						hwWriteConfig(EEPROM_ROUTES_ADDRESS+i, BROADCAST_ADDRESS);
+					} while (i--);
+					// Clear parent node id & distance to gw
+					hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, AUTO);
+					hwWriteConfig(EEPROM_DISTANCE_ADDRESS, DISTANCE_INVALID);
+					// Find parent node
+					transportFindParentNode();
+					_sendRoute(build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set("ok"));
+				}
+			#endif
+	} else if (type == I_DEBUG) {
+		#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
+			char debug_msg = _msg.data[0];
+			if(debug_msg == 'R'){
+				#if defined(MY_REPEATER_FEATURE)
+					// routing table
+					for(uint8_t cnt=0; cnt!=255;cnt++){
+						uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS+cnt);
+						if (route!=BROADCAST_ADDRESS){
+							debug(PSTR("ID: %d via %d\n"),cnt,route);
+							 uint8_t OutBuf[2] = {cnt,route};
+							_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(OutBuf,2));
+							wait(100);
+						}
+					}
+				#endif
+			} else if(debug_msg == 'V'){
+				// CPU voltage
+				_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(hwCPUVoltage()));
+			} else if (debug_msg == 'F') {
+				// CPU frequency in 1/10Mhz
+				_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(hwCPUFrequency()));
+			} else if (debug_msg == 'M') {
+				// free memory
+				_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG,false).set(hwFreeMem()));
+			} else if (debug_msg == 'E') {
+				// clear MySensors eeprom area and reboot
+				_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN,false).set("ok"));
+				for (int i=EEPROM_START;i<EEPROM_LOCAL_CONFIG_ADDRESS;i++) {
+					hwWriteConfig(i,0xFF);  
+				}
+				hwReboot();
 			}
-		}
-	#endif
+		#endif
+	}
 }
 
 
