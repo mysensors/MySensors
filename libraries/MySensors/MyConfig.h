@@ -31,9 +31,18 @@
 *  Serial and debug options
 ***********************************/
 
-// Enables this in sketch to show debug prints. This option will add a lot to the size of the
+// Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
 // final sketch but is helpful to see what is actually is happening during development
 //#define MY_DEBUG
+
+// Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
+// I_DEBUG requests are:
+// R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+// V: CPU voltage
+// F: CPU frequency
+// M: free memory
+// E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+//#define MY_SPECIAL_DEBUG
 
 // Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
 // Requires DEBUG to be enabled.
