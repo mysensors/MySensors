@@ -53,7 +53,7 @@
 #endif
 
 // Enable radio "feature" if one of the radio types was enabled
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485) || defined(MY_PJON)
 	#define MY_RADIO_FEATURE
 #endif
 
@@ -234,7 +234,7 @@
 
 
 // RADIO
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485) || defined(MY_PJON)
 	// SOFTSPI
 	#ifdef MY_SOFTSPI
 		#if defined(ARDUINO_ARCH_ESP8266)
@@ -260,6 +260,11 @@
 	#elif defined(MY_RS485)
 		#include "drivers/AltSoftSerial/AltSoftSerial.cpp"
 		#include "core/MyTransportRS485.cpp"
+	#elif defined(MY_PJON)
+		#define NOT_ASSIGNED 0
+		#define BROADCAST 255
+		#include <PJON.h>
+		#include "core/MyTransportPJON.cpp"
 	#elif defined(MY_RADIO_RFM69)
 		#include "drivers/RFM69/RFM69.cpp"
 		#include "core/MyTransportRFM69.cpp"
