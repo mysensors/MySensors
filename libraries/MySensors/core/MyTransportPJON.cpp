@@ -59,6 +59,9 @@
 #include "MyTransport.h"
 #include <stdint.h>
 
+#ifndef PJON_PIN
+  #define PJON_PIN 12
+#endif
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
@@ -132,7 +135,7 @@ void _receiver_function(uint8_t _id, uint8_t *payload,uint8_t l) {
 
 bool transportInit() {
     bus.set_receiver(_receiver_function);
-    bus.set_pin(12);
+    bus.set_pin(PJON_PIN);
     bus.begin();
     return true;
 }
