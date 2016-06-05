@@ -65,6 +65,9 @@ void _infiniteLoop() {
 		#if defined(MY_GATEWAY_ESP8266)
 			yield();
 		#endif
+        #if defined (MY_LEDS_BLINKING_FEATURE)
+            ledsProcess();
+        #endif
 	}
 }
 
