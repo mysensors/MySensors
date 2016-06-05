@@ -31,6 +31,7 @@ MyMessage _serialMsg;
 
 
 bool gatewayTransportSend(MyMessage &message) {
+    setIndication(INDICATION_GW_TX);
 	MY_SERIALDEVICE.print(protocolFormat(message));
 	// Serial print is always successful
 	return true;
