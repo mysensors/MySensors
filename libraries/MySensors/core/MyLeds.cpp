@@ -19,81 +19,64 @@
 
 #include "MyLeds.h"
 
-// these variables don't need to be volatile, since we are not using interrupts
-uint8_t _countRx;
-uint8_t _countTx;
-uint8_t _countErr;
-unsigned long _blink_next_time;
+#define LED_ON_OFF_RATIO        (4)       // Power of 2 please
+#define LED_PROCESS_INTERVAL_MS (MY_DEFAULT_LED_BLINK_PERIOD/LED_ON_OFF_RATIO)
 
-inline void ledsInit() {
+// these variables don't need to be volatile, since we are not using interrupts
+static uint8_t countRx;
+static uint8_t countTx;
+static uint8_t countErr;
+static unsigned long prevTime = millis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
+
+
+inline void ledsInit()
+{
+	// initialize counters
+	countRx = 0;
+	countTx = 0;
+	countErr = 0;
+
 	// Setup led pins
-	pinMode(MY_DEFAULT_RX_LED_PIN, OUTPUT);
-	pinMode(MY_DEFAULT_TX_LED_PIN, OUTPUT);
+	pinMode(MY_DEFAULT_RX_LED_PIN,  OUTPUT);
+	pinMode(MY_DEFAULT_TX_LED_PIN,  OUTPUT);
 	pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
 
-	// Set initial state of leds
-	hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, LED_OFF);
-	hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, LED_OFF);
-	hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_OFF);
-
-	// initialize counters
-	_countRx = 0;
-	_countTx = 0;
-	_countErr = 0;
+    ledsProcess();
 }
 
-inline void ledsProcess() {
+void ledsProcess() {
 	// Just return if it is not the time...
-	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(hwMillis() - _blink_next_time) < 0)
+	if ((hwMillis() - prevTime) < LED_PROCESS_INTERVAL_MS)
 		return;
-	else
-		_blink_next_time = hwMillis() + MY_DEFAULT_LED_BLINK_PERIOD;
 
-	// do the actual blinking
-	if(_countRx && _countRx != 255) {
-		// switch led on
-		hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, LED_ON);
-	}
-	else if(!_countRx) {
-		// switching off
-		hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, LED_OFF);
-	}
-	if(_countRx != 255)
-		--_countRx;
+	prevTime += LED_PROCESS_INTERVAL_MS;
 
-	if(_countTx && _countTx != 255) {
-		// switch led on
-		hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, LED_ON);
-	}
-	else if(!_countTx) {
-		// switching off
-		hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, LED_OFF);
-	}
-	if(_countTx != 255)
-		--_countTx;
+    uint8_t state;
 
-	if(_countErr && _countErr != 255) {
-		// switch led on
-		hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_ON);
-	}
-	else if(!_countErr) {
-		// switching off
-		hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, LED_OFF);
-	}
-	if(_countErr != 255)
-		--_countErr;
+    // For an On/Off ratio of 4, the pattern repeated will be [on, on, on, off]
+    // until the counter becomes 0.
+    state = (countRx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
+    hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, state);
+    if (countRx)  --countRx;
+
+    state = (countTx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
+    hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, state);
+    if (countTx)  --countTx;
+
+    state = (countErr & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
+    hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, state);
+    if (countErr) --countErr;
 }
 
 void ledsBlinkRx(uint8_t cnt) {
-  if(_countRx == 255) { _countRx = cnt; }
+  if (!countRx) { countRx = cnt*LED_ON_OFF_RATIO; }
 }
 
 void ledsBlinkTx(uint8_t cnt) {
-  if(_countTx == 255) { _countTx = cnt; }
+  if(!countTx) { countTx = cnt*LED_ON_OFF_RATIO; }
 }
 
 void ledsBlinkErr(uint8_t cnt) {
-  if(_countErr == 255) { _countErr = cnt; }
+  if(!countErr) { countErr = cnt*LED_ON_OFF_RATIO; }
 }
 
