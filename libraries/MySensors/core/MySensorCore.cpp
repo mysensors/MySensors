@@ -65,6 +65,9 @@ void _infiniteLoop() {
 		#if defined(MY_GATEWAY_ESP8266)
 			yield();
 		#endif
+        #if defined (MY_LEDS_BLINKING_FEATURE)
+            ledsProcess();
+        #endif
 	}
 }
 
@@ -79,6 +82,10 @@ void _begin() {
 
 	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILITIES ", " LIBRARY_VERSION ")\n"));
 
+	#if defined(MY_LEDS_BLINKING_FEATURE)
+		ledsInit();
+	#endif
+
 	signerInit();
 
 	#if defined(MY_RADIO_FEATURE)
@@ -86,6 +93,7 @@ void _begin() {
 
 		// Setup radio
 		if (!transportInit()) {
+            setIndication(INDICATION_ERR_INIT_TRANSPORT);
 			debug(PSTR("Radio init failed. Check wiring.\n"));
 			// Nothing more we can do
 			_infiniteLoop();
@@ -101,16 +109,12 @@ void _begin() {
 
 	    // initialize the transport driver
 		if (!gatewayTransportInit()) {
+            setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
 			debug(PSTR("Transport driver init fail\n"));
 			// Nothing more we can do
 			_infiniteLoop();
 		}
 
-	#endif
-
-
-	#if defined(MY_LEDS_BLINKING_FEATURE)
-		ledsInit();
 	#endif
 
 	// Read latest received controller configuration from EEPROM
@@ -141,6 +145,7 @@ void _begin() {
 			// We don't actually know the distance to gw here. Let's pretend it is 1.
 			// If the current node is also repeater, be aware of this.
 			_nc.distance = 1;
+            setIndication(INDICATION_GOT_PARENT);
 		} else if (!isValidParent(_nc.parentNodeId)) {
 			// Auto find parent, but parent in eeprom is invalid. Try find one.
 			transportFindParentNode();
@@ -151,6 +156,7 @@ void _begin() {
 			_nc.nodeId = MY_NODE_ID;
 			// Save static id in eeprom
 			hwWriteConfig(EEPROM_NODE_ID_ADDRESS, MY_NODE_ID);
+            setIndication(INDICATION_GOT_NODEID);
 		} else if (_nc.nodeId == AUTO && isValidParent(_nc.parentNodeId)) {
 			// Try to fetch node-id from gateway
 			transportRequestNodeId();
@@ -174,6 +180,7 @@ void _begin() {
 		} else {
 			// Disable pullup
 			pinMode(MY_NODE_UNLOCK_PIN, INPUT);
+            setIndication(INDICATION_ERR_LOCKED);
 			nodeLock("LDB"); //Locked during boot
 		}
 	} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
@@ -222,7 +229,6 @@ boolean _sendRoute(MyMessage &message) {
 		if (message.destination == _nc.nodeId) {
 			// This is a message sent from a sensor attached on the gateway node.
 			// Pass it directly to the gateway transport layer.
-			ledBlinkTx(1);
 			return gatewayTransportSend(message);
 		}
 	#endif
@@ -278,6 +284,7 @@ void _processInternalMessages() {
 	#if !defined(MY_DISABLE_REMOTE_RESET)
 		if (type == I_REBOOT) {
 			// Requires MySensors or other bootloader with watchdogs enabled
+            setIndication(INDICATION_REBOOT);
 			hwReboot();
 		} else
 	#endif
@@ -310,6 +317,7 @@ void _processInternalMessages() {
 			#if defined(MY_REPEATER_FEATURE)
 				if (_msg.data[0] == 'C') {
 					// Clears child relay data for this node
+	                setIndication(INDICATION_CLEAR_ROUTING);
 					debug(PSTR("clear routing table\n"));
 					uint8_t i = 255;
 					do {
@@ -354,6 +362,7 @@ void _processInternalMessages() {
 				for (int i=EEPROM_START;i<EEPROM_LOCAL_CONFIG_ADDRESS;i++) {
 					hwWriteConfig(i,0xFF);  
 				}
+                setIndication(INDICATION_REBOOT);
 				hwReboot();
 			}
 		#endif
@@ -408,7 +417,10 @@ int8_t sleep(unsigned long ms) {
 		#if defined(MY_RADIO_FEATURE)
 			transportPowerDown();
 		#endif
-		return hwSleep(ms);
+        setIndication(INDICATION_SLEEP);
+		const int8_t res = hwSleep(ms);
+        setIndication(INDICATION_WAKEUP);
+        return res;
 	#endif
 }
 
@@ -438,7 +450,10 @@ int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 		#if defined(MY_RADIO_FEATURE)
 			transportPowerDown();
 		#endif
-		return hwSleep(interrupt, mode, ms);
+        setIndication(INDICATION_SLEEP);
+		const int8_t res = hwSleep(interrupt, mode, ms);
+        setIndication(INDICATION_WAKEUP);
+        return res;
 	#endif
 }
 
@@ -470,7 +485,10 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 		#if defined(MY_RADIO_FEATURE)
 			transportPowerDown();
 		#endif
-		return hwSleep(interrupt1, mode1, interrupt2, mode2, ms);
+        setIndication(INDICATION_SLEEP);
+		const int8_t res = hwSleep(interrupt1, mode1, interrupt2, mode2, ms);
+        setIndication(INDICATION_WAKEUP);
+        return res;
 	#endif
 }
 
@@ -488,6 +506,7 @@ void nodeLock(const char* str) {
 	// Make sure EEPROM is updated to locked status
 	hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, 0);
 	while (1) {
+        setIndication(INDICATION_ERR_LOCKED);
 		debug(PSTR("Node is locked. Ground pin %d and reset to unlock.\n"), MY_NODE_UNLOCK_PIN);
 		#if defined(MY_GATEWAY_ESP8266)
 			yield();
@@ -497,7 +516,9 @@ void nodeLock(const char* str) {
 		#if defined(MY_RADIO_FEATURE)
 			transportPowerDown();
 		#endif
+        setIndication(INDICATION_SLEEP);
 		(void)hwSleep((unsigned long)1000*60*30); // Sleep for 30 min before resending LOCKED message
+        setIndication(INDICATION_WAKEUP);
 	}
 }
 #endif

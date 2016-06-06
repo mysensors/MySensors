@@ -34,6 +34,7 @@ inline void firmwareOTAUpdateRequest() {
 	unsigned long enter = hwMillis();
 	if (_fwUpdateOngoing && (enter - _fwLastRequestTime > MY_OTA_RETRY_DELAY)) {
 		if (!_fwRetry) {
+            setIndication(INDICATION_ERR_FW_TIMEOUT);
 			debug(PSTR("fw upd fail\n"));
 			// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 			_fwUpdateOngoing = false;
@@ -57,11 +58,13 @@ inline bool firmwareOTAUpdateProcess() {
 		NodeFirmwareConfig *firmwareConfigResponse = (NodeFirmwareConfig *)_msg.data;
 		// compare with current node configuration, if they differ, start fw fetch process
 		if (memcmp(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
+            setIndication(INDICATION_FW_START);
 			debug(PSTR("fw update\n"));
 			// copy new FW config
 			memcpy(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
 			// Init flash
 			if (!_flash.initialize()) {
+                setIndication(INDICATION_ERR_FW_FLASH_INIT);
 				debug(PSTR("flash init fail\n"));
 				_fwUpdateOngoing = false;
 			} else {
@@ -81,6 +84,7 @@ inline bool firmwareOTAUpdateProcess() {
 	} else if (_msg.type == ST_FIRMWARE_RESPONSE) {
 		if (_fwUpdateOngoing) {
 			// Save block to flash
+            setIndication(INDICATION_FW_RX);
 			debug(PSTR("fw block %d\n"), _fwBlock);
 			// extract FW block
 			ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)_msg.data;
@@ -102,6 +106,7 @@ inline bool firmwareOTAUpdateProcess() {
 					hwWriteConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
 					hwReboot();
 				} else {
+                    setIndication(INDICATION_ERR_FW_CHECKSUM);
 					debug(PSTR("fw checksum fail\n"));
 				}
 			}

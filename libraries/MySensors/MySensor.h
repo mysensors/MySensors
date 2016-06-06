@@ -142,6 +142,8 @@
 	#include "core/MyLeds.h"
 #endif
 
+#include "core/MyIndication.cpp"
+
 
 // INCLUSION MODE
 #if defined(MY_INCLUSION_MODE_FEATURE)

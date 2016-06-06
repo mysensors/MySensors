@@ -42,7 +42,7 @@ inline void transportProcess() {
 
 	uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
 	(void)payloadLength; //until somebody makes use of it
-	ledBlinkRx(1);
+	setIndication(INDICATION_RX);
 
 	
 	uint8_t command = mGetCommand(_msg);
@@ -54,8 +54,8 @@ inline void transportProcess() {
 
 	// Reject massages that do not pass verification
 	if (!signerVerifyMsg(_msg)) {
+		setIndication(INDICATION_ERR_SIGN);
 		debug(PSTR("verify fail\n"));
-		ledBlinkErr(1);
 		return;	
 	}
 
@@ -75,8 +75,8 @@ inline void transportProcess() {
 	}
 
 	if(!(mGetVersion(_msg) == PROTOCOL_VERSION)) {
+        setIndication(INDICATION_ERR_VERSION);
 		debug(PSTR("ver mismatch\n"));
-		ledBlinkErr(1);
 		return;
 	}
 
@@ -121,6 +121,7 @@ inline void transportProcess() {
 						distance++;
 						if (isValidDistance(distance) && (distance < _nc.distance)) {
 							// Found a neighbor closer to GW than previously found
+                            setIndication(INDICATION_GOT_PARENT);
 							_nc.distance = distance;
 							_nc.parentNodeId = sender;
 							hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, _nc.parentNodeId);
@@ -135,11 +136,13 @@ inline void transportProcess() {
 					_nc.nodeId = _msg.getByte();
 					if (_nc.nodeId == AUTO) {
 						// sensor net gateway will return max id if all sensor id are taken
+                        setIndication(INDICATION_ERR_NET_FULL);
 						debug(PSTR("full\n"));
 						// Nothing else we can do...
 						_infiniteLoop();
 						
 					}
+                    setIndication(INDICATION_GOT_NODEID);
 					transportPresentNode();
 					if (presentation)
 						presentation();
@@ -214,9 +217,10 @@ boolean transportSendWrite(uint8_t to, MyMessage &message) {
 	mSetVersion(message, PROTOCOL_VERSION);
 	uint8_t length = mGetSigned(message) ? MAX_MESSAGE_LENGTH : mGetLength(message);
 	message.last = _nc.nodeId;
-	ledBlinkTx(1);
+    setIndication(INDICATION_TX);
 
 	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
+    if (!ok) setIndication(INDICATION_ERR_TX);
 
 	debug(PSTR("send: %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
 			message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
@@ -234,23 +238,23 @@ boolean transportSendRoute(MyMessage &message) {
 
 	// If we still don't have any parent id, re-request and skip this message.
 	if (_nc.parentNodeId == AUTO) {
-		transportFindParentNode();
-		ledBlinkErr(1);
+        setIndication(INDICATION_ERR_FIND_PARENT);
+        transportFindParentNode();
 		return false;
 	}
 
 	// If we still don't have any node id, re-request and skip this message.
 	if (_nc.nodeId == AUTO) {
+        setIndication(INDICATION_ERR_GET_NODEID);
 		transportRequestNodeId();
-		ledBlinkErr(1);
 		return false;
 	}
 
 	mSetVersion(message, PROTOCOL_VERSION);
 
 	if (!signerSignMsg(message)) {
+       setIndication(INDICATION_ERR_SIGN);
 		debug(PSTR("sign fail\n"));
-		ledBlinkErr(1);
 	}
 
 	#if !defined(MY_REPEATER_FEATURE)
@@ -322,7 +326,6 @@ boolean transportSendRoute(MyMessage &message) {
 	if (!ok) {
 		// Failure when sending to parent node. The parent node might be down and we
 		// need to find another route to gateway.
-		ledBlinkErr(1);
 		_failedTransmissions++;
 		if (_autoFindParent && _failedTransmissions > SEARCH_FAILURES) {
 			transportFindParentNode();
@@ -336,6 +339,7 @@ boolean transportSendRoute(MyMessage &message) {
 
 
 void transportRequestNodeId() {
+    setIndication(INDICATION_REQ_NODEID);
 	debug(PSTR("req id\n"));
 	transportSetAddress(_nc.nodeId);
 	build(_msg, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set("");
@@ -344,6 +348,7 @@ void transportRequestNodeId() {
 }
 
 void transportPresentNode() {
+    setIndication(INDICATION_PRESENT);
 	// Open reading pipe for messages directed to this node (set write pipe to same)
 	transportSetAddress(_nc.nodeId);
 	// Present node and request config
@@ -385,6 +390,8 @@ void transportFindParentNode() {
 	if (findingParentNode)
 		return;
 	findingParentNode = true;
+
+    setIndication(INDICATION_FIND_PARENT);
 
 	_failedTransmissions = 0;
 
