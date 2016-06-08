@@ -66,7 +66,7 @@ typedef enum {
 	S_RAIN, // Rain sensor, V_RAIN, V_RAINRATE
 	S_UV, // Uv sensor, V_UV
 	S_WEIGHT, // Personal scale sensor, V_WEIGHT, V_IMPEDANCE
-	S_POWER, // Power meter, V_WATT, V_KWH
+	S_POWER, // Power meter, V_WATT, V_KWH, V_VAR, V_VA, V_POWER_FACTOR
 	S_HEATER, // Header device, V_HVAC_SETPOINT_HEAT, V_HVAC_FLOW_STATE, V_TEMP
 	S_DISTANCE, // Distance sensor, V_DISTANCE
 	S_LIGHT_LEVEL, // Light level sensor, V_LIGHT_LEVEL (uncalibrated in percentage),  V_LEVEL (light level in lux)
@@ -161,7 +161,10 @@ typedef enum {
 	V_IR_RECORD,         // Record IR codes S_IR for playback
 	V_PH, // S_WATER_QUALITY, water PH
     V_ORP, // S_WATER_QUALITY, water ORP : redox potential in mV
-    V_EC,// S_WATER_QUALITY, water electric conductivity μS/cm (microSiemens/cm)
+    V_EC,  // S_WATER_QUALITY, water electric conductivity μS/cm (microSiemens/cm)
+    V_VAR,           // S_POWER, Reactive power: volt-ampere reactive (var)
+    V_VA,            // S_POWER, Apparent power: volt-ampere (VA)
+    V_POWER_FACTOR   // S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
 } mysensor_data;
 
 
