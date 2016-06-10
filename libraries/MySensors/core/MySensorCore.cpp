@@ -424,13 +424,12 @@ int8_t sleep(unsigned long ms) {
 	#endif
 }
 
-int8_t smartSleep(unsigned long ms) {
-	int8_t ret = sleep(ms);
-	// notifiy controller about wake up
+int8_t smartSleep(unsigned long ms) {	
+	// notifiy controller about going to sleep
 	sendHeartbeat();
 	// listen for incoming messages
 	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	return ret;
+	return sleep(ms);
 }
 
 int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
@@ -458,12 +457,11 @@ int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 }
 
 int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	int8_t ret = sleep(interrupt, mode, ms);
-	// notifiy controller about wake up
+	// notifiy controller about going to sleep
 	sendHeartbeat();
 	// listen for incoming messages
 	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	return ret;
+	return sleep(interrupt, mode, ms);
 }
 
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
@@ -493,12 +491,11 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 }
 
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	int8_t ret = sleep(interrupt1, mode1, interrupt2, mode2, ms);
-	// notifiy controller about wake up
+	// notifiy controller about going to sleep
 	sendHeartbeat();
 	// listen for incoming messages
 	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	return ret;
+	return sleep(interrupt1, mode1, interrupt2, mode2, ms);
 }
 
 #ifdef MY_NODE_LOCK_FEATURE
