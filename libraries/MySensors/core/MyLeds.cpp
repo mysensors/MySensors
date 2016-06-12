@@ -26,7 +26,7 @@
 static uint8_t countRx;
 static uint8_t countTx;
 static uint8_t countErr;
-static unsigned long prevTime = millis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
+static unsigned long prevTime = hwMillis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
 
 
 inline void ledsInit()
