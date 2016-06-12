@@ -38,7 +38,8 @@
 Sha256Class _signing_sha256;
 unsigned long _signing_timestamp;
 bool _signing_verification_ongoing = false;
-uint8_t _signing_current_nonce[NONCE_NUMIN_SIZE_PASSTHROUGH];
+uint8_t _signing_verifying_nonce[32];
+uint8_t _signing_signing_nonce[32];
 uint8_t _signing_temp_message[32];
 static uint8_t _signing_hmac_key[32];
 uint8_t _signing_hmac[32];
@@ -49,7 +50,7 @@ static uint8_t _signing_node_serial_info[9];
 	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
 
-static void signerCalculateSignature(MyMessage &msg);
+static void signerCalculateSignature(MyMessage &msg, bool signing);
 
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 static char i2h(uint8_t i)
@@ -99,10 +100,11 @@ void signerAtsha204SoftInit(void) {
 
 bool signerAtsha204SoftCheckTimer(void) {
 	if (_signing_verification_ongoing) {
-		if (millis() < _signing_timestamp || millis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+		if (hwMillis() < _signing_timestamp || hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
 			// Purge nonce
-			memset(_signing_current_nonce, 0xAA, 32);
+			memset(_signing_signing_nonce, 0xAA, 32);
+			memset(_signing_verifying_nonce, 0xAA, 32);
 			_signing_verification_ongoing = false;
 			return false; 
 		}
@@ -113,35 +115,35 @@ bool signerAtsha204SoftCheckTimer(void) {
 bool signerAtsha204SoftGetNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 
-	// We used a basic whitening technique that takes the first byte of a new random value and builds up a 32-byte random value
-	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter and then the byte is 
+	// hashed (SHA256) to produce the resulting nonce
 	_signing_sha256.init();
 	for (int i = 0; i < 32; i++) {
-		_signing_sha256.write(random(256));
+		_signing_sha256.write(random(256) ^ (hwMillis()&0xFF));
 	}
-	memcpy(_signing_current_nonce, _signing_sha256.result(), MAX_PAYLOAD);
-	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_current_nonce, 32);
+	memcpy(_signing_verifying_nonce, _signing_sha256.result(), MAX_PAYLOAD);
+	DEBUG_SIGNING_PRINTBUF(F("SHA256: "), _signing_verifying_nonce, 32);
 
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
-	memset(&_signing_current_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_current_nonce)-MAX_PAYLOAD);
+	memset(&_signing_verifying_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_verifying_nonce)-MAX_PAYLOAD);
 
 	// Transfer the first part of the nonce to the message
-	msg.set(_signing_current_nonce, MAX_PAYLOAD);
+	msg.set(_signing_verifying_nonce, MAX_PAYLOAD);
 	_signing_verification_ongoing = true;
-	_signing_timestamp = millis(); // Set timestamp to determine when to purge nonce
+	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
 	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
 	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < millis()) _signing_timestamp = 0;
+	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < hwMillis()) _signing_timestamp = 0;
 	return true;
 }
 
 void signerAtsha204SoftPutNonce(MyMessage &msg) {
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 
-	memcpy(_signing_current_nonce, (uint8_t*)msg.getCustom(), MAX_PAYLOAD);
+	memcpy(_signing_signing_nonce, (uint8_t*)msg.getCustom(), MAX_PAYLOAD);
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
-	memset(&_signing_current_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_current_nonce)-MAX_PAYLOAD);
+	memset(&_signing_signing_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_signing_nonce)-MAX_PAYLOAD);
 }
 
 bool signerAtsha204SoftSignMsg(MyMessage &msg) {
@@ -153,7 +155,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg) {
 
 	// Calculate signature of message
 	mSetSigned(msg, 1); // make sure signing flag is set before signature is calculated
-	signerCalculateSignature(msg);
+	signerCalculateSignature(msg, true);
 
 	if (DO_WHITELIST(msg.destination)) {
 		// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has provided
@@ -195,7 +197,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 
 		// Get signature of message
 		DEBUG_SIGNING_PRINTBUF(F("Signature in message: "), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg));
-		signerCalculateSignature(msg);
+		signerCalculateSignature(msg, false);
 
 #ifdef MY_SIGNING_NODE_WHITELISTING
 		// Look up the senders nodeId in our whitelist and salt the signature with that data
@@ -236,11 +238,11 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 }
 
 // Helper to calculate signature of msg (returned in hmac)
-static void signerCalculateSignature(MyMessage &msg) {
+static void signerCalculateSignature(MyMessage &msg, bool signing) {
 	memset(_signing_temp_message, 0, 32);
 	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
 	DEBUG_SIGNING_PRINTBUF(F("Message to process: "), (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
-	DEBUG_SIGNING_PRINTBUF(F("Current nonce: "), _signing_current_nonce, 32);
+	DEBUG_SIGNING_PRINTBUF(F("Current nonce: "), signing ? _signing_signing_nonce : _signing_verifying_nonce, 32);
 
 	// ATSHA204 calculates the HMAC with a PSK and a SHA256 digest of the following data:
 	// 32 bytes zeroes
@@ -275,9 +277,9 @@ static void signerCalculateSignature(MyMessage &msg) {
 	_signing_sha256.write(0x01); // SN[0]
 	_signing_sha256.write(0x23); // SN[1]
 	for (int i=0; i<25; i++) _signing_sha256.write(0x00);
-	for (int i=0; i<32; i++) _signing_sha256.write(_signing_current_nonce[i]);
+	for (int i=0; i<32; i++) _signing_sha256.write(signing ? _signing_signing_nonce[i] : _signing_verifying_nonce[i]);
 	// Purge nonce when used
-	memset(_signing_current_nonce, 0xAA, 32);
+	memset(signing ? _signing_signing_nonce : _signing_verifying_nonce, 0xAA, 32);
 	memcpy(_signing_temp_message, _signing_sha256.result(), 32);
 
 	// Feed "message" to HMAC calculator

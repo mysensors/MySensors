@@ -3,7 +3,7 @@
 #if !DOXYGEN
 #include "Arduino.h"
 
-/* This is a scaled down variant of the ATSHA204 library, tweaked to meet the specific needs of MySensors. */
+/* This is a scaled down variant of the ATSHA204 library, tweaked to meet the specific needs of the MySensors library. */
 
 /* Library return codes */
 #define SHA204_SUCCESS              ((uint8_t)  0x00) //!< Function succeeded.
@@ -239,31 +239,14 @@
 #define SHA204_PIN_READ() (*device_port_IN & device_pin)
 #endif
 
-class ATSHA204Class
-{
-private:
-	uint8_t device_pin;
-	#ifdef ARDUINO_ARCH_AVR
-	volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
-	#endif
-	void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc);
-	uint8_t sha204c_check_crc(uint8_t *response);
-	void swi_set_signal_pin(uint8_t is_high);
-	uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer);
-	uint8_t swi_send_bytes(uint8_t count, uint8_t *buffer);
-	uint8_t swi_send_byte(uint8_t value);
-	uint8_t sha204p_receive_response(uint8_t size, uint8_t *response);
-	uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
-	uint8_t sha204c_wakeup(uint8_t *response);
-	uint8_t sha204c_resync(uint8_t size, uint8_t *response);	
-	uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
-public:
-	ATSHA204Class(uint8_t pin);	// Constructor
-	void sha204c_sleep();
-	uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
-			uint8_t datalen1, uint8_t *data1, uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
-	void getSerialNumber(uint8_t *response);
-};
+void atsha204_init(uint8_t pin);
+void atsha204_idle(void);
+void atsha204_sleep(void);
+uint8_t atsha204_wakeup(uint8_t *response);
+uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
+												uint8_t datalen1, uint8_t *data1, uint8_t tx_size,
+												uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
+void atsha204_getSerialNumber(uint8_t *response);
 
 #endif
 #endif
