@@ -89,8 +89,12 @@
 #endif  
 
 // When W5100 is connected we have to move CE/CSN pins for NRF radio
-#define MY_RF24_CE_PIN 5
-#define MY_RF24_CS_PIN 6
+#ifndef MY_RF24_CE_PIN 
+  #define MY_RF24_CE_PIN 5
+#endif
+#ifndef MY_RF24_CS_PIN 
+  #define MY_RF24_CS_PIN 6
+#endif
 
 // Enable these if your MQTT broker requires usenrame/password
 //#define MY_MQTT_USER "username"
