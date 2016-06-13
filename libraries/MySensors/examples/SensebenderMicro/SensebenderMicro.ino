@@ -291,7 +291,8 @@ void sendBattLevel(bool force)
     lastBattery = vcc;
 
 #ifdef BATT_SENSOR
-    send(msgBatt.set(vcc));
+    float send_voltage = float(vcc)/1000.0f;
+    send(msgBatt.set(send_voltage,3));
 #endif
 
     // Calculate percentage
