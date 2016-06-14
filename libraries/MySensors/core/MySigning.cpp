@@ -148,7 +148,7 @@ void signerPresentation(MyMessage &msg, uint8_t destination) {
 	// If we do support signing, wait for the gateway to tell us how it prefer us to transmit our messages
 	if (destination == GATEWAY_ADDRESS) {
 		SIGN_DEBUG(PSTR("Waiting for GW to send signing preferences...\n"));
-		wait(2000);
+		wait(2000, C_INTERNAL, I_SIGNING_PRESENTATION);
 	}
 #endif
 }
