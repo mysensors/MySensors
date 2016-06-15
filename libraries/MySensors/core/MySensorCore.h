@@ -177,8 +177,9 @@ void wait(unsigned long ms);
  * @param ms Number of milliseconds to sleep.
  * @param cmd Command of incoming message.
  * @param msgtype Message type.
+ * @return True if specified message received
  */
-void wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
+bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
