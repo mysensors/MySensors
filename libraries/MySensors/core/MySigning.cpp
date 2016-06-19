@@ -142,7 +142,9 @@ void signerPresentation(MyMessage &msg, uint8_t destination) {
 	SIGN_DEBUG(PSTR("Whitelisting required\n"));
 #endif
 
-	_sendRoute(msg);
+	if (!_sendRoute(msg)) {
+		SIGN_DEBUG(PSTR("Failed to transmit signing presentation!"));
+	}
 
 #if defined(MY_SIGNING_FEATURE)
 	// If we do support signing, wait for the gateway to tell us how it prefer us to transmit our messages
@@ -164,7 +166,9 @@ bool signerProcessInternal(MyMessage &msg) {
 			prepareSigningPresentation(msg, sender);
 			SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures because we do not support it\n"),
 				sender);
-			_sendRoute(msg);
+			if (!_sendRoute(msg)) {
+				SIGN_DEBUG(PSTR("Failed to transmit signing presentation!"));
+			}
 			return true; // No need to further process I_SIGNING_PRESENTATION in this case
 		}
 #elif defined(MY_SIGNING_FEATURE)
@@ -182,9 +186,12 @@ bool signerProcessInternal(MyMessage &msg) {
 #if defined(MY_SIGNING_ATSHA204)
 			if (signerAtsha204GetNonce(msg)) {
 #endif
-				SIGN_DEBUG(PSTR("Transmittng nonce\n"));
-				_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
-					C_INTERNAL, I_NONCE_RESPONSE, false));
+				if (!_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
+					C_INTERNAL, I_NONCE_RESPONSE, false))) {
+					SIGN_DEBUG(PSTR("Failed to transmit nonce!\n"));
+				} else {
+					SIGN_DEBUG(PSTR("Transmitted nonce\n"));
+				}
 			} else {
 				SIGN_DEBUG(PSTR("Failed to generate nonce!\n"));
 			}
@@ -248,7 +255,9 @@ bool signerProcessInternal(MyMessage &msg) {
 			} else {
 				SIGN_DEBUG(PSTR("Informing node %d that we do not require whitelisting\n"), sender);
 			}
-			_sendRoute(msg);
+			if (!_sendRoute(msg)) {
+				SIGN_DEBUG(PSTR("Failed to transmit signing presentation!"));
+			}
 #endif // MY_GATEWAY_FEATURE
 			return true; // No need to further process I_SIGNING_PRESENTATION
 		} else if (msg.type == I_NONCE_RESPONSE) {
