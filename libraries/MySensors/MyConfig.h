@@ -187,9 +187,9 @@
 // The following defines can be used to set the port pin, that the LED is connected to
 // If one of the following is defined here, or in the sketch, MY_LEDS_BLINKING_FEATURE will be
 // enabled by default. (Replace x with the pin number you have the LED on)
-//#define MY_DEFAULT_ERR_LED x
-//#define MY_DEFAULT_TX_LED x
-//#define MY_DEFAULT_RX_LED x
+//#define MY_DEFAULT_ERR_LED_PIN x
+//#define MY_DEFAULT_TX_LED_PIN x
+//#define MY_DEFAULT_RX_LED_PIN x
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
@@ -340,13 +340,13 @@
 /**
  * @def MY_DEBUG_VERBOSE_RF24
  * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled.
- */ 
+ */
 //#define MY_DEBUG_VERBOSE_RF24
 
 /**
  * @def MY_RF24_SPI_MAX_SPEED
  * @brief MY_RF24_SPI_MAX_SPEED to overrule default nRF24L01+ SPI speed.
- */ 
+ */
 //#define MY_RF24_SPI_MAX_SPEED 4000000
 
 /**
@@ -619,7 +619,7 @@
  *
  * If using a secure bootloader, grounding the pin is the only option to reactivate the node.
  * If using stock Android bootloader or a DualOptiBoot it is also possible to download a sketch
- * using serial protocol to erase EEPROM to unlock the node. 
+ * using serial protocol to erase EEPROM to unlock the node.
  */
 #ifndef MY_NODE_UNLOCK_PIN
 #define MY_NODE_UNLOCK_PIN 14
