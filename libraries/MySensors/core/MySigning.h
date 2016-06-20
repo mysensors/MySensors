@@ -475,7 +475,7 @@
 #ifndef MySigning_h
 #define MySigning_h
 
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 #include "drivers/ATSHA204/ATSHA204.h"
 
 #ifdef MY_SIGNING_NODE_WHITELISTING

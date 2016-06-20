@@ -22,10 +22,10 @@
  *
  * MySensors main interface (includes all necessary code for the library)
  */
-#ifndef MySensor_h
-#define MySensor_h
+#ifndef MySensors_h
+#define MySensors_h
 
-#include "core/MySensorCore.h"
+#include "core/MySensorsCore.h"
 
 // Detect node type
 /**
@@ -290,7 +290,7 @@
 
 #include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
-#include "core/MySensorCore.cpp"
+#include "core/MySensorsCore.cpp"
 
 #include <Arduino.h>
 

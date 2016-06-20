@@ -20,7 +20,7 @@
 #ifndef MyOTAFirmwareUpdate_h
 #define MyOTAFirmwareUpdate_h
 
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 
 // Size of each firmware block
 #define FIRMWARE_BLOCK_SIZE	16
