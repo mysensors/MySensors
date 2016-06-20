@@ -16,7 +16,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include "MYSLog.h"
 
 #define VSN "v1.0"

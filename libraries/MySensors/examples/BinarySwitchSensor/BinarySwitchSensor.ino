@@ -35,7 +35,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Bounce2.h>
 
 #define CHILD_ID 3

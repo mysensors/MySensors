@@ -69,7 +69,7 @@
 
 #include <math.h>       // Conversion equation from resistance to %
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 // Setting up format for reading 3 soil sensors
 #define NUM_READS 10    // Number of sensor reads for filtering

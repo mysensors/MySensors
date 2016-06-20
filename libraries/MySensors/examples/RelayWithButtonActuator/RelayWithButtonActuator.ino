@@ -40,7 +40,7 @@
 #define MY_REPEATER_FEATURE
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Bounce2.h>
 
 #define RELAY_PIN  4  // Arduino Digital I/O pin number for relay 

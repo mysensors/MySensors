@@ -127,7 +127,7 @@
 */
 
 #include <ESP8266WiFi.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 void setup() { 
 }

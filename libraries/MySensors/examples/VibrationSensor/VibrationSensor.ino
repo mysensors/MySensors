@@ -40,7 +40,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Wire.h>
 
 #define CHILD_ID_VIBRATION 0

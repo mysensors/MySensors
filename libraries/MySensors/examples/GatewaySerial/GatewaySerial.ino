@@ -83,7 +83,7 @@
 //#define MY_DEFAULT_TX_LED_PIN  5  // the PCB, on board LED
 
 #include <SPI.h>
-#include <MySensor.h>  
+#include <MySensors.h>  
 
 void setup() { 
   // Setup locally attached sensors

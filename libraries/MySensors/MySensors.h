@@ -18,7 +18,7 @@
  */
 
 /**
- * @file MySensor.h
+ * @file MySensors.h
  *
  * MySensors main interface (includes all necessary code for the library)
  */

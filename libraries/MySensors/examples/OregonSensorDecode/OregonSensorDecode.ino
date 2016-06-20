@@ -53,7 +53,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Oregon.h>
 
 //Define pin where is 433Mhz receiver (here, pin 2)

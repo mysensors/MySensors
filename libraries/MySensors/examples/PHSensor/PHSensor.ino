@@ -30,7 +30,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 #define COMPARE_PH 1 // Send PH only if changed? 1 = Yes 0 = No
 

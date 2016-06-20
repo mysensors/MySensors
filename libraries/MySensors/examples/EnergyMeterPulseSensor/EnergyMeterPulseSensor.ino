@@ -42,7 +42,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>  
+#include <MySensors.h>  
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
 #define PULSE_FACTOR 1000       // Nummber of blinks per KWH of your meeter

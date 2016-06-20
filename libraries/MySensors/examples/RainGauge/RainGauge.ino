@@ -45,7 +45,7 @@
 //#define MY_NODE_ID 7
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <math.h>
 #include <Time.h>
 

@@ -83,7 +83,7 @@
 #include <sha204_library.h>
 #include <sha204_lib_return_codes.h>
 #define MY_CORE_ONLY
-#include <MySensor.h>
+#include <MySensors.h>
 
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.

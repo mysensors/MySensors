@@ -51,7 +51,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>  
+#include <MySensors.h>  
 #include <Wire.h>
 #include <PN532_I2C.h>
 #include <PN532.h>

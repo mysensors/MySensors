@@ -56,7 +56,7 @@
 #define MY_OTA_FIRMWARE_FEATURE
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Wire.h>
 #include <SI7021.h>
 #ifndef MY_OTA_FIRMWARE_FEATURE
