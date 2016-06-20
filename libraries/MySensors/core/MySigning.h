@@ -180,7 +180,7 @@
  * signatures. The setting is defined using @ref MY_SIGNING_SOFT_RANDOMSEED_PIN and the default is to use pin A7. The same configuration
  * possibilities exist as with the other configuration options.
  *
- * <b>Thirdly</b>, if you use the software backend, you need to personalize the node (see @ref perzonalization).
+ * <b>Thirdly</b>, if you use the software backend, you need to personalize the node (see @ref personalization).
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
@@ -191,7 +191,7 @@
  *
  * An example of a node that require signatures is available in @ref SecureActuator.ino.
  *
- * @anchor perzonalization If you use the “real” ATSHA204A, before any signing operations can be done, the device needs to be <i>personalized</i>.
+ * @anchor personalization If you use the “real” ATSHA204A, before any signing operations can be done, the device needs to be <i>personalized</i>.
  * This can be a daunting process as it involves irreversibly writing configurations to the device, which cannot be undone. I have however tried
  * to simplify the process as much as possibly by creating a helper-sketch specifically for this purpose in @ref SecurityPersonalizer.ino
  * Note that you also need to do personalization for software signing, but then the values are stored in EEPROM (described below).
@@ -637,4 +637,79 @@ uint8_t* signerSha256Final(void);
 int signerMemcmp(const void* a, const void* b, size_t sz);
 
 #endif
+/** @}*/
+/**
+ * @defgroup MySigningTroubleshootinggrp Troubleshooting
+ * @ingroup MySigninggrp
+ * @{
+ *
+ * @section MySigningTroubleshootingSymptoms Symptoms and solutions
+ *
+ * The first thing to do if you suspect signing is causing problems, is to enable the verbose debug
+ * flag for the signing backend. @see MY_DEBUG_VERBOSE_SIGNING
+ *
+ * If you are having trouble getting signing to work, please see the following troubleshooting tips.
+ *
+ * @subsection MySigningTroubleshootingSymptomStFail Signing fails and logs show st=fail on transmissions
+ *
+ * This is actually not a signing problem, although ofthen st=fail becomes st=ok when signing is disabled.
+ * This is by far the most commonly reported problem with signing, but the problems is not with signing,
+ * it is with radio performence.<br>
+ * This is a typical log which might look like a signing related issue but isn't:
+ * @code{.unparsed}
+ * 0;255;3;0;9;Skipping security for command 3 type 16
+ * 0;255;3;0;9;read: 3-3-0 s=255,c=3,t=16,pt=0,l=0,sg=0:
+ * 0;255;3;0;9;Signing backend: ATSHA204Soft
+ * 0;255;3;0;9;SHA256: 86DEAE1DAF50D577A4E2262B33ABF9DEE05DD8FAF84F94F50900000000000000
+ * 0;255;3;0;9;Skipping security for command 3 type 17
+ * 0;255;3;0;9;send: 0-0-3-3 s=255,c=3,t=17,pt=6,l=25,sg=0,st=fail:86DEAE1DAF50D577A4E2262B33ABF9DEE05DD8FAF84F94F509
+ * 0;255;3;0;9;Failed to transmit nonce!
+ * 0;255;3;0;9;Message is not signed, but it should have been!
+ * 0;255;3;0;9;verify fail
+ * @endcode
+ *
+ * The reason for this is that when signing is used, the messages transmitted become relatively large.<br>
+ * Because of this, the message is more sensitive to noise, and the chance for a message to get scrambled
+ * increase with the message size. Please refer to the troubleshooting section at the MySensors forum for
+ * information on how to improve radio performence.<br>
+ * This is a good place to start: https://forum.mysensors.org/topic/666/debug-faq-and-how-ask-for-help
+ *
+ * @subsection MySigningTroubleshootingSymptomNonce Failed to generate nonce
+ *
+ * The signing backend failed to generate the nonce needed to sign a message. This indicate a hardware
+ * problem. Please post the debug info on the forum together with a description of your hardware setup.
+ *
+ * @subsection MySigningTroubleshootingSymptomSign Failed to sign message
+ *
+ * The signing backend failed to sign the message. Typically this happens if your message is so large,
+ * that there is no room left in the buffer to store a signature.
+ *
+ * @subsection MySigningTroubleshootingSymptomWrongSource Nonce did not come from the destination (XX) of the message to be signed! It came from YY
+ *
+ * This should not really happen. The reason for this message is that the signing backend is only capable
+ * of handling one signed message session at any time. If for some reason multiple nodes send a nonce message to
+ * the same node, only the nonce from a node that is the destination of the current message signing session will be
+ * accepted. Any other nonces will be dropped. This should not happen as no node should send a nonce unless asked to,
+ * and a node will only ask for a nonce to one destination for every signing session.<br>
+ * If you see this message, please post the debugging details on the MySensors forum so it can be investigated further
+ * together with a description of your setup.
+ *
+ * @subsection MySigningTroubleshootingSymptomNotSigned Message is not signed, but it should have been
+ *
+ * A node has failed to comply with the signing preferences of this node. Check that the node has received a
+ * signing presentation message from this node. This is automatically transmitted to gateways. For other nodes,
+ * you need to transmit the presentation from the sketch. @see signerPresentation
+ *
+ * @subsection MySigningTroubleshootingSymptomNotSignedGeneral "Messages do not appear to be signed but I think they should be..."
+ *
+ * Make sure you have enabled the flag to require signatures to require signatures and have enabled one of the signing
+ * backends. @see MY_SIGNING_REQUEST_SIGNATURES @see MY_SIGNING_ATSHA204 @see MY_SIGNING_SOFT
+ *
+ * @subsection MySigningTroubleshootingSymptomNotWorkingWhitelisting Signature verification failed!
+ *
+ * Make sure both source and destination of the signed message has undergone @ref personalization with the same HMAC key.<br>
+ * Also, if whitelisting is used, make sure the proper serial is paired with the proper node ID at the destination.
+ * Whitelisting preferences are communicated with the signing presentation (done automatically from nodes to gateway but
+ * has to be explicitly done by sketch for node to node communication). @see signerPresentation
+ */
 /** @}*/

@@ -77,7 +77,7 @@
  * data for EEPROM and ATSHA204A so it is recommended to use different serial and HMAC
  * keys on the same device for ATSHA204A vs soft signing settings.
  *
- * Details on personalization procedure is given in @ref perzonalization.
+ * Details on personalization procedure is given in @ref personalization.
  */
 
 #include <sha204_library.h>
