@@ -82,6 +82,40 @@
 //#define MY_RS485
 
 /**
+ * @def MY_REGISTRATION_FEATURE
+ * @brief If enabled, node has to register to gateway/controller before allowed to send sensor data.
+ */
+#define MY_REGISTRATION_FEATURE
+
+ /**
+ * @def MY_REGISTRATION_RETRIES
+ * @brief Number of registration retries if no reply received from GW/controller
+ */
+
+#ifndef MY_REGISTRATION_RETRIES
+#define MY_REGISTRATION_RETRIES 3
+#endif
+
+ /**
+ * @def MY_REGISTRATION_DEFAULT
+ * @brief Node registration default - this applies if no registration response is recieved from controller
+ */
+
+#define MY_REGISTRATION_DEFAULT true
+
+ /**
+ * @def MY_REGISTRATION_CONTROLLER
+ * @brief If enabled, node registration request has to be handled by controller
+ */
+ // #define MY_REGISTRATION_CONTROLLER
+
+ /**
+ * @def MY_CORE_COMPATIBILITY_CHECK
+ * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
+ */
+#define MY_CORE_COMPATIBILITY_CHECK
+
+/**
  * @def MY_NODE_ID
  * @brief Node id defaults to AUTO (tries to fetch id from controller).
  */
@@ -96,6 +130,12 @@
 #ifndef MY_PARENT_NODE_ID
 #define MY_PARENT_NODE_ID AUTO
 #endif
+
+/**
+ * @def MY_PARENT_NODE_IS_STATIC
+ * @brief Enable MY_PARENT_NODE_IS_STATIC to disable fall back if parent node fails
+ */
+//#define MY_PARENT_NODE_IS_STATIC
 
 // Enables repeater functionality (relays messages from other nodes)
 // #define MY_REPEATER_FEATURE
@@ -646,4 +686,6 @@
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 #define MY_IS_RFM69HW
+#define MY_PARENT_NODE_IS_STATIC
+#define MY_DEBUG_VERBOSE_RF24
 #endif

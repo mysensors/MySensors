@@ -17,43 +17,228 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+ /**
+ * @file MyTransport.h
+ *
+ * @brief API declaration for MyTransport
+ */
 #ifndef MyTransport_h
 #define MyTransport_h
 
-#include <stdint.h>
 #include "MySensorsCore.h"
 
-// Search for a new parent node after this many transmission failures
-#define SEARCH_FAILURES  5
+#define TRANSMISSION_FAILURES  5			//!<  search for a new parent node after this many transmission failures
+#define TIMEOUT_FAILURE_STATE 10000			//!<  duration failure state
+#define STATE_TIMEOUT 2000					//!<  general state timeout
+#define STATE_RETRIES 3						//!<  retries before switching to FAILURE
+#define AUTO 255							//!<  ID 255 is reserved for auto initialization of nodeId.
+#define BROADCAST_ADDRESS ((uint8_t)255)	//!<  broadcasts are addressed to ID 255
+#define DISTANCE_INVALID ((uint8_t)255)		//!<  invalid distance when searching for parent
+#define MAX_HOPS ((uint8_t)254)				//!<  maximal mumber of hops for ping/pong
+#define INVALID_HOPS ((uint8_t)255)			//!<  invalid hops
 
-#define AUTO 0xFF // 0-254. Id 255 is reserved for auto initialization of nodeId.
+#define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)				//!<  returns true if static parent id is undefined
+#define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
+#define isValidParent(parent) (bool)(parent != AUTO)					//!<  returns true if parent is valid
 
-#define BROADCAST_ADDRESS ((uint8_t)0xFF)
+ /**
+ * @brief SM state
+ *
+ * This structure stores SM state definitions
+ */
+struct State {
+	void(*Transition)();					//!< state transition function
+	void(*Update)();						//!< state update function
+};
 
-// invalid distance when searching for parent
-#define DISTANCE_INVALID (0xFF)
+/**
+* @brief Status variables and SM state
+*
+* This structure stores transport status and SM variables
+*/ 
+typedef struct {
+	State* currentState;					//!< pointer to current fsm state
+	uint32_t stateEnter;					//!< state enter timepoint
+	bool findingParentNode : 1;				//!< flag finding parent node is active
+	bool preferredParentFound : 1;			//!< flag preferred parent found
+	bool uplinkOk : 1;						//!< flag uplink ok
+	bool pingActive : 1;					//!< flag ping active
+	uint8_t reserved : 4;					//!< reserved
+	uint8_t retries : 4;					//!< retries / state re-enter
+	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions
+	uint8_t pingResponse;					//!< stores hops received in I_PONG
+} __attribute__((packed)) transportSM;
 
-// Common functions in all radio drivers
-#ifdef MY_OTA_FIRMWARE_FEATURE
-	// do a crc16 on the whole received firmware
-	bool transportIsValidFirmware();
-#endif
 
+// PRIVATE functions
 
+/**
+* @brief Initialize SM variables and transport HW
+*/
+void stInitTransition();
+/**
+* @brief Find parent
+*/
+void stParentTransition();
+/**
+* @brief Verify find parent responses
+*/
+void stParentUpdate();
+/**
+* @brief Send ID request
+*/
+void stIDTransition();
+/**
+* @brief Verify ID response and GW link
+*/
+void stIDUpdate();
+/**
+* @brief Send uplink ping request
+*/
+void stUplinkTransition();
+/**
+* @brief Set transport OK
+*/
+void stOKTransition();
+/**
+* @brief Monitor transport link
+*/
+void stOKUpdate();
+/**
+* @brief Transport failure and power down radio 
+*/
+void stFailureTransition();
+/**
+* @brief Re-initialize transport after timeout
+*/
+void stFailureUpdate();
+/**
+* @brief Switch SM state
+* @param newState New state to switch SM to
+*/
+void transportSwitchSM(State& newState);
+/**
+* @brief Update SM state
+*/
+void transportUpdateSM();
+/**
+* @brief Request time in current SM state
+* @return ms in current state
+*/
+uint32_t transportTimeInState();
+
+/**
+* @brief Process all pending messages in RX FIFO
+*/
+void transportProcessFIFO();
+/**
+* @brief Receive message from RX FIFO and process
+*/
+void transportProcessMessage();
+/**
+* @brief Assign node ID
+* @param newNodeId New node ID
+*/
+void transportAssignNodeID(uint8_t newNodeId);
+/**
+* @brief Wait and process messages for a defined amount of time until specified message received
+* @param ms Time to wait and process incoming messages in ms
+* @param cmd Specific command
+* @param msgtype Specific message type 
+* @return true if specified command received within waiting time
+*/
+bool transportWait(uint32_t ms, uint8_t cmd, uint8_t msgtype);
+/**
+* @brief Ping node
+* @param targetId Node to be pinged
+* @return hops from pinged node or 255 if no answer received within 2000ms
+*/
+uint8_t transportPingNode(uint8_t targetId);
+/**
+* @brief Send and route message according to destination
+* 
+* This function is used in MyTransport and omits the transport state check, i.e. message can be sent even if transport is !OK
+*
+* @param message
+* @return true if message sent successfully
+*/
+bool transportRouteMessage(MyMessage &message);
+/**
+* @brief Send and route message according to destination with transport state check
+* @param message
+* @return true if message sent successfully and false if sending error or transport !OK
+*/
+bool transportSendRoute(MyMessage &message);
+/**
+* @brief Send message to recipient
+* @param to Recipient of message
+* @param message
+* @return true if message sent successfully 
+*/
+bool transportSendWrite(uint8_t to, MyMessage &message);
+
+// PUBLIC functions
+
+/**
+* @brief Initialize transport and SM
+*/
+void transportInitialize();
+/**
+* @brief Process FIFO msg and update SM
+*/
 void transportProcess();
-void transportRequestNodeId();
-void transportPresentNode();
-void transportFindParentNode();
-boolean transportSendRoute(MyMessage &message);
-boolean transportSendWrite(uint8_t to, MyMessage &message);
+/**
+* @brief Verify transport status
+* @return true if transport is initialize and ready
+*/
+bool isTransportOK();
+/**
+* @brief Clear routing table
+*/
+void transportClearRoutingTable();
+/**
+* @brief Return heart beat, i.e. ms in current state
+*/
+uint32_t transportGetHeartbeat();
 
-// "Interface" functions for radio driver
+// interface functions for radio driver
+
+/**
+* @brief Initialize transport HW
+* @return true if initalization successful
+*/
 bool transportInit();
+/**
+* @brief Set node address
+*/
 void transportSetAddress(uint8_t address);
+/**
+* @brief Retrieve node address
+*/
 uint8_t transportGetAddress();
+/**
+* @brief Send message
+* @param to recipient
+* @param data message to be sent
+* @param len length of message (header + payload)
+* @return true if message sent successfully
+*/
 bool transportSend(uint8_t to, const void* data, uint8_t len);
-bool transportAvailable(uint8_t *to);
-uint8_t transportReceive(void* data);
+/**
+* @brief Verify if RX FIFO has pending messages
+* @return true if message available in RX FIFO
+*/
+bool transportAvailable();
+/**
+* @brief Receive message from FIFO
+* @return length of recevied message (header + payload)
+*/
+uint8_t transportReceive(void* data); 
+/**
+* @brief Power down transport HW
+*/
 void transportPowerDown();
 
-#endif
+
+#endif // MyTransport_h
+/** @}*/

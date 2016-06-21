@@ -165,16 +165,12 @@ LOCAL uint8_t RF24_getDynamicPayloadSize(void) {
 }
 
 
-LOCAL bool RF24_isDataAvailable(uint8_t* to) {
+LOCAL bool RF24_isDataAvailable() {
 	uint8_t pipe_num = ( RF24_getStatus() >> RX_P_NO ) & 0b0111;
-	#if defined(MY_DEBUG_VERBOSE_RF24)
+	#if defined(MY_DEBUG_VERBOSE_RF24) && defined(MY_DEBUG)
 		if(pipe_num <= 5)
 			RF24_DEBUG(PSTR("Data available on pipe %d\n"),pipe_num);	
 	#endif	
-	if (pipe_num == NODE_PIPE)
-		*to = MY_RF24_NODE_ADDRESS;
-	else if (pipe_num == BROADCAST_PIPE)
-		*to = BROADCAST_ADDRESS;
 	return (pipe_num <= 5);
 }
 

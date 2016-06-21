@@ -29,15 +29,15 @@
 #include <stdarg.h>
 
 #ifdef MY_DEBUG
-#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
 #else
-#define debug(x,...)
+	#define debug(x,...)
 #endif
 
-// This is the nodeId for sensor net gateway receiver sketch (where all sensors should send their data).
-#define GATEWAY_ADDRESS ((uint8_t)0)
-// Node child is always created/presented when a node is started
-#define NODE_SENSOR_ID 0xFF
+#define GATEWAY_ADDRESS ((uint8_t)0)			//!< Node ID for GW sketch	
+#define NODE_SENSOR_ID 0xFF						//!< Node child is always created/presented when a node is started
+#define MY_CORE_VERSION ((uint8_t)2)			//!< core version	
+#define MY_CORE_MIN_VERSION ((uint8_t)2)		//!< min core version required for compatibility
 
 
 /**
@@ -71,6 +71,11 @@ uint8_t getNodeId();
  * Return the parent node id.
  */
 uint8_t getParentNodeId();
+
+/**
+* Sends node information to the gateway.
+*/
+void presentNode();
 
 /**
 * Each node must present all attached sensors before any values can be handled correctly by the controller.
@@ -236,9 +241,11 @@ void _begin();
 
 void _process(void);
 
-void _processInternalMessages();
+bool _processInternalMessages();
 
 void _infiniteLoop();
+
+void _registerNode();
 
 boolean _sendRoute(MyMessage &message);
 
