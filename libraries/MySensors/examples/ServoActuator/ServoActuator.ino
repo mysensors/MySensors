@@ -39,7 +39,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Servo.h> 
 
 #define SERVO_DIGITAL_OUT_PIN 3

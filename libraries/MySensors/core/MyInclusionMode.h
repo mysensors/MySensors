@@ -20,7 +20,7 @@
 #ifndef MyInclusionMode_h
 #define MyInclusionMode_h
 
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 
 
 extern bool gatewayTransportSend(MyMessage &message);

@@ -54,7 +54,7 @@
 #define MY_RS485_BAUD_RATE 9600
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)

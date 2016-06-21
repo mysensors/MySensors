@@ -66,7 +66,7 @@
 #define MY_SIGNING_ATSHA204_PIN 17 //!< A3 - pin where ATSHA204 is attached
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 
 #define LOCK_1  3     //!< Arduino Digital I/O pin number for first lock (second on pin+1 etc)

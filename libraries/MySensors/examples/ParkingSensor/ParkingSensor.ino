@@ -47,7 +47,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #endif
 
 #define NEO_PIN      4 // NeoPixels input pin

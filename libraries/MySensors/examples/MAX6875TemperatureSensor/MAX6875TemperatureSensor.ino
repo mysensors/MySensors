@@ -43,7 +43,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <MAX6675.h>
 
 uint8_t CS0 = 4; // CS pin on MAX6675

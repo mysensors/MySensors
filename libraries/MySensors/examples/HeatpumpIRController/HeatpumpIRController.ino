@@ -48,7 +48,7 @@
 
 // MySensors libraries
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 // Child ID's of this node
 #define CHILD_1  1

@@ -99,7 +99,7 @@
 #include <SPI.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_FONA.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 // Pin definitions and other defines
 #define FONA_RX 2

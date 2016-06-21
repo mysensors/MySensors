@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 
 ControllerConfig _cc; // Configuration coming from controller
 NodeConfig _nc; // Essential settings for node to work

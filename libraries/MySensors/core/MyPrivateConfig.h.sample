@@ -22,7 +22,7 @@
  * it in the sketch:
  * #include "MyPrivateConfig.h"
  * Make sure to include it before
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * Then adapt the contents to your personal preference.
  */
 

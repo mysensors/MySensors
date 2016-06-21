@@ -35,4 +35,4 @@
 #endif
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>

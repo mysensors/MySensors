@@ -307,14 +307,14 @@ int FindSensor (const int id, int maxsensor)
 {
   int EepromId=0;
   for (int i=0; i<maxsensor; i++){
-    #ifdef MySensor_h
+    #ifdef MySensors_h
       int SensorID = loadState(i);
     #else
       int SensorID = EEPROM.read(i);
     #endif
     if(SensorID == 255)
     {
-      #ifdef MySensor_h
+      #ifdef MySensors_h
         saveState(i,id);
       #else
         EEPROM.write(i,id);

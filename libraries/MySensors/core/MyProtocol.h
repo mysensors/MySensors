@@ -20,7 +20,7 @@
 #ifndef MyProtocol_h
 #define MyProtocol_h
 
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 
 
 // parse(message, inputString)

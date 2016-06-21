@@ -59,7 +59,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>  
+#include <MySensors.h>  
 
 
 #define CHILD_ID 99   // Id of the sensor child

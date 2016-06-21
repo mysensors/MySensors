@@ -21,7 +21,7 @@
 #define MyTransport_h
 
 #include <stdint.h>
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 
 // Search for a new parent node after this many transmission failures
 #define SEARCH_FAILURES  5

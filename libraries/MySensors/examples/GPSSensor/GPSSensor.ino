@@ -51,7 +51,7 @@ const int offset = 1;
 
 #include <SPI.h>
 #include <Time.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 

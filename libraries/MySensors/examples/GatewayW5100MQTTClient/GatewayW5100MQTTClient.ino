@@ -136,7 +136,7 @@
 */
 
 #include <Ethernet.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 void setup() { 
 }

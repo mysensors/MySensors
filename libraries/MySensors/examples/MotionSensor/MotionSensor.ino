@@ -35,7 +35,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)

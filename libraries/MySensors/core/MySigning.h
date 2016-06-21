@@ -146,10 +146,10 @@
  * @code{.cpp}
  * //#define MY_SIGNING_SOFT
  * #define MY_SIGNING_ATSHA204
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
- * Make sure to set the define before the inclusion of MySensor.h.
+ * Make sure to set the define before the inclusion of MySensors.h.
  * It is legal to mix hardware- and software-based backends in a network. They work together.
  *
  * You also need to decide if the node (or gateway) in question require and verify signatures in addition to calculating them.
@@ -172,7 +172,7 @@
  * #define MY_SIGNING_ATSHA204
  * #define MY_SIGNING_ATSHA204_PIN 4
  * #define MY_SIGNING_REQUEST_SIGNATURES
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  * For the software backed signingbackend, an unconnected analog pin is required to set a random seed for the pseudo-random generator.
@@ -185,7 +185,7 @@
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_REQUEST_SIGNATURES
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  *
@@ -326,7 +326,7 @@
  * #define MY_SIGNING_ATSHA204
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}},{.nodeId = 2,.serial = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09}}}
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  * In this example, there are two nodes in the whitelist; the gateway, and a separate node that communicates directly with this node (with signed
@@ -338,7 +338,7 @@
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}},{.nodeId = 2,.serial = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09}}}
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  *
@@ -405,7 +405,7 @@
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
  * #define MY_SIGNING_REQUEST_SIGNATURES
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  * If you do also want your gateway to require signatures from your lock you just enable the same (or similar if using software signing) settings
@@ -425,7 +425,7 @@
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_REQUEST_SIGNATURES
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  *
@@ -435,7 +435,7 @@
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = MOTION_SENSOR_ID,.serial = {0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78}}}
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
 
@@ -447,7 +447,7 @@
  * Configuration example for the keyfob (keyfob will only transmit to another node and not receive anything):<br>
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  *
@@ -457,7 +457,7 @@
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * #define MY_SIGNING_REQUEST_SIGNATURES
  * #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88}},{.nodeId = KEYFOB_ID,.serial = {<FROM ATSHA ON KEYFOB>}}}
- * #include <MySensor.h>
+ * #include <MySensors.h>
  * ...
  * @endcode
  *
@@ -475,7 +475,7 @@
 #ifndef MySigning_h
 #define MySigning_h
 
-#include "MySensorCore.h"
+#include "MySensorsCore.h"
 #include "drivers/ATSHA204/ATSHA204.h"
 
 #ifdef MY_SIGNING_NODE_WHITELISTING

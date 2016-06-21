@@ -11,7 +11,7 @@
 //#define MY_RADIO_RFM69
 
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 // include Playing With Fusion AXS3935 libraries
 #include <PWFusion_AS3935.h>
 

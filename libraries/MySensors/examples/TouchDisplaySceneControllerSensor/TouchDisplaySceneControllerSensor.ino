@@ -64,7 +64,7 @@
 
 #include <Time.h>  
 #include <SPI.h>
-#include <MySensor.h>  
+#include <MySensors.h>  
 #include <stdarg.h>
 #include <UTFT.h>
 #include <UTouch.h>

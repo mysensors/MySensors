@@ -38,7 +38,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <MsTimer2.h>
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 #include <Bounce2.h>
 
 #define LED_CYCLE_MS    30   // Update rate of LEDs, in [ms].
