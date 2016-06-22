@@ -233,7 +233,18 @@ LOCAL uint8_t RF24_readMessage(void* buf);
 LOCAL void RF24_setNodeAddress(uint8_t address);
 LOCAL uint8_t RF24_getNodeID(void);
 LOCAL bool RF24_initialize(void);
+LOCAL void RF24_setChannel(uint8_t channel);
+LOCAL void RF24_setRetries(uint8_t retransmitDelay, uint8_t retransmitCount);
+LOCAL void RF24_setAddressWidth(uint8_t width);
+LOCAL void RF24_setRFSetup(uint8_t RFsetup);
+LOCAL void RF24_setFeature(uint8_t feature);
+LOCAL void RF24_setPipe(uint8_t pipe);
+LOCAL void RF24_setAutoACK(uint8_t pipe);
+LOCAL void RF24_setDynamicPayload(uint8_t pipe);
+LOCAL void RF24_setRFConfiguration(uint8_t configuration);
+LOCAL void RF24_setPipeAddress(uint8_t pipe, uint8_t* address, uint8_t width);
+LOCAL void RF24_setPipeLSB(uint8_t pipe, uint8_t LSB);
+LOCAL void RF24_setStatus(uint8_t status);
+LOCAL void RF24_enableFeatures(void);
 
 #endif // __RF24_H__
-
-

@@ -86,19 +86,70 @@ LOCAL uint8_t RF24_getStatus(void) {
 	return RF24_spiByteTransfer( NOP );
 }
 
+LOCAL void RF24_setChannel(uint8_t channel) {
+	RF24_writeByteRegister(RF_CH, channel);
+}
+
+LOCAL void RF24_setRetries(uint8_t retransmitDelay, uint8_t retransmitCount) {
+	RF24_writeByteRegister(SETUP_RETR, retransmitDelay << ARD | retransmitCount << ARC);
+}
+
+LOCAL void RF24_setAddressWidth(uint8_t width) {
+	RF24_writeByteRegister(SETUP_AW, width - 2);
+}
+
+LOCAL void RF24_setRFSetup(uint8_t RFsetup) {
+	RF24_writeByteRegister(RF_SETUP, RFsetup);
+}
+
+LOCAL void RF24_setFeature(uint8_t feature) {
+	RF24_writeByteRegister(FEATURE, feature);
+}
+
+LOCAL void RF24_setPipe(uint8_t pipe) {
+	RF24_writeByteRegister(EN_RXADDR, pipe);
+}
+
+LOCAL void RF24_setAutoACK(uint8_t pipe) {
+	RF24_writeByteRegister(EN_AA, pipe);
+}
+
+LOCAL void RF24_setDynamicPayload(uint8_t pipe) {
+	RF24_writeByteRegister(DYNPD, pipe);
+}
+
+LOCAL void RF24_setRFConfiguration(uint8_t configuration) {
+	RF24_writeByteRegister(NRF_CONFIG, configuration);
+}
+
+LOCAL void RF24_setPipeAddress(uint8_t pipe, uint8_t* address, uint8_t width) {
+	RF24_writeMultiByteRegister(pipe, address, width);
+}
+
+LOCAL void RF24_setPipeLSB(uint8_t pipe, uint8_t LSB) {
+	RF24_writeByteRegister(pipe, LSB);
+}
+
+LOCAL void RF24_setStatus(uint8_t status) {
+	RF24_writeByteRegister(RF24_STATUS, status);
+}
+LOCAL void RF24_enableFeatures(void) {
+	RF24_writeByteRegister(ACTIVATE, 0x73);
+}
+
 LOCAL void RF24_openWritingPipe(uint8_t recipient) {	
 	RF24_DEBUG(PSTR("open writing pipe, recipient=%d\n"), recipient);	
 	// only write LSB of RX0 and TX pipe
-	RF24_writeByteRegister(RX_ADDR_P0, recipient);
-	RF24_writeByteRegister(TX_ADDR, recipient);		
+	RF24_setPipeLSB(RX_ADDR_P0, recipient);
+	RF24_setPipeLSB(TX_ADDR, recipient);
 }
 
 LOCAL void RF24_startListening(void) {
 	RF24_DEBUG(PSTR("start listening\n"));
 	// toggle PRX		
-	RF24_writeByteRegister(NRF_CONFIG, MY_RF24_CONFIGURATION | _BV(PWR_UP) | _BV(PRIM_RX) );	
+	RF24_setRFConfiguration(MY_RF24_CONFIGURATION | _BV(PWR_UP) | _BV(PRIM_RX) );
 	// all RX pipe addresses must be unique, therefore skip if node ID is 0xFF
-	if(MY_RF24_NODE_ADDRESS!=AUTO) RF24_writeByteRegister(RX_ADDR_P0, MY_RF24_NODE_ADDRESS);
+	if(MY_RF24_NODE_ADDRESS!=AUTO) RF24_setPipeLSB(RX_ADDR_P0, MY_RF24_NODE_ADDRESS);
 	// start listening
 	RF24_ce(HIGH);
 }
@@ -108,14 +159,14 @@ LOCAL void RF24_stopListening(void) {
 	RF24_ce(LOW);
 	// timing
 	delayMicroseconds(130);
-	RF24_writeByteRegister(NRF_CONFIG, MY_RF24_CONFIGURATION | _BV(PWR_UP) );
+	RF24_setRFConfiguration(MY_RF24_CONFIGURATION | _BV(PWR_UP) );
 	// timing
 	delayMicroseconds(100);
 }
 
 LOCAL void RF24_powerDown(void) {
 	RF24_ce(LOW);
-	RF24_writeByteRegister(NRF_CONFIG, 0x00);
+	RF24_setRFConfiguration(MY_RF24_CONFIGURATION);
 	RF24_DEBUG(PSTR("power down\n"));
 }
 
@@ -140,7 +191,7 @@ LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 		
 	RF24_ce(LOW);
 	// reset interrupts
-	RF24_writeByteRegister(RF24_STATUS, _BV(TX_DS) | _BV(MAX_RT) );
+	RF24_setStatus(_BV(TX_DS) | _BV(MAX_RT) );
 	// Max retries exceeded
 	if( status & _BV(MAX_RT)){
 		// flush packet
@@ -154,7 +205,7 @@ LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 }
 
 LOCAL uint8_t RF24_getDynamicPayloadSize(void) {
-	uint8_t result = RF24_spiMultiByteTransfer(R_RX_PL_WID,NULL,1,true);
+	uint8_t result = RF24_spiMultiByteTransfer(R_RX_PL_WID, NULL, 1, true);
 	// check if payload size invalid
 	if(result > 32) { 
 		RF24_DEBUG(PSTR("invalid payload length = %d\n"),result);
@@ -184,7 +235,7 @@ LOCAL uint8_t RF24_readMessage( void* buf) {
 	RF24_DEBUG(PSTR("read message, len=%d\n"), len);
 	RF24_spiMultiByteTransfer( R_RX_PAYLOAD , (uint8_t*)buf, len, true ); 
 	// clear RX interrupt
-	RF24_writeByteRegister(RF24_STATUS, _BV(RX_DR) );
+	RF24_setStatus(_BV(RX_DR) );
 	return len;
 }
 
@@ -192,15 +243,16 @@ LOCAL void RF24_setNodeAddress(uint8_t address) {
 	if(address!=AUTO){
 		MY_RF24_NODE_ADDRESS = address;
 		// enable node pipe
-		RF24_writeByteRegister(EN_RXADDR, _BV(ERX_P0 + BROADCAST_PIPE) | _BV(ERX_P0) );
+		RF24_setPipe(_BV(ERX_P0 + BROADCAST_PIPE) | _BV(ERX_P0) );
 		// enable autoACK on pipe 0
-		RF24_writeByteRegister(EN_AA, _BV(ENAA_P0) );
+		RF24_setAutoACK(_BV(ENAA_P0) );
 	}
 }
 
 LOCAL uint8_t RF24_getNodeID(void) {
 	return MY_RF24_NODE_ADDRESS;
 }
+
 
 LOCAL bool RF24_initialize(void) {
 	// Initialize pins
@@ -211,45 +263,46 @@ LOCAL bool RF24_initialize(void) {
 	RF24_ce(LOW);
 	RF24_csn(HIGH);
 	// CRC and power up
-	RF24_writeByteRegister(NRF_CONFIG, MY_RF24_CONFIGURATION | _BV(PWR_UP) ) ;
+	RF24_setRFConfiguration(MY_RF24_CONFIGURATION | _BV(PWR_UP) ) ;
 	// settle >2ms
 	delay(5);
 	// set address width
-	RF24_writeByteRegister(SETUP_AW, MY_RF24_ADDR_WIDTH - 2 );
+	RF24_setAddressWidth(MY_RF24_ADDR_WIDTH);
 	// auto retransmit delay 1500us, auto retransmit count 15
-	RF24_writeByteRegister(SETUP_RETR, RF24_ARD << ARD | RF24_ARC << ARC);
+	RF24_setRetries(RF24_ARD, RF24_ARC);
 	// set channel
-	RF24_writeByteRegister(RF_CH, MY_RF24_CHANNEL);
+	RF24_setChannel(MY_RF24_CHANNEL);
 	// set data rate and pa level
-	RF24_writeByteRegister(RF_SETUP, MY_RF24_RF_SETUP);
+	RF24_setRFSetup(MY_RF24_RF_SETUP);
 	// sanity check
 	#if defined(MY_RF24_SANITY_CHECK)
-		if(RF24_readByteRegister(RF_SETUP)!=MY_RF24_RF_SETUP) {
-			RF24_DEBUG(PSTR("Sanity check failed: RF_SETUP register=%d instead of %d, check wiring, replace module or non-P version\n"),RF24_readByteRegister(RF_SETUP), MY_RF24_RF_SETUP);
+		uint8_t _rf_setup = RF24_readByteRegister(RF_SETUP);
+		if(_rf_setup!=MY_RF24_RF_SETUP) {
+			RF24_DEBUG(PSTR("Sanity check failed: RF_SETUP register=%d instead of %d, check wiring, replace module or non-P version\n"), _rf_setup, MY_RF24_RF_SETUP);
 			return false;
 		}
 	#endif
 	// toggle features (necessary on some clones)
-	RF24_writeByteRegister(ACTIVATE,0x73);
+	RF24_enableFeatures();
 	// enable ACK payload and dynamic payload
-	RF24_writeByteRegister(FEATURE, MY_RF24_FEATURE );
+	RF24_setFeature(MY_RF24_FEATURE);
     // enable broadcasting pipe
-	RF24_writeByteRegister(EN_RXADDR, _BV(ERX_P0 + BROADCAST_PIPE) );
+	RF24_setPipe(_BV(ERX_P0 + BROADCAST_PIPE));
 	// disable AA on all pipes, activate when node pipe set
-	RF24_writeByteRegister(EN_AA, 0x00 );
+	RF24_setAutoACK(0x00);
 	// enable dynamic payloads on used pipes
-	RF24_writeByteRegister(DYNPD, _BV(DPL_P0 + BROADCAST_PIPE) | _BV(DPL_P0));
+	RF24_setDynamicPayload(_BV(DPL_P0 + BROADCAST_PIPE) | _BV(DPL_P0));
 	// listen to broadcast pipe
 	MY_RF24_BASE_ADDR[0] = BROADCAST_ADDRESS;
-	RF24_writeMultiByteRegister(RX_ADDR_P0 + BROADCAST_PIPE, (uint8_t*)&MY_RF24_BASE_ADDR, BROADCAST_PIPE > 1 ? 1 : MY_RF24_ADDR_WIDTH);
+	RF24_setPipeAddress(RX_ADDR_P0 + BROADCAST_PIPE, (uint8_t*)&MY_RF24_BASE_ADDR, BROADCAST_PIPE > 1 ? 1 : MY_RF24_ADDR_WIDTH);
 	// pipe 0, set full address, later only LSB is updated
-	RF24_writeMultiByteRegister(RX_ADDR_P0, (uint8_t*)&MY_RF24_BASE_ADDR, MY_RF24_ADDR_WIDTH);
-	RF24_writeMultiByteRegister(TX_ADDR, (uint8_t*)&MY_RF24_BASE_ADDR, MY_RF24_ADDR_WIDTH);
+	RF24_setPipeAddress(RX_ADDR_P0, (uint8_t*)&MY_RF24_BASE_ADDR, MY_RF24_ADDR_WIDTH);
+	RF24_setPipeAddress(TX_ADDR, (uint8_t*)&MY_RF24_BASE_ADDR, MY_RF24_ADDR_WIDTH);
 	// reset FIFO
 	RF24_flushRX();
 	RF24_flushTX();
 	// reset interrupts
-	RF24_writeByteRegister(RF24_STATUS, _BV(TX_DS) | _BV(MAX_RT) | _BV(RX_DR));
+	RF24_setStatus(_BV(TX_DS) | _BV(MAX_RT) | _BV(RX_DR));
 	return true;
 }
 
