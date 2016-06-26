@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -70,8 +70,8 @@ bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
 	return status;
 }
 
-bool transportAvailable(uint8_t *to) {
-	bool avail = RF24_isDataAvailable(to);
+bool transportAvailable() {
+	bool avail = RF24_isDataAvailable();
 	return avail;
 }
 

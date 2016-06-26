@@ -19,7 +19,7 @@
 
 #include "MyGatewayTransport.h"
 
-extern boolean transportSendRoute(MyMessage &message);
+extern bool transportSendRoute(MyMessage &message);
 extern MyMessage _msg;
 
 inline void gatewayTransportProcess() {
