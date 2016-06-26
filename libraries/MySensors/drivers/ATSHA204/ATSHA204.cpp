@@ -15,7 +15,7 @@ static uint8_t swi_send_bytes(uint8_t count, uint8_t *buffer);
 static uint8_t swi_send_byte(uint8_t value);
 static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response);
 static uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
-static uint8_t sha204c_resync(uint8_t size, uint8_t *response);  
+static uint8_t sha204c_resync(uint8_t size, uint8_t *response);
 static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
 
 /* SWI bit bang functions */
@@ -40,23 +40,23 @@ static uint8_t swi_send_bytes(uint8_t count, uint8_t *buffer)
   // Set signal pin as output.
   SHA204_POUT_HIGH();
   SHA204_SET_OUTPUT();
-  
+
 
   // Wait turn around time.
   delayMicroseconds(RX_TX_DELAY);  //RX_TX_DELAY;
 
-  for (i = 0; i < count; i++) 
+  for (i = 0; i < count; i++)
   {
-    for (bit_mask = 1; bit_mask > 0; bit_mask <<= 1) 
+    for (bit_mask = 1; bit_mask > 0; bit_mask <<= 1)
     {
-      if (bit_mask & buffer[i]) 
+      if (bit_mask & buffer[i])
       {
         SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
         delayMicroseconds(BIT_DELAY);  //BIT_DELAY_1;
         SHA204_POUT_HIGH(); //*device_port_OUT |= device_pin;
         delayMicroseconds(7*BIT_DELAY);  //BIT_DELAY_7;
       }
-      else 
+      else
       {
         // Send a zero bit.
         SHA204_POUT_LOW(); //*device_port_OUT &= ~device_pin;
@@ -92,11 +92,11 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
 
   // Configure signal pin as input.
   SHA204_SET_INPUT();
-	
+
   // Receive bits and store in buffer.
   for (i = 0; i < count; i++)
   {
-    for (bit_mask = 1; bit_mask > 0; bit_mask <<= 1) 
+    for (bit_mask = 1; bit_mask > 0; bit_mask <<= 1)
     {
       pulse_count = 0;
 
@@ -106,23 +106,23 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
       timeout_count = START_PULSE_TIME_OUT;
 
       // Detect start bit.
-      while (--timeout_count > 0) 
+      while (--timeout_count > 0)
       {
         // Wait for falling edge.
         if (SHA204_PIN_READ() == 0)
           break;
       }
 
-      if (timeout_count == 0) 
+      if (timeout_count == 0)
       {
         status = SWI_FUNCTION_RETCODE_TIMEOUT;
         break;
       }
 
-      do 
+      do
       {
         // Wait for rising edge.
-        if (SHA204_PIN_READ() != 0) 
+        if (SHA204_PIN_READ() != 0)
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 1;
@@ -130,7 +130,7 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
         }
       } while (--timeout_count > 0);
 
-      if (pulse_count == 0) 
+      if (pulse_count == 0)
       {
         status = SWI_FUNCTION_RETCODE_TIMEOUT;
         break;
@@ -143,9 +143,9 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
       timeout_count = ZERO_PULSE_TIME_OUT;
 
       // Detect possible edge indicating zero bit.
-      do 
+      do
       {
-        if (SHA204_PIN_READ() == 0) 
+        if (SHA204_PIN_READ() == 0)
         {
           // For an Atmel microcontroller this might be faster than "pulse_count++".
           pulse_count = 2;
@@ -155,9 +155,9 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
 
       // Wait for rising edge of zero pulse before returning. Otherwise we might interpret
       // its rising edge as the next start pulse.
-      if (pulse_count == 2) 
+      if (pulse_count == 2)
       {
-        do 
+        do
         {
           if (SHA204_PIN_READ() != 0)
             break;
@@ -174,7 +174,7 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
   }
   interrupts(); //swi_enable_interrupts();
 
-  if (status == SWI_FUNCTION_RETCODE_TIMEOUT) 
+  if (status == SWI_FUNCTION_RETCODE_TIMEOUT)
   {
     if (i > 0)
     // Indicate that we timed out after having received at least one byte.
@@ -197,7 +197,7 @@ static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response)
   (void) swi_send_byte(SHA204_SWI_FLAG_TX);
 
   ret_code = swi_receive_bytes(size, response);
-  if (ret_code == SWI_FUNCTION_RETCODE_SUCCESS || ret_code == SWI_FUNCTION_RETCODE_RX_FAIL) 
+  if (ret_code == SWI_FUNCTION_RETCODE_SUCCESS || ret_code == SWI_FUNCTION_RETCODE_RX_FAIL)
   {
     count_byte = response[SHA204_BUFFER_POS_COUNT];
     if ((count_byte < SHA204_RSP_SIZE_MIN) || (count_byte > size))
@@ -257,7 +257,7 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
   // Retry loop for sending a command and receiving a response.
   n_retries_send = SHA204_RETRY_COUNT + 1;
 
-  while ((n_retries_send-- > 0) && (ret_code != SHA204_SUCCESS)) 
+  while ((n_retries_send-- > 0) && (ret_code != SHA204_SUCCESS))
   {
     // Send command.
     ret_code = swi_send_byte(SHA204_SWI_FLAG_CMD);
@@ -266,7 +266,7 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
     else
       ret_code = swi_send_bytes(count, tx_buffer);
 
-    if (ret_code != SHA204_SUCCESS) 
+    if (ret_code != SHA204_SUCCESS)
     {
       if (sha204c_resync(rx_size, rx_buffer) == SHA204_RX_NO_RESPONSE)
         return ret_code; // The device seems to be dead in the water.
@@ -279,7 +279,7 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
 
     // Retry loop for receiving a response.
     n_retries_receive = SHA204_RETRY_COUNT + 1;
-    while (n_retries_receive-- > 0) 
+    while (n_retries_receive-- > 0)
     {
       // Reset response buffer.
       for (i = 0; i < rx_size; i++)
@@ -287,14 +287,14 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
 
       // Poll for response.
       timeout_countdown = execution_timeout_us;
-      do 
+      do
       {
         ret_code = sha204p_receive_response(rx_size, rx_buffer);
         timeout_countdown -= SHA204_RESPONSE_TIMEOUT;
-      } 
+      }
       while ((timeout_countdown > SHA204_RESPONSE_TIMEOUT) && (ret_code == SHA204_RX_NO_RESPONSE));
 
-      if (ret_code == SHA204_RX_NO_RESPONSE) 
+      if (ret_code == SHA204_RX_NO_RESPONSE)
       {
         // We did not receive a response. Re-synchronize and send command again.
         if (sha204c_resync(rx_size, rx_buffer) == SHA204_RX_NO_RESPONSE)
@@ -324,7 +324,7 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
       // We received a response of valid size.
       // Check the consistency of the response.
       ret_code = sha204c_check_crc(rx_buffer);
-      if (ret_code == SHA204_SUCCESS) 
+      if (ret_code == SHA204_SUCCESS)
       {
         // Received valid response.
         if (rx_buffer[SHA204_BUFFER_POS_COUNT] > SHA204_RSP_SIZE_MIN)
@@ -340,7 +340,7 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
           return SHA204_PARSE_ERROR;
         if (status_byte == SHA204_STATUS_BYTE_EXEC)
           return SHA204_CMD_FAIL;
-        if (status_byte == SHA204_STATUS_BYTE_COMM) 
+        if (status_byte == SHA204_STATUS_BYTE_COMM)
         {
           // In case of the device status byte indicating a communication
           // error this function exits the retry loop for receiving a response
@@ -355,7 +355,7 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
         return ret_code;
       }
 
-      else 
+      else
       {
         // Received response with incorrect CRC.
         ret_code_resync = sha204c_resync(rx_size, rx_buffer);
@@ -410,7 +410,7 @@ static void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc)
 
   for (counter = 0; counter < length; counter++)
   {
-    for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1) 
+    for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1)
     {
       data_bit = (data[counter] & shift_register) ? 1 : 0;
       crc_bit = crc_register >> 15;
@@ -441,11 +441,11 @@ static uint8_t sha204c_check_crc(uint8_t *response)
 /* Public functions */
 
 void atsha204_init(uint8_t pin)
-{ 
+{
 #if defined(ARDUINO_ARCH_AVR)
   device_pin = digitalPinToBitMask(pin);  // Find the bit value of the pin
   uint8_t port = digitalPinToPort(pin); // temoporarily used to get the next three registers
-  
+
   // Point to data direction register port of pin
   device_port_DDR = portModeRegister(port);
   // Point to output register of pin
@@ -483,7 +483,7 @@ uint8_t atsha204_wakeup(uint8_t *response)
     ret_code = SHA204_INVALID_SIZE;
   else if (response[SHA204_BUFFER_POS_STATUS] != SHA204_STATUS_BYTE_WAKEUP)
     ret_code = SHA204_COMM_FAIL;
-  else 
+  else
   {
     if ((response[SHA204_RSP_SIZE_MIN - SHA204_CRC_SIZE] != 0x33)
       || (response[SHA204_RSP_SIZE_MIN + 1 - SHA204_CRC_SIZE] != 0x43))
@@ -502,9 +502,9 @@ uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 	uint8_t *p_buffer;
 	uint8_t len;
   (void)tx_size;
-  
+
 	// Supply delays and response size.
-	switch (op_code) 
+	switch (op_code)
 	{
 		case SHA204_GENDIG:
 			poll_delay = GENDIG_DELAY;
@@ -571,7 +571,7 @@ uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 				&rx_buffer[0],	poll_delay, poll_timeout);
 }
 
-void atsha204_getSerialNumber(uint8_t * response)
+uint8_t atsha204_getSerialNumber(uint8_t * response)
 {
   uint8_t readCommand[READ_COUNT];
   uint8_t readResponse[READ_4_RSP_SIZE];
@@ -596,5 +596,5 @@ void atsha204_getSerialNumber(uint8_t * response)
     }
   }
 
-  return;
+  return returnCode;
 }
