@@ -23,7 +23,6 @@
 
 #ifdef __cplusplus
 #include <Arduino.h>
-//#include <SPI.h>
 #endif
 
 #define MY_SERIALDEVICE Serial
@@ -36,7 +35,7 @@
 #define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
 #define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE); MY_SERIALDEVICE.setDebugOutput(true)
 #define hwWatchdogReset() wdt_reset()
-#define hwReboot() wdt_enable(WDTO_15MS); while (1)
+#define hwReboot() ESP.restart();
 #define hwMillis() millis()
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
