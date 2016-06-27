@@ -123,10 +123,9 @@ void stIDUpdate() {
 		debug(PSTR("node ID=%d\n"), _nc.nodeId);
 		setIndication(INDICATION_GOT_NODEID);
 		// check uplink
-		transportSwitchSM(stUplink);
-		
+		transportSwitchSM(stUplink);	
 	}
-	if (transportTimeInState() > STATE_TIMEOUT) {
+	else if (transportTimeInState() > STATE_TIMEOUT) {
 		if (_transportSM.retries < STATE_RETRIES) {
 			// re-enter if retries left
 			transportSwitchSM(stID);
