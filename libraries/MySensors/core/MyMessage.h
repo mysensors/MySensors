@@ -230,41 +230,41 @@ typedef enum {
 
 // Getters/setters for special bit fields in header
 #define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 2) //!< Set version field
-#define mGetVersion(_msg) BF_GET(_msg.version_length, 0, 2) //!< Get version field
+#define mGetVersion(_msg) ((uint8_t)BF_GET(_msg.version_length, 0, 2)) //!< Get version field
 
 #define mSetSigned(_msg,_signed) BF_SET(_msg.version_length, _signed, 2, 1) //!< Set signed field
-#define mGetSigned(_msg) BF_GET(_msg.version_length, 2, 1) //!< Get versignedsion field
+#define mGetSigned(_msg) ((bool)BF_GET(_msg.version_length, 2, 1)) //!< Get versignedsion field
 
 #define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5) //!< Set length field
-#define mGetLength(_msg) BF_GET(_msg.version_length, 3, 5) //!< Get length field
+#define mGetLength(_msg) ((uint8_t)BF_GET(_msg.version_length, 3, 5)) //!< Get length field
 
 #define mSetCommand(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 0, 3) //!< Set command field
-#define mGetCommand(_msg) BF_GET(_msg.command_ack_payload, 0, 3) //!< Get command field
+#define mGetCommand(_msg) ((uint8_t)BF_GET(_msg.command_ack_payload, 0, 3)) //!< Get command field
 
 #define mSetRequestAck(_msg,_rack) BF_SET(_msg.command_ack_payload, _rack, 3, 1) //!< Set ack-request field
-#define mGetRequestAck(_msg) BF_GET(_msg.command_ack_payload, 3, 1) //!< Get  ack-request field
+#define mGetRequestAck(_msg) ((bool)BF_GET(_msg.command_ack_payload, 3, 1)) //!< Get  ack-request field
 
 #define mSetAck(_msg,_ackMsg) BF_SET(_msg.command_ack_payload, _ackMsg, 4, 1) //!< Set ack field
-#define mGetAck(_msg) BF_GET(_msg.command_ack_payload, 4, 1) //!< Get ack field
+#define mGetAck(_msg) ((bool)BF_GET(_msg.command_ack_payload, 4, 1)) //!< Get ack field
 
 #define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 5, 3) //!< Set payload type field
-#define mGetPayloadType(_msg) BF_GET(_msg.command_ack_payload, 5, 3) //!< Get payload type field
+#define mGetPayloadType(_msg) ((uint8_t)BF_GET(_msg.command_ack_payload, 5, 3)) //!< Get payload type field
 
 
 // internal access for special fields
-#define miGetCommand() BF_GET(command_ack_payload, 0, 3) //!< Internal getter for command field
+#define miGetCommand() ((uint8_t)BF_GET(command_ack_payload, 0, 3)) //!< Internal getter for command field
 
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5) //!< Internal setter for length field
-#define miGetLength() BF_GET(version_length, 3, 5) //!< Internal getter for length field
+#define miGetLength() ((uint8_t)BF_GET(version_length, 3, 5)) //!< Internal getter for length field
 
 #define miSetRequestAck(_rack) BF_SET(command_ack_payload, _rack, 3, 1) //!< Internal setter for ack-request field
-#define miGetRequestAck() BF_GET(command_ack_payload, 3, 1) //!< Internal getter for ack-request field
+#define miGetRequestAck() ((bool)BF_GET(command_ack_payload, 3, 1)) //!< Internal getter for ack-request field
 
 #define miSetAck(_ack) BF_SET(command_ack_payload, _ack, 4, 1) //!< Internal setter for ack field
-#define miGetAck() BF_GET(command_ack_payload, 4, 1) //!< Internal getter for ack field
+#define miGetAck() ((bool)BF_GET(command_ack_payload, 4, 1)) //!< Internal getter for ack field
 
 #define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 5, 3) //!< Internal setter for payload type field
-#define miGetPayloadType() BF_GET(command_ack_payload, 5, 3) //!< Internal getter for payload type field
+#define miGetPayloadType() (uint8_t)BF_GET(command_ack_payload, 5, 3) //!< Internal getter for payload type field
 
 
 #if !DOXYGEN
