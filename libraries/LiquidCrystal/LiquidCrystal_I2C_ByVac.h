@@ -30,7 +30,7 @@
 #include <inttypes.h>
 #include <Print.h>
 
-#include <../Wire/Wire.h>
+#include <Wire.h>
 #include "LCD.h"
 
 
