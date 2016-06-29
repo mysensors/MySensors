@@ -24,7 +24,7 @@ NodeConfig _nc; // Essential settings for node to work
 MyMessage _msg;  // Buffer for incoming messages.
 MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among others).
 
-boolean _nodeRegistered = false;
+bool _nodeRegistered = false;
 
 #if defined(MY_DEBUG)
 	char _convBuf[MAX_PAYLOAD*2+1];
@@ -231,7 +231,7 @@ ControllerConfig getConfig() {
 }
 
 
-boolean _sendRoute(MyMessage &message) {
+bool _sendRoute(MyMessage &message) {
 	#if defined(MY_CORE_ONLY)
 		(void)message;
 	#endif

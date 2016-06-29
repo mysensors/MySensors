@@ -247,7 +247,7 @@ void _infiniteLoop();
 
 void _registerNode();
 
-boolean _sendRoute(MyMessage &message);
+bool _sendRoute(MyMessage &message);
 
 extern NodeConfig _nc;
 extern MyMessage _msg;  // Buffer for incoming messages.
