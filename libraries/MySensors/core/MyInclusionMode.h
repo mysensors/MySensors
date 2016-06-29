@@ -26,7 +26,7 @@
 extern bool gatewayTransportSend(MyMessage &message);
 
 void inclusionInit();
-void inclusionModeSet(boolean newMode);
+void inclusionModeSet(bool newMode);
 void inclusionProcess();
 
 

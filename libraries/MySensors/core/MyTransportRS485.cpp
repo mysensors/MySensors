@@ -126,7 +126,7 @@ void _serialReset(){
 // our station ID, then look for a registered command that matches the
 // command code.  If all the above is true, execute the command's
 // function.
-boolean _serialProcess()
+bool _serialProcess()
 {
     char inch;
     unsigned char i;

@@ -76,7 +76,7 @@ typedef struct
 // On W5100 boards with SPI_EN exposed we can use the real SPI bus together with radio
 // (if we enable it during usage)
 #ifdef MY_W5100_SPI_EN
-	void _w5100_spi_en(boolean enable)
+	void _w5100_spi_en(bool enable)
 	{
 	  if (enable)
 	  {

@@ -33,7 +33,7 @@ inline void inclusionInit() {
 }
 
 
-void inclusionModeSet(boolean newMode) {
+void inclusionModeSet(bool newMode) {
   if (newMode != _inclusionMode) {
     _inclusionMode = newMode;
     // Send back mode change to controller
