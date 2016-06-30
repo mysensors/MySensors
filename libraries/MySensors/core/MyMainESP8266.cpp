@@ -93,6 +93,7 @@ static void loop_wrapper() {
 		setup_done = true;
 	}
 	_process();			// Process incoming data
+	loop();
 	run_scheduled_functions();
 	esp_schedule();
 }
