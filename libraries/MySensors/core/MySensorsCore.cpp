@@ -81,20 +81,6 @@ void _begin() {
 
 	signerInit();
 
-	#if defined(MY_GATEWAY_FEATURE)
-		#if defined(MY_INCLUSION_BUTTON_FEATURE)
-	    	inclusionInit();
-		#endif
-
-	    // initialize the transport driver
-		if (!gatewayTransportInit()) {
-			setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
-			debug(PSTR("Transport driver init fail\n"));
-			// Nothing more we can do
-			_infiniteLoop();
-		}
-
-	#endif	
 	// Read latest received controller configuration from EEPROM
 	hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 	// isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true
@@ -144,7 +130,21 @@ void _begin() {
 			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
 		}
 	#endif
+	
+	#if defined(MY_GATEWAY_FEATURE)
+		#if defined(MY_INCLUSION_BUTTON_FEATURE)
+	    	inclusionInit();
+		#endif
 
+	    // initialize the transport driver
+		if (!gatewayTransportInit()) {
+			setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
+			debug(PSTR("Transport driver init fail\n"));
+			// Nothing more we can do
+			_infiniteLoop();
+		}
+	#endif	
+	
 	// Call sketch setup
 	if (setup)
 		setup();
