@@ -200,7 +200,7 @@
 		#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
 	#endif
 
-	#include "drivers/pubsubclient/src/PubSubClient.cpp"
+	#include "drivers/PubSubClient/PubSubClient.cpp"
 	#include "core/MyGatewayTransport.cpp"
 	#include "core/MyGatewayTransportMQTTClient.cpp"
 #elif defined(MY_GATEWAY_FEATURE)

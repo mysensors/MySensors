@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -47,8 +47,8 @@ typedef struct
 	#define EthernetUDP WiFiUDP
 
 	#if defined(MY_IP_ADDRESS)
-		IPAddress gateway(MY_IP_GATEWAY_ADDRESS);
-		IPAddress subnet(MY_IP_SUBNET_ADDRESS);
+		IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+		IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
 	#endif
 	static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 #endif
@@ -108,7 +108,7 @@ bool gatewayTransportInit() {
 			#endif
 			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 			#ifdef MY_IP_ADDRESS
-				WiFi.config(_ethernetGatewayIP, gateway, subnet);
+				WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 			#endif
 			while (WiFi.status() != WL_CONNECTED)
 			{
@@ -123,16 +123,17 @@ bool gatewayTransportInit() {
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP);
-			MY_SERIALDEVICE.print(F("IP: "));
-			MY_SERIALDEVICE.println(Ethernet.localIP());
 		#else
 			// Get IP address from DHCP
-			Ethernet.begin(_ethernetGatewayMAC);
-			MY_SERIALDEVICE.print(F("IP: "));
-			MY_SERIALDEVICE.println(Ethernet.localIP());
-		#endif /* IP_ADDRESS_DHCP */
+			if (!Ethernet.begin(_ethernetGatewayMAC)) {
+				MY_SERIALDEVICE.print("DHCP FAILURE...");
+				_w5100_spi_en(false);
+				return false;
+			}
+		#endif 
+		MY_SERIALDEVICE.print(F("IP: "));
+		MY_SERIALDEVICE.println(Ethernet.localIP());
 		// give the Ethernet interface a second to initialize
-		// TODO: use HW delay
 		delay(1000);
 	#endif
 
@@ -277,9 +278,9 @@ bool gatewayTransportAvailable()
 				return protocolParse(_ethernetMsg, inputString[0].string);
 			#else
 				_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
-				_w5100_spi_en(false);
 				inputString.string[packet_size] = 0;
 				debug(PSTR("UDP packet received: %s\n"), inputString.string);
+				_w5100_spi_en(false);
 				return protocolParse(_ethernetMsg, inputString.string);
 			#endif
 		}
@@ -299,9 +300,7 @@ bool gatewayTransportAvailable()
 						clients[i] = _ethernetServer.available();
 						inputString[i].idx = 0;
 						debug(PSTR("Client %d connected\n"), i);
-						_w5100_spi_en(false);
 						gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
-						_w5100_spi_en(true);
 						if (presentation)
 							presentation();
 					}
@@ -335,6 +334,7 @@ bool gatewayTransportAvailable()
 					debug(PSTR("Eth: connect\n"));
 					_w5100_spi_en(false);
 					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+					_w5100_spi_en(true);
 					if (presentation)
 						presentation();
 				}
