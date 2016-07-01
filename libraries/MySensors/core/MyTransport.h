@@ -63,7 +63,8 @@ typedef struct {
 	bool preferredParentFound : 1;			//!< flag preferred parent found
 	bool uplinkOk : 1;						//!< flag uplink ok
 	bool pingActive : 1;					//!< flag ping active
-	uint8_t reserved : 4;					//!< reserved
+	bool transportActive : 1;				//!< flag transport active
+	uint8_t reserved : 3;					//!< reserved
 	uint8_t retries : 4;					//!< retries / state re-enter
 	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions
 	uint8_t pingResponse;					//!< stores hops received in I_PONG

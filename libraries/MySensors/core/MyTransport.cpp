@@ -36,6 +36,7 @@ void stInitTransition() {
 	// initialize status variables
 	_transportSM.failedUplinkTransmissions = 0;
 	_transportSM.pingActive = false;
+	_transportSM.transportActive = false;
 
 	// Read node settings (ID, parentId, GW distance) from EEPROM
 	hwReadConfigBlock((void*)&_nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
@@ -48,6 +49,7 @@ void stInitTransition() {
 	}
 	else {
 		debug(PSTR("RADIO:OK\n"));
+		_transportSM.transportActive = true;
 		#if defined(MY_GATEWAY_FEATURE)
 			// Set configuration for gateway
 			debug(PSTR("TSM:GW MODE\n"));
@@ -170,6 +172,7 @@ void stOKUpdate() {
 void stFailureTransition() {
 	debug(PSTR("!TSM:FAILURE\n"));
 	_transportSM.uplinkOk = false;
+	_transportSM.transportActive = false;
 	// power down transport, no need until re-init
 	debug(PSTR("TSM:PDT\n"));
 	transportPowerDown();
@@ -221,7 +224,7 @@ void transportProcess() {
 	// update state machine
 	transportUpdateSM();	
 	// process transport FIFO
-	transportProcessFIFO(); 
+	if (_transportSM.transportActive) transportProcessFIFO();
 }
 
 
