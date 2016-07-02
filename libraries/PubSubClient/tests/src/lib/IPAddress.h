@@ -48,24 +48,24 @@ public:
 
     // Overloaded cast operator to allow IPAddress objects to be used where a pointer
     // to a four-byte uint8_t array is expected
-    /** @brief operator overload */
-    operator uint32_t() { return *((uint32_t*)_address); };
-    /** @brief operator overload */
-    bool operator==(const IPAddress& addr) { return (*((uint32_t*)_address)) == (*((uint32_t*)addr._address)); };
-    /** @brief operator overload */
-    bool operator==(const uint8_t* addr);
+	/** @brief operator overload */
+	operator uint32_t() { return *((uint32_t*)_address); };
+	/** @brief operator overload */
+	bool operator==(const IPAddress& addr) { return (*((uint32_t*)_address)) == (*((uint32_t*)addr._address)); };
+	/** @brief operator overload */
+	bool operator==(const uint8_t* addr);
 
     // Overloaded index operator to allow getting and setting individual octets of the address
-    /** @brief operator overload */
-    uint8_t operator[](int index) const { return _address[index]; };
-    /** @brief operator overload */
-    uint8_t& operator[](int index) { return _address[index]; };
+	/** @brief operator overload */
+	uint8_t operator[](int index) const { return _address[index]; };
+	/** @brief operator overload */
+	uint8_t& operator[](int index) { return _address[index]; };
 
     // Overloaded copy operators to allow initialisation of IPAddress objects from other types
-    /** @brief operator overload */
-    IPAddress& operator=(const uint8_t *address);
-    /** @brief operator overload */
-    IPAddress& operator=(uint32_t address);
+	/** @brief operator overload */
+	IPAddress& operator=(const uint8_t *address);
+	/** @brief operator overload */
+	IPAddress& operator=(uint32_t address);
 
 
     friend class EthernetClass;
