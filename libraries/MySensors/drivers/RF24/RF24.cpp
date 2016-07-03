@@ -63,22 +63,22 @@ LOCAL uint8_t RF24_spiByteTransfer(uint8_t cmd) {
 
 LOCAL uint8_t RF24_RAW_readByteRegister(uint8_t cmd) {
 	uint8_t value = RF24_spiMultiByteTransfer( cmd, NULL, 1, true);
-	RF24_DEBUG(PSTR("read register, reg=%d, value=%d\n"), cmd & (R_REGISTER ^ 0xFF), value);
+	RF24_DEBUG(PSTR("RF24:read register, reg=%d, value=%d\n"), cmd & (R_REGISTER ^ 0xFF), value);
 	return value;
 }
 
 LOCAL uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value) {
-	RF24_DEBUG(PSTR("write register, reg=%d, value=%d\n"), cmd & (W_REGISTER ^ 0xFF), value);
+	RF24_DEBUG(PSTR("RF24:write register, reg=%d, value=%d\n"), cmd & (W_REGISTER ^ 0xFF), value);
 	return RF24_spiMultiByteTransfer( cmd , &value, 1, false);
 }
 
 LOCAL void RF24_flushRX(void) {
-	RF24_DEBUG(PSTR("RF24_flushRX\n"));
+	RF24_DEBUG(PSTR("RF24:flushRX\n"));
 	RF24_spiByteTransfer( FLUSH_RX );
 }
 
 LOCAL void RF24_flushTX(void) {
-	RF24_DEBUG(PSTR("RF24_flushTX\n"));
+	RF24_DEBUG(PSTR("RF24:flushTX\n"));
 	RF24_spiByteTransfer( FLUSH_TX );
 }
 
@@ -138,14 +138,14 @@ LOCAL void RF24_enableFeatures(void) {
 }
 
 LOCAL void RF24_openWritingPipe(uint8_t recipient) {	
-	RF24_DEBUG(PSTR("open writing pipe, recipient=%d\n"), recipient);	
+	RF24_DEBUG(PSTR("RF24:open writing pipe, recipient=%d\n"), recipient);	
 	// only write LSB of RX0 and TX pipe
 	RF24_setPipeLSB(RX_ADDR_P0, recipient);
 	RF24_setPipeLSB(TX_ADDR, recipient);
 }
 
 LOCAL void RF24_startListening(void) {
-	RF24_DEBUG(PSTR("start listening\n"));
+	RF24_DEBUG(PSTR("RF24:start listening\n"));
 	// toggle PRX		
 	RF24_setRFConfiguration(MY_RF24_CONFIGURATION | _BV(PWR_UP) | _BV(PRIM_RX) );
 	// all RX pipe addresses must be unique, therefore skip if node ID is 0xFF
@@ -155,7 +155,7 @@ LOCAL void RF24_startListening(void) {
 }
 
 LOCAL void RF24_stopListening(void) {
-	RF24_DEBUG(PSTR("stop listening\n"));
+	RF24_DEBUG(PSTR("RF24:stop listening\n"));
 	RF24_ce(LOW);
 	// timing
 	delayMicroseconds(130);
@@ -167,7 +167,7 @@ LOCAL void RF24_stopListening(void) {
 LOCAL void RF24_powerDown(void) {
 	RF24_ce(LOW);
 	RF24_setRFConfiguration(MY_RF24_CONFIGURATION);
-	RF24_DEBUG(PSTR("power down\n"));
+	RF24_DEBUG(PSTR("RF24:power down\n"));
 }
 
 LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
@@ -175,40 +175,41 @@ LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 
 	RF24_stopListening();
 	RF24_openWritingPipe( recipient );		
-	RF24_DEBUG(PSTR("send message to %d, len=%d\n"),recipient,len);
+	RF24_DEBUG(PSTR("RF24:send message to %d, len=%d\n"),recipient,len);
 	// flush TX FIFO
 	RF24_flushTX();
 	// this command is affected in clones (e.g. Si24R1):  flipped NoACK bit when using W_TX_PAYLOAD_NO_ACK / W_TX_PAYLOAD
 	// RF24_spiMultiByteTransfer( recipient==BROADCAST_ADDRESS ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD, (uint8_t*)buf, len, false );
 	// we are safe by disabling AutoACK on the broadcasting pipe
 	RF24_spiMultiByteTransfer( W_TX_PAYLOAD, (uint8_t*)buf, len, false );
-	// go
+	// go, TX starts after ~10us
 	RF24_ce(HIGH);
-	// TX starts after ~10us
+	// timeout counter to detect HW issues
+	uint16_t timeout = 0xFFFF;
 	do {
 		status = RF24_getStatus();
-	} while  (!(status & ( _BV(MAX_RT) | _BV(TX_DS) )));
-		
+	} while  (!(status & ( _BV(MAX_RT) | _BV(TX_DS) )) && timeout--);
+	// timeout value after successful TX on 16Mhz AVR ~ 65500, i.e. msg is transmitted after ~36 loop cycles
 	RF24_ce(LOW);
 	// reset interrupts
 	RF24_setStatus(_BV(TX_DS) | _BV(MAX_RT) );
 	// Max retries exceeded
 	if( status & _BV(MAX_RT)){
 		// flush packet
-		RF24_DEBUG(PSTR("MAX_RT\n"));
+		RF24_DEBUG(PSTR("RF24:MAX_RT\n"));
 		RF24_flushTX();
 	}
 		
 	RF24_startListening();
-	
-	return (status & _BV(TX_DS));
+	// true if message sent and not timeout
+	return (status & _BV(TX_DS) && timeout);
 }
 
 LOCAL uint8_t RF24_getDynamicPayloadSize(void) {
 	uint8_t result = RF24_spiMultiByteTransfer(R_RX_PL_WID, NULL, 1, true);
 	// check if payload size invalid
 	if(result > 32) { 
-		RF24_DEBUG(PSTR("invalid payload length = %d\n"),result);
+		RF24_DEBUG(PSTR("RF24:invalid payload length = %d\n"),result);
 		RF24_flushRX(); 
 		result = 0; 
 	}
@@ -217,18 +218,14 @@ LOCAL uint8_t RF24_getDynamicPayloadSize(void) {
 
 
 LOCAL bool RF24_isDataAvailable() {
-	uint8_t pipe_num = ( RF24_getStatus() >> RX_P_NO ) & 0b0111;
-	#if defined(MY_DEBUG_VERBOSE_RF24) && defined(MY_DEBUG)
-		if(pipe_num <= 5)
-			RF24_DEBUG(PSTR("Data available on pipe %d\n"),pipe_num);	
-	#endif	
-	return (pipe_num <= 5);
+	uint8_t status = RF24_getStatus();
+	return (((status >> RX_P_NO) & 0b0111) <= 5);
 }
 
 
 LOCAL uint8_t RF24_readMessage( void* buf) {
 	uint8_t len = RF24_getDynamicPayloadSize();
-	RF24_DEBUG(PSTR("read message, len=%d\n"), len);
+	RF24_DEBUG(PSTR("RF24:read message, len=%d\n"), len);
 	RF24_spiMultiByteTransfer( R_RX_PAYLOAD , (uint8_t*)buf, len, true ); 
 	// clear RX interrupt
 	RF24_setStatus(_BV(RX_DR) );
@@ -249,6 +246,12 @@ LOCAL uint8_t RF24_getNodeID(void) {
 	return MY_RF24_NODE_ADDRESS;
 }
 
+LOCAL bool RF24_sanityCheck(void) {
+	// detect HW defect ot interrupted SPI line, CE disconnect cannot be detected
+	bool status = RF24_readByteRegister(RF_SETUP) == MY_RF24_RF_SETUP;
+	status &= RF24_readByteRegister(RF_CH) == MY_RF24_CHANNEL;
+	return status;
+}
 
 LOCAL bool RF24_initialize(void) {
 	// Initialize pins
@@ -272,11 +275,10 @@ LOCAL bool RF24_initialize(void) {
 	RF24_setRFSetup(MY_RF24_RF_SETUP);
 	// sanity check
 	#if defined(MY_RF24_SANITY_CHECK)
-		uint8_t _rf_setup = RF24_readByteRegister(RF_SETUP);
-		if(_rf_setup!=MY_RF24_RF_SETUP) {
-			RF24_DEBUG(PSTR("Sanity check failed: RF_SETUP register=%d instead of %d, check wiring, replace module or non-P version\n"), _rf_setup, MY_RF24_RF_SETUP);
-			return false;
-		}
+	if (!RF24_sanityCheck()) {
+		RF24_DEBUG(PSTR("RF24:Sanity check failed: configuration mismatch! Check wiring, replace module or non-P version\n"));
+		return false;
+	}
 	#endif
 	// toggle features (necessary on some clones)
 	RF24_enableFeatures();

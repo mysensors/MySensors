@@ -337,6 +337,11 @@ bool transportAvailable() {
 	return _packet_received;
 }
 
+bool transportSanityCheck() {
+	// not implemented yet
+	return true;
+}
+
 uint8_t transportReceive(void* data) {
 	if (_packet_received) {
 		memcpy(data,_data,_packet_len);

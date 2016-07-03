@@ -82,6 +82,18 @@
 //#define MY_RS485
 
 /**
+* @def MY_TRANSPORT_SANITY_CHECK
+* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. This feature is enabled for all repeater nodes (incl. GW)
+*/
+//#define MY_TRANSPORT_SANITY_CHECK
+/**
+* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL
+* @brief Interval (in ms) of transport sanity checks
+*/
+#ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL ((uint32_t)60000)
+#endif
+/**
  * @def MY_REGISTRATION_FEATURE
  * @brief If enabled, node has to register to gateway/controller before allowed to send sensor data.
  */
@@ -687,5 +699,6 @@
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 #define MY_IS_RFM69HW
 #define MY_PARENT_NODE_IS_STATIC
+#define MY_REGISTRATION_CONTROLLER
 #define MY_DEBUG_VERBOSE_RF24
 #endif
