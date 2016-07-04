@@ -44,7 +44,7 @@ void stInitTransition() {
 	_transportSM.failedUplinkTransmissions = 0;
 	_transportSM.pingActive = false;
 	_transportSM.transportActive = false;
-	#if defined(MY_TRANSPORT_SANITY_CHECK) || defined(MY_GATEWAY_FEATURE) || defined(MY_REPEATER_FEATURE)
+	#if defined(MY_TRANSPORT_SANITY_CHECK) || defined(MY_REPEATER_FEATURE)
 		_transport_lastSanityCheck = hwMillis();
 	#endif
 	_transport_lastUplinkCheck = 0;
@@ -558,7 +558,8 @@ void transportProcessMessage() {
 									_transport_lastUplinkCheck = hwMillis();
 								#endif
 								debug(PSTR("TSP:MSG:GWL OK\n")); // GW uplink ok
-								//delay(hwMillis() & 0x3ff);
+								// delay minimizes collisions
+								delay(hwMillis() & 0x3ff);
 								transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
 							}
 						}
@@ -669,9 +670,9 @@ bool transportSendWrite(uint8_t to, MyMessage &message) {
 	setIndication(INDICATION_TX);
 	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 	
-	debug(PSTR("%sTSP:MSG:SEND %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,st=%s:%s\n"),
+	debug(PSTR("%sTSP:MSG:SEND %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,ft=%d,st=%s:%s\n"),
 			(ok || to == BROADCAST_ADDRESS ? "" : "!"),message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
-			mGetPayloadType(message), mGetLength(message), mGetSigned(message), to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(_convBuf));
+			mGetPayloadType(message), mGetLength(message), mGetSigned(message), _transportSM.failedUplinkTransmissions, to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(_convBuf));
 	
 	return (ok || to==BROADCAST_ADDRESS);
 }
