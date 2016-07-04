@@ -27,7 +27,11 @@
 
 #include "MySensorsCore.h"
 
-#define TRANSMISSION_FAILURES  5			//!< search for a new parent node after this many transmission failures
+#if defined(MY_REPEATER_FEATURE)
+	#define TRANSMISSION_FAILURES  10		//!< search for a new parent node after this many transmission failures, higher threshold for repeating nodes
+#else
+	#define TRANSMISSION_FAILURES  5		//!< search for a new parent node after this many transmission failures, lower threshold for non-repeating nodes
+#endif
 #define TIMEOUT_FAILURE_STATE 10000			//!< duration failure state
 #define STATE_TIMEOUT 2000					//!< general state timeout
 #define STATE_RETRIES 3						//!< retries before switching to FAILURE
@@ -37,7 +41,7 @@
 #define MAX_HOPS ((uint8_t)254)				//!< maximal mumber of hops for ping/pong
 #define INVALID_HOPS ((uint8_t)255)			//!< invalid hops
 #define MAX_SUBSEQ_MSGS 5					//!< Maximum number of subsequentially processed messages in FIFO (to prevent transport deadlock if HW issue)
-#define CHKUPL_INTERVAL ((uint32_t)5000)	//!< Minimum time interval to re-check uplink
+#define CHKUPL_INTERVAL ((uint32_t)10000)	//!< Minimum time interval to re-check uplink
 
 #define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)				//!<  returns true if static parent id is undefined
 #define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
