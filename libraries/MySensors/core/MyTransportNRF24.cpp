@@ -75,6 +75,10 @@ bool transportAvailable() {
 	return avail;
 }
 
+bool transportSanityCheck() {
+	return RF24_sanityCheck();
+}
+
 uint8_t transportReceive(void* data) {
 	uint8_t len = RF24_readMessage(data);
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)

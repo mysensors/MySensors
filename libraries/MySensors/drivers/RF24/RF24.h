@@ -232,6 +232,7 @@ LOCAL bool RF24_isDataAvailable();
 LOCAL uint8_t RF24_readMessage(void* buf); 
 LOCAL void RF24_setNodeAddress(uint8_t address);
 LOCAL uint8_t RF24_getNodeID(void);
+LOCAL bool RF24_sanityCheck(void);
 LOCAL bool RF24_initialize(void);
 LOCAL void RF24_setChannel(uint8_t channel);
 LOCAL void RF24_setRetries(uint8_t retransmitDelay, uint8_t retransmitCount);

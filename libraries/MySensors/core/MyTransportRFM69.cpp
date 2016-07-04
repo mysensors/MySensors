@@ -57,6 +57,11 @@ bool transportAvailable() {
 	return _radio.receiveDone();
 }
 
+bool transportSanityCheck() {
+	// not implemented yet
+	return true;
+}
+
 uint8_t transportReceive(void* data) {
 	memcpy(data,(const void *)_radio.DATA, _radio.DATALEN);
 	// Send ack back if this message wasn't a broadcast

@@ -46,6 +46,7 @@ typedef enum {
 
     INDICATION_ERR_START = 100,
     INDICATION_ERR_TX,                        //!< Failed to transmit message.
+	INDICATION_ERR_TRANSPORT_FAILURE,		  //!< Transport failure.
     INDICATION_ERR_INIT_TRANSPORT,            //!< MySensors transport hardware (radio) init failure.
     INDICATION_ERR_FIND_PARENT,               //!< Failed to find parent node.
     INDICATION_ERR_GET_NODEID,                //!< Failed to receive node ID.
