@@ -73,7 +73,7 @@ void _begin() {
 	if (before) 
 		before();
 
-	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILITIES ", " LIBRARY_VERSION ")\n"));
+	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILITIES ", " MYSENSORS_LIBRARY_VERSION ")\n"));
 
 	#if defined(MY_LEDS_BLINKING_FEATURE)
 		ledsInit();
@@ -278,7 +278,7 @@ void sendHeartbeat(void) {
 }
 
 void present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
-	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?LIBRARY_VERSION:description));
+	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?MYSENSORS_LIBRARY_VERSION:description));
 }
 
 void sendSketchInfo(const char *name, const char *version, bool enableAck) {
