@@ -272,9 +272,12 @@ void sendBatteryLevel(uint8_t value, bool enableAck) {
 }
 
 void sendHeartbeat(void) {
-	#if !defined(MY_CORE_ONLY)
-		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(transportGetHeartbeat()));
+	#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
+		uint32_t heartbeat = transportGetHeartbeat();
+	#else
+		uint32_t heartbeat = hwMillis();
 	#endif
+	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(heartbeat));
 }
 
 void present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
