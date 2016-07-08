@@ -661,6 +661,7 @@ bool transportSendWrite(uint8_t to, MyMessage &message) {
 	if (!signerSignMsg(message)) {
 		debug(PSTR("!TSP:MSG:SIGN fail\n"));
 		setIndication(INDICATION_ERR_SIGN);
+		return false;
 	}
 	
 	// msg length changes if signed
