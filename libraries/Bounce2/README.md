@@ -1,1 +1,0 @@
-Please visit https://github.com/thomasfredericks/Bounce-Arduino-Wiring for latest code and documentation.
