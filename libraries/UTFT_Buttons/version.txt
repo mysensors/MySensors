@@ -1,3 +1,0 @@
-Version:
-	1.0	24 May 2013  -  initial release
-	1.01	08 Sep 2014  -  fixed compatibility-issues with Arduino 1.5.7
