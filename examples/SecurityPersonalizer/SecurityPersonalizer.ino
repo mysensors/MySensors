@@ -80,8 +80,8 @@
  * Details on personalization procedure is given in @ref personalization.
  */
 
-#include "sha204/sha204_library.h"
-#include "sha204/sha204_lib_return_codes.h"
+#include "sha204_library.h"
+#include "sha204_lib_return_codes.h"
 #define MY_CORE_ONLY
 #include <MySensors.h>
 
