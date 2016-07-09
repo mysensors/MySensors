@@ -1,9 +1,0 @@
-With git:
-1) git clone https://github.com/Mickaelh51/Arduino-Oregon-Library.git Oregon
-2) Put the "Oregon" folder in your Arduino "libraries" folder. 
-
-Direct download:
-1) Download https://github.com/Mickaelh51/Arduino-Oregon-Library/archive/master.zip
-2) Extract master.zip
-3) rename folder: mv Arduino-Oregon-Library-master Oregon
-4) Put the "Oregon" folder in your Arduino "libraries" folder.
