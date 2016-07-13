@@ -145,16 +145,17 @@ void _begin() {
 		}
 	#endif	
 	
-	// Call sketch setup
-	if (setup)
-		setup();
-
 	#if defined(MY_RADIO_FEATURE)
 		presentNode();
 	#endif
 	
 	// register node
 	_registerNode();
+
+	// Call sketch setup
+	if (setup) {
+		setup();
+	}
 
 	debug(PSTR("Init complete, id=%d, parent=%d, distance=%d, registration=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance, _nodeRegistered);
 }
