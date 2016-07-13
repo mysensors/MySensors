@@ -10,6 +10,10 @@
   "version": "2.0.0",
   "frameworks": "arduino",
   "platforms": "*",
+  "exclude": [
+    "tests",
+    "Documentation"
+  ],
   "build": {
     "srcFilter": [
       "+<*.c>",
