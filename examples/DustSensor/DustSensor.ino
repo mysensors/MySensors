@@ -94,7 +94,7 @@ void loop() {
   Serial.println(dustDensity); // unit: ug/m3
  
   if (ceil(dustDensity) != lastDUST) {
-      send(dustMsg.set((int)ceil(dustDensity)));
+      send(dustMsg.set((int16_t)ceil(dustDensity)));
       lastDUST = ceil(dustDensity);
   }
  

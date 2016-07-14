@@ -55,7 +55,7 @@ void presentation()  {
 
 void loop()      
 {     
-  int lightLevel = (1023-analogRead(LIGHT_SENSOR_ANALOG_PIN))/10.23; 
+  int16_t lightLevel = (1023-analogRead(LIGHT_SENSOR_ANALOG_PIN))/10.23; 
   Serial.println(lightLevel);
   if (lightLevel != lastLightLevel) {
       send(msg.set(lightLevel));
