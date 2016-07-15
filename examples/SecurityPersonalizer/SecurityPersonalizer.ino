@@ -879,7 +879,7 @@ void setup()
   (void)key;
 
   Serial.begin(115200);
-
+  hwInit();
   Serial.println(F("Personalization sketch for MySensors usage."));
   Serial.println(F("-------------------------------------------"));
 
