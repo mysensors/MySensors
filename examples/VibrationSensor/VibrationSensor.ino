@@ -33,7 +33,7 @@
 **/
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG 
+#define MY_DEBUG
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -57,7 +57,7 @@ unsigned char state = 0;
 
 MyMessage vibrationMsg(CHILD_ID_VIBRATION, V_LEVEL);
 
-void setup()  
+void setup()
 {
   pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(VIBRATION_SENSOR_DIGITAL_PIN), blink, FALLING); // Trigger the blink function when the falling edge is detected
@@ -72,19 +72,19 @@ void presentation()  {
   present(CHILD_ID_VIBRATION, S_VIBRATION);
 }
 
-void loop()      
-{    
-  
+void loop()
+{
+
   if(state>=40){ // basically below 40 so ignire basic level
-        send(vibrationMsg.set(int(state)));
-        state = 0;  
+        send(vibrationMsg.set(int16_t(state)));
+        state = 0;
         digitalWrite(SensorLED,HIGH);
    }    else {
-        state = 0;  
+        state = 0;
         digitalWrite(SensorLED,LOW);
-  } 
+  }
 
-  
+
   // Power down the radio.  Note that the radio will get powered back up
   // on the next write() call.
   delay(1000); //delay to allow serial to fully print before sleep

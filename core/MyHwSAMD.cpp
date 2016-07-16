@@ -68,7 +68,7 @@ void hwReadConfigBlock(void* buf, void* adr, size_t length)
   int offs = reinterpret_cast<int>(adr);
   while (length-- > 0)
   {
-    *dst++ = i2c_eeprom_read_byte(offs++); 
+    *dst++ = i2c_eeprom_read_byte(offs++);
   }
 }
 
@@ -100,7 +100,7 @@ void hwWriteConfig(int adr, uint8_t value)
 
 void hwInit() {
   MY_SERIALDEVICE.begin(MY_BAUD_RATE);
-  #ifndef MY_GATEWAY_W5100
+  #if defined(MY_GATEWAY_SERIAL)
   while (!MY_SERIALDEVICE) {}
   #endif
   Wire.begin();
@@ -142,12 +142,12 @@ uint16_t hwCPUVoltage() {
 	// TODO: Not supported!
 	return 0;
 }
- 
+
 uint16_t hwCPUFrequency() {
 	// TODO: Not supported!
 	return 0;
 }
- 
+
 uint16_t hwFreeMem() {
 	// TODO: Not supported!
 	return 0;
