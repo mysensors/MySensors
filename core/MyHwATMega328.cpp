@@ -161,7 +161,7 @@ uint16_t hwCPUVoltage() {
 }
 
 uint16_t hwCPUFrequency() {
-	noInterrupts();
+	cli();
 	// setup timer1
 	TIFR1 = 0xFF;   
 	TCNT1 = 0; 
@@ -183,7 +183,7 @@ uint16_t hwCPUFrequency() {
 	wdt_reset();
 	WDTCSR |= (1 << WDCE) | (1 << WDE);
 	WDTCSR = WDTsave;
-	interrupts();	
+	sei();	
 	// return frequency in 1/10MHz (accuracy +- 10%)
 	return TCNT1 * 2048UL / 100000UL;
 }
