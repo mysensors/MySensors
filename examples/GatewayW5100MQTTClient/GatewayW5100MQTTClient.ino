@@ -68,7 +68,7 @@
 
 #define MY_GATEWAY_MQTT_CLIENT
 
-// Set this nodes subscripe and publish topic prefix
+// Set this node's subscribe and publish topic prefix
 #define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
 #define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
 
@@ -147,7 +147,7 @@ void presentation() {
 
 
 void loop() {
-  // Send locally attech sensors data here
+  // Send locally attached sensors data here
 }
 
 
