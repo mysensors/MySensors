@@ -106,10 +106,10 @@ bool gatewayTransportInit() {
 			#if defined(MY_ESP8266_HOSTNAME)
 				WiFi.hostname(MY_ESP8266_HOSTNAME);
 			#endif
-			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 			#ifdef MY_IP_ADDRESS
 				WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 			#endif
+			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 			while (WiFi.status() != WL_CONNECTED)
 			{
 				delay(500);
