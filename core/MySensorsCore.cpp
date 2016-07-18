@@ -94,7 +94,7 @@ void _begin() {
 		// Save static parent id in eeprom (used by bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, MY_PARENT_NODE_ID);
 		transportInitialize();
-		while (!isTransportOK()) {
+		while (!isTransportReady()) {
 			hwWatchdogReset();
 			transportProcess();
 			#if defined(ARDUINO_ARCH_ESP8266)
