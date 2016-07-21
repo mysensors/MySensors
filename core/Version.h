@@ -6,6 +6,6 @@
 #ifndef Version_h
 #define Version_h
 
-#define MYSENSORS_LIBRARY_VERSION "2.0.0-beta"
+#define MYSENSORS_LIBRARY_VERSION "2.0.1-beta"
 
 #endif
