@@ -463,7 +463,7 @@ int8_t sleep(unsigned long ms) {
 }
 
 int8_t smartSleep(unsigned long ms) {
-	// notifiy controller about going to sleep
+	// notify controller about going to sleep
 	sendHeartbeat();
 	// listen for incoming messages
 	wait(MY_SMART_SLEEP_WAIT_DURATION);
@@ -495,7 +495,7 @@ int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 }
 
 int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	// notifiy controller about going to sleep
+	// notify controller about going to sleep
 	sendHeartbeat();
 	// listen for incoming messages
 	wait(MY_SMART_SLEEP_WAIT_DURATION);
@@ -529,7 +529,7 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 }
 
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	// notifiy controller about going to sleep
+	// notify controller about going to sleep
 	sendHeartbeat();
 	// listen for incoming messages
 	wait(MY_SMART_SLEEP_WAIT_DURATION);
