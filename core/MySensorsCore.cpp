@@ -65,15 +65,16 @@ void _infiniteLoop() {
 }
 
 void _begin() {
+		
 	#if !defined(MY_DISABLED_SERIAL)
 	    hwInit();
 	#endif
 
+	debug(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
+
 	// Call before() in sketch (if it exists)
 	if (before) 
 		before();
-
-	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILITIES ", " MYSENSORS_LIBRARY_VERSION ")\n"));
 
 	#if defined(MY_LEDS_BLINKING_FEATURE)
 		ledsInit();
@@ -82,8 +83,8 @@ void _begin() {
 	signerInit();
 
 	// Read latest received controller configuration from EEPROM
+	// Note: _cc.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
 	hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
-	// isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true
 	
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 		// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
@@ -119,7 +120,7 @@ void _begin() {
 				// Disable pullup
 				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
 				setIndication(INDICATION_ERR_LOCKED);
-				debug(PSTR("Node is unlocked.\n"));
+				debug(PSTR("MCO:BGN:NODE UNLOCKED\n"));
 			} else {
 				// Disable pullup
 				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
@@ -139,7 +140,7 @@ void _begin() {
 	    // initialize the transport driver
 		if (!gatewayTransportInit()) {
 			setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
-			debug(PSTR("Transport driver init fail\n"));
+			debug(PSTR("!MCO:BGN:TSP FAIL\n"));
 			// Nothing more we can do
 			_infiniteLoop();
 		}
@@ -157,13 +158,13 @@ void _begin() {
 		setup();
 	}
 
-	debug(PSTR("Init complete, id=%d, parent=%d, distance=%d, registration=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance, _nodeRegistered);
+	debug(PSTR("MCO:BGN:INIT OK,ID=%d,PAR=%d,DIS=%d,REG=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance, _nodeRegistered);
 }
 
 
 void _registerNode() {
 	#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
-		debug(PSTR("Request registration...\n"));	// registration request
+		debug(PSTR("MCO:REG:REQ\n"));	// registration request
 		setIndication(INDICATION_REQ_REGISTRATION);
 		_nodeRegistered = MY_REGISTRATION_DEFAULT;
 		uint8_t counter = MY_REGISTRATION_RETRIES;
@@ -174,7 +175,7 @@ void _registerNode() {
 
 	#else 
 		_nodeRegistered = true;
-		debug(PSTR("No registration required\n"));
+		debug(PSTR("MCO:REG:NOT NEEDED\n"));
 	#endif
 }
 
@@ -260,7 +261,7 @@ bool send(MyMessage &message, bool enableAck) {
 			return _sendRoute(message);
 		}
 		else {
-			debug(PSTR("NODE:!REG\n"));
+			debug(PSTR("!MCO:SND:NODE NOT REG\n"));	// node not registered
 			return false;
 		}
 	#else
@@ -314,7 +315,7 @@ bool _processInternalMessages() {
 			#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
 				_nodeRegistered = _msg.getBool();
 				setIndication(INDICATION_GOT_REGISTRATION);
-				debug(PSTR("Node registration=%d\n"), _nodeRegistered);
+				debug(PSTR("MCO:PIM:NODE REG=%d\n"), _nodeRegistered);	// node registration
 			#endif
 		}
 		else if (type == I_CONFIG) {
@@ -354,7 +355,7 @@ bool _processInternalMessages() {
 					for (uint8_t cnt = 0; cnt != 255; cnt++) {
 						uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS + cnt);
 						if (route != BROADCAST_ADDRESS) {
-							debug(PSTR("ID: %d via %d\n"), cnt, route);
+							debug(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
 							uint8_t OutBuf[2] = { cnt,route };
 							_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(OutBuf, 2));
 							wait(200);
@@ -546,7 +547,7 @@ void nodeLock(const char* str) {
 	hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, 0);
 	while (1) {
 		setIndication(INDICATION_ERR_LOCKED);
-		debug(PSTR("Node is locked. Ground pin %d and reset to unlock.\n"), MY_NODE_UNLOCK_PIN);
+		debug(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %d AND RESET\n"), MY_NODE_UNLOCK_PIN);
 		#if defined(ARDUINO_ARCH_ESP8266)
 			yield();
 		#endif
