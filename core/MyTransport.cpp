@@ -17,136 +17,161 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-
 #include "MyTransport.h"
 
-static uint32_t _transport_lastUplinkCheck;			//!< last uplink check, to prevent GW flooding
-
-// repeaters (this includes GW) should perform regular sanity checks for network reliability
-#if defined(MY_TRANSPORT_SANITY_CHECK) || defined(MY_REPEATER_FEATURE)		
-	uint32_t _transport_lastSanityCheck;			//!< last sanity check
+// debug 
+#if defined(MY_DEBUG)
+	#define TRANSPORT_DEBUG(x,...) debug(x, ##__VA_ARGS__)
+#else
+	#define TRANSPORT_DEBUG(x,...)  
 #endif
 
-// SM: transitions and update states
-static State stInit = { stInitTransition, NULL };
-static State stParent = { stParentTransition, stParentUpdate };
-static State stID = { stIDTransition, stIDUpdate };
-static State stUplink = { stUplinkTransition, NULL };
-static State stOK = { stOKTransition, stOKUpdate };
-static State stFailure = { stFailureTransition, stFailureUpdate };
 
+// SM: transitions and update states
+static transportState stInit = { stInitTransition, NULL };
+static transportState stParent = { stParentTransition, stParentUpdate };
+static transportState stID = { stIDTransition, stIDUpdate };
+static transportState stUplink = { stUplinkTransition, NULL };
+static transportState stReady = { stReadyTransition, stReadyUpdate };
+static transportState stFailure = { stFailureTransition, stFailureUpdate };
+
+// transport SM variables
 static transportSM _transportSM;
 
 // stInit: initialize transport HW
 void stInitTransition() {
-	debug(PSTR("TSM:INIT\n"));
+	TRANSPORT_DEBUG(PSTR("TSM:INIT\n"));
 	// initialize status variables
-	_transportSM.failedUplinkTransmissions = 0;
 	_transportSM.pingActive = false;
 	_transportSM.transportActive = false;
 	#if defined(MY_TRANSPORT_SANITY_CHECK) || defined(MY_REPEATER_FEATURE)
-		_transport_lastSanityCheck = hwMillis();
+		_transportSM.lastSanityCheck = hwMillis();
 	#endif
-	_transport_lastUplinkCheck = 0;
+	_transportSM.lastUplinkCheck = 0;
 	// Read node settings (ID, parentId, GW distance) from EEPROM
 	hwReadConfigBlock((void*)&_nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
 
 	// initialize radio
 	if (!transportInit()) {
-		debug(PSTR("!TSM:RADIO:FAIL\n"));
+		TRANSPORT_DEBUG(PSTR("!TSM:INIT:TSP FAIL\n"));
 		setIndication(INDICATION_ERR_INIT_TRANSPORT);
 		transportSwitchSM(stFailure);
 	}
 	else {
-		debug(PSTR("TSM:RADIO:OK\n"));
+		TRANSPORT_DEBUG(PSTR("TSM:INIT:TSP OK\n"));
 		_transportSM.transportActive = true;
 		#if defined(MY_GATEWAY_FEATURE)
 			// Set configuration for gateway
-			debug(PSTR("TSM:GW MODE\n"));
+			TRANSPORT_DEBUG(PSTR("TSM:INIT:GW MODE\n"));
 			_nc.parentNodeId = GATEWAY_ADDRESS;
 			_nc.distance = 0;
 			_nc.nodeId = GATEWAY_ADDRESS;
 			transportSetAddress(GATEWAY_ADDRESS);
-			transportSwitchSM(stOK);
+			// GW mode: skip FPAR,ID,UPL states
+			transportSwitchSM(stReady);
 		#else
-			if (MY_NODE_ID != AUTO) {
+			if ((uint8_t)MY_NODE_ID != AUTO) {
+				TRANSPORT_DEBUG(PSTR("TSM:INIT:STATID,ID=%d\n"),MY_NODE_ID);
 				// Set static id
 				_nc.nodeId = MY_NODE_ID;
 				// Save static id in eeprom
 				hwWriteConfig(EEPROM_NODE_ID_ADDRESS, MY_NODE_ID);
 			}
 			// set ID if static or set in EEPROM
-			if(_nc.nodeId!=AUTO) transportAssignNodeID(_nc.nodeId);
-			transportSwitchSM(stParent);
+			if (_nc.nodeId == AUTO || transportAssignNodeID(_nc.nodeId)) {
+				// if node ID > 0, proceed to next state
+				transportSwitchSM(stParent);
+			}
+			else {
+				// ID invalid (=0), nothing we can do
+				transportSwitchSM(stFailure);
+			}
 		#endif	
 	}
 }
 
 // stParent: find parent
 void stParentTransition()  {
-	debug(PSTR("TSM:FPAR\n"));		// find parent
-	_transportSM.preferredParentFound = false;
-	_transportSM.findingParentNode = true;
-	_transportSM.failedUplinkTransmissions = 0;
-	_transportSM.uplinkOk = false;
-	// Set distance to max and invalidate parent node id
-	_nc.distance = DISTANCE_INVALID;
-	_nc.parentNodeId = AUTO;
-	// Broadcast find parent request
+	TRANSPORT_DEBUG(PSTR("TSM:FPAR\n"));	// find parent
 	setIndication(INDICATION_FIND_PARENT);
-	transportRouteMessage(build(_msgTmp, _nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set(""));
+	_transportSM.uplinkOk = false;
+	_transportSM.preferredParentFound = false;
+	#if defined(MY_PARENT_NODE_IS_STATIC)
+		TRANSPORT_DEBUG(PSTR("TSM:FPAR:STATP=%d\n"),MY_PARENT_NODE_ID);	// static parent
+		_transportSM.findingParentNode = false;
+		_nc.distance = 1;	// assumption, CHKUPL:GWDC will update this variable
+		_nc.parentNodeId = MY_PARENT_NODE_ID;
+		// skipping find parent
+		transportSwitchSM(stID);
+	#else
+		_transportSM.findingParentNode = true;
+		_nc.distance = DISTANCE_INVALID;	// Set distance to max and invalidate parent node ID
+		_nc.parentNodeId = AUTO;
+		// Broadcast find parent request
+		transportRouteMessage(build(_msgTmp, _nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set(""));
+	#endif
 }
 
 // stParentUpdate
 void stParentUpdate() {
-	if (transportTimeInState() > STATE_TIMEOUT || _transportSM.preferredParentFound) {
-		// timeout or preferred parent found
-		if (_nc.parentNodeId != AUTO) {
-			debug(PSTR("TSM:FPAR:OK\n"));		// find parent ok
-			_transportSM.findingParentNode = false;
-			setIndication(INDICATION_GOT_PARENT);
-			transportSwitchSM(stID);
-		}
-		else if (transportTimeInState() > STATE_TIMEOUT) {
-			if (_transportSM.retries < STATE_RETRIES) {
-				// reenter if timeout and retries left
-				transportSwitchSM(stParent);
+	#if !defined(MY_PARENT_NODE_IS_STATIC)
+		if (transportTimeInState() > STATE_TIMEOUT || _transportSM.preferredParentFound) {
+			// timeout or preferred parent found
+			if (_nc.parentNodeId != AUTO) {
+				// parent assigned
+				TRANSPORT_DEBUG(PSTR("TSM:FPAR:OK\n"));	// find parent ok
+				_transportSM.findingParentNode = false;
+				setIndication(INDICATION_GOT_PARENT);
+				// go to next state
+				transportSwitchSM(stID);
 			}
-			else {
-				debug(PSTR("!TSM:FPAR:FAIL\n"));		// find parent fail
-				setIndication(INDICATION_ERR_FIND_PARENT);
-				transportSwitchSM(stFailure);
+			else if (transportTimeInState() > STATE_TIMEOUT) {
+				// timeout w/o reply or valid parent
+				if (_transportSM.retries < STATE_RETRIES) {
+					// retries left
+					TRANSPORT_DEBUG(PSTR("!TSM:FPAR:NO REPLY\n"));		// find parent, no reply
+					// reenter state
+					transportSwitchSM(stParent);
+				}
+				else {
+					// no retries left, finding parent failed
+					TRANSPORT_DEBUG(PSTR("!TSM:FPAR:FAIL\n"));	// find parent fail
+					setIndication(INDICATION_ERR_FIND_PARENT);
+					transportSwitchSM(stFailure);
+				}
 			}
 		}
-	}
+	#endif
 }
 
 // stID: verify and request ID if necessary
 void stIDTransition() {
-	debug(PSTR("TSM:ID\n"));
+	TRANSPORT_DEBUG(PSTR("TSM:ID\n"));	// verify/request node ID
 	if (_nc.nodeId == AUTO) {
 		// send ID request
 		setIndication(INDICATION_REQ_NODEID);
+		TRANSPORT_DEBUG(PSTR("TSM:ID:REQ\n"));	// request node ID
 		transportRouteMessage(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
 	}
 }
 
 void stIDUpdate() {
 	if (_nc.nodeId != AUTO) {
-		// current node ID is valid, proceed to uplink check
-		debug(PSTR("TSM:CHKID:OK (ID=%d)\n"), _nc.nodeId);
+		// current node ID is valid
+		TRANSPORT_DEBUG(PSTR("TSM:ID:OK,ID=%d\n"), _nc.nodeId);
 		setIndication(INDICATION_GOT_NODEID);
-		// check uplink
+		// proceed to next state
 		transportSwitchSM(stUplink);	
 	}
 	else if (transportTimeInState() > STATE_TIMEOUT) {
+		// timeout
 		if (_transportSM.retries < STATE_RETRIES) {
-			// re-enter if retries left
+			// reenter
 			transportSwitchSM(stID);
 		}
 		else {
-			// fail
-			debug(PSTR("!TSM:CHKID:FAIL (ID=%d)\n"), _nc.nodeId);
+			// no retries left
+			TRANSPORT_DEBUG(PSTR("!TSM:ID:FAIL,ID=%d\n"), _nc.nodeId);
 			setIndication(INDICATION_ERR_GET_NODEID);
 			transportSwitchSM(stFailure);
 		}
@@ -154,56 +179,65 @@ void stIDUpdate() {
 }
 
 void stUplinkTransition() {
-	debug(PSTR("TSM:UPL\n"));
+	TRANSPORT_DEBUG(PSTR("TSM:UPL\n"));
+	// check uplink
 	if(transportCheckUplink(true)) {
-		debug(PSTR("TSM:UPL:OK\n"));
-		transportSwitchSM(stOK);
+		// uplink ok, i.e. GW replied
+		TRANSPORT_DEBUG(PSTR("TSM:UPL:OK\n"));	// uplink ok
+		// proceed to next state
+		transportSwitchSM(stReady);
 	}
 	else {
-		debug(PSTR("!TSM:UPL:FAIL\n"));
+		// uplink failed, at this point, no retries or timeout
+		TRANSPORT_DEBUG(PSTR("!TSM:UPL:FAIL\n"));	// uplink failed
+		// go back to stParent
 		transportSwitchSM(stParent);
 	}
 }
 
-void stOKTransition() {
-	debug(PSTR("TSM:READY\n"));		// transport is ready
+void stReadyTransition() {
+	// transport is ready and fully operational
+	TRANSPORT_DEBUG(PSTR("TSM:READY\n"));		// transport is ready
 	_transportSM.uplinkOk = true;
+	_transportSM.failedUplinkTransmissions = 0;	// reset counter
 }
 
-// stOK update: monitors uplink failures
-void stOKUpdate() {
+// stReadyUpdate: monitors uplink failures
+void stReadyUpdate() {
 	#if !defined(MY_GATEWAY_FEATURE)		
 		if (_transportSM.failedUplinkTransmissions > TRANSMISSION_FAILURES) {
-			// too many uplink transmissions failed, find new parent
-		#if !defined(MY_PARENT_NODE_IS_STATIC)
-			debug(PSTR("!TSM:UPL FAIL, SNP\n"));
-			transportSwitchSM(stParent);
-		#else
-			debug(PSTR("!TSM:UPL FAIL, STATP\n"));
-			_transportSM.failedUplinkTransmissions = 0;
-		#endif
+			// too many uplink transmissions failed, find new parent (if non-static)
+			#if !defined(MY_PARENT_NODE_IS_STATIC)
+				TRANSPORT_DEBUG(PSTR("!TSM:READY:UPL FAIL,SNP\n"));		// uplink failed, search new parent
+				transportSwitchSM(stParent);
+			#else
+				TRANSPORT_DEBUG(PSTR("!TSM:READY:UPL FAIL,STATP\n"));	// uplink failed, static parent
+				// reset counter
+				_transportSM.failedUplinkTransmissions = 0;
+			#endif
 		}
 	#endif
 }
 
 // stFailure: entered upon HW init failure or max retries exceeded
 void stFailureTransition() {
-	debug(PSTR("!TSM:FAILURE\n"));
-	_transportSM.uplinkOk = false;
-	_transportSM.transportActive = false;
+	TRANSPORT_DEBUG(PSTR("TSM:FAILURE\n"));
+	_transportSM.uplinkOk = false;	// uplink nok
+	_transportSM.transportActive = false;	// transport inactive
 	setIndication(INDICATION_ERR_INIT_TRANSPORT);
 	// power down transport, no need until re-init
-	debug(PSTR("TSM:PDT\n"));
+	TRANSPORT_DEBUG(PSTR("TSM:FAILURE:PDT\n"));	// power down transport
 	transportPowerDown();
 }
 
 void stFailureUpdate() {
 	if (transportTimeInState()> TIMEOUT_FAILURE_STATE) {
+		TRANSPORT_DEBUG(PSTR("TSM:FAILURE:RE-INIT\n"));	// attempt to re-initialize transport
 		transportSwitchSM(stInit);
 	}
 }
 
-void transportSwitchSM(State& newState) {
+void transportSwitchSM(transportState& newState) {
 	if (_transportSM.currentState != &newState) {
 		// state change, reset retry counter
 		_transportSM.retries = 0;
@@ -227,10 +261,13 @@ void transportUpdateSM(){
 	if (_transportSM.currentState->Update) _transportSM.currentState->Update();
 }
 
-bool isTransportOK() {
-	return (_transportSM.uplinkOk);
+bool isTransportReady() {
+	return _transportSM.uplinkOk;
 }
 
+bool isTransportSearchingParent() {
+	return _transportSM.findingParentNode;
+}
 
 void transportInitialize() {
 	// intial state
@@ -248,8 +285,8 @@ void transportProcess() {
 
 
 bool transportCheckUplink(bool force) {
-	if (!force && (hwMillis() - _transport_lastUplinkCheck) < CHKUPL_INTERVAL) {
-		debug(PSTR("TSP:CHKUPL:OK (FLDCTRL)\n"));	// flood control
+	if (!force && (hwMillis() - _transportSM.lastUplinkCheck) < CHKUPL_INTERVAL) {
+		TRANSPORT_DEBUG(PSTR("TSF:CHKUPL:OK,FCTRL\n"));	// flood control
 		return true;
 	}
 	// ping GW
@@ -257,35 +294,35 @@ bool transportCheckUplink(bool force) {
 	// verify hops
 	if (hopsCount != INVALID_HOPS) {
 		// update
-		_transport_lastUplinkCheck = hwMillis();
-		debug(PSTR("TSP:CHKUPL:OK\n"));
-		// did distance to GW change upstream, i.e. re-routing of uplink nodes?
+		_transportSM.lastUplinkCheck = hwMillis();
+		TRANSPORT_DEBUG(PSTR("TSF:CHKUPL:OK\n"));
+		// did distance to GW change upstream, eg. re-routing of uplink nodes
 		if (hopsCount != _nc.distance) {
-			debug(PSTR("TSP:CHKUPL:DGWC (old=%d,new=%d)"), _nc.distance, hopsCount);	// distance to GW changed
+			TRANSPORT_DEBUG(PSTR("TSF:CHKUPL:DGWC,O=%d,N=%d\n"), _nc.distance, hopsCount);	// distance to GW changed
 			_nc.distance = hopsCount;
 		}
 		return true;
 	}
 	else {
-		debug(PSTR("TSP:CHKUPL:FAIL (hops=%d)\n"), hopsCount);
+		TRANSPORT_DEBUG(PSTR("TSF:CHKUPL:FAIL\n"));
 		return false;
 	}
 }
 
-void transportAssignNodeID(uint8_t newNodeId) {
+bool transportAssignNodeID(uint8_t newNodeId) {
 	// verify if ID valid
 	if (newNodeId != GATEWAY_ADDRESS && newNodeId != AUTO) {
 		_nc.nodeId = newNodeId;
 		transportSetAddress(newNodeId);
 		// Write ID to EEPROM
 		hwWriteConfig(EEPROM_NODE_ID_ADDRESS, newNodeId);
-		debug(PSTR("TSP:ASSIGNID:OK (ID=%d)\n"),newNodeId);
+		TRANSPORT_DEBUG(PSTR("TSF:ASID:OK,ID=%d\n"),newNodeId);
+		return true;
 	}
 	else {
-		debug(PSTR("!TSP:ASSIGNID:FAIL (ID=%d)\n"),newNodeId);
+		TRANSPORT_DEBUG(PSTR("!TSF:ASID:FAIL,ID=%d\n"),newNodeId);
 		setIndication(INDICATION_ERR_NET_FULL);
-		// Nothing else we can do...
-		transportSwitchSM(stFailure);
+		return false;
 	}
 }
 
@@ -294,7 +331,7 @@ bool transportRouteMessage(MyMessage &message) {
 	uint8_t route;
 	
 	if (_transportSM.findingParentNode && destination != BROADCAST_ADDRESS) {
-		debug(PSTR("!TSP:FPAR:ACTIVE (msg not send)\n"));
+		TRANSPORT_DEBUG(PSTR("!TSF:ROUTE:FPAR ACTIVE\n")); // find parent active, message not sent
 		// request to send a non-BC message while finding parent active, abort
 		return false;
 	}
@@ -313,7 +350,7 @@ bool transportRouteMessage(MyMessage &message) {
 				// route unknown
 				if (message.last != _nc.parentNodeId) {
 					// message not from parent, i.e. child node - route it to parent
-					debug(PSTR("!TSP:ROUTING:DEST UNKNOWN (dest=%d, STP=%d)\n"), destination, _nc.parentNodeId);
+					TRANSPORT_DEBUG(PSTR("!TSF:ROUTE:%d UNKNOWN\n"), destination);
 					route = _nc.parentNodeId;
 				} 
 				else {
@@ -338,19 +375,18 @@ bool transportRouteMessage(MyMessage &message) {
 		}
 	#else
 		if(!ok) setIndication(INDICATION_ERR_TX);
-
 	#endif
 
 	return ok;
 }
 
 bool transportSendRoute(MyMessage &message) {
-	if (isTransportOK()) {
+	if (isTransportReady()) {
 		return transportRouteMessage(message);
 	}
 	else {
 		// TNR: transport not ready
-		debug(PSTR("!TSP:SEND:TNR\n"));
+		TRANSPORT_DEBUG(PSTR("!TSF:SEND:TNR\n"));
 		return false;
 	}
 }
@@ -380,7 +416,7 @@ uint8_t transportPingNode(uint8_t targetId) {
 		}
 		_transportSM.pingActive = true;
 		_transportSM.pingResponse = INVALID_HOPS;
-		debug(PSTR("TSP:PING:SEND (dest=%d)\n"), targetId);
+		TRANSPORT_DEBUG(PSTR("TSF:PING:SEND,TO=%d\n"), targetId);
 		transportRouteMessage(build(_msgTmp, _nc.nodeId, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)0x01));
 		// Wait for ping reply or timeout
 		transportWait(2000, C_INTERNAL, I_PONG);
@@ -397,7 +433,7 @@ void transportClearRoutingTable() {
 	for (uint8_t i = 0; i != 255; i++) {
 		hwWriteConfig(EEPROM_ROUTES_ADDRESS + i, BROADCAST_ADDRESS);
 	}
-	debug(PSTR("TSP:CRT:OK\n"));	// clear routing table
+	TRANSPORT_DEBUG(PSTR("TSF:CRT:OK\n"));	// clear routing table
 }
 
 uint32_t transportGetHeartbeat() {
@@ -408,7 +444,7 @@ void transportProcessMessage() {
 	(void)signerCheckTimer(); // Manage signing timeout
 
 	uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
-	(void)payloadLength;	// currently not used, but good to test for CRC-ok but corrupt msgs
+	(void)payloadLength;	// currently not used
 	
 	setIndication(INDICATION_RX);
 
@@ -418,26 +454,25 @@ void transportProcessMessage() {
 	uint8_t last = _msg.last;
 	uint8_t destination = _msg.destination;
 
-	debug(PSTR("TSP:MSG:READ %d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
+	TRANSPORT_DEBUG(PSTR("TSF:MSG:READ,%d-%d-%d,s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 		sender, last, destination, _msg.sensor, mGetCommand(_msg), type, mGetPayloadType(_msg), mGetLength(_msg), mGetSigned(_msg), _msg.getString(_convBuf));
 
 	// verify protocol version
 	if(mGetVersion(_msg) != PROTOCOL_VERSION) {
 		setIndication(INDICATION_ERR_VERSION);
-		debug(PSTR("!TSP:MSG:PVER mismatch\n"));	// protocol version
+		TRANSPORT_DEBUG(PSTR("!TSF:MSG:PVER,%d!=%d\n"), mGetVersion(_msg),PROTOCOL_VERSION);	// protocol version mismatch
 		return;
 	}
 		
-	// Reject massages that do not pass verification
+	// Reject messages that do not pass verification
 	if (!signerVerifyMsg(_msg)) {
 		setIndication(INDICATION_ERR_SIGN);
-		debug(PSTR("!TSP:MSG:SIGN verify fail\n"));
+		TRANSPORT_DEBUG(PSTR("!TSF:MSG:SIGN VERIFY FAIL\n"));
 		return;	
 	}
 		
-
+	// Is message addressed to this node?
 	if (destination == _nc.nodeId) {
-		// This message is addressed to this node
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
 		mSetLength(_msg, min(mGetLength(_msg),MAX_PAYLOAD));
 		// null terminate data
@@ -459,7 +494,7 @@ void transportProcessMessage() {
 			_msgTmp.sender = _nc.nodeId;
 			_msgTmp.destination = sender;
 			// send ACK
-			debug(PSTR("TSP:MSG:ACK msg\n"));
+			TRANSPORT_DEBUG(PSTR("TSF:MSG:ACK REQ\n"));	// ACK requested
 			// use transportSendRoute since ACK reply is not internal, i.e. if !transportOK do not reply
 			transportSendRoute(_msgTmp);
 		} 
@@ -479,24 +514,29 @@ void transportProcessMessage() {
 					return; // no further processing required
 					}
 					if (type == I_FIND_PARENT_RESPONSE) {
-						#if !defined(MY_GATEWAY_FEATURE)
-							// Reply to a I_FIND_PARENT message. Check if the distance is shorter than we already have.
-							uint8_t distance = _msg.getByte();
-							debug(PSTR("TSP:MSG:FPAR RES (ID=%d, dist=%d)\n"), sender, distance);
-							if (isValidDistance(distance)) {
-								// Distance to gateway is one more for us w.r.t. parent
-								distance++;
-								// update settings if distance shorter or preferred parent found
-								if (((isValidDistance(distance) && distance < _nc.distance) || (!_autoFindParent && sender == MY_PARENT_NODE_ID)) && !_transportSM.preferredParentFound) {
-									// Found a neighbor closer to GW than previously found
-									if (!_autoFindParent && sender == MY_PARENT_NODE_ID) {
-										_transportSM.preferredParentFound = true;
-										debug(PSTR("TSP:MSG:FPAR (PPAR FOUND)\n"));	// preferred parent found
+						#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_PARENT_NODE_IS_STATIC)
+							if (_transportSM.findingParentNode) {	// only process if find parent active
+								// Reply to a I_FIND_PARENT message. Check if the distance is shorter than we already have.
+								uint8_t distance = _msg.getByte();
+								TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR RES,ID=%d,D=%d\n"), sender, distance);	// find parent response
+								if (isValidDistance(distance)) {
+									// Distance to gateway is one more for us w.r.t. parent
+									distance++;
+									// update settings if distance shorter or preferred parent found
+									if (((isValidDistance(distance) && distance < _nc.distance) || (!_autoFindParent && sender == MY_PARENT_NODE_ID)) && !_transportSM.preferredParentFound) {
+										// Found a neighbor closer to GW than previously found
+										if (!_autoFindParent && sender == MY_PARENT_NODE_ID) {
+											_transportSM.preferredParentFound = true;
+											TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR PREF FOUND\n"));	// find parent, preferred parent found
+										}
+										_nc.distance = distance;
+										_nc.parentNodeId = sender;
+										TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR OK,ID=%d,D=%d\n"), _nc.parentNodeId, _nc.distance);
 									}
-									_nc.distance = distance;
-									_nc.parentNodeId = sender;
-									debug(PSTR("TSP:MSG:PAR OK (ID=%d, dist=%d)\n"), _nc.parentNodeId, _nc.distance);
 								}
+							}
+							else {
+								TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR INACTIVE\n"));	// find parent response received, but inactive
 							}
 							return;
 						#endif
@@ -504,7 +544,7 @@ void transportProcessMessage() {
 				#endif
 				// general
 				if (type == I_PING) {
-					debug(PSTR("TSP:MSG:PINGED (ID=%d, hops=%d)\n"), sender, _msg.getByte());
+					TRANSPORT_DEBUG(PSTR("TSF:MSG:PINGED,ID=%d,HP=%d\n"), sender, _msg.getByte()); // node pinged
 					transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PONG, false).set((uint8_t)0x01));
 					return; // no further processing required
 				}
@@ -512,7 +552,7 @@ void transportProcessMessage() {
 					if (_transportSM.pingActive) {
 						_transportSM.pingActive = false;
 						_transportSM.pingResponse = _msg.getByte();
-						debug(PSTR("TSP:MSG:PONG RECV (hops=%d)\n"), _transportSM.pingResponse);
+						TRANSPORT_DEBUG(PSTR("TSF:MSG:PONG RECV,HP=%d\n"), _transportSM.pingResponse); // pong received
 					}
 					return; // no further processing required
 				}
@@ -528,39 +568,41 @@ void transportProcessMessage() {
 				#endif
 			}
 		}
+		else {
+			TRANSPORT_DEBUG(PSTR("TSF:MSG:ACK\n")); // received message is ACK, no internal processing, handover to msg callback
+		}
 		#if defined(MY_GATEWAY_FEATURE)
 			// Hand over message to controller
 			gatewayTransportSend(_msg);
-		#else
-			// Call incoming message callback if available
-			if (receive) {
-				receive(_msg);
-			}
 		#endif
+		// Call incoming message callback if available
+		if (receive) {
+			receive(_msg);
+		}
 		return;
 	} 
 	else if (destination == BROADCAST_ADDRESS) {
-		// broadcast
-		debug(PSTR("TSP:MSG:BC\n"));
+		TRANSPORT_DEBUG(PSTR("TSF:MSG:BC\n"));	// broadcast msg
 		if (command == C_INTERNAL) {
-			if (isTransportOK()) {
+			if (isTransportReady()) {
 				// only reply if node is fully operational
 				if (type == I_FIND_PARENT) {
 					#if defined(MY_REPEATER_FEATURE)
 						if (sender != _nc.parentNodeId) {	// no circular reference
-							debug(PSTR("TSP:MSG:FPAR REQ (sender=%d)\n"), sender);	// FPR: find parent request
+							TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR REQ,ID=%d\n"), sender);	// FPR: find parent request
 							// node is in our range, update routing table - important if node has new repeater as parent
 							hwWriteConfig(EEPROM_ROUTES_ADDRESS + sender, sender);
 							// check if uplink functional - node can only be parent node if link to GW functional
 							// this also prevents circular references in case GW ooo
 							if(transportCheckUplink(false)){ 
-								#if defined(MY_REPEATER_FEATURE)
-									_transport_lastUplinkCheck = hwMillis();
-								#endif
-								debug(PSTR("TSP:MSG:GWL OK\n")); // GW uplink ok
+								_transportSM.lastUplinkCheck = hwMillis();
+								TRANSPORT_DEBUG(PSTR("TSF:MSG:GWL OK\n")); // GW uplink ok
 								// delay minimizes collisions
 								delay(hwMillis() & 0x3ff);
 								transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
+							}
+							else {
+								TRANSPORT_DEBUG(PSTR("!TSF:MSG:GWL FAIL\n")); // GW uplink fail, do not respond to parent request
 							}
 						}
 							
@@ -580,8 +622,8 @@ void transportProcessMessage() {
 		// controlled BC relay
 		#if defined(MY_REPEATER_FEATURE)
 			// controlled BC repeating: forward only if message received from parent and sender not self to prevent circular fwds
-			if(last == _nc.parentNodeId && sender != _nc.nodeId && isTransportOK()){
-				debug(PSTR("TSP:MSG:FWD BC MSG\n")); // forward BC msg
+			if(last == _nc.parentNodeId && sender != _nc.nodeId && isTransportReady()){
+				TRANSPORT_DEBUG(PSTR("TSF:MSG:FWD BC MSG\n")); // controlled broadcast msg forwarding
 				transportRouteMessage(_msg);
 			}
 		#endif
@@ -593,10 +635,10 @@ void transportProcessMessage() {
 				
 	} 
 	else {
-		// msg not no us and not BC, relay msg 
+		// msg not to us and not BC, relay msg 
 		#if defined(MY_REPEATER_FEATURE)
-		if (isTransportOK()) {
-			debug(PSTR("TSP:MSG:REL MSG\n"));	// relay msg
+		if (isTransportReady()) {
+			TRANSPORT_DEBUG(PSTR("TSF:MSG:REL MSG\n"));	// relay msg
 			// update routing table if message not received from parent
 			if (last != _nc.parentNodeId) {
 				hwWriteConfig(EEPROM_ROUTES_ADDRESS + sender, last);
@@ -605,7 +647,7 @@ void transportProcessMessage() {
 				if (type == I_PING || type == I_PONG) {
 					uint8_t hopsCnt = _msg.getByte();
 					if (hopsCnt != MAX_HOPS) {
-						debug(PSTR("TSP:MSG:REL PxNG (hops=%d)\n"), hopsCnt);
+						TRANSPORT_DEBUG(PSTR("TSF:MSG:REL PxNG,HP=%d\n"), hopsCnt);
 						_msg.set((uint8_t)(hopsCnt + 1));
 					}
 				}
@@ -614,24 +656,28 @@ void transportProcessMessage() {
 			transportRouteMessage(_msg);
 		}
 		#else
-			debug(PSTR("!TSM:MSG:REL MSG, but not a repeater\n"));
+			TRANSPORT_DEBUG(PSTR("!TSF:MSG:REL MSG,NORP\n"));	// message relaying request, but not a repeater
 		#endif
+	}
+}
+
+void transportInvokeSanityCheck() {
+	if (!transportSanityCheck()) {
+		TRANSPORT_DEBUG(PSTR("!TSF:SANCHK:FAIL\n"));	// sanity check fail
+		transportSwitchSM(stFailure);
+		return;
+	}
+	else {
+		TRANSPORT_DEBUG(PSTR("TSF:SANCHK:OK\n"));		// sanity check ok
 	}
 }
 
 inline void transportProcessFIFO() {
 	if (_transportSM.transportActive) {
 		#if defined(MY_TRANSPORT_SANITY_CHECK) || defined(MY_REPEATER_FEATURE)
-			if (hwMillis() > (_transport_lastSanityCheck + MY_TRANSPORT_SANITY_CHECK_INTERVAL)) {
-				_transport_lastSanityCheck = hwMillis();
-				if (!transportSanityCheck()) {
-					debug(PSTR("!TSP:SANCHK:FAIL\n"));	// sanity check fail
-					transportSwitchSM(stFailure);
-					return;
-				}
-				else {
-					debug(PSTR("TSP:SANCHK:OK\n"));		// sanity check ok
-				}
+			if (hwMillis() - _transportSM.lastSanityCheck > MY_TRANSPORT_SANITY_CHECK_INTERVAL) {
+				_transportSM.lastSanityCheck = hwMillis();
+				transportInvokeSanityCheck();
 			}
 		#endif
 	}
@@ -645,7 +691,7 @@ inline void transportProcessFIFO() {
 		transportProcessMessage();
 	}
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
-		if (isTransportOK()) {
+		if (isTransportReady()) {
 			// only process if transport ok
 			firmwareOTAUpdateRequest();
 		}
@@ -659,7 +705,7 @@ bool transportSendWrite(uint8_t to, MyMessage &message) {
 
 	// sign message if required
 	if (!signerSignMsg(message)) {
-		debug(PSTR("!TSP:MSG:SIGN fail\n"));
+		TRANSPORT_DEBUG(PSTR("!TSF:MSG:SIGN FAIL\n"));
 		setIndication(INDICATION_ERR_SIGN);
 		return false;
 	}
@@ -671,10 +717,11 @@ bool transportSendWrite(uint8_t to, MyMessage &message) {
 	setIndication(INDICATION_TX);
 	bool ok = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, HEADER_SIZE + length));
 	
-	debug(PSTR("%sTSP:MSG:SEND %d-%d-%d-%d s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,ft=%d,st=%s:%s\n"),
+	TRANSPORT_DEBUG(PSTR("%sTSF:MSG:SEND,%d-%d-%d-%d,s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d,ft=%d,st=%s:%s\n"),
 			(ok || to == BROADCAST_ADDRESS ? "" : "!"),message.sender,message.last, to, message.destination, message.sensor, mGetCommand(message), message.type,
-			mGetPayloadType(message), mGetLength(message), mGetSigned(message), _transportSM.failedUplinkTransmissions, to==BROADCAST_ADDRESS ? "bc" : (ok ? "ok":"fail"), message.getString(_convBuf));
+			mGetPayloadType(message), mGetLength(message), mGetSigned(message), _transportSM.failedUplinkTransmissions, to==BROADCAST_ADDRESS ? "bc" : (ok ? "OK":"NACK"), message.getString(_convBuf));
 	
 	return (ok || to==BROADCAST_ADDRESS);
 }
 
+// EOF MyTransport.cpp
