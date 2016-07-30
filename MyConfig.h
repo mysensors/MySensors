@@ -483,14 +483,6 @@
 #define MY_RF24_ADDR_WIDTH 5
 #endif
 
-/**
- * @def MY_RF24_SANITY_CHECK
- * @brief RF24 sanity check to verify functional RF module
- *
- * This reads back and compares configuration registers. Disable if using non-P modules
- */
-#define MY_RF24_SANITY_CHECK
-
 // Enable SOFTSPI for NRF24L01, useful for the W5100 Ethernet module
 //#define MY_SOFTSPI
 
