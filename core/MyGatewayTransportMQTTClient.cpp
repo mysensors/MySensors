@@ -146,6 +146,8 @@ bool reconnectMQTT() {
 #endif
 	)) {
 		debug(PSTR("MQTT connected\n"));
+		if (presentation)
+		    presentation();
 		// Once connected, publish an announcement...
 		//_MQTT_client.publish("outTopic","hello world");
 		// ... and resubscribe
