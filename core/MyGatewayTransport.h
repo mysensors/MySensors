@@ -36,11 +36,6 @@ void gatewayTransportProcess();
 bool gatewayTransportInit();
 
 /**
- * Present locally attached sensors
- */
-void gatewayPresent();
-
-/**
  * Send message to controller
  */
 bool gatewayTransportSend(MyMessage &message);

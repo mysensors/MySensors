@@ -149,7 +149,7 @@ bool reconnectMQTT() {
 		debug(PSTR("MQTT connected\n"));
 
 		// Send presentation of locally attached sensors (and node if applicable)
-		gatewayPresent();
+		presentNode();
 
 		// Once connected, publish an announcement...
 		//_MQTT_client.publish("outTopic","hello world");
