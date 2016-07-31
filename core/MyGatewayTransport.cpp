@@ -22,6 +22,15 @@
 extern bool transportSendRoute(MyMessage &message);
 extern MyMessage _msg;
 
+void gatewayPresent() {
+	if (presentation) {
+		#if !defined(MY_RADIO_FEATURE)
+			present(NODE_SENSOR_ID, S_ARDUINO_NODE);
+		#endif
+		presentation();
+	}
+}
+
 inline void gatewayTransportProcess() {
 	if (gatewayTransportAvailable()) {
 		_msg = gatewayTransportReceive();

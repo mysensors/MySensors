@@ -301,8 +301,8 @@ bool gatewayTransportAvailable()
 						inputString[i].idx = 0;
 						debug(PSTR("Client %d connected\n"), i);
 						gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
-						if (presentation)
-							presentation();
+						// Send presentation of locally attached sensors (and node if applicable)
+						gatewayPresent();
 					}
 				}
 				bool connected = clients[i].connected();

@@ -39,6 +39,9 @@ bool gatewayTransportSend(MyMessage &message) {
 
 bool gatewayTransportInit() {
 	gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+	// Send presentation of locally attached sensors (and node if applicable)
+	gatewayPresent();
+
 	return true;
 }
 

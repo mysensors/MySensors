@@ -21,6 +21,7 @@
 #define MyGatewayTransport_h
 
 #include "MyProtocol.h"
+#include "MySensorsCore.h"
 
 // Common gateway functions
 
@@ -33,6 +34,11 @@ void gatewayTransportProcess();
  * initialize the driver
  */
 bool gatewayTransportInit();
+
+/**
+ * Present locally attached sensors
+ */
+void gatewayPresent();
 
 /**
  * Send message to controller

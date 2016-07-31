@@ -20,6 +20,7 @@
 
 // Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
+#include "MyGatewayTransport.h"
 
 #if defined MY_CONTROLLER_IP_ADDRESS
 	IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
@@ -146,8 +147,10 @@ bool reconnectMQTT() {
 #endif
 	)) {
 		debug(PSTR("MQTT connected\n"));
-		if (presentation)
-		    presentation();
+
+		// Send presentation of locally attached sensors (and node if applicable)
+		gatewayPresent();
+
 		// Once connected, publish an announcement...
 		//_MQTT_client.publish("outTopic","hello world");
 		// ... and resubscribe
