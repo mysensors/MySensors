@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <netinet/tcp.h>
+#include <errno.h>
 #include "EthernetClient.h"
 
 EthernetClient::EthernetClient() : _sock(-1) {
