@@ -65,9 +65,9 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#define GATEWAY_ADDRESS ((uint8_t)0)			//!< Node ID for GW sketch	
+#define GATEWAY_ADDRESS ((uint8_t)0)			//!< Node ID for GW sketch
 #define NODE_SENSOR_ID 0xFF						//!< Node child is always created/presented when a node is started
-#define MY_CORE_VERSION ((uint8_t)2)			//!< core version	
+#define MY_CORE_VERSION ((uint8_t)2)			//!< core version
 #define MY_CORE_MIN_VERSION ((uint8_t)2)		//!< min core version required for compatibility
 
 #ifdef MY_DEBUG
@@ -344,6 +344,10 @@ void presentation()  __attribute__((weak));
 * @brief Called before node initialises
 */
 void before() __attribute__((weak));
+/**
+* @brief Called before any hwInitialization is done
+*/
+void preHwInit() __attribute__((weak));
 /**
 * @brief Called after node initialises but before main loop
 */
