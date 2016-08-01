@@ -19,14 +19,6 @@
 
 #include "MyTransport.h"
 
-// debug 
-#if defined(MY_DEBUG)
-	#define TRANSPORT_DEBUG(x,...) debug(x, ##__VA_ARGS__)
-#else
-	#define TRANSPORT_DEBUG(x,...)  
-#endif
-
-
 // SM: transitions and update states
 static transportState stInit = { stInitTransition, NULL };
 static transportState stParent = { stParentTransition, stParentUpdate };
