@@ -21,6 +21,7 @@
 #define MyGatewayTransport_h
 
 #include "MyProtocol.h"
+#include "MySensorsCore.h"
 
 // Common gateway functions
 

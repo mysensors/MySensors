@@ -146,7 +146,7 @@ void _begin() {
 		}
 	#endif	
 	
-	#if defined(MY_RADIO_FEATURE)
+	#if !defined(MY_GATEWAY_FEATURE)
 		presentNode();
 	#endif
 	
@@ -325,9 +325,7 @@ bool _processInternalMessages() {
 		}
 		else if (type == I_PRESENTATION) {
 			// Re-send node presentation to controller
-			#if defined(MY_RADIO_FEATURE)
-				presentNode();
-			#endif
+			presentNode();
 		}
 		else if (type == I_HEARTBEAT) {
 			sendHeartbeat();
