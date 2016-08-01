@@ -43,13 +43,13 @@
 #if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_MQTT_CLIENT)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
-	#define MY_NODE_TYPE "gateway"
+	#define MY_NODE_TYPE "GW"
 #elif defined(MY_REPEATER_FEATURE)
 	#define MY_IS_GATEWAY (false)
-	#define MY_NODE_TYPE "repeater"
+	#define MY_NODE_TYPE "REPEATER"
 #else
 	#define MY_IS_GATEWAY (false)
-	#define MY_NODE_TYPE "sensor"
+	#define MY_NODE_TYPE "NODE"
 #endif
 
 // Enable radio "feature" if one of the radio types was enabled

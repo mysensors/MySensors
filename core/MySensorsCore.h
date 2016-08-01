@@ -17,6 +17,43 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+ /**
+ * @file MySensorsCore.h
+ *
+ * @defgroup MySensorsCoregrp MySensorsCore
+ * @ingroup internals
+ * @{
+ *
+ * MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
+ * - [!] Exclamation mark is prepended in case of error
+ * - SYSTEM:
+ *  - <b>MCO</b> messages emitted by MySensorsCore
+ * - SUB SYSTEMS:
+ *  - MCO:<b>BGN</b>	from @ref _begin()
+ *  - MCO:<b>REG</b>	from @ref _registerNode()
+ *  - MCO:<b>SND</b>	from @ref send()
+ *  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
+ *  - MCO:<b>NLK</b>	from @ref nodeLock()
+ *
+ * MySensorsCore debug log messages:
+ *
+ * |E| SYS	| SUB	| Message									| Comment
+ * |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
+ * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s					| Core initialization, capabilities (CP), library version (VER)
+ * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d	| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
+ * | | MCO	| BGN	| NODE UNLOCKED								| Node successfully unlocked (see signing chapter)
+ * |!| MCO	| BGN	| TSP FAIL									| Transport initialization failed
+ * | | MCO	| REG	| REQ										| Registration request
+ * | | MCO	| REG	| NOT NEEDED								| No registration needed (i.e. GW)
+ * |!| MCO	| SND	| NODE NOT REG								| Node is not registered, cannot send message
+ * | | MCO	| PIM	| NODE REG=%%d								| Registration response received, registration status (REG)
+ * | | MCO	| PIM	| ROUTE N=%%d,R=%%d							| Routing table, messages to node (N) are routed via node (R)
+ * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET| Node locked during booting, see signing chapter for additional information
+ *
+ *
+ * @brief API declaration for MySensorsCore
+ */
+
 
 #ifndef MySensorsCore_h
 #define MySensorsCore_h
@@ -28,17 +65,16 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#ifdef MY_DEBUG
-	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
-#else
-	#define debug(x,...)
-#endif
-
 #define GATEWAY_ADDRESS ((uint8_t)0)			//!< Node ID for GW sketch	
 #define NODE_SENSOR_ID 0xFF						//!< Node child is always created/presented when a node is started
 #define MY_CORE_VERSION ((uint8_t)2)			//!< core version	
 #define MY_CORE_MIN_VERSION ((uint8_t)2)		//!< min core version required for compatibility
 
+#ifdef MY_DEBUG
+	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+#else
+	#define debug(x,...)								//!< debug NULL
+#endif
 
 /**
  * @brief Node configuration
@@ -46,9 +82,9 @@
  * This structure stores node-related configurations
  */
 struct NodeConfig {
-	uint8_t nodeId; //!< Current node id
-	uint8_t parentNodeId; //!< Where this node sends its messages
-	uint8_t distance; //!< This nodes distance to sensor net gateway (number of hops)
+	uint8_t nodeId;								//!< Current node id
+	uint8_t parentNodeId;						//!< Where this node sends its messages
+	uint8_t distance;							//!< This nodes distance to sensor net gateway (number of hops)
 };
 
 /**
@@ -57,10 +93,17 @@ struct NodeConfig {
  * This structure stores controllerrelated configurations
  */
 struct ControllerConfig {
-	uint8_t isMetric; //!< Flag indicating if metric or imperial measurements are used
+	uint8_t isMetric;							//!< Flag indicating if metric or imperial measurements are used
 };
 
+extern NodeConfig _nc;							//!< Node config
+extern MyMessage _msg;							//!< Buffer for incoming messages
+extern MyMessage _msgTmp;						//!< Buffer for temporary messages (acks and nonces among others)
+#ifdef MY_DEBUG
+	extern char _convBuf[MAX_PAYLOAD * 2 + 1];
+#endif
 
+// **** public functions ********
 
 /**
  * Return this nodes id.
@@ -138,8 +181,6 @@ void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GA
  */
 void requestTime();
 
-
-
 /**
  * Returns the most recent node configuration received from controller
  */
@@ -192,6 +233,11 @@ bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
  * @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
  */
 int8_t sleep(unsigned long ms);
+/**
+* Same as sleep(), send heartbeat upon wakeup and process incoming messages
+* @param ms Number of milliseconds to sleep.
+* @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+*/
 int8_t smartSleep(unsigned long ms);
 
 /**
@@ -204,6 +250,13 @@ int8_t smartSleep(unsigned long ms);
  * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
  */
 int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
+/**
+* Same as sleep(), send heartbeat upon wakeup and process incoming messages
+* @param interrupt Interrupt that should trigger the wakeup
+* @param mode RISING, FALLING, CHANGE
+* @param ms Number of milliseconds to sleep.
+* @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+*/
 int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 
 /**
@@ -218,6 +271,15 @@ int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
  * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
  */
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
+/**
+* Same as sleep(), send heartbeat upon wakeup and process incoming messages
+* @param interrupt1 First interrupt that should trigger the wakeup
+* @param mode1 Mode for first interrupt (RISING, FALLING, CHANGE)
+* @param interrupt2 Second interrupt that should trigger the wakeup
+* @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
+* @param ms Number of milliseconds to sleep or 0 to sleep forever
+* @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+*/
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 
 #ifdef MY_NODE_LOCK_FEATURE
@@ -235,31 +297,60 @@ int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t
 void nodeLock(const char* str);
 #endif
 
-/******  PRIVATE ********/
+// **** private functions ********
 
+/**
+* @brief Node initialisation
+*/
 void _begin();
-
+/**
+* @brief Main framework process
+*/
 void _process(void);
-
+/**
+* @brief Processes internal messages
+* @return True if received message requires further processing
+*/
 bool _processInternalMessages();
-
+/**
+* @brief Puts node to a infinite loop if unrecoverable situation detected
+*/
 void _infiniteLoop();
-
+/**
+* @brief Handles registration request
+*/
 void _registerNode();
-
+/**
+* @brief Sends message according to routing table
+* @param message
+* @return True if message successfully sent to next node
+*/
 bool _sendRoute(MyMessage &message);
 
-extern NodeConfig _nc;
-extern MyMessage _msg;  // Buffer for incoming messages.
-extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces among others).
-#ifdef MY_DEBUG
-	extern char _convBuf[MAX_PAYLOAD*2+1];
-#endif
+/**
+* @brief Callback for incoming messages
+* @param message
+*/
 void receive(const MyMessage &message)  __attribute__((weak));
+/**
+* @brief Callback for incoming time messages
+*/
 void receiveTime(unsigned long)  __attribute__((weak));
+/**
+* @brief Node presenation
+*/
 void presentation()  __attribute__((weak));
+/**
+* @brief Called before node initialises
+*/
 void before() __attribute__((weak));
+/**
+* @brief Called after node initialises but before main loop
+*/
 void setup() __attribute__((weak));
+/**
+* @brief Main loop
+*/
 void loop() __attribute__((weak));
 
 
@@ -278,7 +369,7 @@ static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destinati
 static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
 	msg.sender = GATEWAY_ADDRESS;
 	msg.destination = GATEWAY_ADDRESS;
-	msg.sensor = 255;
+	msg.sensor = NODE_SENSOR_ID;
 	msg.type = type;
 	mSetCommand(msg, C_INTERNAL);
 	mSetRequestAck(msg, false);
@@ -288,3 +379,5 @@ static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
 
 
 #endif
+
+/** @}*/
