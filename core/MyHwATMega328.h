@@ -27,7 +27,7 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
-
+#include <util/atomic.h>
 
 
 #ifdef __cplusplus
@@ -91,5 +91,9 @@ enum period_t
 };
 
 void hwInternalSleep(unsigned long ms);
+
+#ifndef DOXYGEN
+  #define MY_CRITICAL_SECTION     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#endif  /* DOXYGEN */
 
 #endif

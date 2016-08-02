@@ -43,5 +43,17 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
+/**
+ * Restore interrupt state.
+ * Helper function for MY_CRITICAL_SECTION.
+ */
+static __inline__ void __psRestore(const uint32_t *__s)
+{
+    xt_wsr_ps( *__s );
+}
+   
+#ifndef DOXYGEN
+	#define MY_CRITICAL_SECTION    for ( uint32_t __psSaved __attribute__((__cleanup__(__psRestore))) = xt_rsil(15), __ToDo = 1; __ToDo ; __ToDo = 0 )
+#endif  /* DOXYGEN */
 
 #endif // #ifdef ARDUINO_ARCH_ESP8266
