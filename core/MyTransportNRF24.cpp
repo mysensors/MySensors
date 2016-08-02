@@ -20,9 +20,45 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 #include "drivers/RF24/RF24.h"
+#include "drivers/CircularBuffer/CircularBuffer.h"
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	#include "drivers/AES/AES.h"
+#endif
+
+#ifdef MY_RF24_IRQ_PIN
+typedef struct _transportQueuedMessage
+{
+	uint8_t m_len;                        // Length of the data
+	uint8_t m_data[MAX_MESSAGE_LENGTH];   // The raw data
+} transportQueuedMessage;
+
+/** Buffer to store queued messages in. */
+static transportQueuedMessage transportRxQueueStorage[MY_RX_MESSAGE_BUFFER_SIZE];
+/** Circular buffer, which uses the transportRxQueueStorage and administers stored messages. */
+static CircularBuffer<transportQueuedMessage> transportRxQueue(transportRxQueueStorage, MY_RX_MESSAGE_BUFFER_SIZE); 
+
+static volatile uint8_t transportLostMessageCount = 0;
+
+static void transportRxCallback(void)
+{
+	// Called for each message received by radio, from interrupt context.
+	// This function _must_ call RF24_readMessage() to de-assert interrupt line!
+	if (!transportRxQueue.full())
+	{
+		transportQueuedMessage* msg = transportRxQueue.getFront();
+		msg->m_len = RF24_readMessage(msg->m_data);		// Read payload & clear RX_DR
+		(void)transportRxQueue.pushFront(msg);
+	} else {
+		// Queue is full. Discard message.
+		(void)RF24_readMessage(NULL);		// Read payload & clear RX_DR
+		// Keep track of messages lost. Max 255, prevent wrapping.
+		if (transportLostMessageCount < 255)
+		{
+			++transportLostMessageCount;
+		}
+	}
+}
 #endif
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
@@ -32,7 +68,6 @@
 #endif
 
 bool transportInit() {
-	
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 		//set up AES-key
@@ -41,6 +76,9 @@ bool transportInit() {
 		memset(_psk, 0, 16);
 	#endif
 	
+	#ifdef MY_RF24_IRQ_PIN
+		RF24_registerReceiveCallback( transportRxCallback );
+	#endif
 	return RF24_initialize();
 }
 
@@ -71,8 +109,12 @@ bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
 }
 
 bool transportAvailable() {
-	bool avail = RF24_isDataAvailable();
-	return avail;
+	#ifdef MY_RF24_IRQ_PIN
+		(void)RF24_isDataAvailable;				// Prevent 'defined but not used' warning
+		return !transportRxQueue.empty();
+	#else
+		return RF24_isDataAvailable();
+	#endif
 }
 
 bool transportSanityCheck() {
@@ -80,7 +122,18 @@ bool transportSanityCheck() {
 }
 
 uint8_t transportReceive(void* data) {
-	uint8_t len = RF24_readMessage(data);
+	uint8_t len = 0; 
+	#ifdef MY_RF24_IRQ_PIN
+		transportQueuedMessage* msg = transportRxQueue.getBack();
+		if (msg)
+		{
+			len = msg->m_len;
+			(void)memcpy(data, msg->m_data, len);
+			(void)transportRxQueue.popBack();
+		}
+	#else
+		len = RF24_readMessage(data);
+	#endif
 	#if defined(MY_RF24_ENABLE_ENCRYPTION)
 		// has to be adjusted, WIP!
 		_aes.set_IV(0);
