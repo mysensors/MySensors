@@ -48,9 +48,33 @@ void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 */
 
+/**
+ * Sleep for a defined time, using minimum power.
+ * @param ms   Time to sleep, in [ms].
+ * @return Nonsense, please ignore.
+ */
 int8_t hwSleep(unsigned long ms);
+
+/**
+ * Sleep for a defined time, using minimum power, or until woken by interrupt.
+ * @param interrupt  Interrupt number, which can wake the mcu from sleep.
+ * @param mode       Interrupt mode, as passed to attachInterrupt.
+ * @param ms         Time to sleep, in [ms].
+ * @return -1 when woken by timer, or interrupt number when woken by interrupt.
+ */
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
+
+/**
+ * Sleep for a defined time, using minimum power, or until woken by one of the interrupts.
+ * @param interrupt1  Interrupt1 number, which can wake the mcu from sleep.
+ * @param mode1       Interrupt1 mode, as passed to attachInterrupt.
+ * @param interrupt2  Interrupt2 number, which can wake the mcu from sleep.
+ * @param mode2       Interrupt2 mode, as passed to attachInterrupt.
+ * @param ms          Time to sleep, in [ms].
+ * @return -1 when woken by timer, or interrupt number when woken by interrupt.
+ */
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
+
 #ifdef MY_DEBUG
 	void hwDebugPrint(const char *fmt, ... );
 #endif
