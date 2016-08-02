@@ -168,19 +168,29 @@ template <class T> class CircularBuffer
     }
     
   protected:
+    /**
+     * Internal getter for records.
+     * @param idx   Record index in buffer.
+     * @return Ptr to record.
+     */
     inline T * get(const uint8_t idx) const
     {
       return &(m_buff[idx]);
     }
+
+    /**
+     * Internal getter for index of last used record in buffer.
+     * @return Index of last record.
+     */
     inline uint8_t back(void) const
     {
       return (m_front - m_fill + m_size) % m_size;
     }
 
-    const uint8_t      m_size;     // Total number of records that can be stored in the buffer.
-    T* const           m_buff;     // Ptr to buffer holding all records.
-    volatile uint8_t   m_front;    // Index of front element (not pushed yet).
-    volatile uint8_t   m_fill;     // Amount of records currently pushed.
+    const uint8_t      m_size;     //!< Total number of records that can be stored in the buffer.
+    T* const           m_buff;     //!< Ptr to buffer holding all records.
+    volatile uint8_t   m_front;    //!< Index of front element (not pushed yet).
+    volatile uint8_t   m_fill;     //!< Amount of records currently pushed.
 };
 
 #endif // CircularBuffer_h
