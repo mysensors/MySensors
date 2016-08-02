@@ -25,6 +25,10 @@
 LOCAL uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
 LOCAL uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 
+#ifdef MY_RF24_IRQ_PIN
+	LOCAL RF24_receiveCallbackType RF24_receiveCallback = NULL;
+#endif
+
 LOCAL void RF24_csn(bool level) {
 	digitalWrite(MY_RF24_CS_PIN, level);		
 }
@@ -84,6 +88,10 @@ LOCAL void RF24_flushTX(void) {
 
 LOCAL uint8_t RF24_getStatus(void) {
 	return RF24_spiByteTransfer( NOP );
+}
+
+LOCAL uint8_t RF24_getFifoStatus(void) {
+	return RF24_readByteRegister(FIFO_STATUS);
 }
 
 LOCAL void RF24_setChannel(uint8_t channel) {
@@ -253,14 +261,69 @@ LOCAL bool RF24_sanityCheck(void) {
 	return status;
 }
 
+#ifdef MY_RF24_IRQ_PIN
+LOCAL void RF24_irqHandler( void )
+{
+	if (RF24_receiveCallback)
+	{
+		// Will stay for a while (several 100us) in this interrupt handler. Any interrupts from serial
+		// rx coming in during our stay will not be handled and will cause characters to be lost.
+		// As a workaround we re-enable interrupts to allow nested processing of other interrupts.
+		// Our own handler is disconnected to prevent recursive calling of this handler.
+		#ifdef MY_GATEWAY_SERIAL
+			detachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
+			interrupts();
+		#endif
+		// Read FIFO until empty.
+		// Procedure acc. to datasheet (pg. 63):
+		// 1.Read payload, 2.Clear RX_DR IRQ, 3.Read FIFO_status, 4.Repeat when more data available.
+		// Datasheet (ch. 8.5) states, that the nRF de-asserts IRQ after reading STATUS.
+
+		// Start checking if RX-FIFO is not empty, as we might end up here from an interrupt
+		// for a message we've already read.
+		while (!(RF24_getFifoStatus() & _BV(0))) {
+			RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
+		} 
+		// Restore our interrupt handler.
+		#ifdef MY_GATEWAY_SERIAL
+			noInterrupts();
+			attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
+		#endif
+	} else {
+		// clear RX interrupt
+		RF24_setStatus(_BV(RX_DR));
+	}
+}
+
+LOCAL void RF24_registerReceiveCallback( RF24_receiveCallbackType cb )
+{
+	MY_CRITICAL_SECTION {
+		RF24_receiveCallback = cb;
+	}
+}
+#endif
+
 LOCAL bool RF24_initialize(void) {
 	// Initialize pins
 	pinMode(MY_RF24_CE_PIN,OUTPUT);
 	pinMode(MY_RF24_CS_PIN,OUTPUT);
+	#ifdef MY_RF24_IRQ_PIN
+		pinMode(MY_RF24_IRQ_PIN,INPUT);
+	#endif
 	// Initialize SPI
 	_SPI.begin();
 	RF24_ce(LOW);
 	RF24_csn(HIGH);
+	#ifdef MY_RF24_IRQ_PIN
+		// assure SPI can be used from interrupt context
+		// Note: ESP8266 & SoftSPI currently do not support interrupt usage for SPI,
+		// therefore it is unsafe to use MY_RF24_IRQ_PIN with ESP8266/SoftSPI!
+		_SPI.usingInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
+		// attach interrupt
+		attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
+	#else
+		(void)RF24_getFifoStatus;   // prevent 'defined but not used' warning
+	#endif
 	// CRC and power up
 	RF24_setRFConfiguration(MY_RF24_CONFIGURATION | _BV(PWR_UP) ) ;
 	// settle >2ms

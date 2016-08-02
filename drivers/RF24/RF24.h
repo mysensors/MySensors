@@ -62,7 +62,11 @@
 #endif
 
 // RF24 settings
-#define MY_RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)
+#ifdef MY_RF24_IRQ_PIN
+	#define MY_RF24_CONFIGURATION (uint8_t) ((RF24_CRC_16 << 2) | (1 << MASK_TX_DS) | (1 << MASK_MAX_RT))
+#else
+	#define MY_RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)
+#endif
 #define MY_RF24_FEATURE (uint8_t)( _BV(EN_DPL) | _BV(EN_ACK_PAY) )
 #define MY_RF24_RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 // +1 for Si24R1
 
@@ -222,6 +226,7 @@ LOCAL uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value);
 LOCAL void RF24_flushRX(void);
 LOCAL void RF24_flushTX(void);
 LOCAL uint8_t RF24_getStatus(void);
+LOCAL uint8_t RF24_getFifoStatus(void);
 LOCAL void RF24_openWritingPipe(uint8_t recipient);
 LOCAL void RF24_startListening(void);
 LOCAL void RF24_stopListening(void);
@@ -247,5 +252,16 @@ LOCAL void RF24_setPipeAddress(uint8_t pipe, uint8_t* address, uint8_t width);
 LOCAL void RF24_setPipeLSB(uint8_t pipe, uint8_t LSB);
 LOCAL void RF24_setStatus(uint8_t status);
 LOCAL void RF24_enableFeatures(void);
+
+#ifdef MY_RF24_IRQ_PIN
+	typedef void (*RF24_receiveCallbackType)(void);
+  /**
+	 * Register a callback, which will be called (from interrupt context) for every message received.
+	 * @note When a callback is registered, it _must_ retrieve the message from the nRF24
+	 * by calling RF24_readMessage(). Otherwise the interrupt will not get deasserted
+	 * and message reception will stop.
+	 */
+	LOCAL void RF24_registerReceiveCallback( RF24_receiveCallbackType cb );
+#endif
 
 #endif // __RF24_H__
