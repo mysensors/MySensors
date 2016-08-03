@@ -66,8 +66,11 @@ void _infiniteLoop() {
 
 void _begin() {
 
+	if (preHwInit)
+		preHwInit();
+
 	#if !defined(MY_DISABLED_SERIAL)
-	    hwInit();
+		hwInit();
 	#endif
 
 	debug(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
