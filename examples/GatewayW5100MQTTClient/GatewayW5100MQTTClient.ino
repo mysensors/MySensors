@@ -123,11 +123,11 @@
 // Enable inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
 // Enable Inclusion mode button on gateway
-#define MY_INCLUSION_BUTTON_FEATURE
+//#define MY_INCLUSION_BUTTON_FEATURE
 // Set inclusion mode duration (in seconds)
 #define MY_INCLUSION_MODE_DURATION 60 
 // Digital pin used for inclusion mode button
-#define MY_INCLUSION_MODE_BUTTON_PIN  3 
+//#define MY_INCLUSION_MODE_BUTTON_PIN  3 
 
 // Uncomment to override default HW configurations
 //#define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
