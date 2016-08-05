@@ -94,6 +94,7 @@ void stParentTransition()  {
 		_nc.distance = 1;	// assumption, CHKUPL:GWDC will update this variable
 		_nc.parentNodeId = MY_PARENT_NODE_ID;
 		// skipping find parent
+        setIndication(INDICATION_GOT_PARENT);
 		transportSwitchSM(stID);
 	#else
 		_transportSM.findingParentNode = true;
