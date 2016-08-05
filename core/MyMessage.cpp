@@ -23,12 +23,21 @@
 #include <stdlib.h>
 
 
-MyMessage::MyMessage() {
-	destination = 0; // Gateway is default destination
+MyMessage::MyMessage()
+  :   last( 0u )
+    , sender( 0u )
+	, destination( 0u ) // Gateway is default destination
+    , version_length( 0u )
+    , command_ack_payload( 0u )
+    , type( 0u )
+    , sensor( 0u )
+{
+    (void)memset(data, 0u, sizeof(data));    
 }
 
-MyMessage::MyMessage(uint8_t _sensor, uint8_t _type) {
-	destination = 0; // Gateway is default destination
+MyMessage::MyMessage(uint8_t _sensor, uint8_t _type)
+  : MyMessage()
+{
 	sensor = _sensor;
 	type = _type;
 }
