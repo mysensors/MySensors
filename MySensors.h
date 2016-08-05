@@ -286,6 +286,10 @@
 	#endif
 #endif
 
+#if defined(MY_PARENT_NODE_IS_STATIC) && (MY_PARENT_NODE_ID == AUTO)
+	#error Parent is static but no parent ID defined. 
+#endif
+
 // Make sure to disable child features when parent feature is disabled
 #if !defined(MY_RADIO_FEATURE)
 	#undef MY_OTA_FIRMWARE_FEATURE
