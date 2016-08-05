@@ -282,6 +282,11 @@ public:
 
 	char i2h(uint8_t i) const;
 
+    /**
+     * Clear message contents.
+     */
+    void clear();
+
 	/**
 	 * If payload is something else than P_STRING you can have the payload value converted
 	 * into string representation by supplying a buffer with the minimum size of
