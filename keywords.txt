@@ -2,7 +2,6 @@
 # Datatypes (KEYWORD1)
 #######################################
 MyMessage	KEYWORD1
-MySensor	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
