@@ -52,7 +52,7 @@
 
 unsigned long SEND_FREQUENCY = 20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
-boolean pcReceived = false;
+bool pcReceived = false;
 volatile unsigned long pulseCount = 0;   
 volatile unsigned long lastBlink = 0;
 volatile unsigned long watt = 0;
