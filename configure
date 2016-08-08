@@ -1,0 +1,322 @@
+#!/bin/bash
+# This version is heavily based on the work of mz-fuzzy (https://github.com/mz-fuzzy)
+# adapted to work with MySensors project.
+# Original work: https://github.com/TMRh20/RF24/blob/master/configure
+
+function help {
+cat <<EOF
+configure script for MySensors gateway.
+Options:
+
+Help:
+    -h, --help                  print this message
+
+Driver options:
+    --driver=[SPIDEV|MRAA|RPi|LittleWire]
+                                Driver for RF24 library. [configure autodetected]
+
+Building options:
+    --os=[LINUX|DARWIN]         Operating system. [configure autodetected]
+    --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
+                                SoC type to be used. [configure autodetected]
+    --cpu-flags=<CXXFLAGS>        CPU defining/optimizing flags to be used. [configure autodetected]
+    --extra-cxxflags=<CXXFLAGS>     Extra C flags passed to C/C++ compilation. []
+    --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
+    --libname=<LIBNAME>         Library name. [rf24]
+    --cxx_compiler=<CXX>        C++ compiler [arm-linux-gnueabihf-g++][g++]
+    --no-clean                  Don't clean previous build artifacts.
+    --rf24h-lib-dir             RF24 library files directory.
+
+Installation options:
+    --prefix=<PREFIX>           Installation prefix path. [/usr/local]
+    --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
+
+MySensors options:
+    --my-debug                  Enables debug.
+    --my-gateway-type=[ethernet|mqtt]
+                                Gateway type, default to ethernet.
+    --my-config-file=<FILE>     Config file path. [/etc/MySensorGateway.cfg]
+    --my-rf24-enable            Enables RF24 radio.
+    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125.
+    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
+                                RF24 PA level.
+    --my-controller-url-address=<URL>
+                                Controller or MQTT broker url.
+    --my-controller-ip-address=<IP>
+                                Controller or MQTT broker ip.
+                                Use commas instead of points. Example: 127,0,0,1
+    --my-port                   Controller or MQTT broker port.
+    --my-mqtt-client-id=<ID>    MQTT client id.
+    --my-mqtt-publish-topic-prefix=<PREFIX>
+                                MQTT publish topic prefix.
+    --my-mqtt-subscribe-topic-prefix=<PREFIX>
+                                MQTT subscribe topic prefix.
+    --my-rf24-irq-pin           Pin number connected to nRF24L01 IRQ pin.
+    --my-rx-message-buffer-size Buffer size for incoming messages when using rf24 interrupts.
+                                Default set to 20.
+EOF
+}
+
+function die {
+    echo "[ERROR] $1"
+    exit $2
+}
+
+function detect_rpi_revision {
+    # get PI Revision from cpuinfo
+    local pirev=$(eval "cat /proc/cpuinfo 2>/dev/null | grep Revision | cut -f 2 -d ':' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$$//'")
+    echo ${pirev}
+}
+
+function detect_machine {
+    local cpu=$(eval "uname -m 2>/dev/null")
+    local machine=$(eval "cat /sys/firmware/devicetree/base/model 2>/dev/null")
+    local hardware=$(eval "grep sunxi_platform /sys/class/sunxi_info/sys_info 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
+    if [ -z "$hardware" ]; then
+        local hardware=$(eval "grep Hardware /proc/cpuinfo 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
+    fi
+    local soc="unknown"
+    local tp="unknown"
+    local rev="unknown"
+
+    if [ -z "$cpu" ]; then
+        cpu="unknown"
+    fi
+
+    case $hardware in
+    BCM2708)
+        soc="BCM2835"
+        if [[ $machine == "Raspberry"* ]]; then
+            tp="RPi"
+            rev=($(detect_rpi_revision))
+        fi
+        ;;
+    BCM2709)
+        soc="BCM2836"
+        if [[ $machine == "Raspberry"* ]]; then
+            rev=($(detect_rpi_revision))
+            if [[ $rev == "a02082" || $rev == "a22082" ]]; then
+                tp="RPi3"
+            else
+                tp="Rpi2"
+            fi
+        fi
+        ;;
+    sun4i|Sun4iw1p1)
+        soc="A10"
+        ;;
+    sun5i|Sun4iw2p1)
+        soc="A13"
+        ;;
+    Sun4iw2p2)
+        soc="A12"
+        ;;
+    Sun4iw2p3)
+        soc="A10s"
+        ;;
+    sun6i|Sun8iw1p1)
+        soc="A31"
+        ;;
+    Sun8iw1p2)
+        soc="A31s"
+        ;;
+    sun7i|Sun8iw2p1)
+        soc="A20"
+        if [[ $machine == "Banana Pi"* ]]; then
+            tp="BananaPi"
+        elif [[ $machine == "Banana Pro"* ]]; then
+            tp="BananaPro"
+        fi
+        ;;
+    sun8i|Sun8iw7p1)
+        soc="H3"
+        ;;
+    Sun8iw3p1)
+        soc="A23"
+        ;;
+    Sun8iw5p1)
+        soc="A33"
+        ;;
+    Sun8iw6p1)
+        soc="A83t"
+        ;;
+    sun9i|Sun9iw1p1)
+        soc="A80"
+        ;;
+    Sun9iw1p2)
+        soc="A80t"
+        ;;
+    sun50i|Sun50iw1p1)
+        soc="A64"
+        ;;
+    'Generic AM33XX'*)
+        soc="AM33XX"
+        ;;
+    *)
+        soc="unknown"
+    esac
+    echo "${soc} ${tp} ${cpu} ${rev}"
+}
+
+function gcc_cpu_flags {
+    local soc=$1
+    case $soc in
+    BCM2835)
+        flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -DRASPBERRYPI_ARCH"
+        ;;
+    BCM2836)
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -DRASPBERRYPI_ARCH"
+        ;;
+    AM33XX)
+        flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
+        ;;
+    A10)
+        flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
+        ;;
+    A13)
+        flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
+        ;;
+    A20)
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+        ;;
+    H3)
+        flags="-march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+        ;;
+    *)
+        flags=""
+    esac
+    echo ${flags}
+}
+
+params="OS SOC CPUFLAGS CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR"
+
+for opt do
+    if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
+        help
+        exit 0
+    fi
+    optarg="${opt#*=}"
+    case "$opt" in
+    --os=*)
+        OS="$optarg"
+        ;;
+    --soc=*)
+        SOC="$optarg"
+        ;;
+    --cpu-flags=*)
+        CPUFLAGS="$optarg"
+        ;;
+    --extra-cxxflags=*)
+        CXXFLAGS="$optarg"
+        ;;
+    --extra-ldflags=*)
+        LDFLAGS="$optarg"
+        ;;
+    --cxx_compiler=*)
+        CXX="$optarg"
+        ;;
+    --no-clean*)
+        NO_CLEAN="1"
+        ;;
+    --prefix=*)
+        PREFIX="$optarg"
+        ;;
+    --rf24h-lib-dir=*)
+        RF24H_LIB_DIR="$optarg"
+        ;;
+    --gateway-dir=*)
+        GATEWAY_DIR="$optarg"
+        ;;
+    --my-debug*)
+        CXXFLAGS="-DMY_DEBUG $CXXFLAGS"
+        ;;
+    --my-gateway-type=*)
+        if [[ ${optarg} == "mqtt" ]]; then
+            LDFLAGS="-lmosquitto $LDFLAGS"
+            CXXFLAGS="-DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
+        fi
+        ;;
+    --my-config-file=*)
+        CXXFLAGS="-DMY_CONFIG_FILE=${optarg} $CXXFLAGS"
+        ;;
+    --my-rf24-enable*)
+        CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+        ;;
+    --my-rf24-channel=*)
+        CXXFLAGS="-DMY_RF24_CHANNEL=${optarg} $CXXFLAGS"
+        ;;
+    --my-rf24-pa-level=*)
+        CXXFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CXXFLAGS"
+        ;;
+    --my-controller-url-address=*)
+        CXXFLAGS="-DMY_CONTROLLER_URL_ADDRESS=${optarg} $CXXFLAGS"
+        ;;
+    --my-controller-ip-address=*)
+        CXXFLAGS="-DMY_CONTROLLER_IP_ADDRESS=${optarg} $CXXFLAGS"
+        ;;
+    --my-port=*)
+        CXXFLAGS="-DMY_PORT=${optarg} $CXXFLAGS"
+        ;;
+    --my-mqtt-client-id=*)
+        CXXFLAGS="-DMY_MQTT_CLIENT_ID=${optarg} $CXXFLAGS"
+        ;;
+    --my-mqtt-publish-topic-prefix=*)
+        CXXFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=${optarg} $CXXFLAGS"
+        ;;
+    --my-mqtt-subscribe-topic-prefix=*)
+        CXXFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=${optarg} $CXXFLAGS"
+        ;;
+    --my-rf24-irq-pin=*)
+        CXXFLAGS="-DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-rx-message-buffer-size=*)
+        CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
+        ;;
+    *)
+        echo "[WARNING] Unknown option detected:$opt, ignored"
+        ;;
+    esac
+done
+
+PREFIX=${PREFIX:-/usr/local}
+RF24H_LIB_DIR=${PREFIX}/include/RF24
+GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
+CXX=${CXX:-g++}
+
+if [ -z "${SOC}" ]; then
+    echo "[SECTION] Detecting target machine."
+    info=($(detect_machine))
+    SOC=${info[0]}
+    TYPE=${info[1]}
+    CPU=${info[2]}
+    REV=${info[3]}
+    echo "[OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}, REV=${REV}."
+fi
+
+if [ -z "${CPUFLAGS}" ]; then
+    CPUFLAGS=$(gcc_cpu_flags $SOC)
+fi
+
+CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra -DLINUX_ARCH_GENERIC $CXXFLAGS"
+
+if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
+    CXXFLAGS+="-D__RPI_BPLUS"
+fi  
+
+LDFLAGS="-pthread -lrf24-bcm $LDFLAGS"
+
+echo "[SECTION] Saving configuration."
+echo -n "" > Makefile.inc
+for param in ${params}; do
+    if [[ ${!param} ]]; then
+        echo "${param}=${!param}" >> Makefile.inc
+    fi
+done
+
+if [ -z "${NO_CLEAN}" ]; then
+    echo "[SECTION] Cleaning previous builds."
+    make clean >/dev/null
+fi
+
+
+echo "[OK] Finished."

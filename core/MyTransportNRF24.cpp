@@ -19,7 +19,13 @@
 
 #include "MyConfig.h"
 #include "MyTransport.h"
-#include "drivers/RF24/RF24.h"
+
+#ifdef RASPBERRYPI_ARCH
+	#include "drivers/RF24/RF24_RPi.cpp"
+#else
+	#include "drivers/RF24/RF24.h"
+#endif
+
 #include "drivers/CircularBuffer/CircularBuffer.h"
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)

@@ -413,7 +413,7 @@
 	#elif defined(RASPBERRYPI_ARCH)
 		#include <RF24.h>
 		#include <RF24_config.h>
-		#ifdef __PI_BPLUS
+		#ifdef __RPI_BPLUS
 			#define MY_RF24_CE_PIN RPI_BPLUS_GPIO_J8_22
 			#define MY_RF24_CS_PIN RPI_BPLUS_GPIO_J8_24
 		#else
@@ -716,25 +716,34 @@
 #endif
 
 /**************************************
-* RaspberryPi Settings
+* Linux Settings
 ***************************************/
 
 /**
- * @def MY_RASPBERRYPI_TTY_NAME
+ * @def MY_LINUX_TTY_NAME
  * @brief Set the name of predictable tty
  */
-#ifndef MY_RASPBERRYPI_TTY_NAME
-#define MY_RASPBERRYPI_TTY_NAME /dev/ttyMySensorsGateway
+#ifndef MY_LINUX_TTY_NAME
+#define MY_LINUX_TTY_NAME "/dev/ttyMySensorsGateway"
 #endif
 
 /**
- * @def MY_RASPBERRYPI_TTY_GROUPNAME
+ * @def MY_LINUX_TTY_GROUPNAME
  * @brief Set the group name for the raw tty
  */
-#ifndef MY_RASPBERRYPI_TTY_GROUPNAME
-#define MY_RASPBERRYPI_TTY_GROUPNAME tty
+#ifndef MY_LINUX_TTY_GROUPNAME
+#define MY_LINUX_TTY_GROUPNAME tty
 #endif
 
+/**
+ * @def MY_LINUX_CONFIG_FILE
+ * @brief Set the filepath for the gateway config file
+ *
+ * For now the configuration file is only used to store the emulated eeprom state
+ */
+ #ifndef MY_LINUX_CONFIG_FILE
+ #define MY_LINUX_CONFIG_FILE "/etc/MySensorGateway.cfg"
+ #endif
 
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.

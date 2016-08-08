@@ -51,6 +51,10 @@ void _process() {
 		transportProcess();
 	#endif
 
+	#if defined(LINUX_ARCH_GENERIC)
+		// To avoid high cpu usage
+		usleep(10000); // 10ms
+	#endif
 }
 
 void _infiniteLoop() {
@@ -61,17 +65,17 @@ void _infiniteLoop() {
 		#if defined (MY_LEDS_BLINKING_FEATURE)
 			ledsProcess();
 		#endif
+		#if defined(LINUX_ARCH_GENERIC)
+			exit(1);
+		#endif
 	}
 }
 
 void _begin() {
-
 	if (preHwInit)
 		preHwInit();
 
-	#if !defined(MY_DISABLED_SERIAL)
-		hwInit();
-	#endif
+	hwInit();
 
 	debug(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
 

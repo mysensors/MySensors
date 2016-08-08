@@ -20,6 +20,7 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 #include "MyProtocol.h"
+#include <string.h>
 
 uint8_t protocolH2i(char c);
 
@@ -32,7 +33,6 @@ bool protocolParse(MyMessage &message, char *inputString) {
 	uint8_t blen = 0;
 	int i = 0;
 	uint8_t command = 0;
-	uint8_t ack = 0;
 
 	// Extract command data coming on serial line
 	for (str = strtok_r(inputString, ";", &p); // split using semicolon
@@ -51,7 +51,7 @@ bool protocolParse(MyMessage &message, char *inputString) {
 				mSetCommand(message, command);
 				break;
 			case 3: // Should we request ack from destination?
-				ack = atoi(str);
+				mSetRequestAck(message, atoi(str)?1:0);
 				break;
 			case 4: // Data type
 				message.type = atoi(str);
@@ -86,8 +86,7 @@ bool protocolParse(MyMessage &message, char *inputString) {
 
 	message.sender = GATEWAY_ADDRESS;
 	message.last = GATEWAY_ADDRESS;
-    mSetRequestAck(message, ack?1:0);
-    mSetAck(message, false);
+	mSetAck(message, false);
 	if (command == C_STREAM)
 		message.set(bvalue, blen);
 	else
@@ -110,23 +109,23 @@ char * protocolFormatMQTTSubscribe(const char* prefix) {
 	return _fmtBuffer;
 }
 
-void protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsigned int length) {
-	//TODO: Not sure if we should copy the topic and payload into a buffer so we are not modifying original.
+#ifdef MY_GATEWAY_MQTT_CLIENT
+bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsigned int length) {
 	char *str, *p;
 	uint8_t i = 0;
 	uint8_t bvalue[MAX_PAYLOAD];
 	uint8_t blen = 0;
 	uint8_t command = 0;
+
 	for (str = strtok_r(topic, "/", &p); str && i <= 5;
 			str = strtok_r(NULL, "/", &p)) {
 		switch (i) {
 			case 0: {
 				// Topic prefix
-				//TODO: Should be checking the topic prefix
-				//if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
+				if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
 					// Message not for us or malformed!
-				//	return;
-				//}
+					return false;
+				}
 				break;
 			}
 			case 1: {
@@ -153,29 +152,41 @@ void protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 			case 5: {
 				// Sub type
 				message.type = atoi(str);
-				// Add payload
-				if (command == C_STREAM) {
-					blen = 0;
-					uint8_t val;
-					while (*payload) {
-						val = protocolH2i(*payload++) << 4;
-						val += protocolH2i(*payload++);
-						bvalue[blen] = val;
-						blen++;
-					}
-					message.set(bvalue, blen);
-				} else {
-					char* ca;
-					ca = (char *) payload;
-					ca += length;
-					*ca = '\0';
-					message.set((const char*) payload);
-				}
+				break;
 			}
 		}
 		i++;
 	}
+
+	if (i != 6)
+		return false;
+
+	message.sender = GATEWAY_ADDRESS;
+	message.last = GATEWAY_ADDRESS;
+	mSetAck(message, false);
+
+	// Add payload
+	if (command == C_STREAM) {
+		blen = 0;
+		uint8_t val;
+		while (*payload) {
+			val = protocolH2i(*payload++) << 4;
+			val += protocolH2i(*payload++);
+			bvalue[blen] = val;
+			blen++;
+		}
+		message.set(bvalue, blen);
+	} else {
+		char* ca;
+		ca = (char *) payload;
+		ca += length;
+		*ca = '\0';
+		message.set((const char*) payload);
+	}
+
+	return true;
 }
+#endif
 
 uint8_t protocolH2i(char c) {
 	uint8_t i = 0;
@@ -187,5 +198,3 @@ uint8_t protocolH2i(char c) {
 		i += c - 'A' + 10;
 	return i;
 }
-
-

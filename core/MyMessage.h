@@ -32,7 +32,6 @@
 
 #ifdef __cplusplus
 #include <Arduino.h>
-#include <string.h>
 #include <stdint.h>
 #endif
 

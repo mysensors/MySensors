@@ -21,7 +21,11 @@
 #include "MyMessage.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#ifndef ARDUINO
+	#define min(a,b) ((a)<(b)?(a):(b))
+#endif
 
 MyMessage::MyMessage()
 {
