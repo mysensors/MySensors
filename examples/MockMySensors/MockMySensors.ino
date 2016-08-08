@@ -86,7 +86,7 @@
 
 // Global Vars
 unsigned long SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
-boolean metric = true;
+bool metric = true;
 long randNumber;
 
 

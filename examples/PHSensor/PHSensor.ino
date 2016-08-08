@@ -36,8 +36,8 @@
 
 unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in milliseconds)
 float lastPH;
-boolean receivedConfig = false;
-boolean metric = true;
+bool receivedConfig = false;
+bool metric = true;
 // Initialize PH message
 MyMessage msg(0, V_PH);
 
