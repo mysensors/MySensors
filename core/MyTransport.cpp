@@ -692,8 +692,7 @@ inline void transportProcessFIFO() {
 }
 
 bool transportSendWrite(uint8_t to, MyMessage &message) {
-	// set protocol version and update last
-	mSetVersion(message, PROTOCOL_VERSION);
+	// Update last
 	message.last = _nc.nodeId;
 
 	// sign message if required
