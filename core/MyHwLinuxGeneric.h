@@ -54,19 +54,23 @@ static __inline__ void __hwLock() {
 }
 #endif
 
-#if defined(__DOXYGEN__)
+#if defined(DOXYGEN)
 	#define ATOMIC_BLOCK_CLEANUP
 #elif defined(MY_RF24_IRQ_PIN)
 	#define ATOMIC_BLOCK_CLEANUP uint8_t __atomic_loop \
 		__attribute__((__cleanup__( __hwUnlock ))) = 1
-#endif	/* __DOXYGEN__ */
+#else
+	#define ATOMIC_BLOCK_CLEANUP
+#endif	/* DOXYGEN */
 
-#if defined(__DOXYGEN__)
+#if defined(DOXYGEN)
 	#define ATOMIC_BLOCK
 #elif defined(MY_RF24_IRQ_PIN)
 	#define ATOMIC_BLOCK for ( ATOMIC_BLOCK_CLEANUP, __hwLock(); \
 							__atomic_loop ; __atomic_loop = 0 )
-#endif	/* __DOXYGEN__ */
+#else
+	#define ATOMIC_BLOCK
+#endif	/* DOXYGEN */
 
 #ifndef DOXYGEN
   #define MY_CRITICAL_SECTION ATOMIC_BLOCK
