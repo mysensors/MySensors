@@ -257,6 +257,9 @@ typedef enum {
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5) //!< Internal setter for length field
 #define miGetLength() ((uint8_t)BF_GET(version_length, 3, 5)) //!< Internal getter for length field
 
+#define miSetVersion(_version) BF_SET(version_length, _version, 0, 2) //!< Internal setter for version field
+#define miGetVersion() ((uint8_t)BF_GET(version_length, 0, 2)) //!< Internal getter for version field
+
 #define miSetRequestAck(_rack) BF_SET(command_ack_payload, _rack, 3, 1) //!< Internal setter for ack-request field
 #define miGetRequestAck() ((bool)BF_GET(command_ack_payload, 3, 1)) //!< Internal getter for ack-request field
 
