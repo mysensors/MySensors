@@ -163,13 +163,13 @@ typedef enum {
 /// @brief Type of internal messages (for internal messages)
 typedef enum {
 	I_BATTERY_LEVEL			= 0,	//!< Battery level
-	I_TIME					= 1,	//!< Time
+	I_TIME					= 1,	//!< Time (request/response)
 	I_VERSION				= 2,	//!< Version
 	I_ID_REQUEST			= 3,	//!< ID request
 	I_ID_RESPONSE			= 4,	//!< ID response
 	I_INCLUSION_MODE		= 5,	//!< Inclusion mode
-	I_CONFIG				= 6,	//!< Config
-	I_FIND_PARENT			= 7,	//!< Find parent
+	I_CONFIG				= 6,	//!< Config (request/response)
+	I_FIND_PARENT_REQUEST	= 7,	//!< Find parent
 	I_FIND_PARENT_RESPONSE	= 8,	//!< Find parent response
 	I_LOG_MESSAGE			= 9,	//!< Log message
 	I_CHILDREN				= 10,	//!< Children
@@ -180,9 +180,9 @@ typedef enum {
 	I_SIGNING_PRESENTATION	= 15,	//!< Provides signing related preferences (first byte is preference version)
 	I_NONCE_REQUEST			= 16,	//!< Request for a nonce
 	I_NONCE_RESPONSE		= 17,	//!< Payload is nonce data
-	I_HEARTBEAT				= 18,	//!< Heartbeat request
+	I_HEARTBEAT_REQUEST		= 18,	//!< Heartbeat request
 	I_PRESENTATION			= 19,	//!< Presentation message
-	I_DISCOVER				= 20,	//!< Discover request
+	I_DISCOVER_REQUEST		= 20,	//!< Discover request
 	I_DISCOVER_RESPONSE		= 21,	//!< Discover response
 	I_HEARTBEAT_RESPONSE	= 22,	//!< Heartbeat response
 	I_LOCKED				= 23,	//!< Node is locked (reason in string-payload)

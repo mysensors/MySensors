@@ -330,7 +330,7 @@ bool _processInternalMessages() {
 			// Re-send node presentation to controller
 			presentNode();
 		}
-		else if (type == I_HEARTBEAT) {
+		else if (type == I_HEARTBEAT_REQUEST) {
 			sendHeartbeat();
 		}
 		else if (type == I_TIME) {
