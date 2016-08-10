@@ -48,7 +48,10 @@ void MyMessage::clear()
     command_ack_payload = 0u;
     type                = 0u;
     sensor              = 0u;
-    (void)memset(data, 0u, sizeof(data));    
+    (void)memset(data, 0u, sizeof(data));
+
+	// set message protocol version
+	miSetVersion(PROTOCOL_VERSION);
 }
 
 bool MyMessage::isAck() const {

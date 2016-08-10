@@ -80,8 +80,10 @@ void _begin() {
 	debug(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
 
 	// Call before() in sketch (if it exists)
-	if (before)
+	if (before) {
+		debug(PSTR("MCO:BGN:BFR\n"));	// before callback
 		before();
+	}
 
 	#if defined(MY_LEDS_BLINKING_FEATURE)
 		ledsInit();
@@ -162,6 +164,7 @@ void _begin() {
 
 	// Call sketch setup
 	if (setup) {
+		debug(PSTR("MCO:BGN:STP\n"));	// setup callback
 		setup();
 	}
 
@@ -334,7 +337,7 @@ bool _processInternalMessages() {
 			// Re-send node presentation to controller
 			presentNode();
 		}
-		else if (type == I_HEARTBEAT) {
+		else if (type == I_HEARTBEAT_REQUEST) {
 			sendHeartbeat();
 		}
 		else if (type == I_TIME) {

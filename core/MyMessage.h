@@ -162,13 +162,13 @@ typedef enum {
 /// @brief Type of internal messages (for internal messages)
 typedef enum {
 	I_BATTERY_LEVEL			= 0,	//!< Battery level
-	I_TIME					= 1,	//!< Time
+	I_TIME					= 1,	//!< Time (request/response)
 	I_VERSION				= 2,	//!< Version
 	I_ID_REQUEST			= 3,	//!< ID request
 	I_ID_RESPONSE			= 4,	//!< ID response
 	I_INCLUSION_MODE		= 5,	//!< Inclusion mode
-	I_CONFIG				= 6,	//!< Config
-	I_FIND_PARENT			= 7,	//!< Find parent
+	I_CONFIG				= 6,	//!< Config (request/response)
+	I_FIND_PARENT_REQUEST	= 7,	//!< Find parent
 	I_FIND_PARENT_RESPONSE	= 8,	//!< Find parent response
 	I_LOG_MESSAGE			= 9,	//!< Log message
 	I_CHILDREN				= 10,	//!< Children
@@ -179,9 +179,9 @@ typedef enum {
 	I_SIGNING_PRESENTATION	= 15,	//!< Provides signing related preferences (first byte is preference version)
 	I_NONCE_REQUEST			= 16,	//!< Request for a nonce
 	I_NONCE_RESPONSE		= 17,	//!< Payload is nonce data
-	I_HEARTBEAT				= 18,	//!< Heartbeat request
+	I_HEARTBEAT_REQUEST		= 18,	//!< Heartbeat request
 	I_PRESENTATION			= 19,	//!< Presentation message
-	I_DISCOVER				= 20,	//!< Discover request
+	I_DISCOVER_REQUEST		= 20,	//!< Discover request
 	I_DISCOVER_RESPONSE		= 21,	//!< Discover response
 	I_HEARTBEAT_RESPONSE	= 22,	//!< Heartbeat response
 	I_LOCKED				= 23,	//!< Node is locked (reason in string-payload)
@@ -228,26 +228,26 @@ typedef enum {
 #define BF_SET(y, x, start, len)    ( y= ((y) &~ BF_MASK(start, len)) | BF_PREP(x, start, len) ) //!< Insert a new bitfield value 'x' into 'y'
 
 // Getters/setters for special bit fields in header
-#define mSetVersion(_msg,_version) BF_SET(_msg.version_length, _version, 0, 2) //!< Set version field
-#define mGetVersion(_msg) ((uint8_t)BF_GET(_msg.version_length, 0, 2)) //!< Get version field
+#define mSetVersion(_message,_version) BF_SET(_message.version_length, _version, 0, 2) //!< Set version field
+#define mGetVersion(_message) ((uint8_t)BF_GET(_message.version_length, 0, 2)) //!< Get version field
 
-#define mSetSigned(_msg,_signed) BF_SET(_msg.version_length, _signed, 2, 1) //!< Set signed field
-#define mGetSigned(_msg) ((bool)BF_GET(_msg.version_length, 2, 1)) //!< Get versignedsion field
+#define mSetSigned(_message,_signed) BF_SET(_message.version_length, _signed, 2, 1) //!< Set signed field
+#define mGetSigned(_message) ((bool)BF_GET(_message.version_length, 2, 1)) //!< Get versignedsion field
 
-#define mSetLength(_msg,_length) BF_SET(_msg.version_length, _length, 3, 5) //!< Set length field
-#define mGetLength(_msg) ((uint8_t)BF_GET(_msg.version_length, 3, 5)) //!< Get length field
+#define mSetLength(_message,_length) BF_SET(_message.version_length, _length, 3, 5) //!< Set length field
+#define mGetLength(_message) ((uint8_t)BF_GET(_message.version_length, 3, 5)) //!< Get length field
 
-#define mSetCommand(_msg,_command) BF_SET(_msg.command_ack_payload, _command, 0, 3) //!< Set command field
-#define mGetCommand(_msg) ((uint8_t)BF_GET(_msg.command_ack_payload, 0, 3)) //!< Get command field
+#define mSetCommand(_message,_command) BF_SET(_message.command_ack_payload, _command, 0, 3) //!< Set command field
+#define mGetCommand(_message) ((uint8_t)BF_GET(_message.command_ack_payload, 0, 3)) //!< Get command field
 
-#define mSetRequestAck(_msg,_rack) BF_SET(_msg.command_ack_payload, _rack, 3, 1) //!< Set ack-request field
-#define mGetRequestAck(_msg) ((bool)BF_GET(_msg.command_ack_payload, 3, 1)) //!< Get  ack-request field
+#define mSetRequestAck(_message,_rack) BF_SET(_message.command_ack_payload, _rack, 3, 1) //!< Set ack-request field
+#define mGetRequestAck(_message) ((bool)BF_GET(_message.command_ack_payload, 3, 1)) //!< Get  ack-request field
 
-#define mSetAck(_msg,_ackMsg) BF_SET(_msg.command_ack_payload, _ackMsg, 4, 1) //!< Set ack field
-#define mGetAck(_msg) ((bool)BF_GET(_msg.command_ack_payload, 4, 1)) //!< Get ack field
+#define mSetAck(_message,_ackMsg) BF_SET(_message.command_ack_payload, _ackMsg, 4, 1) //!< Set ack field
+#define mGetAck(_message) ((bool)BF_GET(_message.command_ack_payload, 4, 1)) //!< Get ack field
 
-#define mSetPayloadType(_msg, _pt) BF_SET(_msg.command_ack_payload, _pt, 5, 3) //!< Set payload type field
-#define mGetPayloadType(_msg) ((uint8_t)BF_GET(_msg.command_ack_payload, 5, 3)) //!< Get payload type field
+#define mSetPayloadType(_message, _pt) BF_SET(_message.command_ack_payload, _pt, 5, 3) //!< Set payload type field
+#define mGetPayloadType(_message) ((uint8_t)BF_GET(_message.command_ack_payload, 5, 3)) //!< Get payload type field
 
 
 // internal access for special fields
@@ -255,6 +255,9 @@ typedef enum {
 
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5) //!< Internal setter for length field
 #define miGetLength() ((uint8_t)BF_GET(version_length, 3, 5)) //!< Internal getter for length field
+
+#define miSetVersion(_version) BF_SET(version_length, _version, 0, 2) //!< Internal setter for version field
+#define miGetVersion() ((uint8_t)BF_GET(version_length, 0, 2)) //!< Internal getter for version field
 
 #define miSetRequestAck(_rack) BF_SET(command_ack_payload, _rack, 3, 1) //!< Internal setter for ack-request field
 #define miGetRequestAck() ((bool)BF_GET(command_ack_payload, 3, 1)) //!< Internal getter for ack-request field

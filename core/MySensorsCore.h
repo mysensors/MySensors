@@ -40,6 +40,8 @@
  * |E| SYS	| SUB	| Message									| Comment
  * |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
  * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s					| Core initialization, capabilities (CP), library version (VER)
+ * | | MCO  | BGN	| BFR										| Callback before()
+ * | | MCO  | BGN	| STP										| Callback setup()
  * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d	| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
  * | | MCO	| BGN	| NODE UNLOCKED								| Node successfully unlocked (see signing chapter)
  * |!| MCO	| BGN	| TSP FAIL									| Transport initialization failed
@@ -234,7 +236,8 @@ bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
  */
 int8_t sleep(unsigned long ms);
 /**
-* Same as sleep(), send heartbeat upon wakeup and process incoming messages
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
 * @param ms Number of milliseconds to sleep.
 * @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
 */
@@ -247,15 +250,16 @@ int8_t smartSleep(unsigned long ms);
  * @param interrupt Interrupt that should trigger the wakeup
  * @param mode RISING, FALLING, CHANGE
  * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+ * @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
  */
 int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 /**
-* Same as sleep(), send heartbeat upon wakeup and process incoming messages
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
 * @param interrupt Interrupt that should trigger the wakeup
 * @param mode RISING, FALLING, CHANGE
-* @param ms Number of milliseconds to sleep.
-* @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+* @param ms Number of milliseconds to sleep or 0 to sleep forever
+* @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
 */
 int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
 
@@ -268,17 +272,18 @@ int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
  * @param interrupt2 Second interrupt that should trigger the wakeup
  * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
  * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+ * @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
  */
 int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 /**
-* Same as sleep(), send heartbeat upon wakeup and process incoming messages
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
 * @param interrupt1 First interrupt that should trigger the wakeup
 * @param mode1 Mode for first interrupt (RISING, FALLING, CHANGE)
 * @param interrupt2 Second interrupt that should trigger the wakeup
 * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
 * @param ms Number of milliseconds to sleep or 0 to sleep forever
-* @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+* @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
 */
 int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
 

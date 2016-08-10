@@ -20,7 +20,11 @@
 #include "MyGatewayTransport.h"
 
 extern bool transportSendRoute(MyMessage &message);
+
+// global variables
 extern MyMessage _msg;
+extern MyMessage _msgTmp;
+extern NodeConfig _nc;
 
 
 inline void gatewayTransportProcess() {
@@ -41,7 +45,7 @@ inline void gatewayTransportProcess() {
 			if (mGetCommand(_msg) == C_INTERNAL) {
 				if (_msg.type == I_VERSION) {
 					// Request for version. Create the response
-					gatewayTransportSend(buildGw(_msg, I_VERSION).set(MYSENSORS_LIBRARY_VERSION));
+					gatewayTransportSend(buildGw(_msgTmp, I_VERSION).set(MYSENSORS_LIBRARY_VERSION));
 				#ifdef MY_INCLUSION_MODE_FEATURE
 				} else if (_msg.type == I_INCLUSION_MODE) {
 					// Request to change inclusion mode

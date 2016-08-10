@@ -84,11 +84,11 @@ static bool skipSign(MyMessage &msg) {
 		SIGN_DEBUG(PSTR("Skipping security for ACK on command %d type %d\n"), mGetCommand(msg), msg.type);
 		return true;
 	}	else if (mGetCommand(msg) == C_INTERNAL &&
-		(msg.type == I_NONCE_REQUEST	|| msg.type == I_NONCE_RESPONSE			|| msg.type == I_SIGNING_PRESENTATION ||
-		msg.type == I_ID_REQUEST		|| msg.type == I_ID_RESPONSE			||
-		msg.type == I_FIND_PARENT		|| msg.type == I_FIND_PARENT_RESPONSE	||
-		msg.type == I_HEARTBEAT			|| msg.type == I_HEARTBEAT_RESPONSE		||
-		msg.type == I_PING				|| msg.type == I_PONG					||
+		(msg.type == I_NONCE_REQUEST		|| msg.type == I_NONCE_RESPONSE			|| msg.type == I_SIGNING_PRESENTATION ||
+		msg.type == I_ID_REQUEST			|| msg.type == I_ID_RESPONSE			||
+		msg.type == I_FIND_PARENT_REQUEST	|| msg.type == I_FIND_PARENT_RESPONSE	||
+		msg.type == I_HEARTBEAT_REQUEST			|| msg.type == I_HEARTBEAT_RESPONSE		||
+		msg.type == I_PING					|| msg.type == I_PONG					||
 		msg.type == I_REGISTRATION_REQUEST	)) {
 		SIGN_DEBUG(PSTR("Skipping security for command %d type %d\n"), mGetCommand(msg), msg.type);
 		return true;

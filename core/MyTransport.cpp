@@ -101,7 +101,7 @@ void stParentTransition()  {
 		_nc.distance = DISTANCE_INVALID;	// Set distance to max and invalidate parent node ID
 		_nc.parentNodeId = AUTO;
 		// Broadcast find parent request
-		transportRouteMessage(build(_msgTmp, _nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT, false).set(""));
+		transportRouteMessage(build(_msgTmp, _nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_REQUEST, false).set(""));
 	#endif
 }
 
@@ -509,7 +509,7 @@ void transportProcessMessage() {
 					if (type == I_FIND_PARENT_RESPONSE) {
 						#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_PARENT_NODE_IS_STATIC)
 							if (_transportSM.findingParentNode) {	// only process if find parent active
-								// Reply to a I_FIND_PARENT message. Check if the distance is shorter than we already have.
+								// Reply to a I_FIND_PARENT_REQUEST message. Check if the distance is shorter than we already have.
 								uint8_t distance = _msg.getByte();
 								TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR RES,ID=%d,D=%d\n"), sender, distance);	// find parent response
 								if (isValidDistance(distance)) {
@@ -579,7 +579,7 @@ void transportProcessMessage() {
 		if (command == C_INTERNAL) {
 			if (isTransportReady()) {
 				// only reply if node is fully operational
-				if (type == I_FIND_PARENT) {
+				if (type == I_FIND_PARENT_REQUEST) {
 					#if defined(MY_REPEATER_FEATURE)
 						if (sender != _nc.parentNodeId) {	// no circular reference
 							TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR REQ,ID=%d\n"), sender);	// FPR: find parent request
@@ -603,7 +603,7 @@ void transportProcessMessage() {
 				return; // no further processing required	
 				}
 			}
-			if (type == I_DISCOVER) {
+			if (type == I_DISCOVER_REQUEST) {
 				if (last == _nc.parentNodeId) {
 					// random wait to minimize collisions
 					delay(hwMillis() & 0x3ff);
@@ -692,8 +692,7 @@ inline void transportProcessFIFO() {
 }
 
 bool transportSendWrite(uint8_t to, MyMessage &message) {
-	// set protocol version and update last
-	mSetVersion(message, PROTOCOL_VERSION);
+	// Update last
 	message.last = _nc.nodeId;
 
 	// sign message if required

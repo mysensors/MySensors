@@ -19,6 +19,10 @@
 
 #include "MyGatewayTransport.h"
 
+ // global variables
+extern MyMessage _msgTmp;
+
+
 #if defined(MY_CONTROLLER_IP_ADDRESS)
 	IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
 #endif
@@ -31,8 +35,6 @@ uint16_t _ethernetGatewayPort = MY_PORT;
 MyMessage _ethernetMsg;
 
 #define ARRAY_SIZE(x)  (sizeof(x)/sizeof(x[0]))
-
-// gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
 
 typedef struct
 {
@@ -113,7 +115,7 @@ bool gatewayTransportInit() {
 			while (WiFi.status() != WL_CONNECTED)
 			{
 				delay(500);
-				MY_SERIALDEVICE.print(".");
+				MY_SERIALDEVICE.print(F("."));
 				yield();
 			}
 			MY_SERIALDEVICE.print(F("IP: "));
@@ -127,7 +129,7 @@ bool gatewayTransportInit() {
 		#else
 			// Get IP address from DHCP
 			if (!Ethernet.begin(_ethernetGatewayMAC)) {
-				MY_SERIALDEVICE.print("DHCP FAILURE...");
+				MY_SERIALDEVICE.print(F("DHCP FAILURE..."));
 				_w5100_spi_en(false);
 				return false;
 			}
@@ -305,7 +307,7 @@ bool gatewayTransportAvailable()
 						clients[i] = _ethernetServer.available();
 						inputString[i].idx = 0;
 						debug(PSTR("Client %d connected\n"), i);
-						gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+						gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
 						// Send presentation of locally attached sensors (and node if applicable)
 						presentNode();
 					}
@@ -338,7 +340,7 @@ bool gatewayTransportAvailable()
 					client = newclient;
 					debug(PSTR("Eth: connect\n"));
 					_w5100_spi_en(false);
-					gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+					gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
 					_w5100_spi_en(true);
 					presentNode();
 				}

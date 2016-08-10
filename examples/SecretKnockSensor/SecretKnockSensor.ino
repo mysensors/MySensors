@@ -85,7 +85,7 @@ const int knockComplete = 1200;    // Longest time to wait for a knock before we
 byte secretCode[maximumKnocks] = {50, 25, 25, 50, 100, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  // Initial setup: "Shave and a Hair Cut, two bits."
 int knockReadings[maximumKnocks];    // When someone knocks this array fills with the delays between knocks.
 int knockSensorValue = 0;            // Last reading of the knock sensor.
-boolean programModeActive = false;   // True if we're trying to program a new knock.
+bool programModeActive = false;   // True if we're trying to program a new knock.
 
 bool lockStatus;
 
@@ -242,7 +242,7 @@ void setLockState(bool state, bool doSend){
  
 // Checks to see if our knock matches the secret.
 // Returns true if it's a good knock, false if it's not.
-boolean validateKnock(){
+bool validateKnock(){
   int i = 0;
  
   int currentKnockCount = 0;

@@ -24,6 +24,8 @@
 #include "MyMessage.h"
 #include "MyProtocol.h"
 
+ // global variables
+extern MyMessage _msgTmp;
 
 char _serialInputString[MY_GATEWAY_MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
 int _serialInputPos;
@@ -38,7 +40,7 @@ bool gatewayTransportSend(MyMessage &message) {
 }
 
 bool gatewayTransportInit() {
-	gatewayTransportSend(buildGw(_msg, I_GATEWAY_READY).set("Gateway startup complete."));
+	gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
 	// Send presentation of locally attached sensors (and node if applicable)
 	presentNode();
 
