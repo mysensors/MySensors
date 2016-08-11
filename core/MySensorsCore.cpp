@@ -151,10 +151,6 @@ void _begin() {
 		}
 	#endif
 
-	#if !defined(MY_GATEWAY_FEATURE)
-		presentNode();
-	#endif
-
 	// register node
 	_registerNode();
 
@@ -163,6 +159,10 @@ void _begin() {
 		debug(PSTR("MCO:BGN:STP\n"));	// setup callback
 		setup();
 	}
+
+	#if !defined(MY_GATEWAY_FEATURE)
+		presentNode();
+	#endif
 
 	debug(PSTR("MCO:BGN:INIT OK,ID=%d,PAR=%d,DIS=%d,REG=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance, _nodeRegistered);
 }
