@@ -45,15 +45,17 @@ MySensors options:
     --my-controller-ip-address=<IP>
                                 Controller or MQTT broker ip.
                                 Use commas instead of points. Example: 127,0,0,1
-    --my-port                   Controller or MQTT broker port.
+    --my-port=<PORT>            Controller or MQTT broker port.
     --my-mqtt-client-id=<ID>    MQTT client id.
     --my-mqtt-publish-topic-prefix=<PREFIX>
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-rf24-irq-pin           Pin number connected to nRF24L01 IRQ pin.
-    --my-rx-message-buffer-size Buffer size for incoming messages when using rf24 interrupts.
-                                Default set to 20.
+    --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
+                                For RaspberryPi use BCM numbering.
+    --my-rx-message-buffer-size=<SIZE>
+                                Buffer size for incoming messages when using rf24 interrupts.
+                                Default is 20.
 EOF
 }
 
@@ -188,7 +190,7 @@ function gcc_cpu_flags {
     echo ${flags}
 }
 
-params="OS SOC CPUFLAGS CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR"
+params="OS SOC CPUFLAGS CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR INIT_SYSTEM"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -304,6 +306,16 @@ if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
 fi  
 
 LDFLAGS="-pthread -lrf24-bcm $LDFLAGS"
+
+if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
+    INIT_SYSTEM=systemd
+    echo "[OK] init system detected: systemd"
+elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
+    INIT_SYSTEM=sysvinit
+    echo "[OK] init system detected: sysvinit"
+else
+    echo "[FAILED] unknown init system"
+fi
 
 echo "[SECTION] Saving configuration."
 echo -n "" > Makefile.inc

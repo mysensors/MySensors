@@ -53,11 +53,11 @@ install-gateway:
 	@install -m 0755 $(GATEWAY) $(GATEWAY_DIR)
 
 install-initscripts:
-	if [[ `systemctl` =~ -\.mount ]]; then \
-		install -m0644 initscripts/mysgateway.systemd /etc/systemd/system/mysgateway.service && \
-		sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/systemd/system/mysgateway.service && \
-		systemctl daemon-reload; \
-	elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then \
-		install -m0755 initscripts/mysgateway.sysvinit /etc/init.d/mysgateway && \
-		sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/init.d/mysgateway; \
-	fi
+ifeq ($(INIT_SYSTEM), systemd)
+	install -m0644 initscripts/mysgateway.systemd /etc/systemd/system/mysgateway.service
+	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/systemd/system/mysgateway.service
+	systemctl daemon-reload
+else ifeq ($(INIT_SYSTEM), sysvinit)
+	install -m0755 initscripts/mysgateway.sysvinit /etc/init.d/mysgateway
+	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/init.d/mysgateway
+endif
