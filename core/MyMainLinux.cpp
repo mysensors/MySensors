@@ -1,18 +1,15 @@
 // Initialize library and handle sketch functions like we want to
 
 #include <iostream>
-#include <signal.h>
+#include <csignal>
+#include <cstdlib>
 #include "MySensorsCore.h"
-
-volatile static int running = 1;
 
 /*
  * handler for SIGINT signal
  */
 void handle_sigint(int sig)
 {
-	running = 0;
-
 	if (sig == SIGINT) {
 		std::cout << "Received SIGINT\n" << std::endl;
 	} else if (sig == SIGTERM) {
@@ -22,6 +19,8 @@ void handle_sigint(int sig)
 	#ifdef MY_RF24_IRQ_PIN
 		detachInterrupt(MY_RF24_IRQ_PIN);
 	#endif
+
+	exit(0);
 }
 
 int main(void) {
@@ -31,7 +30,7 @@ int main(void) {
 
 	_begin(); // Startup MySensors library
 
-	while (running) {
+	for (;;) {
 		_process();  // Process incoming data
 		if (loop) loop(); // Call sketch loop
 	}
