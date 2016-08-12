@@ -210,9 +210,10 @@ MyMessage& MyMessage::setDestination(uint8_t _destination) {
 
 // Set payload
 MyMessage& MyMessage::set(void* value, uint8_t length) {
+	uint8_t payloadLength = value == NULL ? 0 : min(length, MAX_PAYLOAD);
+	miSetLength(payloadLength); 
 	miSetPayloadType(P_CUSTOM);
-	miSetLength(length);
-	memcpy(data, value, min(length, MAX_PAYLOAD));
+	memcpy(data, value, payloadLength);
 	return *this;
 }
 
