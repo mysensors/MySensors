@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <string.h>
+#include <iostream>
 #include <fstream>
 #include <sys/stat.h>
 

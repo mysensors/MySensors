@@ -21,8 +21,7 @@
 #define MyHwLinuxGeneric_h
 
 #include "MyHw.h"
-#include <stdlib.h>
-#include <iostream>
+#include <cstdlib>
 #include <pthread.h>
 
 #define MY_SERIALDEVICE Serial
@@ -31,8 +30,6 @@
 #define hwDigitalWrite(__pin, __value)
 #define hwWatchdogReset()
 #define hwReboot()
-
-using namespace std;
 
 void hwInit();
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
@@ -73,7 +70,7 @@ static __inline__ void __hwLock() {
 #endif	/* DOXYGEN */
 
 #ifndef DOXYGEN
-  #define MY_CRITICAL_SECTION ATOMIC_BLOCK
-#endif  /* DOXYGEN */
+	#define MY_CRITICAL_SECTION ATOMIC_BLOCK
+#endif	/* DOXYGEN */
 
 #endif

@@ -79,8 +79,6 @@
 
 #include <MySensors.h>
 
-using namespace std;
-
 void setup() { 
 }
 

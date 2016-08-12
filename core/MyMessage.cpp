@@ -23,10 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef ARDUINO
-	#define min(a,b) ((a)<(b)?(a):(b))
-#endif
-
 MyMessage::MyMessage()
 {
     clear();
@@ -121,7 +117,7 @@ char* MyMessage::getString(char *buffer) const {
 		} else if (payloadType == P_ULONG32) {
 			ultoa(ulValue, buffer, 10);
 		} else if (payloadType == P_FLOAT32) {
-			dtostrf(fValue,2,min(fPrecision, 8),buffer);
+			dtostrf(fValue,2,min(fPrecision, (uint8_t)8),buffer);
 		} else if (payloadType == P_CUSTOM) {
 			return getCustomString(buffer);
 		}
@@ -216,12 +212,12 @@ MyMessage& MyMessage::setDestination(uint8_t _destination) {
 MyMessage& MyMessage::set(void* value, uint8_t length) {
 	miSetPayloadType(P_CUSTOM);
 	miSetLength(length);
-	memcpy(data, value, min(length, MAX_PAYLOAD));
+	memcpy(data, value, min(length, (uint8_t)MAX_PAYLOAD));
 	return *this;
 }
 
 MyMessage& MyMessage::set(const char* value) {
-	uint8_t length = value == NULL ? 0 : min(strlen(value), MAX_PAYLOAD);
+	uint8_t length = value == NULL ? 0 : min(strlen(value), (size_t)MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
 	if (length) {		
