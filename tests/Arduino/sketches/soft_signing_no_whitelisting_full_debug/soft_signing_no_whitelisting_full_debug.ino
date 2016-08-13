@@ -34,5 +34,4 @@
 #define MY_SIGNING_ATSHA204_PIN 17
 #endif
 
-#include <SPI.h>
 #include <MySensors.h>

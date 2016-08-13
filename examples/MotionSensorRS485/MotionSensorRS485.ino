@@ -53,7 +53,6 @@
 // Set RS485 baud rate to use
 #define MY_RS485_BAUD_RATE 9600
 
-#include <SPI.h>
 #include <MySensors.h>
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)

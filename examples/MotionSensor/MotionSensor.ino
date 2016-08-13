@@ -34,7 +34,6 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>
 
 unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
