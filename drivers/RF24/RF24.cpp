@@ -25,7 +25,7 @@
 LOCAL uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
 LOCAL uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 
-#ifdef MY_RF24_IRQ_PIN
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	LOCAL RF24_receiveCallbackType RF24_receiveCallback = NULL;
 #endif
 
@@ -261,7 +261,7 @@ LOCAL bool RF24_sanityCheck(void) {
 	return status;
 }
 
-#ifdef MY_RF24_IRQ_PIN
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 LOCAL void RF24_irqHandler( void )
 {
 	if (RF24_receiveCallback)
@@ -307,14 +307,14 @@ LOCAL bool RF24_initialize(void) {
 	// Initialize pins
 	pinMode(MY_RF24_CE_PIN,OUTPUT);
 	pinMode(MY_RF24_CS_PIN,OUTPUT);
-	#ifdef MY_RF24_IRQ_PIN
+	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 		pinMode(MY_RF24_IRQ_PIN,INPUT);
 	#endif
 	// Initialize SPI
 	_SPI.begin();
 	RF24_ce(LOW);
 	RF24_csn(HIGH);
-	#ifdef MY_RF24_IRQ_PIN
+	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 		// assure SPI can be used from interrupt context
 		// Note: ESP8266 & SoftSPI currently do not support interrupt usage for SPI,
 		// therefore it is unsafe to use MY_RF24_IRQ_PIN with ESP8266/SoftSPI!

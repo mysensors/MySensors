@@ -33,7 +33,7 @@
  *  - MCO:<b>REG</b>	from @ref _registerNode()
  *  - MCO:<b>SND</b>	from @ref send()
  *  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
- *  - MCO:<b>NLK</b>	from @ref nodeLock()
+ *  - MCO:<b>NLK</b>	from nodeLock()
  *
  * MySensorsCore debug log messages:
  *

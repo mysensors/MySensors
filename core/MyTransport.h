@@ -147,6 +147,18 @@
 #else
 	#define TRANSMISSION_FAILURES  5		//!< search for a new parent node after this many transmission failures, lower threshold for non-repeating nodes
 #endif
+
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+	#if defined(MY_RADIO_RFM69)
+		#error Receive message buffering not supported for RFM69!
+	#endif
+	#if defined(MY_RS485) 
+		#error Receive message buffering not supported for RS485!
+	#endif
+#elif !defined(MY_RX_MESSAGE_BUFFER_FEATURE) && defined(MY_RX_MESSAGE_BUFFER_SIZE)
+	#error Receive message buffering requires message buffering feature enabled!
+#endif
+
 #define TIMEOUT_FAILURE_STATE 10000			//!< duration failure state
 #define STATE_TIMEOUT 2000					//!< general state timeout
 #define STATE_RETRIES 3						//!< retries before switching to FAILURE
