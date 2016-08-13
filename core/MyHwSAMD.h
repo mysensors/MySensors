@@ -50,6 +50,7 @@ void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
 #define MY_SERIALDEVICE SerialUSB
+#define MY_DEBUG_BUFFER_SIZE 300
 
 
 /*

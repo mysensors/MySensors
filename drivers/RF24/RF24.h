@@ -36,9 +36,6 @@
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 	#if defined(MY_SOFTSPI)
 		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE> _SPI;
-	#elif defined(ARDUINO_ARCH_SAMD)
-		#include <SPI.h>
-		#define _SPI SPI1
 	#else	    
 		#include <SPI.h>
 		#define _SPI SPI
@@ -61,8 +58,31 @@
 	#endif
 #endif
 
+// verify RF24 IRQ defs
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+	#if !defined(MY_RF24_IRQ_PIN)
+		#error Message buffering feature requires MY_RF24_IRQ_PIN to be defined!
+	#endif
+	// SoftSPI does not support usingInterrupt()
+	#ifdef MY_SOFTSPI
+		#error RF24 IRQ usage cannot be used with Soft SPI
+	#endif
+	// ESP8266 does not support usingInterrupt()
+	#ifdef ARDUINO_ARCH_ESP8266
+		#error RF24 IRQ usage cannot be used with ESP8266
+	#endif
+	#ifndef SPI_HAS_TRANSACTION
+		#error RF24 IRQ usage requires transactional SPI support
+	#endif
+#else
+	#ifdef MY_RX_MESSAGE_BUFFER_SIZE
+		#error Receive message buffering requires RF24 IRQ usage
+	#endif
+#endif
+
+
 // RF24 settings
-#ifdef MY_RF24_IRQ_PIN
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	#define MY_RF24_CONFIGURATION (uint8_t) ((RF24_CRC_16 << 2) | (1 << MASK_TX_DS) | (1 << MASK_MAX_RT))
 #else
 	#define MY_RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)
@@ -253,7 +273,7 @@ LOCAL void RF24_setPipeLSB(uint8_t pipe, uint8_t LSB);
 LOCAL void RF24_setStatus(uint8_t status);
 LOCAL void RF24_enableFeatures(void);
 
-#ifdef MY_RF24_IRQ_PIN
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	typedef void (*RF24_receiveCallbackType)(void);
   /**
 	 * Register a callback, which will be called (from interrupt context) for every message received.
