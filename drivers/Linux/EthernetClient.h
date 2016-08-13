@@ -1,26 +1,26 @@
 /*
-* The MySensors Arduino library handles the wireless radio link and protocol
-* between your home built sensors/actuators and HA controller of choice.
-* The sensors forms a self healing radio network with optional repeaters. Each
-* repeater and gateway builds a routing tables in EEPROM which keeps track of the
-* network topology allowing messages to be routed to nodes.
-*
-* Created by Marcelo Aquino <marceloaqno@gmail.org>
-* Copyright (C) 2016 Marcelo Aquino
-* Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
-*
-* Documentation: http://www.mysensors.org
-* Support Forum: http://forum.mysensors.org
-*
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* version 2 as published by the Free Software Foundation.
-*
-* Based on Arduino ethernet library, Copyright (c) 2010 Arduino LLC. All right reserved.
-*/
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Marcelo Aquino <marceloaqno@gmail.org>
+ * Copyright (C) 2016 Marcelo Aquino
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * Based on Arduino ethernet library, Copyright (c) 2010 Arduino LLC. All right reserved.
+ */
 
-#ifndef ethernetclient_h
-#define ethernetclient_h
+#ifndef EthernetClient_h
+#define EthernetClient_h
 
 #include "Client.h"
 #include "IPAddress.h"
@@ -69,7 +69,7 @@ public:
 	virtual bool operator!=(const bool value) { return bool() != value; }
 	virtual bool operator==(const EthernetClient&);
 	virtual bool operator!=(const EthernetClient& rhs) { return !this->operator==(rhs); };
-	uint8_t getSocketNumber();
+	int getSocketNumber();
 
 	friend class EthernetServer;
 

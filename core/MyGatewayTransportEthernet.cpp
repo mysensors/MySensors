@@ -56,6 +56,8 @@ typedef struct
 
 #if defined(MY_USE_UDP)
 	EthernetUDP _ethernetServer;
+#elif defined(MY_GATEWAY_LINUX)
+	EthernetServer _ethernetServer(_ethernetGatewayPort, MY_GATEWAY_MAX_CLIENTS);
 #else
 	EthernetServer _ethernetServer(_ethernetGatewayPort);
 #endif

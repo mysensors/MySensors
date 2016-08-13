@@ -222,9 +222,9 @@
 	#include "core/MyProtocolMySensors.cpp"
 
 	#if defined(MY_GATEWAY_LINUX)
-		#include "drivers/Linux/EthernetClient.cpp"
-		#include "drivers/Linux/EthernetServer.cpp"
-		#include "drivers/Linux/IPAddress.cpp"
+		#include "drivers/Linux/EthernetClient.h"
+		#include "drivers/Linux/EthernetServer.h"
+		#include "drivers/Linux/IPAddress.h"
 	#endif
 	#include "drivers/PubSubClient/PubSubClient.cpp"
 	#include "core/MyGatewayTransportMQTTClient.cpp"
@@ -250,9 +250,9 @@
 		#include "core/MyGatewayTransportEthernet.cpp"
 	#elif defined(MY_GATEWAY_LINUX)
 		// GATEWAY - Generic Linux (RaspberryPi, BBB, ...)
-		#include "drivers/Linux/EthernetClient.cpp"
-		#include "drivers/Linux/EthernetServer.cpp"
-		#include "drivers/Linux/IPAddress.cpp"
+		#include "drivers/Linux/EthernetClient.h"
+		#include "drivers/Linux/EthernetServer.h"
+		#include "drivers/Linux/IPAddress.h"
 		#include "core/MyGatewayTransportEthernet.cpp"
 	#elif defined(MY_GATEWAY_W5100)
 		// GATEWAY - W5100

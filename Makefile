@@ -12,7 +12,7 @@ CONFIG_FILE=Makefile.inc
 include $(CONFIG_FILE)
 
 GATEWAY=examples_RPi/MySGateway
-GATEWAY_SOURCES=examples_RPi/MySGateway.cpp
+GATEWAY_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_RPi/MySGateway.cpp
 GATEWAY_OBJECTS=$(patsubst %.cpp,%.o,$(GATEWAY_SOURCES))
 DEPS+=$(patsubst %.cpp,%.d,$(GATEWAY_SOURCES))
 
