@@ -26,7 +26,7 @@
 	#include "drivers/AES/AES.h"
 #endif
 
-#ifdef MY_RF24_IRQ_PIN
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 typedef struct _transportQueuedMessage
 {
 	uint8_t m_len;                        // Length of the data
@@ -76,7 +76,7 @@ bool transportInit() {
 		memset(_psk, 0, 16);
 	#endif
 	
-	#ifdef MY_RF24_IRQ_PIN
+	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 		RF24_registerReceiveCallback( transportRxCallback );
 	#endif
 	return RF24_initialize();
@@ -109,7 +109,7 @@ bool transportSend(uint8_t recipient, const void* data, uint8_t len) {
 }
 
 bool transportAvailable() {
-	#ifdef MY_RF24_IRQ_PIN
+	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 		(void)RF24_isDataAvailable;				// Prevent 'defined but not used' warning
 		return !transportRxQueue.empty();
 	#else
@@ -123,10 +123,9 @@ bool transportSanityCheck() {
 
 uint8_t transportReceive(void* data) {
 	uint8_t len = 0; 
-	#ifdef MY_RF24_IRQ_PIN
+	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 		transportQueuedMessage* msg = transportRxQueue.getBack();
-		if (msg)
-		{
+		if (msg) {
 			len = msg->m_len;
 			(void)memcpy(data, msg->m_data, len);
 			(void)transportRxQueue.popBack();
