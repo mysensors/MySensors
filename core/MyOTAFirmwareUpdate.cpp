@@ -19,6 +19,12 @@
  
 #include "MyOTAFirmwareUpdate.h"
 
+// global variables
+extern MyMessage _msg;
+extern MyMessage _msgTmp;
+extern NodeConfig _nc;
+
+// local variables
 SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 NodeFirmwareConfig _fc;
 bool _fwUpdateOngoing;
@@ -26,16 +32,16 @@ unsigned long _fwLastRequestTime;
 uint16_t _fwBlock;
 uint8_t _fwRetry;
 
-inline void readFirmwareSettings() {
+void readFirmwareSettings() {
 	hwReadConfigBlock((void*)&_fc, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(NodeFirmwareConfig));
 }
 
-inline void firmwareOTAUpdateRequest() {
+void firmwareOTAUpdateRequest() {
 	unsigned long enter = hwMillis();
 	if (_fwUpdateOngoing && (enter - _fwLastRequestTime > MY_OTA_RETRY_DELAY)) {
 		if (!_fwRetry) {
             setIndication(INDICATION_ERR_FW_TIMEOUT);
-			debug(PSTR("fw upd fail\n"));
+			OTA_DEBUG(PSTR("!OTA:FRQ:FW UPD FAIL\n"));	// fw update failed
 			// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 			_fwUpdateOngoing = false;
 			return;
@@ -47,24 +53,24 @@ inline void firmwareOTAUpdateRequest() {
 		firmwareRequest.type = _fc.type;
 		firmwareRequest.version = _fc.version;
 		firmwareRequest.block = (_fwBlock - 1);
-		debug(PSTR("req FW: T=%02X, V=%02X, B=%04X\n"),_fc.type,_fc.version,_fwBlock - 1);
+		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04X,V=%04X,B=%04X\n"),_fc.type,_fc.version,_fwBlock - 1); // request FW update block
 		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false).set(&firmwareRequest,sizeof(RequestFWBlock)));
 	}
 }
 
-inline bool firmwareOTAUpdateProcess() {
+bool firmwareOTAUpdateProcess() {
 	if (_msg.type == ST_FIRMWARE_CONFIG_RESPONSE) {
 		NodeFirmwareConfig *firmwareConfigResponse = (NodeFirmwareConfig *)_msg.data;
 		// compare with current node configuration, if they differ, start fw fetch process
 		if (memcmp(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig))) {
             setIndication(INDICATION_FW_UPDATE_START);
-			debug(PSTR("fw update\n"));
+			OTA_DEBUG(PSTR("OTA:FWP:UPDATE\n"));	// FW update initiated
 			// copy new FW config
 			memcpy(&_fc,firmwareConfigResponse,sizeof(NodeFirmwareConfig));
 			// Init flash
 			if (!_flash.initialize()) {
                 setIndication(INDICATION_ERR_FW_FLASH_INIT);
-				debug(PSTR("flash init fail\n"));
+				OTA_DEBUG(PSTR("!OTA:FWP:FLASH INIT FAIL\n"));	// failed to initialise flash
 				_fwUpdateOngoing = false;
 			} else {
 				// erase lower 32K -> max flash size for ATMEGA328
@@ -79,12 +85,12 @@ inline bool firmwareOTAUpdateProcess() {
 			}
 			return true;
 		}
-		debug(PSTR("fw update skipped\n"));
+		OTA_DEBUG(PSTR("OTA:FWP:UPDATE SKIPPED\n"));		// FW update skipped, no newer version available
 	} else if (_msg.type == ST_FIRMWARE_RESPONSE) {
 		if (_fwUpdateOngoing) {
 			// Save block to flash
             setIndication(INDICATION_FW_UPDATE_RX);
-			debug(PSTR("fw block %d\n"), _fwBlock);
+			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04X\n"), _fwBlock);	// received FW block
 			// extract FW block
 			ReplyFWBlock *firmwareResponse = (ReplyFWBlock *)_msg.data;
 			// write to flash
@@ -94,9 +100,10 @@ inline bool firmwareOTAUpdateProcess() {
 			_fwBlock--;
 			if (!_fwBlock) {
 				// We're finished! Do a checksum and reboot.
+				OTA_DEBUG(PSTR("OTA:FWP:FW END\n"));	// received FW block
 				_fwUpdateOngoing = false;
 				if (transportIsValidFirmware()) {
-					debug(PSTR("fw checksum ok\n"));
+					OTA_DEBUG(PSTR("OTA:FWP:CRC OK\n"));	// FW checksum ok
 					// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)
 					uint16_t fwsize = FIRMWARE_BLOCK_SIZE * _fc.blocks;
 					uint8_t OTAbuffer[10] = {'F','L','X','I','M','G',':',(uint8_t)(fwsize >> 8),(uint8_t)(fwsize & 0xff),':'};
@@ -106,21 +113,21 @@ inline bool firmwareOTAUpdateProcess() {
 					hwReboot();
 				} else {
                     setIndication(INDICATION_ERR_FW_CHECKSUM);
-					debug(PSTR("fw checksum fail\n"));
+					OTA_DEBUG(PSTR("!OTA:FWP:CRC FAIL\n"));
 				}
 			}
 			// reset flags
 			_fwRetry = MY_OTA_RETRY+1;
 			_fwLastRequestTime = 0;
 		} else {
-			debug(PSTR("No fw update ongoing\n"));
+			OTA_DEBUG(PSTR("!OTA:FWP:NO UPDATE\n"));
 		}
 		return true;
 	}
 	return false;
 }
 
-inline void presentBootloaderInformation(){
+void presentBootloaderInformation(){
 	RequestFirmwareConfig *reqFWConfig = (RequestFirmwareConfig *)_msgTmp.data;
 	mSetLength(_msgTmp, sizeof(RequestFirmwareConfig));
 	mSetCommand(_msgTmp, C_STREAM);
@@ -133,7 +140,7 @@ inline void presentBootloaderInformation(){
 	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));	
 }
 // do a crc16 on the whole received firmware
-inline bool transportIsValidFirmware() {
+bool transportIsValidFirmware() {
 	// init crc
 	uint16_t crc = ~0;
 	for (uint16_t i = 0; i < _fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
