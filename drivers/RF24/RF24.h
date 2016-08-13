@@ -34,10 +34,10 @@
 #define MY_RF24_SPI_DATA_MODE SPI_MODE0
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
+	#include <SPI.h>
 	#if defined(MY_SOFTSPI)
 		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE> _SPI;
 	#else	    
-		#include <SPI.h>
 		#define _SPI SPI
 	#endif
 #else
