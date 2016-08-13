@@ -246,7 +246,7 @@ LOCAL uint8_t RF24_RAW_writeByteRegister(uint8_t cmd, uint8_t value);
 LOCAL void RF24_flushRX(void);
 LOCAL void RF24_flushTX(void);
 LOCAL uint8_t RF24_getStatus(void);
-LOCAL uint8_t RF24_getFifoStatus(void);
+LOCAL uint8_t RF24_getFIFOStatus(void);
 LOCAL void RF24_openWritingPipe(uint8_t recipient);
 LOCAL void RF24_startListening(void);
 LOCAL void RF24_stopListening(void);
@@ -270,6 +270,7 @@ LOCAL void RF24_setDynamicPayload(uint8_t pipe);
 LOCAL void RF24_setRFConfiguration(uint8_t configuration);
 LOCAL void RF24_setPipeAddress(uint8_t pipe, uint8_t* address, uint8_t width);
 LOCAL void RF24_setPipeLSB(uint8_t pipe, uint8_t LSB);
+LOCAL uint8_t RF24_getObserveTX(void);
 LOCAL void RF24_setStatus(uint8_t status);
 LOCAL void RF24_enableFeatures(void);
 
