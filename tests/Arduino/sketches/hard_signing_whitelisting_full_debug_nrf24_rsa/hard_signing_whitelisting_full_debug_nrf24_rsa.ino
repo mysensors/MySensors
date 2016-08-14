@@ -35,5 +35,4 @@
 #endif
 #define MY_RF24_ENABLE_ENCRYPTION
 
-#include <SPI.h>
 #include <MySensors.h>

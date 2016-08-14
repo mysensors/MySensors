@@ -38,7 +38,6 @@
 // Enabled repeater feature for this node
 #define MY_REPEATER_FEATURE
 
-#include <SPI.h>
 #include <MySensors.h>
 
 void setup() {

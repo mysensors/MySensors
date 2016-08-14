@@ -109,7 +109,6 @@
 //#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
 //#define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
 
-#include <SPI.h>
 
 #if defined(MY_USE_UDP)
   #include <EthernetUdp.h>

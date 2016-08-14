@@ -35,5 +35,4 @@
 #endif
 #define MY_NODE_LOCK_FEATURE
 
-#include <SPI.h>
 #include <MySensors.h>
