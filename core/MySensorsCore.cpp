@@ -280,12 +280,10 @@ void sendBatteryLevel(uint8_t value, bool enableAck) {
 }
 
 void sendHeartbeat(void) {
-	#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
+	#if defined(MY_RADIO_FEATURE)
 		uint32_t heartbeat = transportGetHeartbeat();
-	#else
-		uint32_t heartbeat = hwMillis();
+		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(heartbeat));
 	#endif
-	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(heartbeat));
 }
 
 void present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
@@ -444,103 +442,117 @@ bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype) {
 	return expectedResponse;
 }
 
-
-int8_t sleep(unsigned long ms) {
+int8_t _sleep(const uint32_t ms, const bool smartSleep, const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2) {
+	debug(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), ms, smartSleep, interrupt1, mode1, interrupt2, mode2);
+	// OTA FW feature: do not sleep if FW update ongoing
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
-	if (_fwUpdateOngoing) {
-		// Do not sleep node while fw update is ongoing
-		wait(ms);
-		return -1;
-	}
+		if (_fwUpdateOngoing) {
+			debug(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
+			wait(ms);
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
 	#endif
-	// if repeater, do not sleep
+	// repeater feature: sleeping not possible
 	#if defined(MY_REPEATER_FEATURE)
-		wait(ms);
-		return -1;
-	#else
-		#if defined(MY_RADIO_FEATURE)
-			transportPowerDown();
-		#endif
-		setIndication(INDICATION_SLEEP);
-		const int8_t res = hwSleep(ms);
-		setIndication(INDICATION_WAKEUP);
-		return res;
-	#endif
-}
-
-int8_t smartSleep(unsigned long ms) {
-	// notify controller about going to sleep
-	sendHeartbeat();
-	// listen for incoming messages
-	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	return sleep(ms);
-}
-
-int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	#if defined(MY_OTA_FIRMWARE_FEATURE)
-	if (_fwUpdateOngoing) {
-		// not supported
-		return -2;
-	}
-	#endif
-	#if defined(MY_REPEATER_FEATURE)
-		// not supported
-		(void)interrupt;
-		(void)mode;
-		(void)ms;
-		return -2;
-	#else
-		#if defined(MY_RADIO_FEATURE)
-			transportPowerDown();
-		#endif
-		setIndication(INDICATION_SLEEP);
-		const int8_t res = hwSleep(interrupt, mode, ms);
-		setIndication(INDICATION_WAKEUP);
-		return res;
-	#endif
-}
-
-int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
-	// notify controller about going to sleep
-	sendHeartbeat();
-	// listen for incoming messages
-	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	return sleep(interrupt, mode, ms);
-}
-
-int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	#if defined(MY_OTA_FIRMWARE_FEATURE)
-	if (_fwUpdateOngoing) {
-		// not supported
-		return -2;
-	}
-	#endif
-	#if defined(MY_REPEATER_FEATURE)
-		// not supported
+		(void)smartSleep;
 		(void)interrupt1;
 		(void)mode1;
 		(void)interrupt2;
 		(void)mode2;
-		(void)ms;
-		return -2;
+
+		debug(PSTR("!MCO:SLP:REP\n"));	// sleeping not possible, repeater feature enabled
+		wait(ms);
+		return MY_SLEEP_NOT_POSSIBLE;
 	#else
+		uint32_t sleepingTime = ms;
 		#if defined(MY_RADIO_FEATURE)
+			// Do not sleep if transport not ready
+			if (!isTransportReady()) {
+				debug(PSTR("!MCO:SLP:TNR\n"));	// sleeping not possible, transport not ready
+				uint32_t sleepEnter = hwMillis();
+				uint32_t sleepDelta = 0;
+				while (!isTransportReady() && (sleepDelta < sleepingTime) && (sleepDelta < MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)) {
+					_process();
+					#if defined(ARDUINO_ARCH_ESP8266)
+						yield();
+					#endif
+					sleepDelta = hwMillis() - sleepEnter;
+				}
+				// sleep remainder
+				if (sleepDelta < sleepingTime) {
+					sleepingTime -= sleepDelta;		// calculate remaining sleeping time
+					debug(PSTR("MCO:SLP:MS=%lu\n"), sleepingTime);
+				}
+				else {
+					// no sleeping time left
+					return MY_SLEEP_NOT_POSSIBLE;
+				}
+			}
+		#endif
+
+		if (smartSleep) {
+			// notify controller about going to sleep
+			sendHeartbeat();
+			wait(MY_SMART_SLEEP_WAIT_DURATION_MS);		// listen for incoming messages
+		}
+
+		#if defined(MY_RADIO_FEATURE)
+			debug(PSTR("MCO:SLP:TPD\n"));	// sleep, power down transport
 			transportPowerDown();
 		#endif
+
 		setIndication(INDICATION_SLEEP);
-		const int8_t res = hwSleep(interrupt1, mode1, interrupt2, mode2, ms);
+
+		int8_t res = MY_SLEEP_NOT_POSSIBLE;	// default
+
+		if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 != INTERRUPT_NOT_DEFINED) {
+			// both IRQs
+			res = hwSleep(interrupt1, mode1, interrupt2, mode2, sleepingTime);
+		}
+		else if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 == INTERRUPT_NOT_DEFINED) {
+			// one IRQ
+			res = hwSleep(interrupt1, mode1, sleepingTime);
+		}
+		else if (interrupt1 == INTERRUPT_NOT_DEFINED && interrupt2 == INTERRUPT_NOT_DEFINED) {
+			// no IRQ
+			res = hwSleep(sleepingTime);
+		}
+
 		setIndication(INDICATION_WAKEUP);
+		debug(PSTR("MCO:SLP:WUP=%d\n"), res);	// sleep wake-up
 		return res;
 	#endif
 }
 
-int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
-	// notify controller about going to sleep
-	sendHeartbeat();
-	// listen for incoming messages
-	wait(MY_SMART_SLEEP_WAIT_DURATION);
-	return sleep(interrupt1, mode1, interrupt2, mode2, ms);
+// sleep functions
+int8_t sleep(const uint32_t ms, const bool smartSleep) {
+	return _sleep(ms, smartSleep);
 }
+
+int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t ms, const bool smartSleep) {
+	return _sleep(ms, smartSleep, interrupt, mode);
+}
+
+int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t ms, const bool smartSleep) {
+	return _sleep(ms, smartSleep, interrupt1, mode1, interrupt2, mode2);
+}
+
+// deprecated smartSleep() functions
+int8_t smartSleep(const uint32_t ms) {
+	// compatibility
+	return _sleep(ms, true);
+}
+
+int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t ms) {
+	// compatibility
+	return _sleep(ms, true, interrupt, mode);
+}
+
+int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t ms) {
+	// compatibility
+	return _sleep(ms, true, interrupt1, mode1, interrupt2, mode2);
+}
+
 
 #ifdef MY_NODE_LOCK_FEATURE
 void nodeLock(const char* str) {
@@ -555,6 +567,7 @@ void nodeLock(const char* str) {
 		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED, false).set(str));
 		#if defined(MY_RADIO_FEATURE)
 			transportPowerDown();
+			debug(PSTR("MCO:NLK:TPD\n"));	// power down transport
 		#endif
 		setIndication(INDICATION_SLEEP);
 		(void)hwSleep((unsigned long)1000*60*30); // Sleep for 30 min before resending LOCKED message

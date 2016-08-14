@@ -37,20 +37,26 @@
  *
  * MySensorsCore debug log messages:
  *
- * |E| SYS	| SUB	| Message									| Comment
- * |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
- * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s					| Core initialization, capabilities (CP), library version (VER)
- * | | MCO  | BGN	| BFR										| Callback before()
- * | | MCO  | BGN	| STP										| Callback setup()
- * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d	| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
- * | | MCO	| BGN	| NODE UNLOCKED								| Node successfully unlocked (see signing chapter)
- * |!| MCO	| BGN	| TSP FAIL									| Transport initialization failed
- * | | MCO	| REG	| REQ										| Registration request
- * | | MCO	| REG	| NOT NEEDED								| No registration needed (i.e. GW)
- * |!| MCO	| SND	| NODE NOT REG								| Node is not registered, cannot send message
- * | | MCO	| PIM	| NODE REG=%%d								| Registration response received, registration status (REG)
- * | | MCO	| PIM	| ROUTE N=%%d,R=%%d							| Routing table, messages to node (N) are routed via node (R)
- * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET| Node locked during booting, see signing chapter for additional information
+ * |E| SYS	| SUB	| Message										| Comment
+ * |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
+ * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
+ * | | MCO  | BGN	| BFR											| Callback before()
+ * | | MCO  | BGN	| STP											| Callback setup()
+ * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d		| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
+ * | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
+ * |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
+ * | | MCO	| REG	| REQ											| Registration request
+ * | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
+ * |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
+ * | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
+ * | | MCO	| PIM	| ROUTE N=%%d,R=%%d								| Routing table, messages to node (N) are routed via node (R)
+ * | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
+ * | | MCO	| SLP	| TPD											| Sleep node, powerdown transport
+ * | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
+ * |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
+ * |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
+ * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
+ * | | MCO	| NLK	| TPD											| Powerdown transport
  *
  *
  * @brief API declaration for MySensorsCore
@@ -67,10 +73,16 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#define GATEWAY_ADDRESS ((uint8_t)0)			//!< Node ID for GW sketch
-#define NODE_SENSOR_ID 0xFF						//!< Node child is always created/presented when a node is started
-#define MY_CORE_VERSION ((uint8_t)2)			//!< core version
-#define MY_CORE_MIN_VERSION ((uint8_t)2)		//!< min core version required for compatibility
+#define GATEWAY_ADDRESS			((uint8_t)0)			//!< Node ID for GW sketch
+#define NODE_SENSOR_ID			((uint8_t)255)			//!< Node child is always created/presented when a node is started
+#define MY_CORE_VERSION			((uint8_t)2)			//!< core version
+#define MY_CORE_MIN_VERSION		((uint8_t)2)			//!< min core version required for compatibility
+
+#define MY_WAKE_UP_BY_TIMER		((int8_t)-1)			//!< Sleeping wake up by timer
+#define MY_SLEEP_NOT_POSSIBLE	((int8_t)-2)			//!< Sleeping not possible
+#define INTERRUPT_NOT_DEFINED	((uint8_t)255)			//!< _sleep() param: no interrupt defined
+#define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
+
 
 #ifdef MY_DEBUG
 	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
@@ -232,16 +244,10 @@ bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
  * @param ms Number of milliseconds to sleep.
- * @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+ * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep.
+ * @return @ref MY_WAKE_UP_BY_TIMER if timer woke it up, @ref MY_SLEEP_NOT_POSSIBLE if not possible (e.g. ongoing FW update)
  */
-int8_t sleep(unsigned long ms);
-/**
-* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
-* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
-* @param ms Number of milliseconds to sleep.
-* @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
-*/
-int8_t smartSleep(unsigned long ms);
+int8_t sleep(const uint32_t ms, const bool smartSleep = false);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change.
@@ -250,18 +256,10 @@ int8_t smartSleep(unsigned long ms);
  * @param interrupt Interrupt that should trigger the wakeup
  * @param mode RISING, FALLING, CHANGE
  * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
+ * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep
+ * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
  */
-int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
-/**
-* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
-* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
-* @param interrupt Interrupt that should trigger the wakeup
-* @param mode RISING, FALLING, CHANGE
-* @param ms Number of milliseconds to sleep or 0 to sleep forever
-* @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
-*/
-int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
+int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t ms=0, const bool smartSleep = false);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
@@ -272,10 +270,33 @@ int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
  * @param interrupt2 Second interrupt that should trigger the wakeup
  * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
  * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
+ * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep.
+ * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
  */
-int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
+int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t ms=0, const bool smartSleep = false);
+
 /**
+* \deprecated Use sleep(ms, true) instead
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* @param ms Number of milliseconds to sleep.
+* @return @ref MY_WAKE_UP_BY_TIMER if timer woke it up, @ref MY_SLEEP_NOT_POSSIBLE if not possible (e.g. ongoing FW update)
+*/
+int8_t smartSleep(const uint32_t ms);
+
+/**
+* \deprecated Use sleep(interrupt, mode, ms, true) instead
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* @param interrupt Interrupt that should trigger the wakeup
+* @param mode RISING, FALLING, CHANGE
+* @param ms Number of milliseconds to sleep or 0 to sleep forever
+* @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
+*/
+int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t ms = 0);
+
+/**
+* \deprecated Use sleep(interrupt1, mode1, interrupt2, mode2, ms, true) instead
 * Same as sleep(), send heartbeat and process incoming messages before going to sleep.
 * Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
 * @param interrupt1 First interrupt that should trigger the wakeup
@@ -283,9 +304,24 @@ int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode
 * @param interrupt2 Second interrupt that should trigger the wakeup
 * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
 * @param ms Number of milliseconds to sleep or 0 to sleep forever
-* @return Interrupt number if wake up was triggered by pin change, -1 if wake up was triggered by timer, -2 if sleep was not possible (e.g. ongoing FW update)
+* @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
 */
-int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
+int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t ms=0);
+
+/**
+* Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
+* See: http://arduino.cc/en/Reference/attachInterrupt for details on modes and which pin
+* is assigned to what interrupt. On Nano/Pro Mini: 0=Pin2, 1=Pin3
+* @param ms Number of milliseconds to sleep or 0 to sleep forever
+* @param interrupt1 (optional) First interrupt that should trigger the wakeup
+* @param mode1 (optional) Mode for first interrupt (RISING, FALLING, CHANGE)
+* @param interrupt2 (optional) Second interrupt that should trigger the wakeup
+* @param mode2 (optional) Mode for second interrupt (RISING, FALLING, CHANGE)
+* @param smartSleep (optional) Set True if sending heartbeat and process incoming messages before going to sleep.
+* @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
+*/
+int8_t _sleep(const uint32_t ms, const bool smartSleep = false, const uint8_t interrupt1 = INTERRUPT_NOT_DEFINED, const uint8_t mode1 = MODE_NOT_DEFINED, const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
+
 
 #ifdef MY_NODE_LOCK_FEATURE
 /**

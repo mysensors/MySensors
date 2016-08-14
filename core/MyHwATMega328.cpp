@@ -21,7 +21,7 @@
 
 #include "MyHwATMega328.h"
 
-#define INVALID_INTERRUPT_NUM  (0xFFu)
+#define INVALID_INTERRUPT_NUM	(0xFFu)
 
 volatile uint8_t _wokeUpByInterrupt = INVALID_INTERRUPT_NUM;    // Interrupt number that woke the mcu.
 volatile uint8_t _wakeUp1Interrupt  = INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp1-callback.
@@ -105,7 +105,7 @@ void hwInternalSleep(unsigned long ms) {
 
 int8_t hwSleep(unsigned long ms) {
 	hwInternalSleep(ms);
-	return -1;
+	return MY_WAKE_UP_BY_TIMER;
 }
 
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
@@ -131,7 +131,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	}
 	
     // Return what woke the mcu.
-    int ret = -1;       // default: no interrupt triggered, timer wake up	
+    int8_t ret = MY_WAKE_UP_BY_TIMER;       // default: no interrupt triggered, timer wake up	
     if (interruptWakeUp()) ret = static_cast<int8_t>(_wokeUpByInterrupt);
 
     // Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
