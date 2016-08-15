@@ -190,18 +190,6 @@ void EthernetClient::stop() {
 	_sock = -1;
 }
 
-uint8_t EthernetClient::connected() {
-	if (_sock == -1) return 0;
-	
-	if (peek() < 0) {
-		if (errno == EAGAIN) {
-			return 1;
-		}
-		return 0;
-	}
-	return 1;
-}
-
 uint8_t EthernetClient::status() {
 	if (_sock == -1) return ETHERNETCLIENT_W5100_CLOSED;
 
@@ -232,11 +220,25 @@ uint8_t EthernetClient::status() {
 			case TCP_CLOSING:
 				return ETHERNETCLIENT_W5100_CLOSING;
 		}
-	} else {
-		perror("getsockopt");
 	}
 
 	return ETHERNETCLIENT_W5100_CLOSED;
+}
+
+uint8_t EthernetClient::connected() {
+	if (_sock == -1) return 0;
+	
+	if (peek() < 0) {
+		if (errno == EAGAIN) {
+			return 1;
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int EthernetClient::getSocketNumber() {
+	return _sock;
 }
 
 // the next function allows us to use the client returned by
@@ -248,8 +250,4 @@ EthernetClient::operator bool() {
 
 bool EthernetClient::operator==(const EthernetClient& rhs) {
 	return _sock == rhs._sock && _sock != -1 && rhs._sock != -1;
-}
-
-int EthernetClient::getSocketNumber() {
-  return _sock;
 }

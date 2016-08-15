@@ -39,42 +39,160 @@
 
 // debug 
 #if defined(ETHERNETCLIENT_VERBOSE)
-	#define ETHERNETCLIENT_DEBUG(x,...) debug(x, ##__VA_ARGS__)
+	#define ETHERNETCLIENT_DEBUG(x,...) debug(x, ##__VA_ARGS__) //!< debug
 #else
-	#define ETHERNETCLIENT_DEBUG(x,...)
+	#define ETHERNETCLIENT_DEBUG(x,...) //!< debug NULL
 #endif
 
+/**
+ * EthernetClient class
+ */
 class EthernetClient : public Client {
-
-public:
-	EthernetClient();
-	EthernetClient(int sock);
-
-	uint8_t status();
-	virtual int connect(IPAddress ip, uint16_t port);
-	virtual int connect(const char *host, uint16_t port);
-	virtual size_t write(uint8_t);
-	virtual size_t write(const uint8_t *buf, size_t size);
-	size_t write(const char *str);
-	size_t write(const char *buffer, size_t size);
-	virtual int available();
-	virtual int read();
-	virtual int read(uint8_t *buf, size_t size);
-	virtual int peek();
-	virtual void flush();
-	virtual void stop();
-	virtual uint8_t connected();
-	virtual operator bool();
-	virtual bool operator==(const bool value) { return bool() == value; }
-	virtual bool operator!=(const bool value) { return bool() != value; }
-	virtual bool operator==(const EthernetClient&);
-	virtual bool operator!=(const EthernetClient& rhs) { return !this->operator==(rhs); };
-	int getSocketNumber();
-
-	friend class EthernetServer;
 
 private:
 	int _sock;
+
+public:
+	/**
+	 * @brief EthernetClient constructor.
+	 */
+	EthernetClient();
+	/**
+	 * @brief EthernetClient constructor.
+	 *
+	 * @param sock Network socket.
+	 */
+	EthernetClient(int sock);
+	/**
+	 * @brief Initiate a connection with host:port.
+	 *
+	 * @param host host name to resolve or a stringified dotted IP address.
+	 * @param port to connect to.
+	 * @return 1 if SUCCESS or -1 if FAILURE.
+	 */
+	virtual int connect(const char *host, uint16_t port);
+	/**
+	 * @brief Initiate a connection with ip:port.
+	 *
+	 * @param ip to connect to.
+	 * @param port to connect to.
+	 * @return 1 if SUCCESS or -1 if FAILURE.
+	 */
+	virtual int connect(IPAddress ip, uint16_t port);
+	/**
+	 * @brief Write a byte.
+	 *
+	 * @param b byte to write.
+	 * @return 0 if FAILURE or 1 if SUCCESS.
+	 */
+	virtual size_t write(uint8_t b);
+	/**
+	 * @brief Write at most 'size' bytes.
+	 *
+	 * @param buf Buffer to read from.
+	 * @param size of the buffer.
+	 * @return 0 if FAILURE or the number of bytes sent.
+	 */
+	virtual size_t write(const uint8_t *buf, size_t size);
+	/**
+	 * @brief Write a null-terminated string.
+	 *
+	 * @param str String to write.
+	 * @return 0 if FAILURE or number of characters sent.
+	 */
+	size_t write(const char *str);
+	/**
+	 * @brief Write at most 'size' characters.
+	 *
+	 * @param buffer to read from.
+	 * @param size of the buffer.
+	 * @return 0 if FAILURE or the number of characters sent.
+	 */
+	size_t write(const char *buffer, size_t size);
+	/**
+	 * @brief Checks if new data is available.
+	 *
+	 * @return number of bytes available.
+	 */
+	virtual int available();
+	/**
+	 * @brief Read a byte.
+	 *
+	 * @return 0 if FAILURE or 1 if SUCCESS.
+	 * @note This function will block (until data becomes available or timeout is reached).
+	 */
+	virtual int read();
+	/**
+	 * @brief Read a number of bytes and store in a buffer.
+	 *
+	 * @return -1 if FAILURE or number of read bytes.
+	 * @note This function will block (until data becomes available or timeout is reached).
+	 */
+	virtual int read(uint8_t *buf, size_t size);
+	/**
+	 * @brief Check if new data are available.
+	 *
+	 * @return 0 if no data, else number of bytes available.
+	 */
+	virtual int peek();
+	/**
+	 * @brief Flushes the network buffers.
+	 *
+	 * Empty function due to the way TCP works.
+	 */
+	virtual void flush();
+	/**
+	 * @brief Close the connection gracefully.
+	 *
+	 * Send a FIN and wait 1s for a response. If no response close it forcefully.
+	 */
+	virtual void stop();
+	/**
+	 * @brief Connection status.
+	 *
+	 * @return state according to W5100 library codes.
+	 */
+	uint8_t status();
+	/**
+	 * @brief Checks whether the socket is alive.
+	 *
+	 * @return 0 if disconnected or 1 if connected.
+	 */
+	virtual uint8_t connected();
+	/**
+	 * @brief Get the internal socket file descriptor.
+	 *
+	 * @return an integer, that is the socket number.
+	 */
+	int getSocketNumber();
+	/**
+	 * @brief Overloaded cast operators.
+	 *
+	 * Allow EthernetClient objects to be used where a bool is expected.
+	 */
+	virtual operator bool();
+	/**
+	 * @brief Overloaded cast operators.
+	 *
+	 */
+	virtual bool operator==(const bool value) { return bool() == value; }
+	/**
+	 * @brief Overloaded cast operators.
+	 *
+	 */
+	virtual bool operator!=(const bool value) { return bool() != value; }
+	/**
+	 * @brief Overloaded cast operators.
+	 *
+	 */
+	virtual bool operator==(const EthernetClient& rhs);
+	/**
+	 * @brief Overloaded cast operators.
+	 *
+	 */
+	virtual bool operator!=(const EthernetClient& rhs) { return !this->operator==(rhs); };
+
+	friend class EthernetServer;
 };
 
 #endif

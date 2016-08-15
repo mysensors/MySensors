@@ -1,6 +1,7 @@
 #ifndef Stream_h
 #define Stream_h
 
+#if !DOXYGEN
 class Stream {
 	public:
 		virtual size_t write(uint8_t) = 0;
@@ -11,5 +12,6 @@ class Stream {
 		virtual int peek() = 0;
 		virtual void flush() = 0;
 };
+#endif
 
 #endif
