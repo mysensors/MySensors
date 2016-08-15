@@ -25,44 +25,102 @@
 #include <list>
 #include <vector>
 #include "Server.h"
-#include "EthernetClient.h"
+#include "IPAddress.h"
 
-#ifndef ETHERNETSERVER_BACKLOG
-	#define ETHERNETSERVER_BACKLOG 10
-#endif
-
-#ifndef ETHERNETSERVER_MAX_CLIENTS
-	#define ETHERNETSERVER_MAX_CLIENTS ETHERNETSERVER_BACKLOG
+#ifdef ETHERNETSERVER_MAX_CLIENTS
+	#define ETHERNETSERVER_BACKLOG ETHERNETSERVER_MAX_CLIENTS //!< Maximum length to which the queue of pending connections may grow.
+#else
+	#define ETHERNETSERVER_MAX_CLIENTS 10 //!< Default value for max_clients.
+	#define ETHERNETSERVER_BACKLOG 10 //!< Maximum length to which the queue of pending connections may grow.
 #endif
 
 // debug 
 #if defined(ETHERNETSERVER_VERBOSE)
-	#define ETHERNETSERVER_DEBUG(x,...) debug(x, ##__VA_ARGS__)
+	#define ETHERNETSERVER_DEBUG(x,...) printf(x, ##__VA_ARGS__) //!< debug
 #else
-	#define ETHERNETSERVER_DEBUG(x,...)
+	#define ETHERNETSERVER_DEBUG(x,...) //!< debug NULL
 #endif
 
 class EthernetClient;
 
+/**
+ * @brief EthernetServer class
+ */
 class EthernetServer : public Server {
 
 private:
-	uint16_t port;
-	std::list<int> new_clients;
-	std::vector<int> clients;
-	uint16_t max_clients;
+	uint16_t port; //!< @brief Port number for the network socket.
+	std::list<int> new_clients; //!< Socket list of new clients.
+	std::vector<int> clients; //!< @brief Socket list of clients.
+	uint16_t max_clients; //!< @brief The maximum number of allowed clients.
+	int sockfd; //!< @brief Network socket used to accept connections.
+
+	/**
+	 * @brief Accept new clients if the total of connected clients is below max_clients.
+	 *
+	 */
+	void _accept();
 
 public:
+	/**
+	 * @brief EthernetServer constructor.
+	 *
+	 * @param port number for the socket addresses.
+	 * @param max_clients The maximum number allowed for connected clients.
+	 */
 	EthernetServer(uint16_t port, uint16_t max_clients = ETHERNETSERVER_MAX_CLIENTS);
+	/**
+	 * @brief Listen for inbound connection request.
+	 *
+	 */
 	virtual void begin();
-	void begin(IPAddress);
-	void beginPacket(IPAddress, uint16_t);
-	int parsePacket();
+	/**
+	 * @brief Listen on the specified ip for inbound connection request.
+	 *
+	 * @param addr IP address to bind to.
+	 */
+	void begin(IPAddress addr);
+	/**
+	 * @brief Verifies if a new client has connected.
+	 *
+	 * @return @c true if a new client has connected, else @c false.
+	 */
 	bool hasClient();
+	/**
+	 * @brief Get the new connected client.
+	 *
+	 * @return client class object if a new client has connected else -1.
+	 */
 	EthernetClient available();
-	virtual size_t write(uint8_t);
-	virtual size_t write(const uint8_t *, size_t);
+	/**
+	 * @brief Write a byte to all clients.
+	 *
+	 * @param b byte to send.
+	 * @return 0 if FAILURE or 1 if SUCCESS.
+	 */
+	virtual size_t write(uint8_t b);
+	/**
+	 * @brief Write at most 'size' bytes to all clients.
+	 *
+	 * @param buffer to read from.
+	 * @param size of the buffer.
+	 * @return 0 if FAILURE else number of bytes sent.
+	 */
+	virtual size_t write(const uint8_t *buffer, size_t size);
+	/**
+	 * @brief Write a null-terminated string to all clients.
+	 *
+	 * @param str String to write.
+	 * @return 0 if FAILURE else number of characters sent.
+	 */
 	size_t write(const char *str);
+	/**
+	 * @brief Write at most 'size' characters to all clients.
+	 *
+	 * @param buffer to read from.
+	 * @param size of the buffer.
+	 * @return 0 if FAILURE else the number of characters sent.
+	 */
 	size_t write(const char *buffer, size_t size);
 };
 

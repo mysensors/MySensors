@@ -20,9 +20,11 @@
 #ifndef server_h
 #define server_h
 
+#if !DOXYGEN
 class Server {
 	public:
 		virtual void begin() =0;
 };
+#endif
 
 #endif
