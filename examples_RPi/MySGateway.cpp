@@ -39,7 +39,7 @@
 #define MY_GATEWAY_RASPBERRYPI   
 
 // How many clients should be able to connect to this gateway (default 1)
-#define MY_GATEWAY_MAX_CLIENTS 2
+#define MY_GATEWAY_MAX_CLIENTS 10
 
 #ifdef MY_GATEWAY_MQTT_CLIENT
 	// Set MQTT client id
