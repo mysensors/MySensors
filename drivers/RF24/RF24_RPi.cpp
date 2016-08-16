@@ -21,6 +21,20 @@
 
 #include "RF24.h"
 
+// verify RF24 IRQ defs
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+	#if !defined(MY_RF24_IRQ_PIN)
+		#error Message buffering feature requires MY_RF24_IRQ_PIN to be defined!
+	#endif
+	#ifndef SPI_HAS_TRANSACTION
+		#error RF24 IRQ usage requires transactional SPI support
+	#endif
+#else
+	#ifdef MY_RX_MESSAGE_BUFFER_SIZE
+		#error Receive message buffering requires RF24 IRQ usage
+	#endif
+#endif
+
 // pipes
 #define BROADCAST_PIPE 1
 #define NODE_PIPE 2
@@ -32,7 +46,7 @@
 	#define RF24_DEBUG(x,...)
 #endif
 
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	typedef void (*RF24_receiveCallbackType)(void);
 	
 	void (* RF24_receiveCallback)(void) = NULL;
@@ -52,17 +66,17 @@ static void RF24_startListening(void) {
 }
 
 static void RF24_powerDown(void) {
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_lock(&rf24_mutex);
 #endif
 	_rf24.powerDown();
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_unlock(&rf24_mutex);
 #endif
 }
 
 static bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_lock(&rf24_mutex);
 #endif
 	// Make sure radio has powered up
@@ -75,38 +89,38 @@ static bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) 
 	_rf24.openWritingPipe(MY_RF24_BASE_ADDR);
 	bool ok = _rf24.write(buf, len, recipient == BROADCAST_ADDRESS);
 	_rf24.startListening();
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_unlock(&rf24_mutex);
 #endif
 	return ok;
 }
 
 static bool RF24_isDataAvailable() {
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_lock(&rf24_mutex);
 #endif
 	uint8_t pipe_num = 255;
 	_rf24.available(&pipe_num);
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_unlock(&rf24_mutex);
 #endif
 	return (pipe_num <= 5);
 }
 
 static uint8_t RF24_readMessage( void* buf) {
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_lock(&rf24_mutex);
 #endif
 	uint8_t len = _rf24.getDynamicPayloadSize();
 	_rf24.read(buf, len);
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_unlock(&rf24_mutex);
 #endif
 	return len;
 }
 
 static void RF24_setNodeAddress(uint8_t address) {
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_lock(&rf24_mutex);
 #endif
 	if (address != AUTO){
@@ -117,7 +131,7 @@ static void RF24_setNodeAddress(uint8_t address) {
 		// enable autoACK on node pipe
 		_rf24.setAutoAck(NODE_PIPE, true);
 	}
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_unlock(&rf24_mutex);
 #endif
 }
@@ -128,7 +142,7 @@ static uint8_t RF24_getNodeID(void) {
 
 bool RF24_sanityCheck(void) {
 	bool ok = true;
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_lock(&rf24_mutex);
 #endif
 	// detect HW defect ot interrupted SPI line, CE disconnect cannot be detected	
@@ -136,13 +150,13 @@ bool RF24_sanityCheck(void) {
 			_rf24.getChannel() != MY_RF24_CHANNEL) {
 		ok = false;
 	}
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	pthread_mutex_unlock(&rf24_mutex);
 #endif
 	return ok;
 }
 
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 void RF24_irqHandler(void) {
 	if (RF24_receiveCallback) {
 		while (RF24_isDataAvailable()) {
@@ -199,7 +213,7 @@ static bool RF24_initialize(void) {
 
 	//_rf24.printDetails();
 	
-	#ifdef MY_RF24_IRQ_PIN
+	#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 		// Mask all interrupts except the receive interrupt
 		_rf24.maskIRQ(1,1,0);
 		

@@ -269,7 +269,7 @@ for opt do
         CXXFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=${optarg} $CXXFLAGS"
         ;;
     --my-rf24-irq-pin=*)
-        CXXFLAGS="-DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
+        CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
         ;;
     --my-rx-message-buffer-size=*)
         CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
