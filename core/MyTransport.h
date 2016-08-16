@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2016 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -36,7 +36,7 @@
  *   - TSM:ID						from <b>stID</b> Check/request node ID, if dynamic node ID set
  *   - TSM:UPL						from <b>stUplink</b> Verify uplink connection by pinging GW
  *   - TSM:READY					from <b>stReady</b> Transport is ready and fully operational
- *   - TSM:FAILURE					from <b>stFailure</b> Failure in transport link or transport HW
+ *   - TSM:FAIL						from <b>stFailure</b> Failure in transport link or transport HW
  *  - Transport support function (<b>TSF</b>)
  *   - TSF:CHKUPL					from @ref transportCheckUplink(), checks connection to GW
  *   - TSF:ASID						from @ref transportAssignNodeID(), assigns node ID
@@ -52,7 +52,7 @@
  * |E| SYS	| SUB		| Message				| Comment
  * |-|------|-----------|-----------------------|---------------------------------------------------------------------
  * | | TSM	| INIT		|						| <b>Transition to stInit state</b>
- * | | TSM	| INIT		| STATID,ID=%%d			| Node ID is static
+ * | | TSM	| INIT		| STATID=%%d			| Node ID is static
  * | | TSM	| INIT		| TSP OK				| Transport device configured and fully operational
  * | | TSM	| INIT		| GW MODE				| Node is set up as GW, thus omitting ID and findParent states
  * |!| TSM	| INIT		| TSP FAIL				| Transport device initialization failed
@@ -67,13 +67,14 @@
  * |!| TSM	| ID		| FAIL,ID=%%d			| ID verification failed, ID invalid
  * | | TSM	| UPL		|						| <b>Transition to stUplink state</b>
  * | | TSM	| UPL		| OK					| Uplink OK, GW returned ping
+ * | | TSF	| UPL		| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
  * |!| TSM	| UPL		| FAIL					| Uplink check failed, i.e. GW could not be pinged
  * | | TSM	| READY		|						| <b>Transition to stReady</b>, i.e. transport is ready and fully operational
  * |!| TSM	| READY		| UPL FAIL,SNP			| Too many failed uplink transmissions, search new parent
  * |!| TSM	| READY		| FAIL,STATP			| Too many failed uplink transmissions, static parent enforced
- * | | TSM	| FAILURE	|						| <b>Transition to stFailure state</b>
- * | | TSM	| FAILURE	| PDT					| Power-down transport
- * | | TSM	| FAILURE	| RE-INIT				| Attempt to re-initialize transport
+ * | | TSM	| FAIL		| CNT=%%d				| <b>Transition to stFailure state</b>, consecutive failure counter (CNT)
+ * | | TSM	| FAIL		| PDT					| Power-down transport
+ * | | TSM	| FAIL		| RE-INIT				| Attempt to re-initialize transport
  * | | TSF	| CHKUPL	| OK					| Uplink OK
  * | | TSF	| CHKUPL	| OK,FCTRL				| Uplink OK, flood control prevents pinging GW in too short intervals
  * | | TSF	| CHKUPL	| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
@@ -95,7 +96,8 @@
  * | | TSF	| MSG		| FWD BC MSG			| Controlled broadcast message forwarding
  * | | TSF	| MSG		| REL MSG				| Relay message
  * | | TSF	| MSG		| REL PxNG,HP=%%d		| Relay PING/PONG message, increment hop counter (HP)
- * |!| TSF	| MSG		| PVER,%%d!=%%d			| Message protocol version mismatch
+ * |!| TSF	| MSG		| LEN,%%d!=%%d			| Invalid message length, (actual!=expected)
+ * |!| TSF	| MSG		| PVER,%%d!=%%d			| Message protocol version mismatch (actual!=expected)
  * |!| TSF	| MSG		| SIGN VERIFY FAIL		| Signing verification failed
  * |!| TSF	| MSG		| REL MSG,NORP			| Node received a message for relaying, but node is not a repeater, message skipped
  * |!| TSF	| MSG		| SIGN FAIL				| Signing message failed
@@ -123,8 +125,9 @@
  * - <b>t</b>=msg type
  * - <b>pt</b>=payload type
  * - <b>l</b>=length
- * - <b>ft</b>=failed uplink transmission counter 
  * - <b>sg</b>=signing flag
+ * - <b>ft</b>=failed uplink transmission counter 
+ * - <b>st</b>=send status, OK=success, NACK=no radio ACK received
  *
  * @brief API declaration for MyTransport
  *
@@ -139,15 +142,50 @@
 #if defined(MY_DEBUG)
 	#define TRANSPORT_DEBUG(x,...) debug(x, ##__VA_ARGS__)	//!< debug
 #else
-	#define TRANSPORT_DEBUG(x,...)  //!< debug NULL
+	#define TRANSPORT_DEBUG(x,...)							//!< debug NULL
 #endif
 
 #if defined(MY_REPEATER_FEATURE)
-	#define TRANSMISSION_FAILURES  10		//!< search for a new parent node after this many transmission failures, higher threshold for repeating nodes
+	#define MY_TRANSPORT_MAX_TX_FAILURES	(10u)		//!< search for a new parent node after this many transmission failures, higher threshold for repeating nodes
 #else
-	#define TRANSMISSION_FAILURES  5		//!< search for a new parent node after this many transmission failures, lower threshold for non-repeating nodes
+	#define MY_TRANSPORT_MAX_TX_FAILURES	(5u)		//!< search for a new parent node after this many transmission failures, lower threshold for non-repeating nodes
 #endif
 
+#define MY_TRANSPORT_MAX_TSM_FAILURES		(15u)		//!< Max. number of consecutive TSM failure state entries (4bit)
+
+#ifndef MY_TRANSPORT_TIMEOUT_FAILURE_STATE
+	#define MY_TRANSPORT_TIMEOUT_FAILURE_STATE		(10*1000ul)		//!< Duration failure state (in ms)
+#endif
+#ifndef MY_TRANSPORT_TIMEOUT_EXT_FAILURE_STATE
+	#define MY_TRANSPORT_TIMEOUT_EXT_FAILURE_STATE	(60*1000ul)		//!< Duration extended failure state (in ms)
+#endif
+#ifndef MY_TRANSPORT_STATE_TIMEOUT_MS
+	#define MY_TRANSPORT_STATE_TIMEOUT_MS			(2*1000ul)		//!< general state timeout (in ms)
+#endif
+#ifndef MY_TRANSPORT_CHKUPL_INTERVAL_MS
+	#define MY_TRANSPORT_CHKUPL_INTERVAL_MS			(10*1000ul)		//!< Interval to re-check uplink (in ms)
+#endif
+#ifndef MY_TRANSPORT_STATE_RETRIES
+	#define MY_TRANSPORT_STATE_RETRIES				(3u)			//!< retries before switching to FAILURE
+#endif
+
+#define AUTO						(255u)			//!< ID 255 is reserved
+#define BROADCAST_ADDRESS			(255u)			//!< broadcasts are addressed to ID 255
+#define DISTANCE_INVALID			(255u)			//!< invalid distance when searching for parent
+#define MAX_HOPS					(254u)			//!< maximal mumber of hops for ping/pong
+#define INVALID_HOPS				(255u)			//!< invalid hops
+#define MAX_SUBSEQ_MSGS				(5u)			//!< Maximum number of subsequentially processed messages in FIFO (to prevent transport deadlock if HW issue)
+
+// parent node check
+#if defined(MY_PARENT_NODE_IS_STATIC) && !defined(MY_PARENT_NODE_ID)
+	#error MY_PARENT_NODE_IS_STATIC but no MY_PARENT_NODE_ID defined!
+#endif
+
+#define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)				//!<  returns true if static parent id is undefined
+#define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
+#define isValidParent(parent) (bool)(parent != AUTO)					//!<  returns true if parent is valid
+
+// RX queue
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	#if defined(MY_RADIO_RFM69)
 		#error Receive message buffering not supported for RFM69!
@@ -159,20 +197,6 @@
 	#error Receive message buffering requires message buffering feature enabled!
 #endif
 
-#define TIMEOUT_FAILURE_STATE 10000			//!< duration failure state
-#define STATE_TIMEOUT 2000					//!< general state timeout
-#define STATE_RETRIES 3						//!< retries before switching to FAILURE
-#define AUTO 255							//!< ID 255 is reserved for auto initialization of nodeId.
-#define BROADCAST_ADDRESS ((uint8_t)255)	//!< broadcasts are addressed to ID 255
-#define DISTANCE_INVALID ((uint8_t)255)		//!< invalid distance when searching for parent
-#define MAX_HOPS ((uint8_t)254)				//!< maximal mumber of hops for ping/pong
-#define INVALID_HOPS ((uint8_t)255)			//!< invalid hops
-#define MAX_SUBSEQ_MSGS 5					//!< Maximum number of subsequentially processed messages in FIFO (to prevent transport deadlock if HW issue)
-#define CHKUPL_INTERVAL ((uint32_t)10000)	//!< Minimum time interval to re-check uplink
-
-#define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)				//!<  returns true if static parent id is undefined
-#define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
-#define isValidParent(parent) (bool)(parent != AUTO)					//!<  returns true if parent is valid
 
  /**
  * @brief SM state
@@ -190,67 +214,82 @@ struct transportState {
 * This structure stores transport status and SM variables
 */ 
 typedef struct {
+	// SM variables
 	transportState* currentState;			//!< pointer to current fsm state
 	uint32_t stateEnter;					//!< state enter timepoint
+	// general transport variables
 	uint32_t lastUplinkCheck;				//!< last uplink check, required to prevent GW flooding
-	uint32_t lastSanityCheck;				//!< last sanity check
 	// 8 bits
 	bool findingParentNode : 1;				//!< flag finding parent node is active
 	bool preferredParentFound : 1;			//!< flag preferred parent found
 	bool uplinkOk : 1;						//!< flag uplink ok
 	bool pingActive : 1;					//!< flag ping active
 	bool transportActive : 1;				//!< flag transport active
-	uint8_t reserved : 3;					//!< reserved
+	uint8_t stateRetries : 3;				//!< retries / state re-enter (max 7)
 	// 8 bits
-	uint8_t retries : 4;					//!< retries / state re-enter
-	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions
+	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions (max 15)	
+	uint8_t failureCounter : 4;				//!< counter for TSM failures (max 15)
 	// 8 bits
-	uint8_t pingResponse;					//!< stores hops received in I_PONG
-} __attribute__((packed)) transportSM;
+	uint8_t pingResponse;					//!< stores I_PONG hops
+} transportSM;
 
+/**
+* @brief RAM routing table
+*/
+typedef struct {
+	uint8_t route[256];						//!< route for node
+} routingTable;
 
 // PRIVATE functions
 
 /**
-* @brief Initialize SM variables and transport HW
+* @brief Initialise SM variables and transport HW
 */
-void stInitTransition();
+void stInitTransition(void);
+/**
+* @brief Initialise transport
+*/
+void stInitUpdate(void);
 /**
 * @brief Find parent
 */
-void stParentTransition();
+void stParentTransition(void);
 /**
 * @brief Verify find parent responses
 */
-void stParentUpdate();
+void stParentUpdate(void);
 /**
 * @brief Send ID request
 */
-void stIDTransition();
+void stIDTransition(void);
 /**
 * @brief Verify ID response and GW link
 */
-void stIDUpdate();
+void stIDUpdate(void);
 /**
 * @brief Send uplink ping request
 */
-void stUplinkTransition();
+void stUplinkTransition(void);
+/**
+* @brief Verify uplink response
+*/
+void stUplinkUpdate(void);
 /**
 * @brief Set transport OK
 */
-void stReadyTransition();
+void stReadyTransition(void);
 /**
 * @brief Monitor transport link
 */
-void stReadyUpdate();
+void stReadyUpdate(void);
 /**
 * @brief Transport failure and power down radio 
 */
-void stFailureTransition();
+void stFailureTransition(void);
 /**
 * @brief Re-initialize transport after timeout
 */
-void stFailureUpdate();
+void stFailureUpdate(void);
 /**
 * @brief Switch SM state
 * @param newState New state to switch SM to
@@ -259,30 +298,30 @@ void transportSwitchSM(transportState& newState);
 /**
 * @brief Update SM state
 */
-void transportUpdateSM();
+void transportUpdateSM(void);
 /**
 * @brief Request time in current SM state
 * @return ms in current state
 */
-uint32_t transportTimeInState();
+uint32_t transportTimeInState(void);
 /**
 * @brief Call transport driver sanity check
 */
-void transportInvokeSanityCheck();
+void transportInvokeSanityCheck(void);
 /**
 * @brief Process all pending messages in RX FIFO
 */
-void transportProcessFIFO();
+void transportProcessFIFO(void);
 /**
 * @brief Receive message from RX FIFO and process
 */
-void transportProcessMessage();
+void transportProcessMessage(void);
 /**
 * @brief Assign node ID
 * @param newNodeId New node ID
 * @return true if node ID valid and successfully assigned
 */
-bool transportAssignNodeID(uint8_t newNodeId);
+bool transportAssignNodeID(const uint8_t newNodeId);
 /**
 * @brief Wait and process messages for a defined amount of time until specified message received
 * @param ms Time to wait and process incoming messages in ms
@@ -290,13 +329,13 @@ bool transportAssignNodeID(uint8_t newNodeId);
 * @param msgtype Specific message type 
 * @return true if specified command received within waiting time
 */
-bool transportWait(uint32_t ms, uint8_t cmd, uint8_t msgtype);
+bool transportWait(const uint32_t ms, const uint8_t cmd, const uint8_t msgtype);
 /**
 * @brief Ping node
 * @param targetId Node to be pinged
 * @return hops from pinged node or 255 if no answer received within 2000ms
 */
-uint8_t transportPingNode(uint8_t targetId);
+uint8_t transportPingNode(const uint8_t targetId);
 /**
 * @brief Send and route message according to destination
 * 
@@ -318,44 +357,73 @@ bool transportSendRoute(MyMessage &message);
 * @param message
 * @return true if message sent successfully 
 */
-bool transportSendWrite(uint8_t to, MyMessage &message);
+bool transportSendWrite(const uint8_t to, MyMessage &message);
 /**
 * @brief Check uplink to GW, includes flooding control
 * @param force to override flood control timer
 * @return true if uplink ok
 */
-bool transportCheckUplink(bool force);
+bool transportCheckUplink(bool force=false);
 
 // PUBLIC functions
 
 /**
 * @brief Initialize transport and SM
 */
-void transportInitialize();
+void transportInitialize(void);
 /**
 * @brief Process FIFO msg and update SM
 */
-void transportProcess();
+void transportProcess(void);
 /**
 * @brief Flag transport ready
 * @return true if transport is initialize and ready
 */
-bool isTransportReady();
+bool isTransportReady(void);
 /**
 * @brief Flag searching parent ongoing
 * @return true if transport is searching for parent
 */
-bool isTransportSearchingParent();
+bool isTransportSearchingParent(void);
+/**
+* @brief Flag TSM extended failure
+* @return true if TSM had too many consecutive failure state entries
+*/
+bool isTransportExtendedFailure(void);
 /**
 * @brief Clear routing table
 */
-void transportClearRoutingTable();
+void transportClearRoutingTable(void);
 /**
-* @brief Return heart beat, i.e. ms in current state
+* @brief Return heart beat
+* @return MS in current state
 */
-uint32_t transportGetHeartbeat();
+uint32_t transportGetHeartbeat(void);
+/**
+* @brief Load routing table from EEPROM to RAM.
+* Only for GW devices with enough RAM, i.e. ESP8266, RPI Sensebender GW, etc.
+* Atmega328 has only limited amount of RAM
+*/
+void transportLoadRoutingTable(void);
+/**
+* @brief Save routing table to EEPROM.
+*/
+void transportSaveRoutingTable(void);
+/**
+* @brief Update routing table
+* @param node
+* @param route
+*/
+void transportSetRoute(const uint8_t node, const uint8_t route);
+/**
+* @brief Load route to node
+* @param node
+* @return route to node
+*/
+uint8_t transportGetRoute(const uint8_t node);
 
-// interface functions for radio driver
+
+// interface functions for radio driver ************************************************
 
 /**
 * @brief Initialize transport HW

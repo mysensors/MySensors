@@ -99,7 +99,7 @@ void _begin() {
 	#if defined(MY_RADIO_FEATURE)
 		// Save static parent id in eeprom (used by bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, MY_PARENT_NODE_ID);
-		transportInitialize();
+		transportInitialise();
 		while (!isTransportReady()) {
 			hwWatchdogReset();
 			transportProcess();
@@ -142,7 +142,7 @@ void _begin() {
 	    	inclusionInit();
 		#endif
 
-	    // initialize the transport driver
+	    // initialise the transport driver
 		if (!gatewayTransportInit()) {
 			setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
 			debug(PSTR("!MCO:BGN:TSP FAIL\n"));
@@ -353,15 +353,15 @@ bool _processInternalMessages() {
 		}
 		else if (type == I_DEBUG) {
 			#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
-				char debug_msg = _msg.data[0];
+				const char debug_msg = _msg.data[0];
 				if (debug_msg == 'R') {		// routing table
 				#if defined(MY_REPEATER_FEATURE)
 					for (uint8_t cnt = 0; cnt != 255; cnt++) {
-						uint8_t route = hwReadConfig(EEPROM_ROUTES_ADDRESS + cnt);
+						const uint8_t route = transportGetRoute(cnt);
 						if (route != BROADCAST_ADDRESS) {
 							debug(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
-							uint8_t OutBuf[2] = { cnt,route };
-							_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(OutBuf, 2));
+							uint8_t outBuf[2] = { cnt,route };
+							_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(outBuf, 2));
 							wait(200);
 						}
 					}
@@ -390,15 +390,15 @@ bool _processInternalMessages() {
 		// sender is a node
 		if (type == I_REGISTRATION_REQUEST) {
 			#if defined(MY_GATEWAY_FEATURE)
-				// register request are exclusively handled by GW/Controller
-				// !!! eventually define if AUTO ACK or register request forwarded to controller
+				// registeration requests are exclusively handled by GW/Controller
 				#if !defined(MY_REGISTRATION_CONTROLLER)
-					// auto register if version compatible
+					// auto registration if version compatible
 					bool approveRegistration = true;
 
 					#if defined(MY_CORE_COMPATIBILITY_CHECK)
 							approveRegistration = (_msg.getByte() >= MY_CORE_MIN_VERSION);
 					#endif
+					// delay for slow nodes *****************************
 					_sendRoute(build(_msgTmp, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_RESPONSE, false).set(approveRegistration));
 				#else
 					return false;	// processing of this request via controller

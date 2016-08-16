@@ -239,6 +239,16 @@
 	#endif
 #endif
 
+// RAM ROUTING TABLE
+#if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
+	// activate feature based on architecture
+	#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(LINUX_ARCH_RASPBERRYPI)
+		#define MY_RAM_ROUTING_TABLE_ENABLED
+	#elif defined(ARDUINO_ARCH_AVR)
+		// memory limited, enable with care
+		// #define MY_RAM_ROUTING_TABLE_ENABLED
+	#endif
+#endif
 
 // RADIO
 #if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)

@@ -25,7 +25,7 @@
  * @{
  *
  * MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
- * - [!] Exclamation mark is prepended in case of error
+ * - [!] Exclamation mark is prepended in case of error or warning
  * - SYSTEM:
  *  - <b>MCO</b> messages emitted by MySensorsCore
  * - SUB SYSTEMS:
@@ -44,7 +44,7 @@
  * | | MCO  | BGN	| STP										| Callback setup()
  * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d	| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
  * | | MCO	| BGN	| NODE UNLOCKED								| Node successfully unlocked (see signing chapter)
- * |!| MCO	| BGN	| TSP FAIL									| Transport initialization failed
+ * |!| MCO	| BGN	| TSP FAIL									| Transport initialisation failed
  * | | MCO	| REG	| REQ										| Registration request
  * | | MCO	| REG	| NOT NEEDED								| No registration needed (i.e. GW)
  * |!| MCO	| SND	| NODE NOT REG								| Node is not registered, cannot send message
