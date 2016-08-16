@@ -35,6 +35,8 @@
 #endif
 
 #define MY_SERIALDEVICE Serial
+#define MY_DEBUG_BUFFER_SIZE 300
+
 #if defined __AVR_ATmega328P__
 #ifndef sleep_bod_disable
 #define sleep_bod_disable() 										\

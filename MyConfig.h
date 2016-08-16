@@ -441,16 +441,18 @@
 #endif
 
 /**
- * @def MY_RF24_IRQ_PIN
- * @brief Disable RF24 interrupt pin usage by default. Override in sketch if needed.
- */
-//#define MY_RF24_IRQ_PIN
+* @def MY_RX_MESSAGE_BUFFER_FEATURE
+* @brief This enabled the receiving buffer feature. 
+*
+* This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
+*/
+//#define MY_RX_MESSAGE_BUFFER_FEATURE
 
 /**
  * @def MY_RX_MESSAGE_BUFFER_SIZE
- * @brief Declare the amount of incoming messages that can be buffered. Requires MY_RADIO_NRF24 and MY_RF24_IRQ_PIN. Override in sketch if needed.
+ * @brief Declare the amount of incoming messages that can be buffered. 
  */
-#ifdef MY_RF24_IRQ_PIN
+#ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	#ifndef MY_RX_MESSAGE_BUFFER_SIZE
 		#define MY_RX_MESSAGE_BUFFER_SIZE  (20)
 	#endif
@@ -758,6 +760,7 @@
 #define MY_DEBUG_VERBOSE_RF24
 #define MY_TRANSPORT_SANITY_CHECK
 #define MY_RF24_IRQ_PIN
+#define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
 #endif

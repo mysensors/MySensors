@@ -57,8 +57,6 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
-#include <EEPROM.h>
-#include <SPI.h>
 
 // Enable debug prints to serial monitor
 #define MY_DEBUG 

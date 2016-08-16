@@ -37,7 +37,6 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#include <SPI.h>
 #include <MySensors.h>  
 
 #define CHILD_ID_DUST_PM10            0

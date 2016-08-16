@@ -37,7 +37,6 @@
 // Enable repeater functionality for this node
 #define MY_REPEATER_FEATURE
 
-#include <SPI.h>
 #include <MySensors.h>
 
 #define RELAY_1  3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)

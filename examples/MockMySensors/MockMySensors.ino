@@ -15,7 +15,6 @@
 
 #define MY_NODE_ID 254
 
-#include <SPI.h>
 #include <MySensors.h>
 
 #define RADIO_ERROR_LED_PIN 4  // Error led pin

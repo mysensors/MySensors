@@ -198,22 +198,21 @@ uint16_t hwFreeMem() {
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {
-	char fmtBuffer[300];
+	char fmtBuffer[MY_DEBUG_BUFFER_SIZE];
 	#ifdef MY_GATEWAY_FEATURE
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf_P(fmtBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+		snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		MY_SERIALDEVICE.print(fmtBuffer);
 	#endif
 	va_list args;
 	va_start (args, fmt );
-	va_end (args);
 	#ifdef MY_GATEWAY_FEATURE
 		// Truncate message if this is gateway node
 		vsnprintf_P(fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, fmt, args);
 		fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1] = '\n';
 		fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH] = '\0';
 	#else
-		vsnprintf_P(fmtBuffer, 299, fmt, args);
+		vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 	#endif
 	va_end (args);
 	MY_SERIALDEVICE.print(fmtBuffer);

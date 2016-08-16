@@ -66,8 +66,6 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
-#include <EEPROM.h>
-#include <SPI.h>
 #include <ArduinoOTA.h>
 
 // Enable debug prints to serial monitor

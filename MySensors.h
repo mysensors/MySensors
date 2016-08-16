@@ -285,23 +285,6 @@
 		#error Only one forward link driver can be activated
 	#endif
 	#if defined(MY_RADIO_NRF24)
-		#ifdef MY_RF24_IRQ_PIN
-			// SoftSPI does not support usingInterrupt()
-			#ifdef MY_SOFTSPI
-				#error RF24 IRQ usage cannot be used with Soft SPI
-			#endif
-			// ESP8266 does not support usingInterrupt()
-			#ifdef ESP8266
-				#error RF24 IRQ usage cannot be used with ESP8266
-			#endif
-			#ifndef SPI_HAS_TRANSACTION
-				#error RF24 IRQ usage requires transactional SPI support
-			#endif
-		#else
-			#ifdef MY_RX_MESSAGE_BUFFER_SIZE
-				#error Receive message buffering requires RF24 IRQ usage
-			#endif
-		#endif
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
 			#include "drivers/AES/AES.cpp"
 		#endif
