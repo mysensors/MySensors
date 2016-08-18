@@ -51,7 +51,7 @@ void _process() {
 		transportProcess();
 	#endif
 
-	#if defined(LINUX_ARCH_GENERIC)
+	#if defined(LINUX)
 		// To avoid high cpu usage
 		usleep(10000); // 10ms
 	#endif
@@ -65,7 +65,7 @@ void _infiniteLoop() {
 		#if defined (MY_LEDS_BLINKING_FEATURE)
 			ledsProcess();
 		#endif
-		#if defined(LINUX_ARCH_GENERIC)
+		#if defined(LINUX)
 			exit(1);
 		#endif
 	}

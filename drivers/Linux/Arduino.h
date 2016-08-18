@@ -51,6 +51,7 @@ char *ltoa(long value, char* result, int base);
 char *ultoa(long num, char *str, int radix);
 char *utoa(int num, char *str, int radix);
 char *dtostrf(float f, int width, int decimals, char *result);
+void delay(unsigned int millis);
 
 #ifdef __cplusplus
 	}

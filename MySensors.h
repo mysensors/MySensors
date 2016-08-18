@@ -40,7 +40,7 @@
  * @def MY_NODE_TYPE
  * @brief Contain a string describing the class of sketch/node (gateway/repeater/sensor).
  */
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_RASPBERRYPI) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT)
 	#define MY_GATEWAY_FEATURE
 	#define MY_IS_GATEWAY (true)
 	#define MY_NODE_TYPE "GW"
@@ -50,10 +50,6 @@
 #else
 	#define MY_IS_GATEWAY (false)
 	#define MY_NODE_TYPE "NODE"
-#endif
-
-#if defined(MY_GATEWAY_RASPBERRYPI)
-	#define MY_GATEWAY_LINUX
 #endif
 
 // Enable radio "feature" if one of the radio types was enabled
@@ -73,7 +69,7 @@
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
         #include "core/MyHwSAMD.cpp"
-#elif defined(LINUX_ARCH_GENERIC)
+#elif defined(LINUX)
 	// Remove PSTR macros from debug prints
 	#undef PSTR
 	#define PSTR(x) (x)
@@ -288,7 +284,7 @@
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
 			#include "drivers/AES/AES.cpp"
 		#endif
-		#if !defined(RASPBERRYPI_ARCH)
+		#if !defined(LINUX)
 			#include "drivers/RF24/RF24.cpp"
 		#endif
 		#include "core/MyTransportNRF24.cpp"
@@ -333,7 +329,7 @@
 #if !defined(MY_CORE_ONLY)
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#include "core/MyMainESP8266.cpp"
-	#elif defined(LINUX_ARCH_GENERIC)
+	#elif defined(LINUX)
 		#include "core/MyMainLinux.cpp"
 	#else
 		#include "core/MyMainDefault.cpp"

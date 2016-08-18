@@ -11,12 +11,16 @@ CONFIG_FILE=Makefile.inc
 
 include $(CONFIG_FILE)
 
-GATEWAY=examples_RPi/MySGateway
-GATEWAY_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_RPi/MySGateway.cpp
+GATEWAY=examples_linux/mysGateway
+GATEWAY_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysGateway.cpp
 GATEWAY_OBJECTS=$(patsubst %.cpp,%.o,$(GATEWAY_SOURCES))
 DEPS+=$(patsubst %.cpp,%.d,$(GATEWAY_SOURCES))
 
-CINCLUDE=-I. -I./core -I./drivers/Linux -I$(RF24H_LIB_DIR)
+CINCLUDE=-I. -I./core -I./drivers/Linux
+
+ifneq ($(RF24H_LIB_DIR),)
+CINCLUDE+=-I$(RF24H_LIB_DIR)
+endif
 
 .PHONY: all gateway cleanconfig clean install uninstall force
 

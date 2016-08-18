@@ -32,11 +32,15 @@ Installation options:
     --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
 
 MySensors options:
-    --my-debug                  Enables debug.
-    --my-gateway-type=[ethernet|mqtt]
-                                Gateway type, default to ethernet.
+    --my-debug=[enable|disable]
+                                Enables or disables debugging.
+                                Default to enable.
+    --my-gateway=[none|ethernet|mqtt]
+                                Gateway type, set to none to disable gateway feature.
+                                Default to ethernet.
     --my-config-file=<FILE>     Config file path. [/etc/MySensorGateway.cfg]
-    --my-rf24-enable            Enables RF24 radio.
+    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature.
+                                Default to rf24.
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125.
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level.
@@ -45,7 +49,8 @@ MySensors options:
     --my-controller-ip-address=<IP>
                                 Controller or MQTT broker ip.
                                 Use commas instead of points. Example: 127,0,0,1
-    --my-port=<PORT>            Controller or MQTT broker port.
+    --my-port=<PORT>            The port to keep open on gateway mode.
+                                If gateway is set to mqtt, it sets the broker port.
     --my-mqtt-client-id=<ID>    MQTT client id.
     --my-mqtt-publish-topic-prefix=<PREFIX>
                                 MQTT publish topic prefix.
@@ -164,10 +169,10 @@ function gcc_cpu_flags {
     local soc=$1
     case $soc in
     BCM2835)
-        flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -DRASPBERRYPI_ARCH"
+        flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -DLINUX_ARCH_RASPBERRYPI"
         ;;
     BCM2836)
-        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -DRASPBERRYPI_ARCH"
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -DLINUX_ARCH_RASPBERRYPI"
         ;;
     AM33XX)
         flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
@@ -190,7 +195,12 @@ function gcc_cpu_flags {
     echo ${flags}
 }
 
-params="OS SOC CPUFLAGS CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR INIT_SYSTEM"
+# Default values
+debug=enable
+gateway_type=ethernet
+radio_type=nrf24
+
+params="OS SOC CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR INIT_SYSTEM"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -229,20 +239,17 @@ for opt do
     --gateway-dir=*)
         GATEWAY_DIR="$optarg"
         ;;
-    --my-debug*)
-        CXXFLAGS="-DMY_DEBUG $CXXFLAGS"
+    --my-debug=*)
+        debug=${optarg}
         ;;
-    --my-gateway-type=*)
-        if [[ ${optarg} == "mqtt" ]]; then
-            LDFLAGS="-lmosquitto $LDFLAGS"
-            CXXFLAGS="-DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
-        fi
+    --my-gateway=*)
+        gateway_type=${optarg}
         ;;
     --my-config-file=*)
         CXXFLAGS="-DMY_CONFIG_FILE=${optarg} $CXXFLAGS"
         ;;
-    --my-rf24-enable*)
-        CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+    --my-radio=*)
+        radio_type=${optarg}
         ;;
     --my-rf24-channel=*)
         CXXFLAGS="-DMY_RF24_CHANNEL=${optarg} $CXXFLAGS"
@@ -281,7 +288,6 @@ for opt do
 done
 
 PREFIX=${PREFIX:-/usr/local}
-RF24H_LIB_DIR=${PREFIX}/include/RF24
 GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
 CXX=${CXX:-g++}
 
@@ -299,13 +305,30 @@ if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags $SOC)
 fi
 
-CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra -DLINUX_ARCH_GENERIC $CXXFLAGS"
+CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra -DLINUX $CXXFLAGS"
 
 if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
     CXXFLAGS+="-D__RPI_BPLUS"
-fi  
+fi
 
-LDFLAGS="-pthread -lrf24-bcm $LDFLAGS"
+if [[ ${debug} == "enable" ]]; then
+    CXXFLAGS="-DMY_DEBUG $CXXFLAGS"
+fi
+
+if [[ ${gateway_type} == "ethernet" ]]; then
+    CXXFLAGS="-DMY_GATEWAY_LINUX $CXXFLAGS"
+elif [[ ${gateway_type} == "mqtt" ]]; then
+    LDFLAGS="-lmosquitto $LDFLAGS"
+    CXXFLAGS="-DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
+fi
+
+if [[ ${radio_type} == "nrf24" ]]; then
+    CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+    LDFLAGS="-lrf24-bcm $LDFLAGS"
+    RF24H_LIB_DIR=${PREFIX}/include/RF24
+fi
+
+LDFLAGS="-pthread $LDFLAGS"
 
 if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd

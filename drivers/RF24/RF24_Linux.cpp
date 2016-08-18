@@ -16,35 +16,11 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  *
- * Based on Olivier Mauti work(RF24.h), copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
+ * This is a wrapper for maniacbug's RF24 library, copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
  */
 
-#include "RF24.h"
-
-// verify RF24 IRQ defs
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-	#if !defined(MY_RF24_IRQ_PIN)
-		#error Message buffering feature requires MY_RF24_IRQ_PIN to be defined!
-	#endif
-	#ifndef SPI_HAS_TRANSACTION
-		#error RF24 IRQ usage requires transactional SPI support
-	#endif
-#else
-	#ifdef MY_RX_MESSAGE_BUFFER_SIZE
-		#error Receive message buffering requires RF24 IRQ usage
-	#endif
-#endif
-
-// pipes
-#define BROADCAST_PIPE 1
-#define NODE_PIPE 2
-
-// debug 
-#if defined(MY_DEBUG_VERBOSE_RF24)
-	#define RF24_DEBUG(x,...) debug(x, ##__VA_ARGS__)
-#else
-	#define RF24_DEBUG(x,...)
-#endif
+#include <RF24.h>
+#include "RF24_Linux.h"
 
 #ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	typedef void (*RF24_receiveCallbackType)(void);
@@ -57,7 +33,7 @@
 static uint8_t MY_RF24_BASE_ADDR[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
 static uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 
-RF24 _rf24(MY_RF24_CE_PIN, MY_RF24_CS_PIN);
+RF24 _rf24(RF24_CE_PIN, RF24_CS_PIN, MY_RF24_SPI_MAX_SPEED);
 
 static void RF24_startListening(void) {
 	RF24_DEBUG(PSTR("start listening\n"));

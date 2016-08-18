@@ -20,8 +20,8 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 
-#ifdef RASPBERRYPI_ARCH
-	#include "drivers/RF24/RF24_RPi.cpp"
+#ifdef LINUX_ARCH_RASPBERRYPI
+	#include "drivers/RF24/RF24_Linux.cpp"
 #else
 	#include "drivers/RF24/RF24.h"
 #endif

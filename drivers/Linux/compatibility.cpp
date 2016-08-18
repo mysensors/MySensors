@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include "Arduino.h"
 
 /**
@@ -174,4 +175,13 @@ char *dtostrf(float f, int width, int decimals, char *result)
 {
 	sprintf(result,"%*.*f", width, decimals, f);
 	return result;
+}
+
+void delay(unsigned int millis)
+{
+    struct timespec sleeper;
+    
+    sleeper.tv_sec  = (time_t)(millis / 1000);
+    sleeper.tv_nsec = (long)(millis % 1000) * 1000000;
+    nanosleep(&sleeper, NULL);
 }

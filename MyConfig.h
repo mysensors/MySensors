@@ -410,17 +410,8 @@
 		#define MY_RF24_CE_PIN 4
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CE_PIN 27
-	#elif defined(RASPBERRYPI_ARCH)
-		#include <RF24.h>
-		#include <RF24_config.h>
-		#ifdef __RPI_BPLUS
-			#define MY_RF24_CE_PIN RPI_BPLUS_GPIO_J8_22
-			#define MY_RF24_CS_PIN RPI_BPLUS_GPIO_J8_24
-		#else
-			#define MY_RF24_CE_PIN RPI_V2_GPIO_P1_22
-			#define MY_RF24_CS_PIN BCM2835_SPI_CS0
-		#endif
-		#define MY_RF24_SPI_SPEED BCM2835_SPI_SPEED_8MHZ
+	#elif defined(LINUX)
+		#define MY_RF24_CE_PIN 22
 	#else
 		#define MY_RF24_CE_PIN 9
 	#endif
@@ -435,6 +426,8 @@
 		#define MY_RF24_CS_PIN 15
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CS_PIN 3
+	#elif defined(LINUX)
+		#define MY_RF24_CS_PIN 24
 	#else
 		#define MY_RF24_CS_PIN 10
 	#endif
@@ -616,7 +609,6 @@
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
-//#define MY_GATEWAY_RASPBERRYPI
 //#define MY_GATEWAY_LINUX
 
 /**
