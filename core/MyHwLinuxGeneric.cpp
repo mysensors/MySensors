@@ -19,7 +19,6 @@
 
 #include "MyHwLinuxGeneric.h"
 
-#include <sys/time.h>
 #include <stdarg.h>
 #include <string.h>
 #include <iostream>
@@ -28,60 +27,47 @@
 
 static const char* CONFIG_FILE = MY_LINUX_CONFIG_FILE;
 static const size_t _length = 1024;	// ATMega328 has 1024 bytes
-static uint8_t _config[_length];	
-static unsigned long millis_at_start;
+static uint8_t _config[_length];
 
 bool CheckConfigFile() {
     struct stat fileInfo;
-	
-	if(stat(CONFIG_FILE, &fileInfo) != 0)
-	{
+
+	if (stat(CONFIG_FILE, &fileInfo) != 0) {
 		//File does not exist.  Create it.
 		debug("Config file %s does not exist, creating new config file.\n", CONFIG_FILE);
 		ofstream myFile(CONFIG_FILE, ios::out | ios::binary);
-		if(!myFile)
-		{
+		if (!myFile) {
 			debug("Unable to create config file %s.\n", CONFIG_FILE);
 			return false;
 		}
 		myFile.write((const char*)_config, _length);
 		myFile.close();
-	}
-	else if(fileInfo.st_size < 0 || (size_t)fileInfo.st_size != _length)
-	{
+	} else if (fileInfo.st_size < 0 || (size_t)fileInfo.st_size != _length) {
 		debug("Config file %s is not the correct size of %i.  Please remove the file and a new one will be created.\n", CONFIG_FILE, _length);
 		return false;
-	}
-	else
-	{
+	} else {
 		//Read config into local memory.
 		ifstream myFile(CONFIG_FILE, ios::in | ios::binary);
-		if(!myFile)
-		{
+		if (!myFile) {
 			debug("Unable to open config to file %s for reading.\n", CONFIG_FILE);
 			return false;
 		}
 		myFile.read((char*)_config, _length);
 		myFile.close();
 	}
-	
+
 	return true;
 }
 
 void hwInit()
 {
-	timeval curTime;
-
-	for (size_t i = 0; i < _length; i++)
+	for (size_t i = 0; i < _length; i++) {
 		_config[i] = 0xFF;
+	}
 		
-	if (!CheckConfigFile())
-	{
+	if (!CheckConfigFile()) {
 		exit(1);
 	}
-
-	gettimeofday(&curTime, NULL);
-	millis_at_start = curTime.tv_sec;
 }
 
 void hwReadConfigBlock(void* buf, void* addr, size_t length)
@@ -101,8 +87,7 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 		memcpy(_config+offs, buf, length);
 		
 		ofstream myFile(CONFIG_FILE, ios::out | ios::binary);
-		if(!myFile)
-		{
+		if (!myFile) {
 			debug("Unable to write config to file %s.\n", CONFIG_FILE);
 			return;
 		}
@@ -121,21 +106,12 @@ uint8_t hwReadConfig(int adr)
 void hwWriteConfig(int adr, uint8_t value)
 {
 	uint8_t curr = hwReadConfig(adr);
-	if (curr != value)
-	{
+	if (curr != value) {
 		hwWriteConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
 	}
 }
 
-unsigned long hwMillis()
-{
-	timeval curTime;
-
-	gettimeofday(&curTime, NULL);
-	return ((curTime.tv_sec - millis_at_start) * 1000) + (curTime.tv_usec / 1000);
-}
-
-// TODO: Not supported!
+// Not supported!
 int8_t hwSleep(unsigned long ms)
 {
 	(void)ms;
@@ -143,7 +119,7 @@ int8_t hwSleep(unsigned long ms)
 	return -2;
 }
 
-// TODO: Not supported!
+// Not supported!
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 {
 	(void)interrupt;
@@ -153,7 +129,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 	return -2;
 }
 
-// TODO: Not supported!
+// Not supported!
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms)
 {
 	(void)interrupt1;

@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 #include "Arduino.h"
+
+// For millis()
+static unsigned long millis_at_start = 0;
 
 /**
 * C++ version 0.4 char* style "itoa":
@@ -175,6 +179,19 @@ char *dtostrf(float f, int width, int decimals, char *result)
 {
 	sprintf(result,"%*.*f", width, decimals, f);
 	return result;
+}
+
+unsigned long millis(void)
+{
+	timeval curTime;
+
+	if (millis_at_start == 0) {
+		gettimeofday(&curTime, NULL);
+		millis_at_start = curTime.tv_sec;
+	}
+
+	gettimeofday(&curTime, NULL);
+	return ((curTime.tv_sec - millis_at_start) * 1000) + (curTime.tv_usec / 1000);
 }
 
 void delay(unsigned int millis)

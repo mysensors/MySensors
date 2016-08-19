@@ -267,13 +267,13 @@ for opt do
         CXXFLAGS="-DMY_PORT=${optarg} $CXXFLAGS"
         ;;
     --my-mqtt-client-id=*)
-        CXXFLAGS="-DMY_MQTT_CLIENT_ID=${optarg} $CXXFLAGS"
+        CXXFLAGS="-DMY_MQTT_CLIENT_ID=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
     --my-mqtt-publish-topic-prefix=*)
-        CXXFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=${optarg} $CXXFLAGS"
+        CXXFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
     --my-mqtt-subscribe-topic-prefix=*)
-        CXXFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=${optarg} $CXXFLAGS"
+        CXXFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
     --my-rf24-irq-pin=*)
         CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
@@ -319,7 +319,7 @@ if [[ ${gateway_type} == "ethernet" ]]; then
     CXXFLAGS="-DMY_GATEWAY_LINUX $CXXFLAGS"
 elif [[ ${gateway_type} == "mqtt" ]]; then
     LDFLAGS="-lmosquitto $LDFLAGS"
-    CXXFLAGS="-DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
+    CXXFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
 fi
 
 if [[ ${radio_type} == "nrf24" ]]; then

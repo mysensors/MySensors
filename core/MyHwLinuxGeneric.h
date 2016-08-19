@@ -30,25 +30,25 @@
 #define hwDigitalWrite(__pin, __value)
 #define hwWatchdogReset()
 #define hwReboot()
+#define hwMillis() millis()
 
 void hwInit();
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
-unsigned long hwMillis();
 
 #ifdef MY_RF24_IRQ_PIN
-static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;
+	static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static __inline__ void __hwUnlock(const  uint8_t *__s) {
-	pthread_mutex_unlock(&hw_mutex);
-	(void)__s;
-}
+	static __inline__ void __hwUnlock(const  uint8_t *__s) {
+		pthread_mutex_unlock(&hw_mutex);
+		(void)__s;
+	}
 
-static __inline__ void __hwLock() {
-	pthread_mutex_lock(&hw_mutex);
-}
+	static __inline__ void __hwLock() {
+		pthread_mutex_lock(&hw_mutex);
+	}
 #endif
 
 #if defined(DOXYGEN)
