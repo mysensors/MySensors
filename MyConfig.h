@@ -223,25 +223,22 @@
 /**********************************
 *  Information LEDs blinking
 ***********************************/
-// This feature enables LEDs blinking on message receive, transmit
-// or if some error occurred. This was commonly used only in gateways,
-// but now can be used in any sensor node. Also the LEDs can now be
-// disabled in the gateway.
+// If one of the following is defined here, or in the sketch, the pin will be used for the
+// corresponding led function.
+// They have to be enabled here (or in your sketch). Replace x with the pin number you have the LED on.
+//
+// NOTE!! that on some platforms (for example sensebender GW) the hardware variant can enable LEDs by default,
+// These defaults can be overridden by defining one of these.
+//#define MY_DEFAULT_ERR_LED_PIN x
+//#define MY_DEFAULT_TX_LED_PIN x
+//#define MY_DEFAULT_RX_LED_PIN x
 
-//#define MY_LEDS_BLINKING_FEATURE
-
-// The following setting allows you to inverse the blinking feature MY_LEDS_BLINKING_FEATURE
+// The following setting allows you to inverse the LED blinking
 // When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
 // off when blinking
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
-// The following defines can be used to set the port pin, that the LED is connected to
-// If one of the following is defined here, or in the sketch, MY_LEDS_BLINKING_FEATURE will be
-// enabled by default. (Replace x with the pin number you have the LED on)
-//#define MY_DEFAULT_ERR_LED_PIN x
-//#define MY_DEFAULT_TX_LED_PIN x
-//#define MY_DEFAULT_RX_LED_PIN x
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
@@ -431,7 +428,7 @@
 
 /**
 * @def MY_RX_MESSAGE_BUFFER_FEATURE
-* @brief This enabled the receiving buffer feature. 
+* @brief This enabled the receiving buffer feature.
 *
 * This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
 */
@@ -439,7 +436,7 @@
 
 /**
  * @def MY_RX_MESSAGE_BUFFER_SIZE
- * @brief Declare the amount of incoming messages that can be buffered. 
+ * @brief Declare the amount of incoming messages that can be buffered.
  */
 #ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	#ifndef MY_RX_MESSAGE_BUFFER_SIZE
