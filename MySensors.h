@@ -273,4 +273,5 @@
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN
 #define MY_GATEWAY_FEATURE
+#define MY_LEDS_BLINKING_FEATURE //!< \deprecated use MY_DEFAULT_RX_LED_PIN, MY_DEFAULT_TX_LED_PIN and/or MY_DEFAULT_ERR_LED_PIN instead **** DEPRECATED, DO NOT USE ****
 #endif
