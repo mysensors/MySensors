@@ -611,7 +611,11 @@
  * @brief The Ethernet TCP/UDP port to open on controller or gateway.
  */
 #ifndef MY_PORT
-#define MY_PORT 5003
+	#ifdef MY_GATEWAY_MQTT_CLIENT
+		#define MY_PORT 1883
+	#else
+		#define MY_PORT 5003
+	#endif
 #endif
 
 // Static ip address of gateway (if this is disabled, DHCP will be used)
