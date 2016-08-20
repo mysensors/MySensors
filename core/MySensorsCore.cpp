@@ -35,7 +35,7 @@ void (*_timeCallback)(unsigned long); // Callback for requested time messages
 void _process() {
 	hwWatchdogReset();
 
-	#if defined (MY_LEDS_BLINKING_FEATURE)
+	#if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 		ledsProcess();
 	#endif
 
@@ -58,7 +58,7 @@ void _infiniteLoop() {
 		#if defined(ARDUINO_ARCH_ESP8266)
 			yield();
 		#endif
-		#if defined (MY_LEDS_BLINKING_FEATURE)
+		#if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 			ledsProcess();
 		#endif
 	}
@@ -81,7 +81,7 @@ void _begin() {
 		before();
 	}
 
-	#if defined(MY_LEDS_BLINKING_FEATURE)
+	#if defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 		ledsInit();
 	#endif
 
