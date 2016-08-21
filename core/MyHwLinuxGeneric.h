@@ -20,10 +20,12 @@
 #ifndef MyHwLinuxGeneric_h
 #define MyHwLinuxGeneric_h
 
-#include "MyHw.h"
 #include <cstdlib>
 #include <pthread.h>
+#include "MyHw.h"
+#include "SerialPort.h"
 
+SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT);
 #define MY_SERIALDEVICE Serial
 
 // Define these as macros (do nothing)
@@ -35,8 +37,8 @@
 void hwInit();
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
+void hwWriteConfig(int adr, uint8_t value);
 
 #ifdef MY_RF24_IRQ_PIN
 	static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

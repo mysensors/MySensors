@@ -35,15 +35,10 @@ MySensors options:
     --my-debug=[enable|disable]
                                 Enables or disables debugging.
                                 Default to enable.
-    --my-gateway=[none|ethernet|mqtt]
+    --my-config-file=<FILE>     Config file path. [/etc/MySensorGateway.cfg]
+    --my-gateway=[none|ethernet|serial|mqtt]
                                 Gateway type, set to none to disable gateway feature.
                                 Default to ethernet.
-    --my-config-file=<FILE>     Config file path. [/etc/MySensorGateway.cfg]
-    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature.
-                                Default to rf24.
-    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125.
-    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
-                                RF24 PA level.
     --my-controller-url-address=<URL>
                                 Controller or MQTT broker url.
     --my-controller-ip-address=<IP>
@@ -51,11 +46,18 @@ MySensors options:
                                 Use commas instead of points. Example: 127,0,0,1
     --my-port=<PORT>            The port to keep open on gateway mode.
                                 If gateway is set to mqtt, it sets the broker port.
+    --my-serial-port=<PORT>     Serial port. [/dev/ttyUSB0]
+    --my-serial-baudrate=<BAUD> Serial baud rate. [115200]
     --my-mqtt-client-id=<ID>    MQTT client id.
     --my-mqtt-publish-topic-prefix=<PREFIX>
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
+    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature.
+                                Default to rf24.
+    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125.
+    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
+                                RF24 PA level.
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
                                 For RaspberryPi use BCM numbering.
     --my-rx-message-buffer-size=<SIZE>
@@ -251,6 +253,12 @@ for opt do
     --my-radio=*)
         radio_type=${optarg}
         ;;
+    --my-serial-port=*)
+        CXXFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-serial-baudrate=*)
+        CXXFLAGS="-DMY_BAUD_RATE=${optarg} $CXXFLAGS"
+        ;;
     --my-rf24-channel=*)
         CXXFLAGS="-DMY_RF24_CHANNEL=${optarg} $CXXFLAGS"
         ;;
@@ -305,7 +313,7 @@ if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags $SOC)
 fi
 
-CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra -DLINUX $CXXFLAGS"
+CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra $CXXFLAGS"
 
 if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
     CXXFLAGS+="-D__RPI_BPLUS"
@@ -317,6 +325,8 @@ fi
 
 if [[ ${gateway_type} == "ethernet" ]]; then
     CXXFLAGS="-DMY_GATEWAY_LINUX $CXXFLAGS"
+elif [[ ${gateway_type} == "serial" ]]; then
+    CXXFLAGS="-DMY_GATEWAY_SERIAL $CXXFLAGS"
 elif [[ ${gateway_type} == "mqtt" ]]; then
     LDFLAGS="-lmosquitto $LDFLAGS"
     CXXFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"

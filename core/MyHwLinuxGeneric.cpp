@@ -30,12 +30,12 @@ static const size_t _length = 1024;	// ATMega328 has 1024 bytes
 static uint8_t _config[_length];
 
 bool CheckConfigFile() {
-    struct stat fileInfo;
+	struct stat fileInfo;
 
 	if (stat(CONFIG_FILE, &fileInfo) != 0) {
 		//File does not exist.  Create it.
 		debug("Config file %s does not exist, creating new config file.\n", CONFIG_FILE);
-		ofstream myFile(CONFIG_FILE, ios::out | ios::binary);
+		std::ofstream myFile(CONFIG_FILE, std::ios::out | std::ios::binary);
 		if (!myFile) {
 			debug("Unable to create config file %s.\n", CONFIG_FILE);
 			return false;
@@ -47,7 +47,7 @@ bool CheckConfigFile() {
 		return false;
 	} else {
 		//Read config into local memory.
-		ifstream myFile(CONFIG_FILE, ios::in | ios::binary);
+		std::ifstream myFile(CONFIG_FILE, std::ios::in | std::ios::binary);
 		if (!myFile) {
 			debug("Unable to open config to file %s for reading.\n", CONFIG_FILE);
 			return false;
@@ -68,6 +68,10 @@ void hwInit()
 	if (!CheckConfigFile()) {
 		exit(1);
 	}
+
+	#ifdef MY_GATEWAY_SERIAL
+		MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+	#endif
 }
 
 void hwReadConfigBlock(void* buf, void* addr, size_t length)
@@ -86,7 +90,7 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 	if (length && offs + length <= _length) {
 		memcpy(_config+offs, buf, length);
 		
-		ofstream myFile(CONFIG_FILE, ios::out | ios::binary);
+		std::ofstream myFile(CONFIG_FILE, std::ios::out | std::ios::binary);
 		if (!myFile) {
 			debug("Unable to write config to file %s.\n", CONFIG_FILE);
 			return;

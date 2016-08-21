@@ -21,6 +21,7 @@
 
 #ifndef client_h
 #define client_h
+
 #include "Stream.h"
 #include "IPAddress.h"
 

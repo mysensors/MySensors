@@ -1,18 +1,17 @@
 #ifndef Arduino_h
 #define Arduino_h
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-
-#ifdef __cplusplus
-	#include <algorithm>
-
-	using namespace std;
-
-	extern "C" {
-#endif
-
-void yield(void);
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <string>
+#include <algorithm>
+#include "stdlib_noniso.h"
 
 #define PI 3.1415926535897932384626433832795
 #define HALF_PI 1.5707963267948966192313216916398
@@ -21,17 +20,11 @@ void yield(void);
 #define RAD_TO_DEG 57.295779513082320876798154814105
 #define EULER 2.718281828459045235360287471352
 
-#ifndef __cplusplus
-	#define min(a,b) ((a)<(b)?(a):(b))
-	#define max(a,b) ((a)>(b)?(a):(b))
-	#define abs(x) ((x)>0?(x):-(x))
-	#define round(x) ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
-#endif
-
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
+#define round(x) ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 
 #define lowByte(w) ((uint8_t) ((w) & 0xff))
 #define highByte(w) ((uint8_t) ((w) >> 8))
@@ -43,19 +36,23 @@ void yield(void);
 
 #define bit(b) (1UL << (b))
 
+#define GET_MACRO(_0, _1, _2, NAME, ...) NAME
+#define random(...) GET_MACRO(_0, ##__VA_ARGS__, randMinMax, randMax, rand)(__VA_ARGS__)
+
+using std::string;
+using std::min;
+using std::max;
+using std::abs;
+
 typedef bool boolean;
 typedef uint8_t byte;
+typedef string String;
 
-char *itoa(int value, char* result, int base);
-char *ltoa(long value, char* result, int base);
-char *ultoa(long num, char *str, int radix);
-char *utoa(int num, char *str, int radix);
-char *dtostrf(float f, int width, int decimals, char *result);
+void yield(void);
 unsigned long millis(void);
 void delay(unsigned int millis);
-
-#ifdef __cplusplus
-	}
-#endif
+void randomSeed(unsigned long seed);
+long randMax(long howbig);
+long randMinMax(long howsmall, long howbig);
 
 #endif

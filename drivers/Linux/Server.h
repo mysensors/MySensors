@@ -20,8 +20,10 @@
 #ifndef server_h
 #define server_h
 
+#include "Print.h"
+
 #if !DOXYGEN
-class Server {
+class Server : public Print {
 	public:
 		virtual void begin() =0;
 };

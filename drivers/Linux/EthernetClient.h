@@ -50,7 +50,7 @@
 class EthernetClient : public Client {
 
 private:
-	int _sock;
+	int _sock; //!< @brief Network socket.
 
 public:
 	/**

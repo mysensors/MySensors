@@ -69,7 +69,7 @@
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
         #include "core/MyHwSAMD.cpp"
-#elif defined(LINUX)
+#elif defined(__linux__)
 	// Remove PSTR macros from debug prints
 	#undef PSTR
 	#define PSTR(x) (x)
@@ -284,7 +284,9 @@
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
 			#include "drivers/AES/AES.cpp"
 		#endif
-		#if !defined(LINUX)
+		#if defined(__linux__)
+			#include "drivers/RF24/RF24_Linux.cpp"
+		#else
 			#include "drivers/RF24/RF24.cpp"
 		#endif
 		#include "core/MyTransportNRF24.cpp"
@@ -329,7 +331,7 @@
 #if !defined(MY_CORE_ONLY)
 	#if defined(ARDUINO_ARCH_ESP8266)
 		#include "core/MyMainESP8266.cpp"
-	#elif defined(LINUX)
+	#elif defined(__linux__)
 		#include "core/MyMainLinux.cpp"
 	#else
 		#include "core/MyMainDefault.cpp"
