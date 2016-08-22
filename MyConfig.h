@@ -643,6 +643,10 @@
 // If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server allowing incoming connections.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 
+/**************************************
+* Node Locking
+***************************************/
+
 /**
  * @defgroup MyLockgrp MyNodeLock
  * @ingroup internals
@@ -699,7 +703,25 @@
 #endif
 /** @}*/ // Node lock group
 
+/**********************************
+*  ESP8266 Defaults
+***********************************/
+
+/**
+ * @def MY_ESP8266_SERIAL_MODE
+ * @brief Serial modes: SERIAL_FULL, SERIAL_RX_ONLY, SERIAL_TX_ONLY
+ *
+ * SERIAL_FULL: Default mode.
+ * SERIAL_TX_ONLY: allows to use RX (GPIO3) as a general purpose input/output.
+ * SERIAL_RX_ONLY: allows to use TX (GPIO1) as a general purpose input/output.
+ */
+#ifndef MY_ESP8266_SERIAL_MODE
+#define MY_ESP8266_SERIAL_MODE SERIAL_FULL
 #endif
+
+/** @}*/ // ESP8266 Defaults
+
+#endif	// MyConfig_h
 
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
