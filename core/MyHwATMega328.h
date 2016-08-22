@@ -63,6 +63,7 @@ do { 																\
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
 #define hwMillis() millis()
+#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 #define hwReadConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
 
 #ifndef eeprom_update_byte
