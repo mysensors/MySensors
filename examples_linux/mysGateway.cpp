@@ -24,7 +24,7 @@
 // For more options run ./configure --help
 
 // Config file
-//#define MY_LINUX_CONFIG_FILE "/etc/MySensorGateway.cfg"
+//#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
 
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 10

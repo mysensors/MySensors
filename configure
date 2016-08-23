@@ -35,7 +35,7 @@ MySensors options:
     --my-debug=[enable|disable]
                                 Enables or disables debugging.
                                 Default to enable.
-    --my-config-file=<FILE>     Config file path. [/etc/MySensorGateway.cfg]
+    --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
     --my-gateway=[none|ethernet|serial|mqtt]
                                 Gateway type, set to none to disable gateway feature.
                                 Default to ethernet.
@@ -248,7 +248,7 @@ for opt do
         gateway_type=${optarg}
         ;;
     --my-config-file=*)
-        CXXFLAGS="-DMY_CONFIG_FILE=${optarg} $CXXFLAGS"
+        CXXFLAGS="-DMY_LINUX_CONFIG_FILE=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
     --my-radio=*)
         radio_type=${optarg}

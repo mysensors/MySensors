@@ -11,7 +11,8 @@ CONFIG_FILE=Makefile.inc
 
 include $(CONFIG_FILE)
 
-GATEWAY=examples_linux/mysGateway
+GATEWAY_BIN=mysGateway
+GATEWAY=examples_linux/$(GATEWAY_BIN)
 GATEWAY_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysGateway.cpp
 GATEWAY_OBJECTS=$(patsubst %.cpp,%.o,$(GATEWAY_SOURCES))
 DEPS+=$(patsubst %.cpp,%.d,$(GATEWAY_SOURCES))
@@ -61,7 +62,28 @@ ifeq ($(INIT_SYSTEM), systemd)
 	install -m0644 initscripts/mysgateway.systemd /etc/systemd/system/mysgateway.service
 	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/systemd/system/mysgateway.service
 	systemctl daemon-reload
+	@echo "MySensors gateway has been installed, to add to the boot run:"
+	@echo "  sudo systemctl enable mysgateway.service"
+	@echo "To start the gateway run:"
+	@echo "  sudo systemctl start mysgateway.service"
 else ifeq ($(INIT_SYSTEM), sysvinit)
 	install -m0755 initscripts/mysgateway.sysvinit /etc/init.d/mysgateway
 	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/init.d/mysgateway
+	@echo "MySensors gateway has been installed, to add to the boot run:"
+	@echo "  sudo update-rc.d mysgateway defaults"
+	@echo "To start the gateway run:"
+	@echo "  sudo service mysgateway start"
+endif
+
+uninstall:
+ifeq ($(INIT_SYSTEM), systemd)
+	@echo "Stopping daemon mysgateway (ignore errors)"
+	-@systemctl stop mysgateway.service
+	@echo "removing files"
+	rm /etc/systemd/system/mysgateway.service $(GATEWAY_DIR)/$(GATEWAY_BIN)
+else ifeq ($(INIT_SYSTEM), sysvinit)
+	@echo "Stopping daemon mysgateway (ignore errors)"
+	-@service mysgateway stop
+	@echo "removing files"
+	rm /etc/init.d/mysgateway $(GATEWAY_DIR)/$(GATEWAY_BIN)
 endif

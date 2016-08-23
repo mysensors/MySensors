@@ -732,7 +732,7 @@
  * For now the configuration file is only used to store the emulated eeprom state
  */
  #ifndef MY_LINUX_CONFIG_FILE
- #define MY_LINUX_CONFIG_FILE "/etc/MySensorGateway.cfg"
+ #define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
  #endif
 
 // Doxygen specific constructs, not included when built normally

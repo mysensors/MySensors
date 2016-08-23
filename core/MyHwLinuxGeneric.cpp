@@ -90,12 +90,13 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 	if (length && offs + length <= _length) {
 		memcpy(_config+offs, buf, length);
 		
-		std::ofstream myFile(CONFIG_FILE, std::ios::out | std::ios::binary);
+		std::ofstream myFile(CONFIG_FILE, std::ios::out | std::ios::in | std::ios::binary);
 		if (!myFile) {
 			debug("Unable to write config to file %s.\n", CONFIG_FILE);
 			return;
 		}
-		myFile.write((const char*)buf+offs, _length);
+		myFile.seekp(offs);
+		myFile.write((const char*)buf, length);
 		myFile.close();
 	}
 }
