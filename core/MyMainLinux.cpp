@@ -20,6 +20,10 @@ void handle_sigint(int sig)
 		detachInterrupt(MY_RF24_IRQ_PIN);
 	#endif
 
+	#if defined(MY_GATEWAY_SERIAL)
+		MY_SERIALDEVICE.end();
+	#endif
+
 	exit(0);
 }
 

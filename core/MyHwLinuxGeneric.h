@@ -25,7 +25,12 @@
 #include "MyHw.h"
 #include "SerialPort.h"
 
-SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT);
+#ifdef MY_IS_SERIAL_PTY
+	SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PTY, true);
+#else
+	SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT);
+#endif
+
 #define MY_SERIALDEVICE Serial
 
 // Define these as macros (do nothing)

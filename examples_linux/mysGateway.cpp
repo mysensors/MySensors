@@ -29,6 +29,16 @@
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 10
 
+// Serial config
+// Enable this if you are using an Arduino connected to the USB
+//#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+// Enable this if you need to connect to a controller running on the same device
+//#define MY_IS_SERIAL_PTY
+// Choose a symlink name for the PTY device
+//#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+// Grant access to the specified system group for the serial device
+//#define MY_LINUX_SERIAL_GROUPNAME "tty"
+
 // MQTT options
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
 //#define MY_PORT 1883

@@ -245,7 +245,7 @@
 		// GATEWAY - ESP8266
 		#include "core/MyGatewayTransportEthernet.cpp"
 	#elif defined(MY_GATEWAY_LINUX)
-		// GATEWAY - Generic Linux (RaspberryPi, BBB, ...)
+		// GATEWAY - Generic Linux
 		#include "drivers/Linux/EthernetClient.h"
 		#include "drivers/Linux/EthernetServer.h"
 		#include "drivers/Linux/IPAddress.h"

@@ -719,11 +719,33 @@
 
 /**
  * @def MY_LINUX_SERIAL_PORT
- * @brief Set the name of predictable tty
+ * @brief Serial device port
  */
 #ifndef MY_LINUX_SERIAL_PORT
-#define MY_LINUX_SERIAL_PORT "/dev/ttyUSB0"
+#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
 #endif
+
+/**
+ * @def MY_IS_SERIAL_PTY
+ * @brief Set serial as a pseudo terminal.
+ *
+ * Enable this if you need to connect to a controller running on the same device.
+ */
+//#define MY_IS_SERIAL_PTY
+
+/**
+ * @def MY_LINUX_SERIAL_PTY
+ * @brief Symlink name for the PTY device.
+ */
+#ifndef MY_LINUX_SERIAL_PTY
+#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+#endif
+
+/**
+ * @def MY_LINUX_SERIAL_GROUPNAME
+ * @brief Grant access to the specified system group for the serial device.
+ */
+//#define MY_LINUX_SERIAL_GROUPNAME "tty"
 
 /**
  * @def MY_LINUX_CONFIG_FILE
@@ -731,9 +753,9 @@
  *
  * For now the configuration file is only used to store the emulated eeprom state
  */
- #ifndef MY_LINUX_CONFIG_FILE
- #define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
- #endif
+#ifndef MY_LINUX_CONFIG_FILE
+#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+#endif
 
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
@@ -751,4 +773,5 @@
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
+#define MY_LINUX_SERIAL_GROUPNAME
 #endif

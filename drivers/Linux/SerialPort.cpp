@@ -25,30 +25,67 @@
 #include <limits.h>
 #include <unistd.h>
 #include <termios.h>
+#include <grp.h>
+#include <errno.h>
+#include <sys/stat.h>
 #include "SerialPort.h"
 
-#define SERIAL_PORT "/dev/ttyAMA0"
-
-SerialPort::SerialPort()
+SerialPort::SerialPort(const char *port, bool isPty) : serialPort(std::string(port)), isPty(isPty)
 {
-	SerialPort(SERIAL_PORT);
+	sd = -1;
 }
 
-SerialPort::SerialPort(const char *port) : serialPort(std::string(port))
-{}
-
 void SerialPort::begin(int bauds)
+{
+	if (!open(bauds)) {
+		fprintf(stderr, "Failed to open serial port.\n");
+		exit(1);
+	}
+}
+
+bool SerialPort::open(int bauds)
 {
 	speed_t speed;
 	struct termios options;
 
-	if ((sd = open(serialPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
-		fprintf(stderr, "Unable to open the serial port %s - \n", serialPort.c_str());
-		exit(-1);
-	}
+	if (isPty) {
+		sd = posix_openpt(O_RDWR | O_NOCTTY | O_NDELAY);
+		if (sd < 0) {
+			perror("Couldn't open a PTY");
+			return false;
+		}
 
-	// nonblocking mode
-	fcntl(sd, F_SETFL, FNDELAY);
+		if (grantpt(sd) != 0) {
+			perror("Couldn't grant permission to the PTY");
+			return false;
+		}
+
+		if (unlockpt(sd) != 0) {
+			perror("Couldn't unlock the PTY");
+			return false;
+		}
+
+		// Get the current options of the port
+		if (tcgetattr(sd, &options) < 0) {
+			perror("Couldn't get term attributes");
+			return false;
+		}
+
+		/* create a symlink with predictable name to the PTY device */
+		unlink(serialPort.c_str());	// remove the symlink if it already exists
+		if (symlink(ptsname(sd), serialPort.c_str()) != 0) {
+			fprintf(stderr, "Couldn't create a symlink '%s' to PTY! (%d) %s\n", serialPort.c_str(), errno, strerror(errno));
+			return false;
+		}
+	} else {
+		if ((sd = ::open(serialPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
+			fprintf(stderr, "Unable to open the serial port %s\n", serialPort.c_str());
+			return false;
+		}
+
+		// nonblocking mode
+		fcntl(sd, F_SETFL, FNDELAY);
+	}
 
 	switch (bauds) {
 		case     50:	speed =     B50 ; break ;
@@ -73,22 +110,20 @@ void SerialPort::begin(int bauds)
 	// Get the current options of the port
 	if (tcgetattr(sd, &options) < 0) {
 		perror("Couldn't get term attributes");
-        exit(1);
+		return false;
 	}
 
-	// make raw
-	cfmakeraw(&options);
+	// Clear all the options
+	bzero(&options, sizeof(options));
 
 	// Set the baud rate
 	cfsetispeed(&options, speed);
 	cfsetospeed(&options, speed);
 
-	// turn on READ & ignore ctrl lines
-	options.c_cflag |= (CLOCAL | CREAD);
-	// 8N1
-	options.c_cflag &= ~CSTOPB;
-
-	options.c_lflag &= ~ECHOE;
+	// Configure the device : 8 bits, no parity, no control
+	options.c_cflag |= ( CLOCAL | CREAD |  CS8);
+	// Ignore framing errors, parity errors and BREAK condition on input.
+	options.c_iflag |= ( IGNPAR | IGNBRK );
 
 	// Timer unused
 	options.c_cc[VTIME]=0;
@@ -98,16 +133,55 @@ void SerialPort::begin(int bauds)
 	// Set parameters
 	if (tcsetattr(sd, TCSANOW, &options) < 0) {
 		perror("Couldn't set term attributes");
-		exit(1);
+		return false;
 	}
 
 	// flush
 	if (tcflush(sd, TCIOFLUSH) < 0) {
 		perror("Couldn't flush serial");
-		exit(1);
+		return false;
 	}
 
 	usleep(10000);
+
+	return true;
+}
+
+bool SerialPort::setGroupPerm(const char *groupName)
+{
+	struct group* devGrp;
+	const mode_t ttyPermissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+	const char *dev;
+	int ret;
+
+	if (sd != -1 && groupName != NULL) {
+		devGrp = getgrnam(groupName);
+		if (devGrp == NULL) {
+			fprintf(stderr, "getgrnam: %s failed. (%d) %s\n", groupName, errno, strerror(errno));
+			return false;
+		}
+
+		if (isPty) {
+			dev = ptsname(sd);
+		} else {
+			dev = serialPort.c_str();
+		}
+
+		ret = chown(dev, -1, devGrp->gr_gid);
+		if (ret == -1) {
+			fprintf(stderr, "Could not change PTY owner! (%d) %s\n", errno, strerror(errno));
+			return false;
+		}
+
+		ret = chmod(dev, ttyPermissions);
+		if (ret != 0) {
+			fprintf(stderr, "Could not change PTY permissions! (%d) %s\n", errno, strerror(errno));
+			return false;
+		}
+
+		return true;
+	}
+	return false;
 }
 
 int SerialPort::available()
@@ -156,4 +230,8 @@ void SerialPort::flush()
 void SerialPort::end()
 {
 	close(sd);
+
+	if (isPty) {
+		unlink(serialPort.c_str());	// remove the symlink
+	}
 }

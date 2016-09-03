@@ -21,6 +21,7 @@
 #define SerialPort_h
 
 #include <string>
+#include <stdbool.h>
 #include "Stream.h"
 
 /**
@@ -32,22 +33,34 @@ class SerialPort : public Stream {
 private:
 	int sd; //!< @brief file descriptor number.
 	std::string serialPort;	//!< @brief tty name.
+	bool isPty; //!< @brief true if serial is pseudo terminal.
 
 public:
 	/**
 	 * @brief SerialPort constructor.
 	 */
-	SerialPort();
+	SerialPort(const char *port, bool isPty = false);
 	/**
-	 * @brief SerialPort constructor.
-	 */
-	SerialPort(const char *port);
-	/**
-	* @brief Sets the data rate in bits per second (baud) for serial data transmission.
+	* @brief Open the serial port and set the data rate in bits per second (baud).
 	*
-	* @param serialSpeed serial port speed.
+	* This function will terminate the program on an error.
+	*
+	* @param bauds bits per second.
 	*/
-	void begin(int serialSpeed);
+	void begin(int bauds);
+	/**
+	* @brief Open the serial port and set the data rate in bits per second (baud).
+	*
+	* @param bauds bits per second.
+	* @return @c true if no errors, else @c false.
+	*/
+	bool open(int bauds = 115200);
+	/**
+	* @brief Grant access to the specified system group for the serial device.
+	*
+	* @param groupName system group name.
+	*/
+	bool setGroupPerm(const char *groupName);
 	/**
 	* @brief Get the number of bytes available.
 	*

@@ -71,6 +71,12 @@ void hwInit()
 
 	#ifdef MY_GATEWAY_SERIAL
 		MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+		#ifdef MY_LINUX_SERIAL_GROUPNAME
+			if (!MY_SERIALDEVICE.setGroupPerm(MY_LINUX_SERIAL_GROUPNAME)) {
+				debug("Unable to change permission for serial port device.\n");
+				exit(1);
+			}
+		#endif
 	#endif
 }
 

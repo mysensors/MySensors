@@ -11,12 +11,7 @@ Options:
 Help:
     -h, --help                  print this message
 
-Driver options:
-    --driver=[SPIDEV|MRAA|RPi|LittleWire]
-                                Driver for RF24 library. [configure autodetected]
-
 Building options:
-    --os=[LINUX|DARWIN]         Operating system. [configure autodetected]
     --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
     --cpu-flags=<CXXFLAGS>        CPU defining/optimizing flags to be used. [configure autodetected]
@@ -33,12 +28,10 @@ Installation options:
 
 MySensors options:
     --my-debug=[enable|disable]
-                                Enables or disables debugging.
-                                Default to enable.
+                                Enables or disables debugging. [enable]
     --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
     --my-gateway=[none|ethernet|serial|mqtt]
-                                Gateway type, set to none to disable gateway feature.
-                                Default to ethernet.
+                                Gateway type, set to none to disable gateway feature. [ethernet]
     --my-controller-url-address=<URL>
                                 Controller or MQTT broker url.
     --my-controller-ip-address=<IP>
@@ -48,21 +41,25 @@ MySensors options:
                                 If gateway is set to mqtt, it sets the broker port.
     --my-serial-port=<PORT>     Serial port. [/dev/ttyUSB0]
     --my-serial-baudrate=<BAUD> Serial baud rate. [115200]
+    --my-serial-is-pty          Set the serial port to be a pseudo terminal. Use this if you want
+                                to connect to a controller running on the same device.
+    --my-serial-pty=<NAME>      Symlink name for the PTY device. [/dev/ttyMySensorsGateway]
+    --my-serial-groupname=<GROUP>
+                                Grant access to the specified system group for the serial device.
     --my-mqtt-client-id=<ID>    MQTT client id.
     --my-mqtt-publish-topic-prefix=<PREFIX>
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature.
-                                Default to rf24.
+    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature. [rf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125.
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level.
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
                                 For RaspberryPi use BCM numbering.
     --my-rx-message-buffer-size=<SIZE>
-                                Buffer size for incoming messages when using rf24 interrupts.
-                                Default is 20.
+                                Buffer size for incoming messages when using rf24 interrupts. [20]
+
 EOF
 }
 
@@ -202,7 +199,7 @@ debug=enable
 gateway_type=ethernet
 radio_type=nrf24
 
-params="OS SOC CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR INIT_SYSTEM"
+params="SOC CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR INIT_SYSTEM"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -211,9 +208,6 @@ for opt do
     fi
     optarg="${opt#*=}"
     case "$opt" in
-    --os=*)
-        OS="$optarg"
-        ;;
     --soc=*)
         SOC="$optarg"
         ;;
@@ -258,6 +252,15 @@ for opt do
         ;;
     --my-serial-baudrate=*)
         CXXFLAGS="-DMY_BAUD_RATE=${optarg} $CXXFLAGS"
+        ;;
+    --my-serial-is-pty*)
+        CXXFLAGS="-DMY_IS_SERIAL_PTY $CXXFLAGS"
+        ;;
+    --my-serial-pty=*)
+        CXXFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-serial-groupname=*)
+        CXXFLAGS="-DMY_LINUX_SERIAL_GROUPNAME=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
     --my-rf24-channel=*)
         CXXFLAGS="-DMY_RF24_CHANNEL=${optarg} $CXXFLAGS"
