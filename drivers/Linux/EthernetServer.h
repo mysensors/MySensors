@@ -34,13 +34,6 @@
 	#define ETHERNETSERVER_BACKLOG 10 //!< Maximum length to which the queue of pending connections may grow.
 #endif
 
-// debug 
-#if defined(ETHERNETSERVER_VERBOSE)
-	#define ETHERNETSERVER_DEBUG(x,...) printf(x, ##__VA_ARGS__) //!< debug
-#else
-	#define ETHERNETSERVER_DEBUG(x,...) //!< debug NULL
-#endif
-
 class EthernetClient;
 
 /**

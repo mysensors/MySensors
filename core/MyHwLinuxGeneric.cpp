@@ -24,12 +24,14 @@
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
+#include "log.h"
 
 static const char* CONFIG_FILE = MY_LINUX_CONFIG_FILE;
 static const size_t _length = 1024;	// ATMega328 has 1024 bytes
 static uint8_t _config[_length];
 
-bool CheckConfigFile() {
+bool CheckConfigFile()
+{
 	struct stat fileInfo;
 
 	if (stat(CONFIG_FILE, &fileInfo) != 0) {
@@ -152,27 +154,31 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return -2;
 }
 
-uint16_t hwCPUVoltage() {
+uint16_t hwCPUVoltage()
+{
 	// TODO: Not supported!
 	return 0;
 }
  
-uint16_t hwCPUFrequency() {
+uint16_t hwCPUFrequency()
+{
 	// TODO: Not supported!
 	return 0;
 }
  
-uint16_t hwFreeMem() {
+uint16_t hwFreeMem()
+{
 	// TODO: Not supported!
 	return 0;
 }
 
 #ifdef MY_DEBUG
-void hwDebugPrint(const char *fmt, ... )
+void hwDebugPrint(const char *fmt, ...)
 {
-	va_list arglist;
-	va_start(arglist, fmt);
-	vprintf(fmt, arglist);
-	va_end(arglist);
+	va_list args;
+
+	va_start(args, fmt);
+	mys_log_v(LOG_DEBUG, fmt, args);
+	va_end(args);
 }
 #endif

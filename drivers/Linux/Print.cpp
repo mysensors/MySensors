@@ -38,7 +38,11 @@ size_t Print::write(const uint8_t *buffer, size_t size) {
 	return n;
 }
 
-size_t Print::printf(const char *format, ...) {
+size_t
+#ifdef __GNUC__
+__attribute__((format(printf, 2, 3)))
+#endif
+Print::printf(const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	char temp[64];

@@ -1,19 +1,23 @@
 // Initialize library and handle sketch functions like we want to
 
-#include <iostream>
+#include <stdio.h>
 #include <csignal>
 #include <cstdlib>
+#include <unistd.h>
+#include <fcntl.h>
+#include <syslog.h>
+#include <errno.h>
+#include "log.h"
 #include "MySensorsCore.h"
 
-/*
- * handler for SIGINT signal
- */
 void handle_sigint(int sig)
 {
 	if (sig == SIGINT) {
-		std::cout << "Received SIGINT\n" << std::endl;
+		mys_log(LOG_NOTICE, "Received SIGINT\n\n");
 	} else if (sig == SIGTERM) {
-		std::cout << "Received SIGTERM\n" << std::endl;
+		mys_log(LOG_NOTICE, "Received SIGTERM\n\n");
+	} else {
+		return;
 	}
 
 	#ifdef MY_RF24_IRQ_PIN
@@ -27,10 +31,90 @@ void handle_sigint(int sig)
 	exit(0);
 }
 
-int main(void) {
+static int daemonize(void)
+{
+	pid_t pid, sid;
+
+	/* Fork off the parent process */
+	pid = fork();
+	if (pid < 0) {
+		mys_log(LOG_ERR, "fork: %s", strerror(errno));
+		return -1;
+	}
+	/* If we got a good PID, then we can exit the parent process. */
+	if (pid > 0) {
+		exit(EXIT_SUCCESS);
+	}
+
+	/* At this point we are executing as the child process */
+
+	/* Change the file mode mask */
+	umask(0);
+
+	/* Create a new SID for the child process */
+	sid = setsid();
+	if (sid < 0) {
+		mys_log(LOG_ERR, "setsid: %s", strerror(errno));
+		return -1;
+	}
+
+	/* Change the current working directory.  This prevents the current
+	directory from being locked; hence not being able to remove it. */
+	if ((chdir("/")) < 0) {
+		mys_log(LOG_ERR, "chdir(\"/\"): %s", strerror(errno));
+		return -1;
+	}
+
+	freopen( "/dev/null", "r", stdin);
+	freopen( "/dev/null", "r", stdout);
+	freopen( "/dev/null", "r", stderr);
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+	int opt, log_opts, debug = 0, foreground = 1;
+
 	/* register the signal handler */
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+
+	while ((opt = getopt(argc, argv, "hdb")) != -1) {
+		switch (opt) {
+			case 'h':
+				printf("Usage: mysGateway [options]\n\n" \
+							 "Options:\n" \
+							 "-h            Display a short summary of all program options.\n" \
+							 "-d            Enable debug.\n" \
+							 "-b            Become a daemon.\n");
+				exit(0);
+			case 'd':
+				debug = 1;
+				break;
+			case 'b':
+				foreground = 0;
+				break;
+		}
+	}
+
+	log_opts = LOG_CONS;
+	if (foreground && isatty(STDIN_FILENO)) {
+		log_opts |= LOG_PERROR;
+	}
+	if (!debug) {
+		setlogmask(LOG_UPTO (LOG_INFO));
+	}
+	openlog(NULL, log_opts, LOG_USER);
+
+	if (!foreground && !debug) {
+		if (daemonize() != 0) {
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	mys_log(LOG_INFO, "Starting gateway...\n");
+	mys_log(LOG_INFO, "Protocol version - %s\n", MYSENSORS_LIBRARY_VERSION);
 
 	_begin(); // Startup MySensors library
 

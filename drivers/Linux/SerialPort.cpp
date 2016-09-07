@@ -28,6 +28,7 @@
 #include <grp.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include "log.h"
 #include "SerialPort.h"
 
 SerialPort::SerialPort(const char *port, bool isPty) : serialPort(std::string(port)), isPty(isPty)
@@ -38,7 +39,7 @@ SerialPort::SerialPort(const char *port, bool isPty) : serialPort(std::string(po
 void SerialPort::begin(int bauds)
 {
 	if (!open(bauds)) {
-		fprintf(stderr, "Failed to open serial port.\n");
+		mys_log(LOG_ERR, "Failed to open serial port.\n");
 		exit(1);
 	}
 }
@@ -51,35 +52,29 @@ bool SerialPort::open(int bauds)
 	if (isPty) {
 		sd = posix_openpt(O_RDWR | O_NOCTTY | O_NDELAY);
 		if (sd < 0) {
-			perror("Couldn't open a PTY");
+			mys_log(LOG_ERR, "Couldn't open a PTY: %s\n", strerror(errno));
 			return false;
 		}
 
 		if (grantpt(sd) != 0) {
-			perror("Couldn't grant permission to the PTY");
+			mys_log(LOG_ERR, "Couldn't grant permission to the PTY: %s\n", strerror(errno));
 			return false;
 		}
 
 		if (unlockpt(sd) != 0) {
-			perror("Couldn't unlock the PTY");
-			return false;
-		}
-
-		// Get the current options of the port
-		if (tcgetattr(sd, &options) < 0) {
-			perror("Couldn't get term attributes");
+			mys_log(LOG_ERR, "Couldn't unlock the PTY: %s\n", strerror(errno));
 			return false;
 		}
 
 		/* create a symlink with predictable name to the PTY device */
 		unlink(serialPort.c_str());	// remove the symlink if it already exists
 		if (symlink(ptsname(sd), serialPort.c_str()) != 0) {
-			fprintf(stderr, "Couldn't create a symlink '%s' to PTY! (%d) %s\n", serialPort.c_str(), errno, strerror(errno));
+			mys_log(LOG_ERR, "Couldn't create a symlink '%s' to PTY! (%d) %s\n", serialPort.c_str(), errno, strerror(errno));
 			return false;
 		}
 	} else {
 		if ((sd = ::open(serialPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
-			fprintf(stderr, "Unable to open the serial port %s\n", serialPort.c_str());
+			mys_log(LOG_ERR, "Unable to open the serial port %s\n", serialPort.c_str());
 			return false;
 		}
 
@@ -109,7 +104,7 @@ bool SerialPort::open(int bauds)
 
 	// Get the current options of the port
 	if (tcgetattr(sd, &options) < 0) {
-		perror("Couldn't get term attributes");
+		mys_log(LOG_ERR, "Couldn't get term attributes: %s\n", strerror(errno));
 		return false;
 	}
 
@@ -132,13 +127,13 @@ bool SerialPort::open(int bauds)
 
 	// Set parameters
 	if (tcsetattr(sd, TCSANOW, &options) < 0) {
-		perror("Couldn't set term attributes");
+		mys_log(LOG_ERR, "Couldn't set term attributes: %s\n", strerror(errno));
 		return false;
 	}
 
 	// flush
 	if (tcflush(sd, TCIOFLUSH) < 0) {
-		perror("Couldn't flush serial");
+		mys_log(LOG_ERR, "Couldn't flush serial: %s\n", strerror(errno));
 		return false;
 	}
 
@@ -157,7 +152,7 @@ bool SerialPort::setGroupPerm(const char *groupName)
 	if (sd != -1 && groupName != NULL) {
 		devGrp = getgrnam(groupName);
 		if (devGrp == NULL) {
-			fprintf(stderr, "getgrnam: %s failed. (%d) %s\n", groupName, errno, strerror(errno));
+			mys_log(LOG_ERR, "getgrnam: %s failed. (%d) %s\n", groupName, errno, strerror(errno));
 			return false;
 		}
 
@@ -169,13 +164,13 @@ bool SerialPort::setGroupPerm(const char *groupName)
 
 		ret = chown(dev, -1, devGrp->gr_gid);
 		if (ret == -1) {
-			fprintf(stderr, "Could not change PTY owner! (%d) %s\n", errno, strerror(errno));
+			mys_log(LOG_ERR, "Could not change PTY owner! (%d) %s\n", errno, strerror(errno));
 			return false;
 		}
 
 		ret = chmod(dev, ttyPermissions);
 		if (ret != 0) {
-			fprintf(stderr, "Could not change PTY permissions! (%d) %s\n", errno, strerror(errno));
+			mys_log(LOG_ERR, "Could not change PTY permissions! (%d) %s\n", errno, strerror(errno));
 			return false;
 		}
 
@@ -189,7 +184,7 @@ int SerialPort::available()
 	int nbytes = 0;
 
 	if (ioctl(sd, FIONREAD, &nbytes) < 0) {
-		fprintf(stderr, "Failed to get byte count on serial.\n");
+		mys_log(LOG_ERR, "Failed to get byte count on serial.\n");
 		exit(-1);
 	}
 	return nbytes;

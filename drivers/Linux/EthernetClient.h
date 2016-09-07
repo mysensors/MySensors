@@ -37,13 +37,6 @@
 #define ETHERNETCLIENT_W5100_CLOSE_WAIT 0x1C
 #define ETHERNETCLIENT_W5100_LAST_ACK 0x1D
 
-// debug 
-#if defined(ETHERNETCLIENT_VERBOSE)
-	#define ETHERNETCLIENT_DEBUG(x,...) debug(x, ##__VA_ARGS__) //!< debug
-#else
-	#define ETHERNETCLIENT_DEBUG(x,...) //!< debug NULL
-#endif
-
 /**
  * EthernetClient class
  */
