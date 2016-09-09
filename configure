@@ -17,10 +17,8 @@ Building options:
     --cpu-flags=<CXXFLAGS>        CPU defining/optimizing flags to be used. [configure autodetected]
     --extra-cxxflags=<CXXFLAGS>     Extra C flags passed to C/C++ compilation. []
     --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
-    --libname=<LIBNAME>         Library name. [rf24]
     --cxx_compiler=<CXX>        C++ compiler [arm-linux-gnueabihf-g++][g++]
     --no-clean                  Don't clean previous build artifacts.
-    --rf24h-lib-dir             RF24 library files directory.
 
 Installation options:
     --prefix=<PREFIX>           Installation prefix path. [/usr/local]
@@ -39,7 +37,7 @@ MySensors options:
                                 Use commas instead of points. Example: 127,0,0,1
     --my-port=<PORT>            The port to keep open on gateway mode.
                                 If gateway is set to mqtt, it sets the broker port.
-    --my-serial-port=<PORT>     Serial port. [/dev/ttyUSB0]
+    --my-serial-port=<PORT>     Serial port. [/dev/ttyACM0]
     --my-serial-baudrate=<BAUD> Serial baud rate. [115200]
     --my-serial-is-pty          Set the serial port to be a pseudo terminal. Use this if you want
                                 to connect to a controller running on the same device.
@@ -52,9 +50,9 @@ MySensors options:
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
     --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature. [rf24]
-    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125.
+    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
-                                RF24 PA level.
+                                RF24 PA level. [RF24_PA_MAX]
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
                                 For RaspberryPi use BCM numbering.
     --my-rx-message-buffer-size=<SIZE>
@@ -229,9 +227,6 @@ for opt do
     --prefix=*)
         PREFIX="$optarg"
         ;;
-    --rf24h-lib-dir=*)
-        RF24H_LIB_DIR="$optarg"
-        ;;
     --gateway-dir=*)
         GATEWAY_DIR="$optarg"
         ;;
@@ -331,7 +326,6 @@ if [[ ${gateway_type} == "ethernet" ]]; then
 elif [[ ${gateway_type} == "serial" ]]; then
     CXXFLAGS="-DMY_GATEWAY_SERIAL $CXXFLAGS"
 elif [[ ${gateway_type} == "mqtt" ]]; then
-    LDFLAGS="-lmosquitto $LDFLAGS"
     CXXFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
 fi
 
