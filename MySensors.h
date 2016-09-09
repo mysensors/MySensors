@@ -276,6 +276,10 @@
 		#include "drivers/AVR/DigitalIO/DigitalIO.h"
 	#endif
 
+ 	#if defined(MY_RADIO_NRF24) && defined(__linux__) && !defined(LINUX_ARCH_RASPBERRYPI)
+ 		#error No support for nRF24 radio on this platform
+ 	#endif
+
 	#include "core/MyTransport.cpp"
 	#if (defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)) || (defined(MY_RADIO_NRF24) && defined(MY_RS485)) || (defined(MY_RADIO_RFM69) && defined(MY_RS485))
 		#error Only one forward link driver can be activated
@@ -284,11 +288,7 @@
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
 			#include "drivers/AES/AES.cpp"
 		#endif
-		#if defined(__linux__)
-			#include "drivers/RF24/RF24_Linux.cpp"
-		#else
-			#include "drivers/RF24/RF24.cpp"
-		#endif
+		#include "drivers/RF24/RF24.cpp"
 		#include "core/MyTransportNRF24.cpp"
 	#elif defined(MY_RS485)
 		#include "drivers/AltSoftSerial/AltSoftSerial.cpp"

@@ -54,7 +54,6 @@ MySensors options:
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
-                                For RaspberryPi use BCM numbering.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
 
@@ -197,7 +196,7 @@ debug=enable
 gateway_type=ethernet
 radio_type=nrf24
 
-params="SOC CXXFLAGS LDFLAGS PREFIX CXX RF24H_LIB_DIR GATEWAY_DIR INIT_SYSTEM"
+params="SOC CXXFLAGS LDFLAGS PREFIX CXX GATEWAY_DIR INIT_SYSTEM"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -312,6 +311,7 @@ if [ -z "${CPUFLAGS}" ]; then
 fi
 
 CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra $CXXFLAGS"
+CFLAGS="-Ofast -g -Wall -Wextra $CFLAGS"
 
 if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
     CXXFLAGS+="-D__RPI_BPLUS"
@@ -331,8 +331,6 @@ fi
 
 if [[ ${radio_type} == "nrf24" ]]; then
     CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
-    LDFLAGS="-lrf24-bcm $LDFLAGS"
-    RF24H_LIB_DIR=${PREFIX}/include/RF24
 fi
 
 LDFLAGS="-pthread $LDFLAGS"

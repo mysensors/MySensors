@@ -13,6 +13,11 @@
 #include <algorithm>
 #include "stdlib_noniso.h"
 
+#ifdef LINUX_ARCH_RASPBERRYPI
+	#include "rpi_util.h"
+	using namespace rpi_util;
+#endif
+
 #define PI 3.1415926535897932384626433832795
 #define HALF_PI 1.5707963267948966192313216916398
 #define TWO_PI 6.283185307179586476925286766559
@@ -39,6 +44,10 @@
 #define GET_MACRO(_0, _1, _2, NAME, ...) NAME
 #define random(...) GET_MACRO(_0, ##__VA_ARGS__, randMinMax, randMax, rand)(__VA_ARGS__)
 
+#ifndef delay
+	#define delay _delay_ms
+#endif
+
 using std::string;
 using std::min;
 using std::max;
@@ -50,7 +59,7 @@ typedef string String;
 
 void yield(void);
 unsigned long millis(void);
-void delay(unsigned int millis);
+void _delay_ms(unsigned int millis);
 void randomSeed(unsigned long seed);
 long randMax(long howbig);
 long randMinMax(long howsmall, long howbig);

@@ -44,6 +44,7 @@ void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 uint8_t hwReadConfig(int adr);
 void hwWriteConfig(int adr, uint8_t value);
+void hwRandomNumberInit();
 
 #ifdef MY_RF24_IRQ_PIN
 	static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

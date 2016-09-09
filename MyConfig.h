@@ -410,7 +410,7 @@
 		#define MY_RF24_CE_PIN 4
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CE_PIN 27
-	#elif defined(__linux__)
+	#elif defined(LINUX_ARCH_RASPBERRYPI)
 		#define MY_RF24_CE_PIN 22
 	#else
 		#define MY_RF24_CE_PIN 9
@@ -426,7 +426,7 @@
 		#define MY_RF24_CS_PIN 15
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CS_PIN 3
-	#elif defined(__linux__)
+	#elif defined(LINUX_ARCH_RASPBERRYPI)
 		#define MY_RF24_CS_PIN 24
 	#else
 		#define MY_RF24_CS_PIN 10

@@ -20,11 +20,7 @@
 #include "MyConfig.h"
 #include "MyTransport.h"
 
-#ifdef __linux__
-	#include "drivers/RF24/RF24_Linux.h"
-#else
-	#include "drivers/RF24/RF24.h"
-#endif
+#include "drivers/RF24/RF24.h"
 
 #include "drivers/CircularBuffer/CircularBuffer.h"
 

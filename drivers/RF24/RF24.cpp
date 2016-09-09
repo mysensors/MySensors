@@ -29,8 +29,13 @@ LOCAL uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 	LOCAL RF24_receiveCallbackType RF24_receiveCallback = NULL;
 #endif
 
+#ifdef LINUX_ARCH_RASPBERRYPI
+	uint8_t spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
+	uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
+#endif
+
 LOCAL void RF24_csn(bool level) {
-	digitalWrite(MY_RF24_CS_PIN, level);		
+	digitalWrite(MY_RF24_CS_PIN, level);
 }
 
 LOCAL void RF24_ce(bool level) {
@@ -38,6 +43,7 @@ LOCAL void RF24_ce(bool level) {
 }
 
 LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode) {
+	uint8_t status;
 	uint8_t* current = buf;
 	#if !defined(MY_SOFTSPI)
 		_SPI.beginTransaction(SPISettings(MY_RF24_SPI_MAX_SPEED, MY_RF24_SPI_DATA_ORDER, MY_RF24_SPI_DATA_MODE));
@@ -45,13 +51,40 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, 
 	RF24_csn(LOW);
 	// timing
 	delayMicroseconds(10);
-	uint8_t status = _SPI.transfer( cmd );
-	while ( len-- ) {
-		if (aReadMode) {		
-			status = _SPI.transfer( NOP );
-			if(buf != NULL) *current++ = status;
-		} else status = _SPI.transfer(*current++);
-	}
+	#ifdef LINUX_ARCH_RASPBERRYPI
+		uint8_t * prx = spi_rxbuff;
+		uint8_t * ptx = spi_txbuff;
+		uint8_t size = len + 1; // Add register value to transmit buffer
+
+		*ptx++ = cmd;
+		while ( len-- ) {
+			if (aReadMode) {
+				*ptx++ = NOP ;
+			} else {
+				*ptx++ = *current++;
+			}
+		}
+		_SPI.transfernb( (char *) spi_txbuff, (char *) spi_rxbuff, size);
+		if (aReadMode) {
+			if (size == 2) {
+				status = *++prx;   // result is 2nd byte of receive buffer
+			} else {
+				status = *prx++; // status is 1st byte of receive buffer
+				// decrement before to skip status byte
+				while (--size) { *buf++ = *prx++; } 
+			}
+		} else {
+			status = *prx; // status is 1st byte of receive buffer
+		}
+	#else
+		status = _SPI.transfer( cmd );
+		while ( len-- ) {
+			if (aReadMode) {		
+				status = _SPI.transfer( NOP );
+				if (buf != NULL) *current++ = status;
+			} else status = _SPI.transfer(*current++);
+		}
+	#endif
 	RF24_csn(HIGH);
 	#if !defined(MY_SOFTSPI)
 		_SPI.endTransaction();
@@ -268,7 +301,7 @@ LOCAL void RF24_irqHandler( void )
 		// rx coming in during our stay will not be handled and will cause characters to be lost.
 		// As a workaround we re-enable interrupts to allow nested processing of other interrupts.
 		// Our own handler is disconnected to prevent recursive calling of this handler.
-		#ifdef MY_GATEWAY_SERIAL
+		#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
 			detachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
 			interrupts();
 		#endif
@@ -283,7 +316,7 @@ LOCAL void RF24_irqHandler( void )
 			RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
 		} 
 		// Restore our interrupt handler.
-		#ifdef MY_GATEWAY_SERIAL
+		#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
 			noInterrupts();
 			attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
 		#endif

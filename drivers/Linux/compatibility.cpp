@@ -21,7 +21,7 @@ unsigned long millis(void)
 	return ((curTime.tv_sec - millis_at_start) * 1000) + (curTime.tv_usec / 1000);
 }
 
-void delay(unsigned int millis)
+void _delay_ms(unsigned int millis)
 {
     struct timespec sleeper;
     

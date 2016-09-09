@@ -24,6 +24,7 @@
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
+#include <time.h>
 #include "log.h"
 
 static const char* CONFIG_FILE = MY_LINUX_CONFIG_FILE;
@@ -122,6 +123,11 @@ void hwWriteConfig(int adr, uint8_t value)
 	if (curr != value) {
 		hwWriteConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
 	}
+}
+
+void hwRandomNumberInit()
+{
+	randomSeed(time(NULL));
 }
 
 // Not supported!

@@ -72,6 +72,15 @@ static int daemonize(void)
 	return 0;
 }
 
+void print_usage()
+{
+	printf("Usage: mysGateway [options]\n\n" \
+			 "Options:\n" \
+			 "  -h            Display a short summary of all program options.\n" \
+			 "  -d            Enable debug.\n" \
+			 "  -b            Become a daemon.\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int opt, log_opts, debug = 0, foreground = 1;
@@ -83,11 +92,7 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, "hdb")) != -1) {
 		switch (opt) {
 			case 'h':
-				printf("Usage: mysGateway [options]\n\n" \
-							 "Options:\n" \
-							 "-h            Display a short summary of all program options.\n" \
-							 "-d            Enable debug.\n" \
-							 "-b            Become a daemon.\n");
+				print_usage();
 				exit(0);
 			case 'd':
 				debug = 1;
@@ -95,11 +100,15 @@ int main(int argc, char *argv[])
 			case 'b':
 				foreground = 0;
 				break;
+			default:
+				print_usage();
+				exit(0);
 		}
 	}
 
 	log_opts = LOG_CONS;
 	if (foreground && isatty(STDIN_FILENO)) {
+		// Also print syslog to stderror
 		log_opts |= LOG_PERROR;
 	}
 	if (!debug) {

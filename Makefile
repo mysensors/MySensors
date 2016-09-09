@@ -13,14 +13,22 @@ include $(CONFIG_FILE)
 
 GATEWAY_BIN=mysGateway
 GATEWAY=examples_linux/$(GATEWAY_BIN)
-GATEWAY_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysGateway.cpp
-GATEWAY_OBJECTS=$(patsubst %.cpp,%.o,$(GATEWAY_SOURCES))
-DEPS+=$(patsubst %.cpp,%.d,$(GATEWAY_SOURCES))
+GATEWAY_C_SOURCES=$(wildcard drivers/Linux/*.c)
+GATEWAY_CPP_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysGateway.cpp
+OBJECTS=$(patsubst %.c,%.o,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,%.o,$(GATEWAY_CPP_SOURCES))
+
+DEPS+=$(patsubst %.c,%.d,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,%.d,$(GATEWAY_CPP_SOURCES))
 
 CINCLUDE=-I. -I./core -I./drivers/Linux
 
-ifneq ($(RF24H_LIB_DIR),)
-CINCLUDE+=-I$(RF24H_LIB_DIR)
+ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836))
+RPI_C_SOURCES=$(wildcard drivers/RPi/*.c)
+RPI_CPP_SOURCES=$(wildcard drivers/RPi/*.cpp)
+OBJECTS+=$(patsubst %.c,%.o,$(RPI_C_SOURCES)) $(patsubst %.cpp,%.o,$(RPI_CPP_SOURCES))
+
+DEPS+=$(patsubst %.c,%.d,$(RPI_C_SOURCES)) $(patsubst %.cpp,%.d,$(RPI_CPP_SOURCES))
+
+CINCLUDE+=-I./drivers/RPi
 endif
 
 .PHONY: all gateway cleanconfig clean install uninstall force
@@ -28,14 +36,17 @@ endif
 all: $(GATEWAY)
 
 # Gateway Build
-$(GATEWAY): $(GATEWAY_OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $(GATEWAY_OBJECTS)
+$(GATEWAY): $(OBJECTS)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
 
 # Include all .d files
 -include $(DEPS)
-	
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(CINCLUDE) -MMD -c -o $@ $<
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(CINCLUDE) -MMD -c -o $@ $<
 
 # clear configuration files
 cleanconfig:
@@ -45,7 +56,7 @@ cleanconfig:
 # clear build files
 clean:
 	@echo "[Cleaning]"
-	rm -rf build $(GATEWAY_OBJECTS) $(GATEWAY) $(DEPS)
+	rm -rf build $(OBJECTS) $(GATEWAY) $(DEPS)
 
 $(CONFIG_FILE):
 	@echo "[Running configure]"
