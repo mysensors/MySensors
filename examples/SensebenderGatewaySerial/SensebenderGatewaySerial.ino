@@ -22,6 +22,8 @@
  * The ArduinoGateway prints data received from sensors on the serial link.
  * The gateway accepts input on seral which will be sent out on radio network.
  *
+the last one is meant for the end user to break up into the various connectors used on the board.
+
  * This GW code is designed for Sensebender GateWay / Arduino Zero
  *
  * Wire connections (OPTIONAL):
@@ -36,7 +38,7 @@
  *
  */
 
-#define SKETCH_VERSION "0.1"
+#define SKETCH_VERSION "0.2"
 // Enable debug prints to serial monitor
 #define MY_DEBUG
 
@@ -124,6 +126,7 @@ void preHwInit() {
       delay(500);
     } // Wait for USB to be connected, before spewing out data.
   }
+  digitalWrite(LED_BLUE, LOW);
   if (Serial) {
     Serial.println("Sensebender GateWay test routine");
     Serial.print("Mysensors core version : ");
@@ -146,7 +149,11 @@ void preHwInit() {
     digitalWrite(LED_ORANGE, HIGH);
     tests++;
   }
-  if (tests == 3) {
+  if (testAnalog()) {
+    digitalWrite(LED_BLUE, HIGH);
+    tests++;
+  }
+  if (tests == 4) {
     while(1) {
       for (int i=0; i<num_of_leds; i++) {
         digitalWrite(leds[i], HIGH);
@@ -249,3 +256,17 @@ bool testEEProm() {
   SerialUSB.println("FAILED!");
   return false;
 }
+
+bool testAnalog() {
+  int bat_detect = analogRead(MY_BAT_DETECT);
+  Serial.print("-> analog : ");
+  Serial.print(bat_detect);
+  if (bat_detect < 400 || bat_detect > 650) {
+    Serial.println(" Failed");
+    return false;
+  }
+  Serial.println(" Passed");
+  return true;
+}
+
+
