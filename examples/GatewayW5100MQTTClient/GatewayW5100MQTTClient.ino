@@ -34,7 +34,6 @@
  * See https://www.mysensors.org/build/ethernet_gateway for wiring instructions.
  * The MQTT gateway is basically a Ethernet Gateway with modified software which makes it act as a MQTT broker. 
  * Start by building the physical gateway by following ethernet gateway instructions.
- *
  */
 
 
