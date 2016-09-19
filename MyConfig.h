@@ -153,14 +153,22 @@
 // #define MY_REPEATER_FEATURE
 
 /**
- * @def MY_SMART_SLEEP_WAIT_DURATION
- * @brief The wait period before going to sleep when using smartSleep-functions.
+* @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
+* @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
+*/
+#ifndef MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
+#define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS (10*1000ul)
+#endif
+
+/**
+ * @def MY_SMART_SLEEP_WAIT_DURATION_MS
+ * @brief The wait period (in ms) before going to sleep when using smartSleep-functions.
  *
  * This period has to be long enough for controller to be able to send out
  * potential buffered messages.
  */
-#ifndef MY_SMART_SLEEP_WAIT_DURATION
-#define MY_SMART_SLEEP_WAIT_DURATION 500
+#ifndef MY_SMART_SLEEP_WAIT_DURATION_MS
+#define MY_SMART_SLEEP_WAIT_DURATION_MS (500ul)
 #endif
 
 /**********************************
