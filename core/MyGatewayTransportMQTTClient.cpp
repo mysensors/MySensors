@@ -131,6 +131,7 @@ void incomingMQTT(char* topic, byte* payload, unsigned int length) {
 				_MQTT_msg.set((const char*)payload);
 			}
 			_MQTT_available = true;
+            setIndication(INDICATION_GW_RX);
 		}
 		}
 		i++;

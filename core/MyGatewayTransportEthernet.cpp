@@ -272,19 +272,23 @@ bool gatewayTransportAvailable()
 
 		if (packet_size) {
 			//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
-            setIndication(INDICATION_GW_RX);
 			#if defined(MY_GATEWAY_ESP8266)
 				_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 				inputString[0].string[packet_size] = 0;
 				debug(PSTR("UDP packet received: %s\n"), inputString[0].string);
-				return protocolParse(_ethernetMsg, inputString[0].string);
+				const bool ok = protocolParse(_ethernetMsg, inputString[0].string);
 			#else
 				_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 				inputString.string[packet_size] = 0;
 				debug(PSTR("UDP packet received: %s\n"), inputString.string);
 				_w5100_spi_en(false);
-				return protocolParse(_ethernetMsg, inputString.string);
+				const bool ok = protocolParse(_ethernetMsg, inputString.string);
 			#endif
+            if (ok)
+            {
+                setIndication(INDICATION_GW_RX);
+            }
+            return ok;
 		}
 	#else
 		#if defined(MY_GATEWAY_ESP8266)

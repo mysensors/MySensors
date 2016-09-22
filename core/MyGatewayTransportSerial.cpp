@@ -58,7 +58,11 @@ bool gatewayTransportAvailable() {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
 				bool ok = protocolParse(_serialMsg, _serialInputString);
-				_serialInputPos = 0;
+                if (ok)
+                {
+                    setIndication(INDICATION_GW_RX);
+                }
+                _serialInputPos = 0;
 				return ok;
 			} else {
 				// add it to the inputString:
