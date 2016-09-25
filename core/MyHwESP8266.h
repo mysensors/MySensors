@@ -37,8 +37,9 @@
 #define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
 #define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE); MY_SERIALDEVICE.setDebugOutput(true)
 #define hwWatchdogReset() wdt_reset()
-#define hwReboot() ESP.restart();
+#define hwReboot() ESP.restart()
 #define hwMillis() millis()
+#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);

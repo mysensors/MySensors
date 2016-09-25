@@ -74,6 +74,9 @@ void stInitTransition(void) {
 }
 
 void stInitUpdate(void) {
+	#if defined(MY_TRANSPORT_DONT_CARE_MODE)
+		TRANSPORT_DEBUG(PSTR("TSM:INIT:TDC\n"));	// transport don't care mode
+	#endif
 	// initialise radio
 	if (!transportInit()) {
 		TRANSPORT_DEBUG(PSTR("!TSM:INIT:TSP FAIL\n"));
@@ -281,7 +284,6 @@ void stReadyUpdate(void) {
 	#if defined(MY_RAM_ROUTING_TABLE_ENABLED)
 		if (hwMillis() - _lastRoutingTableSave > MY_ROUTING_TABLE_SAVE_INTERVAL_MS) {
 			_lastRoutingTableSave = hwMillis();
-			TRANSPORT_DEBUG(PSTR("TSM:READY:SRT\n"));	//  save routing table
 			transportSaveRoutingTable();
 		}
 	#endif
@@ -340,6 +342,15 @@ bool isTransportExtendedFailure(void) {
 bool isTransportSearchingParent(void) {
 	return _transportSM.findingParentNode;
 }
+
+bool isMessageReceived(void) {
+	return _transportSM.MsgReceived;
+}
+
+void resetMessageReceived(void) {
+	_transportSM.MsgReceived = false;
+}
+
 
 void transportInitialise(void) {
 	_transportSM.failureCounter = 0u;	// reset failure counter
@@ -566,6 +577,9 @@ void transportProcessMessage(void) {
 			transportSetRoute(sender, last);
 		}
 	#endif
+
+	// set message received flag
+	_transportSM.MsgReceived = true;
 		
 	// Is message addressed to this node?
 	if (destination == _nc.nodeId) {
@@ -627,8 +641,8 @@ void transportProcessMessage(void) {
 				// general
 				if (type == I_PING) {
 					TRANSPORT_DEBUG(PSTR("TSF:MSG:PINGED,ID=%d,HP=%d\n"), sender, _msg.getByte()); // node pinged
-					// delay for slow nodes *****************************
-					#if defined(MY_GATEWAY_FEATURE) && (F_CPU<=16000000)
+					#if defined(MY_GATEWAY_FEATURE) && (F_CPU>16000000)
+						// delay for fast GW and slow nodes
 						delay(5);
 					#endif
 					(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PONG, false).set((uint8_t)1));
@@ -819,8 +833,8 @@ bool transportSendWrite(const uint8_t to, MyMessage &message) {
 }
 
 void transportClearRoutingTable(void) {
-	for (uint8_t i = 0; i != 255; i++) {
-		transportSetRoute(i, BROADCAST_ADDRESS);
+	for (uint16_t i = 0; i < SIZE_ROUTES; i++) {
+		transportSetRoute((uint8_t)i, BROADCAST_ADDRESS);
 	}
 	transportSaveRoutingTable();	// save cleared routing table to EEPROM (if feature enabled)
 	TRANSPORT_DEBUG(PSTR("TSF:CRT:OK\n"));	// clear routing table
@@ -828,13 +842,15 @@ void transportClearRoutingTable(void) {
 
 void transportLoadRoutingTable(void) {
 	#if defined(MY_RAM_ROUTING_TABLE_ENABLED)
-		hwReadConfigBlock((void*)&_transportRoutingTable.route, (void*)EEPROM_ROUTES_ADDRESS, 256);
+		hwReadConfigBlock((void*)&_transportRoutingTable.route, (void*)EEPROM_ROUTES_ADDRESS, SIZE_ROUTES);
+		TRANSPORT_DEBUG(PSTR("TSF:LRT:OK\n"));	//  load routing table
 	#endif
 }
 
 void transportSaveRoutingTable(void) {
 	#if defined(MY_RAM_ROUTING_TABLE_ENABLED)
-		hwWriteConfigBlock((void*)EEPROM_ROUTES_ADDRESS, (void*)&_transportRoutingTable.route, 256);
+		hwWriteConfigBlock((void*)EEPROM_ROUTES_ADDRESS, (void*)&_transportRoutingTable.route, SIZE_ROUTES);
+		TRANSPORT_DEBUG(PSTR("TSF:SRT:OK\n"));	//  save routing table
 	#endif
 }
 

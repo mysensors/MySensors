@@ -124,6 +124,12 @@
 //#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
 
 /**
+*@def MY_TRANSPORT_DONT_CARE_MODE
+*@brief If set, transport traffic is unmonitored and GW connection is optional
+*/
+//#define MY_TRANSPORT_DONT_CARE_MODE
+
+/**
  *@def MY_TRANSPORT_MAX_TX_FAILURES
  *@brief Set to override max. consecutive TX failures until SNP is initiated
  */
@@ -191,14 +197,22 @@
 //#define MY_REPEATER_FEATURE
 
 /**
- * @def MY_SMART_SLEEP_WAIT_DURATION
- * @brief The wait period before going to sleep when using smartSleep-functions.
+* @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
+* @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
+*/
+#ifndef MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
+#define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS (10*1000ul)
+#endif
+
+/**
+ * @def MY_SMART_SLEEP_WAIT_DURATION_MS
+ * @brief The wait period (in ms) before going to sleep when using smartSleep-functions.
  *
  * This period has to be long enough for controller to be able to send out
  * potential buffered messages.
  */
-#ifndef MY_SMART_SLEEP_WAIT_DURATION
-#define MY_SMART_SLEEP_WAIT_DURATION (500ul)
+#ifndef MY_SMART_SLEEP_WAIT_DURATION_MS
+#define MY_SMART_SLEEP_WAIT_DURATION_MS (500ul)
 #endif
 
 /**********************************
@@ -261,25 +275,22 @@
 /**********************************
 *  Information LEDs blinking
 ***********************************/
-// This feature enables LEDs blinking on message receive, transmit
-// or if some error occurred. This was commonly used only in gateways,
-// but now can be used in any sensor node. Also the LEDs can now be
-// disabled in the gateway.
+// If one of the following is defined here, or in the sketch, the pin will be used for the
+// corresponding led function.
+// They have to be enabled here (or in your sketch). Replace x with the pin number you have the LED on.
+//
+// NOTE!! that on some platforms (for example sensebender GW) the hardware variant can enable LEDs by default,
+// These defaults can be overridden by defining one of these.
+//#define MY_DEFAULT_ERR_LED_PIN x
+//#define MY_DEFAULT_TX_LED_PIN x
+//#define MY_DEFAULT_RX_LED_PIN x
 
-//#define MY_LEDS_BLINKING_FEATURE
-
-// The following setting allows you to inverse the blinking feature MY_LEDS_BLINKING_FEATURE
+// The following setting allows you to inverse the LED blinking
 // When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
 // off when blinking
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
-// The following defines can be used to set the port pin, that the LED is connected to
-// If one of the following is defined here, or in the sketch, MY_LEDS_BLINKING_FEATURE will be
-// enabled by default. (Replace x with the pin number you have the LED on)
-//#define MY_DEFAULT_ERR_LED_PIN x
-//#define MY_DEFAULT_TX_LED_PIN x
-//#define MY_DEFAULT_RX_LED_PIN x
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
@@ -469,7 +480,7 @@
 
 /**
 * @def MY_RX_MESSAGE_BUFFER_FEATURE
-* @brief This enabled the receiving buffer feature. 
+* @brief This enabled the receiving buffer feature.
 *
 * This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
 */
@@ -477,7 +488,7 @@
 
 /**
  * @def MY_RX_MESSAGE_BUFFER_SIZE
- * @brief Declare the amount of incoming messages that can be buffered. 
+ * @brief Declare the amount of incoming messages that can be buffered.
  */
 #ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 	#ifndef MY_RX_MESSAGE_BUFFER_SIZE
@@ -649,7 +660,11 @@
  * @brief The Ethernet TCP/UDP port to open on controller or gateway.
  */
 #ifndef MY_PORT
-#define MY_PORT 5003
+	#ifdef MY_GATEWAY_MQTT_CLIENT
+		#define MY_PORT 1883
+	#else
+		#define MY_PORT 5003
+	#endif
 #endif
 
 // Static ip address of gateway (if this is disabled, DHCP will be used)
@@ -755,4 +770,5 @@
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
 #define MY_REPEATER_FEATURE
+#define MY_TRANSPORT_DONT_CARE_MODE
 #endif

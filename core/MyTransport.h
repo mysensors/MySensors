@@ -42,16 +42,20 @@
  *   - TSF:ASID						from @ref transportAssignNodeID(), assigns node ID
  *   - TSF:PING						from @ref transportPingNode(), pings a node
  *   - TSF:CRT						from @ref transportClearRoutingTable(), clears routing table stored in EEPROM
+ *   - TSF:LRT						from @ref transportLoadRoutingTable(), loads RAM routing table from EEPROM (only GW/repeaters)
+ *   - TSF:SRT						from @ref transportSaveRoutingTable(), saves RAM routing table to EEPROM (only GW/repeaters)
  *   - TSF:MSG						from @ref transportProcessMessage(), processes incoming message
  *   - TSF:SANCHK					from @ref transportInvokeSanityCheck(), calls transport-specific sanity check
  *   - TSF:ROUTE					from @ref transportRouteMessage(), sends message
  *   - TSF:SEND						from @ref transportSendRoute(), sends message if transport is ready (exposed)
+
  *
  * Transport debug log messages:
  *
  * |E| SYS	| SUB		| Message				| Comment
  * |-|------|-----------|-----------------------|---------------------------------------------------------------------
  * | | TSM	| INIT		|						| <b>Transition to stInit state</b>
+ * | | TSM	| INIT		| TDC					| Transport don't care mode
  * | | TSM	| INIT		| STATID=%%d			| Node ID is static
  * | | TSM	| INIT		| TSP OK				| Transport device configured and fully operational
  * | | TSM	| INIT		| GW MODE				| Node is set up as GW, thus omitting ID and findParent states
@@ -70,6 +74,7 @@
  * | | TSF	| UPL		| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
  * |!| TSM	| UPL		| FAIL					| Uplink check failed, i.e. GW could not be pinged
  * | | TSM	| READY		|						| <b>Transition to stReady</b>, i.e. transport is ready and fully operational
+ * | | TSM	| READY		| SRT					| Save routing table
  * |!| TSM	| READY		| UPL FAIL,SNP			| Too many failed uplink transmissions, search new parent
  * |!| TSM	| READY		| FAIL,STATP			| Too many failed uplink transmissions, static parent enforced
  * | | TSM	| FAIL		| CNT=%%d				| <b>Transition to stFailure state</b>, consecutive failure counter (CNT)
@@ -105,6 +110,8 @@
  * | | TSF	| SANCHK	| OK					| Sanity check passed
  * |!| TSF	| SANCHK	| FAIL					| Sanity check failed, attempt to re-initialize radio
  * | | TSF	| CRT		| OK					| Clearing routing table successful
+ * | | TSF	| LRT		| OK					| Loading routing table successful
+ * | | TSF	| SRT		| OK					| Saving routing table successful
  * |!| TSF	| ROUTE		| FPAR ACTIVE			| Finding parent active, message not sent
  * |!| TSF	| ROUTE		| DST %%d UNKNOWN		| Routing for destination (DST) unknown, send message to parent
  * |!| TSF	| SEND		| TNR					| Transport not ready, message cannot be sent
@@ -151,7 +158,7 @@
 	#define MY_TRANSPORT_MAX_TX_FAILURES	(5u)		//!< search for a new parent node after this many transmission failures, lower threshold for non-repeating nodes
 #endif
 
-#define MY_TRANSPORT_MAX_TSM_FAILURES		(15u)		//!< Max. number of consecutive TSM failure state entries (4bit)
+#define MY_TRANSPORT_MAX_TSM_FAILURES		(7u)		//!< Max. number of consecutive TSM failure state entries (3bits)
 
 #ifndef MY_TRANSPORT_TIMEOUT_FAILURE_STATE
 	#define MY_TRANSPORT_TIMEOUT_FAILURE_STATE		(10*1000ul)		//!< Duration failure state (in ms)
@@ -228,7 +235,8 @@ typedef struct {
 	uint8_t stateRetries : 3;				//!< retries / state re-enter (max 7)
 	// 8 bits
 	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions (max 15)	
-	uint8_t failureCounter : 4;				//!< counter for TSM failures (max 15)
+	uint8_t failureCounter : 3;				//!< counter for TSM failures (max 7)
+	bool MsgReceived : 1;					//!< flag message received
 	// 8 bits
 	uint8_t pingResponse;					//!< stores I_PONG hops
 } transportSM;
@@ -237,7 +245,7 @@ typedef struct {
 * @brief RAM routing table
 */
 typedef struct {
-	uint8_t route[256];						//!< route for node
+	uint8_t route[SIZE_ROUTES];				//!< route for node
 } routingTable;
 
 // PRIVATE functions
@@ -363,7 +371,7 @@ bool transportSendWrite(const uint8_t to, MyMessage &message);
 * @param force to override flood control timer
 * @return true if uplink ok
 */
-bool transportCheckUplink(bool force=false);
+bool transportCheckUplink(const bool force=false);
 
 // PUBLIC functions
 
@@ -390,6 +398,15 @@ bool isTransportSearchingParent(void);
 * @return true if TSM had too many consecutive failure state entries
 */
 bool isTransportExtendedFailure(void);
+/**
+* @brief Flag valid message received
+* @return true if valid message received, needs to be reset if used
+*/
+bool isMessageReceived(void);
+/**
+* @brief Reset message received flag
+*/
+void resetMessageReceived(void);
 /**
 * @brief Clear routing table
 */
@@ -423,7 +440,7 @@ void transportSetRoute(const uint8_t node, const uint8_t route);
 uint8_t transportGetRoute(const uint8_t node);
 
 
-// interface functions for radio driver ************************************************
+// interface functions for radio driver
 
 /**
 * @brief Initialize transport HW
