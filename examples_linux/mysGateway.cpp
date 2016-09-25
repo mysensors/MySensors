@@ -50,6 +50,17 @@
 //#define MY_MQTT_USER "username"
 //#define MY_MQTT_PASSWORD "password"
 
+// Flash leds on rx/tx/err
+//#define MY_LEDS_BLINKING_FEATURE
+// Inverse the blinking feature
+//#define MY_WITH_LEDS_BLINKING_INVERSE
+// Set blinking period
+//#define MY_DEFAULT_LED_BLINK_PERIOD 300
+
+// Led pins used if blinking feature is enabled above
+#define MY_DEFAULT_ERR_LED_PIN 12  // Error led pin
+#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
+#define MY_DEFAULT_TX_LED_PIN  18  // the PCB, on board 
 
 #include <MySensors.h>
 

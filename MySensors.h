@@ -82,6 +82,11 @@
 	#define pgm_read_dword(x) (*x)
 	#define pgm_read_byte_near(x) (*x)
 	#include "core/MyHwLinuxGeneric.cpp"
+	// Ugly hack
+	#ifdef LINUX_ARCH_RASPBERRYPI
+		#undef hwDigitalWrite
+		#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+	#endif
 #endif
 
 // LEDS
