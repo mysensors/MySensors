@@ -39,7 +39,7 @@
 #define hwDigitalWrite(__pin, __value)
 #define hwInit() MY_SERIALDEVICE.begin(BAUD_RATE)
 #define hwWatchdogReset() wdt_reset()
-#define hwReboot() wdt_enable(WDTO_15MS); while (1)
+#define hwReboot() wdt_enable(WDTO_1S); while (1)
 #define hwMillis() millis()
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
