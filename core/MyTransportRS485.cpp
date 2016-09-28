@@ -92,7 +92,11 @@ unsigned char _recSender;
 unsigned char _recCS;
 unsigned char _recCalcCS;
 
+#if defined(MY_RS485_SERIAL)
+HardwareSerial& _dev = MY_RS485_SERIAL;
+#else
 AltSoftSerial _dev;
+#endif
 
 
 unsigned char _nodeId;
