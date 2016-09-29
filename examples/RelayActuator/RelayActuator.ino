@@ -65,7 +65,7 @@ void presentation()
 
   for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
     // Register all sensors to gw (they will be created as child devices)
-    present(sensor, S_LIGHT);
+    present(sensor, S_BINARY);
   }
 }
 
@@ -77,7 +77,7 @@ void loop()
 
 void receive(const MyMessage &message) {
   // We only expect one type of message from controller. But we better check anyway.
-  if (message.type==V_LIGHT) {
+  if (message.type==V_STATUS) {
      // Change relay state
      digitalWrite(message.sensor-1+RELAY_1, message.getBool()?RELAY_ON:RELAY_OFF);
      // Store state in eeprom
