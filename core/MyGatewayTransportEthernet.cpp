@@ -52,17 +52,19 @@ typedef struct
 		IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
 		IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
 	#endif
-	static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
+	#if !defined(MY_GATEWAY_CLIENT_MODE)
+		static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
+	#endif
 #endif
 
 #if defined(MY_USE_UDP)
 	EthernetUDP _ethernetServer;
-#else
+#elif !defined(MY_GATEWAY_CLIENT_MODE)
 	EthernetServer _ethernetServer(_ethernetGatewayPort);
 #endif
 
 
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_CLIENT_MODE)
 	static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 	static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
 #else
@@ -137,14 +139,29 @@ bool gatewayTransportInit() {
 		MY_SERIALDEVICE.println(Ethernet.localIP());
 		// give the Ethernet interface a second to initialize
 		delay(1000);
-	#endif
+	#endif /* MY_GATEWAY_ESP8266 */
 
 	#ifdef MY_USE_UDP
 		_ethernetServer.begin(_ethernetGatewayPort);
+	#elif defined(MY_GATEWAY_CLIENT_MODE)
+		#if defined(MY_CONTROLLER_URL_ADDRESS)
+			if (!client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+		#else
+			if (!client.connect(_ethernetControllerIP, MY_PORT)) {
+		#endif
+				client.stop();
+				debug(PSTR("Eth: Failed to connect\n"));
+			} else {
+				debug(PSTR("Eth: connect\n"));
+				_w5100_spi_en(false);
+				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+				_w5100_spi_en(true);
+				presentNode();
+			}
 	#else
 		// we have to use pointers due to the constructor of EthernetServer
 		_ethernetServer.begin();
-	#endif /* USE_UDP */
+	#endif
 	_w5100_spi_en(false);
 	return true;
 }
@@ -157,25 +174,37 @@ bool gatewayTransportSend(MyMessage &message)
     setIndication(INDICATION_GW_TX);
 
 	_w5100_spi_en(true);
-	#if defined(MY_CONTROLLER_IP_ADDRESS)
+	#if defined(MY_GATEWAY_CLIENT_MODE)
 		#if defined(MY_USE_UDP)
-			_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
+			#if defined(MY_CONTROLLER_URL_ADDRESS)
+				_ethernetServer.beginPacket(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
+			#else
+				_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
+			#endif
 			_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
 			// returns 1 if the packet was sent successfully
 			ret = _ethernetServer.endPacket();
 		#else
-			EthernetClient client;
+			if (!client.connected()) {
+				client.stop();
 			#if defined(MY_CONTROLLER_URL_ADDRESS)
-	                	if (client.connected() || client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
-	        	#else
-	                	if (client.connected() || client.connect(_ethernetControllerIP, MY_PORT)) {
-	        	#endif
-	                	client.write(_ethernetMsg, strlen(_ethernetMsg));
-	                }
-	                else {
-	                	// connecting to the server failed!
-	                	ret = false;
-	                }
+				if (!client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+			#else
+				if (!client.connect(_ethernetControllerIP, MY_PORT)) {
+			#endif
+					// connecting to the server failed!
+					debug(PSTR("Eth: Failed to connect\n"));
+					ret = false;
+				} else {
+					debug(PSTR("Eth: connect\n"));
+					_w5100_spi_en(false);
+					gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+					_w5100_spi_en(true);
+					presentNode();
+				}
+			} else {
+				ret = client.write(_ethernetMsg, strlen(_ethernetMsg)) > 0;
+			}
 		#endif
 	#else
 		// Send message to connected clients
@@ -188,16 +217,16 @@ bool gatewayTransportSend(MyMessage &message)
 				}
 			}
 		#else
-			_ethernetServer.write(_ethernetMsg);
+			ret = _ethernetServer.write(_ethernetMsg) > 0;
 		#endif
-	#endif
+	#endif /* MY_GATEWAY_CLIENT_MODE */
 	_w5100_spi_en(false);
 	return ret;
 
 }
 
 
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_CLIENT_MODE)
 	bool _readFromClient(uint8_t i) {
 		while (clients[i].connected() && clients[i].available()) {
 			char inChar = clients[i].read();
@@ -290,6 +319,30 @@ bool gatewayTransportAvailable()
             }
             return ok;
 		}
+	#elif defined(MY_GATEWAY_CLIENT_MODE)
+		if (!client.connected()) {
+			client.stop();
+		#if defined(MY_CONTROLLER_URL_ADDRESS)
+			if (!client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+		#else
+			if (!client.connect(_ethernetControllerIP, MY_PORT)) {
+		#endif
+				debug(PSTR("Eth: Failed to connect\n"));
+				_w5100_spi_en(false);
+				return false;
+			} else {
+				debug(PSTR("Eth: connect\n"));
+				_w5100_spi_en(false);
+				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+				_w5100_spi_en(true);
+				presentNode();
+			}
+		}
+		if (_readFromClient()) {
+			setIndication(INDICATION_GW_RX);
+			_w5100_spi_en(false);
+			return true;
+		}
 	#else
 		#if defined(MY_GATEWAY_ESP8266)
 			// ESP8266: Go over list of clients and stop any that are no longer connected.
@@ -356,7 +409,7 @@ bool gatewayTransportAvailable()
 					}
 				}
 			}
-		#endif
+		#endif /* MY_GATEWAY_ESP8266 */
 	#endif
 	_w5100_spi_en(false);
 	return false;
@@ -393,4 +446,4 @@ void gatewayTransportRenewIP()
 	_w5100_spi_en(false);
 	next_time = now + MY_IP_RENEWAL_INTERVAL;
 }
-#endif /* IP_ADDRESS_DHCP */
+#endif

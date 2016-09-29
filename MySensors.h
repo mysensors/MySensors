@@ -141,6 +141,13 @@
 #endif
 
 // GATEWAY - TRANSPORT
+#if defined(MY_CONTROLLER_IP_ADDRESS) || defined(MY_CONTROLLER_URL_ADDRESS)
+	#define MY_GATEWAY_CLIENT_MODE
+#endif
+#if defined(MY_USE_UDP) && !defined(MY_GATEWAY_CLIENT_MODE)
+	#error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS for UDP
+#endif
+
 #if defined(MY_GATEWAY_MQTT_CLIENT)
 	#if defined(MY_RADIO_FEATURE)
 		// We assume that a gateway having a radio also should act as repeater
@@ -148,7 +155,7 @@
 	#endif
 	// GATEWAY - COMMON FUNCTIONS
 	// We only support MQTT Client using W5100 and ESP8266 at the moment
-	#if !(defined(MY_CONTROLLER_URL_ADDRESS) || defined(MY_CONTROLLER_IP_ADDRESS))
+	#if !defined(MY_GATEWAY_CLIENT_MODE)
 		#error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS
 	#endif
 
@@ -176,9 +183,6 @@
 	#if defined(MY_RADIO_FEATURE)
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
-	#endif
-	#if defined(MY_CONTROLLER_IP_ADDRESS)
-		#define MY_GATEWAY_CLIENT_MODE
 	#endif
 	#if !defined(MY_PORT)
 		#error You must define MY_PORT (controller or gatway port to open)
