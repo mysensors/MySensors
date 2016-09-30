@@ -92,7 +92,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 
 void signerAtsha204SoftInit(void) {
 	// initialize pseudo-RNG
-	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+	hwRandomNumberInit();
 	// Set secrets
 	hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
 	hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);

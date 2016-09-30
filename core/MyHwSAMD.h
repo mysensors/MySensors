@@ -43,6 +43,7 @@ void hwInit();
 void hwWatchdogReset();
 void hwReboot();
 #define hwMillis() millis()
+#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);

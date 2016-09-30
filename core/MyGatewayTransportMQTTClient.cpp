@@ -144,7 +144,6 @@ bool gatewayTransportInit() {
 }
 
 bool gatewayTransportAvailable() {
-
 	if (_MQTT_connecting)
 		return false;
 

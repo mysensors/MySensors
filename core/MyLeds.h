@@ -29,7 +29,7 @@
 #define LED_OFF 0x1
 #endif
 
-#ifdef MY_LEDS_BLINKING_FEATURE
+#if defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	#define ledBlinkTx(x,...) ledsBlinkTx(x)
 	#define ledBlinkRx(x,...) ledsBlinkRx(x)
 	#define ledBlinkErr(x,...) ledsBlinkErr(x)

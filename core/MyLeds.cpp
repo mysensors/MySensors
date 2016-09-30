@@ -37,10 +37,15 @@ inline void ledsInit()
 	countErr = 0;
 
 	// Setup led pins
+#if defined(MY_DEFAULT_RX_LED_PIN)
 	pinMode(MY_DEFAULT_RX_LED_PIN,  OUTPUT);
+#endif
+#if defined(MY_DEFAULT_TX_LED_PIN)
 	pinMode(MY_DEFAULT_TX_LED_PIN,  OUTPUT);
+#endif
+#if defined(MY_DEFAULT_ERR_LED_PIN)
 	pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
-
+#endif
     ledsProcess();
 }
 
@@ -55,17 +60,23 @@ void ledsProcess() {
 
     // For an On/Off ratio of 4, the pattern repeated will be [on, on, on, off]
     // until the counter becomes 0.
+#if defined(MY_DEFAULT_RX_LED_PIN)
     state = (countRx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
     hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, state);
     if (countRx)  --countRx;
+#endif
 
+#if defined(MY_DEFAULT_TX_LED_PIN)
     state = (countTx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
     hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, state);
     if (countTx)  --countTx;
+#endif
 
+#if defined(MY_DEFAULT_ERR_LED_PIN)
     state = (countErr & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
     hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, state);
     if (countErr) --countErr;
+#endif
 }
 
 void ledsBlinkRx(uint8_t cnt) {
@@ -79,4 +90,3 @@ void ledsBlinkTx(uint8_t cnt) {
 void ledsBlinkErr(uint8_t cnt) {
   if(!countErr) { countErr = cnt*LED_ON_OFF_RATIO; }
 }
-

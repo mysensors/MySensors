@@ -135,7 +135,7 @@ int8_t hwSleep(unsigned long ms)
 {
 	(void)ms;
 
-	return -2;
+	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 // Not supported!
@@ -145,7 +145,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 	(void)mode;
 	(void)ms;
 
-	return -2;
+	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 // Not supported!
@@ -157,7 +157,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	(void)mode2;
 	(void)ms;
 	
-	return -2;
+	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 uint16_t hwCPUVoltage()

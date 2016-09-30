@@ -39,12 +39,13 @@
 #if defined(MY_DISABLED_SERIAL)
 	#define hwInit()
 #else
-	#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE); MY_SERIALDEVICE.setDebugOutput(true)
+	#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1); MY_SERIALDEVICE.setDebugOutput(true)
 #endif
 
 #define hwWatchdogReset() wdt_reset()
-#define hwReboot() ESP.restart();
+#define hwReboot() ESP.restart()
 #define hwMillis() millis()
+#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);

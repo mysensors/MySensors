@@ -9,7 +9,11 @@
   },
   "version": "2.0.1-beta",
   "frameworks": "arduino",
-  "platforms": "*",
+  "platforms": [
+    "atmelavr",
+    "atmelsam",
+    "espressif"
+  ],
   "exclude": [
     "tests",
     "Documentation"
