@@ -14,8 +14,8 @@ Help:
 Building options:
     --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
-    --cpu-flags=<CXXFLAGS>        CPU defining/optimizing flags to be used. [configure autodetected]
-    --extra-cxxflags=<CXXFLAGS>     Extra C flags passed to C/C++ compilation. []
+    --cpu-flags=<CXXFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
+    --extra-cxxflags=<CXXFLAGS> Extra C flags passed to C/C++ compilation. []
     --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
     --cxx_compiler=<CXX>        C++ compiler [arm-linux-gnueabihf-g++][g++]
     --no-clean                  Don't clean previous build artifacts.
@@ -25,8 +25,7 @@ Installation options:
     --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
 
 MySensors options:
-    --my-debug=[enable|disable]
-                                Enables or disables MySensors core debugging. [enable]
+    --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
     --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
     --my-gateway=[none|ethernet|serial|mqtt]
                                 Gateway type, set to none to disable gateway feature. [ethernet]
@@ -34,7 +33,6 @@ MySensors options:
                                 Controller or MQTT broker url.
     --my-controller-ip-address=<IP>
                                 Controller or MQTT broker ip.
-                                Use commas instead of points. Example: 127,0,0,1
     --my-port=<PORT>            The port to keep open on gateway mode.
                                 If gateway is set to mqtt, it sets the broker port.
     --my-serial-port=<PORT>     Serial port. [/dev/ttyACM0]
@@ -56,6 +54,10 @@ MySensors options:
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
+    --my-leds-err-pin=<PIN>     Error LED pin.
+    --my-leds-rx-pin=<PIN>      Receive LED pin.
+    --my-leds-tx-pin=<PIN>      Transmit LED pin.
+    --my-leds-blinking-inverse  Inverse the blinking feature.
 
 EOF
 }
@@ -263,10 +265,11 @@ for opt do
         CXXFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CXXFLAGS"
         ;;
     --my-controller-url-address=*)
-        CXXFLAGS="-DMY_CONTROLLER_URL_ADDRESS=${optarg} $CXXFLAGS"
+        CXXFLAGS="-DMY_CONTROLLER_URL_ADDRESS=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
     --my-controller-ip-address=*)
-        CXXFLAGS="-DMY_CONTROLLER_IP_ADDRESS=${optarg} $CXXFLAGS"
+        controller_ip=`echo ${optarg//./,}`
+        CXXFLAGS="-DMY_CONTROLLER_IP_ADDRESS=${controller_ip} $CXXFLAGS"
         ;;
     --my-port=*)
         CXXFLAGS="-DMY_PORT=${optarg} $CXXFLAGS"
@@ -285,6 +288,18 @@ for opt do
         ;;
     --my-rx-message-buffer-size=*)
         CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-err-pin=*)
+        CXXFLAGS="-DMY_DEFAULT_ERR_LED_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-rx-pin=*)
+        CXXFLAGS="-DMY_DEFAULT_RX_LED_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-tx-pin=*)
+        CXXFLAGS="-DMY_DEFAULT_TX_LED_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-blinking-inverse*)
+        CXXFLAGS="-DMY_WITH_LEDS_BLINKING_INVERSE $CXXFLAGS"
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"

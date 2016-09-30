@@ -51,9 +51,9 @@
 //#define MY_MQTT_PASSWORD "password"
 
 // Flash leds on rx/tx/err
-//#define MY_DEFAULT_ERR_LED_PIN 12  // Error led pin
-//#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
-//#define MY_DEFAULT_TX_LED_PIN  18  // the PCB, on board 
+//#define MY_DEFAULT_ERR_LED_PIN 12  // Error LED pin
+//#define MY_DEFAULT_RX_LED_PIN  16  // Receive LED pin
+//#define MY_DEFAULT_TX_LED_PIN  18  // Transmit LED pin
 // Inverse the blinking feature
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
