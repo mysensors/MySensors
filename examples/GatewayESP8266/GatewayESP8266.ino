@@ -126,10 +126,10 @@
 #define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
 
 #if defined(MY_USE_UDP)
-  #include <WiFiUDP.h>
-#else
-  #include <ESP8266WiFi.h>
+  #include <WiFiUdp.h>
 #endif
+
+#include <ESP8266WiFi.h>
 
 #include <MySensors.h>
 
