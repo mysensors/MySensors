@@ -64,11 +64,13 @@ bool transportSanityCheck() {
 
 uint8_t transportReceive(void* data) {
 	memcpy(data,(const void *)_radio.DATA, _radio.DATALEN);
+	// save payload length
+	const uint8_t dataLen = _radio.DATALEN;
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.TARGETID != RF69_BROADCAST_ADDR)
 		_radio.ACKRequested();
     _radio.sendACK();
-	return _radio.DATALEN;
+	return dataLen;
 }	
 
 void transportPowerDown() {
