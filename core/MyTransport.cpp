@@ -134,7 +134,7 @@ void stParentTransition(void)  {
 		_nc.distance = DISTANCE_INVALID;	// Set distance to max and invalidate parent node ID
 		_nc.parentNodeId = AUTO;
 		// Broadcast find parent request
-		(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_REQUEST, false).set(""));
+		(void)transportRouteMessage(build(_msgTmp, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_REQUEST, false).set(""));
 	#endif
 }
 
@@ -181,7 +181,7 @@ void stIDTransition(void) {
 		// send ID request
 		setIndication(INDICATION_REQ_NODEID);
 		TRANSPORT_DEBUG(PSTR("TSM:ID:REQ\n"));	// request node ID
-		(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
+		(void)transportRouteMessage(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_ID_REQUEST, false).set(""));
 	}
 }
 
@@ -214,7 +214,7 @@ void stUplinkTransition(void) {
 		setIndication(INDICATION_CHECK_UPLINK);
 		_transportSM.pingResponse = INVALID_HOPS;
 		_transportSM.pingActive = true;
-		(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)1));
+		(void)transportRouteMessage(build(_msgTmp,GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)1));
 	#endif
 }
 
@@ -265,7 +265,7 @@ void stReadyUpdate(void) {
 		if (hwMillis() - _lastNetworkDiscovery > MY_TRANSPORT_DISCOVERY_INTERVAL_MS) {
 			_lastNetworkDiscovery = hwMillis();
 			TRANSPORT_DEBUG(PSTR("TSM:READY:NWD REQ\n"));	// send transport network discovery
-			(void)transportRouteMessage(build(_msgTmp, GATEWAY_ADDRESS, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_REQUEST, false).set(""));
+			(void)transportRouteMessage(build(_msgTmp, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_REQUEST, false).set(""));
 		}
 	#else
 		if (_transportSM.failedUplinkTransmissions > MY_TRANSPORT_MAX_TX_FAILURES) {
@@ -507,7 +507,7 @@ uint8_t transportPingNode(const uint8_t targetId) {
 		else {
 			_transportSM.pingActive = true;
 			_transportSM.pingResponse = INVALID_HOPS;
-			(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)1));
+			(void)transportRouteMessage(build(_msgTmp, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING, false).set((uint8_t)1));
 			// Wait for ping reply or timeout
 			(void)transportWait(2000, C_INTERNAL, I_PONG);
 		}
@@ -647,7 +647,7 @@ void transportProcessMessage(void) {
 						// delay for fast GW and slow nodes
 						delay(5);
 					#endif
-					(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_PONG, false).set((uint8_t)1));
+					(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_PONG, false).set((uint8_t)1));
 					return; // no further processing required
 				}
 				if (type == I_PONG) {
@@ -700,7 +700,7 @@ void transportProcessMessage(void) {
 							TRANSPORT_DEBUG(PSTR("TSF:MSG:GWL OK\n")); // GW uplink ok
 							// random delay minimizes collisions
 							delay(hwMillis() & 0x3ff);
-							(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
+							(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE, false).set(_nc.distance));
 						}
 						else {
 							TRANSPORT_DEBUG(PSTR("!TSF:MSG:GWL FAIL\n")); // GW uplink fail, do not respond to parent request
@@ -718,7 +718,7 @@ void transportProcessMessage(void) {
 					if (last == _nc.parentNodeId) {
 						// random wait to minimize collisions
 						delay(hwMillis() & 0x3ff);
-						(void)transportRouteMessage(build(_msgTmp, _nc.nodeId, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
+						(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE, false).set(_nc.parentNodeId));
 						// no return here (for fwd if repeater)
 					}
 				}
