@@ -532,7 +532,7 @@ void transportProcessMessage(void) {
 	setIndication(INDICATION_RX);
 	const uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
 	// get message length and limit size
-	const uint8_t msgLength = min(mGetLength(_msg), MAX_PAYLOAD);	
+	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);	
 	// calculate expected length
 	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
 	const uint8_t command = mGetCommand(_msg);
@@ -823,7 +823,7 @@ bool transportSendWrite(const uint8_t to, MyMessage &message) {
 
 	// send
 	setIndication(INDICATION_TX);
-	bool result = transportSend(to, &message, min(MAX_MESSAGE_LENGTH, totalMsgLength));
+	bool result = transportSend(to, &message, min((uint8_t)MAX_MESSAGE_LENGTH, totalMsgLength));
 	// broadcasting (workaround counterfeits)
 	result |= (to == BROADCAST_ADDRESS);
 
