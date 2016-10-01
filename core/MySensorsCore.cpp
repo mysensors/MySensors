@@ -180,7 +180,7 @@ void _registerNode() {
 		uint8_t counter = MY_REGISTRATION_RETRIES;
 		// only proceed if register response received or retries exceeded
 		do {
-			_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST, false).set(MY_CORE_VERSION));
+			_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST, false).set(MY_CORE_VERSION));
 		} while (!wait(2000, C_INTERNAL, I_REGISTRATION_RESPONSE) && counter--);
 
 	#else
@@ -217,7 +217,7 @@ void presentNode() {
 
 		// Send a configuration exchange request to controller
 		// Node sends parent node. Controller answers with latest node configuration
-		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
+		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
 
 		// Wait configuration reply.
 		wait(2000, C_INTERNAL, I_CONFIG);
@@ -280,31 +280,31 @@ bool send(MyMessage &message, bool enableAck) {
 	}
 
 void sendBatteryLevel(uint8_t value, bool enableAck) {
-	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
+	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
 }
 
 void sendHeartbeat(void) {
 	#if defined(MY_RADIO_FEATURE)
 		uint32_t heartbeat = transportGetHeartbeat();
-		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(heartbeat));
+		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(heartbeat));
 	#endif
 }
 
 void present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
-	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?MYSENSORS_LIBRARY_VERSION:description));
+	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?MYSENSORS_LIBRARY_VERSION:description));
 }
 
 void sendSketchInfo(const char *name, const char *version, bool enableAck) {
-	if (name) _sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, enableAck).set(name));
-    if (version) _sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, enableAck).set(version));
+	if (name) _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, enableAck).set(name));
+    if (version) _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, enableAck).set(version));
 }
 
 void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination) {
-	_sendRoute(build(_msgTmp, _nc.nodeId, destination, childSensorId, C_REQ, variableType, false).set(""));
+	_sendRoute(build(_msgTmp, destination, childSensorId, C_REQ, variableType, false).set(""));
 }
 
 void requestTime() {
-	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
+	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
 }
 
 // Message delivered through _msg
@@ -349,7 +349,7 @@ bool _processInternalMessages() {
 					// Clears child relay data for this node
 					setIndication(INDICATION_CLEAR_ROUTING);
 					transportClearRoutingTable();
-					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN, false).set("ok"));
+					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN, false).set("ok"));
 				}
 			#endif
 		}
@@ -363,23 +363,23 @@ bool _processInternalMessages() {
 						if (route != BROADCAST_ADDRESS) {
 							debug(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
 							uint8_t outBuf[2] = { (uint8_t)cnt,route };
-							_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(outBuf, 2));
+							_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(outBuf, 2));
 							wait(200);
 						}
 					}
 				#endif
 				}
 				else if (debug_msg == 'V') {	// CPU voltage
-					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwCPUVoltage()));
+					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwCPUVoltage()));
 				}
 				else if (debug_msg == 'F') {	// CPU frequency in 1/10Mhz
-					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwCPUFrequency()));
+					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwCPUFrequency()));
 				}
 				else if (debug_msg == 'M') {	// free memory
-					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwFreeMem()));
+					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwFreeMem()));
 				}
 				else if (debug_msg == 'E') {	// clear MySensors eeprom area and reboot
-					_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set("ok"));
+					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set("ok"));
 					for (int i = EEPROM_START; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) hwWriteConfig(i, 0xFF);
 					setIndication(INDICATION_REBOOT);
 					hwReboot();
@@ -405,7 +405,7 @@ bool _processInternalMessages() {
 						// delay for fast GW and slow nodes
 						delay(5);
 					#endif
-					_sendRoute(build(_msgTmp, _nc.nodeId, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_RESPONSE, false).set(approveRegistration));
+					_sendRoute(build(_msgTmp, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_RESPONSE, false).set(approveRegistration));
 				#else
 					return false;	// processing of this request via controller
 				#endif
@@ -572,7 +572,7 @@ void nodeLock(const char* str) {
 		#if defined(ARDUINO_ARCH_ESP8266)
 			yield();
 		#endif
-		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED, false).set(str));
+		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED, false).set(str));
 		#if defined(MY_RADIO_FEATURE)
 			transportPowerDown();
 			debug(PSTR("MCO:NLK:TPD\n"));	// power down transport
