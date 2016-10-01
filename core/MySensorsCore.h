@@ -25,7 +25,7 @@
  * @{
  *
  * MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
- * - [!] Exclamation mark is prepended in case of error
+ * - [!] Exclamation mark is prepended in case of error or warning
  * - SYSTEM:
  *  - <b>MCO</b> messages emitted by MySensorsCore
  * - SUB SYSTEMS:

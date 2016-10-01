@@ -70,7 +70,7 @@
 	#define MY_CAP_SIGN "-"
 #endif
 
-#if defined(MY_RX_MESSAGE_BUFFER_SIZE)
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	#define MY_CAP_RXBUF "Q"
 #else
 	#define MY_CAP_RXBUF "-"
@@ -79,4 +79,4 @@
 
 #define MY_CAPABILITIES MY_CAP_RESET MY_CAP_RADIO MY_CAP_OTA_FW MY_CAP_TYPE MY_CAP_ARCH MY_CAP_SIGN MY_CAP_RXBUF
 
-#endif /* MyGatewayTransportEthernet_h */
+#endif /* MyCapabilities_h */

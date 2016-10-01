@@ -203,6 +203,10 @@ void hwDebugPrint(const char *fmt, ... ) {
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 		snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		MY_SERIALDEVICE.print(fmtBuffer);
+	#else
+		// prepend timestamp (AVR nodes)
+		MY_SERIALDEVICE.print(hwMillis());
+		MY_SERIALDEVICE.print(" ");
 	#endif
 	va_list args;
 	va_start (args, fmt );

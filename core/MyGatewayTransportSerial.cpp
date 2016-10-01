@@ -27,7 +27,7 @@
 extern MyMessage _msgTmp;
 
 char _serialInputString[MY_GATEWAY_MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
-int _serialInputPos;
+uint8_t _serialInputPos;
 MyMessage _serialMsg;
 
 bool gatewayTransportSend(MyMessage &message) {

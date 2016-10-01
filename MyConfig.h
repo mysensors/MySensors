@@ -2,7 +2,7 @@
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
- * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * repeater and gateway builds a routing tables in RAM or EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
@@ -82,17 +82,59 @@
 //#define MY_RS485
 
 /**
+* @def MY_RAM_ROUTING_TABLE_FEATURE
+* @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
+* note: AVR has limited memory, use with care
+*/
+#define MY_RAM_ROUTING_TABLE_FEATURE
+
+/**
+* @def MY_ROUTING_TABLE_SAVE_INTERVAL_MS
+* @brief Interval to dump content of routing table to eeprom
+*/
+#ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
+#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(10*60*1000ul)
+#endif
+/**
 * @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. This feature is enabled for all repeater nodes (incl. GW)
+* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. 
+* This feature is enabled for all repeater nodes (incl. GW)
 */
 //#define MY_TRANSPORT_SANITY_CHECK
+
 /**
-* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL
+* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
 * @brief Interval (in ms) of transport sanity checks
 */
-#ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL
-#define MY_TRANSPORT_SANITY_CHECK_INTERVAL ((uint32_t)60000)
+#ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (60*1000ul)
 #endif
+/**
+* @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
+* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks 
+*/
+#ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
+#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
+#endif
+
+/**
+ *@def MY_TRANSPORT_UPLINK_CHECK_DISABLED
+ *@brief If set, uplink check to GW is disabled during transport initialisation
+ */
+//#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+
+/**
+*@def MY_TRANSPORT_DONT_CARE_MODE
+*@brief If set, transport traffic is unmonitored and GW connection is optional
+*/
+//#define MY_TRANSPORT_DONT_CARE_MODE
+
+/**
+ *@def MY_TRANSPORT_MAX_TX_FAILURES
+ *@brief Set to override max. consecutive TX failures until SNP is initiated
+ */
+//#define MY_TRANSPORT_MAX_TX_FAILURES (10u)
+
 /**
  * @def MY_REGISTRATION_FEATURE
  * @brief If enabled, node has to register to gateway/controller before allowed to send sensor data.
@@ -105,14 +147,13 @@
  */
 
 #ifndef MY_REGISTRATION_RETRIES
-#define MY_REGISTRATION_RETRIES 3
+#define MY_REGISTRATION_RETRIES (3u)
 #endif
 
  /**
  * @def MY_REGISTRATION_DEFAULT
- * @brief Node registration default - this applies if no registration response is recieved from controller
+ * @brief Node registration default - this applies if no registration response is received from controller
  */
-
 #define MY_REGISTRATION_DEFAULT true
 
  /**
@@ -149,8 +190,11 @@
  */
 //#define MY_PARENT_NODE_IS_STATIC
 
-// Enables repeater functionality (relays messages from other nodes)
-// #define MY_REPEATER_FEATURE
+/**
+* @def MY_REPEATER_FEATURE
+* @brief Enables repeater functionality (relays messages from other nodes)
+*/
+//#define MY_REPEATER_FEATURE
 
 /**
 * @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
@@ -207,7 +251,7 @@
  * @brief Max buffersize needed for messages coming from controller.
  */
 #ifndef MY_GATEWAY_MAX_RECEIVE_LENGTH
-#define MY_GATEWAY_MAX_RECEIVE_LENGTH 100
+#define MY_GATEWAY_MAX_RECEIVE_LENGTH (100u)
 #endif
 
 /**
@@ -215,7 +259,7 @@
  * @brief Max buffer size when sending messages.
  */
 #ifndef MY_GATEWAY_MAX_SEND_LENGTH
-#define MY_GATEWAY_MAX_SEND_LENGTH 120
+#define MY_GATEWAY_MAX_SEND_LENGTH (120u)
 #endif
 
 /**
@@ -223,7 +267,7 @@
  * @brief Max number of parallel clients (sever mode).
  */
 #ifndef MY_GATEWAY_MAX_CLIENTS
-#define MY_GATEWAY_MAX_CLIENTS 1
+#define MY_GATEWAY_MAX_CLIENTS (1u)
 #endif
 
 
@@ -794,5 +838,8 @@
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
+#define MY_REPEATER_FEATURE
+#define MY_TRANSPORT_DONT_CARE_MODE
 #define MY_LINUX_SERIAL_GROUPNAME
+#define MY_IS_SERIAL_PTY
 #endif

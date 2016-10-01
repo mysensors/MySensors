@@ -34,11 +34,12 @@ typedef enum {
     INDICATION_GOT_PARENT,                    //!< Found parent node.
     INDICATION_REQ_NODEID,                    //!< Request node ID.
     INDICATION_GOT_NODEID,                    //!< Got a node ID.
+	INDICATION_CHECK_UPLINK,				  //!< Check uplink
     INDICATION_REQ_REGISTRATION,              //!< Request node registration.
     INDICATION_GOT_REGISTRATION,              //!< Got registration reponse.
     INDICATION_REBOOT,                        //!< Rebooting node.
     INDICATION_PRESENT,                       //!< Presenting node to gateway.
-    INDICATION_CLEAR_ROUTING,                 //!< Clear rrouting table requested.
+    INDICATION_CLEAR_ROUTING,                 //!< Clear routing table requested.
     INDICATION_SLEEP,                         //!< Node goes to sleep.
     INDICATION_WAKEUP,                        //!< Node just woke from sleep.
     INDICATION_FW_UPDATE_START,               //!< Start of OTA firmware update process.
@@ -50,7 +51,9 @@ typedef enum {
     INDICATION_ERR_INIT_TRANSPORT,            //!< MySensors transport hardware (radio) init failure.
     INDICATION_ERR_FIND_PARENT,               //!< Failed to find parent node.
     INDICATION_ERR_GET_NODEID,                //!< Failed to receive node ID.
+	INDICATION_ERR_CHECK_UPLINK,              //!< Failed to check uplink
     INDICATION_ERR_SIGN,                      //!< Error signing.
+	INDICATION_ERR_LENGTH,					  //!< Invalid message length.
     INDICATION_ERR_VERSION,                   //!< Protocol version mismatch.
     INDICATION_ERR_NET_FULL,                  //!< Network full. All node ID's are taken.
     INDICATION_ERR_INIT_GWTRANSPORT,          //!< Gateway transport hardware init failure.
