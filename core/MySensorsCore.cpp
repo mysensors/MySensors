@@ -72,6 +72,8 @@ void _infiniteLoop() {
 }
 
 void _begin() {
+	hwWatchdogReset();
+
 	if (preHwInit)
 		preHwInit();
 
@@ -169,6 +171,8 @@ void _begin() {
 	}
 
 	debug(PSTR("MCO:BGN:INIT OK,ID=%d,PAR=%d,DIS=%d,REG=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance, _nodeRegistered);
+
+	hwWatchdogReset();
 }
 
 
