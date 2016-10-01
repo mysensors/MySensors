@@ -21,7 +21,7 @@
 #include "MyMessage.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 MyMessage::MyMessage()
 {
@@ -117,7 +117,7 @@ char* MyMessage::getString(char *buffer) const {
 		} else if (payloadType == P_ULONG32) {
 			ultoa(ulValue, buffer, 10);
 		} else if (payloadType == P_FLOAT32) {
-			dtostrf(fValue,2,min(fPrecision, 8),buffer);
+			dtostrf(fValue,2,min(fPrecision, (uint8_t)8),buffer);
 		} else if (payloadType == P_CUSTOM) {
 			return getCustomString(buffer);
 		}
@@ -210,7 +210,7 @@ MyMessage& MyMessage::setDestination(uint8_t _destination) {
 
 // Set payload
 MyMessage& MyMessage::set(void* value, uint8_t length) {
-	uint8_t payloadLength = value == NULL ? 0 : min(length, MAX_PAYLOAD);
+	uint8_t payloadLength = value == NULL ? 0 : min(length, (uint8_t)MAX_PAYLOAD);
 	miSetLength(payloadLength); 
 	miSetPayloadType(P_CUSTOM);
 	memcpy(data, value, payloadLength);
@@ -218,7 +218,7 @@ MyMessage& MyMessage::set(void* value, uint8_t length) {
 }
 
 MyMessage& MyMessage::set(const char* value) {
-	uint8_t length = value == NULL ? 0 : min(strlen(value), MAX_PAYLOAD);
+	uint8_t length = value == NULL ? 0 : min(strlen(value), (size_t)MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
 	if (length) {		

@@ -32,8 +32,10 @@
 		IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
 		IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
 	#endif
+#elif defined(MY_GATEWAY_LINUX)
+		// Nothing to do here
 #else
-	byte _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
+	uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
 #endif
 
 #if defined(MY_IP_ADDRESS)
@@ -46,98 +48,19 @@ static bool _MQTT_connecting = true;
 static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
 
-uint8_t protocolH2i(char c) {
-	uint8_t i = 0;
-	if (c <= '9')
-		i += c - '0';
-	else if (c >= 'a')
-		i += c - 'a' + 10;
-	else
-		i += c - 'A' + 10;
-	return i;
-}
-
-
 bool gatewayTransportSend(MyMessage &message) {
 	if (!_MQTT_client.connected())
 		return false;
 	setIndication(INDICATION_GW_TX);
-	char _fmtBuffer[MY_GATEWAY_MAX_SEND_LENGTH];
-	char _convBuffer[MAX_PAYLOAD * 2 + 1];
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR(MY_MQTT_PUBLISH_TOPIC_PREFIX "/%d/%d/%d/%d/%d"), message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
-	debug(PSTR("Sending message on topic: %s\n"), _fmtBuffer);
-	return _MQTT_client.publish(_fmtBuffer, message.getString(_convBuffer));
+	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
+	debug(PSTR("Sending message on topic: %s\n"), topic);
+	return _MQTT_client.publish(topic, message.getString(_convBuffer));
 }
 
-void incomingMQTT(char* topic, byte* payload, unsigned int length) {
+void incomingMQTT(char* topic, uint8_t* payload, unsigned int length) {
 	debug(PSTR("Message arrived on topic: %s\n"), topic);
-	char *str, *p;
-	uint8_t i = 0;
-	uint8_t bvalue[MAX_PAYLOAD];
-	uint8_t blen = 0;
-	uint8_t command = 0;
-	for (str = strtok_r(topic, "/", &p); str && i <= 5;
-		str = strtok_r(NULL, "/", &p)) {
-		switch (i) {
-		case 0: {
-			// Topic prefix
-			if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
-				// Message not for us or malformed!
-				return;
-			}
-			break;
-		}
-		case 1: {
-			// Node id
-			_MQTT_msg.destination = atoi(str);
-			break;
-		}
-		case 2: {
-			// Sensor id
-			_MQTT_msg.sensor = atoi(str);
-			break;
-		}
-		case 3: {
-			// Command type
-			command = atoi(str);
-			mSetCommand(_MQTT_msg, command);
-			break;
-		}
-		case 4: {
-			// Ack flag
-			mSetRequestAck(_MQTT_msg, atoi(str) ? 1 : 0);
-			break;
-		}
-		case 5: {
-			// Sub type
-			_MQTT_msg.type = atoi(str);
-			// Add payload
-			if (command == C_STREAM) {
-				blen = 0;
-				uint8_t val;
-				while (*payload) {
-					val = protocolH2i(*payload++) << 4;
-					val += protocolH2i(*payload++);
-					bvalue[blen] = val;
-					blen++;
-				}
-				_MQTT_msg.set(bvalue, blen);
-			}
-			else {
-				char* ca;
-				ca = (char *)payload;
-				ca += length;
-				*ca = '\0';
-				_MQTT_msg.set((const char*)payload);
-			}
-			_MQTT_available = true;
-            setIndication(INDICATION_GW_RX);
-		}
-		}
-		i++;
-	}
+	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
 }
-
 
 bool reconnectMQTT() {
 	debug(PSTR("Attempting MQTT connection...\n"));
@@ -169,6 +92,10 @@ bool gatewayTransportConnect() {
 		}
 		MY_SERIALDEVICE.print("IP: ");
 		MY_SERIALDEVICE.println(WiFi.localIP());
+	#elif defined(MY_GATEWAY_LINUX)
+		#if defined(MY_IP_ADDRESS)
+			//TODO
+		#endif
 	#else
 		#ifdef MY_IP_ADDRESS
 			Ethernet.begin(_MQTT_clientMAC, _MQTT_clientIp);
@@ -216,10 +143,7 @@ bool gatewayTransportInit() {
 	return true;
 }
 
-
-
 bool gatewayTransportAvailable() {
-
 	if (_MQTT_connecting)
 		return false;
 
@@ -240,6 +164,3 @@ MyMessage & gatewayTransportReceive() {
 	_MQTT_available = false;
 	return _MQTT_msg;
 }
-
-
-

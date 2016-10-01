@@ -415,6 +415,8 @@
 		#define MY_RF24_CE_PIN 4
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CE_PIN 27
+	#elif defined(LINUX_ARCH_RASPBERRYPI)
+		#define MY_RF24_CE_PIN 22
 	#else
 		#define MY_RF24_CE_PIN 9
 	#endif
@@ -429,6 +431,8 @@
 		#define MY_RF24_CS_PIN 15
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CS_PIN 3
+	#elif defined(LINUX_ARCH_RASPBERRYPI)
+		#define MY_RF24_CS_PIN 24
 	#else
 		#define MY_RF24_CS_PIN 10
 	#endif
@@ -610,6 +614,7 @@
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
+//#define MY_GATEWAY_LINUX
 
 /**
  * @def MY_PORT
@@ -727,7 +732,49 @@
 #define MY_ESP8266_SERIAL_MODE SERIAL_FULL
 #endif
 
-/** @}*/ // ESP8266 Defaults
+/**************************************
+* Linux Settings
+***************************************/
+
+/**
+ * @def MY_LINUX_SERIAL_PORT
+ * @brief Serial device port
+ */
+#ifndef MY_LINUX_SERIAL_PORT
+#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+#endif
+
+/**
+ * @def MY_IS_SERIAL_PTY
+ * @brief Set serial as a pseudo terminal.
+ *
+ * Enable this if you need to connect to a controller running on the same device.
+ */
+//#define MY_IS_SERIAL_PTY
+
+/**
+ * @def MY_LINUX_SERIAL_PTY
+ * @brief Symlink name for the PTY device.
+ */
+#ifndef MY_LINUX_SERIAL_PTY
+#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+#endif
+
+/**
+ * @def MY_LINUX_SERIAL_GROUPNAME
+ * @brief Grant access to the specified system group for the serial device.
+ */
+//#define MY_LINUX_SERIAL_GROUPNAME "tty"
+
+/**
+ * @def MY_LINUX_CONFIG_FILE
+ * @brief Set the filepath for the gateway config file
+ *
+ * For now the configuration file is only used to store the emulated eeprom state
+ */
+#ifndef MY_LINUX_CONFIG_FILE
+#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+#endif
 
 #endif	// MyConfig_h
 
@@ -747,4 +794,5 @@
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
+#define MY_LINUX_SERIAL_GROUPNAME
 #endif

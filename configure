@@ -1,0 +1,377 @@
+#!/bin/bash
+# This version is heavily based on the work of mz-fuzzy (https://github.com/mz-fuzzy)
+# adapted to work with MySensors project.
+# Original work: https://github.com/TMRh20/RF24/blob/master/configure
+
+function help {
+cat <<EOF
+configure script for MySensors gateway.
+Options:
+
+Help:
+    -h, --help                  print this message
+
+Building options:
+    --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
+                                SoC type to be used. [configure autodetected]
+    --cpu-flags=<CXXFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
+    --extra-cxxflags=<CXXFLAGS> Extra C flags passed to C/C++ compilation. []
+    --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
+    --cxx_compiler=<CXX>        C++ compiler [arm-linux-gnueabihf-g++][g++]
+    --no-clean                  Don't clean previous build artifacts.
+
+Installation options:
+    --prefix=<PREFIX>           Installation prefix path. [/usr/local]
+    --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
+
+MySensors options:
+    --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
+    --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
+    --my-gateway=[none|ethernet|serial|mqtt]
+                                Gateway type, set to none to disable gateway feature. [ethernet]
+    --my-controller-url-address=<URL>
+                                Controller or MQTT broker url.
+    --my-controller-ip-address=<IP>
+                                Controller or MQTT broker ip.
+    --my-port=<PORT>            The port to keep open on gateway mode.
+                                If gateway is set to mqtt, it sets the broker port.
+    --my-serial-port=<PORT>     Serial port. [/dev/ttyACM0]
+    --my-serial-baudrate=<BAUD> Serial baud rate. [115200]
+    --my-serial-is-pty          Set the serial port to be a pseudo terminal. Use this if you want
+                                to connect to a controller running on the same device.
+    --my-serial-pty=<NAME>      Symlink name for the PTY device. [/dev/ttyMySensorsGateway]
+    --my-serial-groupname=<GROUP>
+                                Grant access to the specified system group for the serial device.
+    --my-mqtt-client-id=<ID>    MQTT client id.
+    --my-mqtt-publish-topic-prefix=<PREFIX>
+                                MQTT publish topic prefix.
+    --my-mqtt-subscribe-topic-prefix=<PREFIX>
+                                MQTT subscribe topic prefix.
+    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature. [rf24]
+    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
+    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
+                                RF24 PA level. [RF24_PA_MAX]
+    --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
+    --my-rx-message-buffer-size=<SIZE>
+                                Buffer size for incoming messages when using rf24 interrupts. [20]
+    --my-leds-err-pin=<PIN>     Error LED pin.
+    --my-leds-rx-pin=<PIN>      Receive LED pin.
+    --my-leds-tx-pin=<PIN>      Transmit LED pin.
+    --my-leds-blinking-inverse  Inverse the blinking feature.
+
+EOF
+}
+
+function die {
+    echo "[ERROR] $1"
+    exit $2
+}
+
+function detect_rpi_revision {
+    # get PI Revision from cpuinfo
+    local pirev=$(eval "cat /proc/cpuinfo 2>/dev/null | grep Revision | cut -f 2 -d ':' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$$//'")
+    echo ${pirev}
+}
+
+function detect_machine {
+    local cpu=$(eval "uname -m 2>/dev/null")
+    local machine=$(eval "cat /sys/firmware/devicetree/base/model 2>/dev/null")
+    local hardware=$(eval "grep sunxi_platform /sys/class/sunxi_info/sys_info 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
+    if [ -z "$hardware" ]; then
+        local hardware=$(eval "grep Hardware /proc/cpuinfo 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
+    fi
+    local soc="unknown"
+    local tp="unknown"
+    local rev="unknown"
+
+    if [ -z "$cpu" ]; then
+        cpu="unknown"
+    fi
+
+    case $hardware in
+    BCM2708)
+        soc="BCM2835"
+        if [[ $machine == "Raspberry"* ]]; then
+            tp="RPi"
+            rev=($(detect_rpi_revision))
+        fi
+        ;;
+    BCM2709)
+        soc="BCM2836"
+        if [[ $machine == "Raspberry"* ]]; then
+            rev=($(detect_rpi_revision))
+            if [[ $rev == "a02082" || $rev == "a22082" ]]; then
+                tp="RPi3"
+            else
+                tp="Rpi2"
+            fi
+        fi
+        ;;
+    sun4i|Sun4iw1p1)
+        soc="A10"
+        ;;
+    sun5i|Sun4iw2p1)
+        soc="A13"
+        ;;
+    Sun4iw2p2)
+        soc="A12"
+        ;;
+    Sun4iw2p3)
+        soc="A10s"
+        ;;
+    sun6i|Sun8iw1p1)
+        soc="A31"
+        ;;
+    Sun8iw1p2)
+        soc="A31s"
+        ;;
+    sun7i|Sun8iw2p1)
+        soc="A20"
+        if [[ $machine == "Banana Pi"* ]]; then
+            tp="BananaPi"
+        elif [[ $machine == "Banana Pro"* ]]; then
+            tp="BananaPro"
+        fi
+        ;;
+    sun8i|Sun8iw7p1)
+        soc="H3"
+        ;;
+    Sun8iw3p1)
+        soc="A23"
+        ;;
+    Sun8iw5p1)
+        soc="A33"
+        ;;
+    Sun8iw6p1)
+        soc="A83t"
+        ;;
+    sun9i|Sun9iw1p1)
+        soc="A80"
+        ;;
+    Sun9iw1p2)
+        soc="A80t"
+        ;;
+    sun50i|Sun50iw1p1)
+        soc="A64"
+        ;;
+    'Generic AM33XX'*)
+        soc="AM33XX"
+        ;;
+    *)
+        soc="unknown"
+    esac
+    echo "${soc} ${tp} ${cpu} ${rev}"
+}
+
+function gcc_cpu_flags {
+    local soc=$1
+    case $soc in
+    BCM2835)
+        flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -DLINUX_ARCH_RASPBERRYPI"
+        ;;
+    BCM2836)
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -DLINUX_ARCH_RASPBERRYPI"
+        ;;
+    AM33XX)
+        flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
+        ;;
+    A10)
+        flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
+        ;;
+    A13)
+        flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
+        ;;
+    A20)
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+        ;;
+    H3)
+        flags="-march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+        ;;
+    *)
+        flags=""
+    esac
+    echo ${flags}
+}
+
+# Default values
+debug=enable
+gateway_type=ethernet
+radio_type=nrf24
+
+params="SOC CXXFLAGS LDFLAGS PREFIX CXX GATEWAY_DIR INIT_SYSTEM"
+
+for opt do
+    if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
+        help
+        exit 0
+    fi
+    optarg="${opt#*=}"
+    case "$opt" in
+    --soc=*)
+        SOC="$optarg"
+        ;;
+    --cpu-flags=*)
+        CPUFLAGS="$optarg"
+        ;;
+    --extra-cxxflags=*)
+        CXXFLAGS="$optarg"
+        ;;
+    --extra-ldflags=*)
+        LDFLAGS="$optarg"
+        ;;
+    --cxx_compiler=*)
+        CXX="$optarg"
+        ;;
+    --no-clean*)
+        NO_CLEAN="1"
+        ;;
+    --prefix=*)
+        PREFIX="$optarg"
+        ;;
+    --gateway-dir=*)
+        GATEWAY_DIR="$optarg"
+        ;;
+    --my-debug=*)
+        debug=${optarg}
+        ;;
+    --my-gateway=*)
+        gateway_type=${optarg}
+        ;;
+    --my-config-file=*)
+        CXXFLAGS="-DMY_LINUX_CONFIG_FILE=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-radio=*)
+        radio_type=${optarg}
+        ;;
+    --my-serial-port=*)
+        CXXFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-serial-baudrate=*)
+        CXXFLAGS="-DMY_BAUD_RATE=${optarg} $CXXFLAGS"
+        ;;
+    --my-serial-is-pty*)
+        CXXFLAGS="-DMY_IS_SERIAL_PTY $CXXFLAGS"
+        ;;
+    --my-serial-pty=*)
+        CXXFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-serial-groupname=*)
+        CXXFLAGS="-DMY_LINUX_SERIAL_GROUPNAME=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-rf24-channel=*)
+        CXXFLAGS="-DMY_RF24_CHANNEL=${optarg} $CXXFLAGS"
+        ;;
+    --my-rf24-pa-level=*)
+        CXXFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CXXFLAGS"
+        ;;
+    --my-controller-url-address=*)
+        CXXFLAGS="-DMY_CONTROLLER_URL_ADDRESS=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-controller-ip-address=*)
+        controller_ip=`echo ${optarg//./,}`
+        CXXFLAGS="-DMY_CONTROLLER_IP_ADDRESS=${controller_ip} $CXXFLAGS"
+        ;;
+    --my-port=*)
+        CXXFLAGS="-DMY_PORT=${optarg} $CXXFLAGS"
+        ;;
+    --my-mqtt-client-id=*)
+        CXXFLAGS="-DMY_MQTT_CLIENT_ID=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-mqtt-publish-topic-prefix=*)
+        CXXFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-mqtt-subscribe-topic-prefix=*)
+        CXXFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-rf24-irq-pin=*)
+        CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-rx-message-buffer-size=*)
+        CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-err-pin=*)
+        CXXFLAGS="-DMY_DEFAULT_ERR_LED_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-rx-pin=*)
+        CXXFLAGS="-DMY_DEFAULT_RX_LED_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-tx-pin=*)
+        CXXFLAGS="-DMY_DEFAULT_TX_LED_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-leds-blinking-inverse*)
+        CXXFLAGS="-DMY_WITH_LEDS_BLINKING_INVERSE $CXXFLAGS"
+        ;;
+    *)
+        echo "[WARNING] Unknown option detected:$opt, ignored"
+        ;;
+    esac
+done
+
+PREFIX=${PREFIX:-/usr/local}
+GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
+CXX=${CXX:-g++}
+
+if [ -z "${SOC}" ]; then
+    echo "[SECTION] Detecting target machine."
+    info=($(detect_machine))
+    SOC=${info[0]}
+    TYPE=${info[1]}
+    CPU=${info[2]}
+    REV=${info[3]}
+    echo "[OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}, REV=${REV}."
+fi
+
+if [ -z "${CPUFLAGS}" ]; then
+    CPUFLAGS=$(gcc_cpu_flags $SOC)
+fi
+
+CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra $CXXFLAGS"
+CFLAGS="-Ofast -g -Wall -Wextra $CFLAGS"
+
+if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
+    CXXFLAGS+="-D__RPI_BPLUS"
+fi
+
+if [[ ${debug} == "enable" ]]; then
+    CXXFLAGS="-DMY_DEBUG $CXXFLAGS"
+fi
+
+if [[ ${gateway_type} == "ethernet" ]]; then
+    CXXFLAGS="-DMY_GATEWAY_LINUX $CXXFLAGS"
+elif [[ ${gateway_type} == "serial" ]]; then
+    CXXFLAGS="-DMY_GATEWAY_SERIAL $CXXFLAGS"
+elif [[ ${gateway_type} == "mqtt" ]]; then
+    CXXFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
+fi
+
+if [[ ${radio_type} == "nrf24" ]]; then
+    CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+fi
+
+LDFLAGS="-pthread $LDFLAGS"
+
+if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
+    INIT_SYSTEM=systemd
+    echo "[OK] init system detected: systemd"
+elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
+    INIT_SYSTEM=sysvinit
+    echo "[OK] init system detected: sysvinit"
+else
+    echo "[FAILED] unknown init system"
+fi
+
+echo "[SECTION] Saving configuration."
+echo -n "" > Makefile.inc
+for param in ${params}; do
+    if [[ ${!param} ]]; then
+        echo "${param}=${!param}" >> Makefile.inc
+    fi
+done
+
+if [ -z "${NO_CLEAN}" ]; then
+    echo "[SECTION] Cleaning previous builds."
+    make clean >/dev/null
+fi
+
+
+echo "[OK] Finished."

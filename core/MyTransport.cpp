@@ -467,7 +467,7 @@ void transportProcessMessage() {
 	// Is message addressed to this node?
 	if (destination == _nc.nodeId) {
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
-		mSetLength(_msg, min(mGetLength(_msg),MAX_PAYLOAD));
+		mSetLength(_msg, min(mGetLength(_msg),(uint8_t)MAX_PAYLOAD));
 		// null terminate data
 		_msg.data[mGetLength(_msg)] = 0x00;
 			
