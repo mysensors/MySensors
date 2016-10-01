@@ -37,22 +37,6 @@
  *
  * MySensorsCore debug log messages:
  *
-<<<<<<< HEAD
- * |E| SYS	| SUB	| Message									| Comment
- * |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
- * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s					| Core initialization, capabilities (CP), library version (VER)
- * | | MCO  | BGN	| BFR										| Callback before()
- * | | MCO  | BGN	| STP										| Callback setup()
- * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d	| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
- * | | MCO	| BGN	| NODE UNLOCKED								| Node successfully unlocked (see signing chapter)
- * |!| MCO	| BGN	| TSP FAIL									| Transport initialisation failed
- * | | MCO	| REG	| REQ										| Registration request
- * | | MCO	| REG	| NOT NEEDED								| No registration needed (i.e. GW)
- * |!| MCO	| SND	| NODE NOT REG								| Node is not registered, cannot send message
- * | | MCO	| PIM	| NODE REG=%%d								| Registration response received, registration status (REG)
- * | | MCO	| PIM	| ROUTE N=%%d,R=%%d							| Routing table, messages to node (N) are routed via node (R)
- * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET| Node locked during booting, see signing chapter for additional information
-=======
  * |E| SYS	| SUB	| Message										| Comment
  * |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
  * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
@@ -73,7 +57,6 @@
  * |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
  * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
  * | | MCO	| NLK	| TPD											| Powerdown transport
->>>>>>> development
  *
  *
  * @brief API declaration for MySensorsCore

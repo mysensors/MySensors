@@ -51,6 +51,10 @@ void _process() {
 		transportProcess();
 	#endif
 
+	#if defined(__linux__)
+		// To avoid high cpu usage
+		usleep(10000); // 10ms
+	#endif
 }
 
 void _infiniteLoop() {
@@ -61,17 +65,17 @@ void _infiniteLoop() {
 		#if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 			ledsProcess();
 		#endif
+		#if defined(__linux__)
+			exit(1);
+		#endif
 	}
 }
 
 void _begin() {
-
 	if (preHwInit)
 		preHwInit();
 
-	#if !defined(MY_DISABLED_SERIAL)
-		hwInit();
-	#endif
+	hwInit();
 
 	debug(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
 
