@@ -67,9 +67,9 @@ uint8_t transportReceive(void* data) {
 	// save payload length
 	const uint8_t dataLen = _radio.DATALEN;
 	// Send ack back if this message wasn't a broadcast
-	if (_radio.TARGETID != RF69_BROADCAST_ADDR)
-		_radio.ACKRequested();
-    _radio.sendACK();
+	if(_radio.ACKRequested()) {
+		_radio.sendACK();
+	}
 	return dataLen;
 }	
 
