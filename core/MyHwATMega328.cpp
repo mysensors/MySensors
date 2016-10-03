@@ -30,11 +30,19 @@ volatile uint8_t _wakeUp2Interrupt  = INVALID_INTERRUPT_NUM;    // Interrupt num
 void wakeUp1()	 //place to send the interrupts
 {
 	detachInterrupt(_wakeUp1Interrupt);
+	if (_wakeUp2Interrupt != INVALID_INTERRUPT_NUM)
+    {
+        detachInterrupt(_wakeUp2Interrupt);
+    }
 	_wokeUpByInterrupt = _wakeUp1Interrupt;
 }
 void wakeUp2()	 //place to send the second interrupts
 {
 	detachInterrupt(_wakeUp2Interrupt);
+	if (_wakeUp1Interrupt != INVALID_INTERRUPT_NUM)
+    {
+        detachInterrupt(_wakeUp1Interrupt);
+    }
 	_wokeUpByInterrupt = _wakeUp2Interrupt;
 }
 
@@ -129,7 +137,11 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 		// sleep until ext interrupt triggered
     	hwPowerDown(SLEEP_FOREVER);
 	}
-	
+    
+    // Assure any interrupts attached, will get detached when they did not occur.
+    if (interrupt1 != INVALID_INTERRUPT_NUM) detachInterrupt(interrupt1);
+	if (interrupt2 != INVALID_INTERRUPT_NUM) detachInterrupt(interrupt2);
+
     // Return what woke the mcu.
     int8_t ret = MY_WAKE_UP_BY_TIMER;       // default: no interrupt triggered, timer wake up	
     if (interruptWakeUp()) ret = static_cast<int8_t>(_wokeUpByInterrupt);
