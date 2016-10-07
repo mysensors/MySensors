@@ -32,13 +32,12 @@
 
 #ifdef __cplusplus
 #include <Arduino.h>
-#include <string.h>
 #include <stdint.h>
 #endif
 
-#define PROTOCOL_VERSION 2    //!< The version of the protocol
-#define MAX_MESSAGE_LENGTH 32 //!< The maximum size of a message (including header)
-#define HEADER_SIZE 7         //!< The size of the header
+#define PROTOCOL_VERSION	(2u)	//!< The version of the protocol
+#define MAX_MESSAGE_LENGTH	(32u)	//!< The maximum size of a message (including header)
+#define HEADER_SIZE			(7u)	//!< The size of the header
 #define MAX_PAYLOAD (MAX_MESSAGE_LENGTH - HEADER_SIZE) //!< The maximum size of a payload depends on #MAX_MESSAGE_LENGTH and #HEADER_SIZE
 
 /// @brief The command field (message-type) defines the overall properties of a message

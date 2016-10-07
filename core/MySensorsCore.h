@@ -25,7 +25,7 @@
  * @{
  *
  * MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
- * - [!] Exclamation mark is prepended in case of error
+ * - [!] Exclamation mark is prepended in case of error or warning
  * - SYSTEM:
  *  - <b>MCO</b> messages emitted by MySensorsCore
  * - SUB SYSTEMS:
@@ -400,8 +400,8 @@ void loop() __attribute__((weak));
 
 
 // Inline function and macros
-static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
-	msg.sender = sender;
+static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const uint8_t sensor, const uint8_t command, const uint8_t type, const bool enableAck) {
+	msg.sender = _nc.nodeId;
 	msg.destination = destination;
 	msg.sensor = sensor;
 	msg.type = type;
@@ -411,7 +411,7 @@ static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destinati
 	return msg;
 }
 
-static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
+static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type) {
 	msg.sender = GATEWAY_ADDRESS;
 	msg.destination = GATEWAY_ADDRESS;
 	msg.sensor = NODE_SENSOR_ID;

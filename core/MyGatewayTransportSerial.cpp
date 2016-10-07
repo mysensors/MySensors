@@ -17,7 +17,6 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-
 #include "MyConfig.h"
 #include "MyProtocol.h"
 #include "MyGatewayTransport.h"
@@ -28,9 +27,8 @@
 extern MyMessage _msgTmp;
 
 char _serialInputString[MY_GATEWAY_MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
-int _serialInputPos;
+uint8_t _serialInputPos;
 MyMessage _serialMsg;
-
 
 bool gatewayTransportSend(MyMessage &message) {
     setIndication(INDICATION_GW_TX);
@@ -46,7 +44,6 @@ bool gatewayTransportInit() {
 
 	return true;
 }
-
 
 bool gatewayTransportAvailable() {
 	while (MY_SERIALDEVICE.available()) {

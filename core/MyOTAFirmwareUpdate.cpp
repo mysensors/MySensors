@@ -54,7 +54,7 @@ void firmwareOTAUpdateRequest() {
 		firmwareRequest.version = _fc.version;
 		firmwareRequest.block = (_fwBlock - 1);
 		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04X,V=%04X,B=%04X\n"),_fc.type,_fc.version,_fwBlock - 1); // request FW update block
-		_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false).set(&firmwareRequest,sizeof(RequestFWBlock)));
+		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false).set(&firmwareRequest,sizeof(RequestFWBlock)));
 	}
 }
 
@@ -137,7 +137,7 @@ void presentBootloaderInformation(){
 	// add bootloader information
 	reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
 	_fwUpdateOngoing = false;
-	_sendRoute(build(_msgTmp, _nc.nodeId, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));	
+	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));	
 }
 // do a crc16 on the whole received firmware
 bool transportIsValidFirmware() {

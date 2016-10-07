@@ -106,7 +106,7 @@ static bool skipSign(MyMessage &msg) {
 // Helper to prepare a signing presentation message
 static void prepareSigningPresentation(MyMessage &msg, uint8_t destination) {
 	// Only supports version 1 for now
-	build(msg, _nc.nodeId, destination, NODE_SENSOR_ID, C_INTERNAL, I_SIGNING_PRESENTATION, false).set("");
+	build(msg, destination, NODE_SENSOR_ID, C_INTERNAL, I_SIGNING_PRESENTATION, false).set("");
 	mSetLength(msg, 2);
 	mSetPayloadType(msg, P_CUSTOM);		// displayed as hex
 	msg.data[0] = SIGNING_PRESENTATION_VERSION_1;
@@ -188,8 +188,7 @@ bool signerProcessInternal(MyMessage &msg) {
 #if defined(MY_SIGNING_ATSHA204)
 			if (signerAtsha204GetNonce(msg)) {
 #endif
-				if (!_sendRoute(build(msg, _nc.nodeId, msg.sender, NODE_SENSOR_ID,
-					C_INTERNAL, I_NONCE_RESPONSE, false))) {
+				if (!_sendRoute(build(msg, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_NONCE_RESPONSE, false))) {
 					SIGN_DEBUG(PSTR("Failed to transmit nonce!\n"));
 				} else {
 					SIGN_DEBUG(PSTR("Transmitted nonce\n"));
@@ -315,8 +314,7 @@ bool signerSignMsg(MyMessage &msg) {
 		} else {
 			// Send nonce-request
 			_signingNonceStatus=SIGN_WAITING_FOR_NONCE;
-			if (!_sendRoute(build(_msgSign, _nc.nodeId, msg.destination, msg.sensor,
-				C_INTERNAL, I_NONCE_REQUEST, false).set(""))) {
+			if (!_sendRoute(build(_msgSign, msg.destination, msg.sensor, C_INTERNAL, I_NONCE_REQUEST, false).set(""))) {
 				SIGN_DEBUG(PSTR("Failed to transmit nonce request!\n"));
 				return false;
 			}

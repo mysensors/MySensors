@@ -19,7 +19,9 @@
 
 #include "MyConfig.h"
 #include "MyTransport.h"
+
 #include "drivers/RF24/RF24.h"
+
 #include "drivers/CircularBuffer/CircularBuffer.h"
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
