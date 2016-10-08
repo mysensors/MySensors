@@ -32,7 +32,7 @@
  * The GW code is designed for Arduino 328p / 16MHz.  ATmega168 does not have enough memory to run this program.
  *
  * LED purposes:
- * - To use the feature, uncomment WITH_LEDS_BLINKING in MyConfig.h
+ * - To use the feature, uncomment MY_DEFAULT_xxx_LED_PIN in the sketch below
  * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error
@@ -106,7 +106,7 @@
 // Uncomment to override default HW configurations
 //#define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
 //#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
-//#define MY_DEFAULT_TX_LED_PIN  9  // the PCB, on board LED
+//#define MY_DEFAULT_TX_LED_PIN  9  // Transmit led pin
 
 
 #if defined(MY_USE_UDP)
