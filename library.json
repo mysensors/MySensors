@@ -1,0 +1,28 @@
+{
+  "name": "MySensors",
+  "keywords": "framework, sensor, rf",
+  "description": "Home Automation Framework. Create your own wireless sensor mesh using NRF24L01+ and RFM69 radios running on Arduino or ESP8266. Over-the-air updates and MySensors support in 16+ home automation controllers.",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/mysensors/MySensors.git"
+  },
+  "version": "2.0.1-beta",
+  "frameworks": "arduino",
+  "platforms": [
+    "atmelavr",
+    "atmelsam",
+    "espressif"
+  ],
+  "exclude": [
+    "tests",
+    "Documentation"
+  ],
+  "build": {
+    "srcFilter": [
+      "+<*.c>",
+      "+<*.cpp>",
+      "+<*.h>"
+    ]
+  }
+}
