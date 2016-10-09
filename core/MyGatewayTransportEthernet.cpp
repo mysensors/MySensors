@@ -87,14 +87,14 @@ typedef struct
 		if (enable)
 		{
 			// Pull up pin
-			pinMode(MY_W5100_SPI_EN, INPUT);
-			digitalWrite(MY_W5100_SPI_EN, HIGH);
+			hwPinMode(MY_W5100_SPI_EN, INPUT);
+			hwDigitalWrite(MY_W5100_SPI_EN, HIGH);
 		}
 		else
 		{
 			// Ground pin
-			pinMode(MY_W5100_SPI_EN, OUTPUT);
-			digitalWrite(MY_W5100_SPI_EN, LOW);
+			hwPinMode(MY_W5100_SPI_EN, OUTPUT);
+			hwDigitalWrite(MY_W5100_SPI_EN, LOW);
 		}
 	}
 #else

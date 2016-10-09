@@ -33,8 +33,11 @@
 
 #define MY_SERIALDEVICE Serial
 
-// Define these as macros (do nothing)
-#define hwDigitalWrite(__pin, __value)
+// Define these as macros
+#define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
+#define hwDigitalRead(__pin) digitalRead(__pin)
+#define hwPinMode(__pin, __value) pinMode(__pin, __value)
+
 #define hwWatchdogReset()
 #define hwReboot()
 #define hwMillis() millis()
