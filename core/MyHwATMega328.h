@@ -80,7 +80,7 @@ do { 																\
 
 //
 #define hwReadConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
-#define hwWriteConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
+#define hwWriteConfigBlock(__buf, __pos, __length) (eeprom_write_block((void*)(__buf), (void*)(__pos), (__length)))
 
 
 
