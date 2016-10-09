@@ -54,7 +54,7 @@
 
 // Enable radio "feature" if one of the radio types was enabled
 #if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
-	#define MY_RADIO_FEATURE
+	#define MY_SENSOR_NETWORK
 #endif
 
 // HARDWARE
@@ -167,7 +167,7 @@
 #endif
 
 #if defined(MY_GATEWAY_MQTT_CLIENT)
-	#if defined(MY_RADIO_FEATURE)
+	#if defined(MY_SENSOR_NETWORK)
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
 	#endif
@@ -205,7 +205,7 @@
 	#include "core/MyProtocolMySensors.cpp"
 
 	// GATEWAY - CONFIGURATION
-	#if defined(MY_RADIO_FEATURE)
+	#if defined(MY_SENSOR_NETWORK)
 		// We assume that a gateway having a radio also should act as repeater
 		#define MY_REPEATER_FEATURE
 	#endif
@@ -308,7 +308,7 @@
 #endif
 
 // Make sure to disable child features when parent feature is disabled
-#if !defined(MY_RADIO_FEATURE)
+#if !defined(MY_SENSOR_NETWORK)
 	#undef MY_OTA_FIRMWARE_FEATURE
 	#undef MY_REPEATER_FEATURE
 	#undef MY_SIGNING_NODE_WHITELISTING
@@ -321,7 +321,7 @@
 #endif
 
 #if !defined(MY_CORE_ONLY)
-	#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RADIO_FEATURE)
+	#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_SENSOR_NETWORK)
 		#error No forward link or gateway feature activated. This means nowhere to send messages! Pretty pointless.
 	#endif
 #endif

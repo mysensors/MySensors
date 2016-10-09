@@ -236,7 +236,7 @@ typedef struct {
 	// 8 bits
 	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions (max 15)	
 	uint8_t failureCounter : 3;				//!< counter for TSM failures (max 7)
-	bool MsgReceived : 1;					//!< flag message received
+	bool msgReceived : 1;					//!< flag message received
 	// 8 bits
 	uint8_t pingResponse;					//!< stores I_PONG hops
 } transportSM;
