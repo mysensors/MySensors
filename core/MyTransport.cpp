@@ -851,7 +851,7 @@ void transportLoadRoutingTable(void) {
 
 void transportSaveRoutingTable(void) {
 	#if defined(MY_RAM_ROUTING_TABLE_ENABLED)
-		hwWriteConfigBlock((void*)EEPROM_ROUTES_ADDRESS, (void*)&_transportRoutingTable.route, SIZE_ROUTES);
+		hwWriteConfigBlock((void*)&_transportRoutingTable.route, (void*)EEPROM_ROUTES_ADDRESS, SIZE_ROUTES);
 		TRANSPORT_DEBUG(PSTR("TSF:SRT:OK\n"));	//  save routing table
 	#endif
 }
