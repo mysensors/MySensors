@@ -19,10 +19,10 @@
 
 #include "MySensorsCore.h"
 
-ControllerConfig _cc; // Configuration coming from controller
-NodeConfig _nc; // Essential settings for node to work
-MyMessage _msg;  // Buffer for incoming messages.
-MyMessage _msgTmp; // Buffer for temporary messages (acks and nonces among others).
+ControllerConfig _cc;	// Configuration coming from controller
+NodeConfig _nc;			// Essential settings for node to work
+MyMessage _msg;			// Buffer for incoming messages
+MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 
 bool _nodeRegistered = false;
 
@@ -32,7 +32,7 @@ bool _nodeRegistered = false;
 
 void (*_timeCallback)(unsigned long); // Callback for requested time messages
 
-void _process() {
+void _process(void) {
 	hwWatchdogReset();
 
 	#if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
@@ -47,7 +47,7 @@ void _process() {
 		gatewayTransportProcess();
 	#endif
 
-	#if defined(MY_RADIO_FEATURE)
+	#if defined(MY_SENSOR_NETWORK)
 		transportProcess();
 	#endif
 
@@ -57,11 +57,9 @@ void _process() {
 	#endif
 }
 
-void _infiniteLoop() {
+void _infiniteLoop(void) {
 	while(1) {
-		#if defined(ARDUINO_ARCH_ESP8266)
-			yield();
-		#endif
+		yield();
 		#if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 			ledsProcess();
 		#endif
@@ -71,7 +69,7 @@ void _infiniteLoop() {
 	}
 }
 
-void _begin() {
+void _begin(void) {
 	hwWatchdogReset();
 
 	if (preHwInit)
@@ -102,16 +100,14 @@ void _begin() {
 		readFirmwareSettings();
 	#endif
 
-	#if defined(MY_RADIO_FEATURE)
+	#if defined(MY_SENSOR_NETWORK)
 		// Save static parent id in eeprom (used by bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, MY_PARENT_NODE_ID);
 		transportInitialise();
 		while (!isTransportReady()) {
 			hwWatchdogReset();
 			transportProcess();
-			#if defined(ARDUINO_ARCH_ESP8266)
-				yield();
-			#endif
+			yield();
 		}
 	#endif
 
@@ -176,7 +172,7 @@ void _begin() {
 }
 
 
-void _registerNode() {
+void _registerNode(void) {
 	#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
 		debug(PSTR("MCO:REG:REQ\n"));	// registration request
 		setIndication(INDICATION_REQ_REGISTRATION);
@@ -184,7 +180,7 @@ void _registerNode() {
 		uint8_t counter = MY_REGISTRATION_RETRIES;
 		// only proceed if register response received or retries exceeded
 		do {
-			_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST, false).set(MY_CORE_VERSION));
+			(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST).set(MY_CORE_VERSION));
 		} while (!wait(2000, C_INTERNAL, I_REGISTRATION_RESPONSE) && counter--);
 
 	#else
@@ -193,20 +189,20 @@ void _registerNode() {
 	#endif
 }
 
-void presentNode() {
+void presentNode(void) {
 	setIndication(INDICATION_PRESENT);
 	// Present node and request config
 	#if defined(MY_GATEWAY_FEATURE)
 		// Send presentation for this gateway device
 		#if defined(MY_REPEATER_FEATURE)
-			present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
+			(void)present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
 		#else
-			present(NODE_SENSOR_ID, S_ARDUINO_NODE);
+			(void)present(NODE_SENSOR_ID, S_ARDUINO_NODE);
 		#endif
 	#else
 
 		#if defined(MY_OTA_FIRMWARE_FEATURE)
-				presentBootloaderInformation();
+			presentBootloaderInformation();
 		#endif
 
 		// Send signing preferences for this node to the GW
@@ -214,17 +210,17 @@ void presentNode() {
 
 			// Send presentation for this radio node
 		#if defined(MY_REPEATER_FEATURE)
-				present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
+			(void)present(NODE_SENSOR_ID, S_ARDUINO_REPEATER_NODE);
 		#else
-				present(NODE_SENSOR_ID, S_ARDUINO_NODE);
+			(void)present(NODE_SENSOR_ID, S_ARDUINO_NODE);
 		#endif
 
 		// Send a configuration exchange request to controller
 		// Node sends parent node. Controller answers with latest node configuration
-		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG, false).set(_nc.parentNodeId));
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG).set(_nc.parentNodeId));
 
 		// Wait configuration reply.
-		wait(2000, C_INTERNAL, I_CONFIG);
+		(void)wait(2000, C_INTERNAL, I_CONFIG);
 
 	#endif
 
@@ -234,15 +230,15 @@ void presentNode() {
 }
 
 
-uint8_t getNodeId() {
+uint8_t getNodeId(void) {
 	return _nc.nodeId;
 }
 
-uint8_t getParentNodeId() {
+uint8_t getParentNodeId(void) {
 	return _nc.parentNodeId;
 }
 
-ControllerConfig getConfig() {
+ControllerConfig getConfig(void) {
 	return _cc;
 }
 
@@ -258,14 +254,14 @@ bool _sendRoute(MyMessage &message) {
 			return gatewayTransportSend(message);
 		}
 	#endif
-	#if defined(MY_RADIO_FEATURE)
+	#if defined(MY_SENSOR_NETWORK)
 		return transportSendRoute(message);
 	#else
 		return false;
 	#endif
 }
 
-bool send(MyMessage &message, bool enableAck) {
+bool send(MyMessage &message, const bool enableAck) {
 	message.sender = _nc.nodeId;
 	mSetCommand(message, C_SET);
 	mSetRequestAck(message, enableAck);
@@ -283,37 +279,42 @@ bool send(MyMessage &message, bool enableAck) {
 	#endif
 	}
 
-void sendBatteryLevel(uint8_t value, bool enableAck) {
-	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, enableAck).set(value));
+bool sendBatteryLevel(const uint8_t value, const bool ack) {
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL, ack).set(value));
 }
 
-void sendHeartbeat(void) {
-	#if defined(MY_RADIO_FEATURE)
-		uint32_t heartbeat = transportGetHeartbeat();
-		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, false).set(heartbeat));
+bool sendHeartbeat(const bool ack) {
+	#if defined(MY_SENSOR_NETWORK)
+		const uint32_t heartbeat = transportGetHeartbeat();
+		return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE, ack).set(heartbeat));
+	#else
+		(void)ack;
+		return false;
 	#endif
 }
 
-void present(uint8_t childSensorId, uint8_t sensorType, const char *description, bool enableAck) {
-	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, enableAck).set(childSensorId==NODE_SENSOR_ID?MYSENSORS_LIBRARY_VERSION:description));
+bool present(const uint8_t childSensorId, const uint8_t sensorType, const char *description, const bool ack) {
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType, ack).set(childSensorId==NODE_SENSOR_ID?MYSENSORS_LIBRARY_VERSION:description));
 }
 
-void sendSketchInfo(const char *name, const char *version, bool enableAck) {
-	if (name) _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, enableAck).set(name));
-    if (version) _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, enableAck).set(version));
+bool sendSketchInfo(const char *name, const char *version, const bool ack) {
+	bool result = true;
+	if (name) result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, ack).set(name));
+    if (version) result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, ack).set(version));
+	return result;
 }
 
-void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination) {
-	_sendRoute(build(_msgTmp, destination, childSensorId, C_REQ, variableType, false).set(""));
+bool request(const uint8_t childSensorId, const uint8_t variableType, const uint8_t destination) {
+	return _sendRoute(build(_msgTmp, destination, childSensorId, C_REQ, variableType).set(""));
 }
 
-void requestTime() {
-	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, false).set(""));
+bool requestTime(const bool ack) {
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, ack).set(""));
 }
 
 // Message delivered through _msg
-bool _processInternalMessages() {
-	uint8_t type = _msg.type;
+bool _processInternalMessages(void) {
+	const uint8_t type = _msg.type;
 
 	if (_msg.sender == GATEWAY_ADDRESS) {
 		if (type == I_REBOOT) {
@@ -340,7 +341,7 @@ bool _processInternalMessages() {
 			presentNode();
 		}
 		else if (type == I_HEARTBEAT_REQUEST) {
-			sendHeartbeat();
+			(void)sendHeartbeat();
 		}
 		else if (type == I_TIME) {
 			// Deliver time to callback
@@ -353,7 +354,7 @@ bool _processInternalMessages() {
 					// Clears child relay data for this node
 					setIndication(INDICATION_CLEAR_ROUTING);
 					transportClearRoutingTable();
-					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN, false).set("ok"));
+					(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN).set("OK"));
 				}
 			#endif
 		}
@@ -367,23 +368,23 @@ bool _processInternalMessages() {
 						if (route != BROADCAST_ADDRESS) {
 							debug(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
 							uint8_t outBuf[2] = { (uint8_t)cnt,route };
-							_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(outBuf, 2));
+							(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set(outBuf, 2));
 							wait(200);
 						}
 					}
 				#endif
 				}
 				else if (debug_msg == 'V') {	// CPU voltage
-					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwCPUVoltage()));
+					(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set(hwCPUVoltage()));
 				}
 				else if (debug_msg == 'F') {	// CPU frequency in 1/10Mhz
-					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwCPUFrequency()));
+					(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set(hwCPUFrequency()));
 				}
 				else if (debug_msg == 'M') {	// free memory
-					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set(hwFreeMem()));
+					(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set(hwFreeMem()));
 				}
 				else if (debug_msg == 'E') {	// clear MySensors eeprom area and reboot
-					_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG, false).set("ok"));
+					(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set("OK"));
 					for (int i = EEPROM_START; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) hwWriteConfig(i, 0xFF);
 					setIndication(INDICATION_REBOOT);
 					hwReboot();
@@ -409,7 +410,7 @@ bool _processInternalMessages() {
 						// delay for fast GW and slow nodes
 						delay(5);
 					#endif
-					_sendRoute(build(_msgTmp, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_RESPONSE, false).set(approveRegistration));
+					(void)_sendRoute(build(_msgTmp, _msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_RESPONSE).set(approveRegistration));
 				#else
 					return false;	// processing of this request via controller
 				#endif
@@ -421,46 +422,42 @@ bool _processInternalMessages() {
 }
 
 
-void saveState(uint8_t pos, uint8_t value) {
+void saveState(const uint8_t pos, const uint8_t value) {
 	hwWriteConfig(EEPROM_LOCAL_CONFIG_ADDRESS+pos, value);
 }
-uint8_t loadState(uint8_t pos) {
+uint8_t loadState(const uint8_t pos) {
 	return hwReadConfig(EEPROM_LOCAL_CONFIG_ADDRESS+pos);
 }
 
 
-void wait(unsigned long ms) {
-	unsigned long enter = hwMillis();
-	while (hwMillis() - enter < ms) {
+void wait(const uint32_t waitingMS) {
+	const uint32_t enteringMS = hwMillis();
+	while (hwMillis() - enteringMS < waitingMS) {
 		_process();
-		#if defined(ARDUINO_ARCH_ESP8266)
-			yield();
-		#endif
+		yield();
 	}
 }
 
-bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype) {
-	unsigned long enter = hwMillis();
+bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgtype) {
+	const uint32_t enteringMS = hwMillis();
 	// invalidate msg type
 	_msg.type = !msgtype;
 	bool expectedResponse = false;
-	while ( (hwMillis() - enter < ms) && !expectedResponse ) {
+	while ( (hwMillis() - enteringMS < waitingMS) && !expectedResponse ) {
 		_process();
-		#if defined(ARDUINO_ARCH_ESP8266)
-			yield();
-		#endif
+		yield();
 		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgtype);
 	}
 	return expectedResponse;
 }
 
-int8_t _sleep(const uint32_t ms, const bool smartSleep, const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2) {
-	debug(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), ms, smartSleep, interrupt1, mode1, interrupt2, mode2);
+int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2) {
+	debug(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), sleepingMS, smartSleep, interrupt1, mode1, interrupt2, mode2);
 	// OTA FW feature: do not sleep if FW update ongoing
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 		if (_fwUpdateOngoing) {
 			debug(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
-			wait(ms);
+			wait(sleepingMS);
 			return MY_SLEEP_NOT_POSSIBLE;
 		}
 	#endif
@@ -473,27 +470,25 @@ int8_t _sleep(const uint32_t ms, const bool smartSleep, const uint8_t interrupt1
 		(void)mode2;
 
 		debug(PSTR("!MCO:SLP:REP\n"));	// sleeping not possible, repeater feature enabled
-		wait(ms);
+		wait(sleepingMS);
 		return MY_SLEEP_NOT_POSSIBLE;
 	#else
-		uint32_t sleepingTime = ms;
-		#if defined(MY_RADIO_FEATURE)
+		uint32_t sleepingTimeMS = sleepingMS;
+		#if defined(MY_SENSOR_NETWORK)
 			// Do not sleep if transport not ready
 			if (!isTransportReady()) {
 				debug(PSTR("!MCO:SLP:TNR\n"));	// sleeping not possible, transport not ready
-				uint32_t sleepEnter = hwMillis();
-				uint32_t sleepDelta = 0;
-				while (!isTransportReady() && (sleepDelta < sleepingTime) && (sleepDelta < MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)) {
+				const uint32_t sleepEnterMS = hwMillis();
+				uint32_t sleepDeltaMS = 0;
+				while (!isTransportReady() && (sleepDeltaMS < sleepingTimeMS) && (sleepDeltaMS < MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)) {
 					_process();
-					#if defined(ARDUINO_ARCH_ESP8266)
-						yield();
-					#endif
-					sleepDelta = hwMillis() - sleepEnter;
+					yield();
+					sleepDeltaMS = hwMillis() - sleepEnterMS;
 				}
 				// sleep remainder
-				if (sleepDelta < sleepingTime) {
-					sleepingTime -= sleepDelta;		// calculate remaining sleeping time
-					debug(PSTR("MCO:SLP:MS=%lu\n"), sleepingTime);
+				if (sleepDeltaMS < sleepingTimeMS) {
+					sleepingTimeMS -= sleepDeltaMS;		// calculate remaining sleeping time
+					debug(PSTR("MCO:SLP:MS=%lu\n"), sleepingTimeMS);
 				}
 				else {
 					// no sleeping time left
@@ -504,65 +499,65 @@ int8_t _sleep(const uint32_t ms, const bool smartSleep, const uint8_t interrupt1
 
 		if (smartSleep) {
 			// notify controller about going to sleep
-			sendHeartbeat();
+			(void)sendHeartbeat();
 			wait(MY_SMART_SLEEP_WAIT_DURATION_MS);		// listen for incoming messages
 		}
 
-		#if defined(MY_RADIO_FEATURE)
+		#if defined(MY_SENSOR_NETWORK)
 			debug(PSTR("MCO:SLP:TPD\n"));	// sleep, power down transport
 			transportPowerDown();
 		#endif
 
 		setIndication(INDICATION_SLEEP);
 
-		int8_t res = MY_SLEEP_NOT_POSSIBLE;	// default
+		int8_t result = MY_SLEEP_NOT_POSSIBLE;	// default
 
 		if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 != INTERRUPT_NOT_DEFINED) {
 			// both IRQs
-			res = hwSleep(interrupt1, mode1, interrupt2, mode2, sleepingTime);
+			result = hwSleep(interrupt1, mode1, interrupt2, mode2, sleepingTimeMS);
 		}
 		else if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 == INTERRUPT_NOT_DEFINED) {
 			// one IRQ
-			res = hwSleep(interrupt1, mode1, sleepingTime);
+			result = hwSleep(interrupt1, mode1, sleepingTimeMS);
 		}
 		else if (interrupt1 == INTERRUPT_NOT_DEFINED && interrupt2 == INTERRUPT_NOT_DEFINED) {
 			// no IRQ
-			res = hwSleep(sleepingTime);
+			result = hwSleep(sleepingTimeMS);
 		}
 
 		setIndication(INDICATION_WAKEUP);
-		debug(PSTR("MCO:SLP:WUP=%d\n"), res);	// sleep wake-up
-		return res;
+		debug(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
+		return result;
 	#endif
 }
 
 // sleep functions
-int8_t sleep(const uint32_t ms, const bool smartSleep) {
-	return _sleep(ms, smartSleep);
+int8_t sleep(const uint32_t sleepingMS, const bool smartSleep) {
+	return _sleep(sleepingMS, smartSleep);
 }
 
-int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t ms, const bool smartSleep) {
-	return _sleep(ms, smartSleep, interrupt, mode);
+int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepingMS, const bool smartSleep) {
+	return _sleep(sleepingMS, smartSleep, interrupt, mode);
 }
 
-int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t ms, const bool smartSleep) {
-	return _sleep(ms, smartSleep, interrupt1, mode1, interrupt2, mode2);
+int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t sleepingMS, const bool smartSleep) {
+	return _sleep(sleepingMS, smartSleep, interrupt1, mode1, interrupt2, mode2);
 }
 
 // deprecated smartSleep() functions
-int8_t smartSleep(const uint32_t ms) {
+int8_t smartSleep(const uint32_t sleepingMS) {
 	// compatibility
-	return _sleep(ms, true);
+	return _sleep(sleepingMS, true);
 }
 
-int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t ms) {
+int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepingMS) {
 	// compatibility
-	return _sleep(ms, true, interrupt, mode);
+	return _sleep(sleepingMS, true, interrupt, mode);
 }
 
-int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t ms) {
+int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t sleepingMS) {
 	// compatibility
-	return _sleep(ms, true, interrupt1, mode1, interrupt2, mode2);
+	return _sleep(sleepingMS, true, interrupt1, mode1, interrupt2, mode2);
 }
 
 
@@ -573,11 +568,9 @@ void nodeLock(const char* str) {
 	while (1) {
 		setIndication(INDICATION_ERR_LOCKED);
 		debug(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %d AND RESET\n"), MY_NODE_UNLOCK_PIN);
-		#if defined(ARDUINO_ARCH_ESP8266)
-			yield();
-		#endif
-		_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED, false).set(str));
-		#if defined(MY_RADIO_FEATURE)
+		yield();
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED).set(str));
+		#if defined(MY_SENSOR_NETWORK)
 			transportPowerDown();
 			debug(PSTR("MCO:NLK:TPD\n"));	// power down transport
 		#endif

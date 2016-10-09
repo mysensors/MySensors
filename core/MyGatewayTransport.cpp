@@ -61,7 +61,7 @@ inline void gatewayTransportProcess() {
 				}
 			}
 		} else {
-			#if defined(MY_RADIO_FEATURE)
+			#if defined(MY_SENSOR_NETWORK)
 				transportSendRoute(_msg);
 			#endif
 		}
