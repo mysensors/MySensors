@@ -34,10 +34,19 @@
 
 class Print {
 	private:
+		int write_error;
 		size_t printNumber(unsigned long n, uint8_t base);
 		size_t printFloat(double number, uint8_t digits);
 
+	protected:
+		void setWriteError(int err = 1) { write_error = err; }
+
 	public:
+		Print() : write_error(0) {}
+
+		int getWriteError() { return write_error; }
+		void clearWriteError() { setWriteError(0); }
+
 		virtual size_t write(uint8_t) = 0;
 		size_t write(const char *str) {
 			if (str == NULL)

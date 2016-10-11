@@ -140,6 +140,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
   return MY_SLEEP_NOT_POSSIBLE;
 }
 
+#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage() {
 	// TODO: Not supported!
 	return 0;
@@ -154,6 +155,7 @@ uint16_t hwFreeMem() {
 	// TODO: Not supported!
 	return 0;
 }
+#endif
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {

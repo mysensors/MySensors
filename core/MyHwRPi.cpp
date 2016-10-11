@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyHwLinuxGeneric.h"
+#include "MyHwRPi.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -28,6 +28,11 @@ static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 
 
 void hwInit()
 {
+	if (!bcm2835_init()) {
+		mys_log(LOG_ERR, "Failed to initialized bcm2835.\n");
+		exit(1);
+	}
+
 #ifdef MY_GATEWAY_SERIAL
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 	#ifdef MY_LINUX_SERIAL_GROUPNAME
@@ -39,24 +44,24 @@ void hwInit()
 #endif
 }
 
-void hwReadConfigBlock(void* buf, void* addr, size_t length)
+void hwReadConfigBlock(void* buf, void* adr, size_t length)
 {
-	eeprom.readBlock(buf, addr, length);
+	eeprom.readBlock(buf, adr, length);
 }
 
-void hwWriteConfigBlock(void* buf, void* addr, size_t length)
+void hwWriteConfigBlock(void* buf, void* adr, size_t length)
 {
-	eeprom.writeBlock(buf, addr, length);
+	eeprom.writeBlock(buf, adr, length);
 }
 
-uint8_t hwReadConfig(int addr)
+uint8_t hwReadConfig(int adr)
 {
-	return eeprom.readByte(addr);
+	return eeprom.readByte(adr);
 }
 
-void hwWriteConfig(int addr, uint8_t value)
+void hwWriteConfig(int adr, uint8_t value)
 {
-	eeprom.writeByte(addr, value);
+	eeprom.writeByte(adr, value);
 }
 
 void hwRandomNumberInit()
@@ -100,32 +105,47 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 }
 
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
-uint16_t hwCPUVoltage()
-{
-	// TODO: Not supported!
-	return 0;
-}
- 
-uint16_t hwCPUFrequency()
-{
-	// TODO: Not supported!
-	return 0;
-}
- 
-uint16_t hwFreeMem()
-{
-	// TODO: Not supported!
-	return 0;
-}
+	uint16_t hwCPUVoltage()
+	{
+		// TODO: Not supported!
+		return 0;
+	}
+	 
+	uint16_t hwCPUFrequency()
+	{
+		// TODO: Not supported!
+		return 0;
+	}
+	 
+	uint16_t hwFreeMem()
+	{
+		// TODO: Not supported!
+		return 0;
+	}
 #endif
 
 #ifdef MY_DEBUG
-void hwDebugPrint(const char *fmt, ...)
-{
-	va_list args;
+	void hwDebugPrint(const char *fmt, ...)
+	{
+		va_list args;
 
-	va_start(args, fmt);
-	mys_log_v(LOG_DEBUG, fmt, args);
-	va_end(args);
-}
+		va_start(args, fmt);
+		mys_log_v(LOG_DEBUG, fmt, args);
+		va_end(args);
+	}
 #endif
+
+void hwDigitalWrite(uint8_t pin, uint8_t value)
+{
+	digitalWrite(pin, value);
+}
+
+int hwDigitalRead(uint8_t pin)
+{
+	return digitalRead(pin);
+}
+
+void hwPinMode(uint8_t pin, uint8_t mode)
+{
+	pinMode(pin, mode);
+}

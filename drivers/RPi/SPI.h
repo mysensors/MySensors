@@ -18,6 +18,7 @@
  *
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
+
 #ifndef _SPI_H_
 #define _SPI_H_
 
@@ -123,19 +124,11 @@ private:
 
 public:
 	/**
-	 * @brief SPIClass constructor.
-	 */
-	SPIClass();
-	/**
-	 * @brief SPIClass destructor.
-	 */
-	virtual ~SPIClass();
-	/**
 	 * @brief Checks if SPI was initialized.
 	 *
 	 * @return 0 if wasn't initialized, else 1 or more.
 	 */
-	static uint8_t isInitialized();
+	static uint8_t is_initialized();
 	/**
 	 * @brief Send and receive a byte.
 	 *

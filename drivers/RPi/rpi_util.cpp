@@ -167,7 +167,7 @@ void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
 		return;
 	}
 	// Check if SPI is in use and target pin is related to SPI
-	if (SPIClass::isInitialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
+	if (SPIClass::is_initialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
 		return;
 	} else {
 		bcm2835_gpio_fsel(gpioPin, mode);
@@ -181,7 +181,7 @@ void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
 		return;
 	}
 	// Check if SPI is in use and target pin is related to SPI
-	if (SPIClass::isInitialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
+	if (SPIClass::is_initialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
 		if (value == LOW && (gpioPin == RPI_GPIO_P1_24 || gpioPin == RPI_GPIO_P1_26)) {
 			SPI.chipSelect(gpioPin);
 		}
@@ -199,7 +199,7 @@ uint8_t rpi_util::digitalRead(uint8_t physPin) {
 		return 0;
 	}
 	// Check if SPI is in use and target pin is related to SPI
-	if (SPIClass::isInitialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
+	if (SPIClass::is_initialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
 		return 0;
 	} else {
 		return bcm2835_gpio_lev(gpioPin);

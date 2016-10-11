@@ -33,21 +33,21 @@
 
 #define MY_SERIALDEVICE Serial
 
-// Define these as macros
-#define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
-#define hwDigitalRead(__pin) digitalRead(__pin)
-#define hwPinMode(__pin, __value) pinMode(__pin, __value)
-
+// Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
-#define hwMillis() millis()
+
+#define hwDigitalWrite(__pin, __value) _Pragma("GCC error \"Not supported on linux-generic\"")
+#define hwDigitalRead(__pin) _Pragma("GCC error \"Not supported on linux-generic\"")
+#define hwPinMode(__pin, __value) _Pragma("GCC error \"Not supported on linux-generic\"")
 
 void hwInit();
-void hwReadConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfigBlock(void* buf, void* adr, size_t length);
-uint8_t hwReadConfig(int adr);
-void hwWriteConfig(int adr, uint8_t value);
-void hwRandomNumberInit();
+inline void hwReadConfigBlock(void* buf, void* addr, size_t length);
+inline void hwWriteConfigBlock(void* buf, void* addr, size_t length);
+inline uint8_t hwReadConfig(int addr);
+inline void hwWriteConfig(int addr, uint8_t value);
+inline void hwRandomNumberInit();
+inline unsigned long hwMillis();
 
 #ifdef MY_RF24_IRQ_PIN
 	static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

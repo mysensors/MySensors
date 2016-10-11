@@ -194,18 +194,32 @@ int SerialPort::read()
 {
 	unsigned char c;
 
-	::read(sd, &c, 1);
-	return c;
+	int ret = ::read(sd, &c, 1);
+	if (ret < 0) {
+		mys_log(LOG_ERR, "Serial - read failed: %s\n", strerror(errno));
+	} else if (ret == 1) {
+		return c;
+	}
+
+	return -1;
 }
 
 size_t SerialPort::write(uint8_t b)
 {
-	return ::write(sd, &b, 1);
+	int ret = ::write(sd, &b, 1);
+	if (ret < 0) {
+		mys_log(LOG_ERR, "Serial - write failed: %s\n", strerror(errno));
+	}
+	return ret;
 }
 
 size_t SerialPort::write(const uint8_t *buffer, size_t size)
 {
-	return ::write(sd, buffer, size);
+	int ret = ::write(sd, buffer, size);
+	if (ret < 0) {
+		mys_log(LOG_ERR, "Serial - write failed: %s\n", strerror(errno));
+	}
+	return ret;
 }
 
 int SerialPort::peek()
