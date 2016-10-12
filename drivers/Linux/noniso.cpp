@@ -1,14 +1,14 @@
 /*
  noniso.cpp - replacements for non-ISO functions used by Arduino core
  Copyright © 2016 Ivan Grokhotkov
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in
  all copies or substantial portions of the Software.
 
@@ -61,8 +61,9 @@ char* itoa(int value, char* result, int base) {
     } while(quotient);
 
     // Apply negative sign
-    if(value < 0)
+    if(value < 0) {
         *out++ = '-';
+      }
 
     reverse(result, out);
     *out = 0;
@@ -112,8 +113,9 @@ char* ltoa(long value, char* result, int base) {
     } while(quotient);
 
     // Apply negative sign
-    if(value < 0)
+    if(value < 0) {
         *out++ = '-';
+      }
 
     reverse(result, out);
     *out = 0;

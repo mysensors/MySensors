@@ -71,7 +71,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, 
 			} else {
 				status = *prx++; // status is 1st byte of receive buffer
 				// decrement before to skip status byte
-				while (--size) { *buf++ = *prx++; } 
+				while (--size) { *buf++ = *prx++; }
 			}
 		} else {
 			status = *prx; // status is 1st byte of receive buffer
@@ -79,9 +79,11 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, 
 	#else
 		status = _SPI.transfer( cmd );
 		while ( len-- ) {
-			if (aReadMode) {		
+			if (aReadMode) {
 				status = _SPI.transfer( NOP );
-				if (buf != NULL) *current++ = status;
+				if (buf != NULL) {
+					*current++ = status;
+				}
 			} else status = _SPI.transfer(*current++);
 		}
 	#endif
@@ -92,7 +94,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, 
 	// timing
 	delayMicroseconds(10);
 	return status;
-} 
+}
 
 LOCAL uint8_t RF24_spiByteTransfer(uint8_t cmd) {
 	return RF24_spiMultiByteTransfer( cmd, NULL, 0, false);
@@ -182,8 +184,8 @@ LOCAL void RF24_enableFeatures(void) {
 	RF24_RAW_writeByteRegister(ACTIVATE, 0x73);
 }
 
-LOCAL void RF24_openWritingPipe(uint8_t recipient) {	
-	RF24_DEBUG(PSTR("RF24:open writing pipe, recipient=%d\n"), recipient);	
+LOCAL void RF24_openWritingPipe(uint8_t recipient) {
+	RF24_DEBUG(PSTR("RF24:open writing pipe, recipient=%d\n"), recipient);
 	// only write LSB of RX0 and TX pipe
 	RF24_setPipeLSB(RX_ADDR_P0, recipient);
 	RF24_setPipeLSB(TX_ADDR, recipient);
@@ -191,10 +193,12 @@ LOCAL void RF24_openWritingPipe(uint8_t recipient) {
 
 LOCAL void RF24_startListening(void) {
 	RF24_DEBUG(PSTR("RF24:start listening\n"));
-	// toggle PRX		
+	// toggle PRX
 	RF24_setRFConfiguration(MY_RF24_CONFIGURATION | _BV(PWR_UP) | _BV(PRIM_RX) );
 	// all RX pipe addresses must be unique, therefore skip if node ID is 0xFF
-	if(MY_RF24_NODE_ADDRESS!=AUTO) RF24_setPipeLSB(RX_ADDR_P0, MY_RF24_NODE_ADDRESS);
+	if(MY_RF24_NODE_ADDRESS!=AUTO) {
+		RF24_setPipeLSB(RX_ADDR_P0, MY_RF24_NODE_ADDRESS);
+	}
 	// start listening
 	RF24_ce(HIGH);
 }
@@ -219,7 +223,7 @@ LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 	uint8_t status;
 
 	RF24_stopListening();
-	RF24_openWritingPipe( recipient );		
+	RF24_openWritingPipe( recipient );
 	RF24_DEBUG(PSTR("RF24:send message to %d, len=%d\n"),recipient,len);
 	// flush TX FIFO
 	RF24_flushTX();
@@ -251,10 +255,10 @@ LOCAL bool RF24_sendMessage( uint8_t recipient, const void* buf, uint8_t len ) {
 LOCAL uint8_t RF24_getDynamicPayloadSize(void) {
 	uint8_t result = RF24_spiMultiByteTransfer(R_RX_PL_WID, NULL, 1, true);
 	// check if payload size invalid
-	if(result > 32) { 
+	if(result > 32) {
 		RF24_DEBUG(PSTR("RF24:invalid payload length = %d\n"),result);
-		RF24_flushRX(); 
-		result = 0; 
+		RF24_flushRX();
+		result = 0;
 	}
 	return result;
 }
@@ -267,7 +271,7 @@ LOCAL bool RF24_isDataAvailable() {
 LOCAL uint8_t RF24_readMessage( void* buf) {
 	const uint8_t len = RF24_getDynamicPayloadSize();
 	RF24_DEBUG(PSTR("RF24:read message, len=%d\n"), len);
-	RF24_spiMultiByteTransfer( R_RX_PAYLOAD , (uint8_t*)buf, len, true ); 
+	RF24_spiMultiByteTransfer( R_RX_PAYLOAD , (uint8_t*)buf, len, true );
 	// clear RX interrupt
 	RF24_setStatus(_BV(RX_DR) );
 	return len;
@@ -314,7 +318,7 @@ LOCAL void RF24_irqHandler( void )
 		// for a message we've already read.
 		while (RF24_isDataAvailable()) {
 			RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
-		} 
+		}
 		// Restore our interrupt handler.
 		#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
 			noInterrupts();
@@ -395,4 +399,3 @@ LOCAL bool RF24_initialize(void) {
 	RF24_setStatus(_BV(TX_DS) | _BV(MAX_RT) | _BV(RX_DR));
 	return true;
 }
-

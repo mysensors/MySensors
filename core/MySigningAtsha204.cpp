@@ -52,10 +52,12 @@ static uint8_t* signerSha256(const uint8_t* data, size_t sz);
 static char i2h(uint8_t i)
 {
 	uint8_t k = i & 0x0F;
-	if (k <= 9)
+	if (k <= 9) {
 		return '0' + k;
-	else
+	}
+	else {
 		return 'A' + k - 10;
+	}
 }
 
 static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz) {
@@ -98,7 +100,7 @@ bool signerAtsha204CheckTimer(void) {
 			memset(_signing_signing_nonce, 0x00, NONCE_NUMIN_SIZE_PASSTHROUGH);
 			memset(_signing_verifying_nonce, 0x00, NONCE_NUMIN_SIZE_PASSTHROUGH);
 			_signing_verification_ongoing = false;
-			return false; 
+			return false;
 		}
 	}
 	return true;
@@ -132,7 +134,9 @@ bool signerAtsha204GetNonce(MyMessage &msg) {
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
 	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
 	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < hwMillis()) _signing_timestamp = 0;
+	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < hwMillis()) {
+		_signing_timestamp = 0;
+	}
 	return true;
 }
 
@@ -148,7 +152,7 @@ bool signerAtsha204SignMsg(MyMessage &msg) {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_SIGNING_PRINTBUF(F("Message too large"), NULL, 0);
-		return false; 
+		return false;
 	}
 
 	// Calculate signature of message
@@ -180,18 +184,18 @@ bool signerAtsha204SignMsg(MyMessage &msg) {
 bool signerAtsha204VerifyMsg(MyMessage &msg) {
 	if (!_signing_verification_ongoing) {
 		DEBUG_SIGNING_PRINTBUF(F("No active verification session"), NULL, 0);
-		return false; 
+		return false;
 	} else {
 		// Make sure we have not expired
 		if (!signerCheckTimer()) {
-			return false; 
+			return false;
 		}
 
 		_signing_verification_ongoing = false;
 
 		if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER) {
 			DEBUG_SIGNING_PRINTBUF(F("Incorrect signing identifier"), NULL, 0);
-			return false; 
+			return false;
 		}
 
 		DEBUG_SIGNING_PRINTBUF(F("Signature in message: "), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg));
@@ -230,7 +234,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg) {
 #ifdef MY_SIGNING_NODE_WHITELISTING
 			DEBUG_SIGNING_PRINTBUF(F("Is the sender whitelisted and serial correct?"), NULL, 0);
 #endif
-			return false; 
+			return false;
 		} else {
 			DEBUG_SIGNING_PRINTBUF(F("Signature OK"), NULL, 0);
 			return true;

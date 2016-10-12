@@ -120,7 +120,9 @@ size_t EthernetClient::write(const uint8_t *buf, size_t size) {
 }
 
 size_t EthernetClient::write(const char *str) {
-	if (str == NULL) return 0;
+	if (str == NULL) {
+		return 0;
+	}
 	return write((const uint8_t *)str, strlen(str));
 }
 size_t EthernetClient::write(const char *buffer, size_t size) {
@@ -165,8 +167,9 @@ void EthernetClient::flush() {
 }
 
 void EthernetClient::stop() {
-	if (_sock == -1)
+	if (_sock == -1) {
 		return;
+	}
 
 	// attempt to close the connection gracefully (send a FIN to other side)
 	shutdown(_sock, SHUT_RDWR);
@@ -178,21 +181,24 @@ void EthernetClient::stop() {
 	uint8_t s;
 	do {
 		s = status();
-		if (s == ETHERNETCLIENT_W5100_CLOSED)
+		if (s == ETHERNETCLIENT_W5100_CLOSED) {
 			break; // exit the loop
+		}
 		usleep(1000);
 		gettimeofday(&curTime, NULL);
 	} while (((curTime.tv_sec - startTime.tv_sec) * 1000000) + (curTime.tv_usec - startTime.tv_usec) < 1000000);
 
 	// if it hasn't closed, close it forcefully
-	if (s != ETHERNETCLIENT_W5100_CLOSED)
+	if (s != ETHERNETCLIENT_W5100_CLOSED) {
 		close(_sock);
-
+	}
 	_sock = -1;
 }
 
 uint8_t EthernetClient::status() {
-	if (_sock == -1) return ETHERNETCLIENT_W5100_CLOSED;
+	if (_sock == -1) {
+		return ETHERNETCLIENT_W5100_CLOSED;
+	}
 
 	struct tcp_info tcp_info;
 	int tcp_info_length = sizeof(tcp_info);
@@ -227,8 +233,10 @@ uint8_t EthernetClient::status() {
 }
 
 uint8_t EthernetClient::connected() {
-	if (_sock == -1) return 0;
-	
+	if (_sock == -1) {
+		return 0;
+	}
+
 	if (peek() < 0) {
 		if (errno == EAGAIN) {
 			return 1;

@@ -72,8 +72,9 @@ void _infiniteLoop(void) {
 void _begin(void) {
 	hwWatchdogReset();
 
-	if (preHwInit)
+	if (preHwInit) {
 		preHwInit();
+	}
 
 	hwInit();
 
@@ -120,7 +121,7 @@ void _begin(void) {
 			pinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
 			// Make a short delay so we are sure any large external nets are fully pulled
 			unsigned long enter = hwMillis();
-			while (hwMillis() - enter < 2);
+			while (hwMillis() - enter < 2) {}
 			if (digitalRead(MY_NODE_UNLOCK_PIN) == 0) {
 				// Pin is grounded, reset lock counter
 				hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
@@ -224,9 +225,9 @@ void presentNode(void) {
 
 	#endif
 
-	if (presentation)
+	if (presentation) {
 		presentation();
-
+	}
 }
 
 
@@ -299,8 +300,12 @@ bool present(const uint8_t childSensorId, const uint8_t sensorType, const char *
 
 bool sendSketchInfo(const char *name, const char *version, const bool ack) {
 	bool result = true;
-	if (name) result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, ack).set(name));
-    if (version) result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, ack).set(version));
+	if (name) {
+		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, ack).set(name));
+	}
+  if (version) {
+		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, ack).set(version));
+	}
 	return result;
 }
 
@@ -345,8 +350,9 @@ bool _processInternalMessages(void) {
 		}
 		else if (type == I_TIME) {
 			// Deliver time to callback
-			if (receiveTime)
+			if (receiveTime) {
 				receiveTime(_msg.getULong());
+			}
 		}
 		else if (type == I_CHILDREN) {
 			#if defined(MY_REPEATER_FEATURE)
@@ -385,7 +391,9 @@ bool _processInternalMessages(void) {
 				}
 				else if (debug_msg == 'E') {	// clear MySensors eeprom area and reboot
 					(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set("OK"));
-					for (int i = EEPROM_START; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) hwWriteConfig(i, 0xFF);
+					for (int i = EEPROM_START; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
+						hwWriteConfig(i, 0xFF);
+					}
 					setIndication(INDICATION_REBOOT);
 					hwReboot();
 				}
@@ -405,7 +413,7 @@ bool _processInternalMessages(void) {
 					#if defined(MY_CORE_COMPATIBILITY_CHECK)
 							approveRegistration = (_msg.getByte() >= MY_CORE_MIN_VERSION);
 					#endif
-					
+
 					#if (F_CPU>16000000)
 						// delay for fast GW and slow nodes
 						delay(5);

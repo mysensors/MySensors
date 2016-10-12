@@ -7,28 +7,28 @@
 // > Updated Jan. 5, 2015, TomWS1, modified writeBytes to allow blocks > 256 bytes and handle page misalignment.
 // > Updated Feb. 26, 2015 TomWS1, added support for SPI Transactions (Arduino 1.5.8 and above)
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
-// > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02, 
+// > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02,
 // >                             use define MY_SPIFLASH_SST25TYPE for SST25 Type Flash Memory
 // **********************************************************************************
 // License
 // **********************************************************************************
-// This program is free software; you can redistribute it 
-// and/or modify it under the terms of the GNU General    
-// Public License as published by the Free Software       
-// Foundation; either version 3 of the License, or        
-// (at your option) any later version.                    
-//                                                        
-// This program is distributed in the hope that it will   
-// be useful, but WITHOUT ANY WARRANTY; without even the  
-// implied warranty of MERCHANTABILITY or FITNESS FOR A   
-// PARTICULAR PURPOSE. See the GNU General Public        
-// License for more details.                              
-//                                                        
-// You should have received a copy of the GNU General    
+// This program is free software; you can redistribute it
+// and/or modify it under the terms of the GNU General
+// Public License as published by the Free Software
+// Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will
+// be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A
+// PARTICULAR PURPOSE. See the GNU General Public
+// License for more details.
+//
+// You should have received a copy of the GNU General
 // Public License along with this program.
 // If not, see <http://www.gnu.org/licenses/>.
-//                                                        
-// Licence can be viewed at                               
+//
+// Licence can be viewed at
 // http://www.gnu.org/licenses/gpl-3.0.txt
 //
 // Please maintain this license information along with authorship
@@ -81,7 +81,7 @@ void SPIFlash::unselect() {
   //restore SPI settings to what they were before talking to the FLASH chip
 #ifdef SPI_HAS_TRANSACTION
   SPI.endTransaction();
-#else  
+#else
   interrupts();
 #endif
 #ifndef ESP8266
@@ -104,7 +104,7 @@ boolean SPIFlash::initialize()
 
   unselect();
   wakeup();
-  
+
   if (_jedecID == 0 || readDeviceId() == _jedecID) {
     command(SPIFLASH_STATUSWRITE, true); // Write Status Register
     SPI.transfer(0);                     // Global Unprotect
@@ -142,8 +142,9 @@ uint8_t* SPIFlash::readUniqueId()
   SPI.transfer(0);
   SPI.transfer(0);
   SPI.transfer(0);
-  for (uint8_t i=0;i<8;i++)
+  for (uint8_t i=0;i<8;i++) {
     UNIQUEID[i] = SPI.transfer(0);
+  }
   unselect();
   return UNIQUEID;
 }
@@ -166,8 +167,9 @@ void SPIFlash::readBytes(uint32_t addr, void* buf, uint16_t len) {
   SPI.transfer(addr >> 8);
   SPI.transfer(addr);
   SPI.transfer(0); //"dont care"
-  for (uint16_t i = 0; i < len; ++i)
+  for (uint16_t i = 0; i < len; ++i) {
     ((uint8_t*) buf)[i] = SPI.transfer(0);
+  }
   unselect();
 }
 
@@ -239,12 +241,12 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
    uint16_t i=0;
    uint8_t oddAdr=0;
    char s[5];
-   
+
    command(SPIFLASH_AAIWORDPROGRAM, true);  // Byte/Page Program
    SPI.transfer(addr >> 16);
    SPI.transfer(addr >> 8);
    SPI.transfer(addr);
-   
+
    if (addr%2){
      //start address is not even, i.e. first byte of word must be 0xff
      SPI.transfer(0xff);
@@ -252,25 +254,31 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
      unselect();
      oddAdr=1; //following addresses must all be shifted one off
      len--;
-     if (len > 0) command(SPIFLASH_AAIWORDPROGRAM); //If for loop will run issue Wordprogram command
+     if (len > 0) {
+       command(SPIFLASH_AAIWORDPROGRAM); //If for loop will run issue Wordprogram command
+     }
    }
-   
+
    for (i=0;i<(len/2);i++){
      //AAI command must be set before every new word
-     if (i>0) command(SPIFLASH_AAIWORDPROGRAM); //Wordprogram command for first write has been issued before
+     if (i>0) {
+       command(SPIFLASH_AAIWORDPROGRAM); //Wordprogram command for first write has been issued before
+     }
      SPI.transfer(((uint8_t*) buf)[i*2+oddAdr]);
      SPI.transfer(((uint8_t*) buf)[i*2+1+oddAdr]);
      unselect();
    }
-   
+
    if (len-i*2 == 1){
      //There is one byte (i.e. half word) left. This happens if len was odd or (len was even and addr odd)
-     if (i>0) command(SPIFLASH_AAIWORDPROGRAM); //if for loop had not run wordprogram command from before is still valid
+     if (i>0) {
+       command(SPIFLASH_AAIWORDPROGRAM); //if for loop had not run wordprogram command from before is still valid
+     }
      SPI.transfer(((uint8_t*) buf)[i*2+oddAdr]);
      SPI.transfer(0xff);
      unselect();
    }
-   
+
    command(SPIFLASH_WRITEDISABLE); //end AAI programming
    unselect();
 #else
@@ -284,11 +292,12 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len) {
     SPI.transfer(addr >> 16);
     SPI.transfer(addr >> 8);
     SPI.transfer(addr);
-    
-    for (uint16_t i = 0; i < n; i++)
-    SPI.transfer(((uint8_t*) buf)[offset + i]);
+
+    for (uint16_t i = 0; i < n; i++) {
+      SPI.transfer(((uint8_t*) buf)[offset + i]);
+    }
     unselect();
-    
+
     addr+=n;  // adjust the addresses and remaining bytes by what we've just transferred.
     offset +=n;
     len -= n;

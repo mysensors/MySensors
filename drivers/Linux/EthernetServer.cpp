@@ -151,7 +151,9 @@ size_t EthernetServer::write(const uint8_t *buffer, size_t size)
 
 size_t EthernetServer::write(const char *str)
 {
-	if (str == NULL) return 0;
+	if (str == NULL) {
+		return 0;
+	}
 	return write((const uint8_t *)str, strlen(str));
 }
 

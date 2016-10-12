@@ -58,7 +58,9 @@ byte i2c_eeprom_read_byte(unsigned int eeaddress ) {
   Wire.write((int)(eeaddress & 0xFF)); // LSB
   Wire.endTransmission();
   Wire.requestFrom(I2C_EEP_ADDRESS,1);
-  if (Wire.available()) rdata = Wire.read();
+  if (Wire.available()) {
+    rdata = Wire.read();
+  }
   return rdata;
 }
 
