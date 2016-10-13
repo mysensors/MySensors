@@ -31,25 +31,26 @@
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error  
  * 
- * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
- * nRF24L01+  ESP8266
- * VCC        VCC
- * CE         GPIO4          
- * CSN/CS     GPIO15
- * SCK        GPIO14
- * MISO       GPIO12
- * MOSI       GPIO13
- *            
- * Not all ESP8266 modules have all pins available on their external interface.
- * This code has been tested on an ESP-12 module.
- * The ESP8266 requires a certain pin configuration to download code, and another one to run code:
- * - Connect REST (reset) via 10K pullup resistor to VCC, and via switch to GND ('reset switch')
- * - Connect GPIO15 via 10K pulldown resistor to GND
- * - Connect CH_PD via 10K resistor to VCC
- * - Connect GPIO2 via 10K resistor to VCC
- * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
+ * See http://www.mysensors.org/build/ethernet_gateway for wiring instructions.
+ * The W5100 ethernet module has problems sharing SPI with radio. 
+ * To solve this, we put the radio on a couple of other pins and 
+ * use so called soft-spi. That's why you have to wire the radio 
+ * a little differently here than on the usual sensors. 
  * 
-  * Inclusion mode button:
+ * Arduino 	NRF24L01 Radio 	Ethernet module
+ * GND 	    GND 	           GND
+ * 3.3V 	   VCC 	           VCC
+ * 13                     		SCK
+ * 12 		                    MISO/SO
+ * 11 		                    MOSI/SI
+ * 10 		                    SS/CS
+ * A2 	     MISO 	
+ * A1 	     MOSI 	
+ * A0 	     SCK 	
+ * 6 	      CSN 	
+ * 5 	      CE
+ *
+ * Inclusion mode button:
  * - Connect GPIO5 via switch to GND ('inclusion switch')
  * 
  * Hardware SHA204 signing is currently not supported!
