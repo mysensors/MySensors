@@ -97,7 +97,7 @@
 #endif
 /**
 * @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. 
+* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure.
 * This feature is enabled for all repeater nodes (incl. GW)
 */
 //#define MY_TRANSPORT_SANITY_CHECK
@@ -111,7 +111,7 @@
 #endif
 /**
 * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks 
+* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
 */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
 #define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
@@ -632,7 +632,11 @@
  * @brief RF69 SPI chip select pin.
  */
 #ifndef MY_RF69_SPI_CS
-#define MY_RF69_SPI_CS RF69_SPI_CS
+	#if defined(MY_SOFTSPI)
+		#define MY_RF69_SPI_CS 5
+	#else
+		#define MY_RF69_SPI_CS RF69_SPI_CS
+	#endif
 #endif
 
 /**
