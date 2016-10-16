@@ -35,11 +35,11 @@ LOCAL uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 #endif
 
 LOCAL void RF24_csn(bool level) {
-	digitalWrite(MY_RF24_CS_PIN, level);
+	hwDigitalWrite(MY_RF24_CS_PIN, level);
 }
 
 LOCAL void RF24_ce(bool level) {
-	digitalWrite(MY_RF24_CE_PIN, level);
+	hwDigitalWrite(MY_RF24_CE_PIN, level);
 }
 
 LOCAL uint8_t RF24_spiMultiByteTransfer(uint8_t cmd, uint8_t* buf, uint8_t len, bool aReadMode) {
@@ -338,10 +338,10 @@ LOCAL bool RF24_initialize(void) {
 	(void)RF24_getObserveTX;
 
 	// Initialize pins
-	pinMode(MY_RF24_CE_PIN,OUTPUT);
-	pinMode(MY_RF24_CS_PIN,OUTPUT);
+	hwPinMode(MY_RF24_CE_PIN,OUTPUT);
+	hwPinMode(MY_RF24_CS_PIN,OUTPUT);
 	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-		pinMode(MY_RF24_IRQ_PIN,INPUT);
+		hwPinMode(MY_RF24_IRQ_PIN,INPUT);
 	#endif
 	// Initialize SPI
 	_SPI.begin();

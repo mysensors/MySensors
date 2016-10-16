@@ -29,8 +29,8 @@ inline void inclusionInit() {
 	_inclusionMode = false;
 	#if defined(MY_INCLUSION_BUTTON_FEATURE)
 		// Setup digital in that triggers inclusion mode
-		pinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
-		digitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
+		hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
+		hwDigitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
 	#endif
 
 }
@@ -49,7 +49,7 @@ void inclusionModeSet(bool newMode) {
 
 inline void inclusionProcess() {
 	#ifdef MY_INCLUSION_BUTTON_FEATURE
-	if (!_inclusionMode && digitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == MY_INCLUSION_BUTTON_PRESSED) {
+	if (!_inclusionMode && hwDigitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == MY_INCLUSION_BUTTON_PRESSED) {
 		// Start inclusion mode
 		inclusionModeSet(true);
 	}

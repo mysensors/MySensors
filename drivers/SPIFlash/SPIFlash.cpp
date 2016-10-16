@@ -72,12 +72,12 @@ void SPIFlash::select() {
   SPI.setClockDivider(SPI_CLOCK_DIV4); //decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
   SPI.begin();
 #endif
-  digitalWrite(_slaveSelectPin, LOW);
+  hwDigitalWrite(_slaveSelectPin, LOW);
 }
 
 /// UNselect the flash chip
 void SPIFlash::unselect() {
-  digitalWrite(_slaveSelectPin, HIGH);
+  hwDigitalWrite(_slaveSelectPin, HIGH);
   //restore SPI settings to what they were before talking to the FLASH chip
 #ifdef SPI_HAS_TRANSACTION
   SPI.endTransaction();
@@ -97,7 +97,7 @@ boolean SPIFlash::initialize()
   _SPCR = SPCR;
   _SPSR = SPSR;
 #endif
-  pinMode(_slaveSelectPin, OUTPUT);
+  hwPinMode(_slaveSelectPin, OUTPUT);
 #ifdef SPI_HAS_TRANSACTION
   _settings = SPISettings(4000000, MSBFIRST, SPI_MODE0);
 #endif

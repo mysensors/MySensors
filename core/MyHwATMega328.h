@@ -58,7 +58,10 @@ do { 																\
 
 // Define these as macros to save valuable space
 
-#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+#define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
+#define hwDigitalRead(__pin) digitalReadFast(__pin)
+#define hwPinMode(__pin, __value) pinModeFast(__pin, __value)
+
 
 #if defined(MY_DISABLED_SERIAL)
 	#define hwInit()
@@ -78,7 +81,6 @@ do { 																\
 	#define hwWriteConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
 #endif
 
-//
 #define hwReadConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
 #define hwWriteConfigBlock(__buf, __pos, __length) (eeprom_write_block((void*)(__buf), (void*)(__pos), (__length)))
 

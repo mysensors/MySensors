@@ -33,8 +33,9 @@
 
 
 // Define these as macros to save valuable space
-
-#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+#define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
+#define hwDigitalRead(__pin) digitalRead(__pin)
+#define hwPinMode(__pin, __value) pinMode(__pin, __value)
 
 #if defined(MY_DISABLED_SERIAL)
 	#define hwInit()

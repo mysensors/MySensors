@@ -76,9 +76,9 @@ void AltSoftSerial::init(uint32_t cycles_per_bit)
 	}
 	ticks_per_bit = cycles_per_bit;
 	rx_stop_ticks = cycles_per_bit * 37 / 4;
-	pinMode(INPUT_CAPTURE_PIN, INPUT_PULLUP);
-	digitalWrite(OUTPUT_COMPARE_A_PIN, HIGH);
-	pinMode(OUTPUT_COMPARE_A_PIN, OUTPUT);
+	hwPinMode(INPUT_CAPTURE_PIN, INPUT_PULLUP);
+	hwDigitalWrite(OUTPUT_COMPARE_A_PIN, HIGH);
+	hwPinMode(OUTPUT_COMPARE_A_PIN, OUTPUT);
 	rx_state = 0;
 	rx_buffer_head = 0;
 	rx_buffer_tail = 0;
