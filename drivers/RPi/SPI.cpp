@@ -31,16 +31,7 @@ SPIClass SPI = SPIClass();
 
 uint8_t SPIClass::initialized = 0;
 
-SPIClass::SPIClass() {
-	if (!bcm2835_init()) {
-		mys_log(LOG_ERR, "Failed to initialized bcm2835.\n");
-		exit(1);
-	}
-}
-
-SPIClass::~SPIClass() {}
-
-uint8_t SPIClass::isInitialized() {
+uint8_t SPIClass::is_initialized() {
 	return initialized;
 }
 

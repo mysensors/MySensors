@@ -36,11 +36,14 @@
 
 // Implement these as functions or macros
 /*
-#define hwDigitalWrite(__pin, __value)
 #define hwInit() MY_SERIALDEVICE.begin(BAUD_RATE)
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
 #define hwMillis() millis()
+
+#define hwDigitalWrite(__pin, __value)
+#define hwDigitalRead(__pin)
+#define hwPinMode(__pin, __value)
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
@@ -75,8 +78,28 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
  */
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
 
+#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
+/**
+ * CPU voltage
+ * @return CPU voltage in mV
+ */
+uint16_t hwCPUVoltage();
+
+/**
+ * CPU frequency
+ * @return CPU frequency in 1/10Mhz
+ */
+uint16_t hwCPUFrequency();
+
+/**
+ * Free memory
+ * @return free memory in bytes
+ */
+uint16_t hwFreeMem();
+#endif
+
 #ifdef MY_DEBUG
-	void hwDebugPrint(const char *fmt, ... );
+void hwDebugPrint(const char *fmt, ... );
 #endif
 
 /** 

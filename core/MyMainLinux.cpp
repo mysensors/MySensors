@@ -22,6 +22,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <syslog.h>
 #include <errno.h>
@@ -56,7 +57,7 @@ static int daemonize(void)
 	/* Fork off the parent process */
 	pid = fork();
 	if (pid < 0) {
-		mys_log(LOG_ERR, "fork: %s", strerror(errno));
+		mys_log(LOG_ERR, "fork: %s\n", strerror(errno));
 		return -1;
 	}
 	/* If we got a good PID, then we can exit the parent process. */
@@ -72,20 +73,26 @@ static int daemonize(void)
 	/* Create a new SID for the child process */
 	sid = setsid();
 	if (sid < 0) {
-		mys_log(LOG_ERR, "setsid: %s", strerror(errno));
+		mys_log(LOG_ERR, "setsid: %s\n", strerror(errno));
 		return -1;
 	}
 
 	/* Change the current working directory.  This prevents the current
 	directory from being locked; hence not being able to remove it. */
 	if ((chdir("/")) < 0) {
-		mys_log(LOG_ERR, "chdir(\"/\"): %s", strerror(errno));
+		mys_log(LOG_ERR, "chdir(\"/\"): %s\n", strerror(errno));
 		return -1;
 	}
 
-	freopen( "/dev/null", "r", stdin);
-	freopen( "/dev/null", "r", stdout);
-	freopen( "/dev/null", "r", stderr);
+	if (freopen( "/dev/null", "r", stdin) == NULL) {
+		mys_log(LOG_ERR, "freopen: %s\n", strerror(errno));
+	}
+	if (freopen( "/dev/null", "r", stdout) == NULL) {
+		mys_log(LOG_ERR, "freopen: %s\n", strerror(errno));
+	}
+	if (freopen( "/dev/null", "r", stderr) == NULL) {
+		mys_log(LOG_ERR, "freopen: %s\n", strerror(errno));
+	}
 
 	return 0;
 }

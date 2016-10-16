@@ -71,22 +71,10 @@
 #elif defined(ARDUINO_ARCH_SAMD)
         #include "core/MyHwSAMD.cpp"
 #elif defined(__linux__)
-	// Remove PSTR macros from debug prints
-	#undef PSTR
-	#define PSTR(x) (x)
-	//#undef F
-	//#define F(x) (x)
-	#define PROGMEM
-	#define vsnprintf_P(...) vsnprintf( __VA_ARGS__ )
-	#define snprintf_P(...) snprintf( __VA_ARGS__ )
-	#define memcpy_P memcpy
-	#define pgm_read_dword(x) (*x)
-	#define pgm_read_byte_near(x) (*x)
-	#include "core/MyHwLinuxGeneric.cpp"
-	// Ugly hack
 	#ifdef LINUX_ARCH_RASPBERRYPI
-		#undef hwDigitalWrite
-		#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
+		#include "core/MyHwRPi.cpp"
+	#else
+		#include "core/MyHwLinuxGeneric.cpp"
 	#endif
 #endif
 

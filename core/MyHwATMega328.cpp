@@ -161,6 +161,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
+#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage() {
 	// Measure Vcc against 1.1V Vref
 	#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -214,8 +215,7 @@ uint16_t hwFreeMem() {
 	int v;
 	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
-
-
+#endif
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {

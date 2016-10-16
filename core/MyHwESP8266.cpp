@@ -114,6 +114,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
+#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 ADC_MODE(ADC_VCC);
 
 uint16_t hwCPUVoltage() {
@@ -129,6 +130,7 @@ uint16_t hwCPUFrequency() {
 uint16_t hwFreeMem() {
 	return ESP.getFreeHeap();
 }
+#endif
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {

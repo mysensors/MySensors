@@ -84,7 +84,7 @@ void EthernetServer::begin(IPAddress address)
 	}
 
 	if (p == NULL)  {
-		mys_log(LOG_ERR, "failed to bind\n");
+		mys_log(LOG_ERR, "Failed to bind!\n");
 		freeaddrinfo(servinfo);
 		return;
 	}
@@ -142,7 +142,7 @@ size_t EthernetServer::write(const uint8_t *buffer, size_t size)
 			client.stop();
 			clients[i] = clients.back();
 			clients.pop_back();
-			mys_log(LOG_DEBUG, "Client disconnected.");
+			mys_log(LOG_DEBUG, "Client disconnected.\n");
 		}
 	}
 
@@ -194,7 +194,7 @@ void EthernetServer::_accept()
 			}
 		}
 		if (no_free_slots) {
-			mys_log(LOG_DEBUG, "Max number of ethernet clients reached.");
+			mys_log(LOG_DEBUG, "Max number of ethernet clients reached.\n");
 			return;
 		}
 	}
