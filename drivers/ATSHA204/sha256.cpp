@@ -54,7 +54,7 @@ void Sha256Class::hashBlock() {
   f=state.w[5];
   g=state.w[6];
   h=state.w[7];
-  
+
   for (i=0; i<64; i++) {
     if (i>=16) {
       t1 = buffer.w[i&15] + buffer.w[(i-7)&15];
@@ -102,7 +102,9 @@ void Sha256Class::pad() {
 
   // Pad with 0x80 followed by 0x00 until the end of the block
   addUncounted(0x80);
-  while (bufferOffset != 56) addUncounted(0x00);
+  while (bufferOffset != 56) {
+		addUncounted(0x00);
+	}
 
   // Append length in the last 8 bytes
   addUncounted(0); // We're only using 32 bit lengths
@@ -119,7 +121,7 @@ void Sha256Class::pad() {
 uint8_t* Sha256Class::result(void) {
   // Pad to complete the last block
   pad();
-  
+
   // Swap byte order back
   for (int i=0; i<8; i++) {
     uint32_t a,b;
@@ -130,7 +132,7 @@ uint8_t* Sha256Class::result(void) {
     b|=a>>24;
     state.w[i]=b;
   }
-  
+
   // Return pointer to hash (20 characters)
   return state.b;
 }
@@ -147,7 +149,9 @@ void Sha256Class::initHmac(const uint8_t* key, int keyLength) {
   if (keyLength > BLOCK_LENGTH) {
     // Hash long keys
     init();
-    for (;keyLength--;) write(*key++);
+    for (;keyLength--;) {
+			write(*key++);
+		}
     memcpy(keyBuffer,result(),HASH_LENGTH);
   } else {
     // Block length keys are used as is
@@ -166,7 +170,11 @@ uint8_t* Sha256Class::resultHmac(void) {
   memcpy(innerHash,result(),HASH_LENGTH);
   // Calculate outer hash
   init();
-  for (i=0; i<BLOCK_LENGTH; i++) write(keyBuffer[i] ^ HMAC_OPAD);
-  for (i=0; i<HASH_LENGTH; i++) write(innerHash[i]);
+  for (i=0; i<BLOCK_LENGTH; i++) {
+		write(keyBuffer[i] ^ HMAC_OPAD);
+	}
+  for (i=0; i<HASH_LENGTH; i++) {
+		write(innerHash[i]);
+	}
   return result();
 }

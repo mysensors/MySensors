@@ -79,9 +79,15 @@ void SPIClass::setClockDivider(uint16_t divider) {
 }
 
 void SPIClass::chipSelect(int csn_pin) {
-	if (csn_pin == RPI_GPIO_P1_26) csn_pin = BCM2835_SPI_CS1;
-	else if (csn_pin == RPI_GPIO_P1_24) csn_pin = BCM2835_SPI_CS0;
-	else csn_pin = BCM2835_SPI_CS0;
+	if (csn_pin == RPI_GPIO_P1_26) {
+		csn_pin = BCM2835_SPI_CS1;
+	}
+	else if (csn_pin == RPI_GPIO_P1_24) {
+		csn_pin = BCM2835_SPI_CS0;
+	}
+	else {
+		csn_pin = BCM2835_SPI_CS0;
+	}
 	bcm2835_spi_chipSelect(csn_pin);
 	delayMicroseconds(5);
 }

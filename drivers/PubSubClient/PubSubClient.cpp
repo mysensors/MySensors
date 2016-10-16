@@ -231,7 +231,9 @@ boolean PubSubClient::readByte(uint8_t * result, uint16_t * index){
 
 uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
     uint16_t len = 0;
-    if(!readByte(buffer, &len)) return 0;
+    if(!readByte(buffer, &len)) {
+      return 0;
+    }
     bool isPublish = (buffer[0]&0xF0) == MQTTPUBLISH;
     uint32_t multiplier = 1;
     uint16_t length = 0;
@@ -240,7 +242,9 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
     uint8_t start = 0;
 
     do {
-        if(!readByte(&digit)) return 0;
+        if(!readByte(&digit)) {
+          return 0;
+        }
         buffer[len++] = digit;
         length += (digit & 127) * multiplier;
         multiplier *= 128;
@@ -249,8 +253,12 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
 
     if (isPublish) {
         // Read in topic length to calculate bytes to skip over for Stream writing
-        if(!readByte(buffer, &len)) return 0;
-        if(!readByte(buffer, &len)) return 0;
+        if(!readByte(buffer, &len)) {
+          return 0;
+        }
+        if(!readByte(buffer, &len)) {
+          return 0;
+        }
         skip = (buffer[*lengthLength+1]<<8)+buffer[*lengthLength+2];
         start = 2;
         if (buffer[0]&MQTTQOS1) {
@@ -260,7 +268,9 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
     }
 
     for (uint16_t i = start;i<length;i++) {
-        if(!readByte(&digit)) return 0;
+        if(!readByte(&digit)) {
+          return 0;
+        }
         if (this->stream) {
             if (isPublish && len-*lengthLength-2>skip) {
                 this->stream->write(digit);

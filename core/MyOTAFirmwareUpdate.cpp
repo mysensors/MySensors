@@ -16,7 +16,7 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
- 
+
 #include "MyOTAFirmwareUpdate.h"
 
 // global variables
@@ -76,7 +76,7 @@ bool firmwareOTAUpdateProcess() {
 				// erase lower 32K -> max flash size for ATMEGA328
 				_flash.blockErase32K(0);
 				// wait until flash erased
-				while ( _flash.busy() );
+				while ( _flash.busy() ) {}
 				_fwBlock = _fc.blocks;
 				_fwUpdateOngoing = true;
 				// reset flags
@@ -96,7 +96,7 @@ bool firmwareOTAUpdateProcess() {
 			// write to flash
 			_flash.writeBytes( ((_fwBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 			// wait until flash written
-			while ( _flash.busy() );
+			while ( _flash.busy() ) {}
 			_fwBlock--;
 			if (!_fwBlock) {
 				// We're finished! Do a checksum and reboot.
@@ -137,7 +137,7 @@ void presentBootloaderInformation(){
 	// add bootloader information
 	reqFWConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
 	_fwUpdateOngoing = false;
-	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));	
+	_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
 }
 // do a crc16 on the whole received firmware
 bool transportIsValidFirmware() {
@@ -146,10 +146,12 @@ bool transportIsValidFirmware() {
 	for (uint16_t i = 0; i < _fc.blocks * FIRMWARE_BLOCK_SIZE; ++i) {
 		crc ^= _flash.readByte(i + FIRMWARE_START_OFFSET);
 	    for (int8_t j = 0; j < 8; ++j) {
-	        if (crc & 1)
-	            crc = (crc >> 1) ^ 0xA001;
-	        else
-	            crc = (crc >> 1);
+	        if (crc & 1) {
+            crc = (crc >> 1) ^ 0xA001;
+          }
+	        else {
+	          crc = (crc >> 1);
+          }
 	    }
 	}
 	return crc == _fc.crc;

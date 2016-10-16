@@ -36,7 +36,7 @@
  *
  * |E| SYS	| SUB	| Message									| Comment
  * |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
- * | | OTA  | FWP	| UPDATE									| FW update initiated 
+ * | | OTA  | FWP	| UPDATE									| FW update initiated
  * |!| OTA  | FWP	| FLASH INIT FAIL							| Failed to initialise flash
  * | | OTA  | FWP	| UPDATE SKIPPED							| FW update skipped, no newer version available
  * | | OTA  | FWP	| RECV B=%04X								| Received FW block (B)
@@ -132,7 +132,7 @@ bool firmwareOTAUpdateProcess();
  */
 bool transportIsValidFirmware();
 /**
- * @brief Present bootloader/FW information upon startup 
+ * @brief Present bootloader/FW information upon startup
  */
 void presentBootloaderInformation();
 

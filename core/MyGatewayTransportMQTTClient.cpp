@@ -49,8 +49,9 @@ static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
 
 bool gatewayTransportSend(MyMessage &message) {
-	if (!_MQTT_client.connected())
+	if (!_MQTT_client.connected()) {
 		return false;
+	}
 	setIndication(INDICATION_GW_TX);
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	debug(PSTR("Sending message on topic: %s\n"), topic);
@@ -134,7 +135,7 @@ bool gatewayTransportInit() {
 		(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 		#ifdef MY_IP_ADDRESS
 			WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
-		#endif	
+		#endif
 	#endif
 
 	gatewayTransportConnect();
@@ -144,15 +145,16 @@ bool gatewayTransportInit() {
 }
 
 bool gatewayTransportAvailable() {
-	if (_MQTT_connecting)
+	if (_MQTT_connecting) {
 		return false;
-
+  }
 	//keep lease on dhcp address
 	//Ethernet.maintain();
 	if (!_MQTT_client.connected()) {
 		//reinitialise client
-		if (gatewayTransportConnect())
+		if (gatewayTransportConnect()) {
 			reconnectMQTT();
+		}
 		return false;
 	}
 	_MQTT_client.loop();

@@ -43,6 +43,7 @@ void setIndication( const indication_t ind )
         ledsBlinkErr(ind-INDICATION_ERR_START);
     }
 #endif
-    if (indication)
-        indication(ind);
+    if (indication) {
+      indication(ind);
+    }
 }

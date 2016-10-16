@@ -212,7 +212,9 @@ int SerialPort::peek()
 {
 	FILE * f = fdopen(sd, "r+");
 	int c = getc(f);
-	if (c == EOF) return -1;
+	if (c == EOF) {
+		return -1;
+	}
 	ungetc(c, f);
 	return c;
 }

@@ -105,10 +105,12 @@ size_t Print::print(long n, int base) {
 }
 
 size_t Print::print(unsigned long n, int base) {
-	if(base == 0)
+	if(base == 0) {
 		return write(n);
-	else
+	}
+	else {
 		return printNumber(n, base);
+	}
 }
 
 size_t Print::print(double n, int digits) {
@@ -182,8 +184,9 @@ size_t Print::printNumber(unsigned long n, uint8_t base) {
 	*str = '\0';
 
 	// prevent crash if called with base == 1
-	if(base < 2)
+	if(base < 2) {
 		base = 10;
+	}
 
 	do {
 		unsigned long m = n;
@@ -198,14 +201,18 @@ size_t Print::printNumber(unsigned long n, uint8_t base) {
 size_t Print::printFloat(double number, uint8_t digits) {
 	size_t n = 0;
 
-	if(std::isnan(number))
+	if(std::isnan(number)) {
 		return print("nan");
-	if(std::isinf(number))
+	}
+	if(std::isinf(number)) {
 		return print("inf");
-	if(number > 4294967040.0)
+	}
+	if(number > 4294967040.0) {
 		return print("ovf");  // constant determined empirically
-	if(number < -4294967040.0)
+	}
+	if(number < -4294967040.0) {
 		return print("ovf");  // constant determined empirically
+	}
 
 	// Handle negative numbers
 	if(number < 0.0) {
@@ -215,8 +222,9 @@ size_t Print::printFloat(double number, uint8_t digits) {
 
 	// Round correctly so that print(1.999, 2) prints as "2.00"
 	double rounding = 0.5;
-	for(uint8_t i = 0; i < digits; ++i)
+	for(uint8_t i = 0; i < digits; ++i) {
 		rounding /= 10.0;
+	}
 
 	number += rounding;
 

@@ -70,10 +70,12 @@ bool protocolParse(MyMessage &message, char *inputString) {
 					value = str;
 					// Remove trailing carriage return and newline character (if it exists)
 					uint8_t lastCharacter = strlen(value)-1;
-					if (value[lastCharacter] == '\r')
+					if (value[lastCharacter] == '\r') {
 						value[lastCharacter] = 0;
-					if (value[lastCharacter] == '\n')
+					}
+					if (value[lastCharacter] == '\n') {
 						value[lastCharacter] = 0;
+					}
 				}
 				break;
 		}
@@ -81,16 +83,18 @@ bool protocolParse(MyMessage &message, char *inputString) {
 	}
 	//debug(PSTR("Received %d"), i);
 	// Check for invalid input
-	if (i < 5)
+	if (i < 5) {
 		return false;
-
+	}
 	message.sender = GATEWAY_ADDRESS;
 	message.last = GATEWAY_ADDRESS;
 	mSetAck(message, false);
-	if (command == C_STREAM)
+	if (command == C_STREAM) {
 		message.set(bvalue, blen);
-	else
+	}
+	else {
 		message.set(value);
+	}
 	return true;
 }
 
@@ -158,8 +162,9 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 		i++;
 	}
 
-	if (i != 6)
+	if (i != 6) {
 		return false;
+	}
 
 	message.sender = GATEWAY_ADDRESS;
 	message.last = GATEWAY_ADDRESS;
@@ -190,11 +195,14 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 
 uint8_t protocolH2i(char c) {
 	uint8_t i = 0;
-	if (c <= '9')
+	if (c <= '9') {
 		i += c - '0';
-	else if (c >= 'a')
+	}
+	else if (c >= 'a') {
 		i += c - 'a' + 10;
-	else
+	}
+	else {
 		i += c - 'A' + 10;
+	}
 	return i;
 }

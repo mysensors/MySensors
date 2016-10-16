@@ -75,10 +75,12 @@ const char* MyMessage::getString() const {
 // handles single character hex (0 - 15)
 char MyMessage::i2h(uint8_t i) const {
 	uint8_t k = i & 0x0F;
-	if (k <= 9)
+	if (k <= 9) {
 		return '0' + k;
-	else
+  }
+	else {
 		return 'A' + k - 10;
+  }
 }
 
 char* MyMessage::getCustomString(char *buffer) const {
@@ -173,7 +175,7 @@ uint32_t MyMessage::getULong() const {
 }
 
 int16_t MyMessage::getInt() const {
-	if (miGetPayloadType() == P_INT16) { 
+	if (miGetPayloadType() == P_INT16) {
 		return iValue;
 	} else if (miGetPayloadType() == P_STRING) {
 		return atoi(data);
@@ -183,7 +185,7 @@ int16_t MyMessage::getInt() const {
 }
 
 uint16_t MyMessage::getUInt() const {
-	if (miGetPayloadType() == P_UINT16) { 
+	if (miGetPayloadType() == P_UINT16) {
 		return uiValue;
 	} else if (miGetPayloadType() == P_STRING) {
 		return atoi(data);
@@ -211,7 +213,7 @@ MyMessage& MyMessage::setDestination(uint8_t _destination) {
 // Set payload
 MyMessage& MyMessage::set(void* value, uint8_t length) {
 	uint8_t payloadLength = value == NULL ? 0 : min(length, (uint8_t)MAX_PAYLOAD);
-	miSetLength(payloadLength); 
+	miSetLength(payloadLength);
 	miSetPayloadType(P_CUSTOM);
 	memcpy(data, value, payloadLength);
 	return *this;
@@ -221,7 +223,7 @@ MyMessage& MyMessage::set(const char* value) {
 	uint8_t length = value == NULL ? 0 : min(strlen(value), (size_t)MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
-	if (length) {		
+	if (length) {
 		strncpy(data, value, length);
 	}
 	// null terminate string

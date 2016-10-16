@@ -112,7 +112,7 @@ void stInitUpdate(void) {
 				// ID invalid (0 or 255)
 				transportSwitchSM(stFailure);
 			}
-		#endif	
+		#endif
 	}
 }
 
@@ -191,7 +191,7 @@ void stIDUpdate(void) {
 		TRANSPORT_DEBUG(PSTR("TSM:ID:OK\n"));
 		setIndication(INDICATION_GOT_NODEID);
 		// proceed to next state
-		transportSwitchSM(stUplink);	
+		transportSwitchSM(stUplink);
 	}
 	else if (transportTimeInState() > MY_TRANSPORT_STATE_TIMEOUT_MS) {
 		// timeout
@@ -261,7 +261,7 @@ void stReadyTransition(void) {
 
 // stReadyUpdate: monitors link
 void stReadyUpdate(void) {
-	#if defined(MY_GATEWAY_FEATURE)		
+	#if defined(MY_GATEWAY_FEATURE)
 		if (hwMillis() - _lastNetworkDiscovery > MY_TRANSPORT_DISCOVERY_INTERVAL_MS) {
 			_lastNetworkDiscovery = hwMillis();
 			TRANSPORT_DEBUG(PSTR("TSM:READY:NWD REQ\n"));	// send transport network discovery
@@ -319,7 +319,9 @@ void transportSwitchSM(transportState& newState) {
 	else {
 		_transportSM.stateRetries++;	// increment retries
 	}
-	if (_transportSM.currentState->Transition) _transportSM.currentState->Transition();	// State transition
+	if (_transportSM.currentState->Transition) {
+		_transportSM.currentState->Transition();	// State transition
+	}
 	_transportSM.stateEnter = hwMillis();	// save time
 }
 
@@ -328,7 +330,9 @@ uint32_t transportTimeInState(void) {
 }
 
 void transportUpdateSM(void) {
-	if (_transportSM.currentState->Update) _transportSM.currentState->Update();
+	if (_transportSM.currentState->Update) {
+		_transportSM.currentState->Update();
+	}
 }
 
 bool isTransportReady(void) {
@@ -363,7 +367,7 @@ void transportInitialise(void) {
 // update TSM and process incoming messages
 void transportProcess(void) {
 	// update state machine
-	transportUpdateSM();	
+	transportUpdateSM();
 	// process transport FIFO
 	transportProcessFIFO();
 }
@@ -415,7 +419,7 @@ bool transportAssignNodeID(const uint8_t newNodeId) {
 bool transportRouteMessage(MyMessage &message) {
 	const uint8_t destination = message.destination;
 	uint8_t route = _nc.parentNodeId;	// by default, all traffic is routed via parent node
-	
+
 	if (_transportSM.findingParentNode && destination != BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("!TSF:RTE:FPAR ACTIVE\n")); // find parent active, message not sent
 		// request to send a non-BC message while finding parent active, abort
@@ -438,7 +442,7 @@ bool transportRouteMessage(MyMessage &message) {
 					if (message.last != _nc.parentNodeId) {
 						// message not from parent, i.e. child node - route it to parent
 						route = _nc.parentNodeId;
-					} 
+					}
 					else {
 						// route unknown and msg received from parent, send it to destination assuming in rx radius
 						route = destination;
@@ -464,7 +468,9 @@ bool transportRouteMessage(MyMessage &message) {
 			else _transportSM.failedUplinkTransmissions = 0u;
 		}
 	#else
-		if(!result) setIndication(INDICATION_ERR_TX);
+		if(!result) {
+			setIndication(INDICATION_ERR_TX);
+		}
 	#endif
 
 	return result;
@@ -532,7 +538,7 @@ void transportProcessMessage(void) {
 	setIndication(INDICATION_RX);
 	const uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
 	// get message length and limit size
-	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);	
+	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
 	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
 	const uint8_t command = mGetCommand(_msg);
@@ -557,12 +563,12 @@ void transportProcessMessage(void) {
 		TRANSPORT_DEBUG(PSTR("!TSF:MSG:PVER,%d=%d\n"), mGetVersion(_msg), PROTOCOL_VERSION);	// protocol version mismatch
 		return;
 	}
-		
+
 	// Reject messages that do not pass verification
 	if (!signerVerifyMsg(_msg)) {
 		setIndication(INDICATION_ERR_SIGN);
 		TRANSPORT_DEBUG(PSTR("!TSF:MSG:SIGN VERIFY FAIL\n"));
-		return;	
+		return;
 	}
 
 	// update routing table if msg not from parent
@@ -580,7 +586,7 @@ void transportProcessMessage(void) {
 
 	// set message received flag
 	_transportSM.msgReceived = true;
-		
+
 	// Is message addressed to this node?
 	if (destination == _nc.nodeId) {
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
@@ -590,14 +596,14 @@ void transportProcessMessage(void) {
 		// Check if sender requests an ack back.
 		if (mGetRequestAck(_msg)) {
 			TRANSPORT_DEBUG(PSTR("TSF:MSG:ACK REQ\n"));	// ACK requested
-			_msgTmp = _msg;	// Copy message	
+			_msgTmp = _msg;	// Copy message
 			mSetRequestAck(_msgTmp, false); // Reply without ack flag (otherwise we would end up in an eternal loop)
 			mSetAck(_msgTmp, true); // set ACK flag
 			_msgTmp.sender = _nc.nodeId;
 			_msgTmp.destination = sender;
 			// send ACK, use transportSendRoute since ACK reply is not internal, i.e. if !transportOK do not reply
 			(void)transportSendRoute(_msgTmp);
-		} 
+		}
 		if(!mGetAck(_msg)) {
 			// only process if not ACK
 			if (command == C_INTERNAL) {
@@ -683,7 +689,7 @@ void transportProcessMessage(void) {
 		if (receive) {
 			receive(_msg);
 		}
-	} 
+	}
 	else if (destination == BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("TSF:MSG:BC\n"));	// broadcast msg
 		if (command == C_INTERNAL) {
@@ -707,7 +713,7 @@ void transportProcessMessage(void) {
 						}
 					}
 					#endif
-					return; // no further processing required, do not forward	
+					return; // no further processing required, do not forward
 				}
 			} // isTransportReady
 			if (type == I_FIND_PARENT_RESPONSE) {
@@ -732,12 +738,14 @@ void transportProcessMessage(void) {
 				(void)transportRouteMessage(_msg);
 			}
 		#endif
-		
+
 		// Callback for BC, only for non-internal messages
 		if (command != C_INTERNAL) {
 			#if !defined(MY_GATEWAY_FEATURE)
 				// only proceed if message received from parent
-				if (last != _nc.parentNodeId) return;
+				if (last != _nc.parentNodeId) {
+					return;
+				}
 			#endif
 			#if defined(MY_GATEWAY_FEATURE)
 				// Hand over message to controller
@@ -747,10 +755,10 @@ void transportProcessMessage(void) {
 				receive(_msg);
 			}
 		}
-				
-	} 
+
+	}
 	else {
-		// msg not to us and not BC, relay msg 
+		// msg not to us and not BC, relay msg
 		#if defined(MY_REPEATER_FEATURE)
 		if (isTransportReady()) {
 			TRANSPORT_DEBUG(PSTR("TSF:MSG:REL MSG\n"));	// relay msg
@@ -817,7 +825,7 @@ bool transportSendWrite(const uint8_t to, MyMessage &message) {
 		setIndication(INDICATION_ERR_SIGN);
 		return false;
 	}
-	
+
 	// msg length changes if signed
 	const uint8_t totalMsgLength = HEADER_SIZE + ( mGetSigned(message) ? MAX_PAYLOAD : mGetLength(message) );
 
@@ -873,6 +881,3 @@ uint8_t transportGetRoute(const uint8_t node) {
 	#endif
 	return result;
 }
-
-
-// EOF MyTransport.cpp

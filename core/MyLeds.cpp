@@ -51,8 +51,9 @@ inline void ledsInit()
 
 void ledsProcess() {
 	// Just return if it is not the time...
-	if ((hwMillis() - prevTime) < LED_PROCESS_INTERVAL_MS)
+	if ((hwMillis() - prevTime) < LED_PROCESS_INTERVAL_MS) {
 		return;
+	}
 
 	prevTime += LED_PROCESS_INTERVAL_MS;
 
@@ -63,19 +64,25 @@ void ledsProcess() {
 #if defined(MY_DEFAULT_RX_LED_PIN)
     state = (countRx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
     hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, state);
-    if (countRx)  --countRx;
+    if (countRx) {
+			--countRx;
+		}
 #endif
 
 #if defined(MY_DEFAULT_TX_LED_PIN)
     state = (countTx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
     hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, state);
-    if (countTx)  --countTx;
+    if (countTx) {
+			--countTx;
+		}
 #endif
 
 #if defined(MY_DEFAULT_ERR_LED_PIN)
     state = (countErr & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
     hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, state);
-    if (countErr) --countErr;
+    if (countErr) {
+			--countErr;
+		}
 #endif
 }
 

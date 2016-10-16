@@ -125,7 +125,9 @@ bool _serialProcess()
 {
     char inch;
     unsigned char i;
-    if (!_dev.available()) return false;
+    if (!_dev.available()) {
+			return false;
+		}
 
     while(_dev.available()) {
         inch = _dev.read();
@@ -263,7 +265,9 @@ bool transportSend(uint8_t to, const void* data, uint8_t len)
 	#endif
 
 		// Start of header by writing multiple SOH
-    for(byte w=0;w<1;w++)  _dev.write(SOH);
+    for(byte w=0;w<1;w++) {
+			_dev.write(SOH);
+		}
     _dev.write(to);  // Destination address
     cs += to;
     _dev.write(_nodeId); // Source address
@@ -351,5 +355,3 @@ uint8_t transportReceive(void* data) {
 void transportPowerDown() {
 	// Nothing to shut down here
 }
-
-
