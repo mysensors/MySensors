@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <syslog.h>
 #include <errno.h>
+#include <getopt.h>
 #include "log.h"
 #include "MySensorsCore.h"
 
@@ -101,20 +102,247 @@ void print_usage()
 {
 	printf("Usage: mysGateway [options]\n\n" \
 			 "Options:\n" \
-			 "  -h            Display a short summary of all program options.\n" \
-			 "  -d            Enable debug.\n" \
-			 "  -b            Become a daemon.\n");
+			 "  -h, --help                 Display a short summary of all program options.\n" \
+			 "  -d, --debug                Enable debug.\n" \
+			 "  -b, --background           Run as a background process.\n"
+			 "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n"
+			 "  --gen-soft-serial-key      Generate and print a soft serial key.\n"
+			 "  --gen-aes-key              Generate and print an aes encryption key.\n"
+			 "  --print-soft-hmac-key      Print the soft hmac key from the config file.\n"
+			 "  --print-soft-serial-key    Print the soft serial key from the config file.\n"
+			 "  --print-aes-key            Print the aes encryption key from the config file.\n"
+			 "  --set-soft-hmac-key        Write a soft hmac key to the config file.\n"
+			 "  --set-soft-serial-key      Write a soft serial key to the config file.\n"
+			 "  --set-aes-key              Write an aes encryption key to the config file.\n");
+}
+
+void print_soft_sign_hmac_key()
+{
+	uint8_t key[32];
+
+	hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+
+	printf("SOFT_HMAC_KEY | ");
+	for (int i = 0; i < 32; i++) {
+		printf("%02X", key[i]);
+	}
+	printf("\n");
+
+	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
+	printf("#define MY_SOFT_HMAC_KEY ");
+	for (int i=0; i<32; i++) {
+		printf("%#02X", key[i]);
+		if (i < 31) printf(",");
+	}
+	printf("\n");
+}
+
+void generate_soft_sign_hmac_key()
+{
+	uint8_t key[32];
+
+	for (int i = 0; i < 32; i++) {
+		key[i] = random(256) ^ micros();
+		unsigned long enter = hwMillis();
+		while (hwMillis() - enter < (unsigned long)2);
+	}
+
+	printf("SOFT_HMAC_KEY | ");
+	for (int i = 0; i < 32; i++) {
+		printf("%02X", key[i]);
+	}
+	printf("\n");
+}
+
+void set_soft_sign_hmac_key(char *key_str)
+{
+	uint8_t key[32];
+	int n;
+
+	if (strlen(key_str) != 64) {
+		printf("invalid key!\n");
+	} else {
+		for (int i = 0; i < 64; ++i) {
+			char c = key_str[i];
+			if (c <= '9')
+				n = c - '0';
+			else if (c >= 'a')
+				n = c - 'a' + 10;
+			else
+				n = c - 'A' + 10;
+
+			if ((i & 0x1) == 0) {
+				key[i/2] = n * 16;
+			} else {
+				key[i/2] += n;
+			}
+		}
+		hwWriteConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+		print_soft_sign_hmac_key();
+	}
+}
+
+void print_soft_sign_serial_key()
+{
+	uint8_t key[9];
+
+	hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+
+	printf("SOFT_SERIAL   | ");
+	for (int i = 0; i < 9; i++) {
+		printf("%02X", key[i]);
+	}
+	printf("\n");
+
+	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
+	printf("#define MY_SOFT_SERIAL ");
+	for (int i=0; i<9; i++) {
+		printf("%#02X", key[i]);
+		if (i < 8) printf(",");
+	}
+	printf("\n");
+}
+
+void generate_soft_sign_serial_key()
+{
+	uint8_t key[9];
+
+	for (int i = 0; i < 9; i++) {
+		key[i] = random(256) ^ micros();
+		unsigned long enter = hwMillis();
+		while (hwMillis() - enter < (unsigned long)2);
+	}
+
+	printf("SOFT_SERIAL   | ");
+	for (int i = 0; i < 9; i++) {
+		printf("%02X", key[i]);
+	}
+	printf("\n");
+}
+
+void set_soft_sign_serial_key(char *key_str)
+{
+	uint8_t key[9];
+	int n;
+
+	if (strlen(key_str) != 18) {
+		printf("invalid key!\n");
+	} else {
+		for (int i = 0; i < 18; ++i) {
+			char c = key_str[i];
+			if (c <= '9')
+				n = c - '0';
+			else if (c >= 'a')
+				n = c - 'a' + 10;
+			else
+				n = c - 'A' + 10;
+
+			if ((i & 0x1) == 0) {
+				key[i/2] = n * 16;
+			} else {
+				key[i/2] += n;
+			}
+		}
+		hwWriteConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+		print_soft_sign_serial_key();
+	}
+}
+
+void print_aes_key()
+{
+	uint8_t key[16];
+
+	hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+
+	printf("AES_KEY       | ");
+	for (int i = 0; i < 16; i++) {
+		printf("%02X", key[i]);
+	}
+	printf("\n");
+
+	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
+	printf("#define MY_AES_KEY ");
+	for (int i=0; i<16; i++) {
+		printf("%#02X", key[i]);
+		if (i < 15) printf(",");
+	}
+	printf("\n");
+}
+
+void generate_aes_key()
+{
+	uint8_t key[16];
+
+	for (int i = 0; i < 16; i++) {
+		key[i] = random(256) ^ micros();
+		unsigned long enter = hwMillis();
+		while (hwMillis() - enter < (unsigned long)2);
+	}
+
+	printf("AES_KEY       | ");
+	for (int i = 0; i < 16; i++) {
+		printf("%02X", key[i]);
+	}
+	printf("\n");
+}
+
+void set_aes_key(char *key_str)
+{
+	uint8_t key[16];
+	int n;
+
+	if (strlen(key_str) != 32) {
+		printf("invalid key!\n");
+	} else {
+		for (int i = 0; i < 32; ++i) {
+			char c = key_str[i];
+			if (c <= '9')
+				n = c - '0';
+			else if (c >= 'a')
+				n = c - 'a' + 10;
+			else
+				n = c - 'A' + 10;
+
+			if ((i & 0x1) == 0) {
+				key[i/2] = n * 16;
+			} else {
+				key[i/2] += n;
+			}
+		}
+		hwWriteConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+		print_aes_key();
+	}
 }
 
 int main(int argc, char *argv[])
 {
 	int opt, log_opts, debug = 0, foreground = 1;
+	char *key = NULL;
 
 	/* register the signal handler */
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
 
-	while ((opt = getopt(argc, argv, "hdb")) != -1) {
+	hwRandomNumberInit();
+
+	static struct option long_options[] = {
+		{"help",					no_argument,		0,	'h'},
+		{"debug",					no_argument,		0,	'd'},
+		{"background",				no_argument,		0,	'b'},
+		{"gen-soft-hmac-key",		no_argument,		0,	'A'},
+		{"gen-soft-serial-key",		no_argument,		0,	'B'},
+		{"gen-aes-key",				no_argument,		0,	'C'},
+		{"print-soft-hmac-key",		no_argument,		0,	'D'},
+		{"print-soft-serial-key",	no_argument,		0,	'E'},
+		{"print-aes-key",			no_argument,		0,	'F'},
+		{"set-soft-hmac-key",		required_argument,	0,	'G'},
+		{"set-soft-serial-key",		required_argument,	0,	'H'},
+		{"set-aes-key",				required_argument,	0,	'I'},
+		{0, 0, 0, 0}
+	};
+
+	int long_index = 0;
+	while ((opt = getopt_long(argc, argv,"hdbABCDEFGHI", long_options, &long_index )) != -1) {
 		switch (opt) {
 			case 'h':
 				print_usage();
@@ -125,6 +353,36 @@ int main(int argc, char *argv[])
 			case 'b':
 				foreground = 0;
 				break;
+			case 'A':
+				generate_soft_sign_hmac_key();
+				exit(0);
+			case 'B':
+				generate_soft_sign_serial_key();
+				exit(0);
+			case 'C':
+				generate_aes_key();
+				exit(0);
+			case 'D':
+				print_soft_sign_hmac_key();
+				exit(0);
+			case 'E':
+				print_soft_sign_serial_key();
+				exit(0);
+			case 'F':
+				print_aes_key();
+				exit(0);
+			case 'G':
+				key = strdup(optarg);
+				set_soft_sign_hmac_key(key);
+				exit(0);
+			case 'H':
+				key = strdup(optarg);
+				set_soft_sign_serial_key(key);
+				exit(0);
+			case 'I':
+				key = strdup(optarg);
+				set_aes_key(key);
+				exit(0);
 			default:
 				print_usage();
 				exit(0);

@@ -71,6 +71,7 @@ typedef string String;
 
 void yield(void);
 unsigned long millis(void);
+unsigned long micros(void);
 void _delay_ms(unsigned int millis);
 void randomSeed(unsigned long seed);
 long randMax(long howbig);

@@ -57,6 +57,16 @@
 // Inverse the blinking feature
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
+// Enable software signing
+//#define MY_SIGNING_SOFT
+// Enable signing related debug
+//#define MY_DEBUG_VERBOSE_SIGNING
+// Enable this to request signatures from nodes that in turn request signatures from gateway
+//#define MY_SIGNING_REQUEST_SIGNATURES
+// Enable this to have gateway require all nodes in the network to sign messages sent to it
+// Note: MY_SIGNING_REQUEST_SIGNATURES must also be set
+//#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+
 #include <MySensors.h>
 
 void setup() { 
