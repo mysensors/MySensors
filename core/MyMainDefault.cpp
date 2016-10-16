@@ -19,11 +19,14 @@
  
 // Initialize library and handle sketch functions like we want to
 
+extern "C" void __libc_init_array(void);
+
 int main(void) {
 	init();
 	#if defined(USBCON)
 		#if defined(ARDUINO_ARCH_SAMD)
-			USBDevice.init();
+			__libc_init_array();
+			USBDevice.init();		
 		#endif
     		USBDevice.attach();
 	#endif
