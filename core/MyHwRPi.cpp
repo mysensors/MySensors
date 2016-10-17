@@ -5,8 +5,8 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2016 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -22,17 +22,11 @@
 #include <stdarg.h>
 #include <time.h>
 #include "SoftEeprom.h"
-#include "log.h"
 
 static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
 
 void hwInit()
 {
-	if (!bcm2835_init()) {
-		logError("Failed to initialized bcm2835.\n");
-		exit(1);
-	}
-
 #ifdef MY_GATEWAY_SERIAL
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 	#ifdef MY_LINUX_SERIAL_GROUPNAME

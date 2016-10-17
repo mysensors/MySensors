@@ -5,8 +5,8 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyleft (c) 2016, Marcelo Aquino
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2016 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -67,15 +67,25 @@
 // Note: MY_SIGNING_REQUEST_SIGNATURES must also be set
 //#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
 
+// Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be
+// personalized with the same AES key)
+//#define MY_RF24_ENABLE_ENCRYPTION
+
 #include <MySensors.h>
 
-void setup() { 
+#define ARDUINO 100
+// This space is intended to be used to include arduino libraries
+
+#undef ARDUINO
+
+void setup() {
+	// Setup locally attached sensors
 }
 
 void presentation() {
-  // Present locally attached sensors here    
+	// Present locally attached sensors here    
 }
 
 void loop() {
-  // Send locally attached sensors data here
+	// Send locally attached sensors data here
 }
