@@ -53,7 +53,7 @@
 #endif
 
 // Enable radio "feature" if one of the radio types was enabled
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 	#define MY_SENSOR_NETWORK
 #endif
 
@@ -260,7 +260,7 @@
 
 
 // RADIO
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RS485)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) ||defined(MY_RS485)
 	// SOFTSPI
 	#ifdef MY_SOFTSPI
 		#if defined(ARDUINO_ARCH_ESP8266)
@@ -289,6 +289,9 @@
 	#elif defined(MY_RADIO_RFM69)
 		#include "drivers/RFM69/RFM69.cpp"
 		#include "core/MyTransportRFM69.cpp"
+	#elif defined(MY_RADIO_RFM95)
+		#include "drivers/RFM95/RFM95.cpp"
+		#include "core/MyTransportRFM95.cpp"
 	#endif
 #endif
 
