@@ -1290,7 +1290,7 @@ static void *mapmem(const char *msg, size_t size, int fd, off_t off)
 {
     void *map = mmap(NULL, size, (PROT_READ | PROT_WRITE), MAP_SHARED, fd, off);
     if (map == MAP_FAILED)
-	mys_log(LOG_ERR, "bcm2835_init: %s mmap failed: %s\n", msg, strerror(errno));
+	logError("bcm2835_init: %s mmap failed: %s\n", msg, strerror(errno));
     return map;
 }
 
@@ -1351,7 +1351,7 @@ int bcm2835_init(void)
       /* Open the master /dev/mem device */
       if ((memfd = open("/dev/mem", O_RDWR | O_SYNC) ) < 0) 
 	{
-	  mys_log(LOG_ERR, "bcm2835_init: Unable to open /dev/mem: %s\n",
+	  logError("bcm2835_init: Unable to open /dev/mem: %s\n",
 		  strerror(errno)) ;
 	  goto exit;
 	}
@@ -1381,7 +1381,7 @@ int bcm2835_init(void)
       /* Open the master /dev/mem device */
       if ((memfd = open("/dev/gpiomem", O_RDWR | O_SYNC) ) < 0) 
 	{
-	  mys_log(LOG_ERR, "bcm2835_init: Unable to open /dev/gpiomem: %s\n",
+	  logError("bcm2835_init: Unable to open /dev/gpiomem: %s\n",
 		  strerror(errno)) ;
 	  goto exit;
 	}

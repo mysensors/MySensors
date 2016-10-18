@@ -51,7 +51,7 @@ int EthernetClient::connect(const char* host, uint16_t port) {
 
 	sprintf(port_str, "%hu", port);
 	if ((rv = getaddrinfo(host, port_str, &hints, &servinfo)) != 0) {
-			mys_log(LOG_ERR, "getaddrinfo: %s\n", gai_strerror(rv));
+			logError("getaddrinfo: %s\n", gai_strerror(rv));
 		return -1;
 	}
 
@@ -59,13 +59,13 @@ int EthernetClient::connect(const char* host, uint16_t port) {
 	for (p = servinfo; p != NULL; p = p->ai_next) {
 		if ((sockfd = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
-			mys_log(LOG_ERR, "socket: %s\n", strerror(errno));
+			logError("socket: %s\n", strerror(errno));
 			continue;
 		}
 
 		if (::connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
 			close(sockfd);
-			mys_log(LOG_ERR, "connect: %s\n", strerror(errno));
+			logError("connect: %s\n", strerror(errno));
 			continue;
 		}
 
@@ -73,7 +73,7 @@ int EthernetClient::connect(const char* host, uint16_t port) {
 	}
 
 	if (p == NULL) {
-		mys_log(LOG_ERR, "failed to connect\n");
+		logError("failed to connect\n");
 		return -1;
 	}
 
@@ -81,7 +81,7 @@ int EthernetClient::connect(const char* host, uint16_t port) {
 
 	void *addr = &(((struct sockaddr_in*)p->ai_addr)->sin_addr);
 	inet_ntop(p->ai_family, addr, s, sizeof s);
-	mys_log(LOG_DEBUG, "connected to %s\n", s);
+	logDebug("connected to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
 
@@ -107,7 +107,7 @@ size_t EthernetClient::write(const uint8_t *buf, size_t size) {
 	while (size > 0) {
 		rc = send(_sock, buf + bytes, size, MSG_NOSIGNAL | MSG_DONTWAIT);
 		if (rc == -1) {
-			mys_log(LOG_ERR, "send: %s\n", strerror(errno));
+			logError("send: %s\n", strerror(errno));
 			close(_sock);
 			_sock = -1;
 			break;

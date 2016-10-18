@@ -32,9 +32,9 @@
 void handle_sigint(int sig)
 {
 	if (sig == SIGINT) {
-		mys_log(LOG_NOTICE, "Received SIGINT\n\n");
+		logNotice("Received SIGINT\n\n");
 	} else if (sig == SIGTERM) {
-		mys_log(LOG_NOTICE, "Received SIGTERM\n\n");
+		logNotice("Received SIGTERM\n\n");
 	} else {
 		return;
 	}
@@ -47,6 +47,8 @@ void handle_sigint(int sig)
 		MY_SERIALDEVICE.end();
 	#endif
 
+	closelog();
+
 	exit(0);
 }
 
@@ -57,7 +59,7 @@ static int daemonize(void)
 	/* Fork off the parent process */
 	pid = fork();
 	if (pid < 0) {
-		mys_log(LOG_ERR, "fork: %s\n", strerror(errno));
+		logError("fork: %s\n", strerror(errno));
 		return -1;
 	}
 	/* If we got a good PID, then we can exit the parent process. */
@@ -73,25 +75,25 @@ static int daemonize(void)
 	/* Create a new SID for the child process */
 	sid = setsid();
 	if (sid < 0) {
-		mys_log(LOG_ERR, "setsid: %s\n", strerror(errno));
+		logError("setsid: %s\n", strerror(errno));
 		return -1;
 	}
 
 	/* Change the current working directory.  This prevents the current
 	directory from being locked; hence not being able to remove it. */
 	if ((chdir("/")) < 0) {
-		mys_log(LOG_ERR, "chdir(\"/\"): %s\n", strerror(errno));
+		logError("chdir(\"/\"): %s\n", strerror(errno));
 		return -1;
 	}
 
 	if (freopen( "/dev/null", "r", stdin) == NULL) {
-		mys_log(LOG_ERR, "freopen: %s\n", strerror(errno));
+		logError("freopen: %s\n", strerror(errno));
 	}
 	if (freopen( "/dev/null", "r", stdout) == NULL) {
-		mys_log(LOG_ERR, "freopen: %s\n", strerror(errno));
+		logError("freopen: %s\n", strerror(errno));
 	}
 	if (freopen( "/dev/null", "r", stderr) == NULL) {
-		mys_log(LOG_ERR, "freopen: %s\n", strerror(errno));
+		logError("freopen: %s\n", strerror(errno));
 	}
 
 	return 0;
@@ -137,9 +139,10 @@ int main(int argc, char *argv[])
 		log_opts |= LOG_PERROR;
 	}
 	if (!debug) {
+		// Ignore debug type messages
 		setlogmask(LOG_UPTO (LOG_INFO));
 	}
-	openlog(NULL, log_opts, LOG_USER);
+	logOpen(log_opts, LOG_USER);
 
 	if (!foreground && !debug) {
 		if (daemonize() != 0) {
@@ -147,8 +150,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	mys_log(LOG_INFO, "Starting gateway...\n");
-	mys_log(LOG_INFO, "Protocol version - %s\n", MYSENSORS_LIBRARY_VERSION);
+	logInfo("Starting gateway...\n");
+	logInfo("Protocol version - %s\n", MYSENSORS_LIBRARY_VERSION);
 
 	_begin(); // Startup MySensors library
 

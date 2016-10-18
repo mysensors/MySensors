@@ -38,7 +38,7 @@ uint8_t SPIClass::is_initialized() {
 void SPIClass::begin() {
 	if (!initialized) {
 		if (!bcm2835_spi_begin()) {
-			mys_log(LOG_ERR, "You need to be root to use SPI.\n");
+			logError("You need root privilege to use SPI.\n");
 			exit(1);
 		}
 	}

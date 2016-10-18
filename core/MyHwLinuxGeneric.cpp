@@ -32,7 +32,7 @@ void hwInit()
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 	#ifdef MY_LINUX_SERIAL_GROUPNAME
 		if (!MY_SERIALDEVICE.setGroupPerm(MY_LINUX_SERIAL_GROUPNAME)) {
-			mys_log(LOG_ERR, "Unable to change permission for serial port device.\n");
+			logError("Unable to change permission for serial port device.\n");
 			exit(1);
 		}
 	#endif
@@ -125,7 +125,7 @@ void hwDebugPrint(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	mys_log_v(LOG_DEBUG, fmt, args);
+	vlogDebug(fmt, args);
 	va_end(args);
 }
 #endif
