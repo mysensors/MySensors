@@ -131,7 +131,7 @@ void *interruptHandler(void *args) {
 	(void)piHiPri(55);	// Only effective if we run as root
 
 	if ((fd = sysFds[gpioPin]) == -1) {
-		mys_log(LOG_ERR, "Failed to attach interrupt for pin %d\n", gpioPin);
+		logError("Failed to attach interrupt for pin %d\n", gpioPin);
 		return NULL;
 	}
 
@@ -143,7 +143,7 @@ void *interruptHandler(void *args) {
 		// Wait for it ...
 		ret = poll(&polls, 1, -1);
 		if (ret < 0) {
-			mys_log(LOG_ERR, "Error waiting for interrupt: %s\n", strerror(errno));
+			logError("Error waiting for interrupt: %s\n", strerror(errno));
 			break;
 		}
 		// Do a dummy read to clear the interrupt
@@ -163,7 +163,7 @@ void *interruptHandler(void *args) {
 void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
 	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
 	if (gpioPin == 255) {
-		mys_log(LOG_ERR, "pinMode: invalid pin: %d\n", physPin);
+		logError("pinMode: invalid pin: %d\n", physPin);
 		return;
 	}
 	// Check if SPI is in use and target pin is related to SPI
@@ -177,7 +177,7 @@ void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
 void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
 	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
 	if (gpioPin == 255) {
-		mys_log(LOG_ERR, "digitalWrite: invalid pin: %d\n", physPin);
+		logError("digitalWrite: invalid pin: %d\n", physPin);
 		return;
 	}
 	// Check if SPI is in use and target pin is related to SPI
@@ -195,7 +195,7 @@ void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
 uint8_t rpi_util::digitalRead(uint8_t physPin) {
 	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
 	if (gpioPin == 255) {
-		mys_log(LOG_ERR, "digitalRead: invalid pin: %d\n", physPin);
+		logError("digitalRead: invalid pin: %d\n", physPin);
 		return 0;
 	}
 	// Check if SPI is in use and target pin is related to SPI
@@ -214,7 +214,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 
 	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
 	if (gpioPin == 255) {
-		mys_log(LOG_ERR, "attachInterrupt: invalid pin: %d\n", physPin);
+		logError("attachInterrupt: invalid pin: %d\n", physPin);
 		return;
 	}
 
@@ -229,7 +229,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 
 	// Export pin for interrupt
 	if ((fd = fopen("/sys/class/gpio/export", "w")) == NULL) {
-		mys_log(LOG_ERR, "attachInterrupt: Unable to export pin %d for interrupt: %s\n", physPin, strerror(errno));
+		logError("attachInterrupt: Unable to export pin %d for interrupt: %s\n", physPin, strerror(errno));
 		exit(1);
 	}
 	fprintf(fd, "%d\n", gpioPin); 
@@ -257,7 +257,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 		case RISING: fprintf(fd, "rising\n"); break;
 		case NONE: fprintf(fd, "none\n"); break;
 		default:
-			mys_log(LOG_ERR, "attachInterrupt: Invalid mode\n");
+			logError("attachInterrupt: Invalid mode\n");
 			fclose(fd);
 			return;
 	}
@@ -275,7 +275,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 	ioctl(sysFds[gpioPin], FIONREAD, &count);
 	for (i = 0; i < count; ++i) {
 		if (read(sysFds[gpioPin], &c, 1) == -1) {
-			mys_log(LOG_ERR, "attachInterrupt: failed to read pin status: %s\n", strerror(errno));
+			logError("attachInterrupt: failed to read pin status: %s\n", strerror(errno));
 		}
 	}
 
@@ -290,7 +290,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 void rpi_util::detachInterrupt(uint8_t physPin) {
 	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
 	if (gpioPin == 255) {
-		mys_log(LOG_ERR, "detachInterrupt: invalid pin: %d\n", physPin);
+		logError("detachInterrupt: invalid pin: %d\n", physPin);
 		return;
 	}
 
@@ -309,7 +309,7 @@ void rpi_util::detachInterrupt(uint8_t physPin) {
 
 	FILE *fp = fopen("/sys/class/gpio/unexport", "w");
 	if (fp == NULL) {
-		mys_log(LOG_ERR, "Unable to unexport pin %d for interrupt\n", gpioPin);
+		logError("Unable to unexport pin %d for interrupt\n", gpioPin);
 		exit(1);
 	}
 	fprintf(fp, "%d", gpioPin); 

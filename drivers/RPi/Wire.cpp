@@ -44,7 +44,7 @@ uint8_t TwoWire::transmitting = 0;
 void TwoWire::begin()
 {
 	if (!bcm2835_i2c_begin()) {
-		mys_log(LOG_ERR, "You need to be root to use I2C.\n");
+		logError("You need root privilege to use I2C.\n");
 		exit(1);
 	}
 }

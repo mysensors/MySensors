@@ -29,7 +29,7 @@ static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 
 void hwInit()
 {
 	if (!bcm2835_init()) {
-		mys_log(LOG_ERR, "Failed to initialized bcm2835.\n");
+		logError("Failed to initialized bcm2835.\n");
 		exit(1);
 	}
 
@@ -37,7 +37,7 @@ void hwInit()
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 	#ifdef MY_LINUX_SERIAL_GROUPNAME
 		if (!MY_SERIALDEVICE.setGroupPerm(MY_LINUX_SERIAL_GROUPNAME)) {
-			mys_log(LOG_ERR, "Unable to change permission for serial port device.\n");
+			logError("Unable to change permission for serial port device.\n");
 			exit(1);
 		}
 	#endif
@@ -130,7 +130,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 		va_list args;
 
 		va_start(args, fmt);
-		mys_log_v(LOG_DEBUG, fmt, args);
+		vlogDebug(fmt, args);
 		va_end(args);
 	}
 #endif

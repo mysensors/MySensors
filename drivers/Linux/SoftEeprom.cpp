@@ -43,22 +43,22 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 
 	if (stat(_fileName, &fileInfo) != 0) {
 		//File does not exist.  Create it.
-		mys_log(LOG_INFO, "Config file %s does not exist, creating new config file.\n", _fileName);
+		logInfo("Config file %s does not exist, creating new config file.\n", _fileName);
 		std::ofstream myFile(_fileName, std::ios::out | std::ios::binary);
 		if (!myFile) {
-			mys_log(LOG_ERR, "Unable to create config file %s.\n", _fileName);
+			logError("Unable to create config file %s.\n", _fileName);
 			exit(1);
 		}
 		myFile.write((const char*)_values, _length);
 		myFile.close();
 	} else if (fileInfo.st_size < 0 || (size_t)fileInfo.st_size != _length) {
-		mys_log(LOG_ERR, "Config file %s is not the correct size of %zu.  Please remove the file and a new one will be created.\n", _fileName, _length);
+		logError("Config file %s is not the correct size of %zu.  Please remove the file and a new one will be created.\n", _fileName, _length);
 		exit(1);
 	} else {
 		//Read config into local memory.
 		std::ifstream myFile(_fileName, std::ios::in | std::ios::binary);
 		if (!myFile) {
-			mys_log(LOG_ERR, "Unable to open config to file %s for reading.\n", _fileName);
+			logError("Unable to open config to file %s for reading.\n", _fileName);
 			exit(1);
 		}
 		myFile.read((char*)_values, _length);
@@ -81,7 +81,7 @@ void SoftEeprom::readBlock(void* buf, void* addr, size_t length)
 		//Read config into local memory.
 		std::ifstream myFile(_fileName, std::ios::in | std::ios::binary);
 		if (!myFile) {
-			mys_log(LOG_ERR, "Unable to open config to file %s for reading.\n", _fileName);
+			logError("Unable to open config to file %s for reading.\n", _fileName);
 			exit(1);
 		}
 		myFile.read((char*)_values, _length);
@@ -104,7 +104,7 @@ void SoftEeprom::writeBlock(void* buf, void* addr, size_t length)
 		
 		std::ofstream myFile(_fileName, std::ios::out | std::ios::in | std::ios::binary);
 		if (!myFile) {
-			mys_log(LOG_ERR, "Unable to write config to file %s.\n", _fileName);
+			logError("Unable to write config to file %s.\n", _fileName);
 			return;
 		}
 		myFile.seekp(offs);
