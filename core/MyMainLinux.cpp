@@ -118,25 +118,28 @@ void print_usage()
 			 "  --set-aes-key              Write an aes encryption key to the config file.\n");
 }
 
-void print_soft_sign_hmac_key()
+void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
 {
 	uint8_t key[32];
 
-	hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+	if (key_ptr == NULL) {
+		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+		key_ptr = key;
+	}
 
 	printf("SOFT_HMAC_KEY | ");
 	for (int i = 0; i < 32; i++) {
-		printf("%02X", key[i]);
+		printf("%02X", key_ptr[i]);
 	}
-	printf("\n");
+	printf("\n\n");
 
 	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
 	printf("#define MY_SOFT_HMAC_KEY ");
 	for (int i=0; i<32; i++) {
-		printf("%#02X", key[i]);
+		printf("%#02X", key_ptr[i]);
 		if (i < 31) printf(",");
 	}
-	printf("\n");
+	printf("\n\n");
 }
 
 void generate_soft_sign_hmac_key()
@@ -149,7 +152,10 @@ void generate_soft_sign_hmac_key()
 		while (hwMillis() - enter < (unsigned long)2);
 	}
 
-	printf("SOFT_HMAC_KEY | ");
+	print_soft_sign_hmac_key(key);
+
+	printf("To use this key, run mysGateway with:\n"
+			" --set-soft-hmac-key=");
 	for (int i = 0; i < 32; i++) {
 		printf("%02X", key[i]);
 	}
@@ -184,25 +190,28 @@ void set_soft_sign_hmac_key(char *key_str)
 	}
 }
 
-void print_soft_sign_serial_key()
+void print_soft_sign_serial_key(uint8_t *key_ptr = NULL)
 {
 	uint8_t key[9];
 
-	hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+	if (key_ptr == NULL) {
+		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+		key_ptr = key;
+	}
 
 	printf("SOFT_SERIAL   | ");
 	for (int i = 0; i < 9; i++) {
-		printf("%02X", key[i]);
+		printf("%02X", key_ptr[i]);
 	}
-	printf("\n");
+	printf("\n\n");
 
 	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
 	printf("#define MY_SOFT_SERIAL ");
 	for (int i=0; i<9; i++) {
-		printf("%#02X", key[i]);
+		printf("%#02X", key_ptr[i]);
 		if (i < 8) printf(",");
 	}
-	printf("\n");
+	printf("\n\n");
 }
 
 void generate_soft_sign_serial_key()
@@ -215,7 +224,10 @@ void generate_soft_sign_serial_key()
 		while (hwMillis() - enter < (unsigned long)2);
 	}
 
-	printf("SOFT_SERIAL   | ");
+	print_soft_sign_serial_key(key);
+
+	printf("To use this key, run mysGateway with:\n"
+			" --set-soft-serial-key=");
 	for (int i = 0; i < 9; i++) {
 		printf("%02X", key[i]);
 	}
@@ -250,25 +262,28 @@ void set_soft_sign_serial_key(char *key_str)
 	}
 }
 
-void print_aes_key()
+void print_aes_key(uint8_t *key_ptr = NULL)
 {
 	uint8_t key[16];
 
-	hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+	if (key_ptr == NULL) {
+		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+		key_ptr = key;
+	}
 
 	printf("AES_KEY       | ");
 	for (int i = 0; i < 16; i++) {
-		printf("%02X", key[i]);
+		printf("%02X", key_ptr[i]);
 	}
-	printf("\n");
+	printf("\n\n");
 
 	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
 	printf("#define MY_AES_KEY ");
 	for (int i=0; i<16; i++) {
-		printf("%#02X", key[i]);
+		printf("%#02X", key_ptr[i]);
 		if (i < 15) printf(",");
 	}
-	printf("\n");
+	printf("\n\n");
 }
 
 void generate_aes_key()
@@ -281,7 +296,10 @@ void generate_aes_key()
 		while (hwMillis() - enter < (unsigned long)2);
 	}
 
-	printf("AES_KEY       | ");
+	print_aes_key(key);
+
+	printf("To use this key, run mysGateway with:\n"
+			" --set-aes-key=");
 	for (int i = 0; i < 16; i++) {
 		printf("%02X", key[i]);
 	}
