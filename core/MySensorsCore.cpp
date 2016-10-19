@@ -19,6 +19,11 @@
 
 #include "MySensorsCore.h"
 
+#if defined(__linux__)
+	#include <stdlib.h>
+	#include <unistd.h>
+#endif
+
 ControllerConfig _cc;	// Configuration coming from controller
 NodeConfig _nc;			// Essential settings for node to work
 MyMessage _msg;			// Buffer for incoming messages

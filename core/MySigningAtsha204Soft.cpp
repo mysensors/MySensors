@@ -64,6 +64,23 @@ static char i2h(uint8_t i)
 	}
 }
 
+#ifdef __linux__
+static void DEBUG_SIGNING_PRINTBUF(const char *str, uint8_t* buf, uint8_t sz) {
+	static char printBuffer[300];
+
+	for (int i=0; i<sz; i++)
+	{
+		printBuffer[i * 2] = i2h(buf[i] >> 4);
+		printBuffer[(i * 2) + 1] = i2h(buf[i]);
+	}
+	printBuffer[sz * 2] = '\0';
+	debug(str);
+	if (sz > 0)
+	{
+		debug(printBuffer);
+	}
+}
+#else
 static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz) {
 	static char printBuffer[300];
 #ifdef MY_GATEWAY_FEATURE
@@ -88,6 +105,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 	}
 	MY_SERIALDEVICE.println("");
 }
+#endif /* __linux__ */
 #else
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif

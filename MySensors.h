@@ -131,6 +131,9 @@
 	#if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)
 		#error Only one signing engine can be activated
 	#endif
+	#if defined(MY_SIGNING_ATSHA204) && defined(__linux__)
+		#error No support for ATSHA204 on this platform
+	#endif
 
 	#if defined(MY_SIGNING_ATSHA204)
 		#include "core/MySigningAtsha204.cpp"
