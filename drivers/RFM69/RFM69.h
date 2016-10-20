@@ -117,7 +117,7 @@ class RFM69 {
     void setCS(uint8_t newSPISlaveSelect); //!< setCS
     int16_t readRSSI(bool forceTrigger=false); //!< readRSSI
     void promiscuous(bool onOff=true); //!< promiscuous
-    virtual void setHighPower(bool onOFF=true); //!< setHighPower (have to call it after initialize for RFM69HW)
+    virtual void setHighPower(bool onOFF=true); //!< setHighPower (has to be called after initialize() for RFM69HW)
     virtual void setPowerLevel(uint8_t level); //!< setPowerLevel (reduce/increase transmit power level)
     void sleep(); //!< sleep
     uint8_t readTemperature(uint8_t calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
@@ -132,6 +132,7 @@ class RFM69 {
     static void isr0(); //!< isr0
     void virtual interruptHandler(); //!< interruptHandler
     virtual void interruptHook(uint8_t CTLbyte); //!< interruptHook
+    static volatile bool _inISR; //!< _inISR
     virtual void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, bool requestACK=false, bool sendACK=false); //!< sendFrame
 
     static RFM69* selfPointer; //!< selfPointer
@@ -152,6 +153,7 @@ class RFM69 {
     virtual void setHighPowerRegs(bool onOff); //!< setHighPowerRegs
     virtual void select(); //!< select
     virtual void unselect(); //!< unselect
+    inline void maybeInterrupts(); //!< maybeInterrupts
 };
 
 #endif
