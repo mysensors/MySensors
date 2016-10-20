@@ -32,8 +32,10 @@
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error
  *
- * The gateway uses AltSoftSerial to handle two serial links
- * on one Arduino. Use the following pins for RS485 link
+ * If your Arduino board has additional serial ports
+ * you can use to connect the RS485 module.
+ * Otherwise, the gateway uses AltSoftSerial to handle two serial
+ * links on one Arduino. Use the following pins for RS485 link
  *
  *  Board          Transmit  Receive   PWM Unusable
  * -----          --------  -------   ------------
@@ -59,6 +61,9 @@
 
 // Set RS485 baud rate to use
 #define MY_RS485_BAUD_RATE 9600
+
+// Enable this if RS485 is connected to a hardware serial port
+//#define MY_RS485_HWSERIAL Serial1
 
 // Enable serial gateway
 #define MY_GATEWAY_SERIAL
