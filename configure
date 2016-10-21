@@ -255,6 +255,10 @@ for opt do
     --my-transport=*)
         transport_type=${optarg}
         ;;
+    --my-radio=*)
+        echo "Warning: --my-radio is deprecated, please use --my-transport"
+        transport_type=${optarg}
+        ;;
     --my-serial-port=*)
         CXXFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
