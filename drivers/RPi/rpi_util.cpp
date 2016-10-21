@@ -34,6 +34,7 @@
 #include "rpi_util.h"
 #include "SPI.h"
 #include "log.h"
+#include <atomic>
 
 extern "C" {
 	int piHiPri(const int pri);
@@ -44,9 +45,8 @@ struct ThreadArgs {
 	int gpioPin;
 };
 
-static pthread_mutex_t intMutex = PTHREAD_MUTEX_INITIALIZER;
-
 static pthread_t *threadIds[64] = {NULL};
+std::atomic<bool> interruptsEnabled(true);
 
 // sysFds:
 //	Map a file descriptor from the /sys/class/gpio/gpioX/value
@@ -152,7 +152,9 @@ void *interruptHandler(void *args) {
 		(void)read (fd, &c, 1) ;
   		lseek (fd, 0, SEEK_SET) ;
 		// Call user function.
-		func();
+		if (interruptsEnabled.load(std::memory_order_acquire)) {
+			func();
+		}
 	}
 
 	close(fd);
@@ -322,9 +324,9 @@ uint8_t rpi_util::digitalPinToInterrupt(uint8_t physPin) {
 }
 
 void rpi_util::interrupts() {
-	pthread_mutex_unlock(&intMutex);
+	interruptsEnabled.store(true, std::memory_order_release);
 }
 
 void rpi_util::noInterrupts() {
-	pthread_mutex_lock(&intMutex);
+	interruptsEnabled.store(false, std::memory_order_release);
 }

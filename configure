@@ -328,6 +328,10 @@ fi
 CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra $CXXFLAGS"
 CFLAGS="-Ofast -g -Wall -Wextra $CFLAGS"
 
+if [[ ${TYPE:0:3} == "RPi" ]]; then
+    CXXFLAGS+="-std=c++11 "
+fi
+
 if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
     CXXFLAGS+="-D__RPI_BPLUS"
 fi
