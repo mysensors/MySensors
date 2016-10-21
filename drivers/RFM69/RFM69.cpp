@@ -41,6 +41,7 @@ volatile uint8_t RFM69::PAYLOADLEN;
 volatile uint8_t RFM69::ACK_REQUESTED;
 volatile uint8_t RFM69::ACK_RECEIVED; // should be polled immediately after sending a packet with ACK request
 volatile int16_t RFM69::RSSI;          // most accurate RSSI during reception (closest to the reception)
+volatile bool RFM69::_inISR;
 RFM69* RFM69::selfPointer;
 
 bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
@@ -119,6 +120,7 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
   if (millis()-start >= timeout) {
     return false;
   }
+  _inISR = false;
   attachInterrupt(_interruptNum, RFM69::isr0, RISING);
 
   selfPointer = this;
@@ -321,6 +323,19 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 
   // write to FIFO
   select();
+#ifdef LINUX_ARCH_RASPBERRYPI
+  char data[RF69_MAX_DATA_LEN + 5];
+  data[0] = REG_FIFO | 0x80;
+  data[1] = bufferSize + 3;
+  data[2] = toAddress;
+  data[3] = _address;
+  data[4] = CTLbyte;
+
+  for (uint8_t i = 0; i < bufferSize; i++) {
+    data[i + 5] = ((char*) buffer)[i];
+  }
+  SPI.transfern(data, bufferSize + 5);
+#else
   SPI.transfer(REG_FIFO | 0x80);
   SPI.transfer(bufferSize + 3);
   SPI.transfer(toAddress);
@@ -330,6 +345,7 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
   for (uint8_t i = 0; i < bufferSize; i++) {
     SPI.transfer(((uint8_t*) buffer)[i]);
   }
+#endif
   unselect();
 
   // no need to wait for transmit mode to be ready since its handled by the radio
@@ -349,10 +365,18 @@ void RFM69::interruptHandler() {
     //RSSI = readRSSI();
     setMode(RF69_MODE_STANDBY);
     select();
+#ifdef LINUX_ARCH_RASPBERRYPI
+    char data[66 /* max payload len */ + 1];
+    data[0] = REG_FIFO & 0x7F;
+    SPI.transfern(data, 3);
+    PAYLOADLEN = data[1];
+    TARGETID = data[2];
+#else
     SPI.transfer(REG_FIFO & 0x7F);
     PAYLOADLEN = SPI.transfer(0);
-    PAYLOADLEN = PAYLOADLEN > 66 ? 66 : PAYLOADLEN; // precaution
     TARGETID = SPI.transfer(0);
+#endif
+    PAYLOADLEN = PAYLOADLEN > 66 ? 66 : PAYLOADLEN; // precaution
     if(!(_promiscuousMode || TARGETID == _address || TARGETID == RF69_BROADCAST_ADDR) // match this node's address, or broadcast address or anything in promiscuous mode
        || PAYLOADLEN < 3) // address situation could receive packets that are malformed and don't fit this libraries extra fields
     {
@@ -364,8 +388,15 @@ void RFM69::interruptHandler() {
     }
 
     DATALEN = PAYLOADLEN - 3;
+#ifdef LINUX_ARCH_RASPBERRYPI
+    data[0] = REG_FIFO & 0x77;
+    SPI.transfern(data, DATALEN + 3);
+    SENDERID = data[1];
+    uint8_t CTLbyte = data[2];
+#else
     SENDERID = SPI.transfer(0);
     uint8_t CTLbyte = SPI.transfer(0);
+#endif
 
     ACK_RECEIVED = CTLbyte & RFM69_CTL_SENDACK; // extract ACK-received flag
     ACK_REQUESTED = CTLbyte & RFM69_CTL_REQACK; // extract ACK-requested flag
@@ -374,7 +405,11 @@ void RFM69::interruptHandler() {
 
     for (uint8_t i = 0; i < DATALEN; i++)
     {
+#ifdef LINUX_ARCH_RASPBERRYPI
+      DATA[i] = data[i + 3];
+#else
       DATA[i] = SPI.transfer(0);
+#endif
     }
     if (DATALEN < RF69_MAX_DATA_LEN) {
       DATA[DATALEN] = 0; // add null at end of string
@@ -387,7 +422,7 @@ void RFM69::interruptHandler() {
 }
 
 // internal function
-void RFM69::isr0() { selfPointer->interruptHandler(); }
+void RFM69::isr0() { _inISR = true; selfPointer->interruptHandler(); _inISR = false; }
 
 // internal function
 void RFM69::receiveBegin() {
@@ -433,10 +468,19 @@ void RFM69::encrypt(const char* key) {
   if (key != 0)
   {
     select();
+#ifdef LINUX_ARCH_RASPBERRYPI
+    char data[17];
+    data[0] = REG_AESKEY1 | 0x80;
+    for (uint8_t i = 0; i < 16; i++) {
+      data[i + 1] = key[i];
+    }
+    SPI.transfern(data, 17);
+#else
     SPI.transfer(REG_AESKEY1 | 0x80);
     for (uint8_t i = 0; i < 16; i++) {
       SPI.transfer(key[i]);
     }
+#endif
     unselect();
   }
   writeReg(REG_PACKETCONFIG2, (readReg(REG_PACKETCONFIG2) & 0xFE) | (key ? 1 : 0));
@@ -459,8 +503,14 @@ int16_t RFM69::readRSSI(bool forceTrigger) {
 uint8_t RFM69::readReg(uint8_t addr)
 {
   select();
+#ifdef LINUX_ARCH_RASPBERRYPI
+  char data[2] = { (char)(addr & 0x7F), 0 };
+  SPI.transfern(data, 2);
+  uint8_t regval = data[1];
+#else
   SPI.transfer(addr & 0x7F);
   uint8_t regval = SPI.transfer(0);
+#endif
   unselect();
   return regval;
 }
@@ -468,8 +518,13 @@ uint8_t RFM69::readReg(uint8_t addr)
 void RFM69::writeReg(uint8_t addr, uint8_t value)
 {
   select();
+#ifdef LINUX_ARCH_RASPBERRYPI
+  char data[2] = { (char)(addr | 0x80), value };
+  SPI.transfern(data, 2);
+#else
   SPI.transfer(addr | 0x80);
   SPI.transfer(value);
+#endif
   unselect();
 }
 
@@ -484,7 +539,11 @@ void RFM69::select() {
   // set RFM69 SPI settings
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
+#ifdef LINUX_ARCH_RASPBERRYPI
+  SPI.setClockDivider(SPI_CLOCK_DIV64);
+#else
   SPI.setClockDivider(SPI_CLOCK_DIV4); // decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
+#endif
   hwDigitalWrite(_slaveSelectPin, LOW);
 }
 
@@ -496,7 +555,7 @@ void RFM69::unselect() {
   SPCR = _SPCR;
   SPSR = _SPSR;
 #endif
-  interrupts();
+  maybeInterrupts();
 }
 
 // true  = disable filtering to capture all frames on network
@@ -565,10 +624,7 @@ void RFM69::readAllRegs()
   Serial.println("Address - HEX - BIN");
   for (uint8_t regAddr = 1; regAddr <= 0x4F; regAddr++)
   {
-    select();
-    SPI.transfer(regAddr & 0x7F); // send address + r/w bit
-    regVal = SPI.transfer(0);
-    unselect();
+    regVal = readReg(regAddr);
 
     Serial.print(regAddr, HEX);
     Serial.print(" - ");
@@ -827,4 +883,10 @@ void RFM69::rcCalibration()
 {
   writeReg(REG_OSC1, RF_OSC1_RCCAL_START);
   while ((readReg(REG_OSC1) & RF_OSC1_RCCAL_DONE) == 0x00) {}
+}
+
+inline void RFM69::maybeInterrupts()
+{
+  // Only reenable interrupts if we're not being called from the ISR
+  if (!_inISR) interrupts();
 }
