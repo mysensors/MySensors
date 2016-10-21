@@ -47,11 +47,13 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature. [rf24]
+    --my-radio=[none|nrf24|rfm69]
+                                Radio type, set to none to disable radio feature. [rf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
+    --my-rf69-irq-pin=<PIN>     Pin number connected to RFM69 IRQ pin.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
     --my-leds-err-pin=<PIN>     Error LED pin.
@@ -286,6 +288,9 @@ for opt do
     --my-rf24-irq-pin=*)
         CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
         ;;
+    --my-rf69-irq-pin=*)
+        CXXFLAGS="-DMY_RF69_IRQ_PIN=${optarg} -DMY_RF69_IRQ_NUM=${optarg} $CXXFLAGS"
+        ;;
     --my-rx-message-buffer-size=*)
         CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
         ;;
@@ -350,6 +355,8 @@ fi
 
 if [[ ${radio_type} == "nrf24" ]]; then
     CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+elif [[ ${radio_type} == "rfm69" ]]; then
+    CXXFLAGS="-DMY_RADIO_RFM69 $CXXFLAGS"
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
