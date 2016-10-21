@@ -45,10 +45,10 @@ typedef enum {
 } rpi_pinedge;
 
 typedef enum {
-	PIN_SPI_SS = RPI_GPIO_P1_24,
-	PIN_SPI_MOSI = RPI_GPIO_P1_19,
-	PIN_SPI_MISO = RPI_GPIO_P1_21,
-	PIN_SPI_SCK = RPI_GPIO_P1_23
+	PIN_SPI_SS = 24,
+	PIN_SPI_MOSI = 19,
+	PIN_SPI_MISO = 21,
+	PIN_SPI_SCK = 23
 } rpi_spipins;
 
 const uint8_t SS   = PIN_SPI_SS;
