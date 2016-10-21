@@ -27,8 +27,9 @@ Installation options:
 MySensors options:
     --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
     --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
-    --my-gateway=[none|ethernet|serial|mqtt]
+    --my-gateway=[ethernet|serial|mqtt]
                                 Gateway type, set to none to disable gateway feature. [ethernet]
+    --my-node-id=<ID>           Disable gateway feature and run as a node with given id.
     --my-controller-url-address=<URL>
                                 Controller or MQTT broker url.
     --my-controller-ip-address=<IP>
@@ -47,13 +48,20 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-radio=[none|nrf24]     Radio type, set to none to disable radio feature. [rf24]
+    --my-transport=[none|nrf24|rs485]
+                                Transport type, set to none to disable transport feature. [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
+    --my-rs485-serial-port=<PORT>
+                                RS485 serial port. You must provide a port.
+    --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
+    --my-rs485-de-pin=<PIN>     Pin number connected to RS485 driver enable pin.
+    --my-rs485-max-msg-length=<LENGTH>
+                                The maximum message length used for RS485.
     --my-leds-err-pin=<PIN>     Error LED pin.
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
@@ -196,7 +204,7 @@ function gcc_cpu_flags {
 # Default values
 debug=enable
 gateway_type=ethernet
-radio_type=nrf24
+transport_type=nrf24
 
 params="SOC CXXFLAGS LDFLAGS PREFIX CXX GATEWAY_DIR INIT_SYSTEM"
 
@@ -237,11 +245,15 @@ for opt do
     --my-gateway=*)
         gateway_type=${optarg}
         ;;
+    --my-node-id=*)
+        gateway_type="none";
+        CXXFLAGS="-DMY_NODE_ID=${optarg} $CXXFLAGS"
+        ;;
     --my-config-file=*)
         CXXFLAGS="-DMY_LINUX_CONFIG_FILE=\\\"${optarg}\\\" $CXXFLAGS"
         ;;
-    --my-radio=*)
-        radio_type=${optarg}
+    --my-transport=*)
+        transport_type=${optarg}
         ;;
     --my-serial-port=*)
         CXXFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CXXFLAGS"
@@ -288,6 +300,18 @@ for opt do
         ;;
     --my-rx-message-buffer-size=*)
         CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
+        ;;
+    --my-rs485-serial-port=*)
+        CXXFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CXXFLAGS"
+        ;;
+    --my-rs485-baudrate=*)
+        CXXFLAGS="-DMY_RS485_BAUD_RATE=${optarg} $CXXFLAGS"
+        ;;
+    --my-rs485-de-pin=*)
+        CXXFLAGS="-DMY_RS485_DE_PIN=${optarg} $CXXFLAGS"
+        ;;
+    --my-rs485-max-msg-length=*)
+        CXXFLAGS="-DMY_RS485_MAX_MESSAGE_LENGTH=${optarg} $CXXFLAGS"
         ;;
     --my-leds-err-pin=*)
         CXXFLAGS="-DMY_DEFAULT_ERR_LED_PIN=${optarg} $CXXFLAGS"
@@ -344,8 +368,10 @@ elif [[ ${gateway_type} == "mqtt" ]]; then
     CXXFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
 fi
 
-if [[ ${radio_type} == "nrf24" ]]; then
+if [[ ${transport_type} == "nrf24" ]]; then
     CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+elif [[ ${transport_type} == "rs485" ]]; then
+    CXXFLAGS="-DMY_RS485 $CXXFLAGS"
 fi
 
 LDFLAGS="-pthread $LDFLAGS"

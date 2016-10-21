@@ -61,6 +61,9 @@
 
 #include "MyTransport.h"
 
+#ifdef __linux__
+    #include "SerialPort.h"
+#endif
 
 #if defined(MY_RS485_DE_PIN)
 	#define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIGH); delayMicroseconds(5)
@@ -87,8 +90,14 @@ unsigned char _recSender;
 unsigned char _recCS;
 unsigned char _recCalcCS;
 
-AltSoftSerial _dev;
 
+#if defined(__linux__)
+SerialPort _dev = SerialPort(MY_RS485_HWSERIAL);
+#elif defined(MY_RS485_HWSERIAL)
+HardwareSerial& _dev = MY_RS485_HWSERIAL;
+#else
+AltSoftSerial _dev;
+#endif
 
 unsigned char _nodeId;
 char _data[MY_RS485_MAX_MESSAGE_LENGTH];
@@ -160,10 +169,6 @@ bool _serialProcess()
                     if ((_recSender == _nodeId) ||
                         (_recStation != _nodeId &&
                          _recStation != BROADCAST_ADDRESS)) {
-						_dev.print(" wrongid: ");
-						_dev.print(_recStation);
-						_dev.print(" - ");
-						_dev.println(_nodeId);
                         _serialReset();
                         break;
                     }
@@ -302,7 +307,9 @@ bool transportSend(uint8_t to, const void* data, uint8_t len)
 				_dev.flush();
 				delayMicroseconds((20000000UL/9600)+1);
 			#endif
-			#endif
+		#elif defined(__linux__)
+			_dev.flush();
+		#endif
 		#endif
 		hwDigitalWrite(MY_RS485_DE_PIN, LOW);
 	#endif

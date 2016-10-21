@@ -440,6 +440,18 @@
 #define MY_RS485_MAX_MESSAGE_LENGTH 40
 #endif
 
+/**
+ * @def MY_RS485_DE_PIN
+ * @brief RS485 driver enable pin.
+ */
+//#define MY_RS485_DE_PIN 2
+
+/**
+ * @def MY_RS485_HWSERIAL
+ * @brief Enable this if RS485 is connected to a hardware serial port.
+ */
+//#define MY_RS485_HWSERIAL Serial1
+
 /**********************************
 *  NRF24L01P Driver Defaults
 ***********************************/
@@ -839,6 +851,7 @@
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_RS485_HWSERIAL
 #define MY_IS_RFM69HW
 #define MY_PARENT_NODE_IS_STATIC
 #define MY_REGISTRATION_CONTROLLER

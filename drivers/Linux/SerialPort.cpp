@@ -235,7 +235,10 @@ int SerialPort::peek()
 
 void SerialPort::flush()
 {
-	tcflush(sd, TCIFLUSH);
+	// Waits until all output written to sd has been transmitted
+	if (tcdrain(sd) < 0) {
+		logError("Couldn't flush serial: %s\n", strerror(errno));
+	}
 }
 
 void SerialPort::end()

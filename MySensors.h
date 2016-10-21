@@ -287,7 +287,12 @@
 		#include "drivers/RF24/RF24.cpp"
 		#include "core/MyTransportNRF24.cpp"
 	#elif defined(MY_RS485)
-		#include "drivers/AltSoftSerial/AltSoftSerial.cpp"
+		#if !defined(MY_RS485_HWSERIAL)
+			#if defined(__linux__)
+				#error You must specify MY_RS485_HWSERIAL for RS485 transport
+			#endif
+			#include "drivers/AltSoftSerial/AltSoftSerial.cpp"
+		#endif
 		#include "core/MyTransportRS485.cpp"
 	#elif defined(MY_RADIO_RFM69)
 		#include "drivers/RFM69/RFM69.cpp"
