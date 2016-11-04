@@ -120,40 +120,35 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 	uint8_t bvalue[MAX_PAYLOAD];
 	uint8_t blen = 0;
 	uint8_t command = 0;
-
-	for (str = strtok_r(topic, "/", &p); str && i <= 5;
+  if (topic != strstr(topic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)) {
+		// Prefix doesn't match incoming topic
+		return false;
+	}
+	for (str = strtok_r(topic + strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1, "/", &p); str && i <= 5;
 			str = strtok_r(NULL, "/", &p)) {
 		switch (i) {
 			case 0: {
-				// Topic prefix
-				if (strcmp(str, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) != 0) {
-					// Message not for us or malformed!
-					return false;
-				}
-				break;
-			}
-			case 1: {
 				// Node id
 				message.destination = atoi(str);
 				break;
 			}
-			case 2: {
+			case 1: {
 				// Sensor id
 				message.sensor = atoi(str);
 				break;
 			}
-			case 3: {
+			case 2: {
 				// Command type
 				command = atoi(str);
 				mSetCommand(message, command);
 				break;
 			}
-			case 4: {
+			case 3: {
 				// Ack flag
 				mSetRequestAck(message, atoi(str)?1:0);
 				break;
 			}
-			case 5: {
+			case 4: {
 				// Sub type
 				message.type = atoi(str);
 				break;
@@ -162,7 +157,7 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 		i++;
 	}
 
-	if (i != 6) {
+	if (i != 5) {
 		return false;
 	}
 
