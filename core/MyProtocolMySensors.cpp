@@ -120,18 +120,11 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 	uint8_t bvalue[MAX_PAYLOAD];
 	uint8_t blen = 0;
 	uint8_t command = 0;
-	uint8_t topiclen = strlen(topic) - strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
-	char topicTrimmed[topiclen];
-
   if (topic != strstr(topic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)) {
 		// Prefix doesn't match incoming topic
 		return false;
 	}
-	// Extract the topic sans prefix
-	strncpy(topicTrimmed, &topic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1], topiclen);
-  topicTrimmed[topiclen] = (char)0;
-
-	for (str = strtok_r(topicTrimmed, "/", &p); str && i <= 5;
+	for (str = strtok_r(topic + strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1, "/", &p); str && i <= 5;
 			str = strtok_r(NULL, "/", &p)) {
 		switch (i) {
 			case 0: {
