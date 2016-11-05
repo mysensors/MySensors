@@ -52,15 +52,6 @@ void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
 #define MY_SERIALDEVICE SerialUSB
-#define MY_DEBUG_BUFFER_SIZE 300
-
-
-/*
-#define hwReadConfigBlock(__buf, __adr, __length) ( __length = __length)
-#define hwWriteConfigBlock(__buf, __adr, __length) ( __length = __length)
-#define hwWriteConfig(__adr, __value) ( __value = __value)
-#define hwReadConfig(__adr) (0)
-*/
 
 /**
  * Disable all interrupts.

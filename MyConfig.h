@@ -67,6 +67,15 @@
 #ifndef MY_BAUD_RATE
 #define MY_BAUD_RATE 115200
 #endif
+ /**
+ * @def MY_SERIAL_OUTPUT_SIZE
+ * @brief Max. characters for serial output.
+ */
+#ifndef MY_SERIAL_OUTPUT_SIZE
+#define MY_SERIAL_OUTPUT_SIZE (120u)
+#endif
+
+
 
 // Disables over-the-air reset of node
 //#define MY_DISABLE_REMOTE_RESET
