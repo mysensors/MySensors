@@ -22,7 +22,6 @@
 // global variables
 extern MyMessage _msg;
 extern MyMessage _msgTmp;
-extern NodeConfig _nc;
 
 // local variables
 SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);

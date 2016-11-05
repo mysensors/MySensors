@@ -41,8 +41,9 @@
  * |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
  * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
  * | | MCO  | BGN	| BFR											| Callback before()
+ * | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAX enabled
  * | | MCO  | BGN	| STP											| Callback setup()
- * | | MCO	| BGN	| INIT OK,ID=%%d,PAR=%%d,DIS=%%d,REG=%%d		| Core initialized, parent ID (PAR), distance to GW (DIS), registration (REG)
+ * | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised
  * | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
  * |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
  * | | MCO	| REG	| REQ											| Registration request
@@ -85,37 +86,36 @@
 
 
 #ifdef MY_DEBUG
-	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)			//!< debug, to be removed (follow-up PR)
+	#define CORE_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
 #else
-	#define debug(x,...)								//!< debug NULL
+	#define debug(x,...)										//!< debug NULL, to be removed (follow-up PR)
+	#define CORE_DEBUG(x,...)									//!< debug NULL
 #endif
 
-/**
- * @brief Node configuration
- *
- * This structure stores node-related configurations
- */
-struct NodeConfig {
-	uint8_t nodeId;								//!< Current node id
-	uint8_t parentNodeId;						//!< Where this node sends its messages
-	uint8_t distance;							//!< This nodes distance to sensor net gateway (number of hops)
-};
 
 /**
  * @brief Controller configuration
  *
- * This structure stores controllerrelated configurations
+ * This structure stores controller-related configurations
  */
-struct ControllerConfig {
+typedef struct {
 	uint8_t isMetric;							//!< Flag indicating if metric or imperial measurements are used
-};
+} controllerConfig_t;
 
-extern NodeConfig _nc;							//!< Node config
-extern MyMessage _msg;							//!< Buffer for incoming messages
-extern MyMessage _msgTmp;						//!< Buffer for temporary messages (acks and nonces among others)
-#ifdef MY_DEBUG
-	extern char _convBuf[MAX_PAYLOAD * 2 + 1];
-#endif
+/**
+* @brief Node core configuration
+*
+*/
+typedef struct {
+	controllerConfig_t controllerConfig;	//!< Controller config
+	// 8 bit
+	bool registered : 1;					//!< Flag node registered
+	bool presentationSent : 1;				//!< Flag presentation sent
+	bool registrationRequested : 1;			//!< Flag registration requested
+	uint8_t reserved : 5;					//!< reserved
+} coreConfig_t;
+
 
 // **** public functions ********
 
@@ -203,7 +203,7 @@ bool requestTime(const bool ack = false);
 /**
  * Returns the most recent node configuration received from controller
  */
-ControllerConfig getConfig(void);
+controllerConfig_t getControllerConfig(void);
 
 /**
  * Save a state (in local EEPROM). Good for actuators to "remember" state between
@@ -328,20 +328,23 @@ int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t i
 int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false, const uint8_t interrupt1 = INTERRUPT_NOT_DEFINED, const uint8_t mode1 = MODE_NOT_DEFINED, const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
 
 
-#ifdef MY_NODE_LOCK_FEATURE
 /**
  * @ingroup MyLockgrp
  * @ingroup internals
  * @brief Lock a node and transmit provided message with 30m intervals
  *
  * This function is called if suspicious activity has exceeded the threshold (see
- * @ref ATTACK_COUNTER_MAX). Unlocking with a normal Arduino bootloader require erasing the EEPROM
- * while unlocking with a custom bootloader require holding @ref UNLOCK_PIN low during power on/reset.
+ * @ref MY_NODE_LOCK_COUNTER_MAX). Unlocking with a normal Arduino bootloader require erasing the EEPROM
+ * while unlocking with a custom bootloader require holding @ref MY_NODE_UNLOCK_PIN low during power on/reset.
  *
  * @param str The string to transmit.
  */
-void nodeLock(const char* str);
-#endif
+void _nodeLock(const char* str);
+
+/**
+ * @brief Check node lock status and prevent node execution if locked.
+ */
+void _checkNodeLock(void);
 
 // **** private functions ********
 
@@ -406,7 +409,7 @@ void loop(void) __attribute__((weak));
 
 // Inline function and macros
 static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const uint8_t sensor, const uint8_t command, const uint8_t type, const bool ack = false) {
-	msg.sender = _nc.nodeId;
+	msg.sender = getNodeId();
 	msg.destination = destination;
 	msg.sensor = sensor;
 	msg.type = type;

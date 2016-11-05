@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2016 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -24,18 +24,34 @@
 	#include <unistd.h>
 #endif
 
-ControllerConfig _cc;	// Configuration coming from controller
-NodeConfig _nc;			// Essential settings for node to work
+// message buffers
 MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 
-bool _nodeRegistered = false;
+// core configuration
+coreConfig_t coreConfig;
 
 #if defined(MY_DEBUG)
 	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
-void (*_timeCallback)(unsigned long); // Callback for requested time messages
+// Callback for requested time messages
+void (*_timeCallback)(unsigned long);
+
+// Callback for transport=ok transition
+void _callbackTransportOk()
+{
+	if (!coreConfig.presentationSent) {
+		presentNode();
+		coreConfig.presentationSent = true;
+	}
+#if !defined(MY_GATEWAY_FEATURE)
+	if (!coreConfig.registrationRequested) {
+		_registerNode();
+		coreConfig.registrationRequested = true;
+	}
+#endif
+}
 
 void _process(void) {
 	hwWatchdogReset();
@@ -75,6 +91,7 @@ void _infiniteLoop(void) {
 }
 
 void _begin(void) {
+	// reset wdt
 	hwWatchdogReset();
 
 	if (preHwInit) {
@@ -83,11 +100,15 @@ void _begin(void) {
 
 	hwInit();
 
-	debug(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
+	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
 
+	// set defaults
+	coreConfig.presentationSent = false;
+	coreConfig.registrationRequested = false;
+	
 	// Call before() in sketch (if it exists)
 	if (before) {
-		debug(PSTR("MCO:BGN:BFR\n"));	// before callback
+		CORE_DEBUG(PSTR("MCO:BGN:BFR\n"));	// before callback
 		before();
 	}
 
@@ -99,7 +120,7 @@ void _begin(void) {
 
 	// Read latest received controller configuration from EEPROM
 	// Note: _cc.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
-	hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
+	hwReadConfigBlock((void*)&coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(controllerConfig_t));
 
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 		// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
@@ -109,42 +130,26 @@ void _begin(void) {
 	#if defined(MY_SENSOR_NETWORK)
 		// Save static parent id in eeprom (used by bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, MY_PARENT_NODE_ID);
+		// Register for transport layer
+		transportRegisterTransportOkCallback(_callbackTransportOk);
+
+		// Initialise transport layer
 		transportInitialise();
-		while (!isTransportReady()) {
-			hwWatchdogReset();
-			transportProcess();
-			yield();
-		}
-	#endif
-
-
-
-	#ifdef MY_NODE_LOCK_FEATURE
-		// Check if node has been locked down
-		if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {
-			// Node is locked, check if unlock pin is asserted, else hang the node
-			pinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
-			// Make a short delay so we are sure any large external nets are fully pulled
-			unsigned long enter = hwMillis();
-			while (hwMillis() - enter < 2) {}
-			if (digitalRead(MY_NODE_UNLOCK_PIN) == 0) {
-				// Pin is grounded, reset lock counter
-				hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
-				// Disable pullup
-				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
-				setIndication(INDICATION_ERR_LOCKED);
-				debug(PSTR("MCO:BGN:NODE UNLOCKED\n"));
-			} else {
-				// Disable pullup
-				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
-				nodeLock("LDB"); //Locked during boot
+		
+		#if !defined(MY_TRANSPORT_RELAX)
+			// check if transport ready
+			while (!isTransportReady()) {
+				hwWatchdogReset();
+				transportProcess();
+				yield();
 			}
-		} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
-			// Reset walue
-			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
-		}
+		#else
+			CORE_DEBUG(PSTR("MCO:BGN:MTR\n"));	
+		#endif
 	#endif
-
+	
+	_checkNodeLock();
+	
 	#if defined(MY_GATEWAY_FEATURE)
 		#if defined(MY_INCLUSION_BUTTON_FEATURE)
 	    	inclusionInit();
@@ -153,46 +158,40 @@ void _begin(void) {
 	    // initialise the transport driver
 		if (!gatewayTransportInit()) {
 			setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
-			debug(PSTR("!MCO:BGN:TSP FAIL\n"));
+			CORE_DEBUG(PSTR("!MCO:BGN:TSP FAIL\n"));
 			// Nothing more we can do
 			_infiniteLoop();
 		}
 	#endif
 
-	#if !defined(MY_GATEWAY_FEATURE)
-		presentNode();
-	#endif
-
-	// register node
-	_registerNode();
-
 	// Call sketch setup
 	if (setup) {
-		debug(PSTR("MCO:BGN:STP\n"));	// setup callback
+		CORE_DEBUG(PSTR("MCO:BGN:STP\n"));	// setup callback
 		setup();
 	}
 
-	debug(PSTR("MCO:BGN:INIT OK,ID=%d,PAR=%d,DIS=%d,REG=%d\n"), _nc.nodeId, _nc.parentNodeId, _nc.distance, _nodeRegistered);
+	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%d\n"), isTransportReady());
 
+	// reset wdt before handing over to loop
 	hwWatchdogReset();
 }
 
 
-void _registerNode(void) {
-	#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
-		debug(PSTR("MCO:REG:REQ\n"));	// registration request
-		setIndication(INDICATION_REQ_REGISTRATION);
-		_nodeRegistered = MY_REGISTRATION_DEFAULT;
-		uint8_t counter = MY_REGISTRATION_RETRIES;
-		// only proceed if register response received or retries exceeded
-		do {
-			(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST).set(MY_CORE_VERSION));
-		} while (!wait(2000, C_INTERNAL, I_REGISTRATION_RESPONSE) && counter--);
-
-	#else
-		_nodeRegistered = true;
-		debug(PSTR("MCO:REG:NOT NEEDED\n"));
-	#endif
+void _registerNode(void)
+{
+#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
+	CORE_DEBUG(PSTR("MCO:REG:REQ\n"));	// registration request
+	setIndication(INDICATION_REQ_REGISTRATION);
+	coreConfig.registered = MY_REGISTRATION_DEFAULT;
+	uint8_t counter = MY_REGISTRATION_RETRIES;
+	// only proceed if register response received or retries exceeded
+	do {
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST).set(MY_CORE_VERSION));
+	} while (!wait(2000, C_INTERNAL, I_REGISTRATION_RESPONSE) && counter--);
+#else
+	coreConfig.registered = true;
+	CORE_DEBUG(PSTR("MCO:REG:NOT NEEDED\n"));
+#endif
 }
 
 void presentNode(void) {
@@ -223,7 +222,7 @@ void presentNode(void) {
 
 		// Send a configuration exchange request to controller
 		// Node sends parent node. Controller answers with latest node configuration
-		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG).set(_nc.parentNodeId));
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CONFIG).set(getParentNodeId()));
 
 		// Wait configuration reply.
 		(void)wait(2000, C_INTERNAL, I_CONFIG);
@@ -236,16 +235,35 @@ void presentNode(void) {
 }
 
 
-uint8_t getNodeId(void) {
-	return _nc.nodeId;
+uint8_t getNodeId(void)
+{
+#if defined(MY_SENSOR_NETWORK)
+	return transportGetNodeId();
+#else
+	return 0xFF;
+#endif
 }
 
-uint8_t getParentNodeId(void) {
-	return _nc.parentNodeId;
+uint8_t getParentNodeId(void)
+{
+#if defined(MY_SENSOR_NETWORK)
+	return transportGetParentNodeId();
+#else
+	return 0xFF;
+#endif
 }
 
-ControllerConfig getConfig(void) {
-	return _cc;
+uint8_t getDistanceGW(void)
+{
+#if defined(MY_SENSOR_NETWORK)
+	return transportGetDistanceGW();
+#else
+	return 0xFF;
+#endif
+}
+
+controllerConfig_t getConfig(void) {
+	return coreConfig.controllerConfig;
 }
 
 
@@ -254,7 +272,7 @@ bool _sendRoute(MyMessage &message) {
 		(void)message;
 	#endif
 	#if defined(MY_GATEWAY_FEATURE)
-		if (message.destination == _nc.nodeId) {
+		if (message.destination == getNodeId()) {
 			// This is a message sent from a sensor attached on the gateway node.
 			// Pass it directly to the gateway transport layer.
 			return gatewayTransportSend(message);
@@ -268,16 +286,16 @@ bool _sendRoute(MyMessage &message) {
 }
 
 bool send(MyMessage &message, const bool enableAck) {
-	message.sender = _nc.nodeId;
+	message.sender = getNodeId();
 	mSetCommand(message, C_SET);
 	mSetRequestAck(message, enableAck);
 
 	#if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
-		if (_nodeRegistered) {
+		if (coreConfig.registered) {
 			return _sendRoute(message);
 		}
 		else {
-			debug(PSTR("!MCO:SND:NODE NOT REG\n"));	// node not registered
+			CORE_DEBUG(PSTR("!MCO:SND:NODE NOT REG\n"));	// node not registered
 			return false;
 		}
 	#else
@@ -308,7 +326,7 @@ bool sendSketchInfo(const char *name, const char *version, const bool ack) {
 	if (name) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME, ack).set(name));
 	}
-  if (version) {
+	if (version) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION, ack).set(version));
 	}
 	return result;
@@ -336,15 +354,15 @@ bool _processInternalMessages(void) {
 		}
 		else if (type == I_REGISTRATION_RESPONSE) {
 			#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
-				_nodeRegistered = _msg.getBool();
+				coreConfig.registered = _msg.getBool();
 				setIndication(INDICATION_GOT_REGISTRATION);
-				debug(PSTR("MCO:PIM:NODE REG=%d\n"), _nodeRegistered);	// node registration
+				CORE_DEBUG(PSTR("MCO:PIM:NODE REG=%d\n"), coreConfig.registered);	// node registration
 			#endif
 		}
 		else if (type == I_CONFIG) {
 			// Pick up configuration from controller (currently only metric/imperial) and store it in eeprom if changed
-			_cc.isMetric = _msg.data[0] == 0x00 || _msg.data[0] == 'M'; // metric if null terminated or M
-			hwWriteConfig(EEPROM_CONTROLLER_CONFIG_ADDRESS, _cc.isMetric);
+			coreConfig.controllerConfig.isMetric = _msg.data[0] == 0x00 || _msg.data[0] == 'M'; // metric if null terminated or M
+			hwWriteConfigBlock((void*)&coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(controllerConfig_t));
 		}
 		else if (type == I_PRESENTATION) {
 			// Re-send node presentation to controller
@@ -377,7 +395,7 @@ bool _processInternalMessages(void) {
 					for (uint16_t cnt = 0; cnt < SIZE_ROUTES; cnt++) {
 						const uint8_t route = transportGetRoute(cnt);
 						if (route != BROADCAST_ADDRESS) {
-							debug(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
+							CORE_DEBUG(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
 							uint8_t outBuf[2] = { (uint8_t)cnt,route };
 							(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set(outBuf, 2));
 							wait(200);
@@ -465,11 +483,11 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgtype) {
 }
 
 int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2) {
-	debug(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), sleepingMS, smartSleep, interrupt1, mode1, interrupt2, mode2);
+	CORE_DEBUG(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), sleepingMS, smartSleep, interrupt1, mode1, interrupt2, mode2);
 	// OTA FW feature: do not sleep if FW update ongoing
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 		if (_fwUpdateOngoing) {
-			debug(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
+			CORE_DEBUG(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
 			wait(sleepingMS);
 			return MY_SLEEP_NOT_POSSIBLE;
 		}
@@ -482,7 +500,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		(void)interrupt2;
 		(void)mode2;
 
-		debug(PSTR("!MCO:SLP:REP\n"));	// sleeping not possible, repeater feature enabled
+		CORE_DEBUG(PSTR("!MCO:SLP:REP\n"));	// sleeping not possible, repeater feature enabled
 		wait(sleepingMS);
 		return MY_SLEEP_NOT_POSSIBLE;
 	#else
@@ -490,7 +508,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		#if defined(MY_SENSOR_NETWORK)
 			// Do not sleep if transport not ready
 			if (!isTransportReady()) {
-				debug(PSTR("!MCO:SLP:TNR\n"));	// sleeping not possible, transport not ready
+				CORE_DEBUG(PSTR("!MCO:SLP:TNR\n"));	// sleeping not possible, transport not ready
 				const uint32_t sleepEnterMS = hwMillis();
 				uint32_t sleepDeltaMS = 0;
 				while (!isTransportReady() && (sleepDeltaMS < sleepingTimeMS) && (sleepDeltaMS < MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)) {
@@ -501,7 +519,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 				// sleep remainder
 				if (sleepDeltaMS < sleepingTimeMS) {
 					sleepingTimeMS -= sleepDeltaMS;		// calculate remaining sleeping time
-					debug(PSTR("MCO:SLP:MS=%lu\n"), sleepingTimeMS);
+					CORE_DEBUG(PSTR("MCO:SLP:MS=%lu\n"), sleepingTimeMS);
 				}
 				else {
 					// no sleeping time left
@@ -517,7 +535,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		}
 
 		#if defined(MY_SENSOR_NETWORK)
-			debug(PSTR("MCO:SLP:TPD\n"));	// sleep, power down transport
+			CORE_DEBUG(PSTR("MCO:SLP:TPD\n"));	// sleep, power down transport
 			transportPowerDown();
 		#endif
 
@@ -539,7 +557,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		}
 
 		setIndication(INDICATION_WAKEUP);
-		debug(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
+		CORE_DEBUG(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
 		return result;
 	#endif
 }
@@ -574,22 +592,57 @@ int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t i
 }
 
 
+
+void _nodeLock(const char* str)
+{
 #ifdef MY_NODE_LOCK_FEATURE
-void nodeLock(const char* str) {
 	// Make sure EEPROM is updated to locked status
 	hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, 0);
 	while (1) {
 		setIndication(INDICATION_ERR_LOCKED);
-		debug(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %d AND RESET\n"), MY_NODE_UNLOCK_PIN);
+		CORE_DEBUG(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %d AND RESET\n"), MY_NODE_UNLOCK_PIN);
 		yield();
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED).set(str));
 		#if defined(MY_SENSOR_NETWORK)
 			transportPowerDown();
-			debug(PSTR("MCO:NLK:TPD\n"));	// power down transport
+			CORE_DEBUG(PSTR("MCO:NLK:TPD\n"));	// power down transport
 		#endif
 		setIndication(INDICATION_SLEEP);
 		(void)hwSleep((unsigned long)1000*60*30); // Sleep for 30 min before resending LOCKED message
 		setIndication(INDICATION_WAKEUP);
 	}
-}
+#else
+	(void)str;
 #endif
+}
+
+void _checkNodeLock(void)
+{
+#ifdef MY_NODE_LOCK_FEATURE
+	// Check if node has been locked down
+	if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {
+		// Node is locked, check if unlock pin is asserted, else hang the node
+		hwPinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
+		// Make a short delay so we are sure any large external nets are fully pulled
+		unsigned long enter = hwMillis();
+		while (hwMillis() - enter < 2) {}
+		if (hwDigitalRead(MY_NODE_UNLOCK_PIN) == 0) {
+			// Pin is grounded, reset lock counter
+			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
+			// Disable pullup
+			hwPinMode(MY_NODE_UNLOCK_PIN, INPUT);
+			setIndication(INDICATION_ERR_LOCKED);
+			CORE_DEBUG(PSTR("MCO:BGN:NODE UNLOCKED\n"));
+		}
+		else {
+			// Disable pullup
+			hwPinMode(MY_NODE_UNLOCK_PIN, INPUT);
+			_nodeLock("LDB"); //Locked during boot
+		}
+	}
+	else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
+		// Reset walue
+		hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
+	}
+#endif
+}

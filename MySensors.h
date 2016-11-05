@@ -239,26 +239,8 @@
 	#endif
 #endif
 
-#if defined(MY_TRANSPORT_DONT_CARE_MODE) && !defined(MY_GATEWAY_FEATURE)
-	// enables transport don't care mode, i.e. transport link is not monitored and GW connection optional
-	#if !defined(MY_PARENT_NODE_ID) || MY_PARENT_NODE_ID==255
-		#error MY_TRANSPORT_DONT_CARE_MODE requires MY_PARENT_NODE_ID set
-	#endif
-	#if !defined(MY_PARENT_NODE_IS_STATIC)
-		#define MY_PARENT_NODE_IS_STATIC
-	#endif
-	#ifdef MY_REGISTRATION_FEATURE
-		#undef MY_REGISTRATION_FEATURE
-	#endif
-	#ifdef MY_TRANSPORT_SANITY_CHECK 
-		#undef MY_TRANSPORT_SANITY_CHECK
-	#endif
-	#ifndef MY_TRANSPORT_UPLINK_CHECK_DISABLED
-		#define MY_TRANSPORT_UPLINK_CHECK_DISABLED	
-	#endif
-	#ifdef MY_REGISTRATION_FEATURE
-		#undef MY_REGISTRATION_FEATURE
-	#endif
+#if defined(MY_TRANSPORT_DONT_CARE_MODE)
+	#error This directive is deprecated, use MY_TRANSPORT_RELAX instead!
 #endif
 
 

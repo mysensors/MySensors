@@ -55,7 +55,6 @@
  * |E| SYS	| SUB		| Message				| Comment
  * |-|------|-----------|-----------------------|---------------------------------------------------------------------
  * | | TSM	| INIT		|						| <b>Transition to stInit state</b>
- * | | TSM	| INIT		| TDC					| Transport don't care mode
  * | | TSM	| INIT		| STATID=%%d			| Node ID is static
  * | | TSM	| INIT		| TSP OK				| Transport device configured and fully operational
  * | | TSM	| INIT		| GW MODE				| Node is set up as GW, thus omitting ID and findParent states
@@ -147,10 +146,12 @@
 
  // debug 
 #if defined(MY_DEBUG)
-	#define TRANSPORT_DEBUG(x,...) debug(x, ##__VA_ARGS__)	//!< debug
+	#define TRANSPORT_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+	extern char _convBuf[MAX_PAYLOAD * 2 + 1];
 #else
 	#define TRANSPORT_DEBUG(x,...)							//!< debug NULL
 #endif
+
 
 #if defined(MY_REPEATER_FEATURE)
 	#define MY_TRANSPORT_MAX_TX_FAILURES	(10u)		//!< search for a new parent node after this many transmission failures, higher threshold for repeating nodes
@@ -204,16 +205,32 @@
 	#error Receive message buffering requires message buffering feature enabled!
 #endif
 
+/**
+* @brief Callback
+*
+*/
+typedef void(*transportCallback_t)(void);
+
+/**
+* @brief Node configuration
+*
+* This structure stores node-related configurations
+*/
+typedef struct {
+	uint8_t nodeId;								//!< Current node id
+	uint8_t parentNodeId;						//!< Where this node sends its messages
+	uint8_t distanceGW;							//!< This nodes distance to sensor net gateway (number of hops)
+} transportConfig_t;
 
  /**
  * @brief SM state
  *
  * This structure stores SM state definitions
  */
-struct transportState {
+typedef struct {
 	void(*Transition)();					//!< state transition function
 	void(*Update)();						//!< state update function
-};
+} transportState_t;
 
 /**
 * @brief Status variables and SM state
@@ -222,7 +239,7 @@ struct transportState {
 */ 
 typedef struct {
 	// SM variables
-	transportState* currentState;			//!< pointer to current fsm state
+	transportState_t* currentState;			//!< pointer to current fsm state
 	uint32_t stateEnter;					//!< state enter timepoint
 	// general transport variables
 	uint32_t lastUplinkCheck;				//!< last uplink check, required to prevent GW flooding
@@ -239,7 +256,7 @@ typedef struct {
 	bool msgReceived : 1;					//!< flag message received
 	// 8 bits
 	uint8_t pingResponse;					//!< stores I_PONG hops
-} transportSM;
+} transportSM_t;
 
 /**
 * @brief RAM routing table
@@ -302,7 +319,7 @@ void stFailureUpdate(void);
 * @brief Switch SM state
 * @param newState New state to switch SM to
 */
-void transportSwitchSM(transportState& newState);
+void transportSwitchSM(transportState_t& newState);
 /**
 * @brief Update SM state
 */
@@ -482,6 +499,22 @@ uint8_t transportReceive(void* data);
 * @brief Power down transport HW
 */
 void transportPowerDown();
+
+/**
+* @brief Get node ID
+* @return node ID
+*/
+uint8_t transportGetNodeId(void);
+/**
+* @brief Get parent node ID
+* @return parent node ID
+*/
+uint8_t transportGetParentNodeId(void);
+/**
+* @brief Get distance to GW
+* @return distance (=hops) to GW
+*/
+uint8_t transportGetDistanceGW(void);
 
 
 #endif // MyTransport_h

@@ -185,7 +185,7 @@ bool signerProcessInternal(MyMessage &msg) {
 		nof_nonce_requests++;
 		SIGN_DEBUG(PSTR("Nonce requests left until lockdown: %d\n"), MY_NODE_LOCK_COUNTER_MAX-nof_nonce_requests);
 		if (nof_nonce_requests >= MY_NODE_LOCK_COUNTER_MAX) {
-			nodeLock("TMNR"); //Too many nonces requested
+			_nodeLock("TMNR"); //Too many nonces requested
 		}
 #endif
 #if defined(MY_SIGNING_SOFT)
@@ -317,7 +317,7 @@ bool signerSignMsg(MyMessage &msg) {
 #if defined(MY_SIGNING_FEATURE)
 	// If destination is known to require signed messages and we are the sender,
 	// sign this message unless it is a handshake message
-	if (DO_SIGN(msg.destination) && msg.sender == _nc.nodeId) {
+	if (DO_SIGN(msg.destination) && msg.sender == getNodeId()) {
 		if (skipSign(msg)) {
 			return true;
 		} else {
@@ -350,7 +350,7 @@ bool signerSignMsg(MyMessage &msg) {
 			// After this point, only the 'last' member of the message structure is allowed to be altered if the
 			// message has been signed, or signature will become invalid and the message rejected by the receiver
 		}
-	} else if (_nc.nodeId == msg.sender) {
+	} else if (getNodeId() == msg.sender) {
 		mSetSigned(msg, 0); // Message is not supposed to be signed, make sure it is marked unsigned
 	}
 #else
@@ -368,9 +368,9 @@ bool signerVerifyMsg(MyMessage &msg) {
 	// If we are a node, or we are a gateway and the sender require signatures (or just a strict gw)
 	// and we are the destination...
 #if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL)
-	if (msg.destination == _nc.nodeId) {
+	if (msg.destination == getNodeId()) {
 #else
-	if ((!MY_IS_GATEWAY || DO_SIGN(msg.sender)) && msg.destination == _nc.nodeId) {
+	if ((!MY_IS_GATEWAY || DO_SIGN(msg.sender)) && msg.destination == getNodeId()) {
 #endif
 		// Internal messages of certain types are not verified
 		if (skipSign(msg)) {
@@ -399,7 +399,7 @@ bool signerVerifyMsg(MyMessage &msg) {
 				nof_failed_verifications++;
 				SIGN_DEBUG(PSTR("Failed verification attempts left until lockdown: %d\n"), MY_NODE_LOCK_COUNTER_MAX-nof_failed_verifications);
 				if (nof_failed_verifications >= MY_NODE_LOCK_COUNTER_MAX) {
-					nodeLock("TMFV"); //Too many failed verifications
+					_nodeLock("TMFV"); //Too many failed verifications
 				}
 			}
 #endif

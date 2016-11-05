@@ -24,8 +24,6 @@ extern bool transportSendRoute(MyMessage &message);
 // global variables
 extern MyMessage _msg;
 extern MyMessage _msgTmp;
-extern NodeConfig _nc;
-
 
 inline void gatewayTransportProcess() {
 	if (gatewayTransportAvailable()) {
@@ -38,7 +36,7 @@ inline void gatewayTransportProcess() {
 				_msgTmp = _msg;
 				mSetRequestAck(_msgTmp, false); // Reply without ack flag (otherwise we would end up in an eternal loop)
 				mSetAck(_msgTmp, true);
-				_msgTmp.sender = _nc.nodeId;
+				_msgTmp.sender = getNodeId();
 				_msgTmp.destination = _msg.sender;
 				gatewayTransportSend(_msgTmp);
 			}
