@@ -62,7 +62,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
     *ptx++ = cmd;
     while ( len-- ) {
         if (aReadMode) {
-            *ptx++ = NOP ;
+            *ptx++ = RF24_NOP;
         } else {
             *ptx++ = *current++;
         }
