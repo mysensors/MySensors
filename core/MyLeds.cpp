@@ -55,7 +55,7 @@ void ledsProcess() {
 		return;
 	}
 
-	prevTime += LED_PROCESS_INTERVAL_MS;
+	prevTime = hwMillis();
 
     uint8_t state;
 
