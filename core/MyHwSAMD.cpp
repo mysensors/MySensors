@@ -113,7 +113,8 @@ void hwWatchdogReset() {
 }
 
 void hwReboot() {
- // TODO: Not supported!
+	NVIC_SystemReset();
+	while (true);
 }
 
 int8_t hwSleep(unsigned long ms) {
@@ -142,13 +143,44 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage() {
-	// TODO: Not supported!
-	return 0;
+
+	// disable ADC
+	while (ADC->STATUS.bit.SYNCBUSY);
+	ADC->CTRLA.bit.ENABLE = 0x00;
+	
+	// internal 1V reference (default)
+	analogReference(AR_INTERNAL1V0);
+	// 12 bit resolution (default)
+	analogWriteResolution(12);
+	// MUXp 0x1B = SCALEDIOVCC/4 => connected to Vcc
+	ADC->INPUTCTRL.bit.MUXPOS = 0x1B ; 
+
+	// enable ADC
+	while (ADC->STATUS.bit.SYNCBUSY);
+	ADC->CTRLA.bit.ENABLE = 0x01;
+	// start conversion
+	while (ADC->STATUS.bit.SYNCBUSY);
+	ADC->SWTRIG.bit.START = 1;
+	// clear the Data Ready flag
+	ADC->INTFLAG.bit.RESRDY = 1;
+	// start conversion again, since The first conversion after the reference is changed must not be used.
+	while (ADC->STATUS.bit.SYNCBUSY);
+	ADC->SWTRIG.bit.START = 1;
+
+	// waiting for conversion to complete
+	while (!ADC->INTFLAG.bit.RESRDY);
+	const uint32_t valueRead = ADC->RESULT.reg;
+
+	// disable ADC
+	while (ADC->STATUS.bit.SYNCBUSY);
+	ADC->CTRLA.bit.ENABLE = 0x00;
+
+	return valueRead * 4;
 }
 
 uint16_t hwCPUFrequency() {
-	// TODO: Not supported!
-	return 0;
+	// TODO: currently reporting compile time frequency (in 1/10MHz)
+	return F_CPU / 100000UL;
 }
 
 uint16_t hwFreeMem() {
