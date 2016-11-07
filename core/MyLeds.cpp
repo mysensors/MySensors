@@ -26,8 +26,7 @@
 static uint8_t countRx;
 static uint8_t countTx;
 static uint8_t countErr;
-static unsigned long prevTime = hwMillis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
-
+static unsigned long prevTime;
 
 inline void ledsInit()
 {
@@ -46,6 +45,7 @@ inline void ledsInit()
 #if defined(MY_DEFAULT_ERR_LED_PIN)
 	pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
 #endif
+	prevTime = hwMillis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
     ledsProcess();
 }
 
@@ -54,7 +54,6 @@ void ledsProcess() {
 	if ((hwMillis() - prevTime) < LED_PROCESS_INTERVAL_MS) {
 		return;
 	}
-
 	prevTime = hwMillis();
 
     uint8_t state;
@@ -87,13 +86,22 @@ void ledsProcess() {
 }
 
 void ledsBlinkRx(uint8_t cnt) {
-  if (!countRx) { countRx = cnt*LED_ON_OFF_RATIO; }
+	if (!countRx) {
+		countRx = cnt*LED_ON_OFF_RATIO;
+	}
+	ledsProcess();
 }
 
 void ledsBlinkTx(uint8_t cnt) {
-  if(!countTx) { countTx = cnt*LED_ON_OFF_RATIO; }
+	if(!countTx) {
+		countTx = cnt*LED_ON_OFF_RATIO;
+	}
+	ledsProcess();
 }
 
 void ledsBlinkErr(uint8_t cnt) {
-  if(!countErr) { countErr = cnt*LED_ON_OFF_RATIO; }
+	if(!countErr) {
+		countErr = cnt*LED_ON_OFF_RATIO;
+	}
+	ledsProcess();
 }

@@ -116,9 +116,8 @@ bool gatewayTransportInit() {
 			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 			while (WiFi.status() != WL_CONNECTED)
 			{
-				delay(500);
+				wait(500);
 				MY_SERIALDEVICE.print(F("."));
-				yield();
 			}
 			MY_SERIALDEVICE.print(F("IP: "));
 			MY_SERIALDEVICE.println(WiFi.localIP());

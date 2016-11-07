@@ -88,7 +88,7 @@ bool reconnectMQTT() {
 bool gatewayTransportConnect() {
 	#if defined(MY_GATEWAY_ESP8266)
 		while (WiFi.status() != WL_CONNECTED) {
-			delay(500); // delay calls yield
+			wait(500);
 			MY_SERIALDEVICE.print(".");
 		}
 		MY_SERIALDEVICE.print("IP: ");

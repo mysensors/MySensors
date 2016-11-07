@@ -247,6 +247,13 @@ void wait(const uint32_t waitingMS);
 bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgtype);
 
 /**
+ * Function to allow scheduler to do some work.
+ * @remark Internally it will call yield, kick the watchdog and update led states.
+ */
+void doYield(void);
+
+
+/**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
  * @param sleepingMS Number of milliseconds to sleep.
  * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep.
