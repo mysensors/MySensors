@@ -26,8 +26,7 @@
 static uint8_t countRx;
 static uint8_t countTx;
 static uint8_t countErr;
-static unsigned long prevTime = hwMillis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
-
+static unsigned long prevTime;
 
 inline void ledsInit()
 {
@@ -37,16 +36,17 @@ inline void ledsInit()
 	countErr = 0;
 
 	// Setup led pins
-#if defined(MY_DEFAULT_RX_LED_PIN)
-	pinMode(MY_DEFAULT_RX_LED_PIN,  OUTPUT);
-#endif
-#if defined(MY_DEFAULT_TX_LED_PIN)
-	pinMode(MY_DEFAULT_TX_LED_PIN,  OUTPUT);
-#endif
-#if defined(MY_DEFAULT_ERR_LED_PIN)
-	pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
-#endif
-    ledsProcess();
+	#if defined(MY_DEFAULT_RX_LED_PIN)
+		pinMode(MY_DEFAULT_RX_LED_PIN,  OUTPUT);
+	#endif
+	#if defined(MY_DEFAULT_TX_LED_PIN)
+		pinMode(MY_DEFAULT_TX_LED_PIN,  OUTPUT);
+	#endif
+	#if defined(MY_DEFAULT_ERR_LED_PIN)
+		pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
+	#endif
+	prevTime = hwMillis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
+	ledsProcess();
 }
 
 void ledsProcess() {
@@ -54,46 +54,58 @@ void ledsProcess() {
 	if ((hwMillis() - prevTime) < LED_PROCESS_INTERVAL_MS) {
 		return;
 	}
-
 	prevTime = hwMillis();
 
-    uint8_t state;
+	uint8_t state;
 
-    // For an On/Off ratio of 4, the pattern repeated will be [on, on, on, off]
-    // until the counter becomes 0.
-#if defined(MY_DEFAULT_RX_LED_PIN)
-    state = (countRx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
-    hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, state);
-    if (countRx) {
+	// For an On/Off ratio of 4, the pattern repeated will be [on, on, on, off]
+	// until the counter becomes 0.
+	#if defined(MY_DEFAULT_RX_LED_PIN)
+		if (countRx) {
 			--countRx;
 		}
-#endif
+		state = (countRx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
+		hwDigitalWrite(MY_DEFAULT_RX_LED_PIN, state);
+	#endif
 
-#if defined(MY_DEFAULT_TX_LED_PIN)
-    state = (countTx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
-    hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, state);
-    if (countTx) {
+	#if defined(MY_DEFAULT_TX_LED_PIN)
+		if (countTx) {
 			--countTx;
 		}
-#endif
+		state = (countTx & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
+		hwDigitalWrite(MY_DEFAULT_TX_LED_PIN, state);
+	#endif
 
-#if defined(MY_DEFAULT_ERR_LED_PIN)
-    state = (countErr & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
-    hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, state);
-    if (countErr) {
+	#if defined(MY_DEFAULT_ERR_LED_PIN)
+		if (countErr) {
 			--countErr;
 		}
-#endif
+		state = (countErr & (LED_ON_OFF_RATIO-1)) ? LED_ON : LED_OFF;
+		hwDigitalWrite(MY_DEFAULT_ERR_LED_PIN, state);
+	#endif
 }
 
 void ledsBlinkRx(uint8_t cnt) {
-  if (!countRx) { countRx = cnt*LED_ON_OFF_RATIO; }
+	if (!countRx) {
+		countRx = cnt*LED_ON_OFF_RATIO;
+	}
+	ledsProcess();
 }
 
 void ledsBlinkTx(uint8_t cnt) {
-  if(!countTx) { countTx = cnt*LED_ON_OFF_RATIO; }
+	if(!countTx) {
+		countTx = cnt*LED_ON_OFF_RATIO;
+	}
+	ledsProcess();
 }
 
 void ledsBlinkErr(uint8_t cnt) {
-  if(!countErr) { countErr = cnt*LED_ON_OFF_RATIO; }
+	if(!countErr) {
+		countErr = cnt*LED_ON_OFF_RATIO;
+	}
+	ledsProcess();
+}
+
+bool ledsBlinking() {
+	return countRx || countTx || countErr;
 }
