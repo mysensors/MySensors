@@ -520,6 +520,13 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 			transportPowerDown();
 		#endif
 
+		#if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
+			// Wait until leds finish their blinking pattern
+			while (ledsBlinking()) {
+				doYield();
+			}
+		#endif
+
 		setIndication(INDICATION_SLEEP);
 
 		int8_t result = MY_SLEEP_NOT_POSSIBLE;	// default
