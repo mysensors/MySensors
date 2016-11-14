@@ -468,7 +468,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 	debug(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), sleepingMS, smartSleep, interrupt1, mode1, interrupt2, mode2);
 	// OTA FW feature: do not sleep if FW update ongoing
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
-		if (_fwUpdateOngoing) {
+		if (isFirmwareUpdateOngoing()) {
 			debug(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
 			wait(sleepingMS);
 			return MY_SLEEP_NOT_POSSIBLE;
