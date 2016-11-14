@@ -115,20 +115,20 @@ void _begin(void) {
 		// Check if node has been locked down
 		if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {
 			// Node is locked, check if unlock pin is asserted, else hang the node
-			pinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
+			hwPinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
 			// Make a short delay so we are sure any large external nets are fully pulled
 			unsigned long enter = hwMillis();
 			while (hwMillis() - enter < 2) {}
-			if (digitalRead(MY_NODE_UNLOCK_PIN) == 0) {
+			if (hwDigitalRead(MY_NODE_UNLOCK_PIN) == 0) {
 				// Pin is grounded, reset lock counter
 				hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
 				// Disable pullup
-				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
+				hwPinMode(MY_NODE_UNLOCK_PIN, INPUT);
 				setIndication(INDICATION_ERR_LOCKED);
 				debug(PSTR("MCO:BGN:NODE UNLOCKED\n"));
 			} else {
 				// Disable pullup
-				pinMode(MY_NODE_UNLOCK_PIN, INPUT);
+				hwPinMode(MY_NODE_UNLOCK_PIN, INPUT);
 				nodeLock("LDB"); //Locked during boot
 			}
 		} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
