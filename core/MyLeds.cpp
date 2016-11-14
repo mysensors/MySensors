@@ -34,16 +34,16 @@ inline void ledsInit()
 	countRx = 0;
 	countTx = 0;
 	countErr = 0;
-
+	
 	// Setup led pins
 	#if defined(MY_DEFAULT_RX_LED_PIN)
-		pinMode(MY_DEFAULT_RX_LED_PIN,  OUTPUT);
+		hwPinMode(MY_DEFAULT_RX_LED_PIN,  OUTPUT);
 	#endif
 	#if defined(MY_DEFAULT_TX_LED_PIN)
-		pinMode(MY_DEFAULT_TX_LED_PIN,  OUTPUT);
+		hwPinMode(MY_DEFAULT_TX_LED_PIN,  OUTPUT);
 	#endif
 	#if defined(MY_DEFAULT_ERR_LED_PIN)
-		pinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
+		hwPinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
 	#endif
 	prevTime = hwMillis() - LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
 	ledsProcess();

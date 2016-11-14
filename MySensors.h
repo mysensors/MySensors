@@ -240,7 +240,7 @@
 #endif
 
 #if defined(MY_TRANSPORT_DONT_CARE_MODE)
-	#error This directive is deprecated, use MY_TRANSPORT_RELAX instead!
+	#error This directive is deprecated, use MY_TRANSPORT_RELAXED instead!
 #endif
 
 

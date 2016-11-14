@@ -105,12 +105,11 @@ typedef struct {
 
 /**
 * @brief Node core configuration
-*
 */
 typedef struct {
 	controllerConfig_t controllerConfig;	//!< Controller config
 	// 8 bit
-	bool nodeRegistered : 1;					//!< Flag node registered
+	bool nodeRegistered : 1;				//!< Flag node registered
 	bool presentationSent : 1;				//!< Flag presentation sent
 	uint8_t reserved : 6;					//!< reserved
 } coreConfig_t;

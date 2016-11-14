@@ -35,11 +35,8 @@ static coreConfig_t _coreConfig;
 	char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
-// Callback for requested time messages
-void (*_timeCallback)(unsigned long);
-
 // Callback for transport=ok transition
-void _callbackTransportOk()
+void _callbackTransportOk(void)
 {
 	if (!_coreConfig.presentationSent) {
 		presentNode();
@@ -123,7 +120,7 @@ void _begin(void) {
 		transportRegisterOkCallback(_callbackTransportOk);
 		// Initialise transport layer
 		transportInitialise();
-		
+		// wait until transport is ready
 		#if !defined(MY_TRANSPORT_RELAXED)
 			// check if transport ready
 			while (!isTransportReady()) {
@@ -176,7 +173,7 @@ void _registerNode(void)
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST).set(MY_CORE_VERSION));
 	} while (!wait(2000, C_INTERNAL, I_REGISTRATION_RESPONSE) && counter--);
 #else
-	_coreConfig.registered = true;
+	_coreConfig.nodeRegistered = true;
 	CORE_DEBUG(PSTR("MCO:REG:NOT NEEDED\n"));
 #endif
 }

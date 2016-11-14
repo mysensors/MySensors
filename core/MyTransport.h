@@ -227,8 +227,8 @@ typedef struct {
  * This structure stores SM state definitions
  */
 typedef struct {
-	void(*Transition)();					//!< state transition function
-	void(*Update)();						//!< state update function
+	void(*Transition)(void);					//!< state transition function
+	void(*Update)(void);						//!< state update function
 } transportState_t;
 
 /**
