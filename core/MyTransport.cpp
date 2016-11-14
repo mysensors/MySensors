@@ -504,7 +504,7 @@ bool transportWait(const uint32_t ms, const uint8_t cmd, const uint8_t msgtype){
 	while ((hwMillis() - enter < ms) && !expectedResponse) {
 		// process incoming messages
 		transportProcessFIFO();
-		yield();	// process esp8266 stack, ignored for AVR
+		doYield();
 		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgtype);
 	}
 	return expectedResponse;

@@ -43,6 +43,11 @@
 	void ledsBlinkTx(uint8_t cnt);
 	void ledsBlinkErr(uint8_t cnt);
 	void ledsProcess(); // do the actual blinking
+	/**
+	 * Test if any LED is currently blinking.
+	 * @return true when one or more LEDs are blinking, false otherwise.
+	 */
+	bool ledsBlinking();
 
 #else
 	// Remove led functions if feature is disabled

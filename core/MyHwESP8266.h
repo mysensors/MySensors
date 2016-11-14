@@ -26,7 +26,6 @@
 #endif
 
 #define MY_SERIALDEVICE Serial
-#define MY_DEBUG_BUFFER_SIZE 300
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
