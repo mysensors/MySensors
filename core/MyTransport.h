@@ -190,8 +190,8 @@
 #endif
 
 #define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)				//!<  returns true if static parent id is undefined
-#define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
-#define isValidParent(parent) (bool)(parent != AUTO)					//!<  returns true if parent is valid
+#define isValidDistance(_distance) (bool)(_distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
+#define isValidParent(_parent) (bool)(_parent != AUTO)					//!<  returns true if parent is valid
 
 // RX queue
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -206,23 +206,22 @@
 #endif
 
 /**
-* @brief Callback
-*
-*/
+ * @brief Callback type
+ */
 typedef void(*transportCallback_t)(void);
 
 /**
-* @brief Node configuration
-*
-* This structure stores node-related configurations
-*/
+ * @brief Node configuration
+ *
+ * This structure stores node-related configurations
+ */
 typedef struct {
 	uint8_t nodeId;								//!< Current node id
 	uint8_t parentNodeId;						//!< Where this node sends its messages
 	uint8_t distanceGW;							//!< This nodes distance to sensor net gateway (number of hops)
 } transportConfig_t;
 
- /**
+/**
  * @brief SM state
  *
  * This structure stores SM state definitions
@@ -233,10 +232,10 @@ typedef struct {
 } transportState_t;
 
 /**
-* @brief Status variables and SM state
-*
-* This structure stores transport status and SM variables
-*/ 
+ * @brief Status variables and SM state
+ *
+ * This structure stores transport status and SM variables
+ */ 
 typedef struct {
 	// SM variables
 	transportState_t* currentState;			//!< pointer to current fsm state
@@ -263,7 +262,7 @@ typedef struct {
 */
 typedef struct {
 	uint8_t route[SIZE_ROUTES];				//!< route for node
-} routingTable;
+} routingTable_t;
 
 // PRIVATE functions
 
@@ -349,12 +348,12 @@ void transportProcessMessage(void);
 bool transportAssignNodeID(const uint8_t newNodeId);
 /**
 * @brief Wait and process messages for a defined amount of time until specified message received
-* @param ms Time to wait and process incoming messages in ms
+* @param waitingMS Time to wait and process incoming messages in ms
 * @param cmd Specific command
-* @param msgtype Specific message type 
+* @param msgType Specific message type 
 * @return true if specified command received within waiting time
 */
-bool transportWait(const uint32_t ms, const uint8_t cmd, const uint8_t msgtype);
+bool transportWait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType);
 /**
 * @brief Ping node
 * @param targetId Node to be pinged

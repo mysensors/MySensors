@@ -172,10 +172,10 @@
 #define MY_CORE_COMPATIBILITY_CHECK
  
  /**
- * @def MY_TRANSPORT_RELAX
+ * @def MY_TRANSPORT_RELAXED
  * @brief If enabled, node enters main loop() even if transport / connection to GW is not established
  */
-//#define MY_TRANSPORT_RELAX
+//#define MY_TRANSPORT_RELAXED
 
 /**
  * @def MY_NODE_ID
@@ -865,7 +865,7 @@
 #define MY_PARENT_NODE_IS_STATIC
 #define MY_REGISTRATION_CONTROLLER
 #define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-#define MY_TRANSPORT_RELAX
+#define MY_TRANSPORT_RELAXED
 #define MY_DEBUG_VERBOSE_RF24
 #define MY_TRANSPORT_SANITY_CHECK
 #define MY_RF24_IRQ_PIN

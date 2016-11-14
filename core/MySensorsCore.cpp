@@ -29,7 +29,7 @@ MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 
 // core configuration
-coreConfig_t coreConfig;
+static coreConfig_t _coreConfig;
 
 #if defined(MY_DEBUG)
 	char _convBuf[MAX_PAYLOAD*2+1];
@@ -41,16 +41,13 @@ void (*_timeCallback)(unsigned long);
 // Callback for transport=ok transition
 void _callbackTransportOk()
 {
-	if (!coreConfig.presentationSent) {
+	if (!_coreConfig.presentationSent) {
 		presentNode();
-		coreConfig.presentationSent = true;
-	}
 #if !defined(MY_GATEWAY_FEATURE)
-	if (!coreConfig.registrationRequested) {
 		_registerNode();
-		coreConfig.registrationRequested = true;
-	}
 #endif
+		_coreConfig.presentationSent = true;
+	}
 }
 
 void _process(void) {
@@ -96,8 +93,7 @@ void _begin(void) {
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER=" MYSENSORS_LIBRARY_VERSION "\n"));
 
 	// set defaults
-	coreConfig.presentationSent = false;
-	coreConfig.registrationRequested = false;
+	_coreConfig.presentationSent = false;
 	
 	// Call before() in sketch (if it exists)
 	if (before) {
@@ -112,8 +108,8 @@ void _begin(void) {
 	signerInit();
 
 	// Read latest received controller configuration from EEPROM
-	// Note: _cc.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
-	hwReadConfigBlock((void*)&coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(controllerConfig_t));
+	// Note: _coreConfig.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
+	hwReadConfigBlock((void*)&_coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(controllerConfig_t));
 
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
 		// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
@@ -123,13 +119,12 @@ void _begin(void) {
 	#if defined(MY_SENSOR_NETWORK)
 		// Save static parent id in eeprom (used by bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, MY_PARENT_NODE_ID);
-		// Register for transport layer
-		transportRegisterTransportOkCallback(_callbackTransportOk);
-
+		// Register transport=OK callback
+		transportRegisterOkCallback(_callbackTransportOk);
 		// Initialise transport layer
 		transportInitialise();
 		
-		#if !defined(MY_TRANSPORT_RELAX)
+		#if !defined(MY_TRANSPORT_RELAXED)
 			// check if transport ready
 			while (!isTransportReady()) {
 				transportProcess();
@@ -174,14 +169,14 @@ void _registerNode(void)
 #if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
 	CORE_DEBUG(PSTR("MCO:REG:REQ\n"));	// registration request
 	setIndication(INDICATION_REQ_REGISTRATION);
-	coreConfig.registered = MY_REGISTRATION_DEFAULT;
+	_coreConfig.nodeRegistered = MY_REGISTRATION_DEFAULT;
 	uint8_t counter = MY_REGISTRATION_RETRIES;
 	// only proceed if register response received or retries exceeded
 	do {
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_REGISTRATION_REQUEST).set(MY_CORE_VERSION));
 	} while (!wait(2000, C_INTERNAL, I_REGISTRATION_RESPONSE) && counter--);
 #else
-	coreConfig.registered = true;
+	_coreConfig.registered = true;
 	CORE_DEBUG(PSTR("MCO:REG:NOT NEEDED\n"));
 #endif
 }
@@ -255,7 +250,7 @@ uint8_t getDistanceGW(void)
 }
 
 controllerConfig_t getConfig(void) {
-	return coreConfig.controllerConfig;
+	return _coreConfig.controllerConfig;
 }
 
 
@@ -283,7 +278,7 @@ bool send(MyMessage &message, const bool enableAck) {
 	mSetRequestAck(message, enableAck);
 
 	#if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
-		if (coreConfig.registered) {
+		if (_coreConfig.nodeRegistered) {
 			return _sendRoute(message);
 		}
 		else {
@@ -346,15 +341,15 @@ bool _processInternalMessages(void) {
 		}
 		else if (type == I_REGISTRATION_RESPONSE) {
 			#if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
-				coreConfig.registered = _msg.getBool();
+				_coreConfig.nodeRegistered = _msg.getBool();
 				setIndication(INDICATION_GOT_REGISTRATION);
-				CORE_DEBUG(PSTR("MCO:PIM:NODE REG=%d\n"), coreConfig.registered);	// node registration
+				CORE_DEBUG(PSTR("MCO:PIM:NODE REG=%d\n"), _coreConfig.nodeRegistered);	// node registration
 			#endif
 		}
 		else if (type == I_CONFIG) {
 			// Pick up configuration from controller (currently only metric/imperial) and store it in eeprom if changed
-			coreConfig.controllerConfig.isMetric = _msg.data[0] == 0x00 || _msg.data[0] == 'M'; // metric if null terminated or M
-			hwWriteConfigBlock((void*)&coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(controllerConfig_t));
+			_coreConfig.controllerConfig.isMetric = _msg.data[0] == 0x00 || _msg.data[0] == 'M'; // metric if null terminated or M
+			hwWriteConfigBlock((void*)&_coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(controllerConfig_t));
 		}
 		else if (type == I_PRESENTATION) {
 			// Re-send node presentation to controller
@@ -460,14 +455,14 @@ void wait(const uint32_t waitingMS) {
 	}
 }
 
-bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgtype) {
+bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType) {
 	const uint32_t enteringMS = hwMillis();
 	// invalidate msg type
-	_msg.type = !msgtype;
+	_msg.type = !msgType;
 	bool expectedResponse = false;
 	while ( (hwMillis() - enteringMS < waitingMS) && !expectedResponse ) {
 		_process();
-		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgtype);
+		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgType);
 	}
 	return expectedResponse;
 }

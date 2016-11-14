@@ -41,7 +41,7 @@
  * |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
  * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
  * | | MCO  | BGN	| BFR											| Callback before()
- * | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAX enabled
+ * | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
  * | | MCO  | BGN	| STP											| Callback setup()
  * | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised
  * | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
@@ -110,10 +110,9 @@ typedef struct {
 typedef struct {
 	controllerConfig_t controllerConfig;	//!< Controller config
 	// 8 bit
-	bool registered : 1;					//!< Flag node registered
+	bool nodeRegistered : 1;					//!< Flag node registered
 	bool presentationSent : 1;				//!< Flag presentation sent
-	bool registrationRequested : 1;			//!< Flag registration requested
-	uint8_t reserved : 5;					//!< reserved
+	uint8_t reserved : 6;					//!< reserved
 } coreConfig_t;
 
 
