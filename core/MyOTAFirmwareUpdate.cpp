@@ -25,7 +25,11 @@ extern MyMessage _msgTmp;
 extern NodeConfig _nc;
 
 // local variables
+#ifdef MY_OTA_USE_I2C_EEPROM
+I2CEeprom _flash(MY_OTA_I2C_ADDR);
+#else
 SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
+#endif
 NodeFirmwareConfig _fc;
 bool _fwUpdateOngoing;
 unsigned long _fwLastRequestTime;

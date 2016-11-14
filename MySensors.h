@@ -146,7 +146,11 @@
 
 // FLASH
 #if defined(MY_OTA_FIRMWARE_FEATURE)
-	#include "drivers/SPIFlash/SPIFlash.cpp"
+	#if defined(MY_OTA_USE_I2C_EEPROM)
+		#include "drivers/I2CEeprom/I2CEeprom.cpp"
+	#else
+		#include "drivers/SPIFlash/SPIFlash.cpp"
+	#endif
 	#include "core/MyOTAFirmwareUpdate.cpp"
 #endif
 
