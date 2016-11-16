@@ -88,6 +88,7 @@
 
 //#define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 //#define MY_RS485
 
 /**
@@ -671,7 +672,7 @@
  */
 #ifndef MY_RF69_IRQ_NUM
 	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
+		#define MY_RF69_IRQ_NUM RF69_IRQ_PIN
 	#else
 		#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
 	#endif
@@ -679,6 +680,87 @@
 
 // Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RFM69_ENABLE_ENCRYPTION
+
+/**********************************
+*  RFM95 driver defaults
+***********************************/
+
+/**
+ * @def MY_RFM95_FREQUENCY
+ * @brief RFM95 frequency
+ *
+ * This must match the hardware version of the RFM95 radio.
+ */
+#ifndef MY_RFM95_FREQUENCY
+	#define MY_RFM95_FREQUENCY   (868.1f)
+#endif
+ /**
+ * @def MY_RFM95_MODEM_CONFIGRUATION
+ * @brief RFM95 modem configuration, see table
+ * 
+ * BW = Bandwidth in kHz
+ * CR = Error correction code
+ * SF = Spreading factor, chips / symbol
+ *
+ * | CONFIG				    | BW    | CR  | SF   | Comment
+ * |------------------------|-------|-----|------|-----------------------------
+ * | RFM95_BW125CR45SF128   | 125   | 4/5 | 128  | Default, medium range
+ * | RFM95_BW500CR45SF128   | 500   | 4/5 | 128  | Fast, short range
+ * | RFM95_BW31_25CR48SF512 | 31.25 | 4/8 | 512  | Slow, long range
+ * | RFM95_BW125CR48SF4096  | 125   | 4/8 | 4096 | Slow, long range
+ *
+ */
+
+#ifndef MY_RFM95_MODEM_CONFIGRUATION
+	// default
+	#define MY_RFM95_MODEM_CONFIGRUATION RFM95_BW125CR45SF128
+#endif
+
+/**
+ * @def MY_RFM95_RST_PIN
+ * @brief RFM95 reset pin, uncomment if used
+ */
+//#define MY_RFM95_RST_PIN RFM95_RST_PIN
+
+/**
+ * @def MY_RFM95_IRQ_PIN
+ * @brief RFM95 IRQ pin
+ */
+#ifndef MY_RFM95_IRQ_PIN
+	#define MY_RFM95_IRQ_PIN RFM95_IRQ_PIN
+#endif
+
+/**
+ * @def MY_RFM95_SPI_CS
+ * @brief RFM95 SPI chip select pin
+ */
+#ifndef MY_RFM95_SPI_CS
+	#define MY_RFM95_SPI_CS RFM95_SPI_CS
+#endif
+
+/**
+ * @def MY_RFM95_TX_POWER
+ * @brief RFM95 TX power level.
+ */
+#ifndef MY_RFM95_TX_POWER
+	#define MY_RFM95_TX_POWER 13
+#endif
+
+ /**
+ * @def MY_RFM95_ATC_MODE_DISABLED
+ * @brief Enable to disable ATC mode
+ */
+//#define MY_RFM95_ATC_MODE_DISABLED
+
+ /**
+ * @def MY_RFM95_ATC_TARGET_RSSI
+ * @brief Traget RSSI level for ATC mode
+ */
+#ifndef MY_RFM95_ATC_TARGET_RSSI
+	#define MY_RFM95_ATC_TARGET_RSSI (-60)
+#endif
+
+
 
 /**************************************
 * Ethernet Gateway Transport  Defaults
@@ -874,4 +956,6 @@
 #define MY_TRANSPORT_DONT_CARE_MODE
 #define MY_LINUX_SERIAL_GROUPNAME
 #define MY_IS_SERIAL_PTY
+#define MY_RFM95_ATC_MODE_DISABLED
+#define MY_RFM95_RST_PIN
 #endif
