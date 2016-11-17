@@ -30,11 +30,11 @@ static transportState_t stFailure = { stFailureTransition, stFailureUpdate };
 // transport SM variables
 static transportSM_t _transportSM;
 
-// transport config
+// transport configuration
 static transportConfig_t _transportConfig;		
 
-// callbacks
-transportCallback_t transportOk_cb = NULL;
+// callback transportOk
+transportCallback_t transportReady_cb = NULL;
 
 // global variables
 extern MyMessage _msg;		// incoming message
@@ -216,7 +216,7 @@ void stUplinkTransition(void) {
 		setIndication(INDICATION_CHECK_UPLINK);
 		_transportSM.pingResponse = INVALID_HOPS;
 		_transportSM.pingActive = true;
-		(void)transportRouteMessage(build(_msgTmp,GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)1));
+		(void)transportRouteMessage(build(_msgTmp,GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)0x01));
 	#endif
 }
 
@@ -226,7 +226,6 @@ void stUplinkUpdate(void) {
 			_transportSM.lastUplinkCheck = hwMillis();
 			// uplink ok, i.e. GW replied
 			TRANSPORT_DEBUG(PSTR("TSM:UPL:OK\n"));	// uplink ok
-			//_transportSM.pingActive = false; ==> set false upon receiving I_PONG
 			if (_transportSM.pingResponse != _transportConfig.distanceGW) {
 				TRANSPORT_DEBUG(PSTR("TSM:UPL:DGWC,O=%d,N=%d\n"), _transportConfig.distanceGW, _transportSM.pingResponse);	// distance to GW changed
 				_transportConfig.distanceGW = _transportSM.pingResponse;
@@ -255,15 +254,14 @@ void stUplinkUpdate(void) {
 
 void stReadyTransition(void) {
 	// transport is ready and fully operational
-	TRANSPORT_DEBUG(PSTR("TSM:READY\n"));		// transport is ready
+	TRANSPORT_DEBUG(PSTR("TSM:READY:ID=%d,PAR=%d,DIS=%d\n"), _transportConfig.nodeId, _transportConfig.parentNodeId, _transportConfig.distanceGW);
 	_transportSM.uplinkOk = true;
 	_transportSM.failureCounter = 0u;			// reset failure counter
 	_transportSM.failedUplinkTransmissions = 0u;	// reset failed uplink TX counter
 	// callback
-	if (transportOk_cb) {
-		transportOk_cb();
+	if (transportReady_cb) {
+		transportReady_cb();
 	}
-	TRANSPORT_DEBUG(PSTR("TSM:READY:PARAM,ID=%d,PAR=%d,DIS=%d\n"), _transportConfig.nodeId, _transportConfig.parentNodeId, _transportConfig.distanceGW);
 }
 
 // stReadyUpdate: monitors link
@@ -369,6 +367,19 @@ void transportInitialise(void) {
 	// intial state
 	_transportSM.currentState = NULL;
 	transportSwitchSM(stInit);
+}
+
+bool transportWaitUntilReady(const uint32_t waitingMS) {
+	// check if transport ready
+	TRANSPORT_DEBUG(PSTR("TSF:WUR:MS=%lu\n"), waitingMS);	// timeout
+	uint32_t enterMS = hwMillis();
+	bool result = false;
+	while (!result && ( hwMillis() - enterMS < waitingMS || !waitingMS)) {
+		transportProcess();
+		result = isTransportReady();
+		doYield();
+	}
+	return result;
 }
 
 // update TSM and process incoming messages
@@ -520,7 +531,7 @@ uint8_t transportPingNode(const uint8_t targetId) {
 		else {
 			_transportSM.pingActive = true;
 			_transportSM.pingResponse = INVALID_HOPS;
-			(void)transportRouteMessage(build(_msgTmp, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)1));
+			(void)transportRouteMessage(build(_msgTmp, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)0x01));
 			// Wait for ping reply or timeout
 			(void)transportWait(2000, C_INTERNAL, I_PONG);
 		}
@@ -849,9 +860,9 @@ bool transportSendWrite(const uint8_t to, MyMessage &message) {
 	return result;
 }
 
-void transportRegisterOkCallback(transportCallback_t cb)
+void transportRegisterReadyCallback(transportCallback_t cb)
 {
-	transportOk_cb = cb;
+	transportReady_cb = cb;
 }
 
 uint8_t transportGetNodeId(void)

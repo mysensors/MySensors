@@ -36,7 +36,7 @@ static coreConfig_t _coreConfig;
 #endif
 
 // Callback for transport=ok transition
-void _callbackTransportOk(void)
+void _callbackTransportReady(void)
 {
 	if (!_coreConfig.presentationSent) {
 		presentNode();
@@ -114,23 +114,15 @@ void _begin(void) {
 	#endif
 
 	#if defined(MY_SENSOR_NETWORK)
-		// Save static parent id in eeprom (used by bootloader)
+		// Save static parent ID in eeprom (used by bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, MY_PARENT_NODE_ID);
-		// Register transport=OK callback
-		transportRegisterOkCallback(_callbackTransportOk);
 		// Initialise transport layer
 		transportInitialise();
+		// Register transport=ready callback
+		transportRegisterReadyCallback(_callbackTransportReady);
 		// wait until transport is ready
-		#if !defined(MY_TRANSPORT_RELAXED)
-			// check if transport ready
-			while (!isTransportReady()) {
-				transportProcess();
-				doYield();
-			}
-		#else
-			CORE_DEBUG(PSTR("MCO:BGN:MTR\n"));	
-		#endif
-	#endif
+		(void)transportWaitUntilReady(MY_TRANSPORT_WAIT_READY_MS);
+	#endif	
 	
 	_checkNodeLock();
 	
@@ -478,8 +470,8 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 	CORE_DEBUG(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), sleepingMS, smartSleep, interrupt1, mode1, interrupt2, mode2);
 	// OTA FW feature: do not sleep if FW update ongoing
 	#if defined(MY_OTA_FIRMWARE_FEATURE)
-		if (_fwUpdateOngoing) {
-			CORE_DEBUG(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
+		if (isFirmwareUpdateOngoing()) {
+			debug(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
 			wait(sleepingMS);
 			return MY_SLEEP_NOT_POSSIBLE;
 		}

@@ -56,18 +56,21 @@
 
 #include "MySensorsCore.h"
 
-#define FIRMWARE_BLOCK_SIZE	(16)				//!< Size of each firmware block
-#define FIRMWARE_MAX_REQUESTS (5)				//!< Number of times a firmware block should be requested before giving up
-#define MY_OTA_RETRY (5)						//!< Number of times to request a fw block before giving up
-#define MY_OTA_RETRY_DELAY (500)				//!< Number of milliseconds before re-requesting a FW block
-#define FIRMWARE_START_OFFSET (10)				//!< Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
+#define FIRMWARE_BLOCK_SIZE		(16u)				//!< Size of each firmware block
+#define FIRMWARE_MAX_REQUESTS	(5u)				//!< Number of times a firmware block should be requested before giving up
+#define MY_OTA_RETRY			(5u)				//!< Number of times to request a fw block before giving up
+#define MY_OTA_RETRY_DELAY		(500u)				//!< Number of milliseconds before re-requesting a FW block
+#define FIRMWARE_START_OFFSET	(10u)				//!< Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
 
-#define MY_OTA_BOOTLOADER_MAJOR_VERSION (3)		//!< Bootloader version major
-#define MY_OTA_BOOTLOADER_MINOR_VERSION (0)		//!< Bootloader version minor
+#define MY_OTA_BOOTLOADER_MAJOR_VERSION (3u)		//!< Bootloader version major
+#define MY_OTA_BOOTLOADER_MINOR_VERSION (0u)		//!< Bootloader version minor
 #define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)	//!< Bootloader version
 
-#define OTA_DEBUG(x,...) debug(x, ##__VA_ARGS__)	//!< debug
-
+#if defined(MY_DEBUG)
+	#define OTA_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+#else
+	#define OTA_DEBUG(x,...)	//!< debug NULL
+#endif
 /**
 * @brief FW config structure, stored in eeprom
 */
@@ -76,7 +79,7 @@ typedef struct {
 	uint16_t version;							//!< Version of config
 	uint16_t blocks;							//!< Number of blocks
 	uint16_t crc;								//!< CRC of block data
-} __attribute__((packed)) NodeFirmwareConfig;
+} __attribute__((packed)) nodeFirmwareConfig_t;
 
 /**
 * @brief FW config request structure
@@ -87,7 +90,7 @@ typedef struct {
 	uint16_t blocks;							//!< Number of blocks
 	uint16_t crc;								//!< CRC of block data
 	uint16_t BLVersion;							//!< Bootloader version
-} __attribute__((packed)) RequestFirmwareConfig;
+} __attribute__((packed)) requestFirmwareConfig_t;
 
 /**
 * @brief FW block request structure
@@ -96,7 +99,7 @@ typedef struct {
 	uint16_t type;								//!< Type of config
 	uint16_t version;							//!< Version of config
 	uint16_t block;								//!< Block index
-} __attribute__((packed)) RequestFWBlock;
+} __attribute__((packed)) requestFirmwareBlock_t;
 
 /**
 * @brief  FW block reply structure
@@ -106,7 +109,7 @@ typedef struct {
 	uint16_t version;							//!< Version of config
 	uint16_t block;								//!< Block index
 	uint8_t data[FIRMWARE_BLOCK_SIZE];			//!< Block data
-} __attribute__((packed)) ReplyFWBlock;
+} __attribute__((packed)) replyFirmwareBlock_t;
 
 
 /**
@@ -114,27 +117,27 @@ typedef struct {
  *
  * Current firmware settings (type, version, crc, blocks) are read into _fc
  */
-void readFirmwareSettings();
+void readFirmwareSettings(void);
 /**
  * @brief Handle OTA FW update requests
  */
- void firmwareOTAUpdateRequest();
+void firmwareOTAUpdateRequest(void);
 /**
  * @brief Handle OTA FW update responses
  *
  * This function handles incoming OTA FW packets and stores them to external flash (Sensebender)
  */
-bool firmwareOTAUpdateProcess();
+bool firmwareOTAUpdateProcess(void);
 /**
  * @brief Validate uploaded FW CRC
  *
  * This function verifies if uploaded FW CRC is valid
  */
-bool transportIsValidFirmware();
+bool transportIsValidFirmware(void);
 /**
  * @brief Present bootloader/FW information upon startup
  */
-void presentBootloaderInformation();
+void presentBootloaderInformation(void);
 
 #endif
 

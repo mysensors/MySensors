@@ -41,6 +41,7 @@
  *   - TSF:CHKUPL					from @ref transportCheckUplink(), checks connection to GW
  *   - TSF:ASID						from @ref transportAssignNodeID(), assigns node ID
  *   - TSF:PING						from @ref transportPingNode(), pings a node
+ *   - TSF:WUR						from @ref transportWaitUntilReady(), waits until transport is ready
  *   - TSF:CRT						from @ref transportClearRoutingTable(), clears routing table stored in EEPROM
  *   - TSF:LRT						from @ref transportLoadRoutingTable(), loads RAM routing table from EEPROM (only GW/repeaters)
  *   - TSF:SRT						from @ref transportSaveRoutingTable(), saves RAM routing table to EEPROM (only GW/repeaters)
@@ -72,8 +73,8 @@
  * | | TSM	| UPL		| OK					| Uplink OK, GW returned ping
  * | | TSF	| UPL		| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
  * |!| TSM	| UPL		| FAIL					| Uplink check failed, i.e. GW could not be pinged
- * | | TSM	| READY		|						| <b>Transition to stReady</b>, i.e. transport is ready and fully operational
  * | | TSM	| READY		| SRT					| Save routing table
+ * | | TSM	| READY		| ID=%%d,PAR=%%d,DIS=%%d| <b>Transition to stReady</b> Transport ready, node ID (ID), parent node ID (PAR), distance to GW (DIS)
  * |!| TSM	| READY		| UPL FAIL,SNP			| Too many failed uplink transmissions, search new parent
  * |!| TSM	| READY		| FAIL,STATP			| Too many failed uplink transmissions, static parent enforced
  * | | TSM	| FAIL		| CNT=%%d				| <b>Transition to stFailure state</b>, consecutive failure counter (CNT)
@@ -86,6 +87,7 @@
  * | | TSF	| ASID		| OK,ID=%%d				| Node ID assigned
  * |!| TSF	| ASID		| FAIL,ID=%%d			| Assigned ID is invalid
  * | | TSF	| PING		| SEND,TO=%%d			| Send ping to destination (TO)
+ * | | TSF	| WUR		| MS=%%lu				| Wait until transport ready, timeout (MS)
  * | | TSF	| MSG		| ACK REQ				| ACK message requested
  * | | TSF	| MSG		| ACK					| ACK message, do not proceed but forward to callback
  * | | TSF	| MSG		| FPAR RES,ID=%%d,D=%%d	| Response to find parent received from node (ID) with distance (D) to GW
@@ -387,10 +389,16 @@ bool transportSendWrite(const uint8_t to, MyMessage &message);
 * @param force to override flood control timer
 * @return true if uplink ok
 */
-bool transportCheckUplink(const bool force=false);
+bool transportCheckUplink(const bool force = false);
 
 // PUBLIC functions
 
+/**
+* @brief Wait until transport is ready
+* @param waitingMS timeout in MS, set 0 (default) for no timeout, i.e. wait indefinitely. For a node in standalone mode (optional network connection) set >0 to allow a node entering the main loop() function.
+* @return true if transport is ready
+*/
+bool transportWaitUntilReady(const uint32_t waitingMS = 0);
 /**
 * @brief Initialize transport and SM
 */
