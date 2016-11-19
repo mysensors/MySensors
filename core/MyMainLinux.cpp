@@ -102,7 +102,7 @@ static int daemonize(void)
 
 void print_usage()
 {
-	printf("Usage: mysGateway [options]\n\n" \
+	printf("Usage: mysgw [options]\n\n" \
 			 "Options:\n" \
 			 "  -h, --help                 Display a short summary of all program options.\n" \
 			 "  -d, --debug                Enable debug.\n" \
@@ -154,7 +154,7 @@ void generate_soft_sign_hmac_key()
 
 	print_soft_sign_hmac_key(key);
 
-	printf("To use this key, run mysGateway with:\n"
+	printf("To use this key, run mysgw with:\n"
 			" --set-soft-hmac-key=");
 	for (int i = 0; i < 32; i++) {
 		printf("%02X", key[i]);
@@ -226,7 +226,7 @@ void generate_soft_sign_serial_key()
 
 	print_soft_sign_serial_key(key);
 
-	printf("To use this key, run mysGateway with:\n"
+	printf("To use this key, run mysgw with:\n"
 			" --set-soft-serial-key=");
 	for (int i = 0; i < 9; i++) {
 		printf("%02X", key[i]);
@@ -298,7 +298,7 @@ void generate_aes_key()
 
 	print_aes_key(key);
 
-	printf("To use this key, run mysGateway with:\n"
+	printf("To use this key, run mysgw with:\n"
 			" --set-aes-key=");
 	for (int i = 0; i < 16; i++) {
 		printf("%02X", key[i]);
