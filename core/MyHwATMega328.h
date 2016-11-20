@@ -73,15 +73,9 @@ do { 																\
 #define hwMillis() millis()
 #define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 #define hwReadConfig(__pos) eeprom_read_byte((uint8_t*)(__pos))
-
-#ifndef eeprom_update_byte
-	#define hwWriteConfig(__loc, __val) if((uint8_t)(__val) != eeprom_read_byte((uint8_t*)(__loc))) { eeprom_write_byte((uint8_t*)(__loc), (__val)); }
-#else
-	#define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t*)(__pos), (__val))
-#endif
-
+#define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t*)(__pos), (__val))
 #define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void*)(__buf), (void*)(__pos), (__length))
-#define hwWriteConfigBlock(__buf, __pos, __length) eeprom_write_block((void*)(__buf), (void*)(__pos), (__length))
+#define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((void*)(__buf), (void*)(__pos), (__length))
 
 
 
