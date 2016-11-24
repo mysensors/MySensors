@@ -59,6 +59,10 @@ MySensors options:
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
+    --my-rf24-encryption-enabled
+                                Enables RF24 encryption.
+                                All nodes and gateway must have this enabled, and all must be
+                                personalized with the same AES key
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
     --my-rs485-serial-port=<PORT>
@@ -71,6 +75,15 @@ MySensors options:
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
     --my-leds-blinking-inverse  Inverse the blinking feature.
+    --my-signing=[none|software]
+                                Message signing. [none]
+    --my-signing-debug          Enable signing related debug.
+    --my-signing-request-signatures
+                                Enable signature request from nodes that in turn requested
+                                gateway signature.
+    --my-signing-request-gw-signatures-from-all
+                                Require all nodes in the network to sign messages sent to the
+                                gateway.
 
 EOF
 }
@@ -210,6 +223,8 @@ function gcc_cpu_flags {
 debug=enable
 gateway_type=ethernet
 transport_type=nrf24
+signing=none
+signing_request_signatures=false
 
 params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM"
 
@@ -322,6 +337,9 @@ for opt do
     --my-rf24-irq-pin=*)
         CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CPPFLAGS"
         ;;
+    --my-rf24-encryption-enabled*)
+        CPPFLAGS="-DMY_RF24_ENABLE_ENCRYPTION $CPPFLAGS"
+        ;;
     --my-rx-message-buffer-size=*)
         CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CPPFLAGS"
         ;;
@@ -348,6 +366,19 @@ for opt do
         ;;
     --my-leds-blinking-inverse*)
         CPPFLAGS="-DMY_WITH_LEDS_BLINKING_INVERSE $CPPFLAGS"
+        ;;
+    --my-signing=*)
+        signing=${optarg}
+        ;;
+    --my-signing-debug*)
+        CPPFLAGS="-DMY_DEBUG_VERBOSE_SIGNING $CPPFLAGS"
+        ;;
+    --my-signing-request-signatures*)
+        signing_request_signatures=true
+        ;;
+    --my-signing-request-gw-signatures-from-all*)
+        signing_request_signatures=true
+        CPPFLAGS="-DMY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL $CPPFLAGS"
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
@@ -388,12 +419,19 @@ if [[ ${debug} == "enable" ]]; then
     CPPFLAGS="-DMY_DEBUG $CPPFLAGS"
 fi
 
-if [[ ${gateway_type} == "ethernet" ]]; then
+if [[ ${gateway_type} == "none" ]]; then
+    # Node mode selected
+    :
+elif [[ ${gateway_type} == "ethernet" ]]; then
     CPPFLAGS="-DMY_GATEWAY_LINUX $CPPFLAGS"
 elif [[ ${gateway_type} == "serial" ]]; then
     CPPFLAGS="-DMY_GATEWAY_SERIAL $CPPFLAGS"
 elif [[ ${gateway_type} == "mqtt" ]]; then
     CPPFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CPPFLAGS"
+else
+    echo "Invalid gateway type."
+    echo "Aborting."
+    exit 1
 fi
 
 if [[ ${transport_type} == "none" ]]; then
@@ -407,6 +445,20 @@ elif [[ ${transport_type} == "rfm95" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
 else
     echo "Invalid transport type."
+    echo "Aborting."
+    exit 1
+fi
+
+if [[ ${signing} == "none" ]]; then
+    # Signing disabled
+    :
+elif [[ ${signing} == "software" ]]; then
+    CPPFLAGS="-DMY_SIGNING_SOFT $CPPFLAGS"
+    if [[ ${signing_request_signatures} == true ]]; then
+        CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
+    fi
+else
+    echo "Invalid message signing option."
     echo "Aborting."
     exit 1
 fi
