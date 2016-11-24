@@ -134,12 +134,6 @@
 //#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
 
 /**
-*@def MY_TRANSPORT_DONT_CARE_MODE
-*@brief If set, transport traffic is unmonitored and GW connection is optional
-*/
-//#define MY_TRANSPORT_DONT_CARE_MODE
-
-/**
  *@def MY_TRANSPORT_MAX_TX_FAILURES
  *@brief Set to override max. consecutive TX failures until SNP is initiated
  */
@@ -177,6 +171,14 @@
  * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
  */
 #define MY_CORE_COMPATIBILITY_CHECK
+
+ /**
+* @def MY_TRANSPORT_WAIT_READY_MS
+* @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
+*/
+#ifndef MY_TRANSPORT_WAIT_READY_MS
+#define MY_TRANSPORT_WAIT_READY_MS (0ul)
+#endif
 
 /**
  * @def MY_NODE_ID
@@ -946,6 +948,7 @@
 #define MY_IS_RFM69HW
 #define MY_PARENT_NODE_IS_STATIC
 #define MY_REGISTRATION_CONTROLLER
+#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
 #define MY_DEBUG_VERBOSE_RF24
 #define MY_TRANSPORT_SANITY_CHECK
 #define MY_RF24_IRQ_PIN
@@ -953,8 +956,6 @@
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
 #define MY_REPEATER_FEATURE
-#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-#define MY_TRANSPORT_DONT_CARE_MODE
 #define MY_LINUX_SERIAL_GROUPNAME
 #define MY_IS_SERIAL_PTY
 #define MY_RFM95_ATC_MODE_DISABLED

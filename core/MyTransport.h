@@ -41,6 +41,7 @@
  *   - TSF:CHKUPL					from @ref transportCheckUplink(), checks connection to GW
  *   - TSF:ASID						from @ref transportAssignNodeID(), assigns node ID
  *   - TSF:PING						from @ref transportPingNode(), pings a node
+ *   - TSF:WUR						from @ref transportWaitUntilReady(), waits until transport is ready
  *   - TSF:CRT						from @ref transportClearRoutingTable(), clears routing table stored in EEPROM
  *   - TSF:LRT						from @ref transportLoadRoutingTable(), loads RAM routing table from EEPROM (only GW/repeaters)
  *   - TSF:SRT						from @ref transportSaveRoutingTable(), saves RAM routing table to EEPROM (only GW/repeaters)
@@ -55,7 +56,6 @@
  * |E| SYS	| SUB		| Message				| Comment
  * |-|------|-----------|-----------------------|---------------------------------------------------------------------
  * | | TSM	| INIT		|						| <b>Transition to stInit state</b>
- * | | TSM	| INIT		| TDC					| Transport don't care mode
  * | | TSM	| INIT		| STATID=%%d			| Node ID is static
  * | | TSM	| INIT		| TSP OK				| Transport device configured and fully operational
  * | | TSM	| INIT		| GW MODE				| Node is set up as GW, thus omitting ID and findParent states
@@ -73,8 +73,8 @@
  * | | TSM	| UPL		| OK					| Uplink OK, GW returned ping
  * | | TSF	| UPL		| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
  * |!| TSM	| UPL		| FAIL					| Uplink check failed, i.e. GW could not be pinged
- * | | TSM	| READY		|						| <b>Transition to stReady</b>, i.e. transport is ready and fully operational
  * | | TSM	| READY		| SRT					| Save routing table
+ * | | TSM	| READY		| ID=%%d,PAR=%%d,DIS=%%d| <b>Transition to stReady</b> Transport ready, node ID (ID), parent node ID (PAR), distance to GW (DIS)
  * |!| TSM	| READY		| UPL FAIL,SNP			| Too many failed uplink transmissions, search new parent
  * |!| TSM	| READY		| FAIL,STATP			| Too many failed uplink transmissions, static parent enforced
  * | | TSM	| FAIL		| CNT=%%d				| <b>Transition to stFailure state</b>, consecutive failure counter (CNT)
@@ -87,6 +87,7 @@
  * | | TSF	| ASID		| OK,ID=%%d				| Node ID assigned
  * |!| TSF	| ASID		| FAIL,ID=%%d			| Assigned ID is invalid
  * | | TSF	| PING		| SEND,TO=%%d			| Send ping to destination (TO)
+ * | | TSF	| WUR		| MS=%%lu				| Wait until transport ready, timeout (MS)
  * | | TSF	| MSG		| ACK REQ				| ACK message requested
  * | | TSF	| MSG		| ACK					| ACK message, do not proceed but forward to callback
  * | | TSF	| MSG		| FPAR RES,ID=%%d,D=%%d	| Response to find parent received from node (ID) with distance (D) to GW
@@ -147,10 +148,12 @@
 
  // debug 
 #if defined(MY_DEBUG)
-	#define TRANSPORT_DEBUG(x,...) debug(x, ##__VA_ARGS__)	//!< debug
+	#define TRANSPORT_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+	extern char _convBuf[MAX_PAYLOAD * 2 + 1];
 #else
 	#define TRANSPORT_DEBUG(x,...)							//!< debug NULL
 #endif
+
 
 #if defined(MY_REPEATER_FEATURE)
 	#define MY_TRANSPORT_MAX_TX_FAILURES	(10u)		//!< search for a new parent node after this many transmission failures, higher threshold for repeating nodes
@@ -189,8 +192,8 @@
 #endif
 
 #define _autoFindParent (bool)(MY_PARENT_NODE_ID == AUTO)				//!<  returns true if static parent id is undefined
-#define isValidDistance(distance) (bool)(distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
-#define isValidParent(parent) (bool)(parent != AUTO)					//!<  returns true if parent is valid
+#define isValidDistance(_distance) (bool)(_distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
+#define isValidParent(_parent) (bool)(_parent != AUTO)					//!<  returns true if parent is valid
 
 // RX queue
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -204,25 +207,40 @@
 	#error Receive message buffering requires message buffering feature enabled!
 #endif
 
+/**
+ * @brief Callback type
+ */
+typedef void(*transportCallback_t)(void);
 
- /**
+/**
+ * @brief Node configuration
+ *
+ * This structure stores node-related configurations
+ */
+typedef struct {
+	uint8_t nodeId;								//!< Current node id
+	uint8_t parentNodeId;						//!< Where this node sends its messages
+	uint8_t distanceGW;							//!< This nodes distance to sensor net gateway (number of hops)
+} transportConfig_t;
+
+/**
  * @brief SM state
  *
  * This structure stores SM state definitions
  */
-struct transportState {
-	void(*Transition)();					//!< state transition function
-	void(*Update)();						//!< state update function
-};
+typedef struct {
+	void(*Transition)(void);					//!< state transition function
+	void(*Update)(void);						//!< state update function
+} transportState_t;
 
 /**
-* @brief Status variables and SM state
-*
-* This structure stores transport status and SM variables
-*/ 
+ * @brief Status variables and SM state
+ *
+ * This structure stores transport status and SM variables
+ */ 
 typedef struct {
 	// SM variables
-	transportState* currentState;			//!< pointer to current fsm state
+	transportState_t* currentState;			//!< pointer to current fsm state
 	uint32_t stateEnter;					//!< state enter timepoint
 	// general transport variables
 	uint32_t lastUplinkCheck;				//!< last uplink check, required to prevent GW flooding
@@ -239,14 +257,14 @@ typedef struct {
 	bool msgReceived : 1;					//!< flag message received
 	// 8 bits
 	uint8_t pingResponse;					//!< stores I_PONG hops
-} transportSM;
+} transportSM_t;
 
 /**
 * @brief RAM routing table
 */
 typedef struct {
 	uint8_t route[SIZE_ROUTES];				//!< route for node
-} routingTable;
+} routingTable_t;
 
 // PRIVATE functions
 
@@ -302,7 +320,7 @@ void stFailureUpdate(void);
 * @brief Switch SM state
 * @param newState New state to switch SM to
 */
-void transportSwitchSM(transportState& newState);
+void transportSwitchSM(transportState_t& newState);
 /**
 * @brief Update SM state
 */
@@ -332,12 +350,12 @@ void transportProcessMessage(void);
 bool transportAssignNodeID(const uint8_t newNodeId);
 /**
 * @brief Wait and process messages for a defined amount of time until specified message received
-* @param ms Time to wait and process incoming messages in ms
+* @param waitingMS Time to wait and process incoming messages in ms
 * @param cmd Specific command
-* @param msgtype Specific message type 
+* @param msgType Specific message type 
 * @return true if specified command received within waiting time
 */
-bool transportWait(const uint32_t ms, const uint8_t cmd, const uint8_t msgtype);
+bool transportWait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType);
 /**
 * @brief Ping node
 * @param targetId Node to be pinged
@@ -371,10 +389,16 @@ bool transportSendWrite(const uint8_t to, MyMessage &message);
 * @param force to override flood control timer
 * @return true if uplink ok
 */
-bool transportCheckUplink(const bool force=false);
+bool transportCheckUplink(const bool force = false);
 
 // PUBLIC functions
 
+/**
+* @brief Wait until transport is ready
+* @param waitingMS timeout in MS, set 0 (default) for no timeout, i.e. wait indefinitely. For a node in standalone mode (optional network connection) set >0 to allow a node entering the main loop() function.
+* @return true if transport is ready
+*/
+bool transportWaitUntilReady(const uint32_t waitingMS = 0);
 /**
 * @brief Initialize transport and SM
 */
@@ -482,6 +506,22 @@ uint8_t transportReceive(void* data);
 * @brief Power down transport HW
 */
 void transportPowerDown();
+
+/**
+* @brief Get node ID
+* @return node ID
+*/
+uint8_t transportGetNodeId(void);
+/**
+* @brief Get parent node ID
+* @return parent node ID
+*/
+uint8_t transportGetParentNodeId(void);
+/**
+* @brief Get distance to GW
+* @return distance (=hops) to GW
+*/
+uint8_t transportGetDistanceGW(void);
 
 
 #endif // MyTransport_h

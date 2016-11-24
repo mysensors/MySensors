@@ -20,23 +20,28 @@
 #include "MyTransport.h"
 
 // SM: transitions and update states
-static transportState stInit = { stInitTransition, stInitUpdate };
-static transportState stParent = { stParentTransition, stParentUpdate };
-static transportState stID = { stIDTransition, stIDUpdate };
-static transportState stUplink = { stUplinkTransition, stUplinkUpdate };
-static transportState stReady = { stReadyTransition, stReadyUpdate };
-static transportState stFailure = { stFailureTransition, stFailureUpdate };
+static transportState_t stInit = { stInitTransition, stInitUpdate };
+static transportState_t stParent = { stParentTransition, stParentUpdate };
+static transportState_t stID = { stIDTransition, stIDUpdate };
+static transportState_t stUplink = { stUplinkTransition, stUplinkUpdate };
+static transportState_t stReady = { stReadyTransition, stReadyUpdate };
+static transportState_t stFailure = { stFailureTransition, stFailureUpdate };
 
 // transport SM variables
-static transportSM _transportSM;
+static transportSM_t _transportSM;
+
+// transport configuration
+static transportConfig_t _transportConfig;		
+
+// callback transportOk
+transportCallback_t transportReady_cb = NULL;
 
 // global variables
 extern MyMessage _msg;		// incoming message
 extern MyMessage _msgTmp;	// outgoing message
-extern NodeConfig _nc;		// node config
 
 #if defined(MY_RAM_ROUTING_TABLE_ENABLED)
-	static routingTable _transportRoutingTable;		//!< routing table
+	static routingTable_t _transportRoutingTable;		//!< routing table
 	static uint32_t _lastRoutingTableSave;			//!< last routing table dump
 #endif
 
@@ -70,13 +75,10 @@ void stInitTransition(void) {
 	#endif
 
 	// Read node settings (ID, parent ID, GW distance) from EEPROM
-	hwReadConfigBlock((void*)&_nc, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(NodeConfig));
+	hwReadConfigBlock((void*)&_transportConfig, (void*)EEPROM_NODE_ID_ADDRESS, sizeof(transportConfig_t));
 }
 
 void stInitUpdate(void) {
-	#if defined(MY_TRANSPORT_DONT_CARE_MODE)
-		TRANSPORT_DEBUG(PSTR("TSM:INIT:TDC\n"));	// transport don't care mode
-	#endif
 	// initialise radio
 	if (!transportInit()) {
 		TRANSPORT_DEBUG(PSTR("!TSM:INIT:TSP FAIL\n"));
@@ -89,22 +91,22 @@ void stInitUpdate(void) {
 		#if defined(MY_GATEWAY_FEATURE)
 			// Set configuration for gateway
 			TRANSPORT_DEBUG(PSTR("TSM:INIT:GW MODE\n"));
-			_nc.parentNodeId = GATEWAY_ADDRESS;
-			_nc.distance = 0u;
-			_nc.nodeId = GATEWAY_ADDRESS;
+			_transportConfig.parentNodeId = GATEWAY_ADDRESS;
+			_transportConfig.distanceGW = 0u;
+			_transportConfig.nodeId = GATEWAY_ADDRESS;
 			transportSetAddress(GATEWAY_ADDRESS);
 			// GW mode: skip FPAR,ID,UPL states
 			transportSwitchSM(stReady);
 		#else
-			if ((uint8_t)MY_NODE_ID != AUTO) {
+			#if MY_NODE_ID != AUTO
 				TRANSPORT_DEBUG(PSTR("TSM:INIT:STATID=%d\n"),(uint8_t)MY_NODE_ID);
 				// Set static ID
-				_nc.nodeId = (uint8_t)MY_NODE_ID;
+				_transportConfig.nodeId = (uint8_t)MY_NODE_ID;
 				// Save static ID to eeprom (for bootloader)
 				hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (uint8_t)MY_NODE_ID);
-			}
+			#endif
 			// assign ID if set
-			if (_nc.nodeId == AUTO || transportAssignNodeID(_nc.nodeId)) {
+			if (_transportConfig.nodeId == AUTO || transportAssignNodeID(_transportConfig.nodeId)) {
 				// if node ID valid (>0 and <255), proceed to next state
 				transportSwitchSM(stParent);
 			}
@@ -125,14 +127,14 @@ void stParentTransition(void)  {
 	#if defined(MY_PARENT_NODE_IS_STATIC)
 		TRANSPORT_DEBUG(PSTR("TSM:FPAR:STATP=%d\n"), (uint8_t)MY_PARENT_NODE_ID);	// static parent
 		_transportSM.findingParentNode = false;
-		_nc.distance = 1u;	// assumption, CHKUPL:GWDC will update this variable
-		_nc.parentNodeId = (uint8_t)MY_PARENT_NODE_ID;
+		_transportConfig.distanceGW = 1u;	// assumption, CHKUPL:GWDC will update this variable
+		_transportConfig.parentNodeId = (uint8_t)MY_PARENT_NODE_ID;
 		// save parent ID to eeprom (for bootloader)
 		hwWriteConfig(EEPROM_PARENT_NODE_ID_ADDRESS, (uint8_t)MY_PARENT_NODE_ID);
 	#else
 		_transportSM.findingParentNode = true;
-		_nc.distance = DISTANCE_INVALID;	// Set distance to max and invalidate parent node ID
-		_nc.parentNodeId = AUTO;
+		_transportConfig.distanceGW = DISTANCE_INVALID;	// Set distance to max and invalidate parent node ID
+		_transportConfig.parentNodeId = AUTO;
 		// Broadcast find parent request
 		(void)transportRouteMessage(build(_msgTmp, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_REQUEST).set(""));
 	#endif
@@ -147,7 +149,7 @@ void stParentUpdate(void) {
 	#else
 		if (transportTimeInState() > MY_TRANSPORT_STATE_TIMEOUT_MS || _transportSM.preferredParentFound) {
 			// timeout or preferred parent found
-			if (_nc.parentNodeId != AUTO) {
+			if (_transportConfig.parentNodeId != AUTO) {
 				// parent assigned
 				TRANSPORT_DEBUG(PSTR("TSM:FPAR:OK\n"));	// find parent ok
 				_transportSM.findingParentNode = false;
@@ -177,7 +179,7 @@ void stParentUpdate(void) {
 // stID: verify and request ID if necessary
 void stIDTransition(void) {
 	TRANSPORT_DEBUG(PSTR("TSM:ID\n"));	// verify/request node ID
-	if (_nc.nodeId == AUTO) {
+	if (_transportConfig.nodeId == AUTO) {
 		// send ID request
 		setIndication(INDICATION_REQ_NODEID);
 		TRANSPORT_DEBUG(PSTR("TSM:ID:REQ\n"));	// request node ID
@@ -186,7 +188,7 @@ void stIDTransition(void) {
 }
 
 void stIDUpdate(void) {
-	if (_nc.nodeId != AUTO) {
+	if (_transportConfig.nodeId != AUTO) {
 		// current node ID is valid
 		TRANSPORT_DEBUG(PSTR("TSM:ID:OK\n"));
 		setIndication(INDICATION_GOT_NODEID);
@@ -214,7 +216,7 @@ void stUplinkTransition(void) {
 		setIndication(INDICATION_CHECK_UPLINK);
 		_transportSM.pingResponse = INVALID_HOPS;
 		_transportSM.pingActive = true;
-		(void)transportRouteMessage(build(_msgTmp,GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)1));
+		(void)transportRouteMessage(build(_msgTmp,GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)0x01));
 	#endif
 }
 
@@ -224,10 +226,9 @@ void stUplinkUpdate(void) {
 			_transportSM.lastUplinkCheck = hwMillis();
 			// uplink ok, i.e. GW replied
 			TRANSPORT_DEBUG(PSTR("TSM:UPL:OK\n"));	// uplink ok
-			//_transportSM.pingActive = false; ==> set false upon receiving I_PONG
-			if (_transportSM.pingResponse != _nc.distance) {
-				TRANSPORT_DEBUG(PSTR("TSM:UPL:DGWC,O=%d,N=%d\n"), _nc.distance, _transportSM.pingResponse);	// distance to GW changed
-				_nc.distance = _transportSM.pingResponse;
+			if (_transportSM.pingResponse != _transportConfig.distanceGW) {
+				TRANSPORT_DEBUG(PSTR("TSM:UPL:DGWC,O=%d,N=%d\n"), _transportConfig.distanceGW, _transportSM.pingResponse);	// distance to GW changed
+				_transportConfig.distanceGW = _transportSM.pingResponse;
 			}
 			transportSwitchSM(stReady);		// proceed to next state
 		}
@@ -253,10 +254,14 @@ void stUplinkUpdate(void) {
 
 void stReadyTransition(void) {
 	// transport is ready and fully operational
-	TRANSPORT_DEBUG(PSTR("TSM:READY\n"));		// transport is ready
+	TRANSPORT_DEBUG(PSTR("TSM:READY:ID=%d,PAR=%d,DIS=%d\n"), _transportConfig.nodeId, _transportConfig.parentNodeId, _transportConfig.distanceGW);
 	_transportSM.uplinkOk = true;
 	_transportSM.failureCounter = 0u;			// reset failure counter
 	_transportSM.failedUplinkTransmissions = 0u;	// reset failed uplink TX counter
+	// callback
+	if (transportReady_cb) {
+		transportReady_cb();
+	}
 }
 
 // stReadyUpdate: monitors link
@@ -311,7 +316,7 @@ void stFailureUpdate(void) {
 	}
 }
 
-void transportSwitchSM(transportState& newState) {
+void transportSwitchSM(transportState_t& newState) {
 	if (_transportSM.currentState != &newState) {
 		_transportSM.stateRetries = 0u;	// state change, reset retry counter
 		_transportSM.currentState = &newState;	// change state
@@ -364,6 +369,19 @@ void transportInitialise(void) {
 	transportSwitchSM(stInit);
 }
 
+bool transportWaitUntilReady(const uint32_t waitingMS) {
+	// check if transport ready
+	TRANSPORT_DEBUG(PSTR("TSF:WUR:MS=%lu\n"), waitingMS);	// timeout
+	uint32_t enterMS = hwMillis();
+	bool result = false;
+	while (!result && ( hwMillis() - enterMS < waitingMS || !waitingMS)) {
+		transportProcess();
+		result = isTransportReady();
+		doYield();
+	}
+	return result;
+}
+
 // update TSM and process incoming messages
 void transportProcess(void) {
 	// update state machine
@@ -386,9 +404,9 @@ bool transportCheckUplink(const bool force) {
 		_transportSM.lastUplinkCheck = hwMillis();
 		TRANSPORT_DEBUG(PSTR("TSF:CKU:OK\n"));
 		// did distance to GW change upstream, eg. re-routing of uplink nodes
-		if (hopsCount != _nc.distance) {
-			TRANSPORT_DEBUG(PSTR("TSF:CKU:DGWC,O=%d,N=%d\n"), _nc.distance, hopsCount);	// distance to GW changed
-			_nc.distance = hopsCount;
+		if (hopsCount != _transportConfig.distanceGW) {
+			TRANSPORT_DEBUG(PSTR("TSF:CKU:DGWC,O=%d,N=%d\n"), _transportConfig.distanceGW, hopsCount);	// distance to GW changed
+			_transportConfig.distanceGW = hopsCount;
 		}
 		return true;
 	}
@@ -401,7 +419,7 @@ bool transportCheckUplink(const bool force) {
 bool transportAssignNodeID(const uint8_t newNodeId) {
 	// verify if ID valid
 	if (newNodeId != GATEWAY_ADDRESS && newNodeId != AUTO) {
-		_nc.nodeId = newNodeId;
+		_transportConfig.nodeId = newNodeId;
 		transportSetAddress(newNodeId);
 		// Write ID to EEPROM
 		hwWriteConfig(EEPROM_NODE_ID_ADDRESS, newNodeId);
@@ -411,14 +429,14 @@ bool transportAssignNodeID(const uint8_t newNodeId) {
 	else {
 		TRANSPORT_DEBUG(PSTR("!TSF:SID:FAIL,ID=%d\n"),newNodeId);	// ID is invalid, cannot assign ID
 		setIndication(INDICATION_ERR_NET_FULL);
-		_nc.nodeId = AUTO;
+		_transportConfig.nodeId = AUTO;
 		return false;
 	}
 }
 
 bool transportRouteMessage(MyMessage &message) {
 	const uint8_t destination = message.destination;
-	uint8_t route = _nc.parentNodeId;	// by default, all traffic is routed via parent node
+	uint8_t route = _transportConfig.parentNodeId;	// by default, all traffic is routed via parent node
 
 	if (_transportSM.findingParentNode && destination != BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("!TSF:RTE:FPAR ACTIVE\n")); // find parent active, message not sent
@@ -427,7 +445,7 @@ bool transportRouteMessage(MyMessage &message) {
 	}
 
 	if (destination == GATEWAY_ADDRESS) {
-		route = _nc.parentNodeId;		// message to GW always routes via parent
+		route = _transportConfig.parentNodeId;		// message to GW always routes via parent
 	}
 	else if (destination == BROADCAST_ADDRESS) {
 		route = BROADCAST_ADDRESS;		// message to BC does not require routing
@@ -439,9 +457,9 @@ bool transportRouteMessage(MyMessage &message) {
 			if (route == AUTO) {
 				TRANSPORT_DEBUG(PSTR("!TSF:RTE:%d UNKNOWN\n"), destination);	// route unknown
 				#if !defined(MY_GATEWAY_FEATURE)
-					if (message.last != _nc.parentNodeId) {
+					if (message.last != _transportConfig.parentNodeId) {
 						// message not from parent, i.e. child node - route it to parent
-						route = _nc.parentNodeId;
+						route = _transportConfig.parentNodeId;
 					}
 					else {
 						// route unknown and msg received from parent, send it to destination assuming in rx radius
@@ -453,14 +471,14 @@ bool transportRouteMessage(MyMessage &message) {
 				#endif
 			}
 		#else
-			route = _nc.parentNodeId;	// not a repeater, all traffic routed via parent
+			route = _transportConfig.parentNodeId;	// not a repeater, all traffic routed via parent
 		#endif
 	}
 	// send message
 	const bool result = transportSendWrite(route, message);
 	#if !defined(MY_GATEWAY_FEATURE)
 		// update counter
-		if (route == _nc.parentNodeId) {
+		if (route == _transportConfig.parentNodeId) {
 			if (!result) {
 				setIndication(INDICATION_ERR_TX);
 				_transportSM.failedUplinkTransmissions++;
@@ -489,16 +507,16 @@ bool transportSendRoute(MyMessage &message) {
 }
 
 // only be used inside transport
-bool transportWait(const uint32_t ms, const uint8_t cmd, const uint8_t msgtype){
-	const uint32_t enter = hwMillis();
+bool transportWait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType){
+	const uint32_t enterMS = hwMillis();
 	// invalidate msg type
-	_msg.type = !msgtype;
+	_msg.type = !msgType;
 	bool expectedResponse = false;
-	while ((hwMillis() - enter < ms) && !expectedResponse) {
+	while ((hwMillis() - enterMS < waitingMS) && !expectedResponse) {
 		// process incoming messages
 		transportProcessFIFO();
 		doYield();
-		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgtype);
+		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgType);
 	}
 	return expectedResponse;
 }
@@ -506,14 +524,14 @@ bool transportWait(const uint32_t ms, const uint8_t cmd, const uint8_t msgtype){
 uint8_t transportPingNode(const uint8_t targetId) {
 	if(!_transportSM.pingActive){
 		TRANSPORT_DEBUG(PSTR("TSF:PNG:SEND,TO=%d\n"), targetId);
-		if(targetId == _nc.nodeId) {
+		if(targetId == _transportConfig.nodeId) {
 			// pinging self
 			_transportSM.pingResponse = 0u;
 		}
 		else {
 			_transportSM.pingActive = true;
 			_transportSM.pingResponse = INVALID_HOPS;
-			(void)transportRouteMessage(build(_msgTmp, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)1));
+			(void)transportRouteMessage(build(_msgTmp, targetId, NODE_SENSOR_ID, C_INTERNAL, I_PING).set((uint8_t)0x01));
 			// Wait for ping reply or timeout
 			(void)transportWait(2000, C_INTERNAL, I_PONG);
 		}
@@ -574,7 +592,7 @@ void transportProcessMessage(void) {
 	// update routing table if msg not from parent
 	#if defined(MY_REPEATER_FEATURE)
 		#if !defined(MY_GATEWAY_FEATURE)
-			if (last != _nc.parentNodeId) {
+			if (last != _transportConfig.parentNodeId) {
 		#else
 			// GW doesn't have parent
 			{
@@ -588,7 +606,7 @@ void transportProcessMessage(void) {
 	_transportSM.msgReceived = true;
 
 	// Is message addressed to this node?
-	if (destination == _nc.nodeId) {
+	if (destination == _transportConfig.nodeId) {
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
 		mSetLength(_msg, min(mGetLength(_msg),(uint8_t)MAX_PAYLOAD));
 		// null terminate data
@@ -599,7 +617,7 @@ void transportProcessMessage(void) {
 			_msgTmp = _msg;	// Copy message
 			mSetRequestAck(_msgTmp, false); // Reply without ack flag (otherwise we would end up in an eternal loop)
 			mSetAck(_msgTmp, true); // set ACK flag
-			_msgTmp.sender = _nc.nodeId;
+			_msgTmp.sender = _transportConfig.nodeId;
 			_msgTmp.destination = sender;
 			// send ACK, use transportSendRoute since ACK reply is not internal, i.e. if !transportOK do not reply
 			(void)transportSendRoute(_msgTmp);
@@ -627,15 +645,15 @@ void transportProcessMessage(void) {
 								if (isValidDistance(distance)) {
 									distance++;	// Distance to gateway is one more for us w.r.t. parent
 									// update settings if distance shorter or preferred parent found
-									if (((isValidDistance(distance) && distance < _nc.distance) || (!_autoFindParent && sender == (uint8_t)MY_PARENT_NODE_ID)) && !_transportSM.preferredParentFound) {
+									if (((isValidDistance(distance) && distance < _transportConfig.distanceGW) || (!_autoFindParent && sender == (uint8_t)MY_PARENT_NODE_ID)) && !_transportSM.preferredParentFound) {
 										// Found a neighbor closer to GW than previously found
 										if (!_autoFindParent && sender == (uint8_t)MY_PARENT_NODE_ID) {
 											_transportSM.preferredParentFound = true;
 											TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR PREF\n"));	// find parent, preferred parent found
 										}
-										_nc.distance = distance;
-										_nc.parentNodeId = sender;
-										TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR OK,ID=%d,D=%d\n"), _nc.parentNodeId, _nc.distance);
+										_transportConfig.distanceGW = distance;
+										_transportConfig.parentNodeId = sender;
+										TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR OK,ID=%d,D=%d\n"), _transportConfig.parentNodeId, _transportConfig.distanceGW);
 									}
 								}
 							}
@@ -697,7 +715,7 @@ void transportProcessMessage(void) {
 				// only reply if node is fully operational
 				if (type == I_FIND_PARENT_REQUEST) {
 					#if defined(MY_REPEATER_FEATURE)
-					if (sender != _nc.parentNodeId) {	// no circular reference
+					if (sender != _transportConfig.parentNodeId) {	// no circular reference
 						TRANSPORT_DEBUG(PSTR("TSF:MSG:FPAR REQ,ID=%d\n"), sender);	// FPAR: find parent request
 						// check if uplink functional - node can only be parent node if link to GW functional
 						// this also prevents circular references in case GW ooo
@@ -706,7 +724,7 @@ void transportProcessMessage(void) {
 							TRANSPORT_DEBUG(PSTR("TSF:MSG:GWL OK\n")); // GW uplink ok
 							// random delay minimizes collisions
 							delay(hwMillis() & 0x3ff);
-							(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE).set(_nc.distance));
+							(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_FIND_PARENT_RESPONSE).set(_transportConfig.distanceGW));
 						}
 						else {
 							TRANSPORT_DEBUG(PSTR("!TSF:MSG:GWL FAIL\n")); // GW uplink fail, do not respond to parent request
@@ -721,10 +739,10 @@ void transportProcessMessage(void) {
 			}
 			#if !defined(MY_GATEWAY_FEATURE)
 				if (type == I_DISCOVER_REQUEST) {
-					if (last == _nc.parentNodeId) {
+					if (last == _transportConfig.parentNodeId) {
 						// random wait to minimize collisions
 						delay(hwMillis() & 0x3ff);
-						(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE).set(_nc.parentNodeId));
+						(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL, I_DISCOVER_RESPONSE).set(_transportConfig.parentNodeId));
 						// no return here (for fwd if repeater)
 					}
 				}
@@ -733,7 +751,7 @@ void transportProcessMessage(void) {
 		// controlled BC relay
 		#if defined(MY_REPEATER_FEATURE)
 			// controlled BC repeating: forward only if message received from parent and sender not self to prevent circular fwds
-			if(last == _nc.parentNodeId && sender != _nc.nodeId && isTransportReady()){
+			if(last == _transportConfig.parentNodeId && sender != _transportConfig.nodeId && isTransportReady()){
 				TRANSPORT_DEBUG(PSTR("TSF:MSG:FWD BC MSG\n")); // controlled broadcast msg forwarding
 				(void)transportRouteMessage(_msg);
 			}
@@ -743,7 +761,7 @@ void transportProcessMessage(void) {
 		if (command != C_INTERNAL) {
 			#if !defined(MY_GATEWAY_FEATURE)
 				// only proceed if message received from parent
-				if (last != _nc.parentNodeId) {
+				if (last != _transportConfig.parentNodeId) {
 					return;
 				}
 			#endif
@@ -818,7 +836,7 @@ void transportProcessFIFO(void) {
 }
 
 bool transportSendWrite(const uint8_t to, MyMessage &message) {
-	message.last = _nc.nodeId; // Update last
+	message.last = _transportConfig.nodeId; // Update last
 	// sign message if required
 	if (!signerSignMsg(message)) {
 		TRANSPORT_DEBUG(PSTR("!TSF:MSG:SIGN FAIL\n"));
@@ -841,6 +859,25 @@ bool transportSendWrite(const uint8_t to, MyMessage &message) {
 
 	return result;
 }
+
+void transportRegisterReadyCallback(transportCallback_t cb)
+{
+	transportReady_cb = cb;
+}
+
+uint8_t transportGetNodeId(void)
+{
+	return _transportConfig.nodeId;
+}
+uint8_t transportGetParentNodeId(void)
+{
+	return _transportConfig.parentNodeId;
+}
+uint8_t transportGetDistanceGW(void)
+{
+	return _transportConfig.distanceGW;
+}
+
 
 void transportClearRoutingTable(void) {
 	for (uint16_t i = 0; i < SIZE_ROUTES; i++) {
