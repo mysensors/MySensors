@@ -44,6 +44,7 @@ struct ThreadArgs {
 	int gpioPin;
 };
 
+volatile bool interruptsEnabled = true;
 static pthread_mutex_t intMutex = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_t *threadIds[64] = {NULL};
@@ -152,7 +153,13 @@ void *interruptHandler(void *args) {
 		(void)read (fd, &c, 1) ;
   		lseek (fd, 0, SEEK_SET) ;
 		// Call user function.
-		func();
+		pthread_mutex_lock(&intMutex);
+		if (interruptsEnabled) {
+			pthread_mutex_unlock(&intMutex);
+			func();
+		} else {
+			pthread_mutex_unlock(&intMutex);
+		}
 	}
 
 	close(fd);
@@ -322,9 +329,13 @@ uint8_t rpi_util::digitalPinToInterrupt(uint8_t physPin) {
 }
 
 void rpi_util::interrupts() {
+	pthread_mutex_lock(&intMutex);
+	interruptsEnabled = true;
 	pthread_mutex_unlock(&intMutex);
 }
 
 void rpi_util::noInterrupts() {
 	pthread_mutex_lock(&intMutex);
+	interruptsEnabled = false;
+	pthread_mutex_unlock(&intMutex);
 }

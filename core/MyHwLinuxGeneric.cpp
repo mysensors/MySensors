@@ -5,8 +5,8 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2016 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org

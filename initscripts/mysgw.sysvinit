@@ -1,6 +1,6 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          mysGateway
+# Provides:          mysgw
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -15,7 +15,7 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin
 DESC="MySensors Gateway"
-NAME=mysGateway
+NAME=mysgw
 DAEMON=%gateway_dir%/$NAME
 DAEMON_ARGS="-b"
 PIDFILE=/var/run/$NAME.pid

@@ -14,10 +14,15 @@ Help:
 Building options:
     --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
-    --cpu-flags=<CXXFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
-    --extra-cxxflags=<CXXFLAGS> Extra C flags passed to C/C++ compilation. []
+    --cpu-flags=<CPUFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
+    --extra-cflags=<CFLAGS>     Extra C flags passed to C compilation. []
+    --extra-cxxflags=<CXXFLAGS> Extra C++ flags passed to C++ compilation. []
     --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
+    --c_compiler=<CC>           C compiler. [arm-linux-gnueabihf-gcc][gcc]
     --cxx_compiler=<CXX>        C++ compiler [arm-linux-gnueabihf-g++][g++]
+    --build-dir=<DIR>           Compiler directory to store object files. [build]
+    --bin-dir=<DIR>             Compiler directory to store binary files. [bin]
+    --arduino-lib-dir=<DIR>     Arduino library directory.
     --no-clean                  Don't clean previous build artifacts.
 
 Installation options:
@@ -48,7 +53,7 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485]
+    --my-transport=[none|nrf24|rs485|rfm95]
                                 Transport type, set to none to disable transport feature. [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
@@ -175,10 +180,10 @@ function gcc_cpu_flags {
     local soc=$1
     case $soc in
     BCM2835)
-        flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -DLINUX_ARCH_RASPBERRYPI"
+        flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
         ;;
     BCM2836)
-        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -DLINUX_ARCH_RASPBERRYPI"
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
         ;;
     AM33XX)
         flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
@@ -206,7 +211,7 @@ debug=enable
 gateway_type=ethernet
 transport_type=nrf24
 
-params="SOC CXXFLAGS LDFLAGS PREFIX CXX GATEWAY_DIR INIT_SYSTEM"
+params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -221,14 +226,29 @@ for opt do
     --cpu-flags=*)
         CPUFLAGS="$optarg"
         ;;
+    --extra-cflags=*)
+        CFLAGS="$optarg"
+        ;;
     --extra-cxxflags=*)
         CXXFLAGS="$optarg"
         ;;
     --extra-ldflags=*)
         LDFLAGS="$optarg"
         ;;
+    --c_compiler=*)
+        CC="$optarg"
+        ;;
     --cxx_compiler=*)
         CXX="$optarg"
+        ;;
+    --arduino-lib-dir=*)
+        ARDUINO_LIB_DIR=$optarg
+        ;;
+    --build-dir=*)
+        BUILDDIR="$optarg"
+        ;;
+    --bin-dir=*)
+        BINDIR="$optarg"
         ;;
     --no-clean*)
         NO_CLEAN="1"
@@ -247,10 +267,10 @@ for opt do
         ;;
     --my-node-id=*)
         gateway_type="none";
-        CXXFLAGS="-DMY_NODE_ID=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_NODE_ID=${optarg} $CPPFLAGS"
         ;;
     --my-config-file=*)
-        CXXFLAGS="-DMY_LINUX_CONFIG_FILE=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_LINUX_CONFIG_FILE=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-transport=*)
         transport_type=${optarg}
@@ -260,74 +280,74 @@ for opt do
         transport_type=${optarg}
         ;;
     --my-serial-port=*)
-        CXXFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-serial-baudrate=*)
-        CXXFLAGS="-DMY_BAUD_RATE=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_BAUD_RATE=${optarg} $CPPFLAGS"
         ;;
     --my-serial-is-pty*)
-        CXXFLAGS="-DMY_IS_SERIAL_PTY $CXXFLAGS"
+        CPPFLAGS="-DMY_IS_SERIAL_PTY $CPPFLAGS"
         ;;
     --my-serial-pty=*)
-        CXXFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-serial-groupname=*)
-        CXXFLAGS="-DMY_LINUX_SERIAL_GROUPNAME=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_LINUX_SERIAL_GROUPNAME=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-rf24-channel=*)
-        CXXFLAGS="-DMY_RF24_CHANNEL=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RF24_CHANNEL=${optarg} $CPPFLAGS"
         ;;
     --my-rf24-pa-level=*)
-        CXXFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CPPFLAGS"
         ;;
     --my-controller-url-address=*)
-        CXXFLAGS="-DMY_CONTROLLER_URL_ADDRESS=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_CONTROLLER_URL_ADDRESS=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-controller-ip-address=*)
         controller_ip=`echo ${optarg//./,}`
-        CXXFLAGS="-DMY_CONTROLLER_IP_ADDRESS=${controller_ip} $CXXFLAGS"
+        CPPFLAGS="-DMY_CONTROLLER_IP_ADDRESS=${controller_ip} $CPPFLAGS"
         ;;
     --my-port=*)
-        CXXFLAGS="-DMY_PORT=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_PORT=${optarg} $CPPFLAGS"
         ;;
     --my-mqtt-client-id=*)
-        CXXFLAGS="-DMY_MQTT_CLIENT_ID=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_MQTT_CLIENT_ID=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-mqtt-publish-topic-prefix=*)
-        CXXFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-mqtt-subscribe-topic-prefix=*)
-        CXXFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_MQTT_SUBSCRIBE_TOPIC_PREFIX=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-rf24-irq-pin=*)
-        CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-rx-message-buffer-size=*)
-        CXXFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CPPFLAGS"
         ;;
     --my-rs485-serial-port=*)
-        CXXFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CXXFLAGS"
+        CPPFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-rs485-baudrate=*)
-        CXXFLAGS="-DMY_RS485_BAUD_RATE=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RS485_BAUD_RATE=${optarg} $CPPFLAGS"
         ;;
     --my-rs485-de-pin=*)
-        CXXFLAGS="-DMY_RS485_DE_PIN=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RS485_DE_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-rs485-max-msg-length=*)
-        CXXFLAGS="-DMY_RS485_MAX_MESSAGE_LENGTH=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_RS485_MAX_MESSAGE_LENGTH=${optarg} $CPPFLAGS"
         ;;
     --my-leds-err-pin=*)
-        CXXFLAGS="-DMY_DEFAULT_ERR_LED_PIN=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_DEFAULT_ERR_LED_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-leds-rx-pin=*)
-        CXXFLAGS="-DMY_DEFAULT_RX_LED_PIN=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_DEFAULT_RX_LED_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-leds-tx-pin=*)
-        CXXFLAGS="-DMY_DEFAULT_TX_LED_PIN=${optarg} $CXXFLAGS"
+        CPPFLAGS="-DMY_DEFAULT_TX_LED_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-leds-blinking-inverse*)
-        CXXFLAGS="-DMY_WITH_LEDS_BLINKING_INVERSE $CXXFLAGS"
+        CPPFLAGS="-DMY_WITH_LEDS_BLINKING_INVERSE $CPPFLAGS"
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
@@ -336,7 +356,10 @@ for opt do
 done
 
 PREFIX=${PREFIX:-/usr/local}
+BUILDDIR=${BUILDDIR:-build}
+BINDIR=${BINDIR:-bin}
 GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
+CC=${CC:-gcc}
 CXX=${CXX:-g++}
 
 if [ -z "${SOC}" ]; then
@@ -353,32 +376,43 @@ if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags $SOC)
 fi
 
-CXXFLAGS="$CPUFLAGS -Ofast -g -Wall -Wextra $CXXFLAGS"
-CFLAGS="-Ofast -g -Wall -Wextra $CFLAGS"
+if [[ $SOC == "BCM2835" || $SOC == "BCM2836" ]]; then
+    CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
+fi
 
 if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
-    CXXFLAGS+="-D__RPI_BPLUS"
+    CPPFLAGS="-D__RPI_BPLUS $CPPFLAGS"
 fi
 
 if [[ ${debug} == "enable" ]]; then
-    CXXFLAGS="-DMY_DEBUG $CXXFLAGS"
+    CPPFLAGS="-DMY_DEBUG $CPPFLAGS"
 fi
 
 if [[ ${gateway_type} == "ethernet" ]]; then
-    CXXFLAGS="-DMY_GATEWAY_LINUX $CXXFLAGS"
+    CPPFLAGS="-DMY_GATEWAY_LINUX $CPPFLAGS"
 elif [[ ${gateway_type} == "serial" ]]; then
-    CXXFLAGS="-DMY_GATEWAY_SERIAL $CXXFLAGS"
+    CPPFLAGS="-DMY_GATEWAY_SERIAL $CPPFLAGS"
 elif [[ ${gateway_type} == "mqtt" ]]; then
-    CXXFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CXXFLAGS"
+    CPPFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CPPFLAGS"
 fi
 
-if [[ ${transport_type} == "nrf24" ]]; then
-    CXXFLAGS="-DMY_RADIO_NRF24 $CXXFLAGS"
+if [[ ${transport_type} == "none" ]]; then
+    # Transport disabled
+    :
+elif [[ ${transport_type} == "nrf24" ]]; then
+    CPPFLAGS="-DMY_RADIO_NRF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then
-    CXXFLAGS="-DMY_RS485 $CXXFLAGS"
+    CPPFLAGS="-DMY_RS485 $CPPFLAGS"
+elif [[ ${transport_type} == "rfm95" ]]; then
+    CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
+else
+    echo "Invalid transport type."
+    echo "Aborting."
+    exit 1
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
+CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
 if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd

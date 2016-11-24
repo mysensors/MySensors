@@ -514,13 +514,6 @@
 		#define MY_RF24_CS_PIN 10
 	#endif
 #endif
- /**
- * @def MY_RF24_IRQ_PIN
- * @brief Default RF24 IRQ pin setting. Override in sketch if needed.
- */
-#ifndef MY_RF24_IRQ_PIN
-#define MY_RF24_IRQ_PIN RF24_IRQ_PIN
-#endif
 
 /**
 * @def MY_RX_MESSAGE_BUFFER_FEATURE
@@ -956,7 +949,6 @@
 #define MY_PARENT_NODE_IS_STATIC
 #define MY_REGISTRATION_CONTROLLER
 #define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-#define MY_TRANSPORT_RELAXED
 #define MY_DEBUG_VERBOSE_RF24
 #define MY_TRANSPORT_SANITY_CHECK
 #define MY_RF24_IRQ_PIN

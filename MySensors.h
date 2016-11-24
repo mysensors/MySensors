@@ -79,7 +79,7 @@
 #endif
 
 // LEDS
-#if !defined(MY_DEFAULT_ERR_LED_PIN) & defined(MY_HW_ERR_LED_PIN)
+#if !defined(MY_DEFAULT_ERR_LED_PIN) && defined(MY_HW_ERR_LED_PIN)
 	#define MY_DEFAULT_ERR_LED_PIN MY_HW_ERR_LED_PIN
 #endif
 
@@ -240,7 +240,7 @@
 #endif
 
 #if defined(MY_TRANSPORT_DONT_CARE_MODE)
-	#error This directive is deprecated, use MY_TRANSPORT_RELAXED instead!
+	#error This directive is deprecated, set MY_TRANSPORT_WAIT_READY_MS instead!
 #endif
 
 

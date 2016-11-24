@@ -133,6 +133,8 @@
 #define RFM95_RX_FIFO_ADDR				(0x00u)						//!< RX FIFO addr pointer
 #define RFM95_TX_FIFO_ADDR				(0x80u)						//!< TX FIFO addr pointer
 #define RFM95_MAX_PACKET_LEN			(0x40u)						//!< This is the maximum number of bytes that can be carried by the LORA
+#define RFM95_PREAMBLE_LENGTH			(8u)						//!< Preamble length, default=8
+
 
 #define RFM95_CAD_TIMEOUT_MS			(2*1000ul)					//!< channel activity detection timeout
 #define RFM95_FXOSC						(32000000.0f)				//!< The crystal oscillator frequency of the module
@@ -177,7 +179,7 @@ typedef enum {
 	RFM95_RADIO_MODE_CAD = 2,					//!< CAD mode
 	RFM95_RADIO_MODE_SLEEP = 3,					//!< SLEEP mode
 	RFM95_RADIO_MODE_STDBY = 4					//!< STDBY mode
-} rfm95_radio_mode_t;
+} rfm95_radioMode_t;
 
 /**
 * @brief RFM95 modem config registers
@@ -186,7 +188,7 @@ typedef struct {
 	uint8_t	reg_1d; //!< Value for register REG_1D_MODEM_CONFIG1
 	uint8_t	reg_1e;	//!< Value for register REG_1E_MODEM_CONFIG2
 	uint8_t	reg_26;	//!< Value for register REG_26_MODEM_CONFIG3
-} modemConfig_t;
+} rfm95_modemConfig_t;
 
 /**
 * @brief Sequence number data type
@@ -258,7 +260,7 @@ typedef struct {
 	uint8_t powerLevel;							//!< TX power level dBm
 	uint8_t ATCtargetRSSI;						//!< ATC: target RSSI
 	// 8 bit
-	rfm95_radio_mode_t radioMode : 3;			//!< current transceiver state
+	rfm95_radioMode_t radioMode : 3;			//!< current transceiver state
 	bool cad : 1;								//!< RFM95_cad
 	bool rxBufferValid : 1;						//!< RX buffer valid
 	bool ATCenabled : 1;						//!< ATC enabled
@@ -288,7 +290,7 @@ LOCAL uint8_t RFM95_getAddress(void);
 * bandwidth, spreading factor etc.
 * @param config See modemConfig_t and references therein
 */
-LOCAL void RFM95_setModemRegisters(const modemConfig_t config);
+LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t config);
 /**
 * @brief Tests whether a new message is available
 * @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM95_recv()
@@ -374,7 +376,7 @@ LOCAL bool RFM95_waitPacketSent(void);
 * @param newRadioMode
 * @return True if mode changed
 */
-LOCAL bool RFM95_setRadioMode(const rfm95_radio_mode_t newRadioMode);
+LOCAL bool RFM95_setRadioMode(const rfm95_radioMode_t newRadioMode);
 /**
 * @brief Low level interrupt handler
 */
@@ -383,11 +385,6 @@ LOCAL void RFM95_interruptHandler(void);
 * @brief RFM95_clearRxBuffer
 */
 LOCAL void RFM95_clearRxBuffer(void);
-/**
-* @brief RFM95_getSNR
-* @return SNR Signal strength of last packet
-*/
-LOCAL int16_t RFM95_getSNR(void);
 /**
 * @brief RFM95_getRSSI
 * @return RSSI Signal strength of last packet
@@ -400,11 +397,6 @@ LOCAL int16_t RFM95_getRSSI(void);
 * @return True if power level adjusted
 */
 LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t targetRSSI);
-/**
-* @brief RFM95_getTxPower
-* @return Current power level
-*/
-LOCAL int8_t RFM95_getTxPower(void);
 /**
 * @brief RFM95_ATCmode
 * @param targetRSSI Target RSSI for transmitter (default -60)
