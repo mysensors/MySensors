@@ -413,9 +413,8 @@ LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t t
 	return RFM95_setTxPower(RFM95.powerLevel);;
 }
 
-LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer, const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTime) {
-	(void)retryWaitTime;
-
+LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer, const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTime)
+{
 	for (uint8_t retry = 0; retry < retries; retry++) {
 		RFM95_DEBUG(PSTR("RFM95:SWR:SEND TO=%d,RETRY=%d\n"), recipient, retry);
 		rfm95_flag_t flags = 0x00;
@@ -427,7 +426,7 @@ LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer, cons
 			return true;
 		}
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < RFM95_RETRY_TIMEOUT_MS) {
+		while (hwMillis() - enterMS < retryWaitTime) {
 			if (RFM95.rxBufferValid) {
 				const uint8_t sender = RFM95.currentPacket.header.sender;
 				const rfm95_sequenceNumber_t ACKsequenceNumber = RFM95.currentPacket.ACK.sequenceNumber;
@@ -477,13 +476,6 @@ LOCAL bool RFM95_waitPacketSent(void) {
 
 LOCAL int16_t RFM95_getRSSI(void) {
 	return (int16_t)(RFM95.currentPacket.RSSI - RFM95_RSSI_OFFSET);
-}
-LOCAL int16_t RFM95_getSNR(void) {
-	return (int16_t)(RFM95.currentPacket.SNR / 4);
-}
-
-LOCAL int8_t RFM95_getTxPower(void) {
-	return RFM95.powerLevel;
 }
 
 LOCAL void RFM95_ATCmode(const bool OnOff, const int16_t targetRSSI) {

@@ -386,11 +386,6 @@ LOCAL void RFM95_interruptHandler(void);
 */
 LOCAL void RFM95_clearRxBuffer(void);
 /**
-* @brief RFM95_getSNR
-* @return SNR Signal strength of last packet
-*/
-LOCAL int16_t RFM95_getSNR(void);
-/**
 * @brief RFM95_getRSSI
 * @return RSSI Signal strength of last packet
 */
@@ -402,11 +397,6 @@ LOCAL int16_t RFM95_getRSSI(void);
 * @return True if power level adjusted
 */
 LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t targetRSSI);
-/**
-* @brief RFM95_getTxPower
-* @return Current power level
-*/
-LOCAL int8_t RFM95_getTxPower(void);
 /**
 * @brief RFM95_ATCmode
 * @param targetRSSI Target RSSI for transmitter (default -60)
