@@ -53,7 +53,7 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485]
+    --my-transport=[none|nrf24|rs485|rfm95]
                                 Transport type, set to none to disable transport feature. [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
@@ -396,10 +396,19 @@ elif [[ ${gateway_type} == "mqtt" ]]; then
     CPPFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CPPFLAGS"
 fi
 
-if [[ ${transport_type} == "nrf24" ]]; then
+if [[ ${transport_type} == "none" ]]; then
+    # Transport disabled
+    :
+elif [[ ${transport_type} == "nrf24" ]]; then
     CPPFLAGS="-DMY_RADIO_NRF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then
     CPPFLAGS="-DMY_RS485 $CPPFLAGS"
+elif [[ ${transport_type} == "rfm95" ]]; then
+    CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
+else
+    echo "Invalid transport type."
+    echo "Aborting."
+    exit 1
 fi
 
 LDFLAGS="-pthread $LDFLAGS"

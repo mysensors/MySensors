@@ -179,7 +179,7 @@ LOCAL void RFM95_interruptHandler(void) {
 		(void)RFM95_setRadioMode(RFM95_RADIO_MODE_STDBY);
 		// Have received a packet
 		//In order to retrieve received data from FIFO the user must ensure that ValidHeader, PayloadCrcError, RxDone and RxTimeout interrupts in the status register RegIrqFlags are not asserted to ensure that packet reception has terminated successfully(i.e.no flags should be set).
-		const uint8_t bufLen = min(RFM95_readReg(RFM95_REG_13_RX_NB_BYTES), RFM95_MAX_PACKET_LEN);
+		const uint8_t bufLen = min(RFM95_readReg(RFM95_REG_13_RX_NB_BYTES), (uint8_t)RFM95_MAX_PACKET_LEN);
 		if (bufLen >= RFM95_HEADER_LEN) {
 			// Reset the fifo read ptr to the beginning of the packet
 			RFM95_writeReg(RFM95_REG_0D_FIFO_ADDR_PTR, RFM95_readReg(RFM95_REG_10_FIFO_RX_CURRENT_ADDR));
@@ -277,7 +277,7 @@ LOCAL bool RFM95_sendFrame(const uint8_t recipient, uint8_t* data, const uint8_t
 	packet.header.sender = RFM95.address;
 	packet.header.recipient = recipient;
 	packet.header.controlFlags = 0x00;
-	packet.payloadLen = min(len, RFM95_MAX_PAYLOAD_LEN);
+	packet.payloadLen = min(len, (const uint8_t)RFM95_MAX_PAYLOAD_LEN);
 	packet.header.controlFlags = flags;
 	memcpy(&packet.payload, data, packet.payloadLen);
 	return RFM95_send(packet);
@@ -292,8 +292,8 @@ LOCAL void RFM95_setFrequency(const float centre) {
 
 LOCAL bool RFM95_setTxPower(uint8_t powerLevel) {
 	// RFM95/96/97/98 does not have RFO pins connected to anything. Only PA_BOOST
-	powerLevel = max(RFM95_MIN_POWER_LEVEL_DBM, powerLevel);
-	powerLevel = min(RFM95_MAX_POWER_LEVEL_DBM, powerLevel);
+	powerLevel = max((uint8_t)RFM95_MIN_POWER_LEVEL_DBM, powerLevel);
+	powerLevel = min((uint8_t)RFM95_MAX_POWER_LEVEL_DBM, powerLevel);
 	if (powerLevel != RFM95.powerLevel) {
 		RFM95.powerLevel = powerLevel;
 		uint8_t val;
@@ -414,6 +414,8 @@ LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t t
 }
 
 LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer, const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTime) {
+	(void)retryWaitTime;
+
 	for (uint8_t retry = 0; retry < retries; retry++) {
 		RFM95_DEBUG(PSTR("RFM95:SWR:SEND TO=%d,RETRY=%d\n"), recipient, retry);
 		rfm95_flag_t flags = 0x00;
