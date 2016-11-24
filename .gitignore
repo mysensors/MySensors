@@ -7,3 +7,4 @@ doxygen_sqlite3.db
 Makefile.inc
 build
 bin
+*.sublime-workspace
