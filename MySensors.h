@@ -79,7 +79,7 @@
 #endif
 
 // LEDS
-#if !defined(MY_DEFAULT_ERR_LED_PIN) & defined(MY_HW_ERR_LED_PIN)
+#if !defined(MY_DEFAULT_ERR_LED_PIN) && defined(MY_HW_ERR_LED_PIN)
 	#define MY_DEFAULT_ERR_LED_PIN MY_HW_ERR_LED_PIN
 #endif
 
