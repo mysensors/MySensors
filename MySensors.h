@@ -259,9 +259,34 @@
  	#endif
 
 	#include "core/MyTransport.cpp"
-	#if (defined(MY_RADIO_NRF24) && defined(MY_RADIO_RFM69)) || (defined(MY_RADIO_NRF24) && defined(MY_RS485)) || (defined(MY_RADIO_RFM69) && defined(MY_RS485))
+	
+	// count enabled transports
+	#if defined(MY_RADIO_NRF24)
+	#define __RF24CNT 1
+	#else
+	#define __RF24CNT 0
+	#endif
+	#if defined(MY_RADIO_RFM69)
+	#define __RFM69CNT 1
+	#else
+	#define __RFM69CNT 0
+	#endif
+	#if defined(MY_RADIO_RFM95)
+	#define __RFM95CNT 1
+	#else
+	#define __RFM95CNT 0
+	#endif
+	#if defined(MY_RS485)
+	#define __RS485CNT 1
+	#else
+	#define __RS485CNT 0
+	#endif
+
+
+	#if (__RF24CNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
 		#error Only one forward link driver can be activated
 	#endif
+
 	#if defined(MY_RADIO_NRF24)
 		#if defined(MY_RF24_ENABLE_ENCRYPTION)
 			#include "drivers/AES/AES.cpp"
