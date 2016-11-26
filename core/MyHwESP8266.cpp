@@ -20,73 +20,50 @@
 #include "MyHwESP8266.h"
 #include <EEPROM.h>
 
-/*
-int8_t pinIntTrigger = 0;
-void wakeUp()	 //place to send the interrupts
+void hwInit(void)
 {
-	pinIntTrigger = 1;
-}
-void wakeUp2()	 //place to send the second interrupts
-{
-	pinIntTrigger = 2;
+#if !defined(MY_DISABLED_SERIAL)
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1); 
+	MY_SERIALDEVICE.setDebugOutput(true);
+#endif
+	EEPROM.begin(EEPROM_size);
 }
 
-// Watchdog Timer interrupt service routine. This routine is required
-// to allow automatic WDIF and WDIE bit clearance in hardware.
-ISR (WDT_vect)
+void hwReadConfigBlock(void* buf, void* addr, size_t length)
 {
-	// WDIE & WDIF is cleared in hardware upon entering this ISR
-	wdt_disable();
-}
-*/
-
-static void hwInitConfigBlock( size_t length = 1024 /*ATMega328 has 1024 bytes*/ )
-{
-  static bool initDone = false;
-  if (!initDone)
-  {
-    EEPROM.begin(length);
-    initDone = true;
-  }
-}
-
-void hwReadConfigBlock(void* buf, void* adr, size_t length)
-{
-  hwInitConfigBlock();
   uint8_t* dst = static_cast<uint8_t*>(buf);
-  int offs = reinterpret_cast<int>(adr);
+  int pos = reinterpret_cast<int>(addr);
   while (length-- > 0)
   {
-    *dst++ = EEPROM.read(offs++); 
+    *dst++ = EEPROM.read(pos++); 
   }
 }
 
-void hwWriteConfigBlock(void* buf, void* adr, size_t length)
+void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 {
-  hwInitConfigBlock();
-  uint8_t* src = static_cast<uint8_t*>(buf);
-  int offs = reinterpret_cast<int>(adr);
-  while (length-- > 0)
-  {
-    EEPROM.write(offs++, *src++);
-  }
-  EEPROM.commit();
+	uint8_t* src = static_cast<uint8_t*>(buf);
+	int pos = reinterpret_cast<int>(addr);
+	bool doCommit = false;
+	while (length-- > 0) {
+		doCommit |= EEPROM.read(pos) != *src;
+		EEPROM.write(pos++, *src++);
+	}
+	// only commit if there are changes
+	if (doCommit) {
+		EEPROM.commit();
+	}
 }
 
-uint8_t hwReadConfig(int adr)
+uint8_t hwReadConfig(const int addr)
 {
   uint8_t value;
-  hwReadConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
+  hwReadConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
   return value;
 }
 
-void hwWriteConfig(int adr, uint8_t value)
+void hwWriteConfig(const int addr, uint8_t value)
 {
-  uint8_t curr = hwReadConfig(adr);
-  if (curr != value)
-  {
-    hwWriteConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
-  }
+	hwWriteConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
 }
 
 
