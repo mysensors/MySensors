@@ -592,15 +592,18 @@ void transportProcessMessage(void) {
 	// update routing table if msg not from parent
 	#if defined(MY_REPEATER_FEATURE)
 		#if !defined(MY_GATEWAY_FEATURE)
-			if (last != _transportConfig.parentNodeId) {
+		if (last != getParentNodeId()) 
+		{
 		#else
-			// GW doesn't have parent
-			{
+		// GW doesn't have parent
+		{
 		#endif
-			// Message is from one of the child nodes. Add it to routing table.
-			transportSetRoute(sender, last);
+			// Message is from one of the child nodes and not sent from this node. Add it to routing table.
+			if (sender != getNodeId()) {
+				transportSetRoute(sender, last);
+			}
 		}
-	#endif
+	#endif // MY_REPEATER_FEATURE
 
 	// set message received flag
 	_transportSM.msgReceived = true;
