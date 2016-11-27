@@ -56,7 +56,7 @@
 		(((__pin) == 5 || (__pin) == 6 || (__pin) == 18) ? 3 : \
 		(((__pin) == 2) ? 4 : \
 		(((__pin) == 3 || (__pin) == 4) ? 5 : 7)))))))))))))))
-#elif defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__)
+#elif defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 	#define __digitalPinToPortReg(__pin)	(((__pin) <= 7) ? &PORTB : (((__pin) >= 8 && (__pin) <= 15) ? &PORTD : (((__pin) >= 16 && (__pin) <= 23) ? &PORTC : &PORTA)))
 	#define __digitalPinToDDRReg(__pin)		(((__pin) <= 7) ? &DDRB : (((__pin) >= 8 && (__pin) <= 15) ? &DDRD : (((__pin) >= 8 && (__pin) <= 15) ? &DDRC : &DDRA)))
 	#define __digitalPinToPINReg(__pin)		(((__pin) <= 7) ? &PINB : (((__pin) >= 8 && (__pin) <= 15) ? &PIND : (((__pin) >= 8 && (__pin) <= 15) ? &PINC : &PINA)))
