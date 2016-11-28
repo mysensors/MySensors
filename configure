@@ -26,7 +26,7 @@ Building options:
     --no-clean                  Don't clean previous build artifacts.
 
 Installation options:
-    --prefix=<PREFIX>           Installation prefix path. [/usr/local]
+    --exec-prefix=<PREFIX>           Installation prefix path. [/usr/local]
     --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
 
 MySensors options:
@@ -268,7 +268,7 @@ for opt do
     --no-clean*)
         NO_CLEAN="1"
         ;;
-    --prefix=*)
+    --exec-prefix=*)
         PREFIX="$optarg"
         ;;
     --no_init_system*)
