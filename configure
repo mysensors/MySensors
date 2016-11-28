@@ -271,6 +271,9 @@ for opt do
     --prefix=*)
         PREFIX="$optarg"
         ;;
+    --exec-prefix=*)
+        PREFIX="$optarg"
+        ;;
     --no_init_system*)
         NO_INIT="1"
         ;;
