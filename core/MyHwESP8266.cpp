@@ -43,15 +43,11 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 {
 	uint8_t* src = static_cast<uint8_t*>(buf);
 	int pos = reinterpret_cast<int>(addr);
-	bool doCommit = false;
 	while (length-- > 0) {
-		doCommit |= EEPROM.read(pos) != *src;
 		EEPROM.write(pos++, *src++);
 	}
-	// only commit if there are changes
-	if (doCommit) {
-		EEPROM.commit();
-	}
+	// see implementation, commit only executed if diff
+	EEPROM.commit();
 }
 
 uint8_t hwReadConfig(const int addr)
