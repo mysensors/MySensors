@@ -119,21 +119,21 @@ $(CONFIG_FILE):
 install: all install-gateway install-initscripts
 
 install-gateway: 
-	@echo "Installing $(GATEWAY) to $(GATEWAY_DIR)"
-	@install -m 0755 $(GATEWAY) $(GATEWAY_DIR)
+	@echo "Installing $(GATEWAY) to ${DESTDIR}$(GATEWAY_DIR)"
+	@install -m 0755 $(GATEWAY) ${DESTDIR}$(GATEWAY_DIR)
 
 install-initscripts:
 ifeq ($(INIT_SYSTEM), systemd)
-	install -m0644 initscripts/mysgw.systemd /etc/systemd/system/mysgw.service
-	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/systemd/system/mysgw.service
+	install -m0644 initscripts/mysgw.systemd ${DESTDIR}/etc/systemd/system/mysgw.service
+	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" ${DESTDIR}/etc/systemd/system/mysgw.service
 	systemctl daemon-reload
 	@echo "MySensors gateway has been installed, to add to the boot run:"
 	@echo "  sudo systemctl enable mysgw.service"
 	@echo "To start the gateway run:"
 	@echo "  sudo systemctl start mysgw.service"
 else ifeq ($(INIT_SYSTEM), sysvinit)
-	install -m0755 initscripts/mysgw.sysvinit /etc/init.d/mysgw
-	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/init.d/mysgw
+	install -m0755 initscripts/mysgw.sysvinit ${DESTDIR}/etc/init.d/mysgw
+	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" ${DESTDIR}/etc/init.d/mysgw
 	@echo "MySensors gateway has been installed, to add to the boot run:"
 	@echo "  sudo update-rc.d mysgw defaults"
 	@echo "To start the gateway run:"
