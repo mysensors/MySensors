@@ -271,6 +271,9 @@ for opt do
     --prefix=*)
         PREFIX="$optarg"
         ;;
+    --no_init_system*)
+        NO_INIT="1"
+        ;;
     --gateway-dir=*)
         GATEWAY_DIR="$optarg"
         ;;
@@ -466,6 +469,9 @@ fi
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
+if [ "${NO_INIT}" ];  then
+    echo "[OK] no init system chosen."
+elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
 if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
     echo "[OK] init system detected: systemd"
