@@ -58,40 +58,42 @@ MyMessage vibrationMsg(CHILD_ID_VIBRATION, V_LEVEL);
 
 void setup()
 {
-  pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(VIBRATION_SENSOR_DIGITAL_PIN), blink, FALLING); // Trigger the blink function when the falling edge is detected
-  pinMode(SensorLED, OUTPUT);
+	pinMode(VIBRATION_SENSOR_DIGITAL_PIN, INPUT);
+	attachInterrupt(digitalPinToInterrupt(VIBRATION_SENSOR_DIGITAL_PIN), blink,
+	                FALLING); // Trigger the blink function when the falling edge is detected
+	pinMode(SensorLED, OUTPUT);
 }
 
-void presentation()  {
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("VIBRATION Sensor", "1.0");
+void presentation()
+{
+	// Send the sketch version information to the gateway and Controller
+	sendSketchInfo("VIBRATION Sensor", "1.0");
 
-  // Register all sensors to gateway (they will be created as child devices)
-  present(CHILD_ID_VIBRATION, S_VIBRATION);
+	// Register all sensors to gateway (they will be created as child devices)
+	present(CHILD_ID_VIBRATION, S_VIBRATION);
 }
 
 void loop()
 {
 
-  if(state>=40){ // basically below 40 so ignire basic level
-        send(vibrationMsg.set(int16_t(state)));
-        state = 0;
-        digitalWrite(SensorLED,HIGH);
-   }    else {
-        state = 0;
-        digitalWrite(SensorLED,LOW);
-  }
+	if(state>=40) { // basically below 40 so ignire basic level
+		send(vibrationMsg.set(int16_t(state)));
+		state = 0;
+		digitalWrite(SensorLED,HIGH);
+	}    else {
+		state = 0;
+		digitalWrite(SensorLED,LOW);
+	}
 
 
-  // Power down the radio.  Note that the radio will get powered back up
-  // on the next write() call.
-  delay(1000); //delay to allow serial to fully print before sleep
+	// Power down the radio.  Note that the radio will get powered back up
+	// on the next write() call.
+	delay(1000); //delay to allow serial to fully print before sleep
 
-  sleep(SLEEP_TIME); //sleep for: sleepTime
+	sleep(SLEEP_TIME); //sleep for: sleepTime
 }
 
 void blink()//Interrupts function
 {
-  state++;
+	state++;
 }

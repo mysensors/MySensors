@@ -23,8 +23,8 @@
 #include <Wire.h>
 
 #ifdef __cplusplus
-#include <Arduino.h>
-//#include <SPI.h>
+	#include <Arduino.h>
+	//#include <SPI.h>
 #endif
 
 #include <avr/dtostrf.h>
@@ -59,17 +59,17 @@ uint8_t hwReadConfig(int adr);
  */
 static __inline__ uint8_t __disableIntsRetVal(void)
 {
-    __disable_irq();
-    return 1;
+	__disable_irq();
+	return 1;
 }
-   
-/** 
+
+/**
  * Restore priority mask register.
  * Helper function for MY_CRITICAL_SECTION.
  */
 static __inline__ void __priMaskRestore(const uint32_t *priMask)
 {
-    __set_PRIMASK(*priMask);
+	__set_PRIMASK(*priMask);
 }
 
 #ifndef DOXYGEN

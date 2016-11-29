@@ -45,7 +45,8 @@
 /**
  * SPISettings class
  */
-class SPISettings {
+class SPISettings
+{
 
 public:
 	/**
@@ -53,7 +54,8 @@ public:
 	 *
 	 * Default clock speed is 8Mhz.
 	 */
-	SPISettings() {
+	SPISettings()
+	{
 		init(BCM2835_SPI_CLOCK_DIVIDER_32, BCM2835_SPI_BIT_ORDER_MSBFIRST, BCM2835_SPI_MODE0);
 	}
 	/**
@@ -63,31 +65,32 @@ public:
 	 * @param bitOrder SPI bit order.
 	 * @param dataMode SPI data mode.
 	 */
-	SPISettings(uint32_t clock, uint8_t bitOrder, uint8_t dataMode) {
+	SPISettings(uint32_t clock, uint8_t bitOrder, uint8_t dataMode)
+	{
 		uint16_t divider;
 
 		switch (clock) {
-			case 500000:
-				divider = BCM2835_SPI_CLOCK_DIVIDER_512;
-				break;
-			case 1000000:
-				divider = BCM2835_SPI_CLOCK_DIVIDER_256;
-				break;
-			case 2000000:
-				divider = BCM2835_SPI_CLOCK_DIVIDER_128;
-				break;
-			case 4000000:
-				divider = BCM2835_SPI_CLOCK_DIVIDER_64;
-				break;
-			case 8000000:
-				divider = BCM2835_SPI_CLOCK_DIVIDER_32;
-				break;
-			case 16000000:
-				divider = BCM2835_SPI_CLOCK_DIVIDER_16;
-				break;
-			default:
-				// 8Mhz
-				divider = BCM2835_SPI_CLOCK_DIVIDER_32;
+		case 500000:
+			divider = BCM2835_SPI_CLOCK_DIVIDER_512;
+			break;
+		case 1000000:
+			divider = BCM2835_SPI_CLOCK_DIVIDER_256;
+			break;
+		case 2000000:
+			divider = BCM2835_SPI_CLOCK_DIVIDER_128;
+			break;
+		case 4000000:
+			divider = BCM2835_SPI_CLOCK_DIVIDER_64;
+			break;
+		case 8000000:
+			divider = BCM2835_SPI_CLOCK_DIVIDER_32;
+			break;
+		case 16000000:
+			divider = BCM2835_SPI_CLOCK_DIVIDER_16;
+			break;
+		default:
+			// 8Mhz
+			divider = BCM2835_SPI_CLOCK_DIVIDER_32;
 		}
 
 		init(divider, bitOrder, dataMode);
@@ -105,7 +108,8 @@ private:
 	 * @param bitOrder SPI bit order.
 	 * @param dataMode SPI data mode.
 	 */
-	void init(uint16_t divider, uint8_t bitOrder, uint8_t dataMode) {
+	void init(uint16_t divider, uint8_t bitOrder, uint8_t dataMode)
+	{
 		cdiv = divider;
 		border = bitOrder;
 		dmode = dataMode;
@@ -117,7 +121,8 @@ private:
 /**
  * SPIClass class
  */
-class SPIClass {
+class SPIClass
+{
 
 private:
 	static uint8_t initialized; //!< @brief SPI initialized flag.
@@ -150,7 +155,7 @@ public:
 	 * @param buf Buffer to read from and write to.
 	 * @param len Buffer length.
 	 */
-	inline static void transfern(char* buf, uint32_t len);  
+	inline static void transfern(char* buf, uint32_t len);
 	/**
 	 * @brief Start SPI operations.
 	 */
@@ -207,15 +212,18 @@ public:
 	static void notUsingInterrupt(uint8_t interruptNumber);
 };
 
-uint8_t SPIClass::transfer(uint8_t data) {
+uint8_t SPIClass::transfer(uint8_t data)
+{
 	return bcm2835_spi_transfer(data);
 }
 
-void SPIClass::transfernb(char* tbuf, char* rbuf, uint32_t len) {
+void SPIClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
+{
 	bcm2835_spi_transfernb( tbuf, rbuf, len);
 }
 
-void SPIClass::transfern(char* buf, uint32_t len) {
+void SPIClass::transfern(char* buf, uint32_t len)
+{
 	transfernb(buf, buf, len);
 }
 

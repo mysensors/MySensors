@@ -17,12 +17,12 @@
  * version 2 as published by the Free Software Foundation.
  */
 
- /**
- * @file MyHw.h
- *
- * MySensors hardware abstraction layer
- */
- 
+/**
+* @file MyHw.h
+*
+* MySensors hardware abstraction layer
+*/
+
 #ifndef MyHw_h
 #define MyHw_h
 
@@ -31,7 +31,7 @@
 
 
 #ifdef __cplusplus
-#include <Arduino.h>
+	#include <Arduino.h>
 #endif
 
 // Implement these as functions or macros
@@ -76,33 +76,34 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
  * @param ms          Time to sleep, in [ms].
  * @return -1 when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms);
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+               unsigned long ms);
 
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
-/**
- * CPU voltage
- * @return CPU voltage in mV
- */
-uint16_t hwCPUVoltage();
+	/**
+	* CPU voltage
+	* @return CPU voltage in mV
+	*/
+	uint16_t hwCPUVoltage();
 
-/**
- * CPU frequency
- * @return CPU frequency in 1/10Mhz
- */
-uint16_t hwCPUFrequency();
+	/**
+	* CPU frequency
+	* @return CPU frequency in 1/10Mhz
+	*/
+	uint16_t hwCPUFrequency();
 
-/**
- * Free memory
- * @return free memory in bytes
- */
-uint16_t hwFreeMem();
+	/**
+	* Free memory
+	* @return free memory in bytes
+	*/
+	uint16_t hwFreeMem();
 #endif
 
 #ifdef MY_DEBUG
-void hwDebugPrint(const char *fmt, ... );
+	void hwDebugPrint(const char *fmt, ... );
 #endif
 
-/** 
+/**
  * @def MY_CRITICAL_SECTION
  * @brief Creates a block of code that is guaranteed to be executed atomically.
  * Upon entering the block all interrupts are disabled, and re-enabled upon
@@ -112,12 +113,12 @@ void hwDebugPrint(const char *fmt, ... );
  * platform (e.g AVR):
  * @code
  * volatile uint16_t val = 0;
- * 
+ *
  * void interrupHandler()
  * {
  *   val = ~val;
  * }
- * 
+ *
  * void loop()
  * {
  *   uint16_t copy_val;

@@ -17,17 +17,17 @@
  * version 2 as published by the Free Software Foundation.
  */
 
- /**
- * @file MyEepromAddresses.h
- * @brief Eeprom addresses for MySensors library data
- *
- * @defgroup MyEepromAddressesgrp MyEepromAddresses
- * @ingroup internals
- * @{
- *
- */
+/**
+* @file MyEepromAddresses.h
+* @brief Eeprom addresses for MySensors library data
+*
+* @defgroup MyEepromAddressesgrp MyEepromAddresses
+* @ingroup internals
+* @{
+*
+*/
 
- 
+
 #ifndef MyEepromAddresses_h
 #define MyEepromAddresses_h
 
@@ -60,7 +60,7 @@
 /** @brief Address routing table */
 #define EEPROM_ROUTES_ADDRESS (EEPROM_DISTANCE_ADDRESS + SIZE_DISTANCE)
 /** @brief Address configuration bytes sent by controller */
-#define EEPROM_CONTROLLER_CONFIG_ADDRESS (EEPROM_ROUTES_ADDRESS + SIZE_ROUTES) 
+#define EEPROM_CONTROLLER_CONFIG_ADDRESS (EEPROM_ROUTES_ADDRESS + SIZE_ROUTES)
 /** @brief Address firmware type */
 #define EEPROM_FIRMWARE_TYPE_ADDRESS (EEPROM_CONTROLLER_CONFIG_ADDRESS + SIZE_CONTROLLER_CONFIG)
 /** @brief Address firmware version */
@@ -76,13 +76,13 @@
 /** @brief Address soft signing HMAC key. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS (EEPROM_WHITELIST_REQUIREMENT_TABLE_ADDRESS + SIZE_WHITELIST_REQUIREMENT_TABLE)
 /** @brief Address soft signing serial key. This is set with @ref SecurityPersonalizer.ino */
-#define EEPROM_SIGNING_SOFT_SERIAL_ADDRESS (EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS + SIZE_SIGNING_SOFT_HMAC_KEY) 
+#define EEPROM_SIGNING_SOFT_SERIAL_ADDRESS (EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS + SIZE_SIGNING_SOFT_HMAC_KEY)
 /** @brief Address RF AES encryption key. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS (EEPROM_SIGNING_SOFT_SERIAL_ADDRESS + SIZE_SIGNING_SOFT_SERIAL)
 /** @brief Address node lock couner. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_NODE_LOCK_COUNTER (EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS + SIZE_RF_ENCRYPTION_AES_KEY)
 /** @brief First free address for sketch static configuration */
-#define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_NODE_LOCK_COUNTER + SIZE_NODE_LOCK_COUNTER) 
+#define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_NODE_LOCK_COUNTER + SIZE_NODE_LOCK_COUNTER)
 
 #endif // MyEepromAddresses_h
 

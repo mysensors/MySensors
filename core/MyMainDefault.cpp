@@ -16,20 +16,21 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
- 
+
 // Initialize library and handle sketch functions like we want to
 
 extern "C" void __libc_init_array(void);
 
-int main(void) {
+int main(void)
+{
 	init();
-	#if defined(USBCON)
-		#if defined(ARDUINO_ARCH_SAMD)
-			__libc_init_array();
-			USBDevice.init();		
-		#endif
-    		USBDevice.attach();
-	#endif
+#if defined(USBCON)
+#if defined(ARDUINO_ARCH_SAMD)
+	__libc_init_array();
+	USBDevice.init();
+#endif
+	USBDevice.attach();
+#endif
 	_begin(); // Startup MySensors library
 
 	for(;;) {

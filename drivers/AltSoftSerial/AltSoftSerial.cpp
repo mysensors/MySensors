@@ -59,7 +59,7 @@ static volatile uint8_t tx_buffer[RX_BUFFER_SIZE];
 
 
 #ifndef INPUT_PULLUP
-#define INPUT_PULLUP INPUT
+	#define INPUT_PULLUP INPUT
 #endif
 
 void AltSoftSerial::init(uint32_t cycles_per_bit)

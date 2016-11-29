@@ -18,22 +18,22 @@
 // MQTT_VERSION : Pick the version
 //#define MQTT_VERSION MQTT_VERSION_3_1
 #ifndef MQTT_VERSION
-#define MQTT_VERSION MQTT_VERSION_3_1_1
+	#define MQTT_VERSION MQTT_VERSION_3_1_1
 #endif
 
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 128
+	#define MQTT_MAX_PACKET_SIZE 128
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds
 #ifndef MQTT_KEEPALIVE
-#define MQTT_KEEPALIVE 15
+	#define MQTT_KEEPALIVE 15
 #endif
 
 // MQTT_SOCKET_TIMEOUT: socket timeout interval in Seconds
 #ifndef MQTT_SOCKET_TIMEOUT
-#define MQTT_SOCKET_TIMEOUT 15
+	#define MQTT_SOCKET_TIMEOUT 15
 #endif
 
 // MQTT_MAX_TRANSFER_SIZE : limit how much data is passed to the network client
@@ -74,71 +74,79 @@
 #define MQTTQOS2        (2 << 1)
 
 #ifdef ESP8266
-#include <functional>
-#define MQTT_CALLBACK_SIGNATURE std::function<void(char*, uint8_t*, unsigned int)> callback
+	#include <functional>
+	#define MQTT_CALLBACK_SIGNATURE std::function<void(char*, uint8_t*, unsigned int)> callback
 #else
-#define MQTT_CALLBACK_SIGNATURE void (*callback)(char*, uint8_t*, unsigned int)
+	#define MQTT_CALLBACK_SIGNATURE void (*callback)(char*, uint8_t*, unsigned int)
 #endif
 
 /** PubSubClient class */
-class PubSubClient {
+class PubSubClient
+{
 private:
-   Client* _client;
-   uint8_t buffer[MQTT_MAX_PACKET_SIZE];
-   uint16_t nextMsgId;
-   unsigned long lastOutActivity;
-   unsigned long lastInActivity;
-   bool pingOutstanding;
-   MQTT_CALLBACK_SIGNATURE;
-   uint16_t readPacket(uint8_t*);
-   boolean readByte(uint8_t * result);
-   boolean readByte(uint8_t * result, uint16_t * index);
-   boolean write(uint8_t header, uint8_t* buf, uint16_t length);
-   uint16_t writeString(const char* string, uint8_t* buf, uint16_t pos);
-   IPAddress ip;
-   const char* domain;
-   uint16_t port;
-   Stream* stream;
-   int _state;
+	Client* _client;
+	uint8_t buffer[MQTT_MAX_PACKET_SIZE];
+	uint16_t nextMsgId;
+	unsigned long lastOutActivity;
+	unsigned long lastInActivity;
+	bool pingOutstanding;
+	MQTT_CALLBACK_SIGNATURE;
+	uint16_t readPacket(uint8_t*);
+	boolean readByte(uint8_t * result);
+	boolean readByte(uint8_t * result, uint16_t * index);
+	boolean write(uint8_t header, uint8_t* buf, uint16_t length);
+	uint16_t writeString(const char* string, uint8_t* buf, uint16_t pos);
+	IPAddress ip;
+	const char* domain;
+	uint16_t port;
+	Stream* stream;
+	int _state;
 public:
-   PubSubClient(); //!< PubSubClient
-   PubSubClient(Client& client); //!< PubSubClient
-   PubSubClient(IPAddress, uint16_t, Client& client); //!< PubSubClient
-   PubSubClient(IPAddress, uint16_t, Client& client, Stream&); //!< PubSubClient
-   PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
-   PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client, Stream&); //!< PubSubClient
-   PubSubClient(uint8_t *, uint16_t, Client& client); //!< PubSubClient
-   PubSubClient(uint8_t *, uint16_t, Client& client, Stream&); //!< PubSubClient
-   PubSubClient(uint8_t *, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
-   PubSubClient(uint8_t *, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client, Stream&); //!< PubSubClient
-   PubSubClient(const char*, uint16_t, Client& client); //!< PubSubClient
-   PubSubClient(const char*, uint16_t, Client& client, Stream&); //!< PubSubClient
-   PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
-   PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client, Stream&); //!< PubSubClient
+	PubSubClient(); //!< PubSubClient
+	PubSubClient(Client& client); //!< PubSubClient
+	PubSubClient(IPAddress, uint16_t, Client& client); //!< PubSubClient
+	PubSubClient(IPAddress, uint16_t, Client& client, Stream&); //!< PubSubClient
+	PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
+	PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client,
+	             Stream&); //!< PubSubClient
+	PubSubClient(uint8_t *, uint16_t, Client& client); //!< PubSubClient
+	PubSubClient(uint8_t *, uint16_t, Client& client, Stream&); //!< PubSubClient
+	PubSubClient(uint8_t *, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
+	PubSubClient(uint8_t *, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client,
+	             Stream&); //!< PubSubClient
+	PubSubClient(const char*, uint16_t, Client& client); //!< PubSubClient
+	PubSubClient(const char*, uint16_t, Client& client, Stream&); //!< PubSubClient
+	PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
+	PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client,
+	             Stream&); //!< PubSubClient
 
-   PubSubClient& setServer(IPAddress ip, uint16_t port); //!< setServer
-   PubSubClient& setServer(uint8_t * ip, uint16_t port); //!< setServer
-   PubSubClient& setServer(const char * domain, uint16_t port); //!< setServer
-   PubSubClient& setCallback(MQTT_CALLBACK_SIGNATURE); //!< setCallback
-   PubSubClient& setClient(Client& client); //!< setClient
-   PubSubClient& setStream(Stream& stream); //!< setStream
+	PubSubClient& setServer(IPAddress ip, uint16_t port); //!< setServer
+	PubSubClient& setServer(uint8_t * ip, uint16_t port); //!< setServer
+	PubSubClient& setServer(const char * domain, uint16_t port); //!< setServer
+	PubSubClient& setCallback(MQTT_CALLBACK_SIGNATURE); //!< setCallback
+	PubSubClient& setClient(Client& client); //!< setClient
+	PubSubClient& setStream(Stream& stream); //!< setStream
 
-   boolean connect(const char* id); //!< connect
-   boolean connect(const char* id, const char* user, const char* pass); //!< connect
-   boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage); //!< connect
-   boolean connect(const char* id, const char* user, const char* pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage); //!< connect
-   void disconnect(); //!< disconnect
-   boolean publish(const char* topic, const char* payload); //!< publish
-   boolean publish(const char* topic, const char* payload, boolean retained); //!< publish
-   boolean publish(const char* topic, const uint8_t * payload, unsigned int plength); //!< publish
-   boolean publish(const char* topic, const uint8_t * payload, unsigned int plength, boolean retained); //!< publish
-   boolean publish_P(const char* topic, const uint8_t * payload, unsigned int plength, boolean retained); //!< publish_P
-   boolean subscribe(const char* topic); //!< subscribe
-   boolean subscribe(const char* topic, uint8_t qos); //!< subscribe
-   boolean unsubscribe(const char* topic); //!< unsubscribe
-   boolean loop(); //!< loop
-   boolean connected(); //!< connected
-   int state(); //!< state
+	boolean connect(const char* id); //!< connect
+	boolean connect(const char* id, const char* user, const char* pass); //!< connect
+	boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain,
+	                const char* willMessage); //!< connect
+	boolean connect(const char* id, const char* user, const char* pass, const char* willTopic,
+	                uint8_t willQos, boolean willRetain, const char* willMessage); //!< connect
+	void disconnect(); //!< disconnect
+	boolean publish(const char* topic, const char* payload); //!< publish
+	boolean publish(const char* topic, const char* payload, boolean retained); //!< publish
+	boolean publish(const char* topic, const uint8_t * payload, unsigned int plength); //!< publish
+	boolean publish(const char* topic, const uint8_t * payload, unsigned int plength,
+	                boolean retained); //!< publish
+	boolean publish_P(const char* topic, const uint8_t * payload, unsigned int plength,
+	                  boolean retained); //!< publish_P
+	boolean subscribe(const char* topic); //!< subscribe
+	boolean subscribe(const char* topic, uint8_t qos); //!< subscribe
+	boolean unsubscribe(const char* topic); //!< unsubscribe
+	boolean loop(); //!< loop
+	boolean connected(); //!< connected
+	int state(); //!< state
 };
 
 

@@ -26,7 +26,8 @@
 #include "IPAddress.h"
 
 #if !DOXYGEN
-class Client : public Stream {
+class Client : public Stream
+{
 
 public:
 	virtual int connect(IPAddress ip, uint16_t port) = 0;
@@ -43,7 +44,10 @@ public:
 	virtual operator bool() = 0;
 
 protected:
-	uint8_t* rawIPAddress(IPAddress& addr) { return addr.raw_address(); };
+	uint8_t* rawIPAddress(IPAddress& addr)
+	{
+		return addr.raw_address();
+	};
 };
 #endif
 

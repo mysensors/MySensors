@@ -23,7 +23,7 @@
 void hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
-	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1); 
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1);
 	MY_SERIALDEVICE.setDebugOutput(true);
 #endif
 	EEPROM.begin(EEPROM_size);
@@ -31,12 +31,11 @@ void hwInit(void)
 
 void hwReadConfigBlock(void* buf, void* addr, size_t length)
 {
-  uint8_t* dst = static_cast<uint8_t*>(buf);
-  int pos = reinterpret_cast<int>(addr);
-  while (length-- > 0)
-  {
-    *dst++ = EEPROM.read(pos++); 
-  }
+	uint8_t* dst = static_cast<uint8_t*>(buf);
+	int pos = reinterpret_cast<int>(addr);
+	while (length-- > 0) {
+		*dst++ = EEPROM.read(pos++);
+	}
 }
 
 void hwWriteConfigBlock(void* buf, void* addr, size_t length)
@@ -52,9 +51,9 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 
 uint8_t hwReadConfig(const int addr)
 {
-  uint8_t value;
-  hwReadConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
-  return value;
+	uint8_t value;
+	hwReadConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
+	return value;
 }
 
 void hwWriteConfig(const int addr, uint8_t value)
@@ -63,13 +62,15 @@ void hwWriteConfig(const int addr, uint8_t value)
 }
 
 
-int8_t hwSleep(unsigned long ms) {
+int8_t hwSleep(unsigned long ms)
+{
 	// TODO: Not supported!
 	(void)ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
+{
 	// TODO: Not supported!
 	(void)interrupt;
 	(void)mode;
@@ -77,7 +78,9 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms) {
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms) {
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+               unsigned long ms)
+{
 	// TODO: Not supported!
 	(void)interrupt1;
 	(void)mode1;
@@ -90,39 +93,43 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 ADC_MODE(ADC_VCC);
 
-uint16_t hwCPUVoltage() {
+uint16_t hwCPUVoltage()
+{
 	// in mV
 	return ESP.getVcc();
 }
 
-uint16_t hwCPUFrequency() {
+uint16_t hwCPUFrequency()
+{
 	// in 1/10Mhz
 	return ESP.getCpuFreqMHz()*10;
 }
 
-uint16_t hwFreeMem() {
+uint16_t hwFreeMem()
+{
 	return ESP.getFreeHeap();
 }
 #endif
 
 #ifdef MY_DEBUG
-void hwDebugPrint(const char *fmt, ... ) {
+void hwDebugPrint(const char *fmt, ... )
+{
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-	#ifdef MY_GATEWAY_FEATURE
-		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
-		MY_SERIALDEVICE.print(fmtBuffer);
-	#endif
+#ifdef MY_GATEWAY_FEATURE
+	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
+	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+	MY_SERIALDEVICE.print(fmtBuffer);
+#endif
 	va_list args;
 	va_start (args, fmt );
-	#ifdef MY_GATEWAY_FEATURE
-		// Truncate message if this is gateway node
-		vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-		fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
-		fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-	#else
-		vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-	#endif
+#ifdef MY_GATEWAY_FEATURE
+	// Truncate message if this is gateway node
+	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
+	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
+	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
+#else
+	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
+#endif
 	va_end (args);
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();

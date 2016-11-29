@@ -200,7 +200,7 @@
 #define SHA204_COMMAND_EXEC_MAX      ((uint8_t) (69.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))  //! maximum command delay
 #define SHA204_CMD_SIZE_MIN          ((uint8_t)  7)  //! minimum number of bytes in command (from count byte to second CRC byte)
 #ifndef SHA204_CMD_SIZE_MAX
-#define SHA204_CMD_SIZE_MAX          ((uint8_t) SHA_COUNT_LONG)  //! maximum size of command packet (SHA)
+	#define SHA204_CMD_SIZE_MAX          ((uint8_t) SHA_COUNT_LONG)  //! maximum size of command packet (SHA)
 #endif
 #define SHA204_CRC_SIZE              ((uint8_t)  2)  //! number of CRC bytes
 #define SHA204_BUFFER_POS_STATUS     (1)  //! buffer index of status byte in status response
@@ -226,17 +226,17 @@
 /* Low level HW access macros */
 /* function calls is not working, as it will have too much overhead */
 #if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
-#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
-#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
-#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
-#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
-#define SHA204_PIN_READ() digitalRead(device_pin)
+	#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
+	#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
+	#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
+	#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
+	#define SHA204_PIN_READ() digitalRead(device_pin)
 #else
-#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
-#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
-#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
-#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
-#define SHA204_PIN_READ() (*device_port_IN & device_pin)
+	#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
+	#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
+	#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
+	#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
+	#define SHA204_PIN_READ() (*device_port_IN & device_pin)
 #endif
 
 void atsha204_init(uint8_t pin);
@@ -244,8 +244,8 @@ void atsha204_idle(void);
 void atsha204_sleep(void);
 uint8_t atsha204_wakeup(uint8_t *response);
 uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
-												uint8_t datalen1, uint8_t *data1, uint8_t tx_size,
-												uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
+                         uint8_t datalen1, uint8_t *data1, uint8_t tx_size,
+                         uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
 uint8_t atsha204_getSerialNumber(uint8_t *response);
 
 #endif

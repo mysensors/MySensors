@@ -104,7 +104,7 @@
 // The MQTT broker port to to open
 #define MY_PORT 1883
 
- /*
+/*
 // Enable inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
 // Enable Inclusion mode button on gateway
@@ -126,14 +126,17 @@
 #include <ESP8266WiFi.h>
 #include <MySensors.h>
 
-void setup() {
+void setup()
+{
 }
 
-void presentation() {
-  // Present locally attached sensors here
+void presentation()
+{
+	// Present locally attached sensors here
 }
 
 
-void loop() {
-  // Send locally attech sensors data here
+void loop()
+{
+	// Send locally attech sensors data here
 }

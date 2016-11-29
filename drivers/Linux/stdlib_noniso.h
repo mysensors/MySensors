@@ -1,9 +1,9 @@
-/* 
+/*
   stdlib_noniso.h - nonstandard (but usefull) conversion functions
 
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
- 
+
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -23,7 +23,7 @@
 #define STDLIB_NONISO_H
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 int atoi(const char *s);
@@ -39,7 +39,7 @@ char* ltoa (long val, char *s, int radix);
 char* utoa (unsigned int val, char *s, int radix);
 
 char* ultoa (unsigned long val, char *s, int radix);
- 
+
 char* dtostrf (double val, signed char width, unsigned char prec, char *s);
 
 void reverse(char* begin, char* end);

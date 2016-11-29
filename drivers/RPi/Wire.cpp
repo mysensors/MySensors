@@ -150,7 +150,7 @@ size_t TwoWire::write(uint8_t data)
 		// put byte in tx buffer
 		txBuffer[txBufferIndex] = data;
 		++txBufferIndex;
-		// update amount in buffer   
+		// update amount in buffer
 		txBufferLength = txBufferIndex;
 
 		return 1;

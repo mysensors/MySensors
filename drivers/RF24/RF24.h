@@ -28,7 +28,7 @@
 // SPI settings
 #if !defined(MY_RF24_SPI_MAX_SPEED)
 	// default 2Mhz - safe for nRF24L01+ clones
-	#define MY_RF24_SPI_MAX_SPEED 2000000	
+	#define MY_RF24_SPI_MAX_SPEED 2000000
 #endif
 #define MY_RF24_SPI_DATA_ORDER MSBFIRST
 #define MY_RF24_SPI_DATA_MODE SPI_MODE0
@@ -36,23 +36,24 @@
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 	#include <SPI.h>
 	#if defined(MY_SOFTSPI)
-		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE> _SPI;
-	#else	    
+		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE>
+		_SPI;
+	#else
 		#define _SPI SPI
 	#endif
 #else
 	#include <stdint.h>
 	#include <stdio.h>
 	#include <string.h>
-	
+
 	#define _BV(x) (1<<(x))
-	
+
 	#if defined(__arm__)
 		#include <SPI.h>
 	#else
 		extern HardwareSPI SPI;
 	#endif
-	
+
 	#if !defined(_SPI)
 		#define _SPI SPI
 	#endif
@@ -94,7 +95,7 @@
 #define RF24_BROADCAST_PIPE		(1)
 #define RF24_NODE_PIPE			(0)
 
-// debug 
+// debug
 #if defined(MY_DEBUG_VERBOSE_RF24)
 	#define RF24_DEBUG(x,...) debug(x, ##__VA_ARGS__)
 #else
@@ -113,8 +114,8 @@
 #define RF24_250KBPS 	(2)
 
 // CRC
-#define RF24_CRC_DISABLED	(0) 
-#define RF24_CRC_8			(2) 
+#define RF24_CRC_DISABLED	(0)
+#define RF24_CRC_8			(2)
 #define RF24_CRC_16			(3)
 
 // ARD, auto retry delay
@@ -232,9 +233,10 @@
 
 // functions
 
-LOCAL void RF24_csn(const bool level); 
-LOCAL void RF24_ce(const bool level); 
-LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, const uint8_t len, const bool aReadMode);
+LOCAL void RF24_csn(const bool level);
+LOCAL void RF24_ce(const bool level);
+LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, const uint8_t len,
+                                        const bool aReadMode);
 LOCAL uint8_t RF24_spiByteTransfer(const uint8_t cmd);
 LOCAL uint8_t RF24_RAW_readByteRegister(const uint8_t cmd);
 LOCAL uint8_t RF24_RAW_writeByteRegister(const uint8_t cmd, const uint8_t value);
@@ -250,11 +252,11 @@ LOCAL uint8_t RF24_getFIFOStatus(void);
 LOCAL void RF24_openWritingPipe(uint8_t recipient);
 LOCAL void RF24_startListening(void);
 LOCAL void RF24_stopListening(void);
-LOCAL void RF24_powerDown(void); 
+LOCAL void RF24_powerDown(void);
 LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint8_t len);
 LOCAL uint8_t RF24_getDynamicPayloadSize(void);
 LOCAL bool RF24_isDataAvailable();
-LOCAL uint8_t RF24_readMessage(void* buf); 
+LOCAL uint8_t RF24_readMessage(void* buf);
 LOCAL void RF24_setNodeAddress(const uint8_t address);
 LOCAL uint8_t RF24_getNodeID(void);
 LOCAL bool RF24_sanityCheck(void);
@@ -276,12 +278,12 @@ LOCAL void RF24_enableFeatures(void);
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	typedef void (*RF24_receiveCallbackType)(void);
-  /**
-	 * Register a callback, which will be called (from interrupt context) for every message received.
-	 * @note When a callback is registered, it _must_ retrieve the message from the nRF24
-	 * by calling RF24_readMessage(). Otherwise the interrupt will not get deasserted
-	 * and message reception will stop.
-	 */
+	/**
+	* Register a callback, which will be called (from interrupt context) for every message received.
+	* @note When a callback is registered, it _must_ retrieve the message from the nRF24
+	* by calling RF24_readMessage(). Otherwise the interrupt will not get deasserted
+	* and message reception will stop.
+	*/
 	LOCAL void RF24_registerReceiveCallback(RF24_receiveCallbackType cb);
 #endif
 
