@@ -14,6 +14,7 @@ Help:
 Building options:
     --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
+    --platform-type=<TYPE>      Type of platform
     --cpu-flags=<CPUFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
     --extra-cflags=<CFLAGS>     Extra C flags passed to C compilation. []
     --extra-cxxflags=<CXXFLAGS> Extra C++ flags passed to C++ compilation. []
@@ -238,6 +239,9 @@ for opt do
     --soc=*)
         SOC="$optarg"
         ;;
+    --platform-type=*)
+        PT="$optarg"
+        ;;
     --cpu-flags=*)
         CPUFLAGS="$optarg"
         ;;
@@ -409,6 +413,10 @@ if [ -z "${SOC}" ]; then
     echo "[OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}, REV=${REV}."
 fi
 
+if [ "${PT}" ]; then
+    TYPE=${PT}
+fi
+
 if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags $SOC)
 fi
@@ -475,7 +483,6 @@ CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 if [ "${NO_INIT}" ];  then
     echo "[OK] no init system chosen."
 elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
-if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
     echo "[OK] init system detected: systemd"
 elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
