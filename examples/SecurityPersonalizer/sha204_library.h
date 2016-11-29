@@ -260,7 +260,7 @@
 #define SHA204_COMMAND_EXEC_MAX      ((uint8_t) (69.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))  //! maximum command delay
 #define SHA204_CMD_SIZE_MIN          ((uint8_t)  7)  //! minimum number of bytes in command (from count byte to second CRC byte)
 #ifndef SHA204_CMD_SIZE_MAX
-#define SHA204_CMD_SIZE_MAX          ((uint8_t) 84)  //! maximum size of command packet (CheckMac)
+	#define SHA204_CMD_SIZE_MAX          ((uint8_t) 84)  //! maximum size of command packet (CheckMac)
 #endif
 #define SHA204_CRC_SIZE              ((uint8_t)  2)  //! number of CRC bytes
 #define SHA204_BUFFER_POS_STATUS     (1)  //! buffer index of status byte in status response
@@ -284,26 +284,29 @@
 /* Low level HW access macros */
 /* function calls is not working, as it will have too much overhead */
 #if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
-#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
-#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
-#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
-#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
-#define SHA204_PIN_READ() digitalRead(device_pin)
+	#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
+	#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
+	#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
+	#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
+	#define SHA204_PIN_READ() digitalRead(device_pin)
 #else
-#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
-#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
-#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
-#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
-#define SHA204_PIN_READ() (*device_port_IN & device_pin)
+	#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
+	#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
+	#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
+	#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
+	#define SHA204_PIN_READ() (*device_port_IN & device_pin)
 #endif
 
+/**
+ * atsha204Class class
+ */
 class atsha204Class
 {
 private:
 	uint8_t device_pin;
-	#ifdef ARDUINO_ARCH_AVR
+#ifdef ARDUINO_ARCH_AVR
 	volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
-	#endif
+#endif
 	void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc);
 	uint8_t sha204c_check_crc(uint8_t *response);
 	void swi_set_signal_pin(uint8_t is_high);
@@ -315,26 +318,150 @@ private:
 	uint8_t sha204p_send_command(uint8_t count, uint8_t * command);
 	uint8_t sha204p_sleep();
 	uint8_t sha204p_resync(uint8_t size, uint8_t *response);
-	
+
 
 public:
-	atsha204Class(uint8_t pin);	// Constructor
-	uint8_t sha204c_wakeup(uint8_t *response);
-	uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer, uint8_t execution_delay, uint8_t execution_timeout);
-	uint8_t sha204c_resync(uint8_t size, uint8_t *response);	
-	uint8_t sha204m_random(uint8_t * tx_buffer, uint8_t * rx_buffer, uint8_t mode);
-	uint8_t sha204m_dev_rev(uint8_t *tx_buffer, uint8_t *rx_buffer);
-	uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
-	uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
-			uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
-			uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
-	uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param2,
-			uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
-			uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
+	/**
+	 * @brief      Constructor
+	 *
+	 * @param[in]  pin   The pin to use for communication
+	 */
+	atsha204Class(uint8_t pin);
 
+	/**
+	 * @brief      Wake up device
+	 *
+	 * @param      response  The response from the device
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204c_wakeup(uint8_t *response);
+
+	/**
+	 * @brief      Send and receive data
+	 *
+	 * @param      tx_buffer          The transmit buffer
+	 * @param[in]  rx_size            The receive size
+	 * @param      rx_buffer          The receive buffer
+	 * @param[in]  execution_delay    The execution delay
+	 * @param[in]  execution_timeout  The execution timeout
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer,
+	                                 uint8_t execution_delay, uint8_t execution_timeout);
+
+	/**
+	 * @brief      Resyncronize the device
+	 *
+	 * @param[in]  size      The size of the response buffer
+	 * @param      response  The response
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204c_resync(uint8_t size, uint8_t *response);
+
+	/**
+	 * @brief      Generate random data
+	 *
+	 * @param      tx_buffer  The transmit buffer
+	 * @param      rx_buffer  The receive buffer
+	 * @param[in]  mode       The mode
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204m_random(uint8_t * tx_buffer, uint8_t * rx_buffer, uint8_t mode);
+
+	/**
+	 * @brief      Read device revision
+	 *
+	 * @param      tx_buffer  The transmit buffer
+	 * @param      rx_buffer  The receive buffer
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204m_dev_rev(uint8_t *tx_buffer, uint8_t *rx_buffer);
+
+	/**
+	 * @brief      Read from device
+	 *
+	 * @param      tx_buffer  The transmit buffer
+	 * @param      rx_buffer  The receive buffer
+	 * @param[in]  zone       The zone
+	 * @param[in]  address    The address
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
+
+	/**
+	 * @brief      Execute command
+	 *
+	 * @param[in]  op_code    The operation code
+	 * @param[in]  param1     The parameter 1
+	 * @param[in]  param2     The parameter 2
+	 * @param[in]  datalen1   The datalen 1
+	 * @param      data1      The data 1
+	 * @param[in]  datalen2   The datalen 2
+	 * @param      data2      The data 2
+	 * @param[in]  datalen3   The datalen 3
+	 * @param      data3      The data 3
+	 * @param[in]  tx_size    The transmit size
+	 * @param      tx_buffer  The transmit buffer
+	 * @param[in]  rx_size    The receive size
+	 * @param      rx_buffer  The receive buffer
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
+	                        uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3,
+	                        uint8_t *data3,
+	                        uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
+
+	/**
+	 * @brief      Validate parameters
+	 *
+	 * @param[in]  op_code    The operation code
+	 * @param[in]  param1     The parameter 1
+	 * @param[in]  param2     The parameter 2
+	 * @param[in]  datalen1   The datalen 1
+	 * @param      data1      The data 1
+	 * @param[in]  datalen2   The datalen 2
+	 * @param      data2      The data 2
+	 * @param[in]  datalen3   The datalen 3
+	 * @param      data3      The data 3
+	 * @param[in]  tx_size    The transmit size
+	 * @param      tx_buffer  The transmit buffer
+	 * @param[in]  rx_size    The receive size
+	 * @param      rx_buffer  The receive buffer
+	 *
+	 * @return     Error code (SHA204_SUCCESS if OK)
+	 */
+	uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param2,
+	                                 uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3,
+	                                 uint8_t *data3,
+	                                 uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
+
+	/**
+	 * @brief      Gets the serial number.
+	 *
+	 * @param      response  The response
+	 *
+	 * @return     The serial number
+	 */
 	uint8_t getSerialNumber(uint8_t *response);
+
+	/**
+	 * @brief      Calculates and update crc.
+	 *
+	 * @param[in]  length       The length
+	 * @param      data         The data
+	 * @param[in]  current_crc  The current crc
+	 *
+	 * @return     The updated crc
+	 */
 	uint16_t calculateAndUpdateCrc(uint8_t length, uint8_t *data, uint16_t current_crc);
-	
+
 };
 
 #endif
