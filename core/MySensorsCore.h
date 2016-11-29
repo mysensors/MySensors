@@ -335,7 +335,6 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false, const ui
 
 /**
  * @ingroup MyLockgrp
- * @ingroup internals
  * @brief Lock a node and transmit provided message with 30m intervals
  *
  * This function is called if suspicious activity has exceeded the threshold (see
