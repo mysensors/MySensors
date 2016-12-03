@@ -141,7 +141,9 @@ uint8_t transportReceive(void* data)
     // has to be adjusted, WIP!
     _aes.set_IV(0);
     // decrypt data
-    _aes.cbc_decrypt((byte*)(data), (byte*)(data), len>16?2:1);
+	if (_aes.cbc_decrypt((uint8_t*)(data), (uint8_t*)(data), len > 16 ? 2 : 1) != AES_SUCCESS) {
+		len = 0;
+	}
 #endif
     return len;
 }

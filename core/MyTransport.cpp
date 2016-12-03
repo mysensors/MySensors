@@ -554,11 +554,16 @@ void transportProcessMessage(void) {
 	(void)signerCheckTimer();
 	// receive message
 	setIndication(INDICATION_RX);
-	const uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
+	uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
 	// get message length and limit size
+
 	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
 	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
+#if defined(MY_RF24_ENABLE_ENCRYPTION)	
+	// payload length = a multiple of blocksize length for decrypted messages, i.e. cannot be used for payload length check
+	payloadLength = expectedMessageLength;
+#endif
 	const uint8_t command = mGetCommand(_msg);
 	const uint8_t type = _msg.type;
 	const uint8_t sender = _msg.sender;
