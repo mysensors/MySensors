@@ -4,13 +4,15 @@
 PinIO readPin(12);
 PinIO writePin(13);
 
-void setup() {
-  // Set input mode and disable pull-up.
-  readPin.config(INPUT, LOW);
+void setup()
+{
+	// Set input mode and disable pull-up.
+	readPin.config(INPUT, LOW);
 
-  // set output mode
-  writePin.mode(OUTPUT);
+	// set output mode
+	writePin.mode(OUTPUT);
 }
-void loop() {
-  writePin.write(readPin.read());
+void loop()
+{
+	writePin.write(readPin.read());
 }

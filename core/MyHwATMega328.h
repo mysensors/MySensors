@@ -63,9 +63,9 @@ do { 																\
 
 
 #if defined(MY_DISABLED_SERIAL)
-	#define hwInit()
+#define hwInit()
 #else
-	#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE)
+#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE)
 #endif
 
 #define hwWatchdogReset() wdt_reset()
@@ -96,7 +96,7 @@ enum period_t {
 void hwInternalSleep(unsigned long ms);
 
 #ifndef DOXYGEN
-  #define MY_CRITICAL_SECTION     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#define MY_CRITICAL_SECTION     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 #endif  /* DOXYGEN */
 
 #endif

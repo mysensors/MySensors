@@ -32,7 +32,8 @@
 #include "EthernetClient.h"
 #include "EthernetServer.h"
 
-EthernetServer::EthernetServer(uint16_t port, uint16_t max_clients) : port(port), max_clients(max_clients)
+EthernetServer::EthernetServer(uint16_t port, uint16_t max_clients) : port(port),
+	max_clients(max_clients)
 {
 	clients.reserve(max_clients);
 }

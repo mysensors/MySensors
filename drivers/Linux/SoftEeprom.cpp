@@ -52,7 +52,8 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 		myFile.write((const char*)_values, _length);
 		myFile.close();
 	} else if (fileInfo.st_size < 0 || (size_t)fileInfo.st_size != _length) {
-		logError("Config file %s is not the correct size of %zu.  Please remove the file and a new one will be created.\n", _fileName, _length);
+		logError("Config file %s is not the correct size of %zu.  Please remove the file and a new one will be created.\n",
+		         _fileName, _length);
 		exit(1);
 	} else {
 		//Read config into local memory.
@@ -98,10 +99,10 @@ void SoftEeprom::readBlock(void* buf, void* addr, size_t length)
 void SoftEeprom::writeBlock(void* buf, void* addr, size_t length)
 {
 	unsigned long int offs = reinterpret_cast<unsigned long int>(addr);
-	
+
 	if (length && offs + length <= _length) {
 		memcpy(_values+offs, buf, length);
-		
+
 		std::ofstream myFile(_fileName, std::ios::out | std::ios::in | std::ios::binary);
 		if (!myFile) {
 			logError("Unable to write config to file %s.\n", _fileName);

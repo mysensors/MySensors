@@ -7,34 +7,34 @@
 
 #if  (defined(__linux) || defined(linux)) && !defined(__ARDUINO_X86__)
 
-  #define AES_LINUX
+#define AES_LINUX
 
-  #include <stdint.h>
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <string.h>
-  #include <sys/time.h>
-  #include <unistd.h> 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include <unistd.h>
 #else
-  #include <Arduino.h>
+#include <Arduino.h>
 #endif
 
 #include <stdint.h>
 #include <string.h>
 
 #if defined(__ARDUINO_X86__) || (defined (__linux) || defined (linux))
-	#undef PROGMEM
-	#define PROGMEM __attribute__(( section(".progmem.data") ))
-	#define pgm_read_byte(p) (*(p))
-	typedef unsigned char byte;
-	#define printf_P printf
-	#define PSTR(x) (x)
+#undef PROGMEM
+#define PROGMEM __attribute__(( section(".progmem.data") ))
+#define pgm_read_byte(p) (*(p))
+typedef unsigned char byte;
+#define printf_P printf
+#define PSTR(x) (x)
 #elif defined(ARDUINO_ARCH_ESP8266)
-	#include <pgmspace.h>
+#include <pgmspace.h>
 #elif defined(ARDUINO_ARCH_SAMD)
-	#define printf_P printf
+#define printf_P printf
 #else
-	#include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 #endif
 
 #define N_ROW                   4

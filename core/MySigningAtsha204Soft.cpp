@@ -47,49 +47,47 @@ extern uint8_t _doWhitelist[32];
 
 static uint8_t _signing_node_serial_info[9];
 #ifdef MY_SIGNING_NODE_WHITELISTING
-	const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
+const whitelist_entry_t _signing_whitelist[] = MY_SIGNING_NODE_WHITELISTING;
 #endif
 
 static void signerCalculateSignature(MyMessage &msg, bool signing);
 
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 static char i2h(uint8_t i)
- {
+{
 	uint8_t k = i & 0x0F;
 	if (k <= 9) {
 		return '0' + k;
-	}
-	else {
+	} else {
 		return 'A' + k - 10;
 	}
 }
 
 #ifdef __linux__
-static void DEBUG_SIGNING_PRINTBUF(const char *str, uint8_t* buf, uint8_t sz) {
+static void DEBUG_SIGNING_PRINTBUF(const char *str, uint8_t* buf, uint8_t sz)
+{
 	static char printBuffer[300];
 
-	for (int i=0; i<sz; i++)
-	{
+	for (int i=0; i<sz; i++) {
 		printBuffer[i * 2] = i2h(buf[i] >> 4);
 		printBuffer[(i * 2) + 1] = i2h(buf[i]);
 	}
 	printBuffer[sz * 2] = '\0';
 	debug(str);
-	if (sz > 0)
-	{
+	if (sz > 0) {
 		debug(printBuffer);
 	}
 }
 #else
-static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz) {
+static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
+{
 	static char printBuffer[300];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(printBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 	MY_SERIALDEVICE.print(printBuffer);
 #endif
-	for (int i=0; i<sz; i++)
-	{
+	for (int i=0; i<sz; i++) {
 		printBuffer[i * 2] = i2h(buf[i] >> 4);
 		printBuffer[(i * 2) + 1] = i2h(buf[i]);
 	}
@@ -99,8 +97,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 	printBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1-strlen_P((const char*)str)] = '\0';
 #endif
 	MY_SERIALDEVICE.print(str);
-	if (sz > 0)
-	{
+	if (sz > 0) {
 		MY_SERIALDEVICE.print(printBuffer);
 	}
 	MY_SERIALDEVICE.println("");
@@ -110,7 +107,8 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif
 
-void signerAtsha204SoftInit(void) {
+void signerAtsha204SoftInit(void)
+{
 	// initialize pseudo-RNG
 	hwRandomNumberInit();
 	// Set secrets
@@ -118,9 +116,11 @@ void signerAtsha204SoftInit(void) {
 	hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
 }
 
-bool signerAtsha204SoftCheckTimer(void) {
+bool signerAtsha204SoftCheckTimer(void)
+{
 	if (_signing_verification_ongoing) {
-		if (hwMillis() < _signing_timestamp || hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+		if (hwMillis() < _signing_timestamp ||
+		        hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			DEBUG_SIGNING_PRINTBUF(F("Verification timeout"), NULL, 0);
 			// Purge nonce
 			memset(_signing_signing_nonce, 0xAA, 32);
@@ -132,7 +132,8 @@ bool signerAtsha204SoftCheckTimer(void) {
 	return true;
 }
 
-bool signerAtsha204SoftGetNonce(MyMessage &msg) {
+bool signerAtsha204SoftGetNonce(MyMessage &msg)
+{
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 
 	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter and then the byte is
@@ -160,7 +161,8 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg) {
 	return true;
 }
 
-void signerAtsha204SoftPutNonce(MyMessage &msg) {
+void signerAtsha204SoftPutNonce(MyMessage &msg)
+{
 	DEBUG_SIGNING_PRINTBUF(F("Signing backend: ATSHA204Soft"), NULL, 0);
 
 	memcpy(_signing_signing_nonce, (uint8_t*)msg.getCustom(), MAX_PAYLOAD);
@@ -168,7 +170,8 @@ void signerAtsha204SoftPutNonce(MyMessage &msg) {
 	memset(&_signing_signing_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_signing_nonce)-MAX_PAYLOAD);
 }
 
-bool signerAtsha204SoftSignMsg(MyMessage &msg) {
+bool signerAtsha204SoftSignMsg(MyMessage &msg)
+{
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
 		DEBUG_SIGNING_PRINTBUF(F("Message too large"), NULL, 0);
@@ -199,12 +202,14 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg) {
 
 	// Transfer as much signature data as the remaining space in the message permits
 	memcpy(&msg.data[mGetLength(msg)], _signing_hmac, MAX_PAYLOAD-mGetLength(msg));
-	DEBUG_SIGNING_PRINTBUF(F("Signature in message: "), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg));
+	DEBUG_SIGNING_PRINTBUF(F("Signature in message: "), (uint8_t*)&msg.data[mGetLength(msg)],
+	                       MAX_PAYLOAD-mGetLength(msg));
 
 	return true;
 }
 
-bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
+bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
+{
 	if (!_signing_verification_ongoing) {
 		DEBUG_SIGNING_PRINTBUF(F("No active verification session"), NULL, 0);
 		return false;
@@ -222,7 +227,8 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 		}
 
 		// Get signature of message
-		DEBUG_SIGNING_PRINTBUF(F("Signature in message: "), (uint8_t*)&msg.data[mGetLength(msg)], MAX_PAYLOAD-mGetLength(msg));
+		DEBUG_SIGNING_PRINTBUF(F("Signature in message: "), (uint8_t*)&msg.data[mGetLength(msg)],
+		                       MAX_PAYLOAD-mGetLength(msg));
 		signerCalculateSignature(msg, false);
 
 #ifdef MY_SIGNING_NODE_WHITELISTING
@@ -268,11 +274,15 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg) {
 }
 
 // Helper to calculate signature of msg (returned in hmac)
-static void signerCalculateSignature(MyMessage &msg, bool signing) {
+static void signerCalculateSignature(MyMessage &msg, bool signing)
+{
 	memset(_signing_temp_message, 0, 32);
-	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
-	DEBUG_SIGNING_PRINTBUF(F("Message to process: "), (uint8_t*)&msg.data[1-HEADER_SIZE], MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
-	DEBUG_SIGNING_PRINTBUF(F("Current nonce: "), signing ? _signing_signing_nonce : _signing_verifying_nonce, 32);
+	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE],
+	       MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
+	DEBUG_SIGNING_PRINTBUF(F("Message to process: "), (uint8_t*)&msg.data[1-HEADER_SIZE],
+	                       MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)));
+	DEBUG_SIGNING_PRINTBUF(F("Current nonce: "),
+	                       signing ? _signing_signing_nonce : _signing_verifying_nonce, 32);
 
 	// ATSHA204 calculates the HMAC with a PSK and a SHA256 digest of the following data:
 	// 32 bytes zeroes
