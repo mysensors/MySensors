@@ -29,127 +29,137 @@
 /**
  * @brief A class to make it easier to handle and pass around IP addresses
  */
-class IPAddress {
-	private:
-		union {
-			uint8_t bytes[4]; //!< IPv4 address as an array
-			uint32_t dword; //!< IPv4 address in 32 bits format
-		} _address;
+class IPAddress
+{
+private:
+	union {
+		uint8_t bytes[4]; //!< IPv4 address as an array
+		uint32_t dword; //!< IPv4 address in 32 bits format
+	} _address;
 
-		/**
-		* @brief Access the raw byte array containing the address.
-		*
-		* Because this returns a pointer to the internal structure rather than a copy of the address
-		* this function should only be used when you know that the usage of the returned uint8_t* will
-		* be transient and not stored.
-		*
-		* @return pointer to the internal structure.
-		*/
-		uint8_t* raw_address() {
-			return _address.bytes;
-		}
+	/**
+	* @brief Access the raw byte array containing the address.
+	*
+	* Because this returns a pointer to the internal structure rather than a copy of the address
+	* this function should only be used when you know that the usage of the returned uint8_t* will
+	* be transient and not stored.
+	*
+	* @return pointer to the internal structure.
+	*/
+	uint8_t* raw_address()
+	{
+		return _address.bytes;
+	}
 
-	public:
-		/**
-		 * @brief IPAddress constructor.
-		 */
-		IPAddress();
-		/**
-		 * @brief IPAddress constructor.
-		 *
-		 * @param first_octet first octet of the IPv4 address.
-		 * @param second_octet second octet of the IPv4 address.
-		 * @param third_octet third octet of the IPv4 address.
-		 * @param fourth_octet fourth octet of the IPv4 address.
-		 */
-		IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet);
-		/**
-		 * @brief IPAddress constructor.
-		 *
-		 * @param address to be set from a 32 bits integer.
-		 */
-		IPAddress(uint32_t address);
-		/**
-		 * @brief IPAddress constructor.
-		 *
-		 * @param address to be set from a byte array.
-		 */
-		IPAddress(const uint8_t *address);
-		/**
-		 * @brief Set the IP from a array of characters.
-		 *
-		 * @param address to be set.
-		 */
-		bool fromString(const char *address);
-		/**
-		 * @brief Set the IP from a string class type.
-		 *
-		 * @param address to be set.
-		 */
-		bool fromString(const std::string &address) { return fromString(address.c_str()); }
-		/**
-		 * @brief Overloaded cast operator
-		 *
-		 * Allow IPAddress objects to be used where a pointer to a four-byte uint8_t array is expected
-		 */
-		operator uint32_t() const {
-			return _address.dword;
-		}
-		/**
-		 * @brief Overloaded cast operator
-		 *
-		 */
-		bool operator==(const IPAddress& addr) const {
-			return _address.dword == addr._address.dword;
-		}
-		/**
-		 * @brief Overloaded cast operator
-		 *
-		 */
-		bool operator==(uint32_t addr) const {
-			return _address.dword == addr;
-		}
-		/**
-		 * @brief Overloaded cast operator
-		 *
-		 */
-		bool operator==(const uint8_t* addr) const;
-		/**
-		 * @brief Overloaded index operator.
-		 *
-		 * Allow getting and setting individual octets of the address.
-		 *
-		 */
-		uint8_t operator[](int index) const {
-			return _address.bytes[index];
-		}
-		/**
-		 * @brief Overloaded index operator
-		 *
-		 */
-		uint8_t& operator[](int index) {
-			return _address.bytes[index];
-		}
-		/**
-		 * @brief Overloaded copy operators.
-		 *
-		 * Allow initialisation of IPAddress objects from byte array.
-		 */
-		IPAddress& operator=(const uint8_t *address);
-		/**
-		 * @brief Overloaded copy operator.
-		 *
-		 * Allow initialisation of IPAddress objects from a 32 bits integer.
-		 */
-		IPAddress& operator=(uint32_t address);
-		/**
-		 * @brief Convert the IP address to a string.
-		 *
-		 * @return A stringified IP address
-		 */
-		std::string toString();
+public:
+	/**
+	 * @brief IPAddress constructor.
+	 */
+	IPAddress();
+	/**
+	 * @brief IPAddress constructor.
+	 *
+	 * @param first_octet first octet of the IPv4 address.
+	 * @param second_octet second octet of the IPv4 address.
+	 * @param third_octet third octet of the IPv4 address.
+	 * @param fourth_octet fourth octet of the IPv4 address.
+	 */
+	IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet);
+	/**
+	 * @brief IPAddress constructor.
+	 *
+	 * @param address to be set from a 32 bits integer.
+	 */
+	IPAddress(uint32_t address);
+	/**
+	 * @brief IPAddress constructor.
+	 *
+	 * @param address to be set from a byte array.
+	 */
+	IPAddress(const uint8_t *address);
+	/**
+	 * @brief Set the IP from a array of characters.
+	 *
+	 * @param address to be set.
+	 */
+	bool fromString(const char *address);
+	/**
+	 * @brief Set the IP from a string class type.
+	 *
+	 * @param address to be set.
+	 */
+	bool fromString(const std::string &address)
+	{
+		return fromString(address.c_str());
+	}
+	/**
+	 * @brief Overloaded cast operator
+	 *
+	 * Allow IPAddress objects to be used where a pointer to a four-byte uint8_t array is expected
+	 */
+	operator uint32_t() const
+	{
+		return _address.dword;
+	}
+	/**
+	 * @brief Overloaded cast operator
+	 *
+	 */
+	bool operator==(const IPAddress& addr) const
+	{
+		return _address.dword == addr._address.dword;
+	}
+	/**
+	 * @brief Overloaded cast operator
+	 *
+	 */
+	bool operator==(uint32_t addr) const
+	{
+		return _address.dword == addr;
+	}
+	/**
+	 * @brief Overloaded cast operator
+	 *
+	 */
+	bool operator==(const uint8_t* addr) const;
+	/**
+	 * @brief Overloaded index operator.
+	 *
+	 * Allow getting and setting individual octets of the address.
+	 *
+	 */
+	uint8_t operator[](int index) const
+	{
+		return _address.bytes[index];
+	}
+	/**
+	 * @brief Overloaded index operator
+	 *
+	 */
+	uint8_t& operator[](int index)
+	{
+		return _address.bytes[index];
+	}
+	/**
+	 * @brief Overloaded copy operators.
+	 *
+	 * Allow initialisation of IPAddress objects from byte array.
+	 */
+	IPAddress& operator=(const uint8_t *address);
+	/**
+	 * @brief Overloaded copy operator.
+	 *
+	 * Allow initialisation of IPAddress objects from a 32 bits integer.
+	 */
+	IPAddress& operator=(uint32_t address);
+	/**
+	 * @brief Convert the IP address to a string.
+	 *
+	 * @return A stringified IP address
+	 */
+	std::string toString();
 
-		friend class Client;
+	friend class Client;
 };
 
 #endif

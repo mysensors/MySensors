@@ -81,18 +81,18 @@
 // The W5100 ethernet module seems to have a hard time co-operate with
 // radio on the same spi bus.
 #if !defined(MY_W5100_SPI_EN) && !defined(ARDUINO_ARCH_SAMD)
-  #define MY_SOFTSPI
-  #define MY_SOFT_SPI_SCK_PIN 14
-  #define MY_SOFT_SPI_MISO_PIN 16
-  #define MY_SOFT_SPI_MOSI_PIN 15
+#define MY_SOFTSPI
+#define MY_SOFT_SPI_SCK_PIN 14
+#define MY_SOFT_SPI_MISO_PIN 16
+#define MY_SOFT_SPI_MOSI_PIN 15
 #endif
 
 // When W5100 is connected we have to move CE/CSN pins for NRF radio
 #ifndef MY_RF24_CE_PIN
-  #define MY_RF24_CE_PIN 5
+#define MY_RF24_CE_PIN 5
 #endif
 #ifndef MY_RF24_CS_PIN
-  #define MY_RF24_CS_PIN 6
+#define MY_RF24_CS_PIN 6
 #endif
 
 // Enable these if your MQTT broker requires usenrame/password
@@ -113,7 +113,7 @@
 // The MQTT broker port to to open
 #define MY_PORT 1883
 
- /*
+/*
 // Enable inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
 // Enable Inclusion mode button on gateway
@@ -136,14 +136,17 @@
 #include <Ethernet.h>
 #include <MySensors.h>
 
-void setup() {
+void setup()
+{
 }
 
-void presentation() {
-  // Present locally attached sensors here
+void presentation()
+{
+	// Present locally attached sensors here
 }
 
 
-void loop() {
-  // Send locally attached sensors data here
+void loop()
+{
+	// Send locally attached sensors data here
 }

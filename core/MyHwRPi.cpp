@@ -29,12 +29,12 @@ void hwInit()
 {
 #ifdef MY_GATEWAY_SERIAL
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
-	#ifdef MY_LINUX_SERIAL_GROUPNAME
-		if (!MY_SERIALDEVICE.setGroupPerm(MY_LINUX_SERIAL_GROUPNAME)) {
-			logError("Unable to change permission for serial port device.\n");
-			exit(1);
-		}
-	#endif
+#ifdef MY_LINUX_SERIAL_GROUPNAME
+	if (!MY_SERIALDEVICE.setGroupPerm(MY_LINUX_SERIAL_GROUPNAME)) {
+		logError("Unable to change permission for serial port device.\n");
+		exit(1);
+	}
+#endif
 #endif
 }
 
@@ -87,46 +87,47 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 }
 
 // Not supported!
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms)
+int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+               unsigned long ms)
 {
 	(void)interrupt1;
 	(void)mode1;
 	(void)interrupt2;
 	(void)mode2;
 	(void)ms;
-	
+
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
-	uint16_t hwCPUVoltage()
-	{
-		// TODO: Not supported!
-		return 0;
-	}
-	 
-	uint16_t hwCPUFrequency()
-	{
-		// TODO: Not supported!
-		return 0;
-	}
-	 
-	uint16_t hwFreeMem()
-	{
-		// TODO: Not supported!
-		return 0;
-	}
+uint16_t hwCPUVoltage()
+{
+	// TODO: Not supported!
+	return 0;
+}
+
+uint16_t hwCPUFrequency()
+{
+	// TODO: Not supported!
+	return 0;
+}
+
+uint16_t hwFreeMem()
+{
+	// TODO: Not supported!
+	return 0;
+}
 #endif
 
 #ifdef MY_DEBUG
-	void hwDebugPrint(const char *fmt, ...)
-	{
-		va_list args;
+void hwDebugPrint(const char *fmt, ...)
+{
+	va_list args;
 
-		va_start(args, fmt);
-		vlogDebug(fmt, args);
-		va_end(args);
-	}
+	va_start(args, fmt);
+	vlogDebug(fmt, args);
+	va_end(args);
+}
 #endif
 
 void hwDigitalWrite(uint8_t pin, uint8_t value)

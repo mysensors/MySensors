@@ -58,18 +58,18 @@
 // The W5100 ethernet module seems to have a hard time co-operate with
 // radio on the same spi bus.
 #if !defined(MY_W5100_SPI_EN) && !defined(ARDUINO_ARCH_SAMD)
-  #define MY_SOFTSPI
-  #define MY_SOFT_SPI_SCK_PIN 14
-  #define MY_SOFT_SPI_MISO_PIN 16
-  #define MY_SOFT_SPI_MOSI_PIN 15
+#define MY_SOFTSPI
+#define MY_SOFT_SPI_SCK_PIN 14
+#define MY_SOFT_SPI_MISO_PIN 16
+#define MY_SOFT_SPI_MOSI_PIN 15
 #endif
 
 // When W5100 is connected we have to move CE/CSN pins for NRF radio
 #ifndef MY_RF24_CE_PIN
-  #define MY_RF24_CE_PIN 5
+#define MY_RF24_CE_PIN 5
 #endif
 #ifndef MY_RF24_CS_PIN
-  #define MY_RF24_CS_PIN 6
+#define MY_RF24_CS_PIN 6
 #endif
 
 // Enable to UDP
@@ -110,7 +110,7 @@
 
 
 #if defined(MY_USE_UDP)
-  #include <EthernetUdp.h>
+#include <EthernetUdp.h>
 #endif
 #include <Ethernet.h>
 #include <MySensors.h>
@@ -120,5 +120,6 @@ void setup()
 {
 }
 
-void loop() {
+void loop()
+{
 }

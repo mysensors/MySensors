@@ -23,21 +23,23 @@
 #include "MyMessage.h"
 #include "MyProtocol.h"
 
- // global variables
+// global variables
 extern MyMessage _msgTmp;
 
 char _serialInputString[MY_GATEWAY_MAX_RECEIVE_LENGTH];    // A buffer for incoming commands from serial interface
 uint8_t _serialInputPos;
 MyMessage _serialMsg;
 
-bool gatewayTransportSend(MyMessage &message) {
-    setIndication(INDICATION_GW_TX);
+bool gatewayTransportSend(MyMessage &message)
+{
+	setIndication(INDICATION_GW_TX);
 	MY_SERIALDEVICE.print(protocolFormat(message));
 	// Serial print is always successful
 	return true;
 }
 
-bool gatewayTransportInit() {
+bool gatewayTransportInit()
+{
 	gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
 	// Send presentation of locally attached sensors (and node if applicable)
 	presentNode();
@@ -45,7 +47,8 @@ bool gatewayTransportInit() {
 	return true;
 }
 
-bool gatewayTransportAvailable() {
+bool gatewayTransportAvailable()
+{
 	while (MY_SERIALDEVICE.available()) {
 		// get the new byte:
 		char inChar = (char) MY_SERIALDEVICE.read();
@@ -55,11 +58,10 @@ bool gatewayTransportAvailable() {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
 				bool ok = protocolParse(_serialMsg, _serialInputString);
-                if (ok)
-                {
-                    setIndication(INDICATION_GW_RX);
-                }
-                _serialInputPos = 0;
+				if (ok) {
+					setIndication(INDICATION_GW_RX);
+				}
+				_serialInputPos = 0;
 				return ok;
 			} else {
 				// add it to the inputString:
@@ -74,7 +76,8 @@ bool gatewayTransportAvailable() {
 	return false;
 }
 
-MyMessage & gatewayTransportReceive() {
+MyMessage & gatewayTransportReceive()
+{
 	// Return the last parsed message
 	return _serialMsg;
 }

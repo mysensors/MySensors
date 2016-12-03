@@ -30,7 +30,8 @@
 /**
  * SoftEeprom class
  */
-class SoftEeprom {
+class SoftEeprom
+{
 
 private:
 	size_t _length; //!< @brief Eeprom max size.

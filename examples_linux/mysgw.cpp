@@ -16,7 +16,7 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
- 
+
 #include <iostream>
 #include <cstdio>
 #include <unistd.h>
@@ -78,14 +78,17 @@
 
 #undef ARDUINO
 
-void setup() {
+void setup()
+{
 	// Setup locally attached sensors
 }
 
-void presentation() {
-	// Present locally attached sensors here    
+void presentation()
+{
+	// Present locally attached sensors here
 }
 
-void loop() {
+void loop()
+{
 	// Send locally attached sensors data here
 }
