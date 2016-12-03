@@ -99,7 +99,7 @@
  * scramble into “garbage” when transmitted over the air and then reassembled by a receiving node before being fed in “the clear” up the stack
  * at the receiving end.
  *
- * There are methods and possibilities to provide encryption also in software, but if this is done, it is my recommendation that this is done 
+ * There are methods and possibilities to provide encryption also in software, but if this is done, it is my recommendation that this is done
  * after integrity- and authentication information has been provided to the message (if this is desired). Integrity and authentication is of
  * course not mandatory and some might be happy with only having encryption to cover their need for security. I, however, have only focused on
  * <i>integrity</i> and <i>authenticity</i> while at the same time keeping the current message routing mechanisms intact and therefore leave
@@ -313,7 +313,7 @@
  * The whitelist is stored on the node that require signatures. When a received message is verified, the serial of the sender is looked up in a
  * list stored on the receiving node, and the corresponding serial stored in the list for that sender is then included in the signature verification
  * process. The list is stored as the value of the flag that enables whitelisting, @ref MY_SIGNING_NODE_WHITELISTING.<br>
- * 
+ *
  * Whitelisting is achieved by 'salting' the signature with some node-unique information known to the receiver. In the case of ATSHA204A this is the
  * unique serial number programmed into the circuit. This unique number is never transmitted over the air in clear text, so Eve will not be able to
  * figure out a "trusted" serial by snooping on the traffic.<br>
@@ -523,7 +523,7 @@ void signerInit(void);
  * @param destination Node ID of the destination.
  */
 void signerPresentation(MyMessage &msg, uint8_t destination);
- 
+
 /**
  * @brief Manages internal signing message handshaking.
  *
@@ -574,7 +574,7 @@ bool signerPutNonce(MyMessage &msg);
  * deinitializations and enter a power saving state within this call.
  * \n@b Usage: This function is typically called as action when receiving a @ref I_NONCE_RESPONSE
  * message and after @ref signerPutNonce() has successfully been executed.
- * 
+ *
  * @param msg The message to sign.
  * @returns @c true if successful, else @c false.
 */

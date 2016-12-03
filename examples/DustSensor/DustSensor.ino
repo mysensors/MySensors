@@ -21,21 +21,21 @@
  * REVISION HISTORY
  * Version 1.0 - epierre
  * Converted to 1.4 by Henrik Ekblad
- * 
+ *
  * DESCRIPTION
  * Arduino Dust Sensort
  *
  * connect the sensor as follows :
- * 
+ *
  *   VCC       >>> 5V
  *   A         >>> A0
  *   GND       >>> GND
  *
- * Based on: http://www.dfrobot.com/wiki/index.php/Sharp_GP2Y1010AU 
+ * Based on: http://www.dfrobot.com/wiki/index.php/Sharp_GP2Y1010AU
  * Authors: Cyrille Médard de Chardon (serialC), Christophe Trefois (Trefex)
- * 
+ *
  * http://www.mysensors.org/build/dust
- * 
+ *
  */
 
 // Enable debug prints
@@ -45,7 +45,7 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#include <MySensors.h>  
+#include <MySensors.h>
 
 #define CHILD_ID_DUST 0
 #define DUST_SENSOR_ANALOG_PIN 1
@@ -64,38 +64,40 @@ float dustDensity = 0;
 
 MyMessage dustMsg(CHILD_ID_DUST, V_LEVEL);
 
-void presentation() {
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Dust Sensor", "1.1");
+void presentation()
+{
+	// Send the sketch version information to the gateway and Controller
+	sendSketchInfo("Dust Sensor", "1.1");
 
-  // Register all sensors to gateway (they will be created as child devices)
-  present(CHILD_ID_DUST, S_DUST);  
+	// Register all sensors to gateway (they will be created as child devices)
+	present(CHILD_ID_DUST, S_DUST);
 }
 
-void loop() {    
-  uint16_t voMeasured = analogRead(DUST_SENSOR_ANALOG_PIN);// Get DUST value
+void loop()
+{
+	uint16_t voMeasured = analogRead(DUST_SENSOR_ANALOG_PIN);// Get DUST value
 
-  // 0 - 5V mapped to 0 - 1023 integer values
-  // recover voltage
-  calcVoltage = voMeasured * (5.0 / 1024.0);
+	// 0 - 5V mapped to 0 - 1023 integer values
+	// recover voltage
+	calcVoltage = voMeasured * (5.0 / 1024.0);
 
-  // linear eqaution taken from http://www.howmuchsnow.com/arduino/airquality/
-  // Chris Nafis (c) 2012
-  dustDensity = (0.17 * calcVoltage - 0.1)*1000;
- 
-  Serial.print("Raw Signal Value (0-1023): ");
-  Serial.print(voMeasured);
-  
-  Serial.print(" - Voltage: ");
-  Serial.print(calcVoltage);
-  
-  Serial.print(" - Dust Density: ");
-  Serial.println(dustDensity); // unit: ug/m3
- 
-  if (ceil(dustDensity) != lastDUST) {
-      send(dustMsg.set((int16_t)ceil(dustDensity)));
-      lastDUST = ceil(dustDensity);
-  }
- 
-  sleep(SLEEP_TIME);
+	// linear eqaution taken from http://www.howmuchsnow.com/arduino/airquality/
+	// Chris Nafis (c) 2012
+	dustDensity = (0.17 * calcVoltage - 0.1)*1000;
+
+	Serial.print("Raw Signal Value (0-1023): ");
+	Serial.print(voMeasured);
+
+	Serial.print(" - Voltage: ");
+	Serial.print(calcVoltage);
+
+	Serial.print(" - Dust Density: ");
+	Serial.println(dustDensity); // unit: ug/m3
+
+	if (ceil(dustDensity) != lastDUST) {
+		send(dustMsg.set((int16_t)ceil(dustDensity)));
+		lastDUST = ceil(dustDensity);
+	}
+
+	sleep(SLEEP_TIME);
 }

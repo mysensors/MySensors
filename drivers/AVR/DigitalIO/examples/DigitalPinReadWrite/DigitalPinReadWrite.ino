@@ -6,6 +6,7 @@ DigitalPin<13> pin13(OUTPUT);
 
 void setup() {}
 
-void loop() {
-  pin13 = pin12;
+void loop()
+{
+	pin13 = pin12;
 }

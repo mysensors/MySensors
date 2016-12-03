@@ -69,7 +69,8 @@ bool SerialPort::open(int bauds)
 		/* create a symlink with predictable name to the PTY device */
 		unlink(serialPort.c_str());	// remove the symlink if it already exists
 		if (symlink(ptsname(sd), serialPort.c_str()) != 0) {
-			logError("Couldn't create a symlink '%s' to PTY! (%d) %s\n", serialPort.c_str(), errno, strerror(errno));
+			logError("Couldn't create a symlink '%s' to PTY! (%d) %s\n", serialPort.c_str(), errno,
+			         strerror(errno));
 			return false;
 		}
 	} else {
@@ -83,23 +84,57 @@ bool SerialPort::open(int bauds)
 	}
 
 	switch (bauds) {
-		case     50:	speed =     B50 ; break ;
-		case     75:	speed =     B75 ; break ;
-		case    110:	speed =    B110 ; break ;
-		case    134:	speed =    B134 ; break ;
-		case    150:	speed =    B150 ; break ;
-		case    200:	speed =    B200 ; break ;
-		case    300:	speed =    B300 ; break ;
-		case    600:	speed =    B600 ; break ;
-		case   1200:	speed =   B1200 ; break ;
-		case   1800:	speed =   B1800 ; break ;
-		case   2400:	speed =   B2400 ; break ;
-		case   9600:	speed =   B9600 ; break ;
-		case  19200:	speed =  B19200 ; break ;
-		case  38400:	speed =  B38400 ; break ;
-		case  57600:	speed =  B57600 ; break ;
-		case 115200:	speed = B115200 ; break ;
-		default:		speed = B115200 ; break ;
+	case     50:
+		speed =     B50 ;
+		break ;
+	case     75:
+		speed =     B75 ;
+		break ;
+	case    110:
+		speed =    B110 ;
+		break ;
+	case    134:
+		speed =    B134 ;
+		break ;
+	case    150:
+		speed =    B150 ;
+		break ;
+	case    200:
+		speed =    B200 ;
+		break ;
+	case    300:
+		speed =    B300 ;
+		break ;
+	case    600:
+		speed =    B600 ;
+		break ;
+	case   1200:
+		speed =   B1200 ;
+		break ;
+	case   1800:
+		speed =   B1800 ;
+		break ;
+	case   2400:
+		speed =   B2400 ;
+		break ;
+	case   9600:
+		speed =   B9600 ;
+		break ;
+	case  19200:
+		speed =  B19200 ;
+		break ;
+	case  38400:
+		speed =  B38400 ;
+		break ;
+	case  57600:
+		speed =  B57600 ;
+		break ;
+	case 115200:
+		speed = B115200 ;
+		break ;
+	default:
+		speed = B115200 ;
+		break ;
 	}
 
 	// Get the current options of the port

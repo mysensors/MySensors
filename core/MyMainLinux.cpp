@@ -16,7 +16,7 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
- // Initialize library and handle sketch functions like we want to
+// Initialize library and handle sketch functions like we want to
 
 #include <stdio.h>
 #include <csignal>
@@ -40,13 +40,13 @@ void handle_sigint(int sig)
 		return;
 	}
 
-	#ifdef MY_RF24_IRQ_PIN
-		detachInterrupt(MY_RF24_IRQ_PIN);
-	#endif
+#ifdef MY_RF24_IRQ_PIN
+	detachInterrupt(MY_RF24_IRQ_PIN);
+#endif
 
-	#if defined(MY_GATEWAY_SERIAL)
-		MY_SERIALDEVICE.end();
-	#endif
+#if defined(MY_GATEWAY_SERIAL)
+	MY_SERIALDEVICE.end();
+#endif
 
 	closelog();
 
@@ -103,19 +103,19 @@ static int daemonize(void)
 void print_usage()
 {
 	printf("Usage: mysgw [options]\n\n" \
-			 "Options:\n" \
-			 "  -h, --help                 Display a short summary of all program options.\n" \
-			 "  -d, --debug                Enable debug.\n" \
-			 "  -b, --background           Run as a background process.\n"
-			 "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n"
-			 "  --gen-soft-serial-key      Generate and print a soft serial key.\n"
-			 "  --gen-aes-key              Generate and print an aes encryption key.\n"
-			 "  --print-soft-hmac-key      Print the soft hmac key from the config file.\n"
-			 "  --print-soft-serial-key    Print the soft serial key from the config file.\n"
-			 "  --print-aes-key            Print the aes encryption key from the config file.\n"
-			 "  --set-soft-hmac-key        Write a soft hmac key to the config file.\n"
-			 "  --set-soft-serial-key      Write a soft serial key to the config file.\n"
-			 "  --set-aes-key              Write an aes encryption key to the config file.\n");
+	       "Options:\n" \
+	       "  -h, --help                 Display a short summary of all program options.\n" \
+	       "  -d, --debug                Enable debug.\n" \
+	       "  -b, --background           Run as a background process.\n"
+	       "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n"
+	       "  --gen-soft-serial-key      Generate and print a soft serial key.\n"
+	       "  --gen-aes-key              Generate and print an aes encryption key.\n"
+	       "  --print-soft-hmac-key      Print the soft hmac key from the config file.\n"
+	       "  --print-soft-serial-key    Print the soft serial key from the config file.\n"
+	       "  --print-aes-key            Print the aes encryption key from the config file.\n"
+	       "  --set-soft-hmac-key        Write a soft hmac key to the config file.\n"
+	       "  --set-soft-serial-key      Write a soft serial key to the config file.\n"
+	       "  --set-aes-key              Write an aes encryption key to the config file.\n");
 }
 
 void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
@@ -137,7 +137,9 @@ void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
 	printf("#define MY_SOFT_HMAC_KEY ");
 	for (int i=0; i<32; i++) {
 		printf("%#02X", key_ptr[i]);
-		if (i < 31) printf(",");
+		if (i < 31) {
+			printf(",");
+		}
 	}
 	printf("\n\n");
 }
@@ -155,7 +157,7 @@ void generate_soft_sign_hmac_key()
 	print_soft_sign_hmac_key(key);
 
 	printf("To use this key, run mysgw with:\n"
-			" --set-soft-hmac-key=");
+	       " --set-soft-hmac-key=");
 	for (int i = 0; i < 32; i++) {
 		printf("%02X", key[i]);
 	}
@@ -172,12 +174,13 @@ void set_soft_sign_hmac_key(char *key_str)
 	} else {
 		for (int i = 0; i < 64; ++i) {
 			char c = key_str[i];
-			if (c <= '9')
+			if (c <= '9') {
 				n = c - '0';
-			else if (c >= 'a')
+			} else if (c >= 'a') {
 				n = c - 'a' + 10;
-			else
+			} else {
 				n = c - 'A' + 10;
+			}
 
 			if ((i & 0x1) == 0) {
 				key[i/2] = n * 16;
@@ -209,7 +212,9 @@ void print_soft_sign_serial_key(uint8_t *key_ptr = NULL)
 	printf("#define MY_SOFT_SERIAL ");
 	for (int i=0; i<9; i++) {
 		printf("%#02X", key_ptr[i]);
-		if (i < 8) printf(",");
+		if (i < 8) {
+			printf(",");
+		}
 	}
 	printf("\n\n");
 }
@@ -227,7 +232,7 @@ void generate_soft_sign_serial_key()
 	print_soft_sign_serial_key(key);
 
 	printf("To use this key, run mysgw with:\n"
-			" --set-soft-serial-key=");
+	       " --set-soft-serial-key=");
 	for (int i = 0; i < 9; i++) {
 		printf("%02X", key[i]);
 	}
@@ -244,12 +249,13 @@ void set_soft_sign_serial_key(char *key_str)
 	} else {
 		for (int i = 0; i < 18; ++i) {
 			char c = key_str[i];
-			if (c <= '9')
+			if (c <= '9') {
 				n = c - '0';
-			else if (c >= 'a')
+			} else if (c >= 'a') {
 				n = c - 'a' + 10;
-			else
+			} else {
 				n = c - 'A' + 10;
+			}
 
 			if ((i & 0x1) == 0) {
 				key[i/2] = n * 16;
@@ -281,7 +287,9 @@ void print_aes_key(uint8_t *key_ptr = NULL)
 	printf("#define MY_AES_KEY ");
 	for (int i=0; i<16; i++) {
 		printf("%#02X", key_ptr[i]);
-		if (i < 15) printf(",");
+		if (i < 15) {
+			printf(",");
+		}
 	}
 	printf("\n\n");
 }
@@ -299,7 +307,7 @@ void generate_aes_key()
 	print_aes_key(key);
 
 	printf("To use this key, run mysgw with:\n"
-			" --set-aes-key=");
+	       " --set-aes-key=");
 	for (int i = 0; i < 16; i++) {
 		printf("%02X", key[i]);
 	}
@@ -316,12 +324,13 @@ void set_aes_key(char *key_str)
 	} else {
 		for (int i = 0; i < 32; ++i) {
 			char c = key_str[i];
-			if (c <= '9')
+			if (c <= '9') {
 				n = c - '0';
-			else if (c >= 'a')
+			} else if (c >= 'a') {
 				n = c - 'a' + 10;
-			else
+			} else {
 				n = c - 'A' + 10;
+			}
 
 			if ((i & 0x1) == 0) {
 				key[i/2] = n * 16;
@@ -364,48 +373,48 @@ int main(int argc, char *argv[])
 	int long_index = 0;
 	while ((opt = getopt_long(argc, argv,"hdbABCDEFGHI", long_options, &long_index )) != -1) {
 		switch (opt) {
-			case 'h':
-				print_usage();
-				exit(0);
-			case 'd':
-				debug = 1;
-				break;
-			case 'b':
-				foreground = 0;
-				break;
-			case 'A':
-				generate_soft_sign_hmac_key();
-				exit(0);
-			case 'B':
-				generate_soft_sign_serial_key();
-				exit(0);
-			case 'C':
-				generate_aes_key();
-				exit(0);
-			case 'D':
-				print_soft_sign_hmac_key();
-				exit(0);
-			case 'E':
-				print_soft_sign_serial_key();
-				exit(0);
-			case 'F':
-				print_aes_key();
-				exit(0);
-			case 'G':
-				key = strdup(optarg);
-				set_soft_sign_hmac_key(key);
-				exit(0);
-			case 'H':
-				key = strdup(optarg);
-				set_soft_sign_serial_key(key);
-				exit(0);
-			case 'I':
-				key = strdup(optarg);
-				set_aes_key(key);
-				exit(0);
-			default:
-				print_usage();
-				exit(0);
+		case 'h':
+			print_usage();
+			exit(0);
+		case 'd':
+			debug = 1;
+			break;
+		case 'b':
+			foreground = 0;
+			break;
+		case 'A':
+			generate_soft_sign_hmac_key();
+			exit(0);
+		case 'B':
+			generate_soft_sign_serial_key();
+			exit(0);
+		case 'C':
+			generate_aes_key();
+			exit(0);
+		case 'D':
+			print_soft_sign_hmac_key();
+			exit(0);
+		case 'E':
+			print_soft_sign_serial_key();
+			exit(0);
+		case 'F':
+			print_aes_key();
+			exit(0);
+		case 'G':
+			key = strdup(optarg);
+			set_soft_sign_hmac_key(key);
+			exit(0);
+		case 'H':
+			key = strdup(optarg);
+			set_soft_sign_serial_key(key);
+			exit(0);
+		case 'I':
+			key = strdup(optarg);
+			set_aes_key(key);
+			exit(0);
+		default:
+			print_usage();
+			exit(0);
 		}
 	}
 

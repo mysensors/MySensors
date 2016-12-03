@@ -22,7 +22,7 @@
 #include "MyHw.h"
 
 #ifdef __cplusplus
-#include <Arduino.h>
+	#include <Arduino.h>
 #endif
 
 #define MY_SERIALDEVICE Serial
@@ -54,9 +54,9 @@ uint8_t hwReadConfig(const int addr);
  */
 static __inline__ void __psRestore(const uint32_t *__s)
 {
-    xt_wsr_ps( *__s );
+	xt_wsr_ps( *__s );
 }
-   
+
 #ifndef DOXYGEN
 	#define MY_CRITICAL_SECTION    for ( uint32_t __psSaved __attribute__((__cleanup__(__psRestore))) = xt_rsil(15), __ToDo = 1; __ToDo ; __ToDo = 0 )
 #endif  /* DOXYGEN */

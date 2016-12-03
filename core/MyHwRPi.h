@@ -16,7 +16,7 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
- 
+
 #ifndef MyHwRPi_h
 #define MyHwRPi_h
 
@@ -25,15 +25,18 @@
 #include "log.h"
 #include "bcm2835.h"
 
-class Bcm2835Init {
+class Bcm2835Init
+{
 public:
-	Bcm2835Init() {
+	Bcm2835Init()
+	{
 		if (!bcm2835_init()) {
 			logError("Failed to initialized bcm2835.\n");
 			exit(1);
 		}
 	}
-	~Bcm2835Init() {
+	~Bcm2835Init()
+	{
 		bcm2835_close();
 	}
 };

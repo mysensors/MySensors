@@ -39,7 +39,8 @@ class EthernetClient;
 /**
  * @brief EthernetServer class
  */
-class EthernetServer : public Server {
+class EthernetServer : public Server
+{
 
 private:
 	uint16_t port; //!< @brief Port number for the network socket.

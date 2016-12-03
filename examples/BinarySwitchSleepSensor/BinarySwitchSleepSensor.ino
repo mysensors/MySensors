@@ -50,16 +50,16 @@
 #define SECONDARY_BUTTON_PIN 3 // Arduino Digital I/O pin for button/reed switch
 
 #if (PRIMARY_BUTTON_PIN < 2 || PRIMARY_BUTTON_PIN > 3)
-#error PRIMARY_BUTTON_PIN must be either 2 or 3 for interrupts to work
+	#error PRIMARY_BUTTON_PIN must be either 2 or 3 for interrupts to work
 #endif
 #if (SECONDARY_BUTTON_PIN < 2 || SECONDARY_BUTTON_PIN > 3)
-#error SECONDARY_BUTTON_PIN must be either 2 or 3 for interrupts to work
+	#error SECONDARY_BUTTON_PIN must be either 2 or 3 for interrupts to work
 #endif
 #if (PRIMARY_BUTTON_PIN == SECONDARY_BUTTON_PIN)
-#error PRIMARY_BUTTON_PIN and BUTTON_PIN2 cannot be the same
+	#error PRIMARY_BUTTON_PIN and BUTTON_PIN2 cannot be the same
 #endif
 #if (PRIMARY_CHILD_ID == SECONDARY_CHILD_ID)
-#error PRIMARY_CHILD_ID and SECONDARY_CHILD_ID cannot be the same
+	#error PRIMARY_CHILD_ID and SECONDARY_CHILD_ID cannot be the same
 #endif
 
 
@@ -69,52 +69,53 @@ MyMessage msg2(SECONDARY_CHILD_ID, V_TRIPPED);
 
 void setup()
 {
-  // Setup the buttons
-  pinMode(PRIMARY_BUTTON_PIN, INPUT);
-  pinMode(SECONDARY_BUTTON_PIN, INPUT);
+	// Setup the buttons
+	pinMode(PRIMARY_BUTTON_PIN, INPUT);
+	pinMode(SECONDARY_BUTTON_PIN, INPUT);
 
-  // Activate internal pull-ups
-  digitalWrite(PRIMARY_BUTTON_PIN, HIGH);
-  digitalWrite(SECONDARY_BUTTON_PIN, HIGH);
+	// Activate internal pull-ups
+	digitalWrite(PRIMARY_BUTTON_PIN, HIGH);
+	digitalWrite(SECONDARY_BUTTON_PIN, HIGH);
 }
 
-void presentation() {
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
+void presentation()
+{
+	// Send the sketch version information to the gateway and Controller
+	sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
 
-  // Register binary input sensor to sensor_node (they will be created as child devices)
-  // You can use S_DOOR, S_MOTION or S_LIGHT here depending on your usage.
-  // If S_LIGHT is used, remember to update variable type you send in. See "msg" above.
-  present(PRIMARY_CHILD_ID, S_DOOR);
-  present(SECONDARY_CHILD_ID, S_DOOR);
+	// Register binary input sensor to sensor_node (they will be created as child devices)
+	// You can use S_DOOR, S_MOTION or S_LIGHT here depending on your usage.
+	// If S_LIGHT is used, remember to update variable type you send in. See "msg" above.
+	present(PRIMARY_CHILD_ID, S_DOOR);
+	present(SECONDARY_CHILD_ID, S_DOOR);
 }
 
 // Loop will iterate on changes on the BUTTON_PINs
 void loop()
 {
-  uint8_t value;
-  static uint8_t sentValue=2;
-  static uint8_t sentValue2=2;
+	uint8_t value;
+	static uint8_t sentValue=2;
+	static uint8_t sentValue2=2;
 
-  // Short delay to allow buttons to properly settle
-  sleep(5);
+	// Short delay to allow buttons to properly settle
+	sleep(5);
 
-  value = digitalRead(PRIMARY_BUTTON_PIN);
+	value = digitalRead(PRIMARY_BUTTON_PIN);
 
-  if (value != sentValue) {
-     // Value has changed from last transmission, send the updated value
-     send(msg.set(value==HIGH));
-     sentValue = value;
-  }
+	if (value != sentValue) {
+		// Value has changed from last transmission, send the updated value
+		send(msg.set(value==HIGH));
+		sentValue = value;
+	}
 
-  value = digitalRead(SECONDARY_BUTTON_PIN);
+	value = digitalRead(SECONDARY_BUTTON_PIN);
 
-  if (value != sentValue2) {
-     // Value has changed from last transmission, send the updated value
-     send(msg2.set(value==HIGH));
-     sentValue2 = value;
-  }
+	if (value != sentValue2) {
+		// Value has changed from last transmission, send the updated value
+		send(msg2.set(value==HIGH));
+		sentValue2 = value;
+	}
 
-  // Sleep until something happens with the sensor
-  sleep(PRIMARY_BUTTON_PIN-2, CHANGE, SECONDARY_BUTTON_PIN-2, CHANGE, 0);
+	// Sleep until something happens with the sensor
+	sleep(PRIMARY_BUTTON_PIN-2, CHANGE, SECONDARY_BUTTON_PIN-2, CHANGE, 0);
 }

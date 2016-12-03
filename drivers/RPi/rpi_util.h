@@ -25,7 +25,8 @@
 #include <stdint.h>
 #include "bcm2835.h"
 
-namespace rpi_util {
+namespace rpi_util
+{
 
 typedef enum {
 	LSBFIRST = BCM2835_SPI_BIT_ORDER_LSBFIRST,

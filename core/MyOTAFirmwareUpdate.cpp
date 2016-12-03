@@ -33,7 +33,8 @@ uint8_t _firmwareRetry;
 
 void readFirmwareSettings(void)
 {
-	hwReadConfigBlock((void*)&_nodeFirmwareConfig, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(nodeFirmwareConfig_t));
+	hwReadConfigBlock((void*)&_nodeFirmwareConfig, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS,
+	                  sizeof(nodeFirmwareConfig_t));
 }
 
 void firmwareOTAUpdateRequest(void)
@@ -41,7 +42,7 @@ void firmwareOTAUpdateRequest(void)
 	const uint32_t enterMS = hwMillis();
 	if (_firmwareUpdateOngoing && (enterMS - _firmwareLastRequest > MY_OTA_RETRY_DELAY)) {
 		if (!_firmwareRetry) {
-            setIndication(INDICATION_ERR_FW_TIMEOUT);
+			setIndication(INDICATION_ERR_FW_TIMEOUT);
 			OTA_DEBUG(PSTR("!OTA:FRQ:FW UPD FAIL\n"));	// fw update failed
 			// Give up. We have requested MY_OTA_RETRY times without any packet in return.
 			_firmwareUpdateOngoing = false;
@@ -54,8 +55,10 @@ void firmwareOTAUpdateRequest(void)
 		firmwareRequest.type = _nodeFirmwareConfig.type;
 		firmwareRequest.version = _nodeFirmwareConfig.version;
 		firmwareRequest.block = (_firmwareBlock - 1);
-		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04X,V=%04X,B=%04X\n"), _nodeFirmwareConfig.type, _nodeFirmwareConfig.version, _firmwareBlock - 1); // request FW update block
-		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST, false).set(&firmwareRequest, sizeof(requestFirmwareBlock_t)));
+		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04X,V=%04X,B=%04X\n"), _nodeFirmwareConfig.type,
+		          _nodeFirmwareConfig.version, _firmwareBlock - 1); // request FW update block
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST,
+		                       false).set(&firmwareRequest, sizeof(requestFirmwareBlock_t)));
 	}
 }
 
@@ -65,13 +68,13 @@ bool firmwareOTAUpdateProcess(void)
 		nodeFirmwareConfig_t *firmwareConfigResponse = (nodeFirmwareConfig_t *)_msg.data;
 		// compare with current node configuration, if they differ, start FW fetch process
 		if (memcmp(&_nodeFirmwareConfig, firmwareConfigResponse, sizeof(nodeFirmwareConfig_t))) {
-            setIndication(INDICATION_FW_UPDATE_START);
+			setIndication(INDICATION_FW_UPDATE_START);
 			OTA_DEBUG(PSTR("OTA:FWP:UPDATE\n"));	// FW update initiated
 			// copy new FW config
 			(void)memcpy(&_nodeFirmwareConfig, firmwareConfigResponse, sizeof(nodeFirmwareConfig_t));
 			// Init flash
 			if (!_flash.initialize()) {
-                setIndication(INDICATION_ERR_FW_FLASH_INIT);
+				setIndication(INDICATION_ERR_FW_FLASH_INIT);
 				OTA_DEBUG(PSTR("!OTA:FWP:FLASH INIT FAIL\n"));	// failed to initialise flash
 				_firmwareUpdateOngoing = false;
 			} else {
@@ -91,12 +94,13 @@ bool firmwareOTAUpdateProcess(void)
 	} else if (_msg.type == ST_FIRMWARE_RESPONSE) {
 		if (_firmwareUpdateOngoing) {
 			// Save block to flash
-            setIndication(INDICATION_FW_UPDATE_RX);
+			setIndication(INDICATION_FW_UPDATE_RX);
 			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04X\n"), _firmwareBlock);	// received FW block
 			// extract FW block
 			replyFirmwareBlock_t *firmwareResponse = (replyFirmwareBlock_t *)_msg.data;
 			// write to flash
-			_flash.writeBytes( ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET, firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
+			_flash.writeBytes( ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET,
+			                   firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 			// wait until flash written
 			while (_flash.busy()) {}
 			_firmwareBlock--;
@@ -107,7 +111,8 @@ bool firmwareOTAUpdateProcess(void)
 				if (transportIsValidFirmware()) {
 					OTA_DEBUG(PSTR("OTA:FWP:CRC OK\n"));	// FW checksum ok
 					// Write the new firmware config to eeprom
-					hwWriteConfigBlock((void*)&_nodeFirmwareConfig, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS, sizeof(nodeFirmwareConfig_t));
+					hwWriteConfigBlock((void*)&_nodeFirmwareConfig, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS,
+					                   sizeof(nodeFirmwareConfig_t));
 					// All seems ok, write size and signature to flash (DualOptiboot will pick this up and flash it)
 					const uint16_t firmwareSize = FIRMWARE_BLOCK_SIZE * _nodeFirmwareConfig.blocks;
 					const uint8_t OTAbuffer[FIRMWARE_START_OFFSET] = {'F','L','X','I','M','G',':', (uint8_t)(firmwareSize >> 8), (uint8_t)(firmwareSize & 0xff),':'};
@@ -116,7 +121,7 @@ bool firmwareOTAUpdateProcess(void)
 					while (_flash.busy()) {}
 					hwReboot();
 				} else {
-                    setIndication(INDICATION_ERR_FW_CHECKSUM);
+					setIndication(INDICATION_ERR_FW_CHECKSUM);
 					OTA_DEBUG(PSTR("!OTA:FWP:CRC FAIL\n"));
 				}
 			}
@@ -142,7 +147,8 @@ void presentBootloaderInformation(void)
 	// add bootloader information
 	requestFirmwareConfig->BLVersion = MY_OTA_BOOTLOADER_VERSION;
 	_firmwareUpdateOngoing = false;
-	(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_CONFIG_REQUEST, false));
+	(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM,
+	                       ST_FIRMWARE_CONFIG_REQUEST, false));
 }
 bool isFirmwareUpdateOngoing(void)
 {
@@ -158,8 +164,7 @@ bool transportIsValidFirmware(void)
 		for (int8_t j = 0; j < 8; ++j) {
 			if (crc & 1) {
 				crc = (crc >> 1) ^ 0xA001;
-			}
-			else {
+			} else {
 				crc = (crc >> 1);
 			}
 		}

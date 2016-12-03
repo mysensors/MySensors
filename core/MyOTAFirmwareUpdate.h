@@ -17,38 +17,38 @@
  * version 2 as published by the Free Software Foundation.
  */
 
- /**
- * @file MyOTAFirmwareUpdate.h
- *
- * @defgroup MyOTAFirmwaregrp MyOTAFirmwareUpdate
- * @ingroup internals
- * @{
- *
- * MyOTAFirmwareUpdate-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
- * - [!] Exclamation mark is prepended in case of error or warning
- * - SYSTEM:
- *  - <b>OTA</b> messages emitted by MyOTAFirmwareUpdate
- * - SUB SYSTEMS:
- *  - OTA:<b>FRQ</b>	from @ref firmwareOTAUpdateRequest()
- *  - OTA:<b>FWP</b>	from @ref firmwareOTAUpdateProcess()
- *
- * MyOTAFirmwareUpdate debug log messages:
- *
- * |E| SYS	| SUB	| Message									| Comment
- * |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
- * | | OTA  | FWP	| UPDATE									| FW update initiated
- * |!| OTA  | FWP	| FLASH INIT FAIL							| Failed to initialise flash
- * | | OTA  | FWP	| UPDATE SKIPPED							| FW update skipped, no newer version available
- * | | OTA  | FWP	| RECV B=%04X								| Received FW block (B)
- * | | OTA  | FWP	| FW END									| FW received, proceed to CRC verification
- * | | OTA  | FWP	| CRC OK									| FW CRC verification OK
- * |!| OTA  | FWP	| CRC FAIL									| FW CRC verification failed
- * | | OTA  | FRQ	| FW REQ,T=%04X,V=%04X,B=%04X				| Request FW update, FW type (T), version (V), block (B)
- * |!| OTA  | FRQ	| FW UPD FAIL								| FW update failed
- *
- *
- * @brief API declaration for MyOTAFirmwareUpdate
- */
+/**
+* @file MyOTAFirmwareUpdate.h
+*
+* @defgroup MyOTAFirmwaregrp MyOTAFirmwareUpdate
+* @ingroup internals
+* @{
+*
+* MyOTAFirmwareUpdate-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
+* - [!] Exclamation mark is prepended in case of error or warning
+* - SYSTEM:
+*  - <b>OTA</b> messages emitted by MyOTAFirmwareUpdate
+* - SUB SYSTEMS:
+*  - OTA:<b>FRQ</b>	from @ref firmwareOTAUpdateRequest()
+*  - OTA:<b>FWP</b>	from @ref firmwareOTAUpdateProcess()
+*
+* MyOTAFirmwareUpdate debug log messages:
+*
+* |E| SYS	| SUB	| Message									| Comment
+* |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
+* | | OTA  | FWP	| UPDATE									| FW update initiated
+* |!| OTA  | FWP	| FLASH INIT FAIL							| Failed to initialise flash
+* | | OTA  | FWP	| UPDATE SKIPPED							| FW update skipped, no newer version available
+* | | OTA  | FWP	| RECV B=%04X								| Received FW block (B)
+* | | OTA  | FWP	| FW END									| FW received, proceed to CRC verification
+* | | OTA  | FWP	| CRC OK									| FW CRC verification OK
+* |!| OTA  | FWP	| CRC FAIL									| FW CRC verification failed
+* | | OTA  | FRQ	| FW REQ,T=%04X,V=%04X,B=%04X				| Request FW update, FW type (T), version (V), block (B)
+* |!| OTA  | FRQ	| FW UPD FAIL								| FW update failed
+*
+*
+* @brief API declaration for MyOTAFirmwareUpdate
+*/
 
 
 #ifndef MyOTAFirmwareUpdate_h

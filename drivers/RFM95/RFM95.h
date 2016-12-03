@@ -23,54 +23,54 @@
  * Changelog:
  * - ACK with sequenceNumber
  * - ATC control
- * 
+ *
  * Definitions for HopeRF LoRa radios:
  * http://www.hoperf.com/upload/rf/RFM95_96_97_98W.pdf
  * http://www.hoperf.cn/upload/rfchip/RF96_97_98.pdf
  *
  */
 
- /**
- * @file RFM95.h
- *
- * @defgroup RFM95grp RFM95
- * @ingroup internals
- * @{
- *
- * RFM95 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
- * - [!] Exclamation mark is prepended in case of error
- *
- * This section is WIP!
- *
- * |E| SYS	 | SUB      | Message							| Comment
- * |-|-------|----------|-----------------------------------|---------------------------------------------------------------------
- * | | RFM95 | INIT     |									| Initialise RFM95 radio
- * | | RFM95 | RCV      | SEND ACK							| ACK request received, sending ACK back
- * | | RFM95 | PTC      | LEVEL=%d							| Set TX power level
- * | | RFM95 | SAC      | SEND ACK TO=%d,RSSI=%d			| Send ACK to node (TO), RSSI of received message (RSSI)
- * | | RFM95 | ATC      | ADJ TXL,cR=%d,tR=%d,TXL=%d		| Adjust TX level, current RSSI (cR), target RSSI (tR), TX level (TXL)
- * | | RFM95 | SWR      | SEND TO=%d,RETRY=%d				| Send message to (TO), NACK retry counter (RETRY)
- * | | RFM95 | SWR      | ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d	| ACK received from node (FROM), seq ID (SEQ), (RSSI), (SNR)
- * |!| RFM95 | SWR      | NACK								| No ACK received 
+/**
+* @file RFM95.h
+*
+* @defgroup RFM95grp RFM95
+* @ingroup internals
+* @{
+*
+* RFM95 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
+* - [!] Exclamation mark is prepended in case of error
+*
+* This section is WIP!
+*
+* |E| SYS	 | SUB      | Message							| Comment
+* |-|-------|----------|-----------------------------------|---------------------------------------------------------------------
+* | | RFM95 | INIT     |									| Initialise RFM95 radio
+* | | RFM95 | RCV      | SEND ACK							| ACK request received, sending ACK back
+* | | RFM95 | PTC      | LEVEL=%d							| Set TX power level
+* | | RFM95 | SAC      | SEND ACK TO=%d,RSSI=%d			| Send ACK to node (TO), RSSI of received message (RSSI)
+* | | RFM95 | ATC      | ADJ TXL,cR=%d,tR=%d,TXL=%d		| Adjust TX level, current RSSI (cR), target RSSI (tR), TX level (TXL)
+* | | RFM95 | SWR      | SEND TO=%d,RETRY=%d				| Send message to (TO), NACK retry counter (RETRY)
+* | | RFM95 | SWR      | ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d	| ACK received from node (FROM), seq ID (SEQ), (RSSI), (SNR)
+* |!| RFM95 | SWR      | NACK								| No ACK received
 
- * 
- *
- * RFM95 modem configuration
- *
- * BW = Bandwidth in kHz
- * CR = Error correction code
- * SF = Spreading factor, chips / symbol
- *
- * | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment
- * |------------------|--------|--------|--------|-------|-----|------|-----------------------------
- * | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range
- * | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range
- * | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range
- * | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range
- *
- * @brief API declaration for RFM95
- *
- */
+*
+*
+* RFM95 modem configuration
+*
+* BW = Bandwidth in kHz
+* CR = Error correction code
+* SF = Spreading factor, chips / symbol
+*
+* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment
+* |------------------|--------|--------|--------|-------|-----|------|-----------------------------
+* | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range
+* | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range
+* | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range
+* | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range
+*
+* @brief API declaration for RFM95
+*
+*/
 
 #ifndef _RFM95_h
 #define _RFM95_h
@@ -87,7 +87,7 @@
 #elif defined(__arm__)
 	#define RFM95_IRQ_PIN		(10)
 	#define RFM95_RST_PIN		(27)
-#else 
+#else
 	#define RFM95_IRQ_PIN		(2)			//!< RFM95_IRQ_PIN
 	#define RFM95_RST_PIN		(9)			//!< RFM95_IRQ_PIN
 #endif
@@ -106,23 +106,24 @@
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 	#include <SPI.h>
 	#if defined(MY_SOFTSPI)
-		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE> _SPI;
-	#else	    
+		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE>
+		_SPI;
+	#else
 		#define _SPI SPI
 	#endif
 #else
 	#if defined(__arm__)
 		#include <SPI.h>
 	#else
-		extern HardwareSPI SPI;		//!< SPI			
+		extern HardwareSPI SPI;		//!< SPI
 	#endif
-	
+
 	#if !defined(_SPI)
 		#define _SPI SPI			//!< SPI
 	#endif
 #endif
 
-// debug 
+// debug
 #if defined(MY_DEBUG_VERBOSE_RFM95)
 	#define RFM95_DEBUG(x,...) debug(x, ##__VA_ARGS__)	//!< Debug print
 #else
@@ -247,7 +248,7 @@ typedef struct {
 	uint8_t payloadLen;									//!< Length of payload (excluding header)
 	rfm95_RSSI_t RSSI;									//!< RSSI of current packet, RSSI = value - 137
 	rfm95_SNR_t SNR;									//!< SNR of current packet
-} __attribute__((packed)) rfm95_packet_t;	
+} __attribute__((packed)) rfm95_packet_t;
 
 
 /**
@@ -316,7 +317,8 @@ LOCAL bool RFM95_send(rfm95_packet_t &packet);
 * @param flags
 * @return True if frame sent
 */
-LOCAL bool RFM95_sendFrame(const uint8_t recipient, uint8_t* data, const uint8_t len, const rfm95_flag_t flags);
+LOCAL bool RFM95_sendFrame(const uint8_t recipient, uint8_t* data, const uint8_t len,
+                           const rfm95_flag_t flags);
 /**
 * @brief RFM95_setPreambleLength
 * @param preambleLength
@@ -350,7 +352,8 @@ LOCAL bool RFM95_isChannelActive(void);
 * @param RSSI (rfm95_RSSI_t)
 * @param SNR (rfm95_RSSI_t)
 */
-LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t sequenceNumber, const rfm95_RSSI_t RSSI, const rfm95_RSSI_t SNR);
+LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t sequenceNumber,
+                         const rfm95_RSSI_t RSSI, const rfm95_RSSI_t SNR);
 /**
 * @brief RFM95_sendWithRetry
 * @param recipient
@@ -360,7 +363,9 @@ LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t s
 * @param retryWaitTime
 * @return True if packet successfully sent
 */
-LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer, const uint8_t bufferSize, const uint8_t retries = RFM95_RETRIES, const uint32_t retryWaitTime = RFM95_RETRY_TIMEOUT_MS);
+LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer,
+                               const uint8_t bufferSize, const uint8_t retries = RFM95_RETRIES,
+                               const uint32_t retryWaitTime = RFM95_RETRY_TIMEOUT_MS);
 /**
 * @brief RFM95_waitCAD
 * @return True if no channel activity detected
@@ -476,7 +481,7 @@ volatile rfm95_internal_t RFM95;	//!< internal variables
 #define RFM95_MODE_RXSINGLE						0x06 //!< MODE_RXSINGLE
 #define RFM95_MODE_CAD							0x07 //!< MODE_CAD
 
-// RFM95_REG_09_PA_CONFIG 0x09 
+// RFM95_REG_09_PA_CONFIG 0x09
 #define RFM95_OUTPUT_POWER						0x0F //!< OUTPUT_POWER
 #define RFM95_MAX_POWER							0x70 //!< MAX_POWER
 #define RFM95_PA_SELECT							0x80 //!< PA_SELECT

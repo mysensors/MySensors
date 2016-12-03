@@ -26,7 +26,7 @@ void vlogInfo(const char *fmt, va_list args)
 
 void
 #ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
+	__attribute__((format(printf, 1, 2)))
 #endif
 logInfo(const char *fmt, ...)
 {
@@ -47,7 +47,7 @@ void vlogError(const char *fmt, va_list args)
 
 void
 #ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
+	__attribute__((format(printf, 1, 2)))
 #endif
 logError(const char *fmt, ...)
 {
@@ -68,7 +68,7 @@ void vlogNotice(const char *fmt, va_list args)
 
 void
 #ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
+	__attribute__((format(printf, 1, 2)))
 #endif
 logNotice(const char *fmt, ...)
 {
@@ -89,7 +89,7 @@ void vlogDebug(const char *fmt, va_list args)
 
 void
 #ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
+	__attribute__((format(printf, 1, 2)))
 #endif
 logDebug(const char *fmt, ...)
 {
@@ -110,7 +110,7 @@ void vlogWarning(const char *fmt, va_list args)
 
 void
 #ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
+	__attribute__((format(printf, 1, 2)))
 #endif
 logWarning(const char *fmt, ...)
 {

@@ -22,11 +22,11 @@
 
 
 #ifdef MY_WITH_LEDS_BLINKING_INVERSE
-#define LED_ON 0x1
-#define LED_OFF 0x0
+	#define LED_ON 0x1
+	#define LED_OFF 0x0
 #else
-#define LED_ON 0x0
-#define LED_OFF 0x1
+	#define LED_ON 0x0
+	#define LED_OFF 0x1
 #endif
 
 #if defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
@@ -35,18 +35,18 @@
 	#define ledBlinkErr(x,...) ledsBlinkErr(x)
 
 	/**
-	 * Blink with LEDs
-	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
-	 */
+	* Blink with LEDs
+	* @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
+	*/
 	void ledsInit();
 	void ledsBlinkRx(uint8_t cnt);
 	void ledsBlinkTx(uint8_t cnt);
 	void ledsBlinkErr(uint8_t cnt);
 	void ledsProcess(); // do the actual blinking
 	/**
-	 * Test if any LED is currently blinking.
-	 * @return true when one or more LEDs are blinking, false otherwise.
-	 */
+	* Test if any LED is currently blinking.
+	* @return true when one or more LEDs are blinking, false otherwise.
+	*/
 	bool ledsBlinking();
 
 #else
