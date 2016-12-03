@@ -98,13 +98,13 @@ void stInitUpdate(void) {
 			// GW mode: skip FPAR,ID,UPL states
 			transportSwitchSM(stReady);
 		#else
-			#if MY_NODE_ID != AUTO
+			if (MY_NODE_ID != AUTO) {
 				TRANSPORT_DEBUG(PSTR("TSM:INIT:STATID=%d\n"),(uint8_t)MY_NODE_ID);
 				// Set static ID
 				_transportConfig.nodeId = (uint8_t)MY_NODE_ID;
 				// Save static ID to eeprom (for bootloader)
 				hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (uint8_t)MY_NODE_ID);
-			#endif
+			}
 			// assign ID if set
 			if (_transportConfig.nodeId == AUTO || transportAssignNodeID(_transportConfig.nodeId)) {
 				// if node ID valid (>0 and <255), proceed to next state
