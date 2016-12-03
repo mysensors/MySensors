@@ -26,7 +26,7 @@ Building options:
     --no-clean                  Don't clean previous build artifacts.
 
 Installation options:
-    --prefix=<PREFIX>           Installation prefix path. [/usr/local]
+    --exec-prefix=<PREFIX>           Installation prefix path. [/usr/local]
     --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
 
 MySensors options:
@@ -268,8 +268,11 @@ for opt do
     --no-clean*)
         NO_CLEAN="1"
         ;;
-    --prefix=*)
+    --exec-prefix=*)
         PREFIX="$optarg"
+        ;;
+    --no_init_system*)
+        NO_INIT="1"
         ;;
     --gateway-dir=*)
         GATEWAY_DIR="$optarg"
@@ -466,6 +469,9 @@ fi
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
+if [ "${NO_INIT}" ];  then
+    echo "[OK] no init system chosen."
+elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
 if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
     echo "[OK] init system detected: systemd"
