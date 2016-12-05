@@ -19,6 +19,7 @@
  * Based on wiringPi Copyright (c) 2012 Gordon Henderson.
  */
 
+#include "rpi_util.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -31,9 +32,9 @@
 #include <fcntl.h>
 #include <stropts.h>
 #include <errno.h>
-#include "rpi_util.h"
 #include "SPI.h"
 #include "log.h"
+#include "cpuinfo.h"
 
 extern "C" {
 	int piHiPri(const int pri);
@@ -43,6 +44,9 @@ struct ThreadArgs {
 	void (*func)();
 	int gpioPin;
 };
+
+static const int *pin_to_gpio = 0;
+static rpi_info rpiinfo;
 
 volatile bool interruptsEnabled = true;
 static pthread_mutex_t intMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -59,66 +63,37 @@ static int sysFds[64] =
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
-#ifdef __RPI_BPLUS
-static uint8_t physToGpio[64] =
+int get_gpio_number(uint8_t physPin, uint8_t *gpio)
 {
-	255,		// 0
-	255, 255,	// 1, 2
-	  2, 255,
-	  3, 255,
-	  4,  14,
-	255,  15,
-	 17,  18,
-	 27, 255,
-	 22,  23,
-	255,  24,
-	 10, 255,
-	  9,  25,
-	 11,   8,
-	255,   7,	// 25, 26
-// B+
-	  0,   1,
-	  5, 255,
-	  6,  12,
-	 13, 255,
-	 19,  16,
-	 26,  20,
-	255,  21,
-// the P5 connector on the Rev 2 boards:
-	255, 255,
-	255, 255,
-	255, 255,
-	255, 255,
-	255, 255,
-	 28,  29,
-	 30,  31,
-	255, 255,
-	255, 255,
-	255, 255,
-	255, 255,
-};
-#else
-static uint8_t physToGpio[64] =
-{
-	255,		// 0
-	255, 255,	// 1, 2
-	  0, 255,
-	  1, 255,
-	  4,  14,
-	255,  15,
-	 17,  18,
-	 21, 255,
-	 22,  23,
-	255,  24,
-	 10, 255,
-	  9,  25,
-	 11,   8,
-	255,   7,	// 25, 26
-														   255, 255, 255, 255, 255,	// ... 31
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,	// ... 47
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,	// ... 63
-};
-#endif
+	if (pin_to_gpio == 0) {
+		// detect board revision and set up accordingly
+		if (get_rpi_info(&rpiinfo)) {
+			logError("This module can only be run on a Raspberry Pi!\n");
+			exit(1);
+		}
+
+		if (rpiinfo.p1_revision == 1) {
+			pin_to_gpio = &pin_to_gpio_rev1[0];
+		} else if (rpiinfo.p1_revision == 2) {
+			pin_to_gpio = &pin_to_gpio_rev2[0];
+		} else { // assume model B+ or A+ or 2B
+			pin_to_gpio = &pin_to_gpio_rev3[0];
+		}
+	}
+
+	if ((rpiinfo.p1_revision != 3 && physPin > 26)
+		|| (rpiinfo.p1_revision == 3 && physPin > 40)) {
+		return -1;
+	}
+
+	if (*(pin_to_gpio+physPin) == -1) {
+		return -1;
+	} else {
+		*gpio = *(pin_to_gpio+physPin);
+	}
+
+	return 0;
+}
 
 void *interruptHandler(void *args) {
 	int fd, ret;
@@ -168,11 +143,13 @@ void *interruptHandler(void *args) {
 }
 
 void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
-	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
-	if (gpioPin == 255) {
+	uint8_t gpioPin;
+
+	if (get_gpio_number(physPin, &gpioPin)) {
 		logError("pinMode: invalid pin: %d\n", physPin);
 		return;
 	}
+
 	// Check if SPI is in use and target pin is related to SPI
 	if (SPIClass::is_initialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
 		return;
@@ -182,11 +159,13 @@ void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
 }
 
 void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
-	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
-	if (gpioPin == 255) {
+	uint8_t gpioPin;
+
+	if (get_gpio_number(physPin, &gpioPin)) {
 		logError("digitalWrite: invalid pin: %d\n", physPin);
 		return;
 	}
+
 	// Check if SPI is in use and target pin is related to SPI
 	if (SPIClass::is_initialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
 		if (value == LOW && (gpioPin == RPI_GPIO_P1_24 || gpioPin == RPI_GPIO_P1_26)) {
@@ -200,11 +179,13 @@ void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
 }
 
 uint8_t rpi_util::digitalRead(uint8_t physPin) {
-	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
-	if (gpioPin == 255) {
+	uint8_t gpioPin;
+
+	if (get_gpio_number(physPin, &gpioPin)) {
 		logError("digitalRead: invalid pin: %d\n", physPin);
 		return 0;
 	}
+
 	// Check if SPI is in use and target pin is related to SPI
 	if (SPIClass::is_initialized() && gpioPin >= RPI_GPIO_P1_26 && gpioPin <= RPI_GPIO_P1_23) {
 		return 0;
@@ -218,9 +199,9 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 	char fName[40];
 	char c;
 	int count, i;
+	uint8_t gpioPin;
 
-	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
-	if (gpioPin == 255) {
+	if (get_gpio_number(physPin, &gpioPin)) {
 		logError("attachInterrupt: invalid pin: %d\n", physPin);
 		return;
 	}
@@ -295,8 +276,9 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 }
 
 void rpi_util::detachInterrupt(uint8_t physPin) {
-	uint8_t gpioPin = (physPin > 63)? 255 : physToGpio[physPin];
-	if (gpioPin == 255) {
+	uint8_t gpioPin;
+
+	if (get_gpio_number(physPin, &gpioPin)) {
 		logError("detachInterrupt: invalid pin: %d\n", physPin);
 		return;
 	}

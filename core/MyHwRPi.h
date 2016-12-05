@@ -20,6 +20,7 @@
 #ifndef MyHwRPi_h
 #define MyHwRPi_h
 
+#include <stdint.h>
 #include <stdlib.h>
 #include "MyHwLinuxGeneric.h"
 #include "log.h"
