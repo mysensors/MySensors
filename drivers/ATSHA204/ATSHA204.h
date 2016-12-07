@@ -244,8 +244,8 @@ void atsha204_idle(void);
 void atsha204_sleep(void);
 uint8_t atsha204_wakeup(uint8_t *response);
 uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
-												uint8_t datalen1, uint8_t *data1, uint8_t tx_size,
-												uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
+                         uint8_t datalen1, uint8_t *data1, uint8_t tx_size,
+                         uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
 uint8_t atsha204_getSerialNumber(uint8_t *response);
 
 #endif

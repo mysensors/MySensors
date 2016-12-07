@@ -55,8 +55,7 @@ static pthread_t *threadIds[64] = {NULL};
 
 // sysFds:
 //	Map a file descriptor from the /sys/class/gpio/gpioX/value
-static int sysFds[64] =
-{
+static int sysFds[64] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -82,7 +81,7 @@ int get_gpio_number(uint8_t physPin, uint8_t *gpio)
 	}
 
 	if ((rpiinfo.p1_revision != 3 && physPin > 26)
-		|| (rpiinfo.p1_revision == 3 && physPin > 40)) {
+	        || (rpiinfo.p1_revision == 3 && physPin > 40)) {
 		return -1;
 	}
 
@@ -95,7 +94,8 @@ int get_gpio_number(uint8_t physPin, uint8_t *gpio)
 	return 0;
 }
 
-void *interruptHandler(void *args) {
+void *interruptHandler(void *args)
+{
 	int fd, ret;
 	struct pollfd polls;
 	char c;
@@ -126,7 +126,7 @@ void *interruptHandler(void *args) {
 		//	A one character read appars to be enough.
 		//	Followed by a seek to reset it.
 		(void)read (fd, &c, 1) ;
-  		lseek (fd, 0, SEEK_SET) ;
+		lseek (fd, 0, SEEK_SET) ;
 		// Call user function.
 		pthread_mutex_lock(&intMutex);
 		if (interruptsEnabled) {
@@ -142,7 +142,8 @@ void *interruptHandler(void *args) {
 	return NULL;
 }
 
-void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
+void rpi_util::pinMode(uint8_t physPin, uint8_t mode)
+{
 	uint8_t gpioPin;
 
 	if (get_gpio_number(physPin, &gpioPin)) {
@@ -158,7 +159,8 @@ void rpi_util::pinMode(uint8_t physPin, uint8_t mode) {
 	}
 }
 
-void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
+void rpi_util::digitalWrite(uint8_t physPin, uint8_t value)
+{
 	uint8_t gpioPin;
 
 	if (get_gpio_number(physPin, &gpioPin)) {
@@ -178,7 +180,8 @@ void rpi_util::digitalWrite(uint8_t physPin, uint8_t value) {
 	}
 }
 
-uint8_t rpi_util::digitalRead(uint8_t physPin) {
+uint8_t rpi_util::digitalRead(uint8_t physPin)
+{
 	uint8_t gpioPin;
 
 	if (get_gpio_number(physPin, &gpioPin)) {
@@ -194,7 +197,8 @@ uint8_t rpi_util::digitalRead(uint8_t physPin) {
 	}
 }
 
-void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
+void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode)
+{
 	FILE *fd;
 	char fName[40];
 	char c;
@@ -220,7 +224,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 		logError("attachInterrupt: Unable to export pin %d for interrupt: %s\n", physPin, strerror(errno));
 		exit(1);
 	}
-	fprintf(fd, "%d\n", gpioPin); 
+	fprintf(fd, "%d\n", gpioPin);
 	fclose(fd);
 
 	// Wait a bit the system to create /sys/class/gpio/gpio<GPIO number>
@@ -228,7 +232,8 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 
 	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/direction", gpioPin) ;
 	if ((fd = fopen (fName, "w")) == NULL) {
-		fprintf (stderr, "attachInterrupt: Unable to open GPIO direction interface for pin %d: %s\n", physPin, strerror(errno));
+		fprintf (stderr, "attachInterrupt: Unable to open GPIO direction interface for pin %d: %s\n",
+		         physPin, strerror(errno));
 		exit(1) ;
 	}
 	fprintf(fd, "in\n") ;
@@ -236,18 +241,27 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 
 	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/edge", gpioPin) ;
 	if ((fd = fopen(fName, "w")) == NULL) {
-		fprintf (stderr, "attachInterrupt: Unable to open GPIO edge interface for pin %d: %s\n", physPin, strerror(errno));
+		fprintf (stderr, "attachInterrupt: Unable to open GPIO edge interface for pin %d: %s\n", physPin,
+		         strerror(errno));
 		exit(1) ;
 	}
 	switch (mode) {
-		case CHANGE: fprintf(fd, "both\n"); break;
-		case FALLING: fprintf(fd, "falling\n"); break;
-		case RISING: fprintf(fd, "rising\n"); break;
-		case NONE: fprintf(fd, "none\n"); break;
-		default:
-			logError("attachInterrupt: Invalid mode\n");
-			fclose(fd);
-			return;
+	case CHANGE:
+		fprintf(fd, "both\n");
+		break;
+	case FALLING:
+		fprintf(fd, "falling\n");
+		break;
+	case RISING:
+		fprintf(fd, "rising\n");
+		break;
+	case NONE:
+		fprintf(fd, "none\n");
+		break;
+	default:
+		logError("attachInterrupt: Invalid mode\n");
+		fclose(fd);
+		return;
 	}
 	fclose(fd);
 
@@ -275,7 +289,8 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode) {
 	pthread_create(threadIds[gpioPin], NULL, interruptHandler, (void *)threadArgs);
 }
 
-void rpi_util::detachInterrupt(uint8_t physPin) {
+void rpi_util::detachInterrupt(uint8_t physPin)
+{
 	uint8_t gpioPin;
 
 	if (get_gpio_number(physPin, &gpioPin)) {
@@ -301,22 +316,25 @@ void rpi_util::detachInterrupt(uint8_t physPin) {
 		logError("Unable to unexport pin %d for interrupt\n", gpioPin);
 		exit(1);
 	}
-	fprintf(fp, "%d", gpioPin); 
+	fprintf(fp, "%d", gpioPin);
 	fclose(fp);
 }
 
-uint8_t rpi_util::digitalPinToInterrupt(uint8_t physPin) {
+uint8_t rpi_util::digitalPinToInterrupt(uint8_t physPin)
+{
 	// No need to convert the pin to gpio, we do it in attachInterrupt().
 	return physPin;
 }
 
-void rpi_util::interrupts() {
+void rpi_util::interrupts()
+{
 	pthread_mutex_lock(&intMutex);
 	interruptsEnabled = true;
 	pthread_mutex_unlock(&intMutex);
 }
 
-void rpi_util::noInterrupts() {
+void rpi_util::noInterrupts()
+{
 	pthread_mutex_lock(&intMutex);
 	interruptsEnabled = false;
 	pthread_mutex_unlock(&intMutex);

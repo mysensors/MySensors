@@ -23,127 +23,136 @@
 #include <math.h>
 #include "stdlib_noniso.h"
 
-char* utoa(unsigned value, char* result, int base) {
-    if(base < 2 || base > 16) {
-        *result = 0;
-        return result;
-    }
+char* utoa(unsigned value, char* result, int base)
+{
+	if(base < 2 || base > 16) {
+		*result = 0;
+		return result;
+	}
 
-    char* out = result;
-    unsigned quotient = value;
+	char* out = result;
+	unsigned quotient = value;
 
-    do {
-        const unsigned tmp = quotient / base;
-        *out = "0123456789abcdef"[quotient - (tmp * base)];
-        ++out;
-        quotient = tmp;
-    } while(quotient);
+	do {
+		const unsigned tmp = quotient / base;
+		*out = "0123456789abcdef"[quotient - (tmp * base)];
+		++out;
+		quotient = tmp;
+	} while(quotient);
 
-    reverse(result, out);
-    *out = 0;
-    return result;
+	reverse(result, out);
+	*out = 0;
+	return result;
 }
 
-char* itoa(int value, char* result, int base) {
-    if(base < 2 || base > 16) {
-        *result = 0;
-        return result;
-    }
+char* itoa(int value, char* result, int base)
+{
+	if(base < 2 || base > 16) {
+		*result = 0;
+		return result;
+	}
 
-    char* out = result;
-    int quotient = abs(value);
+	char* out = result;
+	int quotient = abs(value);
 
-    do {
-        const int tmp = quotient / base;
-        *out = "0123456789abcdef"[quotient - (tmp * base)];
-        ++out;
-        quotient = tmp;
-    } while(quotient);
+	do {
+		const int tmp = quotient / base;
+		*out = "0123456789abcdef"[quotient - (tmp * base)];
+		++out;
+		quotient = tmp;
+	} while(quotient);
 
-    // Apply negative sign
-    if(value < 0) {
-        *out++ = '-';
-      }
+	// Apply negative sign
+	if(value < 0) {
+		*out++ = '-';
+	}
 
-    reverse(result, out);
-    *out = 0;
-    return result;
+	reverse(result, out);
+	*out = 0;
+	return result;
 }
 
-int atoi(const char* s) {
-    return (int) atol(s);
+int atoi(const char* s)
+{
+	return (int) atol(s);
 }
 
-long atol(const char* s) {
-    char * tmp;
-    return strtol(s, &tmp, 10);
+long atol(const char* s)
+{
+	char * tmp;
+	return strtol(s, &tmp, 10);
 }
 
-double atof(const char* s) {
-    char * tmp;
-    return strtod(s, &tmp);
+double atof(const char* s)
+{
+	char * tmp;
+	return strtod(s, &tmp);
 }
 
-void reverse(char* begin, char* end) {
-    char *is = begin;
-    char *ie = end - 1;
-    while(is < ie) {
-        char tmp = *ie;
-        *ie = *is;
-        *is = tmp;
-        ++is;
-        --ie;
-    }
+void reverse(char* begin, char* end)
+{
+	char *is = begin;
+	char *ie = end - 1;
+	while(is < ie) {
+		char tmp = *ie;
+		*ie = *is;
+		*is = tmp;
+		++is;
+		--ie;
+	}
 }
 
-char* ltoa(long value, char* result, int base) {
-    if(base < 2 || base > 16) {
-        *result = 0;
-        return result;
-    }
+char* ltoa(long value, char* result, int base)
+{
+	if(base < 2 || base > 16) {
+		*result = 0;
+		return result;
+	}
 
-    char* out = result;
-    long quotient = abs(value);
+	char* out = result;
+	long quotient = abs(value);
 
-    do {
-        const long tmp = quotient / base;
-        *out = "0123456789abcdef"[quotient - (tmp * base)];
-        ++out;
-        quotient = tmp;
-    } while(quotient);
+	do {
+		const long tmp = quotient / base;
+		*out = "0123456789abcdef"[quotient - (tmp * base)];
+		++out;
+		quotient = tmp;
+	} while(quotient);
 
-    // Apply negative sign
-    if(value < 0) {
-        *out++ = '-';
-      }
+	// Apply negative sign
+	if(value < 0) {
+		*out++ = '-';
+	}
 
-    reverse(result, out);
-    *out = 0;
-    return result;
+	reverse(result, out);
+	*out = 0;
+	return result;
 }
 
-char* ultoa(unsigned long value, char* result, int base) {
-    if(base < 2 || base > 16) {
-        *result = 0;
-        return result;
-    }
+char* ultoa(unsigned long value, char* result, int base)
+{
+	if(base < 2 || base > 16) {
+		*result = 0;
+		return result;
+	}
 
-    char* out = result;
-    unsigned long quotient = value;
+	char* out = result;
+	unsigned long quotient = value;
 
-    do {
-        const unsigned long tmp = quotient / base;
-        *out = "0123456789abcdef"[quotient - (tmp * base)];
-        ++out;
-        quotient = tmp;
-    } while(quotient);
+	do {
+		const unsigned long tmp = quotient / base;
+		*out = "0123456789abcdef"[quotient - (tmp * base)];
+		++out;
+		quotient = tmp;
+	} while(quotient);
 
-    reverse(result, out);
-    *out = 0;
-    return result;
+	reverse(result, out);
+	*out = 0;
+	return result;
 }
 
-char* dtostrf (double val, signed char width, unsigned char prec, char *s) {
-    sprintf(s,"%*.*f", width, prec, val);
-    return s;
+char* dtostrf (double val, signed char width, unsigned char prec, char *s)
+{
+	sprintf(s,"%*.*f", width, prec, val);
+	return s;
 }

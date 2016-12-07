@@ -17,51 +17,51 @@
  * version 2 as published by the Free Software Foundation.
  */
 
- /**
- * @file MySensorsCore.h
- *
- * @defgroup MySensorsCoregrp MySensorsCore
- * @ingroup internals
- * @{
- *
- * MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
- * - [!] Exclamation mark is prepended in case of error or warning
- * - SYSTEM:
- *  - <b>MCO</b> messages emitted by MySensorsCore
- * - SUB SYSTEMS:
- *  - MCO:<b>BGN</b>	from @ref _begin()
- *  - MCO:<b>REG</b>	from @ref _registerNode()
- *  - MCO:<b>SND</b>	from @ref send()
- *  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
- *  - MCO:<b>NLK</b>	from nodeLock()
- *
- * MySensorsCore debug log messages:
- *
- * |E| SYS	| SUB	| Message										| Comment
- * |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
- * | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
- * | | MCO  | BGN	| BFR											| Callback before()
- * | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
- * | | MCO  | BGN	| STP											| Callback setup()
- * | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
- * | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
- * |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
- * | | MCO	| REG	| REQ											| Registration request
- * | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
- * |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
- * | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
- * | | MCO	| PIM	| ROUTE N=%%d,R=%%d								| Routing table, messages to node (N) are routed via node (R)
- * | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
- * | | MCO	| SLP	| TPD											| Sleep node, powerdown transport
- * | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
- * |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
- * |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
- * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
- * | | MCO	| NLK	| TPD											| Powerdown transport
- *
- *
- * @brief API declaration for MySensorsCore
- */
+/**
+* @file MySensorsCore.h
+*
+* @defgroup MySensorsCoregrp MySensorsCore
+* @ingroup internals
+* @{
+*
+* MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
+* - [!] Exclamation mark is prepended in case of error or warning
+* - SYSTEM:
+*  - <b>MCO</b> messages emitted by MySensorsCore
+* - SUB SYSTEMS:
+*  - MCO:<b>BGN</b>	from @ref _begin()
+*  - MCO:<b>REG</b>	from @ref _registerNode()
+*  - MCO:<b>SND</b>	from @ref send()
+*  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
+*  - MCO:<b>NLK</b>	from nodeLock()
+*
+* MySensorsCore debug log messages:
+*
+* |E| SYS	| SUB	| Message										| Comment
+* |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
+* | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
+* | | MCO  | BGN	| BFR											| Callback before()
+* | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
+* | | MCO  | BGN	| STP											| Callback setup()
+* | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
+* | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
+* |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
+* | | MCO	| REG	| REQ											| Registration request
+* | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
+* |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
+* | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
+* | | MCO	| PIM	| ROUTE N=%%d,R=%%d								| Routing table, messages to node (N) are routed via node (R)
+* | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
+* | | MCO	| SLP	| TPD											| Sleep node, powerdown transport
+* | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
+* |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
+* |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
+* | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
+* | | MCO	| NLK	| TPD											| Powerdown transport
+*
+*
+* @brief API declaration for MySensorsCore
+*/
 
 
 #ifndef MySensorsCore_h
@@ -86,11 +86,11 @@
 
 
 #ifdef MY_DEBUG
-	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)			//!< debug, to be removed (follow-up PR)
-	#define CORE_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)			//!< debug, to be removed (follow-up PR)
+#define CORE_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
 #else
-	#define debug(x,...)										//!< debug NULL, to be removed (follow-up PR)
-	#define CORE_DEBUG(x,...)									//!< debug NULL
+#define debug(x,...)										//!< debug NULL, to be removed (follow-up PR)
+#define CORE_DEBUG(x,...)									//!< debug NULL
 #endif
 
 
@@ -143,7 +143,8 @@ void presentNode(void);
 * @param description A textual description of the sensor.
 * @return true Returns true if message reached the first stop on its way to destination.
 */
-bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description="", const bool ack = false);
+bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description="",
+             const bool ack = false);
 
 /**
  * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
@@ -189,7 +190,8 @@ bool sendHeartbeat(const bool ack = false);
 * @param destination The nodeId of other node in radio network. Default is gateway
 * @return true Returns true if message reached the first stop on its way to destination.
 */
-bool request(const uint8_t childSensorId, const uint8_t variableType, const uint8_t destination = GATEWAY_ADDRESS);
+bool request(const uint8_t childSensorId, const uint8_t variableType,
+             const uint8_t destination = GATEWAY_ADDRESS);
 
 /**
  * Requests time from controller. Answer will be delivered to receiveTime function in sketch.
@@ -269,7 +271,8 @@ int8_t sleep(const uint32_t sleepingMS, const bool smartSleep = false);
  * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep
  * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
  */
-int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepingMS = 0, const bool smartSleep = false);
+int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepingMS = 0,
+             const bool smartSleep = false);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
@@ -283,7 +286,8 @@ int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepin
  * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep.
  * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
  */
-int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t sleepingMS = 0, const bool smartSleep = false);
+int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+             const uint8_t mode2, const uint32_t sleepingMS = 0, const bool smartSleep = false);
 
 /**
 * \deprecated Use sleep(ms, true) instead
@@ -316,7 +320,8 @@ int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sl
 * @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
 * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
 */
-int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2, const uint32_t sleepingMS = 0);
+int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+                  const uint8_t mode2, const uint32_t sleepingMS = 0);
 
 /**
 * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
@@ -330,7 +335,9 @@ int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t i
 * @param smartSleep (optional) Set True if sending heartbeat and process incoming messages before going to sleep.
 * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
 */
-int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false, const uint8_t interrupt1 = INTERRUPT_NOT_DEFINED, const uint8_t mode1 = MODE_NOT_DEFINED, const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
+int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false,
+              const uint8_t interrupt1 = INTERRUPT_NOT_DEFINED, const uint8_t mode1 = MODE_NOT_DEFINED,
+              const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
 
 
 /**
@@ -412,7 +419,9 @@ void loop(void) __attribute__((weak));
 
 
 // Inline function and macros
-static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const uint8_t sensor, const uint8_t command, const uint8_t type, const bool ack = false) {
+static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const uint8_t sensor,
+                               const uint8_t command, const uint8_t type, const bool ack = false)
+{
 	msg.sender = getNodeId();
 	msg.destination = destination;
 	msg.sensor = sensor;
@@ -423,7 +432,8 @@ static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const 
 	return msg;
 }
 
-static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type) {
+static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type)
+{
 	msg.sender = GATEWAY_ADDRESS;
 	msg.destination = GATEWAY_ADDRESS;
 	msg.sensor = NODE_SENSOR_ID;

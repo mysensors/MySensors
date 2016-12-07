@@ -28,7 +28,8 @@
  * SerialPort Class
  * Class that provides the functionality of arduino Serial library
  */
-class SerialPort : public Stream {
+class SerialPort : public Stream
+{
 
 private:
 	int sd; //!< @brief file descriptor number.

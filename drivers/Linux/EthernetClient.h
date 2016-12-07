@@ -40,7 +40,8 @@
 /**
  * EthernetClient class
  */
-class EthernetClient : public Client {
+class EthernetClient : public Client
+{
 
 private:
 	int _sock; //!< @brief Network socket.
@@ -168,12 +169,18 @@ public:
 	 * @brief Overloaded cast operators.
 	 *
 	 */
-	virtual bool operator==(const bool value) { return bool() == value; }
+	virtual bool operator==(const bool value)
+	{
+		return bool() == value;
+	}
 	/**
 	 * @brief Overloaded cast operators.
 	 *
 	 */
-	virtual bool operator!=(const bool value) { return bool() != value; }
+	virtual bool operator!=(const bool value)
+	{
+		return bool() != value;
+	}
 	/**
 	 * @brief Overloaded cast operators.
 	 *
@@ -183,7 +190,10 @@ public:
 	 * @brief Overloaded cast operators.
 	 *
 	 */
-	virtual bool operator!=(const EthernetClient& rhs) { return !this->operator==(rhs); };
+	virtual bool operator!=(const EthernetClient& rhs)
+	{
+		return !this->operator==(rhs);
+	};
 
 	friend class EthernetServer;
 };

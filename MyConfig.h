@@ -67,10 +67,10 @@
 #ifndef MY_BAUD_RATE
 #define MY_BAUD_RATE 115200
 #endif
- /**
- * @def MY_SERIAL_OUTPUT_SIZE
- * @brief Max. characters for serial output.
- */
+/**
+* @def MY_SERIAL_OUTPUT_SIZE
+* @brief Max. characters for serial output.
+*/
 #ifndef MY_SERIAL_OUTPUT_SIZE
 #define MY_SERIAL_OUTPUT_SIZE (120u)
 #endif
@@ -107,7 +107,7 @@
 #endif
 /**
 * @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. 
+* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure.
 * This feature is enabled for all repeater nodes (incl. GW)
 */
 //#define MY_TRANSPORT_SANITY_CHECK
@@ -121,7 +121,7 @@
 #endif
 /**
 * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks 
+* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
 */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
 #define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
@@ -145,34 +145,34 @@
  */
 #define MY_REGISTRATION_FEATURE
 
- /**
- * @def MY_REGISTRATION_RETRIES
- * @brief Number of registration retries if no reply received from GW/controller
- */
+/**
+* @def MY_REGISTRATION_RETRIES
+* @brief Number of registration retries if no reply received from GW/controller
+*/
 
 #ifndef MY_REGISTRATION_RETRIES
 #define MY_REGISTRATION_RETRIES (3u)
 #endif
 
- /**
- * @def MY_REGISTRATION_DEFAULT
- * @brief Node registration default - this applies if no registration response is received from controller
- */
+/**
+* @def MY_REGISTRATION_DEFAULT
+* @brief Node registration default - this applies if no registration response is received from controller
+*/
 #define MY_REGISTRATION_DEFAULT true
 
- /**
- * @def MY_REGISTRATION_CONTROLLER
- * @brief If enabled, node registration request has to be handled by controller
- */
- // #define MY_REGISTRATION_CONTROLLER
+/**
+* @def MY_REGISTRATION_CONTROLLER
+* @brief If enabled, node registration request has to be handled by controller
+*/
+// #define MY_REGISTRATION_CONTROLLER
 
- /**
- * @def MY_CORE_COMPATIBILITY_CHECK
- * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
- */
+/**
+* @def MY_CORE_COMPATIBILITY_CHECK
+* @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
+*/
 #define MY_CORE_COMPATIBILITY_CHECK
 
- /**
+/**
 * @def MY_TRANSPORT_WAIT_READY_MS
 * @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
 */
@@ -323,11 +323,11 @@
  * @brief The default input pin used for the inclusion mode button.
  */
 #ifndef MY_INCLUSION_MODE_BUTTON_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_INCLUSION_MODE_BUTTON_PIN 5
-	#else
-		#define MY_INCLUSION_MODE_BUTTON_PIN 3
-	#endif
+#if defined(ARDUINO_ARCH_ESP8266)
+#define MY_INCLUSION_MODE_BUTTON_PIN 5
+#else
+#define MY_INCLUSION_MODE_BUTTON_PIN 3
+#endif
 #endif
 
 /**
@@ -488,15 +488,15 @@
  * @brief Default RF24 chip enable pin setting. Override in sketch if needed.
  */
 #ifndef MY_RF24_CE_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF24_CE_PIN 4
-	#elif defined(ARDUINO_ARCH_SAMD)
-		#define MY_RF24_CE_PIN 27
-	#elif defined(LINUX_ARCH_RASPBERRYPI)
-		#define MY_RF24_CE_PIN 22
-	#else
-		#define MY_RF24_CE_PIN 9
-	#endif
+#if defined(ARDUINO_ARCH_ESP8266)
+#define MY_RF24_CE_PIN 4
+#elif defined(ARDUINO_ARCH_SAMD)
+#define MY_RF24_CE_PIN 27
+#elif defined(LINUX_ARCH_RASPBERRYPI)
+#define MY_RF24_CE_PIN 22
+#else
+#define MY_RF24_CE_PIN 9
+#endif
 #endif
 
 /**
@@ -504,15 +504,15 @@
  * @brief Default RF24 chip select pin setting. Override in sketch if needed.
  */
 #ifndef MY_RF24_CS_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF24_CS_PIN 15
-	#elif defined(ARDUINO_ARCH_SAMD)
-		#define MY_RF24_CS_PIN 3
-	#elif defined(LINUX_ARCH_RASPBERRYPI)
-		#define MY_RF24_CS_PIN 24
-	#else
-		#define MY_RF24_CS_PIN 10
-	#endif
+#if defined(ARDUINO_ARCH_ESP8266)
+#define MY_RF24_CS_PIN 15
+#elif defined(ARDUINO_ARCH_SAMD)
+#define MY_RF24_CS_PIN 3
+#elif defined(LINUX_ARCH_RASPBERRYPI)
+#define MY_RF24_CS_PIN 24
+#else
+#define MY_RF24_CS_PIN 10
+#endif
 #endif
 
 /**
@@ -528,9 +528,9 @@
  * @brief Declare the amount of incoming messages that can be buffered.
  */
 #ifdef MY_RX_MESSAGE_BUFFER_FEATURE
-	#ifndef MY_RX_MESSAGE_BUFFER_SIZE
-		#define MY_RX_MESSAGE_BUFFER_SIZE  (20)
-	#endif
+#ifndef MY_RX_MESSAGE_BUFFER_SIZE
+#define MY_RX_MESSAGE_BUFFER_SIZE  (20)
+#endif
 #endif
 
 /**
@@ -639,9 +639,9 @@
  * @brief Set to true if @ref MY_IS_RFM69HW is set.
  */
 #ifdef MY_IS_RFM69HW
-	#define MY_RFM69HW true
+#define MY_RFM69HW true
 #else
-	#define MY_RFM69HW false
+#define MY_RFM69HW false
 #endif
 
 /**
@@ -673,11 +673,11 @@
  * @brief RF69 IRQ pin number.
  */
 #ifndef MY_RF69_IRQ_NUM
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF69_IRQ_NUM RF69_IRQ_PIN
-	#else
-		#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
-	#endif
+#if defined(ARDUINO_ARCH_ESP8266)
+#define MY_RF69_IRQ_NUM RF69_IRQ_PIN
+#else
+#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+#endif
 #endif
 
 // Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
@@ -694,28 +694,28 @@
  * This must match the hardware version of the RFM95 radio.
  */
 #ifndef MY_RFM95_FREQUENCY
-	#define MY_RFM95_FREQUENCY   (868.1f)
+#define MY_RFM95_FREQUENCY   (868.1f)
 #endif
- /**
- * @def MY_RFM95_MODEM_CONFIGRUATION
- * @brief RFM95 modem configuration, see table
- * 
- * BW = Bandwidth in kHz
- * CR = Error correction code
- * SF = Spreading factor, chips / symbol
- *
- * | CONFIG				    | BW    | CR  | SF   | Comment
- * |------------------------|-------|-----|------|-----------------------------
- * | RFM95_BW125CR45SF128   | 125   | 4/5 | 128  | Default, medium range
- * | RFM95_BW500CR45SF128   | 500   | 4/5 | 128  | Fast, short range
- * | RFM95_BW31_25CR48SF512 | 31.25 | 4/8 | 512  | Slow, long range
- * | RFM95_BW125CR48SF4096  | 125   | 4/8 | 4096 | Slow, long range
- *
- */
+/**
+* @def MY_RFM95_MODEM_CONFIGRUATION
+* @brief RFM95 modem configuration, see table
+*
+* BW = Bandwidth in kHz
+* CR = Error correction code
+* SF = Spreading factor, chips / symbol
+*
+* | CONFIG				    | BW    | CR  | SF   | Comment
+* |------------------------|-------|-----|------|-----------------------------
+* | RFM95_BW125CR45SF128   | 125   | 4/5 | 128  | Default, medium range
+* | RFM95_BW500CR45SF128   | 500   | 4/5 | 128  | Fast, short range
+* | RFM95_BW31_25CR48SF512 | 31.25 | 4/8 | 512  | Slow, long range
+* | RFM95_BW125CR48SF4096  | 125   | 4/8 | 4096 | Slow, long range
+*
+*/
 
 #ifndef MY_RFM95_MODEM_CONFIGRUATION
-	// default
-	#define MY_RFM95_MODEM_CONFIGRUATION RFM95_BW125CR45SF128
+// default
+#define MY_RFM95_MODEM_CONFIGRUATION RFM95_BW125CR45SF128
 #endif
 
 /**
@@ -729,7 +729,7 @@
  * @brief RFM95 IRQ pin
  */
 #ifndef MY_RFM95_IRQ_PIN
-	#define MY_RFM95_IRQ_PIN RFM95_IRQ_PIN
+#define MY_RFM95_IRQ_PIN RFM95_IRQ_PIN
 #endif
 
 /**
@@ -737,7 +737,7 @@
  * @brief RFM95 SPI chip select pin
  */
 #ifndef MY_RFM95_SPI_CS
-	#define MY_RFM95_SPI_CS RFM95_SPI_CS
+#define MY_RFM95_SPI_CS RFM95_SPI_CS
 #endif
 
 /**
@@ -745,21 +745,21 @@
  * @brief RFM95 TX power level.
  */
 #ifndef MY_RFM95_TX_POWER
-	#define MY_RFM95_TX_POWER 13
+#define MY_RFM95_TX_POWER 13
 #endif
 
- /**
- * @def MY_RFM95_ATC_MODE_DISABLED
- * @brief Enable to disable ATC mode
- */
+/**
+* @def MY_RFM95_ATC_MODE_DISABLED
+* @brief Enable to disable ATC mode
+*/
 //#define MY_RFM95_ATC_MODE_DISABLED
 
- /**
- * @def MY_RFM95_ATC_TARGET_RSSI
- * @brief Traget RSSI level for ATC mode
- */
+/**
+* @def MY_RFM95_ATC_TARGET_RSSI
+* @brief Traget RSSI level for ATC mode
+*/
 #ifndef MY_RFM95_ATC_TARGET_RSSI
-	#define MY_RFM95_ATC_TARGET_RSSI (-60)
+#define MY_RFM95_ATC_TARGET_RSSI (-60)
 #endif
 
 
@@ -779,11 +779,11 @@
  * @brief The Ethernet TCP/UDP port to open on controller or gateway.
  */
 #ifndef MY_PORT
-	#ifdef MY_GATEWAY_MQTT_CLIENT
-		#define MY_PORT 1883
-	#else
-		#define MY_PORT 5003
-	#endif
+#ifdef MY_GATEWAY_MQTT_CLIENT
+#define MY_PORT 1883
+#else
+#define MY_PORT 5003
+#endif
 #endif
 
 // Static ip address of gateway (if this is disabled, DHCP will be used)

@@ -18,7 +18,7 @@
  *
  *******************************
  */
- 
+
 #define MY_DEBUG
 #define MY_GATEWAY_SERIAL
 #include <MySensors.h>

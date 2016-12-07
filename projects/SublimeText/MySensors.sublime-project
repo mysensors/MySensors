@@ -28,11 +28,11 @@
 		// The coding style is documented here: https://www.mysensors.org/download/contributing
 		"AStyleFormatter":
 		{
-			"debug": true,
-			"autoformat_on_save": false,
+			"debug": false,
+			"autoformat_on_save": true,
 			"options_c":
 			{
-				"additional_options_file": "$project_path/../../.astylerc",
+				"additional_options_file": "$project_path/../../.tools/astyle/config/style.cfg",
 				"use_only_additional_options": true
 			},
 			"options_c++":

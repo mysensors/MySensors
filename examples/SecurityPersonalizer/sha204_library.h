@@ -260,7 +260,7 @@
 #define SHA204_COMMAND_EXEC_MAX      ((uint8_t) (69.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5))  //! maximum command delay
 #define SHA204_CMD_SIZE_MIN          ((uint8_t)  7)  //! minimum number of bytes in command (from count byte to second CRC byte)
 #ifndef SHA204_CMD_SIZE_MAX
-	#define SHA204_CMD_SIZE_MAX          ((uint8_t) 84)  //! maximum size of command packet (CheckMac)
+#define SHA204_CMD_SIZE_MAX          ((uint8_t) 84)  //! maximum size of command packet (CheckMac)
 #endif
 #define SHA204_CRC_SIZE              ((uint8_t)  2)  //! number of CRC bytes
 #define SHA204_BUFFER_POS_STATUS     (1)  //! buffer index of status byte in status response
@@ -284,17 +284,17 @@
 /* Low level HW access macros */
 /* function calls is not working, as it will have too much overhead */
 #if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
-	#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
-	#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
-	#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
-	#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
-	#define SHA204_PIN_READ() digitalRead(device_pin)
+#define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
+#define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
+#define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
+#define SHA204_POUT_LOW() digitalWrite(device_pin, LOW)
+#define SHA204_PIN_READ() digitalRead(device_pin)
 #else
-	#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
-	#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
-	#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
-	#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
-	#define SHA204_PIN_READ() (*device_port_IN & device_pin)
+#define SHA204_SET_INPUT()  *device_port_DDR &= ~device_pin
+#define SHA204_SET_OUTPUT() *device_port_DDR |= device_pin
+#define SHA204_POUT_HIGH() *device_port_OUT |= device_pin
+#define SHA204_POUT_LOW() *device_port_OUT &= ~device_pin
+#define SHA204_PIN_READ() (*device_port_IN & device_pin)
 #endif
 
 /**
