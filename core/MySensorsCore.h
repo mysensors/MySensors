@@ -43,7 +43,7 @@
  * | | MCO  | BGN	| BFR											| Callback before()
  * | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
  * | | MCO  | BGN	| STP											| Callback setup()
- * | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised
+ * | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
  * | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
  * |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
  * | | MCO	| REG	| REQ											| Registration request
