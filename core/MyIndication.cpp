@@ -25,25 +25,22 @@
 void setIndication( const indication_t ind )
 {
 #if defined(MY_DEFAULT_TX_LED_PIN)
-    if ((INDICATION_TX == ind) || (INDICATION_GW_TX == ind))
-    {
-        ledsBlinkTx(1);
-    } else
+	if ((INDICATION_TX == ind) || (INDICATION_GW_TX == ind)) {
+		ledsBlinkTx(1);
+	} else
 #endif
 #if defined(MY_DEFAULT_RX_LED_PIN)
-    if ((INDICATION_RX == ind) || (INDICATION_GW_RX == ind))
-    {
-        ledsBlinkRx(1);
-    } else
+		if ((INDICATION_RX == ind) || (INDICATION_GW_RX == ind)) {
+			ledsBlinkRx(1);
+		} else
 #endif
 #if defined(MY_DEFAULT_ERR_LED_PIN)
-    if (ind > INDICATION_ERR_START)
-    {
-        // Number of blinks indicates which error occurred.
-        ledsBlinkErr(ind-INDICATION_ERR_START);
-    }
+			if (ind > INDICATION_ERR_START) {
+				// Number of blinks indicates which error occurred.
+				ledsBlinkErr(ind-INDICATION_ERR_START);
+			}
 #endif
-    if (indication) {
-      indication(ind);
-    }
+	if (indication) {
+		indication(ind);
+	}
 }

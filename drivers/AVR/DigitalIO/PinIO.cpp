@@ -32,22 +32,26 @@
 /** Constructor
  * @param[in] pin Pin assigned to this object.
  */
-PinIO::PinIO(uint8_t pin) {
-  begin(pin);
+PinIO::PinIO(uint8_t pin)
+{
+	begin(pin);
 }
 //------------------------------------------------------------------------------
 /** Initialize pin bit mask and port address.
  * @param[in] pin Arduino board pin number.
  * @return true for success or false if invalid pin number.
  */
-bool PinIO::begin(uint8_t pin) {
-  if (pin >= NUM_DIGITAL_PINS) return false;
-  uint8_t port = digitalPinToPort(pin);
-  pinReg_ = portInputRegister(port);
-  bit_ = digitalPinToBitMask(pin);
-  mask_ = ~bit_;
-  portReg_ = pinReg_ + 2;
-  return true;
+bool PinIO::begin(uint8_t pin)
+{
+	if (pin >= NUM_DIGITAL_PINS) {
+		return false;
+	}
+	uint8_t port = digitalPinToPort(pin);
+	pinReg_ = portInputRegister(port);
+	bit_ = digitalPinToBitMask(pin);
+	mask_ = ~bit_;
+	portReg_ = pinReg_ + 2;
+	return true;
 }
 //------------------------------------------------------------------------------
 /** Configure the pin
@@ -59,10 +63,11 @@ bool PinIO::begin(uint8_t pin) {
  * This function may be used with interrupts enabled or disabled.
  * The previous interrupt state will be restored.
  */
-void PinIO::config(bool mode, bool data) {
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    modeI(mode);
-    writeI(data);
-  }
+void PinIO::config(bool mode, bool data)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		modeI(mode);
+		writeI(data);
+	}
 }
 /** @} */

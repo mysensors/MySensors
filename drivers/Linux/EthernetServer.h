@@ -28,10 +28,10 @@
 #include "IPAddress.h"
 
 #ifdef ETHERNETSERVER_MAX_CLIENTS
-	#define ETHERNETSERVER_BACKLOG ETHERNETSERVER_MAX_CLIENTS //!< Maximum length to which the queue of pending connections may grow.
+#define ETHERNETSERVER_BACKLOG ETHERNETSERVER_MAX_CLIENTS //!< Maximum length to which the queue of pending connections may grow.
 #else
-	#define ETHERNETSERVER_MAX_CLIENTS 10 //!< Default value for max_clients.
-	#define ETHERNETSERVER_BACKLOG 10 //!< Maximum length to which the queue of pending connections may grow.
+#define ETHERNETSERVER_MAX_CLIENTS 10 //!< Default value for max_clients.
+#define ETHERNETSERVER_BACKLOG 10 //!< Maximum length to which the queue of pending connections may grow.
 #endif
 
 class EthernetClient;
@@ -39,7 +39,8 @@ class EthernetClient;
 /**
  * @brief EthernetServer class
  */
-class EthernetServer : public Server {
+class EthernetServer : public Server
+{
 
 private:
 	uint16_t port; //!< @brief Port number for the network socket.

@@ -14,8 +14,8 @@
 #include "stdlib_noniso.h"
 
 #ifdef LINUX_ARCH_RASPBERRYPI
-	#include "rpi_util.h"
-	using namespace rpi_util;
+#include "rpi_util.h"
+using namespace rpi_util;
 #endif
 
 #undef PSTR
@@ -57,7 +57,7 @@
 #define random(...) GET_MACRO(_0, ##__VA_ARGS__, randMinMax, randMax, rand)(__VA_ARGS__)
 
 #ifndef delay
-	#define delay _delay_ms
+#define delay _delay_ms
 #endif
 
 using std::string;

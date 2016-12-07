@@ -31,11 +31,13 @@ SPIClass SPI = SPIClass();
 
 uint8_t SPIClass::initialized = 0;
 
-uint8_t SPIClass::is_initialized() {
+uint8_t SPIClass::is_initialized()
+{
 	return initialized;
 }
 
-void SPIClass::begin() {
+void SPIClass::begin()
+{
 	if (!initialized) {
 		if (!bcm2835_spi_begin()) {
 			logError("You need root privilege to use SPI.\n");
@@ -46,7 +48,8 @@ void SPIClass::begin() {
 	initialized++; // reference count
 }
 
-void SPIClass::end() {
+void SPIClass::end()
+{
 	if (initialized) {
 		initialized--;
 	}
@@ -57,47 +60,53 @@ void SPIClass::end() {
 	}
 }
 
-void SPIClass::setBitOrder(uint8_t bit_order) {
+void SPIClass::setBitOrder(uint8_t bit_order)
+{
 	bcm2835_spi_setBitOrder(bit_order);
 }
 
-void SPIClass::setDataMode(uint8_t data_mode) {
+void SPIClass::setDataMode(uint8_t data_mode)
+{
 	bcm2835_spi_setDataMode(data_mode);
 }
 
-void SPIClass::setClockDivider(uint16_t divider) {
+void SPIClass::setClockDivider(uint16_t divider)
+{
 	bcm2835_spi_setClockDivider(divider);
 }
 
-void SPIClass::chipSelect(int csn_pin) {
+void SPIClass::chipSelect(int csn_pin)
+{
 	if (csn_pin == RPI_GPIO_P1_26) {
 		csn_pin = BCM2835_SPI_CS1;
-	}
-	else if (csn_pin == RPI_GPIO_P1_24) {
+	} else if (csn_pin == RPI_GPIO_P1_24) {
 		csn_pin = BCM2835_SPI_CS0;
-	}
-	else {
+	} else {
 		csn_pin = BCM2835_SPI_CS0;
 	}
 	bcm2835_spi_chipSelect(csn_pin);
 	delayMicroseconds(5);
 }
 
-void SPIClass::beginTransaction(SPISettings settings) {
+void SPIClass::beginTransaction(SPISettings settings)
+{
 	pthread_mutex_lock(&spiMutex);
 	setBitOrder(settings.border);
 	setDataMode(settings.dmode);
 	setClockDivider(settings.cdiv);
 }
 
-void SPIClass::endTransaction() {
+void SPIClass::endTransaction()
+{
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::usingInterrupt(uint8_t interruptNumber) {
+void SPIClass::usingInterrupt(uint8_t interruptNumber)
+{
 	(void)interruptNumber;
 }
 
-void SPIClass::notUsingInterrupt(uint8_t interruptNumber) {
+void SPIClass::notUsingInterrupt(uint8_t interruptNumber)
+{
 	(void)interruptNumber;
 }
