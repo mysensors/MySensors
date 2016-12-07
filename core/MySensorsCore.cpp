@@ -145,9 +145,11 @@ void _begin(void) {
 		CORE_DEBUG(PSTR("MCO:BGN:STP\n"));	// setup callback
 		setup();
 	}
-
+#if defined(MY_SENSOR_NETWORK)
 	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%d\n"), isTransportReady());
-
+#else
+	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=NA\n"));
+#endif
 	// reset wdt before handing over to loop
 	hwWatchdogReset();
 }
