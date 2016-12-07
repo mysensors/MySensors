@@ -1,0 +1,12 @@
+{
+  "name": "Adafruit-CC3000",
+  "keywords": "wifi, wi-fi, http, web, server, json, rest, spi",
+  "description": "Library code for Adafruit's CC3000 Wi-Fi/WiFi breakouts",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/adafruit/Adafruit_CC3000_Library.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "atmelavr"
+}
