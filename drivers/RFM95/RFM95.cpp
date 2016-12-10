@@ -156,7 +156,7 @@ LOCAL bool RFM95_initialise(const float frequency)
 
 	(void)RFM95_setRadioMode(RFM95_RADIO_MODE_STDBY);
 	const rfm95_modemConfig_t configuration = { MY_RFM95_MODEM_CONFIGRUATION };
-	RFM95_setModemRegisters(configuration);
+	RFM95_setModemRegisters(&configuration);
 	RFM95_setPreambleLength(RFM95_PREAMBLE_LENGTH);
 	RFM95_setFrequency(frequency);
 	// set power level
@@ -331,11 +331,11 @@ LOCAL bool RFM95_setTxPower(uint8_t powerLevel)
 }
 
 // Sets registers from a canned modem configuration structure
-LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t config)
+LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t* config)
 {
-	RFM95_writeReg(RFM95_REG_1D_MODEM_CONFIG1, config.reg_1d);
-	RFM95_writeReg(RFM95_REG_1E_MODEM_CONFIG2, config.reg_1e);
-	RFM95_writeReg(RFM95_REG_26_MODEM_CONFIG3, config.reg_26);
+	RFM95_writeReg(RFM95_REG_1D_MODEM_CONFIG1, config->reg_1d);
+	RFM95_writeReg(RFM95_REG_1E_MODEM_CONFIG2, config->reg_1e);
+	RFM95_writeReg(RFM95_REG_26_MODEM_CONFIG3, config->reg_26);
 }
 
 LOCAL void RFM95_setPreambleLength(const uint16_t preambleLength)

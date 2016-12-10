@@ -291,7 +291,7 @@ LOCAL uint8_t RFM95_getAddress(void);
 * bandwidth, spreading factor etc.
 * @param config See modemConfig_t and references therein
 */
-LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t config);
+LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t* config);
 /**
 * @brief Tests whether a new message is available
 * @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM95_recv()

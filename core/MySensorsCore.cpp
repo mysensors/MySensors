@@ -426,11 +426,13 @@ bool _processInternalMessages(void)
 #if defined(MY_GATEWAY_FEATURE)
 			// registeration requests are exclusively handled by GW/Controller
 #if !defined(MY_REGISTRATION_CONTROLLER)
-			// auto registration if version compatible
-			bool approveRegistration = true;
+			bool approveRegistration;
 
 #if defined(MY_CORE_COMPATIBILITY_CHECK)
 			approveRegistration = (_msg.getByte() >= MY_CORE_MIN_VERSION);
+#else
+			// auto registration if version compatible
+			approveRegistration = true;
 #endif
 
 #if (F_CPU>16000000)

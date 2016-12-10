@@ -111,6 +111,11 @@ public:
 		_promiscuousMode = false;
 		_powerLevel = 31;
 		_isRFM69HW = isRFM69HW;
+		_address = RF69_BROADCAST_ADDR;
+#if defined (SPCR) && defined (SPSR)
+		_SPCR = 0;
+		_SPSR = 0;
+#endif
 	}
 
 	bool initialize(uint8_t freqBand, uint8_t ID, uint8_t networkID=1); //!< initialize
