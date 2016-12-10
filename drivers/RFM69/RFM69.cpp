@@ -256,10 +256,9 @@ void RFM69::send(uint8_t toAddress, const void* buffer, uint8_t bufferSize, bool
 bool RFM69::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
                           uint8_t retries, uint8_t retryWaitTime)
 {
-	uint32_t sentTime;
 	for (uint8_t i = 0; i <= retries; i++) {
 		send(toAddress, buffer, bufferSize, true);
-		sentTime = millis();
+		uint32_t sentTime = millis();
 		while (millis() - sentTime < retryWaitTime) {
 			if (ACKReceived(toAddress)) {
 				//Serial.print(" ~ms:"); Serial.print(millis() - sentTime);
@@ -574,8 +573,6 @@ void SerialPrint_P(PGM_P str, void (*f)(uint8_t) = SerialWrite )
 
 void RFM69::readAllRegs()
 {
-	uint8_t regVal;
-
 #if REGISTER_DETAIL
 	int capVal;
 
@@ -590,7 +587,7 @@ void RFM69::readAllRegs()
 	for (uint8_t regAddr = 1; regAddr <= 0x4F; regAddr++) {
 		select();
 		SPI.transfer(regAddr & 0x7F); // send address + r/w bit
-		regVal = SPI.transfer(0);
+		uint8_t regVal = SPI.transfer(0);
 		unselect();
 
 		Serial.print(regAddr, HEX);

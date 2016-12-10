@@ -60,8 +60,8 @@ bool protocolParse(MyMessage &message, char *inputString)
 		case 5: // Variable value
 			if (command == C_STREAM) {
 				blen = 0;
-				uint8_t val;
 				while (*str) {
+					uint8_t val;
 					val = protocolH2i(*str++) << 4;
 					val += protocolH2i(*str++);
 					bvalue[blen] = val;
