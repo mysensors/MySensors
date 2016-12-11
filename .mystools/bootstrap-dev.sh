@@ -6,7 +6,7 @@
 #  USAGE:
 #			git clone https://github.com/mysensors/MySensors.git
 #     cd MySensors
-#			.tools/bootstrap-dev.sh
+#			.mystools/bootstrap-dev.sh
 ##
 
 ##
@@ -44,8 +44,8 @@ install_hooks()
 #
 #  1.  Check that we are bootstrapping a supported OS/environment
 #  2.  Validate github remotes include valid upstream and origin
-#  3.  Check for client commit hook pre-requisites
-#  4.  Install client commit hook pre-requisites
+#  3.  Check for client commit hook prerequisites
+#  4.  Install client commit hook prerequisites
 #  5.  Define aliases for conveniently running tool bundles
 ##
 
