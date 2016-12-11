@@ -9,7 +9,7 @@ end_of_line = lf
 charset = utf-8
 
 # For all source code
-[*.{c,cpp,h,ino}]
+[*.{c,cpp,h,ino,sh}]
 insert_final_newline = true
 indent_style = tab
 indent_size = 2
