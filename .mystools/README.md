@@ -23,16 +23,16 @@ editor linters, etc.)
 
 The [boostrap-dev](bootstrap-dev.sh) script completely configures a
 development environment. The boostrap-dev script validates development
-pre-requisites such as verifying the git repo ```origin``` &
+prerequisites such as verifying the git repo ```origin``` &
 ```upstream``` remotes, tools needed for the git client hooks,
 installing local commit hooks, and creating git aliases, etc.
 
 ```shell-script
 $ cd MySensors    # git repo
-$ .tools/bootstrap-dev.sh
+$ .mystools/bootstrap-dev.sh
 Checking operating system support: darwin16...
 Checking github 'origin' & 'upstream' remotes...
-Checking tool/utility pre-requisites...
+Checking tool/utility prerequisites...
 Installing git client-side hooks...
 Configuring git aliases for running mysensor tool bundles...
 Successfully configured your repo for MySensors development... Thanks for your support!
@@ -40,7 +40,7 @@ $
 ```
 **Note:**  If the bootstrap can not find required command-line
 utilities, you will be requested to install the required tools and
-re-run bootstrap.sh.  See [Installation instructions for pre-requisite
+re-run bootstrap.sh.  See [Installation instructions for prerequisite
 tools](#installtools).
 
 Once the bootstrapping process is complete, a git alias for each tool
@@ -76,7 +76,7 @@ team.  Gitler will also enforce the coding guidelines so the hooks are
 provided to reduce development cycle times by detecting standards
 variances locally before pushing to GitHub.
 
-### <a name="installtools"></a>Installation instructions for pre-requisite tools
+### <a name="installtools"></a>Installation instructions for prerequisite tools
 
 This first time you run the bootstrap script, it may inform you that
 certain development tools are missing from your path or system:
@@ -87,7 +87,7 @@ Checking github 'origin' & 'upstream' remotes...
 Checking tool/utility prerequisites...
 astyle not installed or not in current path.
 cppcheck not installed or not in current path.
-One or more required tools not found.  Install required tools and re-run .tools/bootstrap-dev.sh
+One or more required tools not found.  Install required tools and re-run .mystools/bootstrap-dev.sh
 ```
 
 To finish the bootstrap process, you will need to install the required
@@ -168,6 +168,7 @@ cd astyle/build/gcc && sudo make shared release shared static install
 curl -L 'https://sourceforge.net/projects/cppcheck/files/cppcheck/1.76.1/cppcheck-1.76.1.tar.gz/download' | tar xvz
 
 # Compile and install
+cd cppcheck-1.76.1
 sudo apt-get install libpcre++-dev
 sudo make SRCDIR=build CFGDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
 
@@ -191,7 +192,7 @@ convenience functions and environment variables common to all tools.
 Each tool bundle is laid out as follows:
 
 ```
-${TOOLSDIR}                 [e.g. ${GITREPO}/.tools}]
+${TOOLSDIR}                 [e.g. ${GITREPO}/.mystools}]
 .../tool                    [e.g. cppcheck, astyle]
 ....../run.sh               [tool run script]
 ....../options.sh           [command-line options]
@@ -209,7 +210,7 @@ that the runtime leverages.
 
 #####git config keys
 
-* mysensors.toolsdir = .tools (defined as a repo-relative path - location agnostic)
+* mysensors.toolsdir = .mystools (defined as a repo-relative path - location agnostic)
 * mysensors.bootstrap-cksum = \<git sha of bootstrap-dev.sh used to detect an outdated environment>
 
 #####git aliases
