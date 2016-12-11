@@ -32,6 +32,16 @@ const uint8_t sha256InitState[] PROGMEM = {
 	0x19,0xcd,0xe0,0x5b  // H7
 };
 
+Sha256Class::Sha256Class()
+{
+	memset(keyBuffer, 0, BLOCK_LENGTH);
+	memset(innerHash, 0, HASH_LENGTH);
+	memset(buffer.b, 0, BLOCK_LENGTH);
+	memset(state.b, 0, BLOCK_LENGTH);
+	bufferOffset = 0;
+	byteCount = 0;
+}
+
 void Sha256Class::init(void)
 {
 	memcpy_P(state.b,sha256InitState,32);

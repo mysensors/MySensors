@@ -326,7 +326,7 @@ public:
 	 *
 	 * @param[in]  pin   The pin to use for communication
 	 */
-	atsha204Class(uint8_t pin);
+	explicit atsha204Class(uint8_t pin);
 
 	/**
 	 * @brief      Wake up device

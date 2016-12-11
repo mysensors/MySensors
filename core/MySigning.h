@@ -490,14 +490,6 @@ typedef struct {
 /** @brief Helper macro to determine the number of elements in a array */
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
-/** @brief Helper macro to determine if node require serial salted signatures */
-#define DO_WHITELIST(node) (~_doWhitelist[node>>3]&(1<<node%8))
-/** @brief Helper macro to set that node require serial salted signatures */
-#define SET_WHITELIST(node) (_doWhitelist[node>>3]&=~(1<<node%8))
-/** @brief Helper macro to set that node does not require serial salted signatures */
-#define CLEAR_WHITELIST(node) (_doWhitelist[node>>3]|=(1<<node%8))
-
-
 /**
  * @brief Initializes signing infrastructure and associated backend.
  *

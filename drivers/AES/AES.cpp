@@ -104,7 +104,7 @@ const static byte s_inv [0x100] PROGMEM = {
 } ;
 
 // times 2 in the GF(2^8)
-#define f2(x)   ((x) & 0x80 ? (x << 1) ^ WPOLY : x << 1)
+#define f2(x)   (((x) & 0x80) ? (x << 1) ^ WPOLY : x << 1)
 #define d2(x)  (((x) >> 1) ^ ((x) & 1 ? DPOLY : 0))
 
 static byte s_box (byte x)
@@ -248,6 +248,11 @@ static void inv_mix_sub_columns (byte dt[N_BLOCK], byte st[N_BLOCK])
 AES::AES()
 {
 	byte ar_iv[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01 };
+	IVC = 0x01;
+	round = 0;
+	pad = 0;
+	size = 0;
+	memset(key_sched, 0, KEY_SCHEDULE_BYTES);
 	memcpy(iv,ar_iv,8);
 	memcpy(iv+8,ar_iv,8);
 	arr_pad[0] = 0x01;
