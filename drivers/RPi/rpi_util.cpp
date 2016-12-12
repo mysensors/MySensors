@@ -96,7 +96,7 @@ int get_gpio_number(uint8_t physPin, uint8_t *gpio)
 
 void *interruptHandler(void *args)
 {
-	int fd, ret;
+	int fd;
 	struct pollfd polls;
 	char c;
 	struct ThreadArgs *arguments = (struct ThreadArgs *)args;
@@ -117,7 +117,7 @@ void *interruptHandler(void *args)
 
 	while (1) {
 		// Wait for it ...
-		ret = poll(&polls, 1, -1);
+		int ret = poll(&polls, 1, -1);
 		if (ret < 0) {
 			logError("Error waiting for interrupt: %s\n", strerror(errno));
 			break;
@@ -232,7 +232,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode)
 
 	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/direction", gpioPin) ;
 	if ((fd = fopen (fName, "w")) == NULL) {
-		fprintf (stderr, "attachInterrupt: Unable to open GPIO direction interface for pin %d: %s\n",
+		logError("attachInterrupt: Unable to open GPIO direction interface for pin %d: %s\n",
 		         physPin, strerror(errno));
 		exit(1) ;
 	}
@@ -241,7 +241,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode)
 
 	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/edge", gpioPin) ;
 	if ((fd = fopen(fName, "w")) == NULL) {
-		fprintf (stderr, "attachInterrupt: Unable to open GPIO edge interface for pin %d: %s\n", physPin,
+		logError("attachInterrupt: Unable to open GPIO edge interface for pin %d: %s\n", physPin,
 		         strerror(errno));
 		exit(1) ;
 	}
@@ -268,7 +268,7 @@ void rpi_util::attachInterrupt(uint8_t physPin, void (*func)(), uint8_t mode)
 	if (sysFds[gpioPin] == -1) {
 		snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/value", gpioPin);
 		if ((sysFds[gpioPin] = open(fName, O_RDWR)) < 0) {
-			fprintf (stderr, "Error reading pin %d: %s\n", physPin, strerror(errno));
+			logError("Error reading pin %d: %s\n", physPin, strerror(errno));
 			exit(1);
 		}
 	}

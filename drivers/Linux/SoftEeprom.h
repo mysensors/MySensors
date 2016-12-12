@@ -44,6 +44,10 @@ public:
 	 */
 	SoftEeprom(const char *fileName, size_t length);
 	/**
+	 * @brief SoftEeprom copy constructor.
+	 */
+	SoftEeprom(const SoftEeprom& other);
+	/**
 	 * @brief SoftEeprom destructor.
 	 */
 	~SoftEeprom();
@@ -77,6 +81,11 @@ public:
 	 * @param value to write.
 	 */
 	void writeByte(int addr, uint8_t value);
+	/**
+	 * @brief Overloaded assign operator.
+	 *
+	 */
+	SoftEeprom& operator=(const SoftEeprom& other);
 };
 
 #endif
