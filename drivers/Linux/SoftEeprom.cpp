@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <string.h>
+#include <errno.h>
 #include "log.h"
 #include "SoftEeprom.h"
 
@@ -31,7 +32,7 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 
 	_fileName = strdup(fileName);
 	if (_fileName == NULL) {
-		perror("Error: ");
+		logError("Error: %s\n", strerror(errno));
 		exit(1);
 	}
 
@@ -64,6 +65,17 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 		}
 		myFile.read((char*)_values, _length);
 		myFile.close();
+	}
+}
+
+SoftEeprom::SoftEeprom(const SoftEeprom& other)
+{
+	_fileName = strdup(other._fileName);
+
+	_length = other._length;
+	_values = new uint8_t[_length];
+	for (size_t i = 0; i < _length; ++i) {
+		_values[i] = other._values[i];
 	}
 }
 
@@ -127,4 +139,18 @@ void SoftEeprom::writeByte(int addr, uint8_t value)
 	if (curr != value) {
 		writeBlock(&value, reinterpret_cast<void*>(addr), 1);
 	}
+}
+
+SoftEeprom& SoftEeprom::operator=(const SoftEeprom& other)
+{
+	if (this != &other) {
+		_fileName = strdup(other._fileName);
+
+		_length = other._length;
+		_values = new uint8_t[_length];
+		for (size_t i = 0; i < _length; ++i) {
+			_values[i] = other._values[i];
+		}
+	}
+	return *this;
 }
