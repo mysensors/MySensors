@@ -4,8 +4,8 @@ OPTIONS="--quiet                                      \
 	--error-exitcode=1                                  \
 	--force                                             \
 	--enable=style,information                          \
-	--library=avr                                       \
-	--platform="${TOOLCONFIG}"/avr.xml                  \
+	--library=${LIBRARY:-avr}                           \
+	--platform="${TOOLCONFIG}"/${PLATFORM:-avr.xml}     \
  	--includes-file="${TOOLCONFIG}"/includes.cfg	      \
 	--suppressions-list="${TOOLCONFIG}"/suppressions.cfg"
 

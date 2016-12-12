@@ -24,7 +24,7 @@ tools_dir()
 	git_config_tools_dir='git config mysensors.toolsdir'
 
 	# Set mysensors.toolsdir in git config if it hasn't been set
-	if [ ! $($git_config_tools_dir) -o ! -d $($git_config_tools_dir) ]; then
+	if [[ ! $($git_config_tools_dir) || ! -d "$($git_config_tools_dir)" ]]; then
 		$git_config_tools_dir "$( cd "$(dirname "${BASH_SOURCE[0]}")"; git rev-parse --show-prefix )"
 		git config alias.mystoolspath '![ -z "${GIT_PREFIX}" ] || cd ${GIT_PREFIX}; echo $(git rev-parse --show-cdup)$(git config mysensors.toolsdir)'
 	fi
@@ -86,7 +86,7 @@ runBundle()
 #
 $(git rev-parse --is-inside-work-tree --quiet >/dev/null 2>&1) || err "Working directory is not a git repository.  aborting..."
 
-if environment_outdated && [[ $(basename "${0}") != *bootstrap* ]]; then
+if [[ $(basename "${0}") != *bootstrap* ]] && environment_outdated ; then
 	err "Your environment is out of date...  Re-run $(git mystoolspath)bootstrap-dev.sh and try again"
 fi
 
