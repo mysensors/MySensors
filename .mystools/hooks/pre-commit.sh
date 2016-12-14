@@ -20,14 +20,6 @@ done
 ###
 #  cppcheck
 #
-errorsDetected=0
-for file in $(stagedSourceFiles); do
-	if ! git cppcheck $file >/dev/null; then
-		warn "$file failed static analysis."
-		errorsDetected=1
-	fi
-done
-
-[ $errorsDetected == 1 ] && err "Correct the errors until cppcheck passees using 'git cppcheck --cached'."
+git cppcheck --cached || err "Correct the errors until cppcheck passes using 'git cppcheck --cached'."
 
 exit 0
