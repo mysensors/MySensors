@@ -109,10 +109,10 @@ uint16_t hwCPUVoltage()
 #else
 uint16_t hwCPUVoltage()
 {
-    // when soft signing is active, the internal voltage
-    // cannot be measured. Therefore the return value of
-    // this function is always 0.
-    return 0;
+	// when soft signing is active, the internal voltage
+	// cannot be measured. Therefore the return value of
+	// this function is always 0.
+	return 0;
 }
 #endif
 
