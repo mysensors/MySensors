@@ -345,7 +345,8 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 	setMode(RF69_MODE_TX);
 	uint32_t txStart = millis();
 	while (hwDigitalRead(_interruptPin) == 0 &&
-	        millis() - txStart < RF69_TX_LIMIT_MS) {} // wait for DIO0 to turn HIGH signalling transmission finish
+	        millis() - txStart <
+	        RF69_TX_LIMIT_MS) {} // wait for DIO0 to turn HIGH signalling transmission finish
 	//while (readReg(REG_IRQFLAGS2) & RF_IRQFLAGS2_PACKETSENT == 0x00); // wait for ModeReady
 	setMode(RF69_MODE_STANDBY);
 }
@@ -364,7 +365,8 @@ void RFM69::interruptHandler()
 		PAYLOADLEN = PAYLOADLEN > 66 ? 66 : PAYLOADLEN; // precaution
 		TARGETID = SPI.transfer(0);
 		if(!(_promiscuousMode || TARGETID == _address ||
-		        TARGETID == RF69_BROADCAST_ADDR) // match this node's address, or broadcast address or anything in promiscuous mode
+		        TARGETID ==
+		        RF69_BROADCAST_ADDR) // match this node's address, or broadcast address or anything in promiscuous mode
 		        || PAYLOADLEN <
 		        3) { // address situation could receive packets that are malformed and don't fit this libraries extra fields
 			PAYLOADLEN = 0;
