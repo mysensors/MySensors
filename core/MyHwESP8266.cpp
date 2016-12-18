@@ -91,6 +91,14 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 }
 
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
+
+// The ESP8266 has only one analog input. When soft signing
+// is used, this port has to be made available to generate
+// the nonce for the message signing. When the ADC mode is
+// set to measure the internal voltage, the analogRead()
+// on the would always return 65535, which is not as random
+// as it is required.
+#if !defined(MY_SIGNING_SOFT)
 ADC_MODE(ADC_VCC);
 
 uint16_t hwCPUVoltage()
@@ -98,6 +106,15 @@ uint16_t hwCPUVoltage()
 	// in mV
 	return ESP.getVcc();
 }
+#else
+uint16_t hwCPUVoltage()
+{
+	// when soft signing is active, the internal voltage
+	// cannot be measured. Therefore the return value of
+	// this function is always 0.
+	return 0;
+}
+#endif
 
 uint16_t hwCPUFrequency()
 {
