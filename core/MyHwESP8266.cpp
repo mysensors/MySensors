@@ -90,13 +90,25 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
+#if defined(MY_SPECIAL_DEBUG)
+// settings for getVcc()
 ADC_MODE(ADC_VCC);
+#else
+// [default] settings for analogRead(A0) 
+ADC_MODE(ADC_TOUT);
+#endif
+
+#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 
 uint16_t hwCPUVoltage()
 {
-	// in mV
+#if defined(MY_SPECIAL_DEBUG)
+	// in mV, requires ADC_VCC set
 	return ESP.getVcc();
+#else
+	// not possible
+	return 0;
+#endif
 }
 
 uint16_t hwCPUFrequency()
