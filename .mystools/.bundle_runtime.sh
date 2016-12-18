@@ -6,12 +6,13 @@
 #
 ##
 log()  { IFS=" "; >&2 printf "%s\n" "$*";										}
-warn() { IFS=" "; >&2 printf "\e[33m%s\e[m\n" "$*";					}
-err()  { IFS=" "; >&2 printf '\e[31m%s\e[m\n' "$*"; exit 1;	}
+info() { IFS=" "; >&2 printf "\e[92m%s\e[m\n" "$*";					}
+warn() { IFS=" "; >&2 printf "\e[93m%s\e[m\n" "$*";					}
+err()  { IFS=" "; >&2 printf "\e[91m%s\e[m\n" "$*"; exit 1;	}
 
 is_supported_os()
 {
-	[[ ${1} == darwin* ]] || [[ ${1} == linux-gnu ]] || [[ ${1} == freebsd ]] || [[ ${1} == msys ]] || [[ ${1} == cygwin ]]
+	[[ ${1} == darwin* ]] || [[ ${1} == linux-gnu* ]] || [[ ${1} == freebsd ]] || [[ ${1} == msys ]] || [[ ${1} == cygwin ]]
 }
 
 is_installed()

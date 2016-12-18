@@ -13,16 +13,21 @@
 # Import common utility functions and environment variables
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)/.bundle_runtime.sh"
 
-check_tool_prerequisites()
+check_tool_prerequisite()
 {
-	local err=0
-	for preReq in ${1}; do
-		if ! is_installed $preReq; then
-			warn "$preReq not installed or not in current path."
-			err=1
+	function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
+
+	if is_installed ${1} ; then
+		#local version=$(${1} --version 2>&1 | sed -e 's/[[:alpha:]|(|[:space:]]//g')
+		local version=$(${1} --version 2>&1 | sed -ne 's/[^0-9]*\(\([0-9]\.\)\{0,4\}[0-9][^.]\).*/\1/p')
+		if [ $(ver ${version}) -lt $(ver ${2}) ]; then
+			warn "Found ${1} ${version} however, version ${2} or greater is required..."
+			return 1
 		fi
-	done
-	return $err
+	else
+		warn "${1} not installed or not in current path."
+		return 1
+	fi
 }
 
 check_git_remote()
@@ -68,7 +73,9 @@ check_git_remote "upstream" "${mysrepo}" || {
 
 #3
 log "Checking tool/utility prerequisites..."
-check_tool_prerequisites "astyle cppcheck" || err "One or more required tools not found.  Install required tools and re-run ${0}"
+check_tool_prerequisite "astyle" "2.0.5"   || err "Install AStyle 2.0.5 or greater and re-run ${0}"
+check_tool_prerequisite "cppcheck" "1.76" || err "Install Cppcheck 1.76 or greater and re-run ${0}"
+check_tool_prerequisite "git" "2.0" || err "Install git 2.0 or greater and re-run ${0}"
 
 #4
 log "Installing client-side git hooks..."
@@ -80,4 +87,4 @@ configure_git_tool_aliases || err "Failed to create git aliases due to error $?.
 
 bootstrap_version "--set"
 
-log "Successfully configured your repo for MySensors development... Thanks for your support!"
+info "Successfully configured your repo for MySensors development... Thanks for your support!"
