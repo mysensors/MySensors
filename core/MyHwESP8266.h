@@ -32,7 +32,6 @@
 
 #define EEPROM_size (1024)
 
-
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
 #define hwDigitalRead(__pin) digitalRead(__pin)
@@ -40,7 +39,7 @@
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() ESP.restart()
 #define hwMillis() millis()
-#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
+#define hwRandomNumberInit() randomSeed(RANDOM_REG32)
 
 void hwInit(void);
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
