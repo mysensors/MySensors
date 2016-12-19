@@ -83,6 +83,7 @@
 #define MY_SLEEP_NOT_POSSIBLE	((int8_t)-2)			//!< Sleeping not possible
 #define INTERRUPT_NOT_DEFINED	((uint8_t)255)			//!< _sleep() param: no interrupt defined
 #define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
+#define VALUE_NOT_DEFINED		((uint8_t)255)			//!< Value not defined
 
 
 #ifdef MY_DEBUG

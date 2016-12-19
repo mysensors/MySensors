@@ -223,29 +223,35 @@ void presentNode(void)
 
 uint8_t getNodeId(void)
 {
-#if defined(MY_SENSOR_NETWORK)
-	return transportGetNodeId();
-#else
-	return 0xFF;
+	uint8_t result = VALUE_NOT_DEFINED;
+#if defined(MY_GATEWAY_FEATURE)
+	result = GATEWAY_ADDRESS;
+#elif defined(MY_SENSOR_NETWORK)
+	result = transportGetNodeId();
 #endif
+	return result;
 }
 
 uint8_t getParentNodeId(void)
 {
-#if defined(MY_SENSOR_NETWORK)
-	return transportGetParentNodeId();
-#else
-	return 0xFF;
+	uint8_t result = VALUE_NOT_DEFINED;
+#if defined(MY_GATEWAY_FEATURE)
+	result = VALUE_NOT_DEFINED;	// GW doesn't have a parent
+#elif defined(MY_SENSOR_NETWORK)
+	result = transportGetParentNodeId();
 #endif
+	return result;
 }
 
 uint8_t getDistanceGW(void)
 {
-#if defined(MY_SENSOR_NETWORK)
-	return transportGetDistanceGW();
-#else
-	return 0xFF;
+	uint8_t result = VALUE_NOT_DEFINED;
+#if defined(MY_GATEWAY_FEATURE)
+	result = 0;
+#elif defined(MY_SENSOR_NETWORK)
+	result = transportGetDistanceGW();
 #endif
+	return result;
 }
 
 controllerConfig_t getConfig(void)
