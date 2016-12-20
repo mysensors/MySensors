@@ -40,9 +40,7 @@ void _callbackTransportReady(void)
 {
 	if (!_coreConfig.presentationSent) {
 		presentNode();
-#if !defined(MY_GATEWAY_FEATURE)
 		_registerNode();
-#endif
 		_coreConfig.presentationSent = true;
 	}
 }
@@ -153,6 +151,8 @@ void _begin(void)
 #if defined(MY_SENSOR_NETWORK)
 	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%d\n"), isTransportReady());
 #else
+	// no sensor network defined, call presentation & registration
+	_callbackTransportReady();
 	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=NA\n"));
 #endif
 	// reset wdt before handing over to loop

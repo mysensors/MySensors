@@ -38,17 +38,17 @@
 *   - TSM:READY					from <b>stReady</b> Transport is ready and fully operational
 *   - TSM:FAIL						from <b>stFailure</b> Failure in transport link or transport HW
 *  - Transport support function (<b>TSF</b>)
-*   - TSF:CHKUPL					from @ref transportCheckUplink(), checks connection to GW
-*   - TSF:ASID						from @ref transportAssignNodeID(), assigns node ID
-*   - TSF:PING						from @ref transportPingNode(), pings a node
+*   - TSF:CKU						from @ref transportCheckUplink(), checks connection to GW
+*   - TSF:SID						from @ref transportAssignNodeID(), assigns node ID
+*   - TSF:PNG						from @ref transportPingNode(), pings a node
 *   - TSF:WUR						from @ref transportWaitUntilReady(), waits until transport is ready
 *   - TSF:CRT						from @ref transportClearRoutingTable(), clears routing table stored in EEPROM
 *   - TSF:LRT						from @ref transportLoadRoutingTable(), loads RAM routing table from EEPROM (only GW/repeaters)
 *   - TSF:SRT						from @ref transportSaveRoutingTable(), saves RAM routing table to EEPROM (only GW/repeaters)
 *   - TSF:MSG						from @ref transportProcessMessage(), processes incoming message
-*   - TSF:SANCHK					from @ref transportInvokeSanityCheck(), calls transport-specific sanity check
-*   - TSF:ROUTE					from @ref transportRouteMessage(), sends message
-*   - TSF:SEND						from @ref transportSendRoute(), sends message if transport is ready (exposed)
+*   - TSF:SAN						from @ref transportInvokeSanityCheck(), calls transport-specific sanity check
+*   - TSF:RTE						from @ref transportRouteMessage(), sends message
+*   - TSF:SND						from @ref transportSendRoute(), sends message if transport is ready (exposed)
 
 *
 * Transport debug log messages:
@@ -80,13 +80,13 @@
 * | | TSM	| FAIL		| CNT=%%d				| <b>Transition to stFailure state</b>, consecutive failure counter (CNT)
 * | | TSM	| FAIL		| PDT					| Power-down transport
 * | | TSM	| FAIL		| RE-INIT				| Attempt to re-initialize transport
-* | | TSF	| CHKUPL	| OK					| Uplink OK
-* | | TSF	| CHKUPL	| OK,FCTRL				| Uplink OK, flood control prevents pinging GW in too short intervals
-* | | TSF	| CHKUPL	| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
-* | | TSF	| CHKUPL	| FAIL					| No reply received when checking uplink
-* | | TSF	| ASID		| OK,ID=%%d				| Node ID assigned
-* |!| TSF	| ASID		| FAIL,ID=%%d			| Assigned ID is invalid
-* | | TSF	| PING		| SEND,TO=%%d			| Send ping to destination (TO)
+* | | TSF	| CKU		| OK					| Uplink OK
+* | | TSF	| CKU		| OK,FCTRL				| Uplink OK, flood control prevents pinging GW in too short intervals
+* | | TSF	| CKU		| DGWC,O=%%d,N=%%d		| Uplink check revealed changed network topology, old distance (O), new distance (N)
+* | | TSF	| CKU		| FAIL					| No reply received when checking uplink
+* | | TSF	| SID		| OK,ID=%%d				| Node ID assigned
+* |!| TSF	| SID		| FAIL,ID=%%d			| Assigned ID is invalid
+* | | TSF	| PNG		| SEND,TO=%%d			| Send ping to destination (TO)
 * | | TSF	| WUR		| MS=%%lu				| Wait until transport ready, timeout (MS)
 * | | TSF	| MSG		| ACK REQ				| ACK message requested
 * | | TSF	| MSG		| ACK					| ACK message, do not proceed but forward to callback
@@ -108,14 +108,14 @@
 * |!| TSF	| MSG		| REL MSG,NORP			| Node received a message for relaying, but node is not a repeater, message skipped
 * |!| TSF	| MSG		| SIGN FAIL				| Signing message failed
 * |!| TSF	| MSG		| GWL FAIL				| GW uplink failed
-* | | TSF	| SANCHK	| OK					| Sanity check passed
-* |!| TSF	| SANCHK	| FAIL					| Sanity check failed, attempt to re-initialize radio
+* | | TSF	| SAN		| OK					| Sanity check passed
+* |!| TSF	| SAN		| FAIL					| Sanity check failed, attempt to re-initialize radio
 * | | TSF	| CRT		| OK					| Clearing routing table successful
 * | | TSF	| LRT		| OK					| Loading routing table successful
 * | | TSF	| SRT		| OK					| Saving routing table successful
-* |!| TSF	| ROUTE		| FPAR ACTIVE			| Finding parent active, message not sent
-* |!| TSF	| ROUTE		| DST %%d UNKNOWN		| Routing for destination (DST) unknown, send message to parent
-* |!| TSF	| SEND		| TNR					| Transport not ready, message cannot be sent
+* |!| TSF	| RTE		| FPAR ACTIVE			| Finding parent active, message not sent
+* |!| TSF	| RTE		| DST %%d UNKNOWN		| Routing for destination (DST) unknown, send message to parent
+* |!| TSF	| SND		| TNR					| Transport not ready, message cannot be sent
 *
 * Incoming / outgoing messages:
 *

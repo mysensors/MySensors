@@ -103,7 +103,7 @@
 * @brief Interval to dump content of routing table to eeprom
 */
 #ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
-#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(10*60*1000ul)
+#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(30*60*1000ul)
 #endif
 /**
 * @def MY_TRANSPORT_SANITY_CHECK
@@ -114,17 +114,17 @@
 
 /**
 * @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-* @brief Interval (in ms) of transport sanity checks
+* @brief Interval (in ms) for transport sanity checks
 */
 #ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (60*1000ul)
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15*60*1000ul)
 #endif
 /**
 * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
 * @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
 */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
+#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (20*60*1000ul)
 #endif
 
 /**
