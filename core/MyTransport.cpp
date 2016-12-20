@@ -625,13 +625,13 @@ void transportProcessMessage(void)
 	// update routing table if msg not from parent
 #if defined(MY_REPEATER_FEATURE)
 #if !defined(MY_GATEWAY_FEATURE)
-	if (last != getParentNodeId()) {
+	if (last != _transportConfig.parentNodeId) {
 #else
 	// GW doesn't have parent
 	{
 #endif
 		// Message is from one of the child nodes and not sent from this node. Add it to routing table.
-		if (sender != getNodeId())
+		if (sender != _transportConfig.nodeId)
 		{
 			transportSetRoute(sender, last);
 		}
@@ -840,10 +840,10 @@ void transportProcessMessage(void)
 void transportInvokeSanityCheck(void)
 {
 	if (!transportSanityCheck()) {
-		TRANSPORT_DEBUG(PSTR("!TSF:SNK:FAIL\n"));	// sanity check fail
+		TRANSPORT_DEBUG(PSTR("!TSF:SAN:FAIL\n"));	// sanity check fail
 		transportSwitchSM(stFailure);
 	} else {
-		TRANSPORT_DEBUG(PSTR("TSF:SNK:OK\n"));		// sanity check ok
+		TRANSPORT_DEBUG(PSTR("TSF:SAN:OK\n"));		// sanity check ok
 	}
 }
 

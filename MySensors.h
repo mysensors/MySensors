@@ -239,6 +239,11 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 #endif
 
+#if defined(MY_REPEATER_FEATURE)
+#define MY_TRANSPORT_SANITY_CHECK
+#endif
+
+
 #if defined(MY_TRANSPORT_DONT_CARE_MODE)
 #error This directive is deprecated, set MY_TRANSPORT_WAIT_READY_MS instead!
 #endif
