@@ -64,25 +64,17 @@ static char i2h(uint8_t i)
 }
 
 #ifdef __linux__
-static void DEBUG_SIGNING_PRINTBUF(const char *str, uint8_t* buf, uint8_t sz)
-{
-	static char printBuffer[300];
+#define __FlashStringHelper char
+#define MY_SERIALDEVICE.print debug
+#endif
 
-	for (int i=0; i<sz; i++) {
-		printBuffer[i * 2] = i2h(buf[i] >> 4);
-		printBuffer[(i * 2) + 1] = i2h(buf[i]);
-	}
-	printBuffer[sz * 2] = '\0';
-	debug(str);
-	if (sz > 0) {
-		debug(printBuffer);
-	}
-}
-#else
 static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf, uint8_t sz)
 {
 	static char printBuffer[300];
-#ifdef MY_GATEWAY_FEATURE
+	if (NULL == buf) {
+		return;
+	}
+#if defined(MY_GATEWAY_FEATURE) && !defined(__linux__)
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(printBuffer, 299, PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 	MY_SERIALDEVICE.print(printBuffer);
@@ -92,7 +84,7 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 		printBuffer[(i * 2) + 1] = i2h(buf[i]);
 	}
 	printBuffer[sz * 2] = '\0';
-#ifdef MY_GATEWAY_FEATURE
+#if defined(MY_GATEWAY_FEATURE) && !defined(__linux__)
 	// Truncate message if this is gateway node
 	printBuffer[MY_GATEWAY_MAX_SEND_LENGTH-1-strlen_P((const char*)str)] = '\0';
 #endif
@@ -100,9 +92,10 @@ static void DEBUG_SIGNING_PRINTBUF(const __FlashStringHelper* str, uint8_t* buf,
 	if (sz > 0) {
 		MY_SERIALDEVICE.print(printBuffer);
 	}
+#if !defined(__linux__)
 	MY_SERIALDEVICE.println("");
+#endif
 }
-#endif /* __linux__ */
 #else
 #define DEBUG_SIGNING_PRINTBUF(str, buf, sz)
 #endif

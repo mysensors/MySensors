@@ -313,42 +313,6 @@ private:
 #endif
 
 /**
- * @example aes.pde
- * <b>For Arduino</b><br>
- * <b>Updated: spaniakos 2015 </b><br>
- *
- * This is an example of how to use AES in CBC mode easily.
- * The text and keys can be either in HEX or String format.<br />
- */
-
-/**
-* @example aes.cpp
-* <b>For Rasberry pi</b><br>
-* <b>Updated: spaniakos 2015 </b><br>
-*
-* This is an example of how to use AES in CBC mode easily.
-* The text and keys can be either in HEX or String format.<br />
-*/
-
-/**
-* @example test_vectors.pde
-* <b>For Arduino</b><br>
-* <b>Updated: spaniakos 2015 </b><br>
-*
-* This is an example of monte carlo test vectors, in order to justify the effectiveness of the algorithm.<br />
-* plus is a classical approach to the AES encryption library with out the easy to use add-on modifications.
-*/
-
-/**
-* @example test_vectors.cpp
-* <b>For Rasberry pi</b><br>
-* <b>Updated: spaniakos 2015 </b><br>
-*
-* This is an example of monte carlo test vectors, in order to justify the effectiveness of the algorithm.<br />
-* plus is a classical approach to the AES encryption library with out the easy to use add-on modifications.
-*/
-
-/**
  * @defgroup aeslib AES library for Arduino and Raspberry pi
  * @ingroup internals
  *

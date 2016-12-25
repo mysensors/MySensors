@@ -177,7 +177,6 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
 
 static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response)
 {
-	uint8_t count_byte;
 	uint8_t i;
 	uint8_t ret_code;
 
@@ -189,6 +188,7 @@ static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response)
 
 	ret_code = swi_receive_bytes(size, response);
 	if (ret_code == SWI_FUNCTION_RETCODE_SUCCESS || ret_code == SWI_FUNCTION_RETCODE_RX_FAIL) {
+		uint8_t count_byte;
 		count_byte = response[SHA204_BUFFER_POS_COUNT];
 		if ((count_byte < SHA204_RSP_SIZE_MIN) || (count_byte > size)) {
 			return SHA204_INVALID_SIZE;

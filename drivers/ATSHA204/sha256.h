@@ -19,6 +19,7 @@ union _state {
 class Sha256Class
 {
 public:
+	Sha256Class(); // Constructor
 	void init(void);
 	void initHmac(const uint8_t* secret, int secretLength);
 	uint8_t* result(void);

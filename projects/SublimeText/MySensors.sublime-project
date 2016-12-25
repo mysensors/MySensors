@@ -32,12 +32,12 @@
 			"autoformat_on_save": true,
 			"options_c":
 			{
-				"additional_options_file": "$project_path/../../.tools/astyle/config/style.cfg",
+				"additional_options_file": "$project_path/../../.mystools/astyle/config/style.cfg",
 				"use_only_additional_options": true
 			},
 			"options_c++":
 			{
-				"additional_options_file": "$project_path/../../.astylerc",
+				"additional_options_file": "$project_path/../../.mystools/astyle/config/style.cfg",
 				"use_only_additional_options": true
 			},
 		},
@@ -65,6 +65,8 @@
 	// The project defines build targets for all Arduino based boards supported by MySensors.
 	// The plugin needed to do the build (which require the Arduino IDE to be installed) is
 	// available here: https://github.com/jacobrosenthal/arduino-cli
+	// You also need to make sure you set up sketch book paths properly and that you can
+	// build sketches and examples for the MySensors library in the IDE.
 	"build_systems":
 	[
 		{
