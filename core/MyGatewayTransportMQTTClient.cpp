@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2015 Sensnology AB
+* Copyright (C) 2013-2016 Sensnology AB
 * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -65,7 +65,7 @@ void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
 	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
 }
 
-bool reconnectMQTT()
+bool reconnectMQTT(void)
 {
 	debug(PSTR("Attempting MQTT connection...\n"));
 	// Attempt to connect
@@ -88,14 +88,14 @@ bool reconnectMQTT()
 	return false;
 }
 
-bool gatewayTransportConnect()
+bool gatewayTransportConnect(void)
 {
 #if defined(MY_GATEWAY_ESP8266)
 	while (WiFi.status() != WL_CONNECTED) {
 		wait(500);
-		MY_SERIALDEVICE.print(".");
+		MY_SERIALDEVICE.print(F("."));
 	}
-	MY_SERIALDEVICE.print("IP: ");
+	MY_SERIALDEVICE.print(F("IP: "));
 	MY_SERIALDEVICE.println(WiFi.localIP());
 #elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
@@ -107,12 +107,12 @@ bool gatewayTransportConnect()
 #else
 	// Get IP address from DHCP
 	if (!Ethernet.begin(_MQTT_clientMAC)) {
-		MY_SERIALDEVICE.print("DHCP FAILURE...");
+		MY_SERIALDEVICE.print(F("DHCP FAILURE..."));
 		_MQTT_connecting = false;
 		return false;
 	}
 #endif
-	MY_SERIALDEVICE.print("IP: ");
+	MY_SERIALDEVICE.print(F("IP: "));
 	MY_SERIALDEVICE.println(Ethernet.localIP());
 	// give the Ethernet interface a second to initialize
 	delay(1000);
@@ -120,7 +120,7 @@ bool gatewayTransportConnect()
 	return true;
 }
 
-bool gatewayTransportInit()
+bool gatewayTransportInit(void)
 {
 	_MQTT_connecting = true;
 #if defined(MY_CONTROLLER_IP_ADDRESS)
@@ -149,7 +149,7 @@ bool gatewayTransportInit()
 	return true;
 }
 
-bool gatewayTransportAvailable()
+bool gatewayTransportAvailable(void)
 {
 	if (_MQTT_connecting) {
 		return false;
@@ -167,7 +167,7 @@ bool gatewayTransportAvailable()
 	return _MQTT_available;
 }
 
-MyMessage & gatewayTransportReceive()
+MyMessage & gatewayTransportReceive(void)
 {
 	// Return the last parsed message
 	_MQTT_available = false;

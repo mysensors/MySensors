@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2015 Sensnology AB
+* Copyright (C) 2013-2016 Sensnology AB
 * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -249,13 +249,13 @@ LOCAL void RF24_flushRX(void);
 LOCAL void RF24_flushTX(void);
 LOCAL uint8_t RF24_getStatus(void);
 LOCAL uint8_t RF24_getFIFOStatus(void);
-LOCAL void RF24_openWritingPipe(uint8_t recipient);
+LOCAL void RF24_openWritingPipe(const uint8_t recipient);
 LOCAL void RF24_startListening(void);
 LOCAL void RF24_stopListening(void);
 LOCAL void RF24_powerDown(void);
 LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint8_t len);
 LOCAL uint8_t RF24_getDynamicPayloadSize(void);
-LOCAL bool RF24_isDataAvailable();
+LOCAL bool RF24_isDataAvailable(void);
 LOCAL uint8_t RF24_readMessage(void* buf);
 LOCAL void RF24_setNodeAddress(const uint8_t address);
 LOCAL uint8_t RF24_getNodeID(void);
