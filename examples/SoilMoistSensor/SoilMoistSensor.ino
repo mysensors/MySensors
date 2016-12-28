@@ -73,7 +73,7 @@
 
 // Setting up format for reading 3 soil sensors
 #define NUM_READS 10    // Number of sensor reads for filtering
-#define CHILD_ID 0
+#define CHILD_ID 0 
 
 MyMessage msg(CHILD_ID, V_LEVEL);  
 unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
@@ -110,7 +110,7 @@ void setup() {
 
 void presentation()  {
   sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
-  present(CHILD_ID, S_HUM);  
+  present(CHILD_ID, S_MOISTURE);  
 }
 
 void loop() {
