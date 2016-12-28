@@ -111,7 +111,7 @@ void setup()
 void presentation()
 {
 	sendSketchInfo("Soil Moisture Sensor Reverse Polarity", "1.0");
-	present(CHILD_ID, S_HUM);
+	present(CHILD_ID, S_MOISTURE);
 }
 
 void loop()

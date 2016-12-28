@@ -97,7 +97,7 @@ void _w5100_spi_en(bool enable)
 #define _w5100_spi_en(x)
 #endif
 
-bool gatewayTransportInit()
+bool gatewayTransportInit(void)
 {
 	_w5100_spi_en(true);
 #if defined(MY_GATEWAY_ESP8266)
@@ -147,7 +147,7 @@ bool gatewayTransportInit()
 #endif
 		debug(PSTR("Eth: connect\n"));
 		_w5100_spi_en(false);
-		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 		_w5100_spi_en(true);
 		presentNode();
 	} else {
@@ -194,7 +194,7 @@ bool gatewayTransportSend(MyMessage &message)
 #endif
 			debug(PSTR("Eth: connect\n"));
 			_w5100_spi_en(false);
-			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
@@ -226,7 +226,7 @@ bool gatewayTransportSend(MyMessage &message)
 bool _readFromClient(uint8_t i)
 {
 	while (clients[i].connected() && clients[i].available()) {
-		char inChar = clients[i].read();
+		const char inChar = clients[i].read();
 		if (inputString[i].idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
 			// if newline then command is complete
 			if (inChar == '\n' || inChar == '\r') {
@@ -253,10 +253,10 @@ bool _readFromClient(uint8_t i)
 	return false;
 }
 #else
-bool _readFromClient()
+bool _readFromClient(void)
 {
 	while (client.connected() && client.available()) {
-		char inChar = client.read();
+		const char inChar = client.read();
 		if (inputString.idx < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
 			// if newline then command is complete
 			if (inChar == '\n' || inChar == '\r') {
@@ -285,7 +285,7 @@ bool _readFromClient()
 #endif
 
 
-bool gatewayTransportAvailable()
+bool gatewayTransportAvailable(void)
 {
 	_w5100_spi_en(true);
 #if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
@@ -325,7 +325,7 @@ bool gatewayTransportAvailable()
 #endif
 			debug(PSTR("Eth: connect\n"));
 			_w5100_spi_en(false);
-			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
@@ -355,7 +355,7 @@ bool gatewayTransportAvailable()
 				clients[i] = _ethernetServer.available();
 				inputString[i].idx = 0;
 				debug(PSTR("Client %d connected\n"), i);
-				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 				// Send presentation of locally attached sensors (and node if applicable)
 				presentNode();
 			}
@@ -388,7 +388,7 @@ bool gatewayTransportAvailable()
 			client = newclient;
 			debug(PSTR("Eth: connect\n"));
 			_w5100_spi_en(false);
-			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set("Gateway startup complete."));
+			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
 		}
@@ -411,14 +411,14 @@ bool gatewayTransportAvailable()
 	return false;
 }
 
-MyMessage& gatewayTransportReceive()
+MyMessage& gatewayTransportReceive(void)
 {
 	// Return the last parsed message
 	return _ethernetMsg;
 }
 
 #if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_LINUX)
-void gatewayTransportRenewIP()
+void gatewayTransportRenewIP(void)
 {
 	/* renew/rebind IP address
 	 0 - nothing happened

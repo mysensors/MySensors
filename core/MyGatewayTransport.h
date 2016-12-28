@@ -23,9 +23,11 @@
 #include "MyProtocol.h"
 #include "MySensorsCore.h"
 
+#define MSG_GW_STARTUP_COMPLETE "Gateway startup complete."
+
 // Common gateway functions
 
-void gatewayTransportProcess();
+void gatewayTransportProcess(void);
 
 
 // Gateway "interface" functions
@@ -33,7 +35,7 @@ void gatewayTransportProcess();
 /**
  * initialize the driver
  */
-bool gatewayTransportInit();
+bool gatewayTransportInit(void);
 
 /**
  * Send message to controller
@@ -43,11 +45,11 @@ bool gatewayTransportSend(MyMessage &message);
 /*
  * Check if a new message is available from controller
  */
-bool gatewayTransportAvailable();
+bool gatewayTransportAvailable(void);
 
 /*
  * Pick up last message received from controller
  */
-MyMessage& gatewayTransportReceive();
+MyMessage& gatewayTransportReceive(void);
 
 #endif /* MyGatewayTransportEthernet_h */

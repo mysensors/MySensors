@@ -299,7 +299,7 @@ LOCAL uint8_t RF24_getDynamicPayloadSize(void)
 	return result;
 }
 
-LOCAL bool RF24_isDataAvailable()
+LOCAL bool RF24_isDataAvailable(void)
 {
 	return (!(RF24_getFIFOStatus() & _BV(0)) );
 }

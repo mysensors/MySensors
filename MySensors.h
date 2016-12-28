@@ -59,11 +59,6 @@
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
-// Remove PSTR macros from debug prints
-#undef PSTR
-#define PSTR(x) (x)
-//#undef F
-//#define F(x) (x)
 #include "core/MyHwESP8266.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"

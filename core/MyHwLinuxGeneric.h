@@ -31,7 +31,9 @@ SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PTY, true);
 SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT);
 #endif
 
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
+#endif
 
 // Define these as macros (do nothing)
 #define hwWatchdogReset()

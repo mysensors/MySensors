@@ -85,13 +85,13 @@
 #define __atomicWrite(A,P,V) do { if ((A) < 0x40) {bitWrite((A), (P), (V) );} else {uint8_t register saveSreg = SREG;cli();bitWrite((A), (P), (V));SREG = saveSreg;}} while(0)
 #endif
 #if !defined(digitalWriteFast)
-#define digitalWriteFast(__pin, __value) do { if (__builtin_constant_p(__pin) && __builtin_constant_p(__value)) { bitWrite(*__digitalPinToPortReg(__pin), __digitalPinToBit(__pin), (__value)); } else { digitalWrite((__pin), (__value)); } } while (0)
+#define digitalWriteFast(__pin, __value) do { if (__builtin_constant_p(__pin) && __builtin_constant_p(__value)) { bitWrite(*__digitalPinToPortReg(__pin), (uint8_t)__digitalPinToBit(__pin), (__value)); } else { digitalWrite((__pin), (__value)); } } while (0)
 #endif
 #if !defined(pinModeFast)
-#define pinModeFast(__pin, __mode) do { if (__builtin_constant_p(__pin) && __builtin_constant_p(__mode) && (__mode!=INPUT_PULLUP)) { bitWrite(*__digitalPinToDDRReg(__pin), __digitalPinToBit(__pin), (__mode)); } else { pinMode((__pin), (__mode)); } } while (0)
+#define pinModeFast(__pin, __mode) do { if (__builtin_constant_p(__pin) && __builtin_constant_p(__mode) && (__mode!=INPUT_PULLUP)) { bitWrite(*__digitalPinToDDRReg(__pin), (uint8_t)__digitalPinToBit(__pin), (__mode)); } else { pinMode((__pin), (__mode)); } } while (0)
 #endif
 #if !defined(digitalReadFast)
-#define digitalReadFast(__pin) ( (bool) (__builtin_constant_p(__pin) ) ? (( bitRead(*__digitalPinToPINReg(__pin), __digitalPinToBit(__pin))) ) : digitalRead((__pin)) )
+#define digitalReadFast(__pin) ( (bool) (__builtin_constant_p(__pin) ) ? (( bitRead(*__digitalPinToPINReg(__pin), (uint8_t)__digitalPinToBit(__pin))) ) : digitalRead((__pin)) )
 #endif
 #endif
 

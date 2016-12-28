@@ -34,7 +34,9 @@
 #include <Arduino.h>
 #endif
 
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
+#endif
 
 #if defined __AVR_ATmega328P__
 #ifndef sleep_bod_disable

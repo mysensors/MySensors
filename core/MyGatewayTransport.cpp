@@ -25,7 +25,7 @@ extern bool transportSendRoute(MyMessage &message);
 extern MyMessage _msg;
 extern MyMessage _msgTmp;
 
-inline void gatewayTransportProcess()
+inline void gatewayTransportProcess(void)
 {
 	if (gatewayTransportAvailable()) {
 		_msg = gatewayTransportReceive();
