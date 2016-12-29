@@ -269,11 +269,11 @@ typedef struct {
 // PRIVATE functions
 
 /**
-* @brief Initialise SM variables and transport HW
+* @brief Initialize SM variables and transport HW
 */
 void stInitTransition(void);
 /**
-* @brief Initialise transport
+* @brief Initialize transport
 */
 void stInitUpdate(void);
 /**
@@ -345,7 +345,7 @@ void transportProcessMessage(void);
 /**
 * @brief Assign node ID
 * @param newNodeId New node ID
-* @return true if node ID valid and successfully assigned
+* @return true if node ID is valid and successfully assigned
 */
 bool transportAssignNodeID(const uint8_t newNodeId);
 /**
@@ -409,7 +409,7 @@ void transportInitialize(void);
 void transportProcess(void);
 /**
 * @brief Flag transport ready
-* @return true if transport is initialize and ready
+* @return true if transport is initialized and ready
 */
 bool isTransportReady(void);
 /**
@@ -462,51 +462,6 @@ void transportSetRoute(const uint8_t node, const uint8_t route);
 * @return route to node
 */
 uint8_t transportGetRoute(const uint8_t node);
-
-
-// interface functions for radio driver
-
-/**
-* @brief Initialize transport HW
-* @return true if initialization successful
-*/
-bool transportInit();
-/**
-* @brief Set node address
-*/
-void transportSetAddress(uint8_t address);
-/**
-* @brief Retrieve node address
-*/
-uint8_t transportGetAddress();
-/**
-* @brief Send message
-* @param to recipient
-* @param data message to be sent
-* @param len length of message (header + payload)
-* @return true if message sent successfully
-*/
-bool transportSend(uint8_t to, const void* data, uint8_t len);
-/**
-* @brief Verify if RX FIFO has pending messages
-* @return true if message available in RX FIFO
-*/
-bool transportAvailable();
-/**
-* @brief Sanity check for transport: is transport still responsive?
-* @return true transport ok
-*/
-bool transportSanityCheck();
-/**
-* @brief Receive message from FIFO
-* @return length of recevied message (header + payload)
-*/
-uint8_t transportReceive(void* data);
-/**
-* @brief Power down transport HW
-*/
-void transportPowerDown();
-
 /**
 * @brief Get node ID
 * @return node ID
@@ -523,6 +478,48 @@ uint8_t transportGetParentNodeId(void);
 */
 uint8_t transportGetDistanceGW(void);
 
+// interface functions for radio driver
+
+/**
+* @brief Initialize transport HW
+* @return true if initialization successful
+*/
+bool transportInit(void);
+/**
+* @brief Set node address
+*/
+void transportSetAddress(const uint8_t address);
+/**
+* @brief Retrieve node address
+*/
+uint8_t transportGetAddress(void);
+/**
+* @brief Send message
+* @param to recipient
+* @param data message to be sent
+* @param len length of message (header + payload)
+* @return true if message sent successfully
+*/
+bool transportSend(const uint8_t to, const void* data, const uint8_t len);
+/**
+* @brief Verify if RX FIFO has pending messages
+* @return true if message available in RX FIFO
+*/
+bool transportAvailable(void);
+/**
+* @brief Sanity check for transport: is transport still responsive?
+* @return true if transport HW is ok
+*/
+bool transportSanityCheck(void);
+/**
+* @brief Receive message from FIFO
+* @return length of recevied message (header + payload)
+*/
+uint8_t transportReceive(void* data);
+/**
+* @brief Power down transport HW
+*/
+void transportPowerDown(void);
 
 #endif // MyTransport_h
 /** @}*/
