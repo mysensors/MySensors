@@ -25,10 +25,12 @@
 #include "RFM95.h"
 
 #if defined(LINUX_ARCH_RASPBERRYPI)
-uint8_t spi_rxbuff[32 + 1]; //SPI receive buffer (payload max 32 bytes, MYS protocol limitation)
-uint8_t spi_txbuff[32 +
-                   1]; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command, MYS protocol limitation)
+// SPI RX and TX buffers (max packet len + 1 byte for the command)
+uint8_t spi_rxbuff[RFM95_MAX_PACKET_LEN + 1];
+uint8_t spi_txbuff[RFM95_MAX_PACKET_LEN + 1];
 #endif
+
+volatile rfm95_internal_t RFM95;	//!< internal variables
 
 LOCAL void RFM95_csn(const bool level)
 {
@@ -110,10 +112,6 @@ LOCAL uint8_t RFM95_RAW_writeByteRegister(const uint8_t address, uint8_t value)
 #define RFM95_burstReadReg(__reg, __buf, __len) RFM95_spiMultiByteTransfer( __reg & RFM95_READ_REGISTER, (uint8_t*)__buf, __len, true )
 #define RFM95_burstWriteReg(__reg, __buf, __len) RFM95_spiMultiByteTransfer( __reg | RFM95_WRITE_REGISTER, (uint8_t*)__buf, __len, false )
 
-
-// check RegPktRssiValue (0x1A) vs. RegRssiValue (0x1B)
-
-
 LOCAL bool RFM95_initialise(const float frequency)
 {
 	RFM95_DEBUG(PSTR("RFM95:INIT\n"));
@@ -134,7 +132,7 @@ LOCAL bool RFM95_initialise(const float frequency)
 	RFM95.txSequenceNumber = 0;	// initialise TX sequence counter
 	RFM95.powerLevel = 0;
 	RFM95.ATCenabled = false;
-	RFM95.ATCtargetRSSI = RFM95_TARGET_RSSI + RFM95_RSSI_OFFSET;
+	RFM95.ATCtargetRSSI = RFM95_RSSItoInternal(RFM95_TARGET_RSSI);
 
 	// SPI init
 	hwDigitalWrite(MY_RFM95_SPI_CS, HIGH);
@@ -143,8 +141,7 @@ LOCAL bool RFM95_initialise(const float frequency)
 
 	// Set LoRa mode (during sleep mode)
 	RFM95_writeReg(RFM95_REG_01_OP_MODE, RFM95_MODE_SLEEP | RFM95_LONG_RANGE_MODE);
-	delay(10); // Wait for sleep mode to take over from say, CAD
-	// Check we are in sleep mode, with LORA set
+	delay(10); // Wait for sleep mode to take over
 	if (RFM95_readReg(RFM95_REG_01_OP_MODE) != (RFM95_MODE_SLEEP | RFM95_LONG_RANGE_MODE)) {
 		return false; // No device present?
 	}
@@ -167,8 +164,14 @@ LOCAL bool RFM95_initialise(const float frequency)
 #if defined (SPI_HAS_TRANSACTION) && !defined (ESP8266)
 	_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM95_IRQ_PIN));
 #endif
-	attachInterrupt(digitalPinToInterrupt(MY_RFM95_IRQ_PIN), RFM95_interruptHandler, RISING);
 
+	if (!RFM95_sanityCheck()) {
+		RFM95_DEBUG(
+		    PSTR("!RFM95:INIT:SANCHK FAIL\n")); // sanity check failed, check wiring or replace module
+		return false;
+	}
+
+	attachInterrupt(digitalPinToInterrupt(MY_RFM95_IRQ_PIN), RFM95_interruptHandler, RISING);
 	return true;
 }
 
@@ -191,7 +194,8 @@ LOCAL void RFM95_interruptHandler(void)
 			// Reset the fifo read ptr to the beginning of the packet
 			RFM95_writeReg(RFM95_REG_0D_FIFO_ADDR_PTR, RFM95_readReg(RFM95_REG_10_FIFO_RX_CURRENT_ADDR));
 			RFM95_burstReadReg(RFM95_REG_00_FIFO, RFM95.currentPacket.data, bufLen);
-			RFM95.currentPacket.RSSI = RFM95_readReg(RFM95_REG_1A_PKT_RSSI_VALUE);
+			RFM95.currentPacket.RSSI = RFM95_readReg(
+			                               RFM95_REG_1A_PKT_RSSI_VALUE); // RSSI of latest packet received
 			RFM95.currentPacket.SNR = static_cast<rfm95_SNR_t>(RFM95_readReg(RFM95_REG_19_PKT_SNR_VALUE));
 			RFM95.currentPacket.payloadLen = bufLen - RFM95_HEADER_LEN;
 			// Message for us
@@ -244,14 +248,13 @@ LOCAL uint8_t RFM95_recv(uint8_t* buf)
 	const rfm95_RSSI_t RSSI = RFM95.currentPacket.RSSI;	// of incoming packet
 	const rfm95_SNR_t SNR = RFM95.currentPacket.SNR;
 	if (buf != NULL) {
-		memcpy((void*)buf, (void*)RFM95.currentPacket.payload, payloadLen);
+		(void)memcpy((void*)buf, (void*)RFM95.currentPacket.payload, payloadLen);
 		RFM95.rxBufferValid = false;
 	}
 	interrupts();
 
 	// ACK handling
 	if (RFM95_getACKRequested(controlFlags)) {
-		RFM95_DEBUG(PSTR("RFM95:RCV:SEND ACK\n"));
 		RFM95_sendACK(sender, sequenceNumber, RSSI, SNR);
 	}
 
@@ -262,9 +265,8 @@ LOCAL bool RFM95_send(rfm95_packet_t &packet)
 {
 	const uint8_t finalLen = packet.payloadLen + RFM95_HEADER_LEN;
 	// Make sure we dont interrupt an outgoing message
-	RFM95_waitPacketSent();
+	(void)RFM95_waitPacketSent();
 	(void)RFM95_setRadioMode(RFM95_RADIO_MODE_STDBY);
-
 	// Check channel activity
 	if (!RFM95_waitCAD()) {
 		return false;
@@ -289,9 +291,9 @@ LOCAL bool RFM95_sendFrame(const uint8_t recipient, uint8_t* data, const uint8_t
 	packet.header.sender = RFM95.address;
 	packet.header.recipient = recipient;
 	packet.header.controlFlags = 0x00;
-	packet.payloadLen = min(len, (const uint8_t)RFM95_MAX_PAYLOAD_LEN);
+	packet.payloadLen = min(len, (uint8_t)RFM95_MAX_PAYLOAD_LEN);
 	packet.header.controlFlags = flags;
-	memcpy(&packet.payload, data, packet.payloadLen);
+	(void)memcpy(&packet.payload, data, packet.payloadLen);
 	return RFM95_send(packet);
 }
 
@@ -314,8 +316,7 @@ LOCAL bool RFM95_setTxPower(uint8_t powerLevel)
 		if (powerLevel > 20) {
 			// enable DAC, adds 3dBm
 			// The documentation is pretty confusing on this topic: PaSelect says the max power is 20dBm,
-			// but OutputPower claims it would be 17dBm.
-			// My measurements show 20dBm is correct
+			// but OutputPower claims it would be 17dBm. Measurements show 20dBm is correct
 			RFM95_writeReg(RFM95_REG_4D_PA_DAC, RFM95_PA_DAC_ENABLE);
 			val = powerLevel - 8;
 		} else {
@@ -352,17 +353,6 @@ LOCAL void RFM95_setAddress(const uint8_t addr)
 LOCAL uint8_t RFM95_getAddress(void)
 {
 	return RFM95.address;
-}
-
-
-LOCAL bool RFM95_isChannelActive(void)
-{
-	(void)RFM95_setRadioMode(RFM95_RADIO_MODE_CAD);
-	while (RFM95.radioMode == RFM95_RADIO_MODE_CAD) {
-		doYield();
-	}
-
-	return RFM95.cad;
 }
 
 LOCAL bool RFM95_setRadioMode(const rfm95_radioMode_t newRadioMode)
@@ -403,7 +393,7 @@ LOCAL bool RFM95_sleep(void)
 LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t sequenceNumber,
                          const rfm95_RSSI_t RSSI, const rfm95_RSSI_t SNR)
 {
-	RFM95_DEBUG(PSTR("RFM95:SAC:SEND ACK to=%d,RSSI=%d\n"),recipient,RSSI);
+	RFM95_DEBUG(PSTR("RFM95:SAC:SEND ACK to=%d,RSSI=%d\n"),recipient,RFM95_internalToRSSI(RSSI));
 	rfm95_ack_t ACK;
 	ACK.sequenceNumber = sequenceNumber;
 	ACK.RSSI = RSSI;
@@ -416,19 +406,21 @@ LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t s
 
 LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t targetRSSI)
 {
-	// allow +-5%
-	if (currentRSSI < (targetRSSI*1.05) && RFM95.powerLevel < RFM95_MAX_POWER_LEVEL_DBM) {
+	// RFM95 internal format RSSI has an offset
+	if (currentRSSI < (targetRSSI * (1 + RFM95_ATC_TARGET_RANGE_PERCENT / 100)) &&
+	        RFM95.powerLevel < RFM95_MAX_POWER_LEVEL_DBM) {
 		// increase transmitter power
 		RFM95.powerLevel++;
-	} else if (currentRSSI > (targetRSSI*0.95) && RFM95.powerLevel > RFM95_MIN_POWER_LEVEL_DBM) {
+	} else if (currentRSSI > (targetRSSI * (1 - RFM95_ATC_TARGET_RANGE_PERCENT / 100)) &&
+	           RFM95.powerLevel > RFM95_MIN_POWER_LEVEL_DBM) {
 		// decrease transmitter power
 		RFM95.powerLevel--;
 	} else {
 		// nothing to adjust
 		return false;
 	}
-	RFM95_DEBUG(PSTR("RFM95:ATC:ADJ TXL,cR=%d,tR=%d,TXL=%d\n"), currentRSSI - RFM95_RSSI_OFFSET,
-	            targetRSSI - RFM95_RSSI_OFFSET, RFM95.powerLevel);
+	RFM95_DEBUG(PSTR("RFM95:ATC:ADJ TXL,cR=%d,tR=%d,TXL=%d\n"), RFM95_internalToRSSI(currentRSSI),
+	            RFM95_internalToRSSI(targetRSSI), RFM95.powerLevel);
 	return RFM95_setTxPower(RFM95.powerLevel);;
 }
 
@@ -454,7 +446,8 @@ LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer,
 				if (sender == recipient && RFM95_getACKReceived(flag) &&
 				        (ACKsequenceNumber == RFM95.txSequenceNumber - 1)) {
 					RFM95_DEBUG(PSTR("RFM95:SWR:ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d\n"),sender,ACKsequenceNumber,
-					            RFM95.currentPacket.ACK.RSSI-RFM95_RSSI_OFFSET, (int8_t)RFM95.currentPacket.ACK.SNR / 4);
+					            RFM95_internalToRSSI(RFM95.currentPacket.ACK.RSSI),
+					            RFM95_internalToSNR(RFM95.currentPacket.ACK.SNR));
 					RFM95_clearRxBuffer();
 
 					// ATC
@@ -469,24 +462,24 @@ LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer,
 		RFM95_DEBUG(PSTR("!RFM95:SWR:NACK\n"));
 		if (RFM95.ATCenabled) {
 			// No ACK received, maybe out of reach: increase power level
-			RFM95_setTxPower(RFM95.powerLevel++);
+			(void)RFM95_setTxPower(RFM95.powerLevel++);
 		}
 	}
 	return false;
 }
 
-
 // Wait until no channel activity detected or timeout
 LOCAL bool RFM95_waitCAD(void)
 {
+	(void)RFM95_setRadioMode(RFM95_RADIO_MODE_CAD);
 	const uint32_t enterMS = hwMillis();
-	while (RFM95_isChannelActive()) {
+	while (RFM95.radioMode == RFM95_RADIO_MODE_CAD) {
 		if (hwMillis() - enterMS > RFM95_CAD_TIMEOUT_MS) {
 			return false;
 		}
 		doYield();
 	}
-	return true;
+	return !RFM95.cad;
 }
 
 // Wait for any previous transmission to finish
@@ -498,15 +491,10 @@ LOCAL bool RFM95_waitPacketSent(void)
 	return true;
 }
 
-LOCAL int16_t RFM95_getRSSI(void)
-{
-	return (int16_t)(RFM95.currentPacket.RSSI - RFM95_RSSI_OFFSET);
-}
-
 LOCAL void RFM95_ATCmode(const bool OnOff, const int16_t targetRSSI)
 {
 	RFM95.ATCenabled = OnOff;
-	RFM95.ATCtargetRSSI = (uint8_t)(targetRSSI + RFM95_RSSI_OFFSET);
+	RFM95.ATCtargetRSSI = RFM95_RSSItoInternal(targetRSSI);
 }
 
 LOCAL bool RFM95_sanityCheck(void)
@@ -516,11 +504,46 @@ LOCAL bool RFM95_sanityCheck(void)
 }
 
 
+LOCAL int16_t RFM95_getSendingRSSI(void)
+{
+	// own RSSI, as measured by the recipient - ACK part
+	if (RFM95_getACKRSSIReport(RFM95.currentPacket.header.controlFlags)) {
+		return RFM95_internalToRSSI(RFM95.currentPacket.ACK.RSSI);
+	} else {
+		// not possible
+		return RFM95_RSSI_INVALID;
+	}
+}
 
+LOCAL int8_t RFM95_getSendingSNR(void)
+{
+	// own SNR, as measured by the recipient - ACK part
+	if (RFM95_getACKRSSIReport(RFM95.currentPacket.header.controlFlags)) {
+		return RFM95_internalToSNR(RFM95.currentPacket.ACK.SNR);
+	} else {
+		// not possible
+		return RFM95_SNR_INVALID;
+	}
+}
 
+LOCAL int16_t RFM95_getReceivingRSSI(void)
+{
+	// RSSI from last received packet
+	return RFM95_internalToRSSI(RFM95.currentPacket.RSSI);
+}
 
+LOCAL int8_t RFM95_getReceivingSNR(void)
+{
+	// SNR from last received packet
+	return RFM95_internalToSNR(RFM95.currentPacket.SNR);
+}
 
-
-
-
+LOCAL uint8_t RFM95_getTxPowerPercent(void)
+{
+	// report TX level in %
+	const uint8_t result = (uint8_t)(100.0f * (RFM95.powerLevel - RFM95_MIN_POWER_LEVEL_DBM) /
+	                                 (RFM95_MAX_POWER_LEVEL_DBM
+	                                  - RFM95_MIN_POWER_LEVEL_DBM));
+	return result;
+}
 
