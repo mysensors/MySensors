@@ -32,7 +32,7 @@ bool transportInit(void)
 	return result;
 }
 
-void transportSetAddress(uint8_t address)
+void transportSetAddress(const uint8_t address)
 {
 	RFM95_setAddress(address);
 }
@@ -42,7 +42,7 @@ uint8_t transportGetAddress(void)
 	return RFM95_getAddress();
 }
 
-bool transportSend(uint8_t to, const void* data, uint8_t len)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len)
 {
 	return RFM95_sendWithRetry(to, data, len);
 }

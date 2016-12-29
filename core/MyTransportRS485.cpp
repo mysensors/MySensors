@@ -239,7 +239,7 @@ bool _serialProcess()
 	return true;
 }
 
-bool transportSend(uint8_t to, const void* data, uint8_t len)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len)
 {
 	const char *datap = static_cast<char const *>(data);
 	unsigned char i;
@@ -319,7 +319,7 @@ bool transportSend(uint8_t to, const void* data, uint8_t len)
 
 
 
-bool transportInit()
+bool transportInit(void)
 {
 	// Reset the state machine
 	_dev.begin(MY_RS485_BAUD_RATE);
@@ -331,24 +331,24 @@ bool transportInit()
 	return true;
 }
 
-void transportSetAddress(uint8_t address)
+void transportSetAddress(const uint8_t address)
 {
 	_nodeId = address;
 }
 
-uint8_t transportGetAddress()
+uint8_t transportGetAddress(void)
 {
 	return _nodeId;
 }
 
 
-bool transportAvailable()
+bool transportAvailable(void)
 {
 	_serialProcess();
 	return _packet_received;
 }
 
-bool transportSanityCheck()
+bool transportSanityCheck(void)
 {
 	// not implemented yet
 	return true;
@@ -365,7 +365,7 @@ uint8_t transportReceive(void* data)
 	}
 }
 
-void transportPowerDown()
+void transportPowerDown(void)
 {
 	// Nothing to shut down here
 }
