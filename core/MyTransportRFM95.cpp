@@ -67,7 +67,26 @@ void transportPowerDown(void)
 	(void)RFM95_sleep();
 }
 
-int16_t transportGetSignalStrength(void)
+// experimental
+// **********************************************
+int16_t transportGetReceivingSignalStrength(void)
 {
-	return RFM95_getRSSI();
+	return RFM95_getReceivingRSSI();
 }
+int16_t transportGetSendingSignalStrength(void)
+{
+	return RFM95_getSendingRSSI();
+}
+int8_t transportGetReceivingSNR(void)
+{
+	return RFM95_getReceivingSNR();
+}
+int8_t transportGetSendingSNR(void)
+{
+	return RFM95_getSendingSNR();
+}
+uint8_t transportGetTxPower(void)
+{
+	return RFM95_getTxPowerPercent();
+}
+// **********************************************
