@@ -169,5 +169,7 @@ bool transportIsValidFirmware(void)
 			}
 		}
 	}
+	OTA_DEBUG(PSTR("OTA:CRC:B=%04X,C=%04X,F=%04X\n"), _nodeFirmwareConfig.blocks,crc,
+	          _nodeFirmwareConfig.crc);
 	return crc == _nodeFirmwareConfig.crc;
 }

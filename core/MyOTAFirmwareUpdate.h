@@ -45,6 +45,7 @@
 * |!| OTA  | FWP	| CRC FAIL									| FW CRC verification failed
 * | | OTA  | FRQ	| FW REQ,T=%04X,V=%04X,B=%04X				| Request FW update, FW type (T), version (V), block (B)
 * |!| OTA  | FRQ	| FW UPD FAIL								| FW update failed
+* | | OTA  | CRC	| B=%04X,C=%04X,F=%04X						| FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
 *
 *
 * @brief API declaration for MyOTAFirmwareUpdate
