@@ -6,23 +6,23 @@
 // **********************************************************************************
 // License
 // **********************************************************************************
-// This program is free software; you can redistribute it 
-// and/or modify it under the terms of the GNU General    
-// Public License as published by the Free Software       
-// Foundation; either version 3 of the License, or        
-// (at your option) any later version.                    
-//                                                        
-// This program is distributed in the hope that it will   
-// be useful, but WITHOUT ANY WARRANTY; without even the  
-// implied warranty of MERCHANTABILITY or FITNESS FOR A   
-// PARTICULAR PURPOSE. See the GNU General Public        
-// License for more details.                              
-//                                                        
-// You should have received a copy of the GNU General    
+// This program is free software; you can redistribute it
+// and/or modify it under the terms of the GNU General
+// Public License as published by the Free Software
+// Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will
+// be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A
+// PARTICULAR PURPOSE. See the GNU General Public
+// License for more details.
+//
+// You should have received a copy of the GNU General
 // Public License along with this program.
 // If not, see <http://www.gnu.org/licenses/>.
-//                                                        
-// Licence can be viewed at                               
+//
+// Licence can be viewed at
 // http://www.gnu.org/licenses/gpl-3.0.txt
 //
 // Please maintain this license information along with authorship
@@ -37,20 +37,20 @@
 
 // INT0 on AVRs should be connected to RFM69's DIO0 (ex on ATmega328 it's D2, on ATmega644/1284 it's D2)
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
-  #define RF69_IRQ_PIN          2
-  #define RF69_IRQ_NUM          0
+#define RF69_IRQ_PIN          2
+#define RF69_IRQ_NUM          0
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-  #define RF69_IRQ_PIN          2
-  #define RF69_IRQ_NUM          2
+#define RF69_IRQ_PIN          2
+#define RF69_IRQ_NUM          2
 #elif defined(__AVR_ATmega32U4__)
-  #define RF69_IRQ_PIN          3
-  #define RF69_IRQ_NUM          0
+#define RF69_IRQ_PIN          3
+#define RF69_IRQ_NUM          0
 #elif defined(__arm__)//Use pin 10 or any pin you want
-  #define RF69_IRQ_PIN          10
-  #define RF69_IRQ_NUM          10
-#else 
-  #define RF69_IRQ_PIN          2
-  #define RF69_IRQ_NUM          0  
+#define RF69_IRQ_PIN          10
+#define RF69_IRQ_NUM          10
+#else
+#define RF69_IRQ_PIN          2
+#define RF69_IRQ_NUM          0
 #endif
 
 
@@ -79,79 +79,101 @@
 #define RFM69_CTL_REQACK    0x40
 
 /** RFM69 class */
-class RFM69 {
-  public:
-    static volatile uint8_t DATA[RF69_MAX_DATA_LEN]; //!< recv/xmit buf, including hdr & crc bytes
-    static volatile uint8_t DATALEN; //!< DATALEN
-    static volatile uint8_t SENDERID;  //!< SENDERID
-    static volatile uint8_t TARGETID; //!<  should match _address
-    static volatile uint8_t PAYLOADLEN; //!< PAYLOADLEN
-    static volatile uint8_t ACK_REQUESTED; //!< ACK_REQUESTED
-    static volatile uint8_t ACK_RECEIVED; //!< Should be polled immediately after sending a packet with ACK requestwith ACK request
-    static volatile int16_t RSSI; //!<  most accurate RSSI during reception (closest to the reception)
-    static volatile uint8_t _mode; //!<  should be protected?
+class RFM69
+{
+public:
+	static volatile uint8_t DATA[RF69_MAX_DATA_LEN]; //!< recv/xmit buf, including hdr & crc bytes
+	static volatile uint8_t DATALEN; //!< DATALEN
+	static volatile uint8_t SENDERID;  //!< SENDERID
+	static volatile uint8_t TARGETID; //!<  should match _address
+	static volatile uint8_t PAYLOADLEN; //!< PAYLOADLEN
+	static volatile uint8_t ACK_REQUESTED; //!< ACK_REQUESTED
+	static volatile uint8_t
+	ACK_RECEIVED; //!< Should be polled immediately after sending a packet with ACK requestwith ACK request
+	static volatile int16_t RSSI; //!<  most accurate RSSI during reception (closest to the reception)
+	static volatile uint8_t _mode; //!<  should be protected?
 
-    RFM69(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false, uint8_t interruptNum=RF69_IRQ_NUM) { //!< Constructor
-      _slaveSelectPin = slaveSelectPin;
-      _interruptPin = interruptPin;
-      _interruptNum = interruptNum;
-      _mode = RF69_MODE_STANDBY;
-      _promiscuousMode = false;
-      _powerLevel = 31;
-      _isRFM69HW = isRFM69HW;
-    }
-
-    bool initialize(uint8_t freqBand, uint8_t ID, uint8_t networkID=1); //!< initialize
-    void setAddress(uint8_t addr); //!< setAddress
-    void setNetwork(uint8_t networkID); //!< setNetwork
-    bool canSend(); //!< canSend
-    virtual void send(uint8_t toAddress, const void* buffer, uint8_t bufferSize, bool requestACK=false); //!< send
-    virtual bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t retries=2, uint8_t retryWaitTime=40); //!< sendWithRetry (40ms roundtrip req for 61byte packets)
-    virtual bool receiveDone(); //!< receiveDone
-    bool ACKReceived(uint8_t fromNodeID); //!< ACKReceived
-    bool ACKRequested(); //!< ACKRequested
-    virtual void sendACK(const void* buffer = "", uint8_t bufferSize=0); //!< sendACK
-    uint32_t getFrequency(); //!< getFrequency
-    void setFrequency(uint32_t freqHz); //!< setFrequency
-    void encrypt(const char* key); //!< encrypt
-    void setCS(uint8_t newSPISlaveSelect); //!< setCS
-    int16_t readRSSI(bool forceTrigger=false); //!< readRSSI
-    void promiscuous(bool onOff=true); //!< promiscuous
-    virtual void setHighPower(bool onOFF=true); //!< setHighPower (have to call it after initialize for RFM69HW)
-    virtual void setPowerLevel(uint8_t level); //!< setPowerLevel (reduce/increase transmit power level)
-    void sleep(); //!< sleep
-    uint8_t readTemperature(uint8_t calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
-    void rcCalibration(); //!< rcCalibration (calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy]) 
-
-    // allow hacking registers by making these public
-    uint8_t readReg(uint8_t addr); //!< readReg
-    void writeReg(uint8_t addr, uint8_t val); //!< writeReg
-    void readAllRegs(); //!< readAllRegs
-
-  protected:
-    static void isr0(); //!< isr0
-    void virtual interruptHandler(); //!< interruptHandler
-    virtual void interruptHook(uint8_t CTLbyte); //!< interruptHook
-    virtual void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, bool requestACK=false, bool sendACK=false); //!< sendFrame
-
-    static RFM69* selfPointer; //!< selfPointer
-    uint8_t _slaveSelectPin; //!< _slaveSelectPin
-    uint8_t _interruptPin; //!< _interruptPin
-    uint8_t _interruptNum; //!< _interruptNum
-    uint8_t _address; //!< _address
-    bool _promiscuousMode; //!< _promiscuousMode
-    uint8_t _powerLevel; //!< _powerLevel
-    bool _isRFM69HW; //!< _isRFM69HW
+	/**
+	 * @brief Constructor
+	 *
+	 * @param slaveSelectPin ChipSelect pin.
+	 * @param interruptPin Interrupt pin.
+	 * @param isRFM69HW Set to @c true to indicate RFM69HW variant.
+	 * @param interruptNum Interrupt number.
+	 */
+	RFM69(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false,
+	      uint8_t interruptNum=RF69_IRQ_NUM)
+	{
+		_slaveSelectPin = slaveSelectPin;
+		_interruptPin = interruptPin;
+		_interruptNum = interruptNum;
+		_mode = RF69_MODE_STANDBY;
+		_promiscuousMode = false;
+		_powerLevel = 31;
+		_isRFM69HW = isRFM69HW;
+		_address = RF69_BROADCAST_ADDR;
 #if defined (SPCR) && defined (SPSR)
-    uint8_t _SPCR; //!< _SPCR
-    uint8_t _SPSR; //!< _SPSR
+		_SPCR = 0;
+		_SPSR = 0;
+#endif
+	}
+
+	bool initialize(uint8_t freqBand, uint8_t ID, uint8_t networkID=1); //!< initialize
+	void setAddress(uint8_t addr); //!< setAddress
+	void setNetwork(uint8_t networkID); //!< setNetwork
+	bool canSend(); //!< canSend
+	virtual void send(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
+	                  bool requestACK=false); //!< send
+	virtual bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
+	                           uint8_t retries=2, uint8_t retryWaitTime=
+	                               40); //!< sendWithRetry (40ms roundtrip req for 61byte packets)
+	virtual bool receiveDone(); //!< receiveDone
+	bool ACKReceived(uint8_t fromNodeID); //!< ACKReceived
+	bool ACKRequested(); //!< ACKRequested
+	virtual void sendACK(const void* buffer = "", uint8_t bufferSize=0); //!< sendACK
+	uint32_t getFrequency(); //!< getFrequency
+	void setFrequency(uint32_t freqHz); //!< setFrequency
+	void encrypt(const char* key); //!< encrypt
+	void setCS(uint8_t newSPISlaveSelect); //!< setCS
+	int16_t readRSSI(bool forceTrigger=false); //!< readRSSI
+	void promiscuous(bool onOff=true); //!< promiscuous
+	virtual void setHighPower(bool onOFF=
+	                              true); //!< setHighPower (have to call it after initialize for RFM69HW)
+	virtual void setPowerLevel(uint8_t level); //!< setPowerLevel (reduce/increase transmit power level)
+	void sleep(); //!< sleep
+	uint8_t readTemperature(uint8_t calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
+	void rcCalibration(); //!< rcCalibration (calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy])
+
+	// allow hacking registers by making these public
+	uint8_t readReg(uint8_t addr); //!< readReg
+	void writeReg(uint8_t addr, uint8_t val); //!< writeReg
+	void readAllRegs(); //!< readAllRegs
+
+protected:
+	static void isr0(); //!< isr0
+	void virtual interruptHandler(); //!< interruptHandler
+	virtual void interruptHook(uint8_t CTLbyte); //!< interruptHook
+	virtual void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, bool requestACK=false,
+	                       bool sendACK=false); //!< sendFrame
+
+	static RFM69* selfPointer; //!< selfPointer
+	uint8_t _slaveSelectPin; //!< _slaveSelectPin
+	uint8_t _interruptPin; //!< _interruptPin
+	uint8_t _interruptNum; //!< _interruptNum
+	uint8_t _address; //!< _address
+	bool _promiscuousMode; //!< _promiscuousMode
+	uint8_t _powerLevel; //!< _powerLevel
+	bool _isRFM69HW; //!< _isRFM69HW
+#if defined (SPCR) && defined (SPSR)
+	uint8_t _SPCR; //!< _SPCR
+	uint8_t _SPSR; //!< _SPSR
 #endif
 
-    virtual void receiveBegin(); //!< receiveBegin
-    virtual void setMode(uint8_t mode); //!< setMode
-    virtual void setHighPowerRegs(bool onOff); //!< setHighPowerRegs
-    virtual void select(); //!< select
-    virtual void unselect(); //!< unselect
+	virtual void receiveBegin(); //!< receiveBegin
+	virtual void setMode(uint8_t mode); //!< setMode
+	virtual void setHighPowerRegs(bool onOff); //!< setHighPowerRegs
+	virtual void select(); //!< select
+	virtual void unselect(); //!< unselect
 };
 
 #endif

@@ -29,26 +29,31 @@
 #define LED_OFF 0x1
 #endif
 
-#ifdef MY_LEDS_BLINKING_FEATURE
-	#define ledBlinkTx(x,...) ledsBlinkTx(x)
-	#define ledBlinkRx(x,...) ledsBlinkRx(x)
-	#define ledBlinkErr(x,...) ledsBlinkErr(x)
+#if defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
+#define ledBlinkTx(x,...) ledsBlinkTx(x)
+#define ledBlinkRx(x,...) ledsBlinkRx(x)
+#define ledBlinkErr(x,...) ledsBlinkErr(x)
 
-	/**
-	 * Blink with LEDs
-	 * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
-	 */
-	void ledsInit();
-	void ledsBlinkRx(uint8_t cnt);
-	void ledsBlinkTx(uint8_t cnt);
-	void ledsBlinkErr(uint8_t cnt);
-	void ledsProcess(); // do the actual blinking
+/**
+ * Blink with LEDs
+ * @param cnt how many blink cycles to keep the LED on. Default cycle is 300ms
+ */
+void ledsInit();
+void ledsBlinkRx(uint8_t cnt);
+void ledsBlinkTx(uint8_t cnt);
+void ledsBlinkErr(uint8_t cnt);
+void ledsProcess(); // do the actual blinking
+/**
+ * Test if any LED is currently blinking.
+ * @return true when one or more LEDs are blinking, false otherwise.
+ */
+bool ledsBlinking();
 
 #else
-	// Remove led functions if feature is disabled
-	#define ledBlinkTx(x,...)
-	#define ledBlinkRx(x,...)
-	#define ledBlinkErr(x,...)
+// Remove led functions if feature is disabled
+#define ledBlinkTx(x,...)
+#define ledBlinkRx(x,...)
+#define ledBlinkErr(x,...)
 #endif
 
 #endif

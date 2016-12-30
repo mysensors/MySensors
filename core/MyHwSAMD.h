@@ -34,28 +34,48 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 
+uint8_t configBlock[1024];
 
 // Define these as macros to save valuable space
+#define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
+#define hwDigitalRead(__pin) digitalRead(__pin)
+#define hwPinMode(__pin, __value) pinMode(__pin, __value)
+#define hwMillis() millis()
+#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 
-uint8_t configBlock[1024];
-#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
 void hwInit();
 void hwWatchdogReset();
 void hwReboot();
-#define hwMillis() millis()
-
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE SerialUSB
+#endif
 
+/**
+ * Disable all interrupts.
+ * Helper function for MY_CRITICAL_SECTION.
+ */
+static __inline__ uint8_t __disableIntsRetVal(void)
+{
+	__disable_irq();
+	return 1;
+}
 
-/*
-#define hwReadConfigBlock(__buf, __adr, __length) ( __length = __length)
-#define hwWriteConfigBlock(__buf, __adr, __length) ( __length = __length)
-#define hwWriteConfig(__adr, __value) ( __value = __value)
-#define hwReadConfig(__adr) (0)
-*/
+/**
+ * Restore priority mask register.
+ * Helper function for MY_CRITICAL_SECTION.
+ */
+static __inline__ void __priMaskRestore(const uint32_t *priMask)
+{
+	__set_PRIMASK(*priMask);
+}
+
+#ifndef DOXYGEN
+#define MY_CRITICAL_SECTION    for ( uint32_t __savePriMask __attribute__((__cleanup__(__priMaskRestore))) = __get_PRIMASK(), __ToDo = __disableIntsRetVal(); __ToDo ; __ToDo = 0 )
+#endif  /* DOXYGEN */
+
 #endif // #ifdef ARDUINO_ARCH_SAMD

@@ -26,51 +26,61 @@ RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM);
 uint8_t _address;
 
 
-bool transportInit() {
+bool transportInit(void)
+{
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
-		#ifdef MY_RFM69_ENABLE_ENCRYPTION
-			uint8_t _psk[16];
-			hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-			_radio.encrypt((const char*)_psk);
-			memset(_psk, 0, 16); // Make sure it is purged from memory when set
-		#endif
+#ifdef MY_RFM69_ENABLE_ENCRYPTION
+		uint8_t _psk[16];
+		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+		_radio.encrypt((const char*)_psk);
+		memset(_psk, 0, 16); // Make sure it is purged from memory when set
+#endif
 		return true;
 	}
 	return false;
 }
 
-void transportSetAddress(uint8_t address) {
+void transportSetAddress(const uint8_t address)
+{
 	_address = address;
 	_radio.setAddress(address);
 }
 
-uint8_t transportGetAddress() {
+uint8_t transportGetAddress(void)
+{
 	return _address;
 }
 
-bool transportSend(uint8_t to, const void* data, uint8_t len) {
+bool transportSend(const uint8_t to, const void* data, const uint8_t len)
+{
 	return _radio.sendWithRetry(to,data,len);
 }
 
-bool transportAvailable() {
+bool transportAvailable(void)
+{
 	return _radio.receiveDone();
 }
 
-bool transportSanityCheck() {
+bool transportSanityCheck(void)
+{
 	// not implemented yet
 	return true;
 }
 
-uint8_t transportReceive(void* data) {
+uint8_t transportReceive(void* data)
+{
 	memcpy(data,(const void *)_radio.DATA, _radio.DATALEN);
+	// save payload length
+	const uint8_t dataLen = _radio.DATALEN;
 	// Send ack back if this message wasn't a broadcast
-	if (_radio.TARGETID != RF69_BROADCAST_ADDR)
-		_radio.ACKRequested();
-    _radio.sendACK();
-	return _radio.DATALEN;
-}	
+	if(_radio.ACKRequested()) {
+		_radio.sendACK();
+	}
+	return dataLen;
+}
 
-void transportPowerDown() {
+void transportPowerDown(void)
+{
 	_radio.sleep();
 }

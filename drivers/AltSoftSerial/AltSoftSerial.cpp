@@ -1,17 +1,17 @@
 /* An Alternative Software Serial Library
  * http://www.pjrc.com/teensy/td_libs_AltSoftSerial.html
  * Copyright (c) 2014 PJRC.COM, LLC, Paul Stoffregen, paul@pjrc.com
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -76,9 +76,9 @@ void AltSoftSerial::init(uint32_t cycles_per_bit)
 	}
 	ticks_per_bit = cycles_per_bit;
 	rx_stop_ticks = cycles_per_bit * 37 / 4;
-	pinMode(INPUT_CAPTURE_PIN, INPUT_PULLUP);
-	digitalWrite(OUTPUT_COMPARE_A_PIN, HIGH);
-	pinMode(OUTPUT_COMPARE_A_PIN, OUTPUT);
+	hwPinMode(INPUT_CAPTURE_PIN, INPUT_PULLUP);
+	hwDigitalWrite(OUTPUT_COMPARE_A_PIN, HIGH);
+	hwPinMode(OUTPUT_COMPARE_A_PIN, OUTPUT);
 	rx_state = 0;
 	rx_buffer_head = 0;
 	rx_buffer_tail = 0;
@@ -108,8 +108,10 @@ void AltSoftSerial::writeByte(uint8_t b)
 	uint8_t intr_state, head;
 
 	head = tx_buffer_head + 1;
-	if (head >= TX_BUFFER_SIZE) head = 0;
-	while (tx_buffer_tail == head) ; // wait until space in buffer
+	if (head >= TX_BUFFER_SIZE) {
+		head = 0;
+	}
+	while (tx_buffer_tail == head) {} // wait until space in buffer
 	intr_state = SREG;
 	cli();
 	if (tx_state) {
@@ -168,7 +170,9 @@ ISR(COMPARE_A_INTERRUPT)
 		DISABLE_INT_COMPARE_A();
 	} else {
 		tx_state = 1;
-		if (++tail >= TX_BUFFER_SIZE) tail = 0;
+		if (++tail >= TX_BUFFER_SIZE) {
+			tail = 0;
+		}
 		tx_buffer_tail = tail;
 		tx_byte = tx_buffer[tail];
 		tx_bit = 0;
@@ -180,7 +184,7 @@ ISR(COMPARE_A_INTERRUPT)
 
 void AltSoftSerial::flushOutput(void)
 {
-	while (tx_state) /* wait */ ;
+	while (tx_state) {}/* wait */
 }
 
 
@@ -216,14 +220,18 @@ ISR(CAPTURE_INTERRUPT)
 		target = rx_target;
 		while (1) {
 			offset = capture - target;
-			if (offset < 0) break;
+			if (offset < 0) {
+				break;
+			}
 			rx_byte = (rx_byte >> 1) | rx_bit;
 			target += ticks_per_bit;
 			state++;
 			if (state >= 9) {
 				DISABLE_INT_COMPARE_B();
 				head = rx_buffer_head + 1;
-				if (head >= RX_BUFFER_SIZE) head = 0;
+				if (head >= RX_BUFFER_SIZE) {
+					head = 0;
+				}
 				if (head != rx_buffer_tail) {
 					rx_buffer[head] = rx_byte;
 					rx_buffer_head = head;
@@ -253,7 +261,9 @@ ISR(COMPARE_B_INTERRUPT)
 		state++;
 	}
 	head = rx_buffer_head + 1;
-	if (head >= RX_BUFFER_SIZE) head = 0;
+	if (head >= RX_BUFFER_SIZE) {
+		head = 0;
+	}
 	if (head != rx_buffer_tail) {
 		rx_buffer[head] = rx_byte;
 		rx_buffer_head = head;
@@ -271,8 +281,12 @@ int AltSoftSerial::read(void)
 
 	head = rx_buffer_head;
 	tail = rx_buffer_tail;
-	if (head == tail) return -1;
-	if (++tail >= RX_BUFFER_SIZE) tail = 0;
+	if (head == tail) {
+		return -1;
+	}
+	if (++tail >= RX_BUFFER_SIZE) {
+		tail = 0;
+	}
 	out = rx_buffer[tail];
 	rx_buffer_tail = tail;
 	return out;
@@ -284,7 +298,9 @@ int AltSoftSerial::peek(void)
 
 	head = rx_buffer_head;
 	tail = rx_buffer_tail;
-	if (head == tail) return -1;
+	if (head == tail) {
+		return -1;
+	}
 	return rx_buffer[tail];
 }
 
@@ -294,7 +310,9 @@ int AltSoftSerial::available(void)
 
 	head = rx_buffer_head;
 	tail = rx_buffer_tail;
-	if (head >= tail) return head - tail;
+	if (head >= tail) {
+		return head - tail;
+	}
 	return RX_BUFFER_SIZE + head - tail;
 }
 
@@ -309,9 +327,14 @@ void ftm0_isr(void)
 {
 	uint32_t flags = FTM0_STATUS;
 	FTM0_STATUS = 0;
-	if (flags & (1<<5)) altss_capture_interrupt();
-	if (flags & (1<<6)) altss_compare_a_interrupt();
-	if (flags & (1<<0)) altss_compare_b_interrupt();
+	if (flags & (1<<5)) {
+		altss_capture_interrupt();
+	}
+	if (flags & (1<<6)) {
+		altss_compare_a_interrupt();
+	}
+	if (flags & (1<<0)) {
+		altss_compare_b_interrupt();
+	}
 }
 #endif
-

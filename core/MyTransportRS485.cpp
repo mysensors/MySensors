@@ -57,23 +57,21 @@
 #include "MyTransport.h"
 #include <stdint.h>
 
-
-#if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
 
 #include "MyTransport.h"
 
+#ifdef __linux__
+#include "SerialPort.h"
+#endif
 
 #if defined(MY_RS485_DE_PIN)
-	#define assertDE() digitalWrite(MY_RS485_DE_PIN, HIGH); delayMicroseconds(5)
-	#define deassertDE() digitalWrite(MY_RS485_DE_PIN, LOW)
+#define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIGH); delayMicroseconds(5)
+#define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW)
 
 #else
-	#define assertDE()
-	#define deassertDE()
+#define assertDE()
+#define deassertDE()
 #endif
 
 // We only use SYS_PACK in this application
@@ -92,8 +90,14 @@ unsigned char _recSender;
 unsigned char _recCS;
 unsigned char _recCalcCS;
 
-AltSoftSerial _dev;
 
+#if defined(__linux__)
+SerialPort _dev = SerialPort(MY_RS485_HWSERIAL);
+#elif defined(MY_RS485_HWSERIAL)
+HardwareSerial& _dev = MY_RS485_HWSERIAL;
+#else
+AltSoftSerial _dev;
+#endif
 
 unsigned char _nodeId;
 char _data[MY_RS485_MAX_MESSAGE_LENGTH];
@@ -110,13 +114,14 @@ bool _packet_received;
 
 
 //Reset the state machine and release the data pointer
-void _serialReset(){
-  _recPhase = 0;
-  _recPos = 0;
-  _recLen = 0;
-  _recCommand = 0;
-  _recCS = 0;
-  _recCalcCS = 0;
+void _serialReset()
+{
+	_recPhase = 0;
+	_recPos = 0;
+	_recLen = 0;
+	_recCommand = 0;
+	_recCS = 0;
+	_recCalcCS = 0;
 }
 
 // This is the main reception state machine.  Progress through the states
@@ -128,120 +133,118 @@ void _serialReset(){
 // function.
 bool _serialProcess()
 {
-    char inch;
-    unsigned char i;
-    if (!_dev.available()) return false;
+	char inch;
+	unsigned char i;
+	if (!_dev.available()) {
+		return false;
+	}
 
-    while(_dev.available()) {
-        inch = _dev.read();
+	while(_dev.available()) {
+		inch = _dev.read();
 
-        switch(_recPhase) {
+		switch(_recPhase) {
 
-            // Case 0 looks for the header.  Bytes arrive in the serial interface and get
-            // shifted through a header buffer.  When the start and end characters in
-            // the buffer match the SOH/STX pair, and the destination station ID matches
-            // our ID, save the header information and progress to the next state.
-            case 0:
-                memcpy(&_header[0],&_header[1],5);
-                _header[5] = inch;
-                if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
-                    _recCalcCS = 0;
-                    _recStation = _header[1];
-                    _recSender = _header[2];
-                    _recCommand = _header[3];
-                    _recLen = _header[4];
+		// Case 0 looks for the header.  Bytes arrive in the serial interface and get
+		// shifted through a header buffer.  When the start and end characters in
+		// the buffer match the SOH/STX pair, and the destination station ID matches
+		// our ID, save the header information and progress to the next state.
+		case 0:
+			memcpy(&_header[0],&_header[1],5);
+			_header[5] = inch;
+			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
+				_recCalcCS = 0;
+				_recStation = _header[1];
+				_recSender = _header[2];
+				_recCommand = _header[3];
+				_recLen = _header[4];
 
-                    for (i=1; i<=4; i++) {
-                        _recCalcCS += _header[i];
-                    }
-                    _recPhase = 1;
-                    _recPos = 0;
+				for (i=1; i<=4; i++) {
+					_recCalcCS += _header[i];
+				}
+				_recPhase = 1;
+				_recPos = 0;
 
-                    //Check if we should process this message
-                    //We reject the message if we are the sender
-                    //We reject if we are not the receiver and message is not a broadcast
-                    if ((_recSender == _nodeId) ||
-                        (_recStation != _nodeId &&
-                         _recStation != BROADCAST_ADDRESS)) {
-						_dev.print(" wrongid: ");
-						_dev.print(_recStation);
-						_dev.print(" - ");
-						_dev.println(_nodeId);
-                        _serialReset();
-                        break;
-                    }
+				//Check if we should process this message
+				//We reject the message if we are the sender
+				//We reject if we are not the receiver and message is not a broadcast
+				if ((_recSender == _nodeId) ||
+				        (_recStation != _nodeId &&
+				         _recStation != BROADCAST_ADDRESS)) {
+					_serialReset();
+					break;
+				}
 
-                    if (_recLen == 0) {
-                        _recPhase = 2;
-                    }
+				if (_recLen == 0) {
+					_recPhase = 2;
+				}
 
-                }
-                break;
+			}
+			break;
 
-            // Case 1 receives the data portion of the packet.  Read in "_recLen" number
-            // of bytes and store them in the _data array.
-            case 1:
-                _data[_recPos++] = inch;
-                _recCalcCS += inch;
-                if (_recPos == _recLen) {
-                    _recPhase = 2;
-                }
-                break;
+		// Case 1 receives the data portion of the packet.  Read in "_recLen" number
+		// of bytes and store them in the _data array.
+		case 1:
+			_data[_recPos++] = inch;
+			_recCalcCS += inch;
+			if (_recPos == _recLen) {
+				_recPhase = 2;
+			}
+			break;
 
-            // After the data comes a single ETX character.  Do we have it?  If not,
-            // reset the state machine to default and start looking for a new header.
-            case 2:
-                // Packet properly terminated?
-                if (inch == ETX) {
-                    _recPhase = 3;
-                } else {
-                    _serialReset();
-                }
-                break;
+		// After the data comes a single ETX character.  Do we have it?  If not,
+		// reset the state machine to default and start looking for a new header.
+		case 2:
+			// Packet properly terminated?
+			if (inch == ETX) {
+				_recPhase = 3;
+			} else {
+				_serialReset();
+			}
+			break;
 
-            // Next comes the checksum.  We have already calculated it from the incoming
-            // data, so just store the incoming checksum byte for later.
-            case 3:
-                _recCS = inch;
-                _recPhase = 4;
-                break;
+		// Next comes the checksum.  We have already calculated it from the incoming
+		// data, so just store the incoming checksum byte for later.
+		case 3:
+			_recCS = inch;
+			_recPhase = 4;
+			break;
 
-            // The final state - check the last character is EOT and that the checksum matches.
-            // If that test passes, then look for a valid command callback to execute.
-            // Execute it if found.
-            case 4:
-                if (inch == EOT) {
-                    if (_recCS == _recCalcCS) {
-                        // First, check for system level commands.  It is possible
-                        // to register your own callback as well for system level
-                        // commands which will be called after the system default
-                        // hook.
+		// The final state - check the last character is EOT and that the checksum matches.
+		// If that test passes, then look for a valid command callback to execute.
+		// Execute it if found.
+		case 4:
+			if (inch == EOT) {
+				if (_recCS == _recCalcCS) {
+					// First, check for system level commands.  It is possible
+					// to register your own callback as well for system level
+					// commands which will be called after the system default
+					// hook.
 
-                        switch (_recCommand) {
-						    case ICSC_SYS_PACK:
-						    	_packet_from = _recSender;
-						    	_packet_len = _recLen;
-						    	_packet_received = true;
-                                break;
-                        }
-                    }
-                }
-                //Clear the data
-                _serialReset();
-                //Return true, we have processed one command
-                return true;
-                break;
-        }
-    }
-    return true;
+					switch (_recCommand) {
+					case ICSC_SYS_PACK:
+						_packet_from = _recSender;
+						_packet_len = _recLen;
+						_packet_received = true;
+						break;
+					}
+				}
+			}
+			//Clear the data
+			_serialReset();
+			//Return true, we have processed one command
+			return true;
+			break;
+		}
+	}
+	return true;
 }
 
-bool transportSend(uint8_t to, const void* data, uint8_t len)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len)
 {
 	const char *datap = static_cast<char const *>(data);
-    unsigned char i;
-    unsigned char cs = 0;
-    unsigned char del;
+	unsigned char i;
+	unsigned char cs = 0;
+	unsigned char del;
 
 	// This is how many times to try and transmit before failing.
 	unsigned char timeout = 10;
@@ -262,99 +265,107 @@ bool transportSend(uint8_t to, const void* data, uint8_t len)
 		}
 	}
 
-	#if defined(MY_RS485_DE_PIN)
-		digitalWrite(MY_RS485_DE_PIN, HIGH);
-		delayMicroseconds(5);
-	#endif
+#if defined(MY_RS485_DE_PIN)
+	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
+	delayMicroseconds(5);
+#endif
 
-		// Start of header by writing multiple SOH
-    for(byte w=0;w<1;w++)  _dev.write(SOH);
-    _dev.write(to);  // Destination address
-    cs += to;
-    _dev.write(_nodeId); // Source address
-    cs += _nodeId;
-    _dev.write(ICSC_SYS_PACK);  // Command code
-    cs += ICSC_SYS_PACK;
-    _dev.write(len);      // Length of text
-    cs += len;
-    _dev.write(STX);      // Start of text
-    for(i=0; i<len; i++) {
-        _dev.write(datap[i]);      // Text bytes
-        cs += datap[i];
-    }
-    _dev.write(ETX);      // End of text
-    _dev.write(cs);
-    _dev.write(EOT);
+	// Start of header by writing multiple SOH
+	for(byte w=0; w<1; w++) {
+		_dev.write(SOH);
+	}
+	_dev.write(to);  // Destination address
+	cs += to;
+	_dev.write(_nodeId); // Source address
+	cs += _nodeId;
+	_dev.write(ICSC_SYS_PACK);  // Command code
+	cs += ICSC_SYS_PACK;
+	_dev.write(len);      // Length of text
+	cs += len;
+	_dev.write(STX);      // Start of text
+	for(i=0; i<len; i++) {
+		_dev.write(datap[i]);      // Text bytes
+		cs += datap[i];
+	}
+	_dev.write(ETX);      // End of text
+	_dev.write(cs);
+	_dev.write(EOT);
 
-	#if defined(MY_RS485_DE_PIN)
-		#ifdef __PIC32MX__
-			// MPIDE has nothing yet for this.  It uses the hardware buffer, which
-			// could be up to 8 levels deep.  For now, let's just delay for 8
-			// characters worth.
-			delayMicroseconds((F_CPU/9600)+1);
-		#else
-		#if defined(ARDUINO) && ARDUINO >= 100
-			#if ARDUINO >= 104
-				// Arduino 1.0.4 and upwards does it right
-				_dev.flush();
-			#else
-				// Between 1.0.0 and 1.0.3 it almost does it - need to compensate
-				// for the hardware buffer. Delay for 2 bytes worth of transmission.
-				_dev.flush();
-				delayMicroseconds((20000000UL/9600)+1);
-			#endif
-			#endif
-		#endif
-		digitalWrite(MY_RS485_DE_PIN, LOW);
-	#endif
-    return true;
+#if defined(MY_RS485_DE_PIN)
+#ifdef __PIC32MX__
+	// MPIDE has nothing yet for this.  It uses the hardware buffer, which
+	// could be up to 8 levels deep.  For now, let's just delay for 8
+	// characters worth.
+	delayMicroseconds((F_CPU/9600)+1);
+#else
+#if defined(ARDUINO) && ARDUINO >= 100
+#if ARDUINO >= 104
+	// Arduino 1.0.4 and upwards does it right
+	_dev.flush();
+#else
+	// Between 1.0.0 and 1.0.3 it almost does it - need to compensate
+	// for the hardware buffer. Delay for 2 bytes worth of transmission.
+	_dev.flush();
+	delayMicroseconds((20000000UL/9600)+1);
+#endif
+#elif defined(__linux__)
+	_dev.flush();
+#endif
+#endif
+	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
+#endif
+	return true;
 }
 
 
 
-bool transportInit() {
-    // Reset the state machine
+bool transportInit(void)
+{
+	// Reset the state machine
 	_dev.begin(MY_RS485_BAUD_RATE);
-    _serialReset();
-	#if defined(MY_RS485_DE_PIN)
-    	pinMode(MY_RS485_DE_PIN, OUTPUT);
-        digitalWrite(MY_RS485_DE_PIN, LOW);
-	#endif
-    return true;
+	_serialReset();
+#if defined(MY_RS485_DE_PIN)
+	hwPinMode(MY_RS485_DE_PIN, OUTPUT);
+	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
+#endif
+	return true;
 }
 
-void transportSetAddress(uint8_t address) {
+void transportSetAddress(const uint8_t address)
+{
 	_nodeId = address;
 }
 
-uint8_t transportGetAddress() {
+uint8_t transportGetAddress(void)
+{
 	return _nodeId;
 }
 
 
-bool transportAvailable() {
+bool transportAvailable(void)
+{
 	_serialProcess();
 	return _packet_received;
 }
 
-bool transportSanityCheck() {
+bool transportSanityCheck(void)
+{
 	// not implemented yet
 	return true;
 }
 
-uint8_t transportReceive(void* data) {
+uint8_t transportReceive(void* data)
+{
 	if (_packet_received) {
 		memcpy(data,_data,_packet_len);
 		_packet_received = false;
 		return _packet_len;
-	}
-	else {
+	} else {
 		return (0);
 	}
 }
 
-void transportPowerDown() {
+void transportPowerDown(void)
+{
 	// Nothing to shut down here
 }
-
-

@@ -17,6 +17,52 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+/**
+* @file MySensorsCore.h
+*
+* @defgroup MySensorsCoregrp MySensorsCore
+* @ingroup internals
+* @{
+*
+* MySensorsCore-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
+* - [!] Exclamation mark is prepended in case of error or warning
+* - SYSTEM:
+*  - <b>MCO</b> messages emitted by MySensorsCore
+* - SUB SYSTEMS:
+*  - MCO:<b>BGN</b>	from @ref _begin()
+*  - MCO:<b>REG</b>	from @ref _registerNode()
+*  - MCO:<b>SND</b>	from @ref send()
+*  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
+*  - MCO:<b>NLK</b>	from nodeLock()
+*
+* MySensorsCore debug log messages:
+*
+* |E| SYS	| SUB	| Message										| Comment
+* |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
+* | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
+* | | MCO  | BGN	| BFR											| Callback before()
+* | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
+* | | MCO  | BGN	| STP											| Callback setup()
+* | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
+* | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
+* |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
+* | | MCO	| REG	| REQ											| Registration request
+* | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
+* |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
+* | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
+* | | MCO	| PIM	| ROUTE N=%%d,R=%%d								| Routing table, messages to node (N) are routed via node (R)
+* | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
+* | | MCO	| SLP	| TPD											| Sleep node, powerdown transport
+* | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
+* |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
+* |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
+* | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
+* | | MCO	| NLK	| TPD											| Powerdown transport
+*
+*
+* @brief API declaration for MySensorsCore
+*/
+
 
 #ifndef MySensorsCore_h
 #define MySensorsCore_h
@@ -28,54 +74,64 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#define GATEWAY_ADDRESS			((uint8_t)0)			//!< Node ID for GW sketch
+#define NODE_SENSOR_ID			((uint8_t)255)			//!< Node child is always created/presented when a node is started
+#define MY_CORE_VERSION			((uint8_t)2)			//!< core version
+#define MY_CORE_MIN_VERSION		((uint8_t)2)			//!< min core version required for compatibility
+
+#define MY_WAKE_UP_BY_TIMER		((int8_t)-1)			//!< Sleeping wake up by timer
+#define MY_SLEEP_NOT_POSSIBLE	((int8_t)-2)			//!< Sleeping not possible
+#define INTERRUPT_NOT_DEFINED	((uint8_t)255)			//!< _sleep() param: no interrupt defined
+#define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
+#define VALUE_NOT_DEFINED		((uint8_t)255)			//!< Value not defined
+
+
 #ifdef MY_DEBUG
-	#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)			//!< debug, to be removed (follow-up PR)
+#define CORE_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
 #else
-	#define debug(x,...)
+#define debug(x,...)										//!< debug NULL, to be removed (follow-up PR)
+#define CORE_DEBUG(x,...)									//!< debug NULL
 #endif
 
-#define GATEWAY_ADDRESS ((uint8_t)0)			//!< Node ID for GW sketch	
-#define NODE_SENSOR_ID 0xFF						//!< Node child is always created/presented when a node is started
-#define MY_CORE_VERSION ((uint8_t)2)			//!< core version	
-#define MY_CORE_MIN_VERSION ((uint8_t)2)		//!< min core version required for compatibility
-
-
-/**
- * @brief Node configuration
- *
- * This structure stores node-related configurations
- */
-struct NodeConfig {
-	uint8_t nodeId; //!< Current node id
-	uint8_t parentNodeId; //!< Where this node sends its messages
-	uint8_t distance; //!< This nodes distance to sensor net gateway (number of hops)
-};
 
 /**
  * @brief Controller configuration
  *
- * This structure stores controllerrelated configurations
+ * This structure stores controller-related configurations
  */
-struct ControllerConfig {
-	uint8_t isMetric; //!< Flag indicating if metric or imperial measurements are used
-};
+typedef struct {
+	uint8_t isMetric;							//!< Flag indicating if metric or imperial measurements are used
+} controllerConfig_t;
+
+/**
+* @brief Node core configuration
+*/
+typedef struct {
+	controllerConfig_t controllerConfig;	//!< Controller config
+	// 8 bit
+	bool nodeRegistered : 1;				//!< Flag node registered
+	bool presentationSent : 1;				//!< Flag presentation sent
+	uint8_t reserved : 6;					//!< reserved
+} coreConfig_t;
 
 
+// **** public functions ********
 
 /**
  * Return this nodes id.
  */
-uint8_t getNodeId();
+uint8_t getNodeId(void);
 
 /**
  * Return the parent node id.
  */
-uint8_t getParentNodeId();
+uint8_t getParentNodeId(void);
 
 /**
 * Sends node information to the gateway.
 */
-void presentNode();
+void presentNode(void);
 
 /**
 * Each node must present all attached sensors before any values can be handled correctly by the controller.
@@ -86,17 +142,19 @@ void presentNode();
 * @param description A textual description of the sensor.
 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 * @param description A textual description of the sensor.
+* @return true Returns true if message reached the first stop on its way to destination.
 */
-void present(uint8_t sensorId, uint8_t sensorType, const char *description="", bool ack=false);
+bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description="",
+             const bool ack = false);
 
 /**
  * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
  * @param name String containing a short Sketch name or NULL  if not applicable
  * @param version String containing a short Sketch version or NULL if not applicable
  * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
- *
+ * @return true Returns true if message reached the first stop on its way to destination.
  */
-void sendSketchInfo(const char *name, const char *version, bool ack=false);
+bool sendSketchInfo(const char *name, const char *version, const bool ack = false);
 
 /**
 * Sends a message to gateway or one of the other nodes in the radio network
@@ -105,22 +163,24 @@ void sendSketchInfo(const char *name, const char *version, bool ack=false);
 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 * @return true Returns true if message reached the first stop on its way to destination.
 */
-bool send(MyMessage &msg, bool ack=false);
+bool send(MyMessage &msg, const bool ack = false);
 
 
 /**
  * Send this nodes battery level to gateway.
  * @param level Level between 0-100(%)
  * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
- *
+ * @return true Returns true if message reached the first stop on its way to destination.
  */
-void sendBatteryLevel(uint8_t level, bool ack=false);
+bool sendBatteryLevel(const uint8_t level, const bool ack = false);
 
 /**
  * Send a heartbeat message (I'm alive!) to the gateway/controller.
  * The payload will be an incremental 16 bit integer value starting at 1 when sensor is powered on.
+ * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+ * @return true Returns true if message reached the first stop on its way to destination.
  */
-void sendHeartbeat(void);
+bool sendHeartbeat(const bool ack = false);
 
 /**
 * Requests a value from gateway or some other sensor in the radio network.
@@ -129,21 +189,22 @@ void sendHeartbeat(void);
 * @param childSensorId  The unique child id for the different sensors connected to this Arduino. 0-254.
 * @param variableType The variableType to fetch
 * @param destination The nodeId of other node in radio network. Default is gateway
+* @return true Returns true if message reached the first stop on its way to destination.
 */
-void request(uint8_t childSensorId, uint8_t variableType, uint8_t destination=GATEWAY_ADDRESS);
+bool request(const uint8_t childSensorId, const uint8_t variableType,
+             const uint8_t destination = GATEWAY_ADDRESS);
 
 /**
  * Requests time from controller. Answer will be delivered to receiveTime function in sketch.
- *
+ * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+ * @return true Returns true if message reached the first stop on its way to destination.
  */
-void requestTime();
-
-
+bool requestTime(const bool ack = false);
 
 /**
  * Returns the most recent node configuration received from controller
  */
-ControllerConfig getConfig();
+controllerConfig_t getControllerConfig(void);
 
 /**
  * Save a state (in local EEPROM). Good for actuators to "remember" state between
@@ -155,7 +216,7 @@ ControllerConfig getConfig();
  * @param pos The position to store value in (0-255)
  * @param value to store in position
  */
-void saveState(uint8_t pos, uint8_t value);
+void saveState(const uint8_t pos, const uint8_t value);
 
 /**
  * Load a state (from local EEPROM).
@@ -163,36 +224,43 @@ void saveState(uint8_t pos, uint8_t value);
  * @param pos The position to fetch value from  (0-255)
  * @return Value to store in position
  */
-uint8_t loadState(uint8_t pos);
+uint8_t loadState(const uint8_t pos);
 
 /**
  * Wait for a specified amount of time to pass.  Keeps process()ing.
  * This does not power-down the radio nor the Arduino.
  * Because this calls process() in a loop, it is a good way to wait
  * in your loop() on a repeater node or sensor that listens to messages.
- * @param ms Number of milliseconds to sleep.
+ * @param waitingMS Number of milliseconds to wait.
  */
-void wait(unsigned long ms);
+void wait(const uint32_t waitingMS);
 
 /**
  * Wait for a specified amount of time to pass or until specified message received.  Keeps process()ing.
  * This does not power-down the radio nor the Arduino.
  * Because this calls process() in a loop, it is a good way to wait
  * in your loop() on a repeater node or sensor that listens to messages.
- * @param ms Number of milliseconds to sleep.
+ * @param waitingMS Number of milliseconds to wait.
  * @param cmd Command of incoming message.
  * @param msgtype Message type.
  * @return True if specified message received
  */
-bool wait(unsigned long ms, uint8_t cmd, uint8_t msgtype);
+bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgtype);
+
+/**
+ * Function to allow scheduler to do some work.
+ * @remark Internally it will call yield, kick the watchdog and update led states.
+ */
+void doYield(void);
+
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
- * @param ms Number of milliseconds to sleep.
- * @return -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+ * @param sleepingMS Number of milliseconds to sleep.
+ * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep.
+ * @return @ref MY_WAKE_UP_BY_TIMER if timer woke it up, @ref MY_SLEEP_NOT_POSSIBLE if not possible (e.g. ongoing FW update)
  */
-int8_t sleep(unsigned long ms);
-int8_t smartSleep(unsigned long ms);
+int8_t sleep(const uint32_t sleepingMS, const bool smartSleep = false);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change.
@@ -200,11 +268,12 @@ int8_t smartSleep(unsigned long ms);
  * is assigned to what interrupt. On Nano/Pro Mini: 0=Pin2, 1=Pin3
  * @param interrupt Interrupt that should trigger the wakeup
  * @param mode RISING, FALLING, CHANGE
- * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+ * @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
+ * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep
+ * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
  */
-int8_t sleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
-int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
+int8_t sleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepingMS = 0,
+             const bool smartSleep = false);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
@@ -214,71 +283,161 @@ int8_t smartSleep(uint8_t interrupt, uint8_t mode, unsigned long ms=0);
  * @param mode1 Mode for first interrupt (RISING, FALLING, CHANGE)
  * @param interrupt2 Second interrupt that should trigger the wakeup
  * @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
- * @param ms Number of milliseconds to sleep or 0 to sleep forever
- * @return Interrupt number wake up was triggered by pin change, -1 if timer woke it up, -2 if not possible (e.g. ongoing FW update)
+ * @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
+ * @param smartSleep Set True if sending heartbeat and process incoming messages before going to sleep.
+ * @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
  */
-int8_t sleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
-int8_t smartSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2, unsigned long ms=0);
+int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+             const uint8_t mode2, const uint32_t sleepingMS = 0, const bool smartSleep = false);
 
-#ifdef MY_NODE_LOCK_FEATURE
+/**
+* \deprecated Use sleep(ms, true) instead
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* @param sleepingMS Number of milliseconds to sleep.
+* @return @ref MY_WAKE_UP_BY_TIMER if timer woke it up, @ref MY_SLEEP_NOT_POSSIBLE if not possible (e.g. ongoing FW update)
+*/
+int8_t smartSleep(const uint32_t sleepingMS);
+
+/**
+* \deprecated Use sleep(interrupt, mode, ms, true) instead
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* @param interrupt Interrupt that should trigger the wakeup
+* @param mode RISING, FALLING, CHANGE
+* @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
+* @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
+*/
+int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sleepingMS = 0);
+
+/**
+* \deprecated Use sleep(interrupt1, mode1, interrupt2, mode2, ms, true) instead
+* Same as sleep(), send heartbeat and process incoming messages before going to sleep.
+* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* @param interrupt1 First interrupt that should trigger the wakeup
+* @param mode1 Mode for first interrupt (RISING, FALLING, CHANGE)
+* @param interrupt2 Second interrupt that should trigger the wakeup
+* @param mode2 Mode for second interrupt (RISING, FALLING, CHANGE)
+* @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
+* @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
+*/
+int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+                  const uint8_t mode2, const uint32_t sleepingMS = 0);
+
+/**
+* Sleep (PowerDownMode) the MCU and radio. Wake up on timer or pin change for two separate interrupts.
+* See: http://arduino.cc/en/Reference/attachInterrupt for details on modes and which pin
+* is assigned to what interrupt. On Nano/Pro Mini: 0=Pin2, 1=Pin3
+* @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
+* @param interrupt1 (optional) First interrupt that should trigger the wakeup
+* @param mode1 (optional) Mode for first interrupt (RISING, FALLING, CHANGE)
+* @param interrupt2 (optional) Second interrupt that should trigger the wakeup
+* @param mode2 (optional) Mode for second interrupt (RISING, FALLING, CHANGE)
+* @param smartSleep (optional) Set True if sending heartbeat and process incoming messages before going to sleep.
+* @return Interrupt number if wake up was triggered by pin change, @ref MY_WAKE_UP_BY_TIMER if wake up was triggered by timer, @ref MY_SLEEP_NOT_POSSIBLE if sleep was not possible (e.g. ongoing FW update)
+*/
+int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false,
+              const uint8_t interrupt1 = INTERRUPT_NOT_DEFINED, const uint8_t mode1 = MODE_NOT_DEFINED,
+              const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
+
+
 /**
  * @ingroup MyLockgrp
- * @ingroup internals
  * @brief Lock a node and transmit provided message with 30m intervals
  *
  * This function is called if suspicious activity has exceeded the threshold (see
- * @ref ATTACK_COUNTER_MAX). Unlocking with a normal Arduino bootloader require erasing the EEPROM
- * while unlocking with a custom bootloader require holding @ref UNLOCK_PIN low during power on/reset.
+ * @ref MY_NODE_LOCK_COUNTER_MAX). Unlocking with a normal Arduino bootloader require erasing the EEPROM
+ * while unlocking with a custom bootloader require holding @ref MY_NODE_UNLOCK_PIN low during power on/reset.
  *
  * @param str The string to transmit.
  */
-void nodeLock(const char* str);
-#endif
+void _nodeLock(const char* str);
 
-/******  PRIVATE ********/
+/**
+ * @brief Check node lock status and prevent node execution if locked.
+ */
+void _checkNodeLock(void);
 
-void _begin();
+// **** private functions ********
 
+/**
+* @brief Node initialisation
+*/
+void _begin(void);
+/**
+* @brief Main framework process
+*/
 void _process(void);
-
-bool _processInternalMessages();
-
-void _infiniteLoop();
-
-void _registerNode();
-
+/**
+* @brief Processes internal messages
+* @return True if received message requires further processing
+*/
+bool _processInternalMessages(void);
+/**
+* @brief Puts node to a infinite loop if unrecoverable situation detected
+*/
+void _infiniteLoop(void);
+/**
+* @brief Handles registration request
+*/
+void _registerNode(void);
+/**
+* @brief Sends message according to routing table
+* @param message
+* @return true Returns true if message reached the first stop on its way to destination.
+*/
 bool _sendRoute(MyMessage &message);
 
-extern NodeConfig _nc;
-extern MyMessage _msg;  // Buffer for incoming messages.
-extern MyMessage _msgTmp;  // Buffer for temporary messages (acks and nonces among others).
-#ifdef MY_DEBUG
-	extern char _convBuf[MAX_PAYLOAD*2+1];
-#endif
+/**
+* @brief Callback for incoming messages
+* @param message
+*/
 void receive(const MyMessage &message)  __attribute__((weak));
+/**
+* @brief Callback for incoming time messages
+*/
 void receiveTime(unsigned long)  __attribute__((weak));
-void presentation()  __attribute__((weak));
-void before() __attribute__((weak));
-void setup() __attribute__((weak));
-void loop() __attribute__((weak));
+/**
+* @brief Node presenation
+*/
+void presentation(void)  __attribute__((weak));
+/**
+* @brief Called before node initialises
+*/
+void before(void) __attribute__((weak));
+/**
+* @brief Called before any hwInitialization is done
+*/
+void preHwInit(void) __attribute__((weak));
+/**
+* @brief Called after node initialises but before main loop
+*/
+void setup(void) __attribute__((weak));
+/**
+* @brief Main loop
+*/
+void loop(void) __attribute__((weak));
 
 
 // Inline function and macros
-static inline MyMessage& build(MyMessage &msg, uint8_t sender, uint8_t destination, uint8_t sensor, uint8_t command, uint8_t type, bool enableAck) {
-	msg.sender = sender;
+static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const uint8_t sensor,
+                               const uint8_t command, const uint8_t type, const bool ack = false)
+{
+	msg.sender = getNodeId();
 	msg.destination = destination;
 	msg.sensor = sensor;
 	msg.type = type;
 	mSetCommand(msg,command);
-	mSetRequestAck(msg,enableAck);
+	mSetRequestAck(msg,ack);
 	mSetAck(msg,false);
 	return msg;
 }
 
-static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
+static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type)
+{
 	msg.sender = GATEWAY_ADDRESS;
 	msg.destination = GATEWAY_ADDRESS;
-	msg.sensor = 255;
+	msg.sensor = NODE_SENSOR_ID;
 	msg.type = type;
 	mSetCommand(msg, C_INTERNAL);
 	mSetRequestAck(msg, false);
@@ -288,3 +447,5 @@ static inline MyMessage& buildGw(MyMessage &msg, uint8_t type) {
 
 
 #endif
+
+/** @}*/

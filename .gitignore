@@ -4,3 +4,7 @@ stino.settings
 MyPrivateConfig.h
 Documentation/html
 doxygen_sqlite3.db
+Makefile.inc
+build
+bin
+*.sublime-workspace

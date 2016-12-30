@@ -19,38 +19,44 @@
 
 #include "MyInclusionMode.h"
 
+// global variables
+extern MyMessage _msgTmp;
+
 unsigned long _inclusionStartTime;
 bool _inclusionMode;
 
-inline void inclusionInit() {
+inline void inclusionInit()
+{
 	_inclusionMode = false;
-	#if defined(MY_INCLUSION_BUTTON_FEATURE)
-		// Setup digital in that triggers inclusion mode
-		pinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
-		digitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
-	#endif
+#if defined(MY_INCLUSION_BUTTON_FEATURE)
+	// Setup digital in that triggers inclusion mode
+	hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
+	hwDigitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
+#endif
 
 }
 
 
-void inclusionModeSet(bool newMode) {
-  if (newMode != _inclusionMode) {
-    _inclusionMode = newMode;
-    // Send back mode change to controller
-    gatewayTransportSend(buildGw(_msg, I_INCLUSION_MODE).set((uint8_t)(_inclusionMode?1:0)));
-    if (_inclusionMode) {
-    	_inclusionStartTime = hwMillis();
-    }
-  }
+void inclusionModeSet(bool newMode)
+{
+	if (newMode != _inclusionMode) {
+		_inclusionMode = newMode;
+		// Send back mode change to controller
+		gatewayTransportSend(buildGw(_msgTmp, I_INCLUSION_MODE).set((uint8_t)(_inclusionMode?1:0)));
+		if (_inclusionMode) {
+			_inclusionStartTime = hwMillis();
+		}
+	}
 }
 
-inline void inclusionProcess() {
-	#ifdef MY_INCLUSION_BUTTON_FEATURE
-	if (!_inclusionMode && digitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == MY_INCLUSION_BUTTON_PRESSED) {
+inline void inclusionProcess()
+{
+#ifdef MY_INCLUSION_BUTTON_FEATURE
+	if (!_inclusionMode && hwDigitalRead(MY_INCLUSION_MODE_BUTTON_PIN) == MY_INCLUSION_BUTTON_PRESSED) {
 		// Start inclusion mode
 		inclusionModeSet(true);
 	}
-	#endif
+#endif
 
 	if (_inclusionMode && hwMillis()-_inclusionStartTime>MY_INCLUSION_MODE_DURATION*1000L) {
 		// inclusionTimeInMinutes minute(s) has passed.. stop inclusion mode

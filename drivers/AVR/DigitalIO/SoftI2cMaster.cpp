@@ -49,16 +49,17 @@
  * @return true for success else false.
  */
 bool I2cMasterBase::transfer(uint8_t addrRW,
-                             void *buf, size_t nbytes, uint8_t option) {
-  if (_state != STATE_REP_START) {
-    start();
-  }
-  if (!write(addrRW)) {
-    _state = addrRW & I2C_READ ? STATE_RX_ADDR_NACK : STATE_TX_ADDR_NACK;
-    return false;
-  }
-  _state = addrRW & I2C_READ ? STATE_RX_DATA : STATE_TX_DATA;
-  return transferContinue(buf, nbytes, option);
+                             void *buf, size_t nbytes, uint8_t option)
+{
+	if (_state != STATE_REP_START) {
+		start();
+	}
+	if (!write(addrRW)) {
+		_state = addrRW & I2C_READ ? STATE_RX_ADDR_NACK : STATE_TX_ADDR_NACK;
+		return false;
+	}
+	_state = addrRW & I2C_READ ? STATE_RX_DATA : STATE_TX_DATA;
+	return transferContinue(buf, nbytes, option);
 }
 //------------------------------------------------------------------------------
 /**
@@ -76,30 +77,31 @@ bool I2cMasterBase::transfer(uint8_t addrRW,
  *                      .
  * @return true for success else false.
  */
-bool I2cMasterBase::transferContinue(void *buf, size_t nbytes, uint8_t option) {
-  uint8_t* p = reinterpret_cast<uint8_t*>(buf);
-  if (_state == STATE_RX_DATA) {
-    for (size_t i = 0; i < nbytes; i++) {
-        p[i] = read(i == (nbytes - 1) && option != I2C_CONTINUE);
-    }
-  } else if (_state == STATE_TX_DATA) {
-    for (size_t i = 0; i < nbytes; i++) {
-      if (!write(p[i])) {
-        _state = STATE_TX_DATA_NACK;
-        return false;
-      }
-    }
-  } else {
-    return false;
-  }
-  if (option == I2C_STOP) {
-    stop();
-    _state = STATE_STOP;
-  } else if (option == I2C_REP_START) {
-    start();
-    _state = STATE_STOP;
-  }
-  return true;
+bool I2cMasterBase::transferContinue(void *buf, size_t nbytes, uint8_t option)
+{
+	uint8_t* p = reinterpret_cast<uint8_t*>(buf);
+	if (_state == STATE_RX_DATA) {
+		for (size_t i = 0; i < nbytes; i++) {
+			p[i] = read(i == (nbytes - 1) && option != I2C_CONTINUE);
+		}
+	} else if (_state == STATE_TX_DATA) {
+		for (size_t i = 0; i < nbytes; i++) {
+			if (!write(p[i])) {
+				_state = STATE_TX_DATA_NACK;
+				return false;
+			}
+		}
+	} else {
+		return false;
+	}
+	if (option == I2C_STOP) {
+		stop();
+		_state = STATE_STOP;
+	} else if (option == I2C_REP_START) {
+		start();
+		_state = STATE_STOP;
+	}
+	return true;
 }
 //==============================================================================
 // WARNING don't change SoftI2cMaster unless you verify the change with a scope
@@ -111,8 +113,9 @@ bool I2cMasterBase::transferContinue(void *buf, size_t nbytes, uint8_t option) {
  *
  * @param[in] sclPin The software SCL pin number.
  */
-SoftI2cMaster::SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin) {
-  begin(sclPin, sdaPin);
+SoftI2cMaster::SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin)
+{
+	begin(sclPin, sdaPin);
 }
 //------------------------------------------------------------------------------
 /**
@@ -122,32 +125,33 @@ SoftI2cMaster::SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin) {
  *
  * @param[in] sclPin The software SCL pin number.
  */
-void SoftI2cMaster::begin(uint8_t sclPin, uint8_t sdaPin) {
-  uint8_t port;
+void SoftI2cMaster::begin(uint8_t sclPin, uint8_t sdaPin)
+{
+	uint8_t port;
 
-  // Get bit mask and address of scl registers.
-  _sclBit = digitalPinToBitMask(sclPin);
-  port = digitalPinToPort(sclPin);
-  _sclDDR = portModeRegister(port);
-  volatile uint8_t* sclOutReg = portOutputRegister(port);
+	// Get bit mask and address of scl registers.
+	_sclBit = digitalPinToBitMask(sclPin);
+	port = digitalPinToPort(sclPin);
+	_sclDDR = portModeRegister(port);
+	volatile uint8_t* sclOutReg = portOutputRegister(port);
 
-  // Get bit mask and address of sda registers.
-  _sdaBit = digitalPinToBitMask(sdaPin);
-  port = digitalPinToPort(sdaPin);
-  _sdaDDR = portModeRegister(port);
-  _sdaInReg = portInputRegister(port);
-  volatile uint8_t* sdaOutReg = portOutputRegister(port);
+	// Get bit mask and address of sda registers.
+	_sdaBit = digitalPinToBitMask(sdaPin);
+	port = digitalPinToPort(sdaPin);
+	_sdaDDR = portModeRegister(port);
+	_sdaInReg = portInputRegister(port);
+	volatile uint8_t* sdaOutReg = portOutputRegister(port);
 
-  // Clear PORT bit for scl and sda.
-  uint8_t s = SREG;
-  noInterrupts();
-  *sclOutReg &= ~_sclBit;
-  *sdaOutReg &= ~_sdaBit;
-  SREG = s;
+	// Clear PORT bit for scl and sda.
+	uint8_t s = SREG;
+	noInterrupts();
+	*sclOutReg &= ~_sclBit;
+	*sdaOutReg &= ~_sdaBit;
+	SREG = s;
 
-  // Set scl and sda high.
-  writeScl(HIGH);
-  writeSda(HIGH);
+	// Set scl and sda high.
+	writeScl(HIGH);
+	writeSda(HIGH);
 }
 //------------------------------------------------------------------------------
 /* Read a byte and send ACK if more reads follow else NACK to terminate read.
@@ -156,51 +160,56 @@ void SoftI2cMaster::begin(uint8_t sclPin, uint8_t sdaPin) {
  *
  * @return The byte read from the I2C bus.
  */
-uint8_t SoftI2cMaster::read(uint8_t last) {
-  uint8_t b = 0;
+uint8_t SoftI2cMaster::read(uint8_t last)
+{
+	uint8_t b = 0;
 
-  // Set sda to high Z mode for read.
-  writeSda(HIGH);
-  // Read a byte.
-  for (uint8_t i = 0; i < 8; i++) {
-    // Don't change this loop unless you verify the change with a scope.
-    b <<= 1;
-    sclDelay(16);
-    writeScl(HIGH);
-    sclDelay(12);
-    if (readSda()) b |= 1;
-    writeScl(LOW);
-  }
-  // send ACK or NACK
-  writeSda(last);
-  sclDelay(12);
-  writeScl(HIGH);
-  sclDelay(18);
-  writeScl(LOW);
-  writeSda(LOW);
-  return b;
+	// Set sda to high Z mode for read.
+	writeSda(HIGH);
+	// Read a byte.
+	for (uint8_t i = 0; i < 8; i++) {
+		// Don't change this loop unless you verify the change with a scope.
+		b <<= 1;
+		sclDelay(16);
+		writeScl(HIGH);
+		sclDelay(12);
+		if (readSda()) {
+			b |= 1;
+		}
+		writeScl(LOW);
+	}
+	// send ACK or NACK
+	writeSda(last);
+	sclDelay(12);
+	writeScl(HIGH);
+	sclDelay(18);
+	writeScl(LOW);
+	writeSda(LOW);
+	return b;
 }
 //------------------------------------------------------------------------------
 /* Issue a start condition. */
-void SoftI2cMaster::start() {
-  if (!readSda()) {
-    writeSda(HIGH);
-    writeScl(HIGH);
-    sclDelay(20);
-  }
-  writeSda(LOW);
-  sclDelay(20);
-  writeScl(LOW);
+void SoftI2cMaster::start()
+{
+	if (!readSda()) {
+		writeSda(HIGH);
+		writeScl(HIGH);
+		sclDelay(20);
+	}
+	writeSda(LOW);
+	sclDelay(20);
+	writeScl(LOW);
 }
 //------------------------------------------------------------------------------
-  /*  Issue a stop condition. */
-void SoftI2cMaster::stop(void) {
-  writeSda(LOW);
-  sclDelay(20);
-  writeScl(HIGH);
-  sclDelay(20);
-  writeSda(HIGH);
-  sclDelay(20);
+/*  Issue a stop condition. */
+void SoftI2cMaster::stop(void)
+{
+	writeSda(LOW);
+	sclDelay(20);
+	writeScl(HIGH);
+	sclDelay(20);
+	writeSda(HIGH);
+	sclDelay(20);
 }
 //------------------------------------------------------------------------------
 /*
@@ -210,30 +219,31 @@ void SoftI2cMaster::stop(void) {
  *
  * @return The value true, 1, if the slave returned an ACK or false for NACK.
  */
-bool SoftI2cMaster::write(uint8_t data) {
-  // write byte
-  for (uint8_t m = 0X80; m != 0; m >>= 1) {
-    // don't change this loop unless you verify the change with a scope
-    writeSda(m & data);
-    sclDelay(8);
-    writeScl(HIGH);
-    sclDelay(18);
-    writeScl(LOW);
-  }
-  sclDelay(8);
-  // Go to sda high Z mode for input.
-  writeSda(HIGH);
-  writeScl(HIGH);
-  sclDelay(16);
+bool SoftI2cMaster::write(uint8_t data)
+{
+	// write byte
+	for (uint8_t m = 0X80; m != 0; m >>= 1) {
+		// don't change this loop unless you verify the change with a scope
+		writeSda(m & data);
+		sclDelay(8);
+		writeScl(HIGH);
+		sclDelay(18);
+		writeScl(LOW);
+	}
+	sclDelay(8);
+	// Go to sda high Z mode for input.
+	writeSda(HIGH);
+	writeScl(HIGH);
+	sclDelay(16);
 
-  // Get ACK or NACK.
-  uint8_t rtn = readSda();
+	// Get ACK or NACK.
+	uint8_t rtn = readSda();
 
-  // pull scl low.
-  writeScl(LOW);
+	// pull scl low.
+	writeScl(LOW);
 
-  // Pull sda low.
-  writeSda(LOW);
-  return rtn == 0;
+	// Pull sda low.
+	writeSda(LOW);
+	return rtn == 0;
 }
 /** @} */
