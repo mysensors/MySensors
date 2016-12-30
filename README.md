@@ -1,7 +1,4 @@
-Arduino
-=======
-
-MySensors Arduino Library v2.1.0-beta
+MySensors Library v2.2.0-beta
 
 Please visit www.mysensors.org for more information
 
