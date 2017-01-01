@@ -34,6 +34,10 @@ uint8_t spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
 uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
 #endif
 
+#ifdef MY_RF24_CHANNEL_CONFIGURABLE
+uint8_t RF24_Channel = MY_RF24_CHANNEL;
+#endif
+
 LOCAL void RF24_csn(const bool level)
 {
 	hwDigitalWrite(MY_RF24_CS_PIN, level);
@@ -333,9 +337,11 @@ LOCAL uint8_t RF24_getNodeID(void)
 
 LOCAL bool RF24_sanityCheck(void)
 {
-	// detect HW defect, configuration errors or interrupted SPI line, CE disconnect cannot be detected
-	return (RF24_readByteRegister(RF24_RF_SETUP) == MY_RF24_RF_SETUP) & (RF24_readByteRegister(
-	            RF24_RF_CH) == MY_RF24_CHANNEL);
+#ifdef MY_RF24_CHANNEL_CONFIGURABLE
+	return (RF24_readByteRegister(RF24_RF_SETUP) == MY_RF24_RF_SETUP) & (RF24_readByteRegister(RF24_RF_CH) == RF24_Channel);
+#else
+	return (RF24_readByteRegister(RF24_RF_SETUP) == MY_RF24_RF_SETUP) & (RF24_readByteRegister(RF24_RF_CH) == MY_RF24_CHANNEL);
+#endif
 }
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -411,7 +417,11 @@ LOCAL bool RF24_initialize(void)
 	// auto retransmit delay 1500us, auto retransmit count 15
 	RF24_setRetries(RF24_SET_ARD, RF24_SET_ARC);
 	// set channel
+#ifdef MY_RF24_CHANNEL_CONFIGURABLE
+	RF24_setChannel(RF24_Channel);
+#else
 	RF24_setChannel(MY_RF24_CHANNEL);
+#endif
 	// set data rate and pa level
 	RF24_setRFSetup(MY_RF24_RF_SETUP);
 	// toggle features (necessary on some clones and non-P versions)

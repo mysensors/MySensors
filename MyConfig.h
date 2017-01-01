@@ -560,6 +560,18 @@
 #endif
 
 /**
+ * @def MY_RF24_CHANNEL_CONFIGURABLE
+ * @brief Enable RF channel for the sensor net, 0-125 definition by user in before() function
+ * void before()
+ * {
+ * 	// Change RF24 Radio frequency
+ * 	RF24_Channel = 80;
+ * }
+*/
+//#ifdef MY_RF24_CHANNEL_CONFIGURABLE
+
+
+/**
  * @def MY_RF24_DATARATE
  * @brief RF24 datarate (RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps or RF24_2MBPS for 2Mbps).
  */
