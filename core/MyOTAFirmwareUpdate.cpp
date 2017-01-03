@@ -93,19 +93,26 @@ bool firmwareOTAUpdateProcess(void)
 		OTA_DEBUG(PSTR("OTA:FWP:UPDATE SKIPPED\n"));		// FW update skipped, no newer version available
 	} else if (_msg.type == ST_FIRMWARE_RESPONSE) {
 		if (_firmwareUpdateOngoing) {
-			// Save block to flash
-			setIndication(INDICATION_FW_UPDATE_RX);
-			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04X\n"), _firmwareBlock);	// received FW block
 			// extract FW block
 			replyFirmwareBlock_t *firmwareResponse = (replyFirmwareBlock_t *)_msg.data;
-			// write to flash
+
+			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04X\n"), firmwareResponse->block);	// received FW block
+			if (firmwareResponse->block != _firmwareBlock - 1) {
+				OTA_DEBUG(PSTR("!OTA:FWP:WRONG FWB\n"));	// received FW block
+				// wrong firmware block received
+				setIndication(INDICATION_FW_UPDATE_RX_ERR);
+				// no further processing required
+				return true;
+			}
+			setIndication(INDICATION_FW_UPDATE_RX);
+			// Save block to flash
 			_flash.writeBytes( ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET,
 			                   firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 			// wait until flash written
 			while (_flash.busy()) {}
 			_firmwareBlock--;
 			if (!_firmwareBlock) {
-				// We're finished! Do a checksum and reboot.
+				// We're done! Do a checksum and reboot.
 				OTA_DEBUG(PSTR("OTA:FWP:FW END\n"));	// received FW block
 				_firmwareUpdateOngoing = false;
 				if (transportIsValidFirmware()) {

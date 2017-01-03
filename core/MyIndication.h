@@ -44,6 +44,7 @@ typedef enum {
 	INDICATION_WAKEUP,                        //!< Node just woke from sleep.
 	INDICATION_FW_UPDATE_START,               //!< Start of OTA firmware update process.
 	INDICATION_FW_UPDATE_RX,                  //!< Received a piece of firmware data.
+	INDICATION_FW_UPDATE_RX_ERR,              //!< Received wrong piece of firmware data.
 
 	INDICATION_ERR_START = 100,
 	INDICATION_ERR_TX,                        //!< Failed to transmit message.
