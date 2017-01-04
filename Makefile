@@ -34,6 +34,22 @@ GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(RPI_C_SOURCES)) $(patsubst %.c
 INCLUDES+=-I./drivers/RPi
 endif
 
+ifeq ($(SPI_DRIVER), BCM)
+SPI_DRIVER_C_SOURCES=$(wildcard drivers/BCM/*.c)
+SPI_DRIVER_CPP_SOURCES=$(wildcard drivers/BCM/*.cpp)
+GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(SPI_DRIVER_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SPI_DRIVER_CPP_SOURCES))
+
+INCLUDES+=-I./drivers/BCM
+endif
+
+ifeq ($(SPI_DRIVER), SPIDEV)
+SPI_DRIVER_C_SOURCES=$(wildcard drivers/SPIDEV/*.c)
+SPI_DRIVER_CPP_SOURCES=$(wildcard drivers/SPIDEV/*.cpp)
+GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(SPI_DRIVER_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SPI_DRIVER_CPP_SOURCES))
+
+INCLUDES+=-I./drivers/SPIDEV
+endif
+
 # Gets include flags for library
 get_library_includes = $(if $(and $(wildcard $(1)/src), $(wildcard $(1)/library.properties)), \
 							-I$(1)/src, \

@@ -24,7 +24,7 @@
 
 #include "RFM95.h"
 
-#if defined(LINUX_ARCH_RASPBERRYPI)
+#if defined(LINUX_SPI_BCM)
 // SPI RX and TX buffers (max packet len + 1 byte for the command)
 uint8_t spi_rxbuff[RFM95_MAX_PACKET_LEN + 1];
 uint8_t spi_txbuff[RFM95_MAX_PACKET_LEN + 1];
@@ -47,7 +47,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	                                  MY_RFM95_SPI_DATA_MODE));
 #endif
 	RFM95_csn(LOW);
-#if defined(LINUX_ARCH_RASPBERRYPI)
+#if defined(LINUX_SPI_BCM)
 	uint8_t * prx = spi_rxbuff;
 	uint8_t * ptx = spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
