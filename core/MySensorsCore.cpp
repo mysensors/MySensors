@@ -24,6 +24,14 @@
 #include <unistd.h>
 #endif
 
+// debug output
+#if defined(MY_DEBUG_VERBOSE_CORE)
+#define CORE_DEBUG(x,...)	DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
+#else
+#define CORE_DEBUG(x,...)									//!< debug NULL
+#endif
+
+
 // message buffers
 MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
@@ -31,7 +39,7 @@ MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among othe
 // core configuration
 static coreConfig_t _coreConfig;
 
-#if defined(MY_DEBUG)
+#if defined(DEBUG_OUTPUT_ENABLED)
 char _convBuf[MAX_PAYLOAD*2+1];
 #endif
 
@@ -323,6 +331,8 @@ bool sendHeartbeat(const bool ack)
 #endif
 }
 
+
+
 bool present(const uint8_t childSensorId, const uint8_t sensorType, const char *description,
              const bool ack)
 {
@@ -388,30 +398,21 @@ bool _processInternalMessages(void)
 			if (receiveTime) {
 				receiveTime(_msg.getULong());
 			}
-		} else if (type == I_CHILDREN) {
-#if defined(MY_REPEATER_FEATURE)
+		}  else if (type == I_CHILDREN) {
 			if (_msg.data[0] == 'C') {
+#if defined(MY_REPEATER_FEATURE) && defined(MY_SENSOR_NETWORK)
 				// Clears child relay data for this node
 				setIndication(INDICATION_CLEAR_ROUTING);
 				transportClearRoutingTable();
 				(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_CHILDREN).set("OK"));
-			}
 #endif
+			}
 		} else if (type == I_DEBUG) {
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 			const char debug_msg = _msg.data[0];
 			if (debug_msg == 'R') {		// routing table
-#if defined(MY_REPEATER_FEATURE)
-				for (uint16_t cnt = 0; cnt < SIZE_ROUTES; cnt++) {
-					const uint8_t route = transportGetRoute(cnt);
-					if (route != BROADCAST_ADDRESS) {
-						CORE_DEBUG(PSTR("MCO:PIM:ROUTE N=%d,R=%d\n"), cnt, route);
-						uint8_t outBuf[2] = { (uint8_t)cnt,route };
-						(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set(outBuf,
-						                 2));
-						wait(200);
-					}
-				}
+#if defined(MY_REPEATER_FEATURE) && defined(MY_SENSOR_NETWORK)
+				transportReportRoutingTable();
 #endif
 			} else if (debug_msg == 'V') {	// CPU voltage
 				(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
@@ -424,7 +425,7 @@ bool _processInternalMessages(void)
 				                       I_DEBUG).set(hwFreeMem()));
 			} else if (debug_msg == 'E') {	// clear MySensors eeprom area and reboot
 				(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_DEBUG).set("OK"));
-				for (int i = EEPROM_START; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
+				for (uint16_t i = EEPROM_START; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
 					hwWriteConfig(i, 0xFF);
 				}
 				setIndication(INDICATION_REBOOT);
@@ -517,7 +518,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 	// OTA FW feature: do not sleep if FW update ongoing
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 	if (isFirmwareUpdateOngoing()) {
-		debug(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
+		CORE_DEBUG(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
 		wait(sleepingMS);
 		return MY_SLEEP_NOT_POSSIBLE;
 	}
@@ -555,18 +556,19 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 			return MY_SLEEP_NOT_POSSIBLE;
 		}
 	}
-#endif
-
 	if (smartSleep) {
-		// notify controller about going to sleep
-		(void)sendHeartbeat();
+		// notify controller about going to sleep, payload indicates smartsleep waiting time in MS
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_PRE_SLEEP_NOTIFICATION).set((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS));
 		wait(MY_SMART_SLEEP_WAIT_DURATION_MS);		// listen for incoming messages
 	}
+#else
+	(void)smartSleep;
+#endif
 
 #if defined(MY_SENSOR_NETWORK)
-	CORE_DEBUG(PSTR("MCO:SLP:TPD\n"));	// sleep, power down transport
-	transportPowerDown();
+	transportDisable();
 #endif
+	setIndication(INDICATION_SLEEP);
 
 #if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	// Wait until leds finish their blinking pattern
@@ -575,9 +577,8 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 	}
 #endif
 
-	setIndication(INDICATION_SLEEP);
-
 	int8_t result = MY_SLEEP_NOT_POSSIBLE;	// default
+	MY_SERIALDEVICE.println(sleepingTimeMS);
 
 	if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 != INTERRUPT_NOT_DEFINED) {
 		// both IRQs
@@ -589,9 +590,15 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		// no IRQ
 		result = hwSleep(sleepingTimeMS);
 	}
-
 	setIndication(INDICATION_WAKEUP);
+#if defined(MY_SENSOR_NETWORK)
+	transportReInitialise();
+#endif
 	CORE_DEBUG(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
+	if (smartSleep) {
+		// notify controller about waking up, payload indicates sleeping time in MS
+		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_POST_SLEEP_NOTIFICATION).set(sleepingTimeMS));
+	}
 	return result;
 #endif
 }
@@ -647,8 +654,8 @@ void _nodeLock(const char* str)
 		doYield();
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED).set(str));
 #if defined(MY_SENSOR_NETWORK)
-		transportPowerDown();
-		CORE_DEBUG(PSTR("MCO:NLK:TPD\n"));	// power down transport
+		transportSleep();
+		CORE_DEBUG(PSTR("MCO:NLK:TSL\n"));	// sleep transport
 #endif
 		setIndication(INDICATION_SLEEP);
 		(void)hwSleep((unsigned long)1000*60*30); // Sleep for 30 min before resending LOCKED message

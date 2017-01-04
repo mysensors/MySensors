@@ -256,7 +256,7 @@ uint16_t hwFreeMem()
 }
 #endif
 
-#ifdef MY_DEBUG
+#ifdef DEBUG_OUTPUT_ENABLED
 void hwDebugPrint(const char *fmt, ... )
 {
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
@@ -267,7 +267,7 @@ void hwDebugPrint(const char *fmt, ... )
 #else
 	// prepend timestamp (AVR nodes)
 	MY_SERIALDEVICE.print(hwMillis());
-	MY_SERIALDEVICE.print(" ");
+	MY_SERIALDEVICE.print(F(" "));
 #endif
 	va_list args;
 	va_start (args, fmt );
@@ -282,8 +282,6 @@ void hwDebugPrint(const char *fmt, ... )
 	va_end (args);
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();
-
-	//MY_SERIALDEVICE.write(freeRam());
 }
 #endif
 

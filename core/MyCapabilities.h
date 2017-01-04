@@ -50,6 +50,8 @@
 #define MY_CAP_TYPE "G"
 #elif defined(MY_REPEATER_FEATURE)
 #define MY_CAP_TYPE "R"
+#elif defined(MY_PASSIVE_NODE)
+#define MY_CAP_TYPE "P"
 #else
 #define MY_CAP_TYPE "N"
 #endif

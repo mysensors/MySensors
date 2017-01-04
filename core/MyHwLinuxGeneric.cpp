@@ -120,7 +120,7 @@ uint16_t hwFreeMem()
 }
 #endif
 
-#ifdef MY_DEBUG
+#ifdef DEBUG_OUTPUT_ENABLED
 void hwDebugPrint(const char *fmt, ...)
 {
 	va_list args;

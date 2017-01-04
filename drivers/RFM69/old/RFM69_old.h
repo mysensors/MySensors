@@ -32,47 +32,43 @@
 #define RFM69_h
 #include <Arduino.h>            // assumes Arduino IDE v1.0 or greater
 
-#define RF69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
-#define RF69_SPI_CS             SS // SS is the SPI slave select pin, for instance D10 on ATmega328
+#define RFM69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
 
 // INT0 on AVRs should be connected to RFM69's DIO0 (ex on ATmega328 it's D2, on ATmega644/1284 it's D2)
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
-#define RF69_IRQ_PIN          2
-#define RF69_IRQ_NUM          0
-#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-#define RF69_IRQ_PIN          2
-#define RF69_IRQ_NUM          2
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
+#define DEFAULT_RFM69_IRQ_PIN			(2)
 #elif defined(__AVR_ATmega32U4__)
-#define RF69_IRQ_PIN          3
-#define RF69_IRQ_NUM          0
+#define DEFAULT_RFM69_IRQ_PIN			(3)
 #elif defined(__arm__)//Use pin 10 or any pin you want
-#define RF69_IRQ_PIN          10
-#define RF69_IRQ_NUM          10
+#define DEFAULT_RFM69_IRQ_PIN			(10)
 #else
-#define RF69_IRQ_PIN          2
-#define RF69_IRQ_NUM          0
+#define DEFAULT_RFM69_IRQ_PIN			(2)
 #endif
 
+#define DEFAULT_RFM69_CS_PIN			(SS)	// SS is the SPI slave select pin, for instance D10 on ATmega328
+
+// powerup delay
+#define RFM69_POWERUP_DELAY_MS			(100u)		//!< Power up delay, allow VCC to settle, transport to become fully operational
 
 #define CSMA_LIMIT              -90 // upper RX signal sensitivity threshold in dBm for carrier sense access
-#define RF69_MODE_SLEEP         0 // XTAL OFF
-#define RF69_MODE_STANDBY       1 // XTAL ON
-#define RF69_MODE_SYNTH         2 // PLL ON
-#define RF69_MODE_RX            3 // RX MODE
-#define RF69_MODE_TX            4 // TX MODE
+#define RFM69_MODE_SLEEP         0 // XTAL OFF
+#define RFM69_MODE_STANDBY       1 // XTAL ON
+#define RFM69_MODE_SYNTH         2 // PLL ON
+#define RFM69_MODE_RX            3 // RX MODE
+#define RFM69_MODE_TX            4 // TX MODE
 
 // available frequency bands
-#define RF69_315MHZ            31 // non trivial values to avoid misconfiguration
-#define RF69_433MHZ            43
-#define RF69_868MHZ            86
-#define RF69_915MHZ            91
+#define RFM69_315MHZ            31 // non trivial values to avoid misconfiguration
+#define RFM69_433MHZ            43
+#define RFM69_868MHZ            86
+#define RFM69_915MHZ            91
 
 #define null                  0
 #define COURSE_TEMP_COEF    -90 // puts the temperature reading in the ballpark, user can fine tune the returned value
-#define RF69_BROADCAST_ADDR 255
-#define RF69_CSMA_LIMIT_MS 1000
-#define RF69_TX_LIMIT_MS   1000
-#define RF69_FSTEP  61.03515625 // == FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
+#define RFM69_BROADCAST_ADDR 255
+#define RFM69_CSMA_LIMIT_MS 1000
+#define RFM69_TX_LIMIT_MS   1000
+#define RFM69_FSTEP  61.03515625 // == FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
 
 // TWS: define CTLbyte bits
 #define RFM69_CTL_SENDACK   0x80
@@ -82,7 +78,7 @@
 class RFM69
 {
 public:
-	static volatile uint8_t DATA[RF69_MAX_DATA_LEN]; //!< recv/xmit buf, including hdr & crc bytes
+	static volatile uint8_t DATA[RFM69_MAX_DATA_LEN]; //!< recv/xmit buf, including hdr & crc bytes
 	static volatile uint8_t DATALEN; //!< DATALEN
 	static volatile uint8_t SENDERID;  //!< SENDERID
 	static volatile uint8_t TARGETID; //!<  should match _address
@@ -101,17 +97,18 @@ public:
 	 * @param isRFM69HW Set to @c true to indicate RFM69HW variant.
 	 * @param interruptNum Interrupt number.
 	 */
-	RFM69(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false,
-	      uint8_t interruptNum=RF69_IRQ_NUM)
+	RFM69(uint8_t slaveSelectPin=MY_RFM69_CS_PIN, uint8_t interruptPin=MY_RFM69_IRQ_PIN,
+	      bool isRFM69HW=false,
+	      uint8_t interruptNum=digitalPinToInterrupt(MY_RFM69_IRQ_PIN))
 	{
 		_slaveSelectPin = slaveSelectPin;
 		_interruptPin = interruptPin;
 		_interruptNum = interruptNum;
-		_mode = RF69_MODE_STANDBY;
+		_mode = RFM69_MODE_STANDBY;
 		_promiscuousMode = false;
 		_powerLevel = 31;
 		_isRFM69HW = isRFM69HW;
-		_address = RF69_BROADCAST_ADDR;
+		_address = RFM69_BROADCAST_ADDR;
 #if defined (SPCR) && defined (SPSR)
 		_SPCR = 0;
 		_SPSR = 0;
@@ -125,8 +122,8 @@ public:
 	virtual void send(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 	                  bool requestACK=false); //!< send
 	virtual bool sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
-	                           uint8_t retries=2, uint8_t retryWaitTime=
-	                               40); //!< sendWithRetry (40ms roundtrip req for 61byte packets)
+	                           uint8_t retries=5, uint8_t retryWaitTime=
+	                               200); //!< sendWithRetry (40ms roundtrip req for 61byte packets, adjusted)
 	virtual bool receiveDone(); //!< receiveDone
 	bool ACKReceived(uint8_t fromNodeID); //!< ACKReceived
 	bool ACKRequested(); //!< ACKRequested
@@ -141,6 +138,9 @@ public:
 	                              true); //!< setHighPower (have to call it after initialize for RFM69HW)
 	virtual void setPowerLevel(uint8_t level); //!< setPowerLevel (reduce/increase transmit power level)
 	void sleep(); //!< sleep
+	void standBy(); //!< standBy
+	void powerDown(); //!< powerDown
+	void powerUp(); //!< powerUp
 	uint8_t readTemperature(uint8_t calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
 	void rcCalibration(); //!< rcCalibration (calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy])
 
