@@ -81,6 +81,12 @@
 #endif
 
 #if defined(ARDUINO_ARCH_AVR)
+#if defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
+// workaround, use builtin functions
+#define digitalWriteFast(__pin, __value) digitalWrite((__pin), (__value))
+#define pinModeFast(__pin, __mode)  pinMode((__pin), (__mode))
+#define digitalReadFast(__pin) digitalRead((__pin))
+#else
 #if !defined(__atomicWrite)
 #define __atomicWrite(A,P,V) do { if ((A) < 0x40) {bitWrite((A), (P), (V) );} else {uint8_t register saveSreg = SREG;cli();bitWrite((A), (P), (V));SREG = saveSreg;}} while(0)
 #endif
@@ -92,6 +98,7 @@
 #endif
 #if !defined(digitalReadFast)
 #define digitalReadFast(__pin) ( (bool) (__builtin_constant_p(__pin) ) ? (( bitRead(*__digitalPinToPINReg(__pin), (uint8_t)__digitalPinToBit(__pin))) ) : digitalRead((__pin)) )
+#endif
 #endif
 #endif
 
