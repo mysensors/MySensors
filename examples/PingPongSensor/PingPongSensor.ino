@@ -84,7 +84,7 @@ void sendPingOrPongResponse( MyMessage msg )
 	    nodeTypeAsCharRepresentation(msg.sender));
 
 	// Set payload to current time in millis to ensure each message is unique
-	response.set( millis() );
+	response.set( (uint32_t)millis() );
 	response.setDestination(msg.sender);
 	send(response);
 }
@@ -92,7 +92,7 @@ void sendPingOrPongResponse( MyMessage msg )
 void setNodeId(byte nodeID)
 {
 	LOG(F("Setting node id to: %i.\n***Please restart the node for changes to take effect.\n"), nodeID);
-	eeprom_write_byte((uint8_t*)EEPROM_NODE_ID_ADDRESS, (byte)nodeID);
+	hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (byte)nodeID);
 }
 
 const char * msgTypeAsCharRepresentation( mysensor_data mType )
