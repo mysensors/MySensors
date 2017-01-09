@@ -65,6 +65,8 @@
 #include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "core/MyHwSAMD.cpp"
+#elif defined(ARDUINO_ARCH_STM32F1)
+#include "core/MyHwSTM32F1.cpp"
 #elif defined(__linux__)
 #ifdef LINUX_ARCH_RASPBERRYPI
 #include "core/MyHwRPi.cpp"
@@ -342,6 +344,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if !defined(MY_CORE_ONLY)
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "core/MyMainESP8266.cpp"
+#elif defined(ARDUINO_ARCH_STM32F1)
+#include "core/MyMainSTM32F1.cpp"
 #elif defined(__linux__)
 #include "core/MyMainLinux.cpp"
 #else

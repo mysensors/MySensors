@@ -30,7 +30,6 @@
 // **********************************************************************************
 #include "RFM69.h"
 #include "RFM69registers.h"
-#include <SPI.h>
 
 volatile uint8_t RFM69::DATA[RF69_MAX_DATA_LEN];
 volatile uint8_t RFM69::_mode;        // current transceiver state
@@ -498,10 +497,12 @@ void RFM69::select()
 	_SPSR = SPSR;
 #endif
 	// set RFM69 SPI settings
+#ifdef LINUX_ARCH_RASPBERRYPI
+	SPI.beginTransaction(SPISettings());
+#endif
 	SPI.setDataMode(SPI_MODE0);
 	SPI.setBitOrder(MSBFIRST);
-	SPI.setClockDivider(
-	    SPI_CLOCK_DIV4); // decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
+	SPI.setClockDivider(_spiClockDiv);
 	hwDigitalWrite(_slaveSelectPin, LOW);
 }
 
@@ -515,6 +516,9 @@ void RFM69::unselect()
 	SPSR = _SPSR;
 #endif
 	interrupts();
+#ifdef LINUX_ARCH_RASPBERRYPI
+	SPI.endTransaction();
+#endif
 }
 
 // true  = disable filtering to capture all frames on network
