@@ -680,6 +680,14 @@
 #endif
 #endif
 
+/**
+ * @def MY_RF69_SPI_CLOCK_DIV
+ * @brief RF69 SPI Clock divider pin number.
+ */
+#ifndef MY_RF69_SPI_CLOCK_DIV
+#define MY_RF69_SPI_CLOCK_DIV RF69_SPI_CLOCK_DIV
+#endif
+
 // Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RFM69_ENABLE_ENCRYPTION
 
