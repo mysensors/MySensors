@@ -53,7 +53,7 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485|rfm95]
+    --my-transport=[none|nrf24|rs485|rfm95|rfm69]
                                 Transport type, set to none to disable transport feature. [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
@@ -63,6 +63,13 @@ MySensors options:
                                 Enables RF24 encryption.
                                 All nodes and gateway must have this enabled, and all must be
                                 personalized with the same AES key
+    --my-rfm69-frequency=[315|433|868|915]
+                                RFM69 Module Frequency
+    --my-is-rfm69hw             Enable high-powered rfm69hw
+    --my-rf69-irq-pin=<PIN>     Pin number connected to RFM69 IRQ pin.
+    --my-rf69-spi-cs=<PIN>      Pin number to use for RFM69 Chip-Select
+    --my-rf69-spi-clock-div=<0-65536>
+                                Clock divider to use for RFM69
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
     --my-rs485-serial-port=<PORT>
@@ -322,6 +329,31 @@ for opt do
     --my-rf24-pa-level=*)
         CPPFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CPPFLAGS"
         ;;
+    --my-rf69-irq-pin=*)
+        CPPFLAGS="-DMY_RF69_IRQ_PIN=${optarg} $CPPFLAGS"
+        ;;
+    --my-rf69-spi-cs=*)
+        CPPFLAGS="-DMY_RF69_SPI_CS=${optarg} $CPPFLAGS"
+        ;;
+    --my-rf69-spi-clock-div=*)
+        CPPFLAGS="-DMY_RF69_SPI_CLOCK_DIV=${optarg} $CPPFLAGS"
+        ;;
+    --my-is-rfm69hw*)
+        CPPFLAGS="-DMY_IS_RFM69HW $CPPFLAGS"
+        ;;
+    --my-rfm69-frequency=*)
+        if [[ ${optarg} == "315" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RF69_315MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "433" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RF69_433MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "868" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RF69_868MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "915" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RF69_915MHZ $CPPFLAGS"
+        else
+            echo "[WARNING] Illegal value for --my-rfm69-frequency=${optarg}, ignored"
+        fi
+        ;;
     --my-controller-url-address=*)
         CPPFLAGS="-DMY_CONTROLLER_URL_ADDRESS=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
@@ -445,6 +477,8 @@ elif [[ ${transport_type} == "rs485" ]]; then
     CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm95" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
+elif [[ ${transport_type} == "rfm69" ]]; then
+    CPPFLAGS="-DMY_RADIO_RFM69 $CPPFLAGS"
 else
     echo "Invalid transport type."
     echo "Aborting."

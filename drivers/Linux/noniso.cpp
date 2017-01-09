@@ -72,18 +72,18 @@ char* itoa(int value, char* result, int base)
 	return result;
 }
 
-int atoi(const char* s)
+int atoi(const char* s) throw()
 {
 	return (int) atol(s);
 }
 
-long atol(const char* s)
+long atol(const char* s) throw()
 {
 	char * tmp;
 	return strtol(s, &tmp, 10);
 }
 
-double atof(const char* s)
+double atof(const char* s) throw()
 {
 	char * tmp;
 	return strtod(s, &tmp);

@@ -497,6 +497,9 @@ void RFM69::select()
 	_SPSR = SPSR;
 #endif
 	// set RFM69 SPI settings
+#ifdef LINUX_ARCH_RASPBERRYPI
+	SPI.beginTransaction(SPISettings());
+#endif
 	SPI.setDataMode(SPI_MODE0);
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setClockDivider(_spiClockDiv);
@@ -513,6 +516,9 @@ void RFM69::unselect()
 	SPSR = _SPSR;
 #endif
 	interrupts();
+#ifdef LINUX_ARCH_RASPBERRYPI
+	SPI.endTransaction();
+#endif
 }
 
 // true  = disable filtering to capture all frames on network

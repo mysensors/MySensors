@@ -116,7 +116,12 @@ public:
 	{
 		_slaveSelectPin = slaveSelectPin;
 		_interruptPin = interruptPin;
+#ifdef LINUX_ARCH_RASPBERRYPI
+		(void)interruptNum;
+		_interruptNum = digitalPinToInterrupt(interruptPin);
+#else
 		_interruptNum = interruptNum;
+#endif
 		_mode = RF69_MODE_STANDBY;
 		_promiscuousMode = false;
 		_powerLevel = 31;
