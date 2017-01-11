@@ -494,6 +494,8 @@
 #define MY_RF24_CE_PIN 27
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define MY_RF24_CE_PIN 22
+#elif defined(ARDUINO_ARCH_DEVDUINO)
+#define MY_RF24_CE_PIN 7
 #else
 #define MY_RF24_CE_PIN 9
 #endif
@@ -510,6 +512,8 @@
 #define MY_RF24_CS_PIN 3
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define MY_RF24_CS_PIN 24
+#elif defined(ARDUINO_ARCH_DEVDUINO)
+#define MY_RF24_CS_PIN 6
 #else
 #define MY_RF24_CS_PIN 10
 #endif
