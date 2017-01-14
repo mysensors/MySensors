@@ -5,9 +5,9 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -41,19 +41,6 @@ class EthernetClient;
  */
 class EthernetServer : public Server
 {
-
-private:
-	uint16_t port; //!< @brief Port number for the network socket.
-	std::list<int> new_clients; //!< Socket list of new clients.
-	std::vector<int> clients; //!< @brief Socket list of clients.
-	uint16_t max_clients; //!< @brief The maximum number of allowed clients.
-	int sockfd; //!< @brief Network socket used to accept connections.
-
-	/**
-	 * @brief Accept new clients if the total of connected clients is below max_clients.
-	 *
-	 */
-	void _accept();
 
 public:
 	/**
@@ -116,6 +103,19 @@ public:
 	 * @return 0 if FAILURE else the number of characters sent.
 	 */
 	size_t write(const char *buffer, size_t size);
+
+private:
+	uint16_t port; //!< @brief Port number for the network socket.
+	std::list<int> new_clients; //!< Socket list of new clients.
+	std::vector<int> clients; //!< @brief Socket list of clients.
+	uint16_t max_clients; //!< @brief The maximum number of allowed clients.
+	int sockfd; //!< @brief Network socket used to accept connections.
+
+	/**
+	 * @brief Accept new clients if the total of connected clients is below max_clients.
+	 *
+	 */
+	void _accept();
 };
 
 #endif

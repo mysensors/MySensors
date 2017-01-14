@@ -70,13 +70,13 @@ public:
 	 *
 	 * @param address to be set from a 32 bits integer.
 	 */
-	IPAddress(uint32_t address);
+	explicit IPAddress(uint32_t address);
 	/**
 	 * @brief IPAddress constructor.
 	 *
 	 * @param address to be set from a byte array.
 	 */
-	IPAddress(const uint8_t *address);
+	explicit IPAddress(const uint8_t *address);
 	/**
 	 * @brief Set the IP from a array of characters.
 	 *

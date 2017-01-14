@@ -29,7 +29,7 @@ LOCAL uint8_t MY_RF24_NODE_ADDRESS = AUTO;
 LOCAL RF24_receiveCallbackType RF24_receiveCallback = NULL;
 #endif
 
-#ifdef LINUX_ARCH_RASPBERRYPI
+#ifdef LINUX_SPI_BCM
 uint8_t spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
 uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
 #endif
@@ -56,7 +56,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 	RF24_csn(LOW);
 	// timing
 	delayMicroseconds(10);
-#ifdef LINUX_ARCH_RASPBERRYPI
+#ifdef LINUX_SPI_BCM
 	uint8_t * prx = spi_rxbuff;
 	uint8_t * ptx = spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
