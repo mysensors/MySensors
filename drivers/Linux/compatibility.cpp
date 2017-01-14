@@ -1,3 +1,22 @@
+/*
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
+
 #include <time.h>
 #include <sys/time.h>
 #include <stdlib.h>
@@ -34,12 +53,21 @@ unsigned long micros()
 	return ((curTime.tv_sec - millis_at_start) * 1000000) + (curTime.tv_usec);
 }
 
-void _delay_ms(unsigned int millis)
+void _delay_milliseconds(unsigned int millis)
 {
 	struct timespec sleeper;
 
 	sleeper.tv_sec  = (time_t)(millis / 1000);
 	sleeper.tv_nsec = (long)(millis % 1000) * 1000000;
+	nanosleep(&sleeper, NULL);
+}
+
+void _delay_microseconds(unsigned int micro)
+{
+	struct timespec sleeper;
+
+	sleeper.tv_sec  = (time_t)(micro / 1000000);
+	sleeper.tv_nsec = (long)(micro % 1000000) * 1000;
 	nanosleep(&sleeper, NULL);
 }
 

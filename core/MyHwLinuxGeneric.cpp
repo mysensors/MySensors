@@ -28,8 +28,8 @@ static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 
 
 void hwInit()
 {
-#ifdef MY_GATEWAY_SERIAL
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+#ifdef MY_GATEWAY_SERIAL
 #ifdef MY_LINUX_SERIAL_GROUPNAME
 	if (!MY_SERIALDEVICE.setGroupPerm(MY_LINUX_SERIAL_GROUPNAME)) {
 		logError("Unable to change permission for serial port device.\n");
@@ -119,6 +119,21 @@ uint16_t hwFreeMem()
 	return 0;
 }
 #endif
+
+void hwDigitalWrite(uint8_t pin, uint8_t value)
+{
+	digitalWrite(pin, value);
+}
+
+int hwDigitalRead(uint8_t pin)
+{
+	return digitalRead(pin);
+}
+
+void hwPinMode(uint8_t pin, uint8_t mode)
+{
+	pinMode(pin, mode);
+}
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ...)
