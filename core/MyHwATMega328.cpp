@@ -54,8 +54,8 @@ bool interruptWakeUp()
 
 // Watchdog Timer interrupt service routine. This routine is required
 // to allow automatic WDIF and WDIE bit clearance in hardware.
-ISR (WDT_vect)
-{
+// Make it weak to allow local sketch implementation
+ISR(WDT_vect, __attribute__((weak))){
 }
 
 void hwPowerDown(period_t period)
