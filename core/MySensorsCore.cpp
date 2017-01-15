@@ -262,7 +262,7 @@ uint8_t getDistanceGW(void)
 	return result;
 }
 
-controllerConfig_t getConfig(void)
+controllerConfig_t getControllerConfig(void)
 {
 	return _coreConfig.controllerConfig;
 }
