@@ -350,7 +350,7 @@ void presentation()
 
 	// Get controller configuration
 	Serial.print("Get Config: ");
-	metric = getConfig().isMetric;
+	metric = getControllerConfig().isMetric;
 	Serial.println(metric ? "Metric":"Imperial");
 	wait(LONG_WAIT);
 
