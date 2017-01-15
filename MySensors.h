@@ -62,7 +62,7 @@
 #include "core/MyHwESP8266.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
-#include "core/MyHwATMega328.cpp"
+#include "core/MyHwAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "core/MyHwSAMD.cpp"
 #elif defined(__linux__)
