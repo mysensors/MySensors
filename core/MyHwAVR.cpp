@@ -19,7 +19,7 @@
 
 #ifdef ARDUINO_ARCH_AVR
 
-#include "MyHwATMega328.h"
+#include "MyHwAVR.h"
 
 #define INVALID_INTERRUPT_NUM	(0xFFu)
 
