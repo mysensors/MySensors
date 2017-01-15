@@ -17,8 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyHwATMega328_h
-#define MyHwATMega328_h
+#ifndef MyHwAVR_h
+#define MyHwAVR_h
 
 #include "MyHw.h"
 #include <avr/eeprom.h>
