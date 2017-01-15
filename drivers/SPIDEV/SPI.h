@@ -5,9 +5,9 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -19,15 +19,20 @@
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
 
-#ifndef _SPI_H_
-#define _SPI_H_
+#ifndef SPI_H
+#define	SPI_H
 
-#include <stdio.h>
-#include "bcm2835.h"
+#include <stdint.h>
+#include <string>
+#include <linux/spi/spidev.h>
 
 #define SPI_HAS_TRANSACTION
 
-// SPI Clock divider
+#define MSBFIRST 0
+#define LSBFIRST SPI_LSB_FIRST
+
+#define SPI_CLOCK_BASE 16000000		// 16Mhz
+
 #define SPI_CLOCK_DIV2 2
 #define SPI_CLOCK_DIV4 4
 #define SPI_CLOCK_DIV8 8
@@ -37,10 +42,20 @@
 #define SPI_CLOCK_DIV128 128
 
 // SPI Data mode
-#define SPI_MODE0 BCM2835_SPI_MODE0
-#define SPI_MODE1 BCM2835_SPI_MODE1
-#define SPI_MODE2 BCM2835_SPI_MODE2
-#define SPI_MODE3 BCM2835_SPI_MODE3
+#define SPI_MODE0 SPI_MODE_0
+#define SPI_MODE1 SPI_MODE_1
+#define SPI_MODE2 SPI_MODE_2
+#define SPI_MODE3 SPI_MODE_3
+
+#ifndef SPI_SPIDEV_DEVICE
+#define SPI_SPIDEV_DEVICE "/dev/spidev0.0"
+#endif
+
+// Default to Raspberry Pi
+const uint8_t SS   = 24;
+const uint8_t MOSI = 19;
+const uint8_t MISO = 21;
+const uint8_t SCK  = 23;
 
 /**
  * SPISettings class
@@ -51,12 +66,10 @@ class SPISettings
 public:
 	/**
 	 * @brief SPISettings constructor.
-	 *
-	 * Default clock speed is 8Mhz.
 	 */
 	SPISettings()
 	{
-		init(BCM2835_SPI_CLOCK_DIVIDER_32, BCM2835_SPI_BIT_ORDER_MSBFIRST, BCM2835_SPI_MODE0);
+		init(SPI_CLOCK_BASE, MSBFIRST, SPI_MODE0);
 	}
 	/**
 	 * @brief SPISettings constructor.
@@ -67,36 +80,10 @@ public:
 	 */
 	SPISettings(uint32_t clock, uint8_t bitOrder, uint8_t dataMode)
 	{
-		uint16_t divider;
-
-		switch (clock) {
-		case 500000:
-			divider = BCM2835_SPI_CLOCK_DIVIDER_512;
-			break;
-		case 1000000:
-			divider = BCM2835_SPI_CLOCK_DIVIDER_256;
-			break;
-		case 2000000:
-			divider = BCM2835_SPI_CLOCK_DIVIDER_128;
-			break;
-		case 4000000:
-			divider = BCM2835_SPI_CLOCK_DIVIDER_64;
-			break;
-		case 8000000:
-			divider = BCM2835_SPI_CLOCK_DIVIDER_32;
-			break;
-		case 16000000:
-			divider = BCM2835_SPI_CLOCK_DIVIDER_16;
-			break;
-		default:
-			// 8Mhz
-			divider = BCM2835_SPI_CLOCK_DIVIDER_32;
-		}
-
-		init(divider, bitOrder, dataMode);
+		init(clock, bitOrder, dataMode);
 	}
 
-	uint16_t cdiv; //!< @brief SPI clock divider.
+	uint32_t clock; //!< @brief SPI clock.
 	uint8_t border; //!< @brief SPI bit order.
 	uint8_t dmode; //!< @brief SPI data mode.
 
@@ -104,13 +91,13 @@ private:
 	/**
 	 * @brief Initialized class members.
 	 *
-	 * @param divider SPI clock divider.
+	 * @param clk SPI clock.
 	 * @param bitOrder SPI bit order.
 	 * @param dataMode SPI data mode.
 	 */
-	void init(uint16_t divider, uint8_t bitOrder, uint8_t dataMode)
+	void init(uint32_t clk, uint8_t bitOrder, uint8_t dataMode)
 	{
-		cdiv = divider;
+		clock = clk;
 		border = bitOrder;
 		dmode = dataMode;
 	}
@@ -118,48 +105,18 @@ private:
 	friend class SPIClass;
 };
 
-/**
- * SPIClass class
- */
 class SPIClass
 {
 
-private:
-	static uint8_t initialized; //!< @brief SPI initialized flag.
-
 public:
 	/**
-	 * @brief Checks if SPI was initialized.
-	 *
-	 * @return 0 if wasn't initialized, else 1 or more.
+	 * @brief SPIClass constructor.
 	 */
-	static uint8_t is_initialized();
-	/**
-	 * @brief Send and receive a byte.
-	 *
-	 * @param data to send.
-	 * @return byte received.
-	 */
-	inline static uint8_t transfer(uint8_t data);
-	/**
-	 * @brief Send and receive a number of bytes.
-	 *
-	 * @param tbuf Sending buffer.
-	 * @param rbuf Receive buffer.
-	 * @param len Buffer length.
-	 */
-	inline static void transfernb(char* tbuf, char* rbuf, uint32_t len);
-	/**
-	 * @brief Send and receive a number of bytes.
-	 *
-	 * @param buf Buffer to read from and write to.
-	 * @param len Buffer length.
-	 */
-	inline static void transfern(char* buf, uint32_t len);
+	SPIClass();
 	/**
 	 * @brief Start SPI operations.
 	 */
-	static void begin();
+	static void begin(int busNo=0);
 	/**
 	 * @brief End SPI operations.
 	 */
@@ -185,9 +142,31 @@ public:
 	/**
 	 * @brief Sets the chip select pin.
 	 *
-	 * @param csn_pin Specifies the CS pin.
+	 * @param csn_chip Specifies the CS chip.
 	 */
-	static void chipSelect(int csn_pin);
+	static void chipSelect(int csn_chip);
+	/**
+	* @brief Transfer a single byte
+	*
+	* @param data Byte to send
+	* @return Data returned via spi
+	*/
+	static uint8_t transfer(uint8_t data);
+	/**
+	* @brief Transfer a buffer of data
+	*
+	* @param tbuf Transmit buffer
+	* @param rbuf Receive buffer
+	* @param len Length of the data
+	*/
+	static void transfernb(char* tbuf, char* rbuf, uint32_t len);
+	/**
+	* @briefTransfer a buffer of data without an rx buffer
+	*
+	* @param buf Pointer to a buffer of data
+	* @param len Length of the data
+	*/
+	static void transfern(char* buf, uint32_t len);
 	/**
 	 * @brief Start SPI transaction.
 	 *
@@ -210,22 +189,17 @@ public:
 	 * @param interruptNumber ignored parameter.
 	 */
 	static void notUsingInterrupt(uint8_t interruptNumber);
+
+private:
+	static uint8_t initialized; //!< @brief SPI initialized flag.
+	static int fd; //!< @brief SPI device file descriptor.
+	static std::string device; //!< @brief Default SPI device.
+	static uint32_t speed; //!< @brief SPI speed.
+	static uint32_t speed_temp; //!< @brief Used when doing transaction.
+	static struct spi_ioc_transfer tr; //!< @brief Auxiliar struct for data transfer.
+
+	static void init();
 };
-
-uint8_t SPIClass::transfer(uint8_t data)
-{
-	return bcm2835_spi_transfer(data);
-}
-
-void SPIClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
-{
-	bcm2835_spi_transfernb( tbuf, rbuf, len);
-}
-
-void SPIClass::transfern(char* buf, uint32_t len)
-{
-	transfernb(buf, buf, len);
-}
 
 extern SPIClass SPI;
 

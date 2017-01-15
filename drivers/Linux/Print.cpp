@@ -210,9 +210,9 @@ size_t Print::printNumber(unsigned long n, uint8_t base)
 	}
 
 	do {
-		unsigned long m = n;
+		char c = n % base;
 		n /= base;
-		char c = m - base * n;
+
 		*--str = c < 10 ? c + '0' : c + 'A' - 10;
 	} while(n);
 

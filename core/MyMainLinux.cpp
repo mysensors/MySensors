@@ -50,7 +50,7 @@ void handle_sigint(int sig)
 
 	closelog();
 
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 static int daemonize(void)
@@ -167,12 +167,12 @@ void generate_soft_sign_hmac_key()
 void set_soft_sign_hmac_key(char *key_str)
 {
 	uint8_t key[32];
-	int n;
 
 	if (strlen(key_str) != 64) {
 		printf("invalid key!\n");
 	} else {
 		for (int i = 0; i < 64; ++i) {
+			int n;
 			char c = key_str[i];
 			if (c <= '9') {
 				n = c - '0';
@@ -242,12 +242,12 @@ void generate_soft_sign_serial_key()
 void set_soft_sign_serial_key(char *key_str)
 {
 	uint8_t key[9];
-	int n;
 
 	if (strlen(key_str) != 18) {
 		printf("invalid key!\n");
 	} else {
 		for (int i = 0; i < 18; ++i) {
+			int n;
 			char c = key_str[i];
 			if (c <= '9') {
 				n = c - '0';
@@ -317,12 +317,12 @@ void generate_aes_key()
 void set_aes_key(char *key_str)
 {
 	uint8_t key[16];
-	int n;
 
 	if (strlen(key_str) != 32) {
 		printf("invalid key!\n");
 	} else {
 		for (int i = 0; i < 32; ++i) {
+			int n;
 			char c = key_str[i];
 			if (c <= '9') {
 				n = c - '0';
@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'h':
 			print_usage();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'd':
 			debug = 1;
 			break;
@@ -384,37 +384,37 @@ int main(int argc, char *argv[])
 			break;
 		case 'A':
 			generate_soft_sign_hmac_key();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'B':
 			generate_soft_sign_serial_key();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'C':
 			generate_aes_key();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'D':
 			print_soft_sign_hmac_key();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'E':
 			print_soft_sign_serial_key();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'F':
 			print_aes_key();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'G':
 			key = strdup(optarg);
 			set_soft_sign_hmac_key(key);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'H':
 			key = strdup(optarg);
 			set_soft_sign_serial_key(key);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'I':
 			key = strdup(optarg);
 			set_aes_key(key);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		default:
 			print_usage();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		}
 	}
 

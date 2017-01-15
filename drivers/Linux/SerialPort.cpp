@@ -5,9 +5,9 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -179,25 +179,23 @@ bool SerialPort::open(int bauds)
 
 bool SerialPort::setGroupPerm(const char *groupName)
 {
-	struct group* devGrp;
 	const mode_t ttyPermissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
-	const char *dev;
-	int ret;
 
 	if (sd != -1 && groupName != NULL) {
-		devGrp = getgrnam(groupName);
+		struct group *devGrp = getgrnam(groupName);
 		if (devGrp == NULL) {
 			logError("getgrnam: %s failed. (%d) %s\n", groupName, errno, strerror(errno));
 			return false;
 		}
 
+		const char *dev;
 		if (isPty) {
 			dev = ptsname(sd);
 		} else {
 			dev = serialPort.c_str();
 		}
 
-		ret = chown(dev, -1, devGrp->gr_gid);
+		int ret = chown(dev, -1, devGrp->gr_gid);
 		if (ret == -1) {
 			logError("Could not change PTY owner! (%d) %s\n", errno, strerror(errno));
 			return false;

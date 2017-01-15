@@ -17,8 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyHwATMega328_h
-#define MyHwATMega328_h
+#ifndef MyHwAVR_h
+#define MyHwAVR_h
 
 #include "MyHw.h"
 #include <avr/eeprom.h>
@@ -58,11 +58,9 @@
 
 
 // Define these as macros to save valuable space
-
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
 #define hwPinMode(__pin, __value) pinModeFast(__pin, __value)
-
 
 #if defined(MY_DISABLED_SERIAL)
 #define hwInit()

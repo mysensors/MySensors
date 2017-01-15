@@ -1022,12 +1022,12 @@
 #endif
 
 /**
- * @def MY_IS_SERIAL_PTY
+ * @def MY_LINUX_IS_SERIAL_PTY
  * @brief Set serial as a pseudo terminal.
  *
  * Enable this if you need to connect to a controller running on the same device.
  */
-//#define MY_IS_SERIAL_PTY
+//#define MY_LINUX_IS_SERIAL_PTY
 
 /**
  * @def MY_LINUX_SERIAL_PTY
@@ -1077,7 +1077,7 @@
 #define MY_NODE_LOCK_FEATURE
 #define MY_REPEATER_FEATURE
 #define MY_LINUX_SERIAL_GROUPNAME
-#define MY_IS_SERIAL_PTY
+#define MY_LINUX_IS_SERIAL_PTY
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
 #define MY_RFM95_MODEM_CONFIGRUATION RFM95_BW125CR45SF128
