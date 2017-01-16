@@ -337,7 +337,8 @@ static bool skipSign(MyMessage &msg)
 	              msg.type == I_FIND_PARENT_REQUEST		|| msg.type == I_FIND_PARENT_RESPONSE	||
 	              msg.type == I_HEARTBEAT_REQUEST			|| msg.type == I_HEARTBEAT_RESPONSE		||
 	              msg.type == I_PING									|| msg.type == I_PONG									||
-	              msg.type == I_REGISTRATION_REQUEST	)) {
+	              msg.type == I_REGISTRATION_REQUEST	|| msg.type == I_DISCOVER_REQUEST	||
+	              msg.type == I_DISCOVER_RESPONSE )) {
 		SIGN_DEBUG(PSTR("Skipping security for command %d type %d\n"), mGetCommand(msg), msg.type);
 		ret = true;
 	} else if (mGetCommand(msg) == C_STREAM &&
@@ -366,6 +367,7 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 // Helper to process presentation mesages
 static bool signerInternalProcessPresentation(MyMessage &msg)
 {
+	const uint8_t sender = msg.sender;
 #if defined(MY_SIGNING_FEATURE)
 	if (msg.data[0] != SIGNING_PRESENTATION_VERSION_1) {
 		SIGN_DEBUG(PSTR("Unsupported signing presentation version (%d)!\n"), msg.data[0]);
@@ -374,21 +376,21 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 	// We only handle version 1 here...
 	if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_SIGNATURES) {
 		// We received an indicator that the sender require us to sign all messages we send to it
-		SIGN_DEBUG(PSTR("Mark node %d as one that require signed messages\n"), msg.sender);
-		SET_SIGN(msg.sender);
+		SIGN_DEBUG(PSTR("Mark node %d as one that require signed messages\n"), sender);
+		SET_SIGN(sender);
 	} else {
 		// We received an indicator that the sender does not require us to sign all messages we send to it
-		SIGN_DEBUG(PSTR("Mark node %d as one that do not require signed messages\n"), msg.sender);
-		CLEAR_SIGN(msg.sender);
+		SIGN_DEBUG(PSTR("Mark node %d as one that do not require signed messages\n"), sender);
+		CLEAR_SIGN(sender);
 	}
 	if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_WHITELISTING) {
 		// We received an indicator that the sender require us to salt signatures with serial
-		SIGN_DEBUG(PSTR("Mark node %d as one that require whitelisting\n"), msg.sender);
-		SET_WHITELIST(msg.sender);
+		SIGN_DEBUG(PSTR("Mark node %d as one that require whitelisting\n"), sender);
+		SET_WHITELIST(sender);
 	} else {
 		// We received an indicator that the sender does not require us to sign all messages we send to it
-		SIGN_DEBUG(PSTR("Mark node %d as one that do not require whitelisting\n"), msg.sender);
-		CLEAR_WHITELIST(msg.sender);
+		SIGN_DEBUG(PSTR("Mark node %d as one that do not require whitelisting\n"), sender);
+		CLEAR_WHITELIST(sender);
 	}
 
 	// Save updated tables
@@ -400,12 +402,12 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 	// Inform sender about our preference if we are a gateway, but only require signing if the sender
 	// required signing unless we explicitly configure it to
 #if defined(MY_GATEWAY_FEATURE)
-	prepareSigningPresentation(msg, msg.sender);
+	prepareSigningPresentation(msg, sender);
 #if defined(MY_SIGNING_REQUEST_SIGNATURES)
 #if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL)
 	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
 #else
-	if (DO_SIGN(msg.sender)) {
+	if (DO_SIGN(sender)) {
 		msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
 	}
 #endif
@@ -414,20 +416,20 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 #if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL)
 	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
 #else
-	if (DO_WHITELIST(msg.sender)) {
+	if (DO_WHITELIST(sender)) {
 		msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
 	}
 #endif
 #endif // MY_SIGNING_NODE_WHITELISTING
 	if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_SIGNATURES) {
-		SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), msg.sender);
+		SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), sender);
 	} else {
-		SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures\n"), msg.sender);
+		SIGN_DEBUG(PSTR("Informing node %d that we do not require signatures\n"), sender);
 	}
 	if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_WHITELISTING) {
-		SIGN_DEBUG(PSTR("Informing node %d that we require whitelisting\n"), msg.sender);
+		SIGN_DEBUG(PSTR("Informing node %d that we require whitelisting\n"), sender);
 	} else {
-		SIGN_DEBUG(PSTR("Informing node %d that we do not require whitelisting\n"), msg.sender);
+		SIGN_DEBUG(PSTR("Informing node %d that we do not require whitelisting\n"), sender);
 	}
 	if (!_sendRoute(msg)) {
 		SIGN_DEBUG(PSTR("Failed to transmit signing presentation!\n"));
@@ -437,10 +439,10 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 #if defined(MY_GATEWAY_FEATURE)
 	// If we act as gateway and do not have the signing feature and receive a signing request we still
 	// need to do make sure the requester does not believe the gateway still require signatures
-	prepareSigningPresentation(msg, msg.sender);
+	prepareSigningPresentation(msg, sender);
 	SIGN_DEBUG(
 	    PSTR("Informing node %d that we do not require signatures because we do not support it\n"),
-	    msg.sender);
+	    sender);
 	if (!_sendRoute(msg)) {
 		SIGN_DEBUG(PSTR("Failed to transmit signing presentation!\n"));
 	}
@@ -448,6 +450,7 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 	// If we act as a node and do not have the signing feature then we just silently drop any signing
 	// presentation messages received
 	(void)msg;
+	(void)sender;
 	SIGN_DEBUG(PSTR("Received signing presentation, but signing is not supported (message ignored)\n"));
 #endif // not MY_GATEWAY_FEATURE
 #endif // not MY_SIGNING_FEATURE 
