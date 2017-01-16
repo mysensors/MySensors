@@ -94,7 +94,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 // settings for getVcc()
 ADC_MODE(ADC_VCC);
 #else
-// [default] settings for analogRead(A0) 
+// [default] settings for analogRead(A0)
 ADC_MODE(ADC_TOUT);
 #endif
 
