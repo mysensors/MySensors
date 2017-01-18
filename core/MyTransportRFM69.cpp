@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include "drivers/RFM69/RFM69.h"
 
-RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM);
+RFM69 _radio(MY_RF69_SPI_CS, MY_RF69_IRQ_PIN, MY_RFM69HW, MY_RF69_IRQ_NUM, MY_RF69_SPI_CLOCK_DIV);
 uint8_t _address;
 
 
