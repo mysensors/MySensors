@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -33,7 +33,7 @@
 // Enable this if you are using an Arduino connected to the USB
 //#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
 // Enable this if you need to connect to a controller running on the same device
-//#define MY_IS_SERIAL_PTY
+//#define MY_LINUX_IS_SERIAL_PTY
 // Choose a symlink name for the PTY device
 //#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
 // Grant access to the specified system group for the serial device

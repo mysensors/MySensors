@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -16,14 +16,41 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
-/***
- *  This file defines the Sensor library version number
- *  Normally, contributors should not modify this directly
- *  as it is managed by the MySensors Bot.
- */
-#ifndef Version_h
-#define Version_h
 
-#define MYSENSORS_LIBRARY_VERSION "2.1.1"
+#include <stdio.h>
+#include "SerialSimulator.h"
 
-#endif
+void SerialSimulator::begin(int baud)
+{
+	(void)baud;
+}
+
+int SerialSimulator::available()
+{
+	return 1;
+}
+
+int SerialSimulator::read()
+{
+	return getchar();
+}
+
+size_t SerialSimulator::write(uint8_t b)
+{
+	return (size_t)::printf("%c", b);
+}
+
+int SerialSimulator::peek()
+{
+	return -1;
+}
+
+void SerialSimulator::flush()
+{
+	fflush(stdout);
+}
+
+void SerialSimulator::end()
+{
+	flush();
+}

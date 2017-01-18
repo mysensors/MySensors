@@ -60,7 +60,7 @@ void SPIFlash::select()
 #ifndef SPI_HAS_TRANSACTION
 	noInterrupts();
 #endif
-#ifndef ESP8266
+#if defined(SPCR) && defined(SPSR)
 	_SPCR = SPCR;
 	_SPSR = SPSR;
 #endif
@@ -88,7 +88,7 @@ void SPIFlash::unselect()
 #else
 	interrupts();
 #endif
-#ifndef ESP8266
+#if defined(SPCR) && defined(SPSR)
 	SPCR = _SPCR;
 	SPSR = _SPSR;
 #endif
@@ -97,7 +97,7 @@ void SPIFlash::unselect()
 /// setup SPI, read device ID etc...
 boolean SPIFlash::initialize()
 {
-#ifndef ESP8266
+#if defined(SPCR) && defined(SPSR)
 	_SPCR = SPCR;
 	_SPSR = SPSR;
 #endif

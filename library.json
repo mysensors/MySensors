@@ -7,22 +7,18 @@
     "type": "git",
     "url": "https://github.com/mysensors/MySensors.git"
   },
-  "version": "2.1.0",
+  "version": "2.1.1",
   "frameworks": "arduino",
   "platforms": [
     "atmelavr",
     "atmelsam",
-    "espressif"
+    "espressif8266"
   ],
-  "exclude": [
-    "tests",
-    "Documentation"
-  ],
-  "build": {
-    "srcFilter": [
-      "+<*.c>",
-      "+<*.cpp>",
-      "+<*.h>"
+  "export": {
+    "exclude": [
+      "tests",
+      "Documentation",
+      "Doxyfile"
     ]
   }
 }

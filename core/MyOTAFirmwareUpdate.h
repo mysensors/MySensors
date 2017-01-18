@@ -40,6 +40,7 @@
 * |!| OTA  | FWP	| FLASH INIT FAIL							| Failed to initialise flash
 * | | OTA  | FWP	| UPDATE SKIPPED							| FW update skipped, no newer version available
 * | | OTA  | FWP	| RECV B=%04X								| Received FW block (B)
+* |!| OTA  | FWP	| WRONG FWB									| Wrong FW block received
 * | | OTA  | FWP	| FW END									| FW received, proceed to CRC verification
 * | | OTA  | FWP	| CRC OK									| FW CRC verification OK
 * |!| OTA  | FWP	| CRC FAIL									| FW CRC verification failed

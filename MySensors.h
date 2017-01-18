@@ -62,15 +62,11 @@
 #include "core/MyHwESP8266.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
-#include "core/MyHwATMega328.cpp"
+#include "core/MyHwAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "core/MyHwSAMD.cpp"
 #elif defined(__linux__)
-#ifdef LINUX_ARCH_RASPBERRYPI
-#include "core/MyHwRPi.cpp"
-#else
 #include "core/MyHwLinuxGeneric.cpp"
-#endif
 #endif
 
 // LEDS
@@ -254,7 +250,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "drivers/AVR/DigitalIO/DigitalIO.h"
 #endif
 
-#if defined(MY_RADIO_NRF24) && defined(__linux__) && !defined(LINUX_ARCH_RASPBERRYPI)
+#if defined(MY_RADIO_NRF24) && defined(__linux__) && !(defined(LINUX_SPI_BCM) || defined(LINUX_SPI_SPIDEV))
 #error No support for nRF24 radio on this platform
 #endif
 

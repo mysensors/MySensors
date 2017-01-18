@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -15,15 +15,31 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
+ *
+ * Based on wiringPi Copyright (c) 2012 Gordon Henderson.
  */
-/***
- *  This file defines the Sensor library version number
- *  Normally, contributors should not modify this directly
- *  as it is managed by the MySensors Bot.
- */
-#ifndef Version_h
-#define Version_h
 
-#define MYSENSORS_LIBRARY_VERSION "2.1.1"
+#ifndef interrupt_h
+#define interrupt_h
+
+#include <stdint.h>
+
+#define CHANGE 1
+#define FALLING 2
+#define RISING 3
+#define NONE 4
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void attachInterrupt(uint8_t gpioPin, void(*func)(), uint8_t mode);
+void detachInterrupt(uint8_t gpioPin);
+void interrupts();
+void noInterrupts();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

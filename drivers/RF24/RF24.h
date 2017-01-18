@@ -48,7 +48,7 @@ _SPI;
 
 #define _BV(x) (1<<(x))
 
-#if defined(__arm__)
+#if defined(__arm__) || defined(__linux__)
 #include <SPI.h>
 #else
 extern HardwareSPI SPI;
