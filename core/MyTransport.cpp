@@ -432,11 +432,11 @@ void transportDisable(void)
 void transportReInitialise(void)
 {
 	if (RADIO_CAN_POWER_OFF == true) {
-		TRANSPORT_DEBUG(PSTR("TSF:TRI:TPU\n"));
+		TRANSPORT_DEBUG(PSTR("TSF:TRI:TPU\n"));		// transport power up
 		transportPowerUp();
 		transportSetAddress(_transportConfig.nodeId);
 	} else {
-		TRANSPORT_DEBUG(PSTR("MCO:TRI:TSB\n"));
+		TRANSPORT_DEBUG(PSTR("TSF:TRI:TSB\n"));		// transport standby
 		transportStandBy();
 	}
 }

@@ -12,17 +12,13 @@
   "platforms": [
     "atmelavr",
     "atmelsam",
-    "espressif"
+    "espressif8266"
   ],
-  "exclude": [
-    "tests",
-    "Documentation"
-  ],
-  "build": {
-    "srcFilter": [
-      "+<*.c>",
-      "+<*.cpp>",
-      "+<*.h>"
+  "export": {
+    "exclude": [
+      "tests",
+      "Documentation",
+      "Doxyfile"
     ]
   }
 }
