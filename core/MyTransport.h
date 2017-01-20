@@ -35,7 +35,7 @@
 *   - TSM:FPAR						from <b>stParent</b> Find parent
 *   - TSM:ID						from <b>stID</b> Check/request node ID, if dynamic node ID set
 *   - TSM:UPL						from <b>stUplink</b> Verify uplink connection by pinging GW
-*   - TSM:READY					from <b>stReady</b> Transport is ready and fully operational
+*   - TSM:READY						from <b>stReady</b> Transport is ready and fully operational
 *   - TSM:FAIL						from <b>stFailure</b> Failure in transport link or transport HW
 *  - Transport support function (<b>TSF</b>)
 *   - TSF:CKU						from @ref transportCheckUplink(), checks connection to GW
@@ -160,13 +160,17 @@
 
 #include "MySensorsCore.h"
 
+#ifndef MY_TRANSPORT_MAX_TX_FAILURES
 #if defined(MY_REPEATER_FEATURE)
 #define MY_TRANSPORT_MAX_TX_FAILURES	(10u)		//!< search for a new parent node after this many transmission failures, higher threshold for repeating nodes
 #else
 #define MY_TRANSPORT_MAX_TX_FAILURES	(5u)		//!< search for a new parent node after this many transmission failures, lower threshold for non-repeating nodes
 #endif
+#endif
 
+#ifndef MY_TRANSPORT_MAX_TSM_FAILURES
 #define MY_TRANSPORT_MAX_TSM_FAILURES		(7u)		//!< Max. number of consecutive TSM failure state entries (3bits)
+#endif
 
 #ifndef MY_TRANSPORT_TIMEOUT_FAILURE_STATE_MS
 #define MY_TRANSPORT_TIMEOUT_FAILURE_STATE_MS		(10*1000ul)		//!< Duration failure state (in ms)

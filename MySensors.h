@@ -273,6 +273,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error Only one forward link driver can be activated
 #endif
 
+// TRANSPORT INCLUDES
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 #include "hal/transport/MyTransportHAL.h"
 #include "core/MyTransport.h"
@@ -283,6 +284,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_TRANSPORT_SANITY_CHECK
 #endif
 
+// PARENT CHECK
 #if defined(MY_PARENT_NODE_IS_STATIC) && (MY_PARENT_NODE_ID == AUTO)
 #error Parent is static but no parent ID defined, set MY_PARENT_NODE_ID.
 #endif
@@ -294,16 +296,17 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // RAM ROUTING TABLE
 #if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(LINUX_ARCH_RASPBERRYPI)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(LINUX_ARCH_RASPBERRYPI) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR)
+#if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__)
+// >4kb, enable it
+#define MY_RAM_ROUTING_TABLE_ENABLED
+#else
 // memory limited, enable with care
 // #define MY_RAM_ROUTING_TABLE_ENABLED
-#endif
-#endif
-
-#if defined(MY_RADIO_RF24) && defined(__linux__) && !defined(LINUX_ARCH_RASPBERRYPI)
-#error No support for nRF24 radio on this platform
+#endif // __avr_atmega1280__, __avr_atmega1284__, __avr_atmega2560__
+#endif // ARDUINO_ARCH_AVR
 #endif
 
 // SOFTSPI
@@ -314,30 +317,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "drivers/AVR/DigitalIO/DigitalIO.h"
 #endif
 
+// POWER PIN
 #if defined(MY_RF24_POWER_PIN) || defined(MY_RFM69_POWER_PIN) || defined(MY_RFM95_POWER_PIN)
 #define RADIO_CAN_POWER_OFF (true)
 #else
 #define RADIO_CAN_POWER_OFF (false)
 #endif
 
-// count enabled transports
-#if defined(MY_RADIO_NRF24)
-#define __RF24CNT 1
-#else
-#define __RF24CNT 0
-#endif
-#if defined(MY_RADIO_RFM69)
-#define __RFM69CNT 1
-#else
-#define __RFM69CNT 0
-#endif
-#if defined(MY_RADIO_RFM95)
-#define __RFM95CNT 1
-#endif
-
 // Transport drivers
 #if defined(MY_RADIO_RF24)
-
 #if defined(__linux__) && !(defined(LINUX_SPI_BCM) || defined(LINUX_SPI_SPIDEV))
 #error No support for nRF24 radio on this platform
 #endif
