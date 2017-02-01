@@ -317,6 +317,12 @@
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
+/**
+* @def MY_INDICATION_HANDLER
+* @brief Enable to use own indication handler
+*/
+//#define MY_INDICATION_HANDLER
+
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
@@ -1089,4 +1095,5 @@
 #define MY_RFM69_ENABLE_LISTENMODE
 #define MY_RFM95_POWER_PIN
 #define MY_PASSIVE_NODE
+#define MY_INDICATION_HANDLER
 #endif
