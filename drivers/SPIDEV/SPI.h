@@ -161,7 +161,7 @@ public:
 	*/
 	static void transfernb(char* tbuf, char* rbuf, uint32_t len);
 	/**
-	* @briefTransfer a buffer of data without an rx buffer
+	* @brief Transfer a buffer of data without an rx buffer
 	*
 	* @param buf Pointer to a buffer of data
 	* @param len Length of the data
