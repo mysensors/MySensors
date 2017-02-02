@@ -112,7 +112,7 @@ public:
 	 * @param spiClockDiv  SPI clock divider
 	 */
 	RFM69(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false,
-	      uint8_t interruptNum=RF69_IRQ_NUM, uint8_t spiClockDiv=RF69_SPI_CLOCK_DIV)
+	      uint8_t interruptNum=RF69_IRQ_NUM, unsigned int spiClockDiv=RF69_SPI_CLOCK_DIV)
 	{
 		_slaveSelectPin = slaveSelectPin;
 		_interruptPin = interruptPin;
