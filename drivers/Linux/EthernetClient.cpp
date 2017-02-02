@@ -5,9 +5,9 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -103,7 +103,6 @@ size_t EthernetClient::write(uint8_t b)
 
 size_t EthernetClient::write(const uint8_t *buf, size_t size)
 {
-	int rc = 0;
 	int bytes = 0;
 
 	if (_sock == -1) {
@@ -111,7 +110,7 @@ size_t EthernetClient::write(const uint8_t *buf, size_t size)
 	}
 
 	while (size > 0) {
-		rc = send(_sock, buf + bytes, size, MSG_NOSIGNAL | MSG_DONTWAIT);
+		int rc = send(_sock, buf + bytes, size, MSG_NOSIGNAL | MSG_DONTWAIT);
 		if (rc == -1) {
 			logError("send: %s\n", strerror(errno));
 			close(_sock);

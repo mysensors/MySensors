@@ -28,6 +28,7 @@
 #if !DOXYGEN
 #include <stdint.h>
 #include "Stream.h"
+#include "RPi.h"
 
 #define BUFFER_LENGTH 32
 

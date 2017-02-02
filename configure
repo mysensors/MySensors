@@ -11,6 +11,11 @@ Options:
 Help:
     -h, --help                  print this message
 
+SPI driver options:
+    --spi-driver=[BCM|SPIDEV]
+    --spi-spidev-device=<DEVICE>
+                                Device path. [/dev/spidev0.0]
+
 Building options:
     --soc=[BCM2835|BCM2836|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
@@ -58,6 +63,8 @@ MySensors options:
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
+    --my-rf24-ce-pin=<PIN>      Pin number to use for rf24 Chip-Enable.
+    --my-rf24-cs-pin=<PIN>      Pin number to use for rf24 Chip-Select.
     --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
     --my-rf24-encryption-enabled
                                 Enables RF24 encryption.
@@ -209,7 +216,7 @@ function gcc_cpu_flags {
         flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
         ;;
     H3)
-        flags="-march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+        flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
         ;;
     *)
         flags=""
@@ -224,7 +231,7 @@ transport_type=nrf24
 signing=none
 signing_request_signatures=false
 
-params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM"
+params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -233,6 +240,12 @@ for opt do
     fi
     optarg="${opt#*=}"
     case "$opt" in
+    --spi-driver=*)
+        SPI_DRIVER="$optarg"
+        ;;
+    --spi-spidev-device=*)
+        CPPFLAGS="-DSPI_SPIDEV_DEVICE=\\\"${optarg}\\\" $CPPFLAGS"
+        ;;
     --soc=*)
         SOC="$optarg"
         ;;
@@ -308,7 +321,7 @@ for opt do
         CPPFLAGS="-DMY_BAUD_RATE=${optarg} $CPPFLAGS"
         ;;
     --my-serial-is-pty*)
-        CPPFLAGS="-DMY_IS_SERIAL_PTY $CPPFLAGS"
+        CPPFLAGS="-DMY_LINUX_IS_SERIAL_PTY $CPPFLAGS"
         ;;
     --my-serial-pty=*)
         CPPFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CPPFLAGS"
@@ -321,6 +334,12 @@ for opt do
         ;;
     --my-rf24-pa-level=*)
         CPPFLAGS="-DMY_RF24_PA_LEVEL=${optarg} $CPPFLAGS"
+        ;;
+    --my-rf24-ce-pin=*)
+        CPPFLAGS="-DMY_RF24_CE_PIN=${optarg} $CPPFLAGS"
+        ;;
+    --my-rf24-cs-pin=*)
+        CPPFLAGS="-DMY_RF24_CS_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-controller-url-address=*)
         CPPFLAGS="-DMY_CONTROLLER_URL_ADDRESS=\\\"${optarg}\\\" $CPPFLAGS"
@@ -406,7 +425,7 @@ if [ -z "${SOC}" ]; then
     SOC=${info[0]}
     TYPE=${info[1]}
     CPU=${info[2]}
-    echo "[OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}."
+    echo "  [OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}."
 fi
 
 if [ -z "${CPUFLAGS}" ]; then
@@ -415,6 +434,40 @@ fi
 
 if [[ $SOC == "BCM2835" || $SOC == "BCM2836" ]]; then
     CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
+else
+    echo "[SECTION] Checking GPIO Sysfs."
+    if [[ $(eval 'ls /sys/class/gpio/export 2>/dev/null') ]]; then
+        echo "  [OK] /sys/class/gpio/export found"
+    else
+        echo "  [WARNING] /sys/class/gpio/export not found."
+    fi
+fi
+
+if [ -z "${SPI_DRIVER}" ]; then
+    echo "[SECTION] Detecting SPI driver."
+    if [[ $SOC == "BCM2835" || $SOC == "BCM2836" ]]; then
+        SPI_DRIVER=BCM
+    elif [[ $(eval 'ls /dev/spidev* 2>/dev/null') ]]; then
+        SPI_DRIVER=SPIDEV
+    fi
+    if [ -n "${SPI_DRIVER}" ]; then
+        echo "  [OK] SPI driver detected:${SPI_DRIVER}."
+    else
+        echo "  [WARNING] No supported SPI driver detected."
+    fi
+fi
+if [ -n "${SPI_DRIVER}" ]; then
+    case ${SPI_DRIVER} in
+        BCM)
+            CPPFLAGS="-DLINUX_SPI_BCM $CPPFLAGS"
+            ;;
+        SPIDEV)
+            CPPFLAGS="-DLINUX_SPI_SPIDEV $CPPFLAGS"
+            ;;
+        *)
+            die "Unsupported SPI driver: ${SPI_DRIVER}." 1
+            ;;
+    esac
 fi
 
 if [[ ${debug} == "enable" ]]; then
@@ -431,9 +484,7 @@ elif [[ ${gateway_type} == "serial" ]]; then
 elif [[ ${gateway_type} == "mqtt" ]]; then
     CPPFLAGS="-DMY_GATEWAY_LINUX -DMY_GATEWAY_MQTT_CLIENT $CPPFLAGS"
 else
-    echo "Invalid gateway type."
-    echo "Aborting."
-    exit 1
+    die "Invalid gateway type." 2
 fi
 
 if [[ ${transport_type} == "none" ]]; then
@@ -446,9 +497,7 @@ elif [[ ${transport_type} == "rs485" ]]; then
 elif [[ ${transport_type} == "rfm95" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
 else
-    echo "Invalid transport type."
-    echo "Aborting."
-    exit 1
+    die "Invalid transport type." 3
 fi
 
 if [[ ${signing} == "none" ]]; then
@@ -460,24 +509,23 @@ elif [[ ${signing} == "software" ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
 else
-    echo "Invalid message signing option."
-    echo "Aborting."
-    exit 1
+    die "Invalid message signing option." 4
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
+echo "[SECTION] Detecting init system."
 if [ "${NO_INIT}" ];  then
-    echo "[OK] no init system chosen."
+    echo "  [OK] no init system chosen."
 elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
-    echo "[OK] init system detected: systemd"
+    echo "  [OK] init system detected: systemd."
 elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
     INIT_SYSTEM=sysvinit
-    echo "[OK] init system detected: sysvinit"
+    echo "  [OK] init system detected: sysvinit."
 else
-    echo "[FAILED] unknown init system"
+    echo "  [FAILED] unknown init system."
 fi
 
 echo "[SECTION] Saving configuration."

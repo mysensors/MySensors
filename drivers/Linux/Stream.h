@@ -57,6 +57,7 @@ public:
 	Stream()
 	{
 		_timeout = 1000;
+		_startMillis = 0;
 	}
 
 	// parsing methods
