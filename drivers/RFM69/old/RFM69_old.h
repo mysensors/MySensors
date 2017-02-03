@@ -137,10 +137,11 @@ public:
 	virtual void setHighPower(bool onOFF=
 	                              true); //!< setHighPower (have to call it after initialize for RFM69HW)
 	virtual void setPowerLevel(uint8_t level); //!< setPowerLevel (reduce/increase transmit power level)
-	void sleep(); //!< sleep
-	void standBy(); //!< standBy
-	void powerDown(); //!< powerDown
-	void powerUp(); //!< powerUp
+	void sleep(void);			//!< sleep
+	void standBy(void);			//!< standBy
+	void powerDown(void);		//!< powerDown
+	void powerUp(void);			//!< powerUp
+	bool sanityCheck(void);	//!< sanityCheck
 	uint8_t readTemperature(uint8_t calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
 	void rcCalibration(); //!< rcCalibration (calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy])
 

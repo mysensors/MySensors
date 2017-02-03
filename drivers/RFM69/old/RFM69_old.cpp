@@ -100,7 +100,7 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 	do {
 		writeReg(REG_SYNCVALUE1, 0xAA);
 		doYield();
-	} while (readReg(REG_SYNCVALUE1) != 0xaa && hwMillis()-start < timeout);
+	} while (readReg(REG_SYNCVALUE1) != 0xAA && hwMillis()-start < timeout);
 	if (hwMillis() - start >= timeout) {
 		// timeout: checking wiring or replace module
 		return false;
@@ -203,27 +203,45 @@ void RFM69::setMode(uint8_t newMode)
 }
 
 //put transceiver in sleep mode to save battery - to wake or resume receiving just call receiveDone()
-void RFM69::sleep()
+void RFM69::sleep(void)
 {
 	setMode(RFM69_MODE_SLEEP);
 }
 
-void RFM69::standBy()
+void RFM69::standBy(void)
 {
 	setMode(RFM69_MODE_STANDBY);
 }
-void RFM69::powerDown()
+void RFM69::powerDown(void)
 {
 #if defined(MY_RFM69_POWER_PIN)
 	hwDigitalWrite(MY_RFM69_POWER_PIN, LOW);
 #endif
 }
-void RFM69::powerUp()
+void RFM69::powerUp(void)
 {
 #if defined(MY_RFM69_POWER_PIN)
 	hwDigitalWrite(MY_RFM69_POWER_PIN, HIGH);
 	delay(RFM69_POWERUP_DELAY_MS);
 #endif
+}
+
+bool RFM69::sanityCheck(void)
+{
+	bool result = true;
+	// check Bitrate
+	result &= readReg(REG_BITRATEMSB) == RF_BITRATEMSB_55555;
+	result &= readReg(REG_BITRATELSB) == RF_BITRATELSB_55555;
+	// default: 5KHz, (FDEV + BitRate / 2 <= 500KHz)
+	result &= readReg(REG_FDEVMSB) == RF_FDEVMSB_50000;
+	result &= readReg(REG_FDEVLSB) == RF_FDEVLSB_50000;
+	/*
+	// Check radio frequency band
+	result &= readReg(REG_FRFMSB) == (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RF_FRFMSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RF_FRFMSB_433 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RF_FRFMSB_868 : RF_FRFMSB_915)));
+	result &= readReg(REG_FRFMID) == (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RF_FRFMID_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RF_FRFMID_433 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RF_FRFMID_868 : RF_FRFMID_915)));
+	result &= readReg(REG_FRFLSB) == (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RF_FRFLSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RF_FRFLSB_433 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RF_FRFLSB_868 : RF_FRFLSB_915)));
+	*/
+	return result;
 }
 
 //set this node's address

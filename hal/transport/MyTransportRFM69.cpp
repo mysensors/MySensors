@@ -195,8 +195,7 @@ bool transportAvailable(void)
 
 bool transportSanityCheck(void)
 {
-	// not implemented yet
-	return true;
+	return _radio.sanityCheck();
 }
 
 uint8_t transportReceive(void* data)
