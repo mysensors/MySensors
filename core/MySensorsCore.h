@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -33,16 +33,15 @@
 *  - MCO:<b>REG</b>	from @ref _registerNode()
 *  - MCO:<b>SND</b>	from @ref send()
 *  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
-*  - MCO:<b>NLK</b>	from nodeLock()
+*  - MCO:<b>NLK</b>	from @ref _nodeLock()
 *
 * MySensorsCore debug log messages:
 *
 * |E| SYS	| SUB	| Message										| Comment
-* |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
-* | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
-* | | MCO  | BGN	| BFR											| Callback before()
-* | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
-* | | MCO  | BGN	| STP											| Callback setup()
+* |-|-------|-------|-----------------------------------------------|----------------------------------------------------------------------------
+* | | MCO	| BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
+* | | MCO	| BGN	| BFR											| Callback before()
+* | | MCO	| BGN	| STP											| Callback setup()
 * | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
 * | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
 * |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
