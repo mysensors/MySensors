@@ -101,12 +101,19 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 		writeReg(REG_SYNCVALUE1, 0xAA);
 		doYield();
 	} while (readReg(REG_SYNCVALUE1) != 0xaa && hwMillis()-start < timeout);
+	if (hwMillis() - start >= timeout) {
+		// timeout: checking wiring or replace module
+		return false;
+	}
 	start = hwMillis();
 	do {
 		writeReg(REG_SYNCVALUE1, 0x55);
 		doYield();
 	} while (readReg(REG_SYNCVALUE1) != 0x55 && hwMillis()-start < timeout);
-
+	if (hwMillis() - start >= timeout) {
+		// timeout: checking wiring or replace module
+		return false;
+	}
 	for (uint8_t i = 0; CONFIG[i][0] != 255; i++) {
 		writeReg(CONFIG[i][0], CONFIG[i][1]);
 	}

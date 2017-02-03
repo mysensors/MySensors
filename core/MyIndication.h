@@ -74,6 +74,6 @@ void setIndication( const indication_t ind );
 /**
  * Allow user to define their own indication handler.
  */
-void indication( const indication_t ) __attribute__((weak));
+void indication( const indication_t );
 
 #endif
