@@ -155,6 +155,13 @@ uint8_t _address;
 
 bool transportInit(void)
 {
+#ifdef MY_RFM69_RST_PIN
+	hwPinMode(MY_RFM69_RST_PIN, OUTPUT);
+	hwDigitalWrite(MY_RFM69_RST_PIN, LOW);
+#endif
+#ifdef MY_RF69_DIO5
+	hwPinMode(MY_RF69_DIO5, INPUT);
+#endif
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
 #ifdef MY_RFM69_ENABLE_ENCRYPTION

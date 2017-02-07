@@ -197,11 +197,12 @@ LOCAL uint8_t RFM69_RAW_writeByteRegister(const uint8_t address, uint8_t value)
 LOCAL bool RFM69_initialise(const float frequency)
 {
 	RFM69_DEBUG(PSTR("RFM69:INIT\n"));
-	// reset radio module if rst pin defined
+	// power up radio if power pin defined
 #if defined(MY_RFM69_POWER_PIN)
 	hwPinMode(MY_RFM69_POWER_PIN, OUTPUT);
 #endif
 	RFM69_powerUp();
+	// reset radio module if rst pin defined
 #if defined(MY_RFM69_RST_PIN)
 	hwPinMode(MY_RFM69_RST_PIN, OUTPUT);
 	hwDigitalWrite(MY_RFM69_RST_PIN, HIGH);

@@ -715,11 +715,19 @@
  */
 //#define MY_RFM69_RST_PIN				(9)
 
+#ifndef MY_RFM69_RST_PIN
+// legacy
+#ifdef MY_RF69_RESET
+#define MY_RFM69_RST_PIN				MY_RF69_RESET
+#endif
+#endif
+
 /**
 * @def MY_RFM69_POWER_PIN
 * @brief RFM69 power pin, uncomment if used
 */
 //#define MY_RFM69_POWER_PIN			(3)
+
 
 /**
  * @def MY_RFM69_IRQ_PIN
@@ -746,6 +754,11 @@
 #define MY_RFM69_CS_PIN					DEFAULT_RFM69_CS_PIN
 #endif
 #endif
+
+
+
+
+
 
 /**
  * @def MY_RFM69_SPI_SPEED
