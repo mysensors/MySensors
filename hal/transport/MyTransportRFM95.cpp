@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -24,6 +24,9 @@
 bool transportInit(void)
 {
 	const bool result = RFM95_initialise(MY_RFM95_FREQUENCY);
+#if defined(MY_RFM95_TCXO)
+	RFM95_enableTCXO();
+#endif
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM95_ATC_MODE_DISABLED)
 	// only enable ATC mode in nodes
 	RFM95_ATCmode(true, MY_RFM95_ATC_TARGET_RSSI);
@@ -41,10 +44,10 @@ uint8_t transportGetAddress(void)
 	return RFM95_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool sendAndForget)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
-	if (sendAndForget) {
-		(void)RFM95_sendWithRetry(to, data, len, 0);
+	if (noACK) {
+		(void)RFM95_sendWithRetry(to, data, len, 0, 0);
 		return true;
 	}
 	return RFM95_sendWithRetry(to, data, len);
@@ -62,7 +65,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	return RFM95_recv((uint8_t*)data);
+	return RFM95_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
 }
 
 void transportSleep(void)

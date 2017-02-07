@@ -53,6 +53,7 @@
 * | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
 * |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
 * |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
+* |!| MCO	| SLP	| TNR											| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
 * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
 * | | MCO	| NLK	| TSL											| Set transport to sleep
 *

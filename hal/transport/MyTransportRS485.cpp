@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -233,9 +233,9 @@ bool _serialProcess()
 	return true;
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool sendAndForget)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
-	(void)sendAndForget;	// not implemented
+	(void)noACK;	// not implemented
 	const char *datap = static_cast<char const *>(data);
 	unsigned char i;
 	unsigned char cs = 0;

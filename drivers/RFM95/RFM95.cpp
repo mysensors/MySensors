@@ -254,7 +254,7 @@ LOCAL bool RFM95_available(void)
 	return false;
 }
 
-LOCAL uint8_t RFM95_recv(uint8_t* buf)
+LOCAL uint8_t RFM95_recv(uint8_t* buf, const uint8_t maxBufSize)
 {
 
 	// atomic
@@ -264,7 +264,7 @@ LOCAL uint8_t RFM95_recv(uint8_t* buf)
 
 	noInterrupts();
 
-	const uint8_t payloadLen = RFM95.currentPacket.payloadLen;
+	const uint8_t payloadLen = min(RFM95.currentPacket.payloadLen, maxBufSize);
 	const uint8_t sender = RFM95.currentPacket.header.sender;
 	const rfm95_sequenceNumber_t sequenceNumber = RFM95.currentPacket.header.sequenceNumber;
 	const rfm95_controlFlags_t controlFlags = RFM95.currentPacket.header.controlFlags;
@@ -359,6 +359,16 @@ LOCAL bool RFM95_setTxPowerLevel(rfm95_powerLevel_t newPowerLevel)
 	return false;
 
 }
+
+#if defined(MY_RFM95_TCXO)
+LOCAL void RFM95_enableTCXO(void)
+{
+	while ((RFM95_readReg(RFM95_REG_4B_TCXO) & RFM95_TCXO_TCXO_INPUT_ON) != RFM95_TCXO_TCXO_INPUT_ON) {
+		RFM95_sleep();
+		RFM95_writeReg(RFM95_REG_4B_TCXO, (RFM95_readReg(RFM95_REG_4B_TCXO) | RFM95_TCXO_TCXO_INPUT_ON));
+	}
+}
+#endif
 
 // Sets registers from a canned modem configuration structure
 LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t* config)
@@ -617,9 +627,8 @@ LOCAL uint8_t RFM95_getTxPowerPercent(void)
 	                        - RFM95_MIN_POWER_LEVEL_DBM));
 	return result;
 }
-LOCAL bool RFM95_setTxPowerPercent(uint8_t newPowerPercent)
+LOCAL bool RFM95_setTxPowerPercent(const uint8_t newPowerPercent)
 {
-	newPowerPercent = min(newPowerPercent, 100);	// limit
 	const rfm95_powerLevel_t newPowerLevel = static_cast<rfm95_powerLevel_t>
 	        (RFM95_MIN_POWER_LEVEL_DBM + (RFM95_MAX_POWER_LEVEL_DBM
 	                                      - RFM95_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));

@@ -47,6 +47,23 @@
 
 #define DEFAULT_RFM69_CS_PIN			(SS)	// SS is the SPI slave select pin, for instance D10 on ATmega328
 
+// SPI clock divier for non-transaction implementations
+#if (MY_RFM69_SPI_SPEED >= F_CPU / 2)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV2			//!< SPI clock divider 2
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 4)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV4			//!< SPI clock divider 4
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 8)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV8			//!< SPI clock divider 8
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 16)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV16			//!< SPI clock divider 16
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 32)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV32			//!< SPI clock divider 32
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 64)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV64			//!< SPI clock divider 64
+#else
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV128		//!< SPI clock divider 128
+#endif
+
 // powerup delay
 #define RFM69_POWERUP_DELAY_MS			(100u)		//!< Power up delay, allow VCC to settle, transport to become fully operational
 
@@ -109,10 +126,15 @@ public:
 		_powerLevel = 31;
 		_isRFM69HW = isRFM69HW;
 		_address = RFM69_BROADCAST_ADDR;
+#if !defined(SPI_HAS_TRANSACTION)
 #if defined (SPCR) && defined (SPSR)
 		_SPCR = 0;
 		_SPSR = 0;
 #endif
+#if defined (SREG)
+		_SREG = 0;
+#endif
+#endif // SPI_HAS_TRANSACTION
 	}
 
 	bool initialize(uint8_t freqBand, uint8_t ID, uint8_t networkID=1); //!< initialize
@@ -141,6 +163,7 @@ public:
 	void standBy(void);			//!< standBy
 	void powerDown(void);		//!< powerDown
 	void powerUp(void);			//!< powerUp
+	void reset(void);			//!< reset
 	bool sanityCheck(void);	//!< sanityCheck
 	uint8_t readTemperature(uint8_t calFactor=0); //!< readTemperature (get CMOS temperature (8bit))
 	void rcCalibration(); //!< rcCalibration (calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy])
@@ -168,6 +191,9 @@ protected:
 #if defined (SPCR) && defined (SPSR)
 	uint8_t _SPCR; //!< _SPCR
 	uint8_t _SPSR; //!< _SPSR
+#endif
+#if defined (SREG)
+	uint8_t _SREG; //!< _SREG
 #endif
 
 	virtual void receiveBegin(); //!< receiveBegin

@@ -51,10 +51,10 @@ uint8_t transportGetAddress(void)
 	return RFM69_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void* data, uint8_t len, const bool sendAndForget)
+bool transportSend(const uint8_t to, const void* data, uint8_t len, const bool noACK)
 {
-	if (sendAndForget) {
-		(void)RFM69_sendWithRetry(to, data, len, 0);
+	if (noACK) {
+		(void)RFM69_sendWithRetry(to, data, len, 0, 0);
 		return true;
 	}
 	return RFM69_sendWithRetry(to, data, len);
@@ -72,7 +72,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	return RFM69_recv((uint8_t*)data);
+	return RFM69_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
 }
 
 void transportSleep(void)
@@ -113,32 +113,32 @@ void transportSetTargetRSSI(int16_t targetSignalStrength)
 
 int16_t transportGetSendingRSSI(void)
 {
-	return static_cast<int16_t>(RFM69_getSendingRSSI());
+	return RFM69_getSendingRSSI();
 }
 
 int16_t transportGetReceivingRSSI(void)
 {
-	return static_cast<int16_t>(RFM69_getReceivingRSSI());
+	return RFM69_getReceivingRSSI();
 }
 
 int16_t transportGetSendingSNR(void)
 {
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetReceivingSNR(void)
 {
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetTxPowerPercent(void)
 {
-	return static_cast<int16_t>(RFM69_getTxPowerPercent());
+	return RFM69_getTxPowerPercent();
 }
 
 int16_t transportGetTxPowerLevel(void)
 {
-	return static_cast<int16_t>(RFM69_getTxPowerLevel());
+	return RFM69_getTxPowerLevel();
 }
 bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
@@ -155,12 +155,11 @@ uint8_t _address;
 
 bool transportInit(void)
 {
-#ifdef MY_RFM69_RST_PIN
-	hwPinMode(MY_RFM69_RST_PIN, OUTPUT);
-	hwDigitalWrite(MY_RFM69_RST_PIN, LOW);
+#if defined(MY_RFM69_POWER_PIN)
+	//hwPinMode(MY_RFM69_POWER_PIN, OUTPUT);
 #endif
 #ifdef MY_RF69_DIO5
-	hwPinMode(MY_RF69_DIO5, INPUT);
+	//hwPinMode(MY_RF69_DIO5, INPUT);
 #endif
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
@@ -186,10 +185,10 @@ uint8_t transportGetAddress(void)
 	return _address;
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool sendAndForget)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
-	if (sendAndForget) {
-		(void)_radio.sendWithRetry(to, data, len, 0);
+	if (noACK) {
+		(void)_radio.sendWithRetry(to, data, len, 0, 0);
 		return true;
 	}
 	return _radio.sendWithRetry(to, data, len);
@@ -207,9 +206,9 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	(void)memcpy(&data, (const void *)_radio.DATA, _radio.DATALEN);
 	// save payload length
-	const uint8_t dataLen = _radio.DATALEN;
+	const uint8_t dataLen = min(MAX_MESSAGE_LENGTH,_radio.DATALEN);
+	(void)memcpy((void*)data, (void*)_radio.DATA, dataLen);
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.ACKRequested()) {
 		_radio.sendACK();
@@ -239,32 +238,32 @@ void transportPowerUp(void)
 // **********************************************
 int16_t transportGetSendingRSSI(void)
 {
-	return static_cast<int16_t>(INVALID_RSSI);
+	return INVALID_RSSI;
 }
 
 int16_t transportGetReceivingRSSI(void)
 {
-	return static_cast<int16_t>(_radio.RSSI);
+	return _radio.RSSI;
 }
 
 int16_t transportGetSendingSNR(void)
 {
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetReceivingSNR(void)
 {
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetTxPowerPercent(void)
 {
-	return static_cast<int16_t>(0);
+	return 0;
 }
 
 int16_t transportGetTxPowerLevel(void)
 {
-	return static_cast<int16_t>(0);
+	return 0;
 }
 
 // **********************************************

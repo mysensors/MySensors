@@ -79,6 +79,22 @@
 // SPI settings
 #define RFM69_SPI_DATA_ORDER	MSBFIRST		//!< SPI data order
 #define RFM69_SPI_DATA_MODE		SPI_MODE0		//!< SPI mode
+// SPI clock divier for non-transaction implementations
+#if (MY_RFM69_SPI_SPEED >= F_CPU / 2)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV2			//!< SPI clock divider 2
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 4)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV4			//!< SPI clock divider 4
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 8)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV8			//!< SPI clock divider 8
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 16)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV16			//!< SPI clock divider 16
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 32)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV32			//!< SPI clock divider 32
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 64)
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV64			//!< SPI clock divider 64
+#else
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV128		//!< SPI clock divider 128
+#endif
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 #include <SPI.h>
@@ -308,9 +324,10 @@ LOCAL bool RFM69_available(void);
 /**
 * @brief If a valid message is received, copy it to buf and return length. 0 byte messages are permitted.
 * @param buf Location to copy the received message
+* @param maxBufSize Max buffer size
 * @return Number of bytes
 */
-LOCAL uint8_t RFM69_recv(uint8_t* buf);
+LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize);
 
 /**
 * @brief RFM69_sendFrame

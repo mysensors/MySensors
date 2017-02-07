@@ -189,9 +189,9 @@
 * @brief If enabled, the node operates fully autonomously, i.e. messages are sent without ACKing
 * note: All transport-related checks and safety-mechanisms are disabled, also @ref MY_NODE_ID,
 * @ref MY_PARENT_NODE_ID and @ref MY_PARENT_NODE_IS_STATIC need to be set.
-* Singing, registration, OTA FW update are disabled.
+* Singing, registration, and OTA FW update are disabled.
 */
-//define MY_PASSIVE_NODE
+//#define MY_PASSIVE_NODE
 
 
 /**
@@ -765,7 +765,7 @@
  * @brief Set to overrule default RFM69 SPI speed.
  */
 #ifndef MY_RFM69_SPI_SPEED
-#define MY_RFM69_SPI_SPEED				(4*1000000ul)
+#define MY_RFM69_SPI_SPEED				(4*1000000ul)	// datasheet says 10Mhz max.
 #endif
 /**
  * @def MY_RFM69_ENABLE_ENCRYPTION
@@ -900,6 +900,12 @@
 #define MY_RFM95_ATC_TARGET_RSSI		(-60)
 #endif
 
+/**
+* @def MY_RFM95_TCXO
+* @brief Enable to force your radio to use an external frequency source (e.g. TCXO, if present).
+* This allows for better stability using SF 9 to 12.
+*/
+//#define MY_RFM95_TCXO
 
 
 /**************************************
@@ -1107,6 +1113,7 @@
 #define MY_RFM69_POWER_PIN
 #define MY_RFM69_ENABLE_LISTENMODE
 #define MY_RFM95_POWER_PIN
+#define MY_RFM95_TCXO
 #define MY_PASSIVE_NODE
 #define MY_INDICATION_HANDLER
 #endif

@@ -92,7 +92,7 @@ uint8_t transportGetAddress(void)
 	return RF24_getNodeID();
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool sendAndForget)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	// copy input data because it is read-only
@@ -102,9 +102,9 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	const uint8_t finalLength = len > 16 ? 32 : 16;
 	//encrypt data
 	_aes.cbc_encrypt(_dataenc, _dataenc, finalLength /16);
-	return RF24_sendMessage(to, _dataenc, finalLength, sendAndForget);
+	return RF24_sendMessage(to, _dataenc, finalLength, noACK);
 #else
-	return RF24_sendMessage(to, data, len, sendAndForget);
+	return RF24_sendMessage(to, data, len, noACK);
 #endif
 }
 

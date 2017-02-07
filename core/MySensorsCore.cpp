@@ -579,8 +579,6 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 #endif
 
 	int8_t result = MY_SLEEP_NOT_POSSIBLE;	// default
-	MY_SERIALDEVICE.println(sleepingTimeMS);
-
 	if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 != INTERRUPT_NOT_DEFINED) {
 		// both IRQs
 		result = hwSleep(interrupt1, mode1, interrupt2, mode2, sleepingTimeMS);
@@ -592,10 +590,10 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		result = hwSleep(sleepingTimeMS);
 	}
 	setIndication(INDICATION_WAKEUP);
+	CORE_DEBUG(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
 #if defined(MY_SENSOR_NETWORK)
 	transportReInitialise();
 #endif
-	CORE_DEBUG(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
 	if (smartSleep) {
 		// notify controller about waking up, payload indicates sleeping time in MS
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,

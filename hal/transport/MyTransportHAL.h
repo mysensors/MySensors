@@ -71,11 +71,11 @@ uint8_t transportGetAddress(void);
 * @param to recipient
 * @param data message to be sent
 * @param len length of message (header + payload)
-* @param sendAndForget do not wait for ACK
+* @param noACK do not wait for ACK
 * @return true if message sent successfully
 */
 bool transportSend(const uint8_t to, const void* data, const uint8_t len,
-                   const bool sendAndForget = false);
+                   const bool noACK = false);
 /**
 * @brief Verify if RX FIFO has pending messages
 * @return true if message available in RX FIFO

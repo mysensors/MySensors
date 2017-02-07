@@ -146,7 +146,7 @@ void stParentTransition(void)
 	setIndication(INDICATION_FIND_PARENT);
 	_transportSM.uplinkOk = false;
 	_transportSM.preferredParentFound = false;
-#if defined(MY_PARENT_NODE_IS_STATIC)
+#if defined(MY_PARENT_NODE_IS_STATIC) || defined(MY_PASSIVE_NODE)
 	TRANSPORT_DEBUG(PSTR("TSM:FPAR:STATP=%d\n"), (uint8_t)MY_PARENT_NODE_ID);	// static parent
 	_transportSM.findingParentNode = false;
 	_transportConfig.distanceGW = 1u;	// assumption, CHKUPL:GWDC will update this variable
@@ -166,7 +166,7 @@ void stParentTransition(void)
 // stParentUpdate
 void stParentUpdate(void)
 {
-#if defined(MY_PARENT_NODE_IS_STATIC)
+#if defined(MY_PARENT_NODE_IS_STATIC) || defined(MY_PASSIVE_NODE)
 	// skipping find parent
 	setIndication(INDICATION_GOT_PARENT);
 	transportSwitchSM(stID);
@@ -559,13 +559,11 @@ bool transportRouteMessage(MyMessage &message)
 			_transportSM.failedUplinkTransmissions++;
 		} else {
 			_transportSM.failedUplinkTransmissions = 0u;
-#if !defined(MY_GATEWAY_FEATURE)
 			// update uplink quality monitor
 			const int16_t signalStrengthRSSI = transportGetSignalReport(SR_TX_RSSI);
 			_transportSM.uplinkQualityRSSI = static_cast<transportRSSI_t>((1 - UPLINK_QUALITY_WEIGHT) *
 			                                 _transportSM.uplinkQualityRSSI
 			                                 + (UPLINK_QUALITY_WEIGHT * transportRSSItoInternal(signalStrengthRSSI)));
-#endif
 
 		}
 	}
@@ -621,7 +619,7 @@ uint8_t transportPingNode(const uint8_t targetId)
 			// Wait for ping reply or timeout
 			(void)transportWait(2000, C_INTERNAL, I_PONG);
 		}
-		// make sure missing I_PONG msg does not block pinging function by leaving pignActive=true
+		// make sure missing I_PONG msg does not block pinging function by leaving pingActive=true
 		_transportSM.pingActive = false;
 		return _transportSM.pingResponse;
 	} else {
@@ -641,9 +639,9 @@ void transportProcessMessage(void)
 	(void)signerCheckTimer();
 	// receive message
 	setIndication(INDICATION_RX);
-	uint8_t payloadLength = transportReceive((uint8_t *)&_msg);
+	uint8_t payloadLength = transportReceive((uint8_t *)
+	                        &_msg.last); // last is the first byte of the payload buffer
 	// get message length and limit size
-
 	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
 	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
@@ -737,7 +735,7 @@ void transportProcessMessage(void)
 					} else {
 						TRANSPORT_DEBUG(PSTR("!TSF:MSG:ID TK INVALID\n"));
 					}
-#endif // MY_NODE_ID == AUTO
+#endif
 					return; // no further processing required
 				}
 				if (type == I_FIND_PARENT_RESPONSE) {

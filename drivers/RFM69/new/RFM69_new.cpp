@@ -44,11 +44,11 @@
 
 volatile rfm69_internal_t RFM69;	//!< internal variables
 
-#if defined (SREG)	// To identify AVR vs EP8266
+#if defined (SREG)	&& !defined(SPI_HAS_TRANSACTION)
 uint8_t _SREG;		// Used to save and restore the SREG values in SPI transactions
 #endif
 
-#if defined (SPCR) && defined (SPSR)
+#if defined (SPCR) && defined (SPSR) && !defined(SPI_HAS_TRANSACTION)
 uint8_t _SPCR; //!< _SPCR
 uint8_t _SPSR; //!< _SPSR
 #endif
@@ -69,12 +69,10 @@ LOCAL void RFM69_prepareSPITransaction(void)
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
 	_SPI.beginTransaction(SPISettings(MY_RFM69_SPI_SPEED, RFM69_SPI_DATA_ORDER, RFM69_SPI_DATA_MODE));
 #else
-	noInterrupts();
-
 #if defined(SREG)
 	_SREG = SREG;
 #endif
-
+	noInterrupts();
 #if defined(SPCR) && defined(SPSR)
 	// save current SPI settings
 	_SPCR = SPCR;
@@ -85,12 +83,7 @@ LOCAL void RFM69_prepareSPITransaction(void)
 #if !defined(MY_SOFTSPI)
 	_SPI.setDataMode(RFM69_SPI_DATA_MODE);
 	_SPI.setBitOrder(RFM69_SPI_DATA_ORDER);
-#ifdef LINUX_ARCH_RASPBERRYPI
-	SPI.setClockDivider(SPI_CLOCK_DIV64);
-#else
-	_SPI.setClockDivider(
-	    MY_RFM69_SPI_SPEED); // decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
-#endif
+	_SPI.setClockDivider(RFM69_CLOCK_DIV);
 #endif
 
 #endif
@@ -110,6 +103,7 @@ LOCAL void RFM69_concludeSPITransaction(void)
 #if defined(SREG)
 	SREG = _SREG;
 #endif
+	interrupts();
 #endif
 }
 
@@ -241,7 +235,6 @@ LOCAL bool RFM69_initialise(const float frequency)
 	RFM69_encrypt(0);
 	(void)RFM69_setTxPowerLevel(MY_RFM69_TX_POWER_DBM);
 	// IRQ
-	//hwDigitalWrite(MY_RFM69_IRQ_PIN, LOW);
 	hwPinMode(MY_RFM69_IRQ_PIN, INPUT);
 #if defined (SPI_HAS_TRANSACTION) && !defined (ESP8266) && !defined (MY_SOFTSPI)
 	_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM69_IRQ_PIN));
@@ -269,7 +262,7 @@ LOCAL void RFM69_interruptHandler(void)
 		//noInterrupts();
 		union {                      // union to simplify addressing of long and short parts of time offset
 			uint32_t l;
-			uint8_t  b[4];
+			uint8_t b[4];
 		} burstRemaining;
 
 		burstRemaining.l = 0;
@@ -362,16 +355,12 @@ LOCAL bool RFM69_available(void)
 
 
 
-LOCAL uint8_t RFM69_recv(uint8_t* buf)
+LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize)
 {
 	// atomic
-#ifdef SREG
-	_SREG = SREG;
-#endif
-
 	noInterrupts();
 
-	const uint8_t payloadLen = RFM69.currentPacket.payloadLen;
+	const uint8_t payloadLen = min(RFM69.currentPacket.payloadLen, maxBufSize);
 	const uint8_t sender = RFM69.currentPacket.header.sender;
 	const rfm69_sequenceNumber_t sequenceNumber = RFM69.currentPacket.header.sequenceNumber;
 	const uint8_t controlFlags = RFM69.currentPacket.header.controlFlags;
@@ -382,10 +371,6 @@ LOCAL uint8_t RFM69_recv(uint8_t* buf)
 		// packet read
 		RFM69.dataReceived = false;
 	}
-
-#ifdef SREG
-	SREG = _SREG; // restore interrupts
-#endif
 
 	interrupts(); // explicitly re-enable interrupts
 

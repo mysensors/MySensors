@@ -284,7 +284,7 @@ LOCAL void RF24_standBy(void)
 
 
 LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint8_t len,
-                            const bool sendAndForget)
+                            const bool noACK)
 {
 	uint8_t RF24_status;
 	RF24_stopListening();
@@ -295,7 +295,7 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint
 	// this command is affected in clones (e.g. Si24R1):  flipped NoACK bit when using W_TX_PAYLOAD_NO_ACK / W_TX_PAYLOAD
 	// AutoACK is disabled on the broadcasting pipe - NO_ACK prevents resending
 	RF24_spiMultiByteTransfer((recipient == RF24_BROADCAST_ADDRESS ||
-	                           sendAndForget) ? RF24_CMD_WRITE_TX_PAYLOAD_NO_ACK :
+	                           noACK) ? RF24_CMD_WRITE_TX_PAYLOAD_NO_ACK :
 	                          RF24_CMD_WRITE_TX_PAYLOAD, (uint8_t*)buf, len, false );
 	// go, TX starts after ~10us, CE high also enables PA+LNA on supported HW
 	RF24_ce(HIGH);
@@ -316,7 +316,7 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint
 	}
 	RF24_startListening();
 	// true if message sent
-	return (RF24_status & _BV(RF24_TX_DS) || sendAndForget);
+	return (RF24_status & _BV(RF24_TX_DS) || noACK);
 }
 
 LOCAL uint8_t RF24_getDynamicPayloadSize(void)
@@ -385,16 +385,14 @@ LOCAL bool RF24_setTxPowerLevel(const uint8_t newPowerLevel)
 {
 	const uint8_t registerContent = RF24_readByteRegister(RF24_REG_RF_SETUP);
 	RF24_writeByteRegister(RF24_REG_RF_SETUP, (registerContent & 0xF9) | ((newPowerLevel & 3) << 1));
+	RF24_DEBUG(PSTR("RF24:STX:LEVEL=%d\n"), newPowerLevel);
 	return true;
 }
 
-LOCAL bool RF24_setTxPowerPercent(uint8_t newPowerPercent)
+LOCAL bool RF24_setTxPowerPercent(const uint8_t newPowerPercent)
 {
-	// optimization needed
-	newPowerPercent = min(newPowerPercent, 100);	// limit
 	const uint8_t newPowerLevel = static_cast<uint8_t>(RF24_MIN_POWER_LEVEL + (RF24_MAX_POWER_LEVEL
 	                              - RF24_MIN_POWER_LEVEL) * (newPowerPercent / 100.0f));
-	RF24_DEBUG(PSTR("RF24:SPP:PCT=%d,TXL=%d\n"), newPowerPercent,newPowerLevel);
 	return RF24_setTxPowerLevel(newPowerLevel);
 }
 LOCAL int16_t RF24_getSendingRSSI(void)

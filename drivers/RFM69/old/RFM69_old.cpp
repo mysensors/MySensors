@@ -47,10 +47,8 @@ RFM69* RFM69::selfPointer;
 
 bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 {
-#if defined(MY_RFM69_POWER_PIN)
-	hwPinMode(MY_RFM69_POWER_PIN, OUTPUT);
-#endif
-	powerUp();
+	//powerUp();
+	//reset();
 	const uint8_t CONFIG[][2] = {
 		/* 0x01 */ { REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY },
 		/* 0x02 */ { REG_DATAMODUL, RF_DATAMODUL_DATAMODE_PACKET | RF_DATAMODUL_MODULATIONTYPE_FSK | RF_DATAMODUL_MODULATIONSHAPING_00 }, // no shaping
@@ -96,7 +94,7 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 	hwPinMode(_slaveSelectPin, OUTPUT);
 	SPI.begin();
 	unsigned long start = hwMillis();
-	uint8_t timeout = 50;
+	const uint8_t timeout = 50;
 	do {
 		writeReg(REG_SYNCVALUE1, 0xAA);
 		doYield();
@@ -131,6 +129,8 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 	if (hwMillis()-start >= timeout) {
 		return false;
 	}
+
+	//SPI.usingInterrupt(_interruptNum);
 	attachInterrupt(_interruptNum, RFM69::isr0, RISING);
 
 	selfPointer = this;
@@ -168,27 +168,29 @@ void RFM69::setMode(uint8_t newMode)
 		return;
 	}
 
+	const uint8_t currentOPMODE = readReg(REG_OPMODE) & 0xE3;
+
 	switch (newMode) {
 	case RFM69_MODE_TX:
-		writeReg(REG_OPMODE, (readReg(REG_OPMODE) & 0xE3) | RF_OPMODE_TRANSMITTER);
+		writeReg(REG_OPMODE, currentOPMODE | RF_OPMODE_TRANSMITTER);
 		if (_isRFM69HW) {
 			setHighPowerRegs(true);
 		}
 		break;
 	case RFM69_MODE_RX:
-		writeReg(REG_OPMODE, (readReg(REG_OPMODE) & 0xE3) | RF_OPMODE_RECEIVER);
+		writeReg(REG_OPMODE, currentOPMODE | RF_OPMODE_RECEIVER);
 		if (_isRFM69HW) {
 			setHighPowerRegs(false);
 		}
 		break;
 	case RFM69_MODE_SYNTH:
-		writeReg(REG_OPMODE, (readReg(REG_OPMODE) & 0xE3) | RF_OPMODE_SYNTHESIZER);
+		writeReg(REG_OPMODE, currentOPMODE | RF_OPMODE_SYNTHESIZER);
 		break;
 	case RFM69_MODE_STANDBY:
-		writeReg(REG_OPMODE, (readReg(REG_OPMODE) & 0xE3) | RF_OPMODE_STANDBY);
+		writeReg(REG_OPMODE, currentOPMODE | RF_OPMODE_STANDBY);
 		break;
 	case RFM69_MODE_SLEEP:
-		writeReg(REG_OPMODE, (readReg(REG_OPMODE) & 0xE3) | RF_OPMODE_SLEEP);
+		writeReg(REG_OPMODE, currentOPMODE | RF_OPMODE_SLEEP);
 		break;
 	default:
 		return;
@@ -223,6 +225,19 @@ void RFM69::powerUp(void)
 #if defined(MY_RFM69_POWER_PIN)
 	hwDigitalWrite(MY_RFM69_POWER_PIN, HIGH);
 	delay(RFM69_POWERUP_DELAY_MS);
+#endif
+}
+void RFM69::reset(void)
+{
+	// reset radio if RESET pin is defined
+#ifdef MY_RFM69_RST_PIN
+	hwPinMode(MY_RFM69_RST_PIN, OUTPUT);
+	hwDigitalWrite(MY_RFM69_RST_PIN, HIGH);
+	// 100uS
+	delayMicroseconds(100);
+	hwDigitalWrite(MY_RFM69_RST_PIN, LOW);
+	// wait until chip ready
+	delay(5);
 #endif
 }
 

@@ -39,6 +39,20 @@
 * | | RF24	| INIT	|									| Initialise RF24 radio
 * |!| RF24	| INIT	| SANCHK FAIL						| Sanity check failed, check wiring or replace module
 * | | RF24	| SPP	| PCT=%d,TX LEVEL=%d				| Set TX level, input TX percent (PCT)
+* | | RF24	| RBR	| REG=%d,VAL=%d						| Read register (REG), value=(VAL)
+* | | RF24	| WBR	| REG=%d,VAL=%d						| Write register (REG), value=(VAL)
+* | | RF24	| FRX	| 									| Flush RX buffer
+* | | RF24	| FTX	| 									| Flush TX buffer
+* | | RF24	| OWP	| RCPT=%d							| Open writing pipe, recipient=(RCPT)
+* | | RF24	| STL	| 									| Start listening
+* | | RF24	| SPL	| 									| Stop listening
+* | | RF24	| SLP	| 									| Set radio to sleep
+* | | RF24	| SBY	| 									| Set radio to standby
+* | | RF24	| TXM	| TO=%d,LEN=%d						| Transmit message to=(TO), length=(LEN)
+* |!| RF24	| TXM	| MAX_RT							| Max TX retries, no ACK received
+* |!| RF24	| GDP	| PYL INV							| Invalid payload size
+* | | RF24	| RXM	| LEN=%d							| Read message, length=(LEN)
+* | | RF24	| STX	| LEVEL=%d							| Set TX level, level=(LEVEL)
 *
 */
 
@@ -235,11 +249,11 @@ LOCAL void RF24_powerUp(void);
 * @param recipient
 * @param buf
 * @param len
-* @param sendAndForget set True if no ACK is necessary
+* @param noACK set True if no ACK is required
 * @return
 */
 LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint8_t len,
-                            const bool sendAndForget = false);
+                            const bool noACK = false);
 /**
 * @brief RF24_getDynamicPayloadSize
 * @return
@@ -363,7 +377,7 @@ LOCAL int16_t RF24_getTxPowerLevel(void);
 * @param newPowerPercent
 * @return
 */
-LOCAL bool RF24_setTxPowerPercent(uint8_t newPowerPercent);
+LOCAL bool RF24_setTxPowerPercent(const uint8_t newPowerPercent);
 /**
 * @brief RF24_getSendingRSSI
 * @return Pseudo-RSSI based on ARC register

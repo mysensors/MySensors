@@ -358,14 +358,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // PASSIVE MODE
 #if defined(MY_PASSIVE_NODE)
 #define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+#define MY_PARENT_NODE_IS_STATIC // prevents searching new parent
 #undef MY_REGISTRATION_FEATURE
 #undef MY_SIGNING_FEATURE
 #undef MY_OTA_FIRMWARE_FEATURE
 #if (defined(MY_GATEWAY_FEATURE) || defined(MY_REPEATER_FEATURE))
 #error This node is configured as GW/repeater, MY_PASSIVE_NODE cannot be set simultaneously
 #endif
-#if !defined(MY_PARENT_NODE_IS_STATIC) || (MY_NODE_ID == AUTO) || (MY_PARENT_NODE_ID == AUTO)
-#error MY_PASSIVE_NODE configuration requires setting MY_NODE_ID, MY_PARENT_NODE_ID and MY_PARENT_NODE_IS_STATIC
+#if (MY_NODE_ID == AUTO)
+#error MY_PASSIVE_NODE configuration requires setting MY_NODE_ID
 #endif
 #endif
 
