@@ -28,6 +28,13 @@ uint8_t _address;
 
 bool transportInit(void)
 {
+#ifdef MY_RF69_RESET
+	pinMode(MY_RF69_RESET, OUTPUT);
+	digitalWrite(MY_RF69_RESET, LOW);
+#endif
+#ifdef MY_RF69_DIO5
+	pinMode(MY_RF69_DIO5, INPUT);
+#endif
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
