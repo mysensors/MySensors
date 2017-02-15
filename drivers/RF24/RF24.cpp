@@ -34,6 +34,40 @@ uint8_t spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
 uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
 #endif
 
+#if defined(MY_RF24_MOMI_PIN)
+
+LOCAL void RF24_csn(const bool level)
+{
+	hwDigitalWrite(MY_RF24_SCLK_PIN, level);
+}
+
+LOCAL void RF24_ce(const bool level)
+{
+}
+
+LOCAL uint8_t RF24_transfer(uint8_t txData)
+{
+	uint8_t rxData, bits = 8;
+	do {
+		rxData <<= 1;
+		if (hwDigitalRead(MY_RF24_MOMI_PIN)) {
+			++rxData;
+		}
+		hwPinMode(MY_RF24_MOMI_PIN, OUTPUT);
+		if (txData & 0x80) {
+			hwDigitalWrite(MY_RF24_MOMI_PIN, HIGH);
+		}
+		hwDigitalWrite(MY_RF24_SCLK_PIN, HIGH);
+		hwPinMode(MY_RF24_MOMI_PIN, INPUT);
+		hwDigitalWrite(MY_RF24_SCLK_PIN, LOW);
+		hwDigitalWrite(MY_RF24_MOMI_PIN, LOW);
+		txData <<= 1;
+	} while (--bits);
+	return rxData;
+}
+
+#else
+
 LOCAL void RF24_csn(const bool level)
 {
 	hwDigitalWrite(MY_RF24_CS_PIN, level);
@@ -44,19 +78,39 @@ LOCAL void RF24_ce(const bool level)
 	hwDigitalWrite(MY_RF24_CE_PIN, level);
 }
 
+#endif
+
 LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t len,
-                                        const bool aReadMode)
+																				const bool aReadMode)
 {
 	uint8_t status;
 	uint8_t* current = buf;
+#if !defined(MY_RF24_MOMI_PIN)
 #if !defined(MY_SOFTSPI)
 	_SPI.beginTransaction(SPISettings(MY_RF24_SPI_MAX_SPEED, MY_RF24_SPI_DATA_ORDER,
-	                                  MY_RF24_SPI_DATA_MODE));
+																		MY_RF24_SPI_DATA_MODE));
+#endif
 #endif
 	RF24_csn(LOW);
 	// timing
+#if defined(MY_RF24_MOMI_PIN)
+	delayMicroseconds(100);
+#else
 	delayMicroseconds(10);
-#ifdef LINUX_SPI_BCM
+#endif
+#if defined(MY_RF24_MOMI_PIN)
+	status = RF24_transfer(cmd);
+	while ( len-- ) {
+		if (aReadMode) {
+			status = RF24_transfer(RF24_NOP);
+			if (buf != NULL) {
+				*current++ = status;
+			}
+		} else {
+			status = RF24_transfer(*current++);
+		}
+	}
+#elif defined(LINUX_SPI_BCM)
 	uint8_t * prx = spi_rxbuff;
 	uint8_t * ptx = spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
@@ -97,11 +151,17 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 	}
 #endif
 	RF24_csn(HIGH);
+#if !defined(MY_RF24_MOMI_PIN)
 #if !defined(MY_SOFTSPI)
 	_SPI.endTransaction();
 #endif
+#endif
 	// timing
+#if defined(MY_RF24_MOMI_PIN)
+	delayMicroseconds(100);
+#else
 	delayMicroseconds(10);
+#endif
 	return status;
 }
 
@@ -264,7 +324,7 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint
 	// this command is affected in clones (e.g. Si24R1):  flipped NoACK bit when using W_TX_PAYLOAD_NO_ACK / W_TX_PAYLOAD
 	// AutoACK is disabled on the broadcasting pipe - NO_ACK prevents resending
 	RF24_spiMultiByteTransfer(recipient == BROADCAST_ADDRESS ? RF24_WRITE_TX_PAYLOAD_NO_ACK :
-	                          RF24_WRITE_TX_PAYLOAD, (uint8_t*)buf, len, false );
+														RF24_WRITE_TX_PAYLOAD, (uint8_t*)buf, len, false );
 	// go, TX starts after ~10us
 	RF24_ce(HIGH);
 	// timeout counter to detect HW issues
@@ -335,7 +395,7 @@ LOCAL bool RF24_sanityCheck(void)
 {
 	// detect HW defect, configuration errors or interrupted SPI line, CE disconnect cannot be detected
 	return (RF24_readByteRegister(RF24_RF_SETUP) == MY_RF24_RF_SETUP) & (RF24_readByteRegister(
-	            RF24_RF_CH) == MY_RF24_CHANNEL);
+							RF24_RF_CH) == MY_RF24_CHANNEL);
 }
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -385,13 +445,19 @@ LOCAL bool RF24_initialize(void)
 	(void)RF24_getObserveTX;
 
 	// Initialize pins
+#if defined(MY_RF24_MOMI_PIN)
+	hwPinMode(MY_RF24_SCLK_PIN,OUTPUT);
+#else
 	hwPinMode(MY_RF24_CE_PIN,OUTPUT);
 	hwPinMode(MY_RF24_CS_PIN,OUTPUT);
+#endif
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	hwPinMode(MY_RF24_IRQ_PIN,INPUT);
 #endif
 	// Initialize SPI
+#if !defined(MY_RF24_MOMI_PIN)
 	_SPI.begin();
+#endif
 	RF24_ce(LOW);
 	RF24_csn(HIGH);
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -432,7 +498,7 @@ LOCAL bool RF24_initialize(void)
 	// listen to broadcast pipe
 	MY_RF24_BASE_ADDR[0] = BROADCAST_ADDRESS;
 	RF24_setPipeAddress(RF24_RX_ADDR_P0 + RF24_BROADCAST_PIPE, (uint8_t*)&MY_RF24_BASE_ADDR,
-	                    RF24_BROADCAST_PIPE > 1 ? 1 : MY_RF24_ADDR_WIDTH);
+											RF24_BROADCAST_PIPE > 1 ? 1 : MY_RF24_ADDR_WIDTH);
 	// pipe 0, set full address, later only LSB is updated
 	RF24_setPipeAddress(RF24_RX_ADDR_P0, (uint8_t*)&MY_RF24_BASE_ADDR, MY_RF24_ADDR_WIDTH);
 	RF24_setPipeAddress(RF24_TX_ADDR, (uint8_t*)&MY_RF24_BASE_ADDR, MY_RF24_ADDR_WIDTH);
