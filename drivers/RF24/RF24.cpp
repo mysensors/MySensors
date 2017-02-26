@@ -39,10 +39,11 @@ uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte 
 #endif
 
 #if defined(MY_RF24_MOMI_PIN)
+#include "drivers/AVR/DigitalIO/DigitalIO.h"
 
 LOCAL void RF24_csn(const bool level)
 {
-	hwDigitalWrite(MY_RF24_SCLK_PIN, level);
+	fastDigitalWrite(MY_RF24_SCLK_PIN, level);
 }
 
 LOCAL void RF24_ce(const bool level)
@@ -54,17 +55,19 @@ LOCAL uint8_t RF24_transfer(uint8_t txData)
 	uint8_t rxData, bits = 8;
 	do {
 		rxData <<= 1;
-		if (hwDigitalRead(MY_RF24_MOMI_PIN)) {
+		if (fastDigitalRead(MY_RF24_MOMI_PIN)) {
 			++rxData;
 		}
-		hwPinMode(MY_RF24_MOMI_PIN, OUTPUT);
+		// hwPinMode(MY_RF24_MOMI_PIN, OUTPUT);
+		fastPinConfig(MY_RF24_MOMI_PIN, OUTPUT, 0);
 		if (txData & 0x80) {
-			hwDigitalWrite(MY_RF24_MOMI_PIN, HIGH);
+			fastDigitalWrite(MY_RF24_MOMI_PIN, HIGH);
 		}
-		hwDigitalWrite(MY_RF24_SCLK_PIN, HIGH);
-		hwPinMode(MY_RF24_MOMI_PIN, INPUT);
-		hwDigitalWrite(MY_RF24_SCLK_PIN, LOW);
-		hwDigitalWrite(MY_RF24_MOMI_PIN, LOW);
+		fastDigitalWrite(MY_RF24_SCLK_PIN, HIGH);
+		// hwPinMode(MY_RF24_MOMI_PIN, INPUT);
+		fastPinConfig(MY_RF24_MOMI_PIN, INPUT, 0);
+		fastDigitalWrite(MY_RF24_SCLK_PIN, LOW);
+		fastDigitalWrite(MY_RF24_MOMI_PIN, LOW);
 		txData <<= 1;
 	} while (--bits);
 	return rxData;
@@ -74,12 +77,12 @@ LOCAL uint8_t RF24_transfer(uint8_t txData)
 
 LOCAL void RF24_csn(const bool level)
 {
-	hwDigitalWrite(MY_RF24_CS_PIN, level);
+	fastDigitalWrite(MY_RF24_CS_PIN, level);
 }
 
 LOCAL void RF24_ce(const bool level)
 {
-	hwDigitalWrite(MY_RF24_CE_PIN, level);
+	fastDigitalWrite(MY_RF24_CE_PIN, level);
 }
 
 #endif
@@ -100,7 +103,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 #if defined(MY_RF24_MOMI_PIN)
 	delayMicroseconds(100);
 #else
-	delayMicroseconds(10);
+	delayMicroseconds(1);
 #endif
 #if defined(MY_RF24_MOMI_PIN)
 	status = RF24_transfer(cmd);
@@ -162,9 +165,9 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 #endif
 	// timing
 #if defined(MY_RF24_MOMI_PIN)
-	delayMicroseconds(100);
+	delayMicroseconds(1); // 100
 #else
-	delayMicroseconds(10);
+	delayMicroseconds(1);
 #endif
 	return status;
 }
