@@ -507,7 +507,7 @@
 
 /**
  * @def MY_RF24_CS_PIN
- * @brief Default RF24 chip select pin setting. Override in sketch if needed.
+ * @brief Default RF24 chip select pin setting. Override in sketch if needed. To save the MCU pin set this to -1 and connect CE to VCC.
  */
 #ifndef MY_RF24_CS_PIN
 #if defined(ARDUINO_ARCH_ESP8266)

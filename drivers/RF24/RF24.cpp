@@ -82,7 +82,9 @@ LOCAL void RF24_csn(const bool level)
 
 LOCAL void RF24_ce(const bool level)
 {
+#if MY_RF24_CE_PIN != -1
 	fastDigitalWrite(MY_RF24_CE_PIN, level);
+#endif
 }
 
 #endif
@@ -455,7 +457,9 @@ LOCAL bool RF24_initialize(void)
 #if defined(MY_RF24_MOMI_PIN)
 	hwPinMode(MY_RF24_SCLK_PIN,OUTPUT);
 #else
+#if MY_RF24_CE_PIN != -1
 	hwPinMode(MY_RF24_CE_PIN,OUTPUT);
+#endif
 	hwPinMode(MY_RF24_CS_PIN,OUTPUT);
 #endif
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
