@@ -245,9 +245,10 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // SOFTSPI
 #ifdef MY_SOFTSPI
 #if defined(ARDUINO_ARCH_ESP8266)
-#error Soft SPI is not available on ESP8266
-#endif
+#include "drivers/ESP8266/SoftSPI.h"
+#else
 #include "drivers/AVR/DigitalIO/DigitalIO.h"
+#endif
 #endif
 
 #if defined(MY_RADIO_NRF24) && defined(__linux__) && !(defined(LINUX_SPI_BCM) || defined(LINUX_SPI_SPIDEV))

@@ -34,6 +34,10 @@ uint8_t spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
 uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
 #endif
 
+#if defined(ARDUINO_ARCH_ESP8266)
+#define fastDigitalWrite digitalWrite
+#endif
+
 #if defined(MY_RF24_MOMI_PIN)
 
 LOCAL void RF24_csn(const bool level)
