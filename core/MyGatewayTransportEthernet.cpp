@@ -204,7 +204,7 @@ bool gatewayTransportSend(MyMessage &message)
 			return false;
 		}
 	}
-	nbytes = client.write(_ethernetMsg, strlen(_ethernetMsg));
+	nbytes = client.write((const char*)_ethernetMsg, strlen(_ethernetMsg));
 #endif
 #else
 	// Send message to connected clients
