@@ -20,13 +20,14 @@
 #include "MyHwESP8266.h"
 #include <EEPROM.h>
 
-void hwInit(void)
+bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1);
 	MY_SERIALDEVICE.setDebugOutput(true);
 #endif
 	EEPROM.begin(EEPROM_size);
+	return true;
 }
 
 void hwReadConfigBlock(void* buf, void* addr, size_t length)
@@ -98,8 +99,6 @@ ADC_MODE(ADC_VCC);
 ADC_MODE(ADC_TOUT);
 #endif
 
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
-
 uint16_t hwCPUVoltage()
 {
 #if defined(MY_SPECIAL_DEBUG)
@@ -121,7 +120,6 @@ uint16_t hwFreeMem()
 {
 	return ESP.getFreeHeap();
 }
-#endif
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... )
@@ -131,6 +129,10 @@ void hwDebugPrint(const char *fmt, ... )
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 	MY_SERIALDEVICE.print(fmtBuffer);
+#else
+	// prepend timestamp
+	MY_SERIALDEVICE.print(hwMillis());
+	MY_SERIALDEVICE.print(" ");
 #endif
 	va_list args;
 	va_start (args, fmt );
@@ -145,7 +147,5 @@ void hwDebugPrint(const char *fmt, ... )
 	va_end (args);
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();
-
-	//MY_SERIALDEVICE.write(freeRam());
 }
 #endif

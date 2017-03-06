@@ -48,7 +48,7 @@ inline void hwDigitalWrite(uint8_t, uint8_t);
 inline int hwDigitalRead(uint8_t);
 inline void hwPinMode(uint8_t, uint8_t);
 
-void hwInit();
+bool hwInit(void);
 inline void hwReadConfigBlock(void* buf, void* addr, size_t length);
 inline void hwWriteConfigBlock(void* buf, void* addr, size_t length);
 inline uint8_t hwReadConfig(int addr);

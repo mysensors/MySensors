@@ -43,7 +43,7 @@
 #define hwMillis() millis()
 #define hwRandomNumberInit() randomSeed(RANDOM_REG32)
 
-void hwInit(void);
+bool hwInit(void);
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);

@@ -21,6 +21,15 @@
 
 #include "MyHwAVR.h"
 
+bool hwInit(void)
+{
+#if !defined(MY_DISABLED_SERIAL)
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+#endif
+	return true;
+}
+
+
 #define INVALID_INTERRUPT_NUM	(0xFFu)
 
 volatile uint8_t _wokeUpByInterrupt =
@@ -197,7 +206,6 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage()
 {
 	// Measure Vcc against 1.1V Vref
@@ -254,7 +262,7 @@ uint16_t hwFreeMem()
 	int v;
 	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
-#endif
+
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... )
@@ -265,7 +273,7 @@ void hwDebugPrint(const char *fmt, ... )
 	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 	MY_SERIALDEVICE.print(fmtBuffer);
 #else
-	// prepend timestamp (AVR nodes)
+	// prepend timestamp
 	MY_SERIALDEVICE.print(hwMillis());
 	MY_SERIALDEVICE.print(" ");
 #endif
@@ -282,8 +290,6 @@ void hwDebugPrint(const char *fmt, ... )
 	va_end (args);
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();
-
-	//MY_SERIALDEVICE.write(freeRam());
 }
 #endif
 

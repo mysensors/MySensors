@@ -88,7 +88,10 @@ void _begin(void)
 		preHwInit();
 	}
 
-	hwInit();
+	if (!hwInit()) {
+		CORE_DEBUG(PSTR("!MCO:BGN:HW FAIL\n"));
+		_infiniteLoop();
+	}
 
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER="
 	                MYSENSORS_LIBRARY_VERSION "\n"));
@@ -687,3 +690,6 @@ void _checkNodeLock(void)
 	}
 #endif
 }
+#if DOXYGEN
+
+#endif
