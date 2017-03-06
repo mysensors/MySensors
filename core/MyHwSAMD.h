@@ -20,21 +20,26 @@
 #define MyHwSAMD_h
 
 #include "MyHw.h"
-#include <Wire.h>
 
 #ifdef __cplusplus
 #include <Arduino.h>
-//#include <SPI.h>
 #endif
 
 #include <avr/dtostrf.h>
-#define I2C_EEP_ADDRESS 0x50
+
+// defines for sensebender gw variant.h
+#define MY_EXT_EEPROM_I2C_ADDRESS	(0x50)
+#define MY_EXT_EEPROM_SIZE			(kbits_512)
+#define MY_EXT_EEPROM_PAGE_SIZE		(32u)
+#define MY_EXT_EEPROM_TWI_CLOCK		(twiClock400kHz)
+
+extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
+              MY_EXT_EEPROM_I2C_ADDRESS);	//device size, number of devices, page size
+
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
-
-uint8_t configBlock[1024];
 
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
