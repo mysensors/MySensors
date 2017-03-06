@@ -68,6 +68,10 @@ extern HardwareSPI SPI;
 #ifdef MY_SOFTSPI
 #error RF24 IRQ usage cannot be used with Soft SPI
 #endif
+// Two-pin RF24 does not support usingInterrupt()
+#ifdef MY_RF24_MOMI_PIN
+#error RF24 IRQ usage cannot be used with Soft SPI
+#endif
 // ESP8266 does not support usingInterrupt()
 #ifdef ARDUINO_ARCH_ESP8266
 #error RF24 IRQ usage cannot be used with ESP8266
