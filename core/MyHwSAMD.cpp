@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -67,22 +67,29 @@ void hwWriteConfig(int adr, uint8_t value)
 	(void)eep.update(adr, value);
 }
 
-void hwInit()
+bool hwInit(void)
 {
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
 #endif
-	// ext. EEPROM on sensebender GW
-	eep.begin(MY_EXT_EEPROM_TWI_CLOCK);
+
+	const uint8_t eepInit = eep.begin(MY_EXT_EEPROM_TWI_CLOCK);
+#if defined(SENSEBENDER_GW_SAMD_V1)
+	// check connection to external EEPROM - only sensebender GW
+	return eepInit==0;
+#else
+	(void)eepInit;
+	return true;
+#endif
 }
 
-void hwWatchdogReset()
+void hwWatchdogReset(void)
 {
 	// TODO: Not supported!
 }
 
-void hwReboot()
+void hwReboot(void)
 {
 	NVIC_SystemReset();
 	while (true);
@@ -162,10 +169,9 @@ uint16_t hwCPUFrequency()
 uint16_t hwFreeMem()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
-#ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... )
 {
 	if (MY_SERIALDEVICE) {
@@ -174,6 +180,12 @@ void hwDebugPrint(const char *fmt, ... )
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 		snprintf(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 		MY_SERIALDEVICE.print(fmtBuffer);
+		MY_SERIALDEVICE.print(hwMillis());
+		MY_SERIALDEVICE.print(" ");
+#else
+		// prepend timestamp
+		MY_SERIALDEVICE.print(hwMillis());
+		MY_SERIALDEVICE.print(" ");
 #endif
 		va_list args;
 		va_start (args, fmt );
@@ -190,4 +202,3 @@ void hwDebugPrint(const char *fmt, ... )
 		//	MY_SERIALDEVICE.flush();
 	}
 }
-#endif

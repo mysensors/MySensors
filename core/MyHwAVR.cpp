@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -16,8 +16,6 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
-
-#ifdef ARDUINO_ARCH_AVR
 
 #include "MyHwAVR.h"
 
@@ -263,8 +261,6 @@ uint16_t hwFreeMem()
 	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
 
-
-#ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... )
 {
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
@@ -272,6 +268,8 @@ void hwDebugPrint(const char *fmt, ... )
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
 	MY_SERIALDEVICE.print(fmtBuffer);
+	MY_SERIALDEVICE.print(hwMillis());
+	MY_SERIALDEVICE.print(" ");
 #else
 	// prepend timestamp
 	MY_SERIALDEVICE.print(hwMillis());
@@ -291,6 +289,3 @@ void hwDebugPrint(const char *fmt, ... )
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();
 }
-#endif
-
-#endif // #ifdef ARDUINO_ARCH_AVR

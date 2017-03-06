@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -104,19 +104,19 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 uint16_t hwCPUVoltage()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 uint16_t hwCPUFrequency()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 uint16_t hwFreeMem()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 void hwDigitalWrite(uint8_t pin, uint8_t value)
@@ -134,7 +134,6 @@ void hwPinMode(uint8_t pin, uint8_t mode)
 	pinMode(pin, mode);
 }
 
-#ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ...)
 {
 	va_list args;
@@ -142,4 +141,3 @@ void hwDebugPrint(const char *fmt, ...)
 	vlogDebug(fmt, args);
 	va_end(args);
 }
-#endif

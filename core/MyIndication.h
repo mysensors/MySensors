@@ -47,6 +47,7 @@ typedef enum {
 	INDICATION_FW_UPDATE_RX_ERR,              //!< Received wrong piece of firmware data.
 
 	INDICATION_ERR_START = 100,
+	INDICATION_ERR_HW_INIT,					  //!< HW initialization error
 	INDICATION_ERR_TX,                        //!< Failed to transmit message.
 	INDICATION_ERR_TRANSPORT_FAILURE,		  //!< Transport failure.
 	INDICATION_ERR_INIT_TRANSPORT,            //!< MySensors transport hardware (radio) init failure.
