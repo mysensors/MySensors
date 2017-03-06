@@ -41,62 +41,30 @@ ISR (WDT_vect)
 */
 
 
-
-void i2c_eeprom_write_byte(unsigned int eeaddress, byte data )
-{
-	int rdata = data;
-	Wire.beginTransmission(I2C_EEP_ADDRESS);
-	Wire.write((int)(eeaddress >> 8)); // MSB
-	Wire.write((int)(eeaddress & 0xFF)); // LSB
-	Wire.write(rdata);
-	Wire.endTransmission();
-}
-
-byte i2c_eeprom_read_byte(unsigned int eeaddress )
-{
-	byte rdata = 0xFF;
-	Wire.beginTransmission(I2C_EEP_ADDRESS);
-	Wire.write((int)(eeaddress >> 8)); // MSB
-	Wire.write((int)(eeaddress & 0xFF)); // LSB
-	Wire.endTransmission();
-	Wire.requestFrom(I2C_EEP_ADDRESS,1);
-	if (Wire.available()) {
-		rdata = Wire.read();
-	}
-	return rdata;
-}
-
 void hwReadConfigBlock(void* buf, void* adr, size_t length)
 {
 	uint8_t* dst = static_cast<uint8_t*>(buf);
-	int offs = reinterpret_cast<int>(adr);
-	while (length-- > 0) {
-		*dst++ = i2c_eeprom_read_byte(offs++);
-	}
+	const int offs = reinterpret_cast<int>(adr);
+	(void)eep.read(offs, dst, length);
+
 }
 
 void hwWriteConfigBlock(void* buf, void* adr, size_t length)
 {
 	uint8_t* src = static_cast<uint8_t*>(buf);
-	int offs = reinterpret_cast<int>(adr);
-	while (length-- > 0) {
-		i2c_eeprom_write_byte(offs++, *src++);
-	}
+	const int offs = reinterpret_cast<int>(adr);
+	// use update() instead of write() to reduce e2p wear off
+	(void)eep.update(offs, src, length);
 }
 
 uint8_t hwReadConfig(int adr)
 {
-	uint8_t value;
-	hwReadConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
-	return value;
+	return eep.read(adr);
 }
 
 void hwWriteConfig(int adr, uint8_t value)
 {
-	uint8_t curr = hwReadConfig(adr);
-	if (curr != value) {
-		hwWriteConfigBlock(&value, reinterpret_cast<void*>(adr), 1);
-	}
+	(void)eep.update(adr, value);
 }
 
 void hwInit()
@@ -105,7 +73,8 @@ void hwInit()
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
 #endif
-	Wire.begin();
+	// ext. EEPROM on sensebender GW
+	eep.begin(MY_EXT_EEPROM_TWI_CLOCK);
 }
 
 void hwWatchdogReset()
