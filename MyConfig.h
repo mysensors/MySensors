@@ -2,12 +2,14 @@
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
- * repeater and gateway builds a routing tables in RAM or EEPROM which keeps track of the
+ * repeater and gateway builds a routing tables in RAM or EEPROM which keeps
+ * track of the
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2015 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list:
+ * https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -26,23 +28,26 @@
 #define MyConfig_h
 #include <stdint.h>
 
-
 /**********************************
 *  Serial and debug options
 ***********************************/
 
 /**
 * @def MY_DEBUG
-* @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
-* final sketch but is helpful to see what is actually is happening during development
+* @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a
+* lot to the size of the
+* final sketch but is helpful to see what is actually is happening during
+* development
 */
 //#define MY_DEBUG
 
 /**
 * @def MY_SPECIAL_DEBUG
-* @brief Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
+* @brief Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if
+* MY_DEBUG is disabled.
 * I_DEBUG requests are:
-* R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+* R: routing info (only repeaters): received msg XXYY (as stream), where XX is
+* the node and YY the routing node
 * V: CPU voltage
 * F: CPU frequency
 * M: free memory
@@ -52,13 +57,15 @@
 
 /**
 * @def MY_DISABLED_SERIAL
-* @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
+* @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as
+* normal I/O pins
 */
 //#define MY_DISABLED_SERIAL
 
 /**
 * @def MY_CORE_ONLY
-* @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+* @brief Enable MY_CORE_ONLY flag if you want to use core functions without
+* loading the framework
 */
 //#define MY_CORE_ONLY
 
@@ -82,8 +89,6 @@
 #define MY_SERIAL_OUTPUT_SIZE (120u)
 #endif
 
-
-
 // Disables over-the-air reset of node
 //#define MY_DISABLE_REMOTE_RESET
 
@@ -94,13 +99,15 @@
 // Selecting uplink transport layer is optional (for a gateway node).
 
 //#define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
 //#define MY_RADIO_RFM95
 //#define MY_RS485
 
 /**
 * @def MY_RAM_ROUTING_TABLE_FEATURE
-* @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
+* @brief If enabled, the routing table is kept in RAM (if memory allows) and
+* saved in regular intervals.
 * note: AVR has limited memory, use with care
 */
 #define MY_RAM_ROUTING_TABLE_FEATURE
@@ -110,11 +117,12 @@
 * @brief Interval to dump content of routing table to eeprom
 */
 #ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
-#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(30*60*1000ul)
+#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS (30 * 60 * 1000ul)
 #endif
 /**
 * @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure.
+* @brief If enabled, node will check transport in regular intervals to detect HW
+* issues and re-initialize in case of failure.
 * This feature is enabled for all repeater nodes (incl. GW)
 */
 //#define MY_TRANSPORT_SANITY_CHECK
@@ -124,14 +132,15 @@
 * @brief Interval (in ms) for transport sanity checks
 */
 #ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15*60*1000ul)
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15 * 60 * 1000ul)
 #endif
 /**
 * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
+* @brief This is a gateway-only feature: Interval (in ms) to issue network
+* discovery checks
 */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (20*60*1000ul)
+#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (20 * 60 * 1000ul)
 #endif
 
 /**
@@ -148,7 +157,8 @@
 
 /**
  * @def MY_REGISTRATION_FEATURE
- * @brief If enabled, node has to register to gateway/controller before allowed to send sensor data.
+ * @brief If enabled, node has to register to gateway/controller before allowed
+ * to send sensor data.
  */
 #define MY_REGISTRATION_FEATURE
 
@@ -163,7 +173,8 @@
 
 /**
 * @def MY_REGISTRATION_DEFAULT
-* @brief Node registration default - this applies if no registration response is received from controller
+* @brief Node registration default - this applies if no registration response is
+* received from controller
 */
 #define MY_REGISTRATION_DEFAULT true
 
@@ -175,13 +186,15 @@
 
 /**
 * @def MY_CORE_COMPATIBILITY_CHECK
-* @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
+* @brief If enabled, library compatibility is checked during node registration.
+* Incompatible libraries are unable to send sensor data.
 */
 #define MY_CORE_COMPATIBILITY_CHECK
 
 /**
 * @def MY_TRANSPORT_WAIT_READY_MS
-* @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
+* @brief Timeout in MS until transport is ready during startup, set to 0 for no
+* timeout
 */
 #ifndef MY_TRANSPORT_WAIT_READY_MS
 #define MY_TRANSPORT_WAIT_READY_MS (0ul)
@@ -205,7 +218,8 @@
 
 /**
  * @def MY_PARENT_NODE_IS_STATIC
- * @brief Enable MY_PARENT_NODE_IS_STATIC to disable fall back if parent node fails
+ * @brief Enable MY_PARENT_NODE_IS_STATIC to disable fall back if parent node
+ * fails
  */
 //#define MY_PARENT_NODE_IS_STATIC
 
@@ -217,15 +231,17 @@
 
 /**
 * @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
-* @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
+* @brief Timeout (in ms) to re-establish link if node is send to sleep and
+* transport is not ready.
 */
 #ifndef MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
-#define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS (10*1000ul)
+#define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS (10 * 1000ul)
 #endif
 
 /**
  * @def MY_SMART_SLEEP_WAIT_DURATION_MS
- * @brief The wait period (in ms) before going to sleep when using smartSleep-functions.
+ * @brief The wait period (in ms) before going to sleep when using
+ * smartSleep-functions.
  *
  * This period has to be long enough for controller to be able to send out
  * potential buffered messages.
@@ -238,7 +254,8 @@
 *  Over the air firmware updates
 ***********************************/
 
-// Enable MY_OTA_FIRMWARE_FEATURE in sketch to allow safe over-the-air firmware updates.
+// Enable MY_OTA_FIRMWARE_FEATURE in sketch to allow safe over-the-air firmware
+// updates.
 // This feature requires external flash and the DualOptiBoot boot-loader.
 // Note: You can still have OTA FW updates without external flash but it
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
@@ -259,7 +276,6 @@
 #ifndef MY_OTA_FLASH_JDECID
 #define MY_OTA_FLASH_JDECID 0x1F65
 #endif
-
 
 /**********************************
 *  Gateway config
@@ -289,23 +305,25 @@
 #define MY_GATEWAY_MAX_CLIENTS (1u)
 #endif
 
-
-
 /**********************************
 *  Information LEDs blinking
 ***********************************/
-// If one of the following is defined here, or in the sketch, the pin will be used for the
+// If one of the following is defined here, or in the sketch, the pin will be
+// used for the
 // corresponding led function.
-// They have to be enabled here (or in your sketch). Replace x with the pin number you have the LED on.
+// They have to be enabled here (or in your sketch). Replace x with the pin
+// number you have the LED on.
 //
-// NOTE!! that on some platforms (for example sensebender GW) the hardware variant can enable LEDs by default,
+// NOTE!! that on some platforms (for example sensebender GW) the hardware
+// variant can enable LEDs by default,
 // These defaults can be overridden by defining one of these.
 //#define MY_DEFAULT_ERR_LED_PIN x
 //#define MY_DEFAULT_TX_LED_PIN x
 //#define MY_DEFAULT_RX_LED_PIN x
 
 // The following setting allows you to inverse the LED blinking
-// When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
+// When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on
+// and switches
 // off when blinking
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE
@@ -315,7 +333,6 @@
 * @brief Enable to use own indication handler
 */
 //#define MY_INDICATION_HANDLER
-
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
@@ -345,7 +362,8 @@
 
 /**
  * @def MY_INCLUSION_MODE_DURATION
- * @brief Number of seconds (default one minute) inclusion mode should be enabled.
+ * @brief Number of seconds (default one minute) inclusion mode should be
+ * enabled.
  */
 
 #ifndef MY_INCLUSION_MODE_DURATION
@@ -367,7 +385,8 @@
 ***********************************/
 /**
 * @def Enable MY_DEBUG_VERBOSE_SIGNING
-* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be
+* enabled. This will add even more to the size of the final sketch!
 */
 //#define MY_DEBUG_VERBOSE_SIGNING
 
@@ -375,7 +394,8 @@
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
  *
- * For any signing related functionality to be included, this define or @ref MY_SIGNING_SOFT has to be enabled.
+ * For any signing related functionality to be included, this define or @ref
+ * MY_SIGNING_SOFT has to be enabled.
  */
 //#define MY_SIGNING_ATSHA204
 
@@ -383,7 +403,8 @@
  * @def MY_SIGNING_SOFT
  * @brief Enables SW backed signing functionality in library.
  *
- * For any signing related functionality to be included, this define or @ref MY_SIGNING_ATSHA204 has to be enabled.
+ * For any signing related functionality to be included, this define or @ref
+ * MY_SIGNING_ATSHA204 has to be enabled.
  */
 //#define MY_SIGNING_SOFT
 
@@ -391,17 +412,21 @@
  * @def MY_SIGNING_REQUEST_SIGNATURES
  * @brief Enable this to inform gateway to sign all messages sent to this node.
  *
- * If used for a gateway, gateway will only request signatures from nodes that in turn
+ * If used for a gateway, gateway will only request signatures from nodes that
+ * in turn
  * request signatures from gateway.
  */
 //#define MY_SIGNING_REQUEST_SIGNATURES
 
 /**
  * @def MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
- * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it. @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
+ * @brief Enable this to have gateway require all nodes in the network to sign
+ * messages sent to it. @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
  *
- * Use this for maximum security, but be aware that every single node will have to be personalized before they can be used.
- * Note that if this is enabled, and whitelisting is also enabled, whitelisting will also be in effect for all nodes.
+ * Use this for maximum security, but be aware that every single node will have
+ * to be personalized before they can be used.
+ * Note that if this is enabled, and whitelisting is also enabled, whitelisting
+ * will also be in effect for all nodes.
  */
 //#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
 
@@ -409,8 +434,10 @@
  * @def MY_VERIFICATION_TIMEOUT_MS
  * @brief Define a suitable timeout for a signature verification session
  *
- * Consider the turnaround from a nonce being generated to a signed message being received
- * which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
+ * Consider the turnaround from a nonce being generated to a signed message
+ * being received
+ * which might vary, especially in networks with many hops. 5s ought to be
+ * enough for anyone.
  */
 #ifndef MY_VERIFICATION_TIMEOUT_MS
 #define MY_VERIFICATION_TIMEOUT_MS 5000
@@ -420,16 +447,23 @@
  * @def MY_SIGNING_NODE_WHITELISTING
  * @brief Enable to turn on whitelisting
  *
- * When enabled, a signing node will salt the signature with it's unique signature and nodeId.<br>
- * The verifying node will look up the sender in a local table of trusted nodes and
+ * When enabled, a signing node will salt the signature with it's unique
+ * signature and nodeId.<br>
+ * The verifying node will look up the sender in a local table of trusted nodes
+ * and
  * do the corresponding salting in order to verify the signature.<br>
- * For this reason, if whitelisting is enabled on one of the nodes in a sign-verify pair, both
+ * For this reason, if whitelisting is enabled on one of the nodes in a
+ * sign-verify pair, both
  * nodes have to implement whitelisting for this to work.<br>
- * Note that a node can still transmit a non-salted message (i.e. have whitelisting disabled)
- * to a node that has whitelisting enabled (assuming the receiver does not have a matching entry
- * for the sender in it's whitelist). The whitelist to use is defined as the value of the flag.
+ * Note that a node can still transmit a non-salted message (i.e. have
+ * whitelisting disabled)
+ * to a node that has whitelisting enabled (assuming the receiver does not have
+ * a matching entry
+ * for the sender in it's whitelist). The whitelist to use is defined as the
+ * value of the flag.
  */
-//#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+//#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial =
+//{0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 
 /**
  * @def MY_SIGNING_ATSHA204_PIN
@@ -487,12 +521,14 @@
 *  NRF24L01P Driver Defaults
 ***********************************/
 
-// Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+// Enables RF24 encryption (all nodes and gateway must have this enabled, and
+// all must be personalized with the same AES key)
 //#define MY_RF24_ENABLE_ENCRYPTION
 
 /**
  * @def MY_DEBUG_VERBOSE_RF24
- * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled.
+ * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to
+ * the RF24 driver. Requires DEBUG to be enabled.
  */
 //#define MY_DEBUG_VERBOSE_RF24
 
@@ -538,7 +574,8 @@
 * @def MY_RX_MESSAGE_BUFFER_FEATURE
 * @brief This enabled the receiving buffer feature.
 *
-* This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
+* This feature is currently not supported for RFM69 and RS485, for RF24
+* MY_RF24_IRQ_PIN has to be defined.
 */
 //#define MY_RX_MESSAGE_BUFFER_FEATURE
 
@@ -548,7 +585,7 @@
  */
 #ifdef MY_RX_MESSAGE_BUFFER_FEATURE
 #ifndef MY_RX_MESSAGE_BUFFER_SIZE
-#define MY_RX_MESSAGE_BUFFER_SIZE  (20)
+#define MY_RX_MESSAGE_BUFFER_SIZE (20)
 #endif
 #endif
 
@@ -571,16 +608,18 @@
  * 83 => 2483 Mhz (RF24 channel 84)
  * 124 => 2524 Mhz (RF24 channel 125)
  * 125 => 2525 Mhz (RF24 channel 126)
- * In some countries there might be limitations, in Germany for example only the range 2400,0 - 2483,5 Mhz is allowed
+ * In some countries there might be limitations, in Germany for example only the
+ * range 2400,0 - 2483,5 Mhz is allowed
  * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
  */
 #ifndef MY_RF24_CHANNEL
-#define MY_RF24_CHANNEL	76
+#define MY_RF24_CHANNEL 76
 #endif
 
 /**
  * @def MY_RF24_DATARATE
- * @brief RF24 datarate (RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps or RF24_2MBPS for 2Mbps).
+ * @brief RF24 datarate (RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps or
+ * RF24_2MBPS for 2Mbps).
  */
 #ifndef MY_RF24_DATARATE
 #define MY_RF24_DATARATE RF24_250KBPS
@@ -590,10 +629,11 @@
  * @def MY_RF24_BASE_RADIO_ID
  * @brief RF24 radio network identifier.
  *
- * This acts as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+ * This acts as base value for sensor nodeId addresses. Change this (or channel)
+ * if you have more than one sensor network.
  */
 #ifndef MY_RF24_BASE_RADIO_ID
-#define MY_RF24_BASE_RADIO_ID 0x00,0xFC,0xE1,0xA8,0xA8
+#define MY_RF24_BASE_RADIO_ID 0x00, 0xFC, 0xE1, 0xA8, 0xA8
 #endif
 
 /**
@@ -634,17 +674,104 @@
 #endif
 
 /**********************************
+*  NRF5_ESB Driver Defaults
+***********************************/
+
+/**
+ * @def MY_NRF5_ESB_ENABLE_ENCRYPTION
+ * @brief Enables RF24 encryption (all nodes and gateway must have this enabled,
+ * and all must be personalized with the same AES key)
+ * This is compatible to MY_RF24_ENABLE_ENCRYPTION. Because the Initialization
+ * Vector is always 0, the Encryption is weak.
+ */
+//#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+
+/**
+ * @def MY_DEBUG_VERBOSE_NRF5_ESB
+ * @brief Enable MY_DEBUG_VERBOSE_NRF5_ESB flag for verbose debug prints related
+ * to the NRF5_ESB driver. Requires DEBUG to be enabled.
+ */
+//#define MY_DEBUG_VERBOSE_NRF5_ESB
+
+/**
+ * @def MY_NRF5_ESB_PA_LEVEL
+ * @brief Default NRF5 PA level. Override in sketch if needed.
+ */
+#ifndef MY_NRF5_ESB_PA_LEVEL
+#define MY_NRF5_ESB_PA_LEVEL NRF5_PA_MAX
+#endif
+
+/**
+ * @def MY_NRF5_ESB_CHANNEL
+ * @brief RF channel for the sensor net, 0-125.
+ * Frequence: 2400 Mhz - 2525 Mhz Channels: 126
+ * http://www.mysensors.org/radio/nRF24L01Plus.pdf
+ * 0 => 2400 Mhz (RF24 channel 1)
+ * 1 => 2401 Mhz (RF24 channel 2)
+ * 76 => 2476 Mhz (RF24 channel 77)
+ * 83 => 2483 Mhz (RF24 channel 84)
+ * 124 => 2524 Mhz (RF24 channel 125)
+ * 125 => 2525 Mhz (RF24 channel 126)
+ * In some countries there might be limitations, in Germany for example only the
+ * range 2400,0 - 2483,5 Mhz is allowed
+ * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
+ */
+#ifndef MY_NRF5_ESB_CHANNEL
+#define MY_NRF5_ESB_CHANNEL 76
+#endif
+
+/**
+ * @def MY_NRF5_ESB_MODE
+ * @brief NRF5 mode (NRF5_250KBPS for 250kbs, NRF5_1MBPS for 1Mbps or NRF5_2MBPS
+ * for 2Mbps).
+ */
+#ifndef MY_NRF5_ESB_MODE
+#define MY_NRF5_ESB_MODE NRF5_250KBPS
+#endif
+
+/**
+ * @def MY_NRF5_ESB_BASE_RADIO_ID
+ * @brief NRF5 radio network identifier.
+ *
+ * This acts as base value for sensor nodeId addresses. Change this (or channel)
+ * if you have more than one sensor network.
+ */
+#ifndef MY_NRF5_ESB_BASE_RADIO_ID
+#define MY_NRF5_ESB_BASE_RADIO_ID 0x00, 0xFC, 0xE1, 0xA8, 0xA8
+#endif
+
+/**
+ * @def MY_NRF5_ESB_ADDR_WIDTH
+ * @brief NRF5 address width.
+ *
+ * This defines the width of the complete address.
+ */
+#ifndef MY_NRF5_ESB_ADDR_WIDTH
+#define MY_NRF5_ESB_ADDR_WIDTH 5
+#endif
+
+/**
+ * @def MY_NRF5_ESB_RX_BUFFER_SIZE
+ * @brief Declare the amount of incoming messages that can be buffered at driver
+ * level.
+ */
+#ifndef MY_NRF5_ESB_RX_BUFFER_SIZE
+#define MY_NRF5_ESB_RX_BUFFER_SIZE (20)
+#endif
+
+/**********************************
 *  RFM69 Driver Defaults
 ***********************************/
 
 /**
  * @def MY_RFM69_FREQUENCY
- * @brief RFM69 frequency to use (RF69_433MHZ for 433MHz, RF69_868MHZ for 868MHz or RF69_915MHZ for 915MHz).
+ * @brief RFM69 frequency to use (RF69_433MHZ for 433MHz, RF69_868MHZ for 868MHz
+ * or RF69_915MHZ for 915MHz).
  *
  * This must match the hardware version of the RFM69 radio.
  */
 #ifndef MY_RFM69_FREQUENCY
-#define MY_RFM69_FREQUENCY   RF69_868MHZ
+#define MY_RFM69_FREQUENCY RF69_868MHZ
 #endif
 
 /**
@@ -665,10 +792,11 @@
 
 /**
  * @def MY_RFM69_NETWORKID
- * @brief RFM69 Network ID. Use the same for all nodes that will talk to each other.
+ * @brief RFM69 Network ID. Use the same for all nodes that will talk to each
+ * other.
  */
 #ifndef MY_RFM69_NETWORKID
-#define MY_RFM69_NETWORKID     100
+#define MY_RFM69_NETWORKID 100
 #endif
 
 /**
@@ -699,7 +827,8 @@
 #endif
 #endif
 
-// Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+// Enables RFM69 encryption (all nodes and gateway must have this enabled, and
+// all must be personalized with the same AES key)
 //#define MY_RFM69_ENABLE_ENCRYPTION
 
 /**********************************
@@ -713,7 +842,7 @@
  * This must match the hardware version of the RFM95 radio.
  */
 #ifndef MY_RFM95_FREQUENCY
-#define MY_RFM95_FREQUENCY   (868.1f)
+#define MY_RFM95_FREQUENCY (868.1f)
 #endif
 /**
 * @def MY_RFM95_MODEM_CONFIGRUATION
@@ -781,8 +910,6 @@
 #define MY_RFM95_ATC_TARGET_RSSI (-60)
 #endif
 
-
-
 /**************************************
 * Ethernet Gateway Transport  Defaults
 ***************************************/
@@ -807,7 +934,8 @@
 
 /**
  * @def MY_MQTT_CLIENT_PUBLISH_RETAIN
- * @brief Enables MQTT client to set the retain flag when publishing specific messages.
+ * @brief Enables MQTT client to set the retain flag when publishing specific
+ * messages.
  */
 //#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 
@@ -835,8 +963,10 @@
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 #endif
 
-// Controller ip-address, if this is defined, gateway will act as a client trying to contact controller on MY_PORT.
-// If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server allowing incoming connections.
+// Controller ip-address, if this is defined, gateway will act as a client
+// trying to contact controller on MY_PORT.
+// If MY_CONTROLLER_IP_ADDRESS is left un-defined, gateway acts as server
+// allowing incoming connections.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 
 /**************************************
@@ -847,26 +977,34 @@
  * @defgroup MyLockgrp MyNodeLock
  * @ingroup internals
  * @{
- * @brief The node lock feature is a security related feature. It locks a node that suspect itself for being
+ * @brief The node lock feature is a security related feature. It locks a node
+ that suspect itself for being
  * under some form of attack.
  *
- * This is achieved by having a counter stored in EEPROM which decrements when suspicious activity is detected.
- * If the counter reaches 0, node will not work anymore and will transmit a @ref I_LOCKED message to the
- * gateway/controller with 30m intervals. Payload is a string with a reason for the locking.
- * The string is abbreviated to accomodate a signature. The following abbreviations exist at the moment:
+ * This is achieved by having a counter stored in EEPROM which decrements when
+ suspicious activity is detected.
+ * If the counter reaches 0, node will not work anymore and will transmit a @ref
+ I_LOCKED message to the
+ * gateway/controller with 30m intervals. Payload is a string with a reason for
+ the locking.
+ * The string is abbreviated to accomodate a signature. The following
+ abbreviations exist at the moment:
  * - LDB (Locked During Boot)
  * - TMNR (Too Many Nonce Requests)
  * - TMFV (Too Many Failed Verifications)
  *
- * Typically, the counter only decrements when suspicious activity happens in a row.
+ * Typically, the counter only decrements when suspicious activity happens in a
+ row.
  * It is reset if legit traffic is present.
 
  * Examples of malicious activity are:
  * - Repeatedly incorrectly checksummed OTA firmware
- * - Repeated requests for signing nonces without properly signed messages arriving
+ * - Repeated requests for signing nonces without properly signed messages
+ arriving
  * - Repeatedly failed signature verifications
  *
- * If counter reaches zero, node locks down and EEPROM has to be erased/reset to reactivate node.
+ * If counter reaches zero, node locks down and EEPROM has to be erased/reset to
+ reactivate node.
  * Node can also be unlocked by grounding a pin (see @ref MY_NODE_UNLOCK_PIN).
  *
  * The size of the counter can be adjusted using @ref MY_NODE_LOCK_COUNTER_MAX.
@@ -878,10 +1016,13 @@
 
 /**
  * @def MY_NODE_UNLOCK_PIN
- * @brief By grounding this pin durig reset of a locked node, the node will unlock.
+ * @brief By grounding this pin durig reset of a locked node, the node will
+ * unlock.
  *
- * If using a secure bootloader, grounding the pin is the only option to reactivate the node.
- * If using stock Android bootloader or a DualOptiBoot it is also possible to download a sketch
+ * If using a secure bootloader, grounding the pin is the only option to
+ * reactivate the node.
+ * If using stock Android bootloader or a DualOptiBoot it is also possible to
+ * download a sketch
  * using serial protocol to erase EEPROM to unlock the node.
  */
 #ifndef MY_NODE_UNLOCK_PIN
@@ -892,7 +1033,8 @@
  * @def MY_NODE_LOCK_COUNTER_MAX
  * @brief Maximum accepted occurances of suspected malicious activity in a node.
  *
- * Counter decrements on reoccuring incidents but resets if legitimate behaviour is identified.
+ * Counter decrements on reoccuring incidents but resets if legitimate behaviour
+ * is identified.
  */
 #ifndef MY_NODE_LOCK_COUNTER_MAX
 #define MY_NODE_LOCK_COUNTER_MAX 5
@@ -931,7 +1073,8 @@
  * @def MY_LINUX_IS_SERIAL_PTY
  * @brief Set serial as a pseudo terminal.
  *
- * Enable this if you need to connect to a controller running on the same device.
+ * Enable this if you need to connect to a controller running on the same
+ * device.
  */
 //#define MY_LINUX_IS_SERIAL_PTY
 
@@ -953,16 +1096,18 @@
  * @def MY_LINUX_CONFIG_FILE
  * @brief Set the filepath for the gateway config file
  *
- * For now the configuration file is only used to store the emulated eeprom state
+ * For now the configuration file is only used to store the emulated eeprom
+ * state
  */
 #ifndef MY_LINUX_CONFIG_FILE
 #define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
 #endif
 
-#endif	// MyConfig_h
+#endif // MyConfig_h
 
 // Doxygen specific constructs, not included when built normally
-// This is used to enable disabled macros/definitions to be included in the documentation as well.
+// This is used to enable disabled macros/definitions to be included in the
+// documentation as well.
 #if DOXYGEN
 #define MY_DEBUG
 #define MY_SPECIAL_DEBUG
@@ -971,7 +1116,22 @@
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
-#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_SIGNING_NODE_WHITELISTING                                           \
+	{                                                                            \
+		{                                                                          \
+			.nodeId = GATEWAY_ADDRESS, .serial = {                                   \
+			                                                                         0x09,                                                                  \
+			                                                                         0x08,                                                                  \
+			                                                                         0x07,                                                                  \
+			                                                                         0x06,                                                                  \
+			                                                                         0x05,                                                                  \
+			                                                                         0x04,                                                                  \
+			                                                                         0x03,                                                                  \
+			                                                                         0x02,                                                                  \
+			                                                                         0x01                                                                   \
+			                                     }                                                                        \
+		}                                                                          \
+	}
 #define MY_RS485_HWSERIAL
 #define MY_IS_RFM69HW
 #define MY_PARENT_NODE_IS_STATIC
@@ -989,4 +1149,6 @@
 #define MY_RFM95_RST_PIN
 #define MY_INDICATION_HANDLER
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
+#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+#define MY_DEBUG_VERBOSE_NRF5_ESB
 #endif
