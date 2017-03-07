@@ -53,7 +53,7 @@
 #endif
 
 // Enable radio "feature" if one of the radio types was enabled
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 #define MY_SENSOR_NETWORK
 #endif
 
@@ -66,6 +66,10 @@
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "core/MyHwSAMD.cpp"
+#elif defined(ARDUINO_ARCH_NRF5)
+#include "drivers/NVM/VirtualPage.cpp"
+#include "drivers/NVM/NVRAM.cpp"
+#include "core/MyHwNRF5.cpp"
 #elif defined(__linux__)
 #include "core/MyHwLinuxGeneric.cpp"
 #endif
@@ -223,7 +227,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // RAM ROUTING TABLE
 #if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(LINUX_ARCH_RASPBERRYPI)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(LINUX_ARCH_RASPBERRYPI)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR)
 // memory limited, enable with care
@@ -242,7 +246,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 
 // RADIO
-#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) ||defined(MY_RS485)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) ||defined(MY_RS485)
 // SOFTSPI
 #ifdef MY_SOFTSPI
 #if defined(ARDUINO_ARCH_ESP8266)
@@ -255,6 +259,10 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error No support for nRF24 radio on this platform
 #endif
 
+#if defined(MY_RADIO_NRF5_ESB) && defined(__linux__) && !(defined(LINUX_SPI_BCM) || defined(LINUX_SPI_SPIDEV))
+#error No support for nRF5 radio on this platform
+#endif
+
 #include "core/MyTransport.cpp"
 
 // count enabled transports
@@ -262,6 +270,11 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define __RF24CNT 1
 #else
 #define __RF24CNT 0
+#endif
+#if defined(MY_RADIO_NRF5_ESB)
+#define __RF5ESBCNT 1
+#else
+#define __RF5ESBCNT 0
 #endif
 #if defined(MY_RADIO_RFM69)
 #define __RFM69CNT 1
@@ -280,7 +293,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 
-#if (__RF24CNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
+#if (__RF24CNT + __RF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
 #error Only one forward link driver can be activated
 #endif
 
@@ -290,6 +303,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 #include "drivers/RF24/RF24.cpp"
 #include "core/MyTransportNRF24.cpp"
+#elif defined(MY_RADIO_NRF5_ESB)
+#if defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
+#include "drivers/AES/AES.cpp"
+#endif
+#include "drivers/NRF5/Radio_ESB.cpp"
+#include "core/MyTransportNRF5_ESB.cpp"
 #elif defined(MY_RS485)
 #if !defined(MY_RS485_HWSERIAL)
 #if defined(__linux__)

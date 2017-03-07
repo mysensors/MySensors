@@ -94,6 +94,7 @@
 // Selecting uplink transport layer is optional (for a gateway node).
 
 //#define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
 //#define MY_RADIO_RFM95
 //#define MY_RS485
@@ -631,6 +632,81 @@
  */
 #ifndef MY_SOFT_SPI_MOSI_PIN
 #define MY_SOFT_SPI_MOSI_PIN 15
+#endif
+
+/**********************************
+*  NRF5_ESB Driver Defaults
+***********************************/
+
+// Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+//#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+
+/**
+ * @def MY_DEBUG_VERBOSE_NRF5_ESB
+ * @brief Enable MY_DEBUG_VERBOSE_NRF5_ESB flag for verbose debug prints related to the NRF5_ESB driver. Requires DEBUG to be enabled.
+ */
+//#define MY_DEBUG_VERBOSE_NRF5_ESB
+
+/**
+ * @def MY_NRF5_ESB_PA_LEVEL
+ * @brief Default NRF5 PA level. Override in sketch if needed.
+ */
+#ifndef MY_NRF5_ESB_PA_LEVEL
+#define MY_NRF5_ESB_PA_LEVEL NRF5_PA_MAX
+#endif
+
+/**
+ * @def MY_RF24_CHANNEL
+ * @brief RF channel for the sensor net, 0-125.
+ * Frequence: 2400 Mhz - 2525 Mhz Channels: 126
+ * http://www.mysensors.org/radio/nRF24L01Plus.pdf
+ * 0 => 2400 Mhz (RF24 channel 1)
+ * 1 => 2401 Mhz (RF24 channel 2)
+ * 76 => 2476 Mhz (RF24 channel 77)
+ * 83 => 2483 Mhz (RF24 channel 84)
+ * 124 => 2524 Mhz (RF24 channel 125)
+ * 125 => 2525 Mhz (RF24 channel 126)
+ * In some countries there might be limitations, in Germany for example only the range 2400,0 - 2483,5 Mhz is allowed
+ * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
+ */
+#ifndef MY_NRF5_ESB_CHANNEL
+#define MY_NRF5_ESB_CHANNEL	76
+#endif
+
+/**
+ * @def MY_NRF5_ESB_MODE
+ * @brief NRF5 mode (NRF5_250KBPS for 250kbs, NRF5_1MBPS for 1Mbps or NRF5_2MBPS for 2Mbps).
+ */
+#ifndef MY_NRF5_ESB_MODE
+#define MY_NRF5_ESB_MODE NRF5_250KBPS
+#endif
+
+/**
+ * @def MY_NRF5_ESB_BASE_RADIO_ID
+ * @brief NRF5 radio network identifier.
+ *
+ * This acts as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
+ */
+#ifndef MY_NRF5_ESB_BASE_RADIO_ID
+#define MY_NRF5_ESB_BASE_RADIO_ID 0x00,0xFC,0xE1,0xA8,0xA8
+#endif
+
+/**
+ * @def MY_NRF5_ESB_ADDR_WIDTH
+ * @brief NRF5 address width.
+ *
+ * This defines the width of the complete address.
+ */
+#ifndef MY_NRF5_ESB_ADDR_WIDTH
+#define MY_NRF5_ESB_ADDR_WIDTH 5
+#endif
+
+/**
+ * @def MY_NRF5_RX_BUFFER_SIZE
+ * @brief Declare the amount of incoming messages that can be buffered at driver level.
+ */
+#ifndef MY_NRF5_RX_BUFFER_SIZE
+#define MY_NRF5_RX_BUFFER_SIZE  (20)
 #endif
 
 /**********************************
