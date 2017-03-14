@@ -14,7 +14,6 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer);
 static uint8_t swi_send_bytes(uint8_t count, uint8_t *buffer);
 static uint8_t swi_send_byte(uint8_t value);
 static uint8_t sha204p_receive_response(uint8_t size, uint8_t *response);
-static uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
 static uint8_t sha204c_resync(uint8_t size, uint8_t *response);
 static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer,
                                         uint8_t execution_delay, uint8_t execution_timeout);
@@ -373,27 +372,6 @@ static uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uin
 	return ret_code;
 }
 
-
-/* Marshaling functions */
-
-static uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address)
-{
-	uint8_t rx_size;
-
-	address >>= 2;
-
-	tx_buffer[SHA204_COUNT_IDX] = READ_COUNT;
-	tx_buffer[SHA204_OPCODE_IDX] = SHA204_READ;
-	tx_buffer[READ_ZONE_IDX] = zone;
-	tx_buffer[READ_ADDR_IDX] = (uint8_t) (address & SHA204_ADDRESS_MASK);
-	tx_buffer[READ_ADDR_IDX + 1] = 0;
-
-	rx_size = (zone & SHA204_ZONE_COUNT_FLAG) ? READ_32_RSP_SIZE : READ_4_RSP_SIZE;
-
-	return sha204c_send_and_receive(&tx_buffer[0], rx_size, &rx_buffer[0], READ_DELAY,
-	                                READ_EXEC_MAX - READ_DELAY);
-}
-
 /* CRC Calculator and Checker */
 
 static void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc)
@@ -574,14 +552,14 @@ uint8_t atsha204_getSerialNumber(uint8_t * response)
 	uint8_t readResponse[READ_4_RSP_SIZE];
 
 	/* read from bytes 0->3 of config zone */
-	uint8_t returnCode = sha204m_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN03);
+	uint8_t returnCode = atsha204_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN03);
 	if (!returnCode) {
 		for (int i=0; i<4; i++) {// store bytes 0-3 into respones array
 			response[i] = readResponse[SHA204_BUFFER_POS_DATA+i];
 		}
 
 		/* read from bytes 8->11 of config zone */
-		returnCode = sha204m_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN47);
+		returnCode = atsha204_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN47);
 
 		for (int i=4; i<8; i++) {// store bytes 4-7 of SN into response array
 			response[i] = readResponse[SHA204_BUFFER_POS_DATA+(i-4)];
@@ -589,10 +567,28 @@ uint8_t atsha204_getSerialNumber(uint8_t * response)
 
 		if (!returnCode) {
 			/* Finally if last two reads were successful, read byte 8 of the SN */
-			returnCode = sha204m_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN8);
+			returnCode = atsha204_read(readCommand, readResponse, SHA204_ZONE_CONFIG, ADDRESS_SN8);
 			response[8] = readResponse[SHA204_BUFFER_POS_DATA]; // Byte 8 of SN should always be 0xEE
 		}
 	}
 
 	return returnCode;
+}
+
+uint8_t atsha204_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address)
+{
+	uint8_t rx_size;
+
+	address >>= 2;
+
+	tx_buffer[SHA204_COUNT_IDX] = READ_COUNT;
+	tx_buffer[SHA204_OPCODE_IDX] = SHA204_READ;
+	tx_buffer[READ_ZONE_IDX] = zone;
+	tx_buffer[READ_ADDR_IDX] = (uint8_t) (address & SHA204_ADDRESS_MASK);
+	tx_buffer[READ_ADDR_IDX + 1] = 0;
+
+	rx_size = (zone & SHA204_ZONE_COUNT_FLAG) ? READ_32_RSP_SIZE : READ_4_RSP_SIZE;
+
+	return sha204c_send_and_receive(&tx_buffer[0], rx_size, &rx_buffer[0], READ_DELAY,
+	                                READ_EXEC_MAX - READ_DELAY);
 }

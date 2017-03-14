@@ -92,7 +92,7 @@ public:
 	* @param pageSize
 	* @param eepromAddr
 	*/
-	extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize,
+	extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, //!< extEEPROM()
 	          byte eepromAddr = 0x50);
 	byte begin(twiClockFreq_t twiFreq = twiClock100kHz);	//!< begin()
 	byte write(unsigned long addr, byte *values, unsigned int nBytes);	//!< write()

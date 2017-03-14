@@ -62,7 +62,7 @@ enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
 #define CLEAR_WHITELIST(node) (_doWhitelist[node>>3]|=(1<<node%8))
 
 #if defined(MY_SIGNING_SOFT)
-extern void signerAtsha204SoftInit(void);
+extern bool signerAtsha204SoftInit(void);
 extern bool signerAtsha204SoftCheckTimer(void);
 extern bool signerAtsha204SoftGetNonce(MyMessage &msg);
 extern void signerAtsha204SoftPutNonce(MyMessage &msg);
@@ -75,7 +75,7 @@ extern bool signerAtsha204SoftSignMsg(MyMessage &msg);
 #define signerBackendVerifyMsg  signerAtsha204SoftVerifyMsg
 #define signerBackendSignMsg    signerAtsha204SoftSignMsg
 #elif defined(MY_SIGNING_ATSHA204)
-extern void signerAtsha204Init(void);
+extern bool signerAtsha204Init(void);
 extern bool signerAtsha204CheckTimer(void);
 extern bool signerAtsha204GetNonce(MyMessage &msg);
 extern void signerAtsha204PutNonce(MyMessage &msg);
@@ -110,6 +110,31 @@ void signerInit(void)
 
 	signerBackendInit();
 #endif
+}
+
+bool signerValidatePersonalization(void)
+{
+	uint8_t buffer[32];
+	uint8_t* hash;
+	uint8_t checksum;
+	signerSha256Init();
+	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+	signerSha256Update(buffer, 32);
+	hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+	signerSha256Update(buffer, 16);
+	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+	signerSha256Update(buffer, 9);
+	hash = signerSha256Final();
+	hwReadConfigBlock((void*)&checksum, (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS, 1);
+	if (checksum != hash[0]) {
+		SIGN_DEBUG(PSTR("WARNING! Personalization data in EEPROM is tampered!\n"));
+		SIGN_DEBUG(PSTR("If you are sure that the personalization data in EEPROM is ok,\n"));
+		SIGN_DEBUG(
+		    PSTR("execute SecurityPersonalizer.ino unmodified to get a new checksum stored.\n"));
+		return false;
+	} else {
+		return true;
+	}
 }
 
 void signerPresentation(MyMessage &msg, uint8_t destination)

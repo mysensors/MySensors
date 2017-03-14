@@ -36,7 +36,8 @@
 #define SIZE_PARENT_NODE_ID					(1u)		//!< Size parent node ID
 #define SIZE_DISTANCE						(1u)		//!< Size GW distance
 #define SIZE_ROUTES							(256u)	//!< Size routing table
-#define SIZE_CONTROLLER_CONFIG				(24u)	//!< Size controller config
+#define SIZE_CONTROLLER_CONFIG				(23u)	//!< Size controller config
+#define SIZE_PERSONALIZATION_CHECKSUM	(1u)  //!< Size personalization checksum
 #define SIZE_FIRMWARE_TYPE					(2u)		//!< Size firmware type
 #define SIZE_FIRMWARE_VERSION				(2u)		//!< Size firmware version
 #define SIZE_FIRMWARE_BLOCKS				(2u)		//!< Size firmware blocks
@@ -61,8 +62,10 @@
 #define EEPROM_ROUTES_ADDRESS (EEPROM_DISTANCE_ADDRESS + SIZE_DISTANCE)
 /** @brief Address configuration bytes sent by controller */
 #define EEPROM_CONTROLLER_CONFIG_ADDRESS (EEPROM_ROUTES_ADDRESS + SIZE_ROUTES)
+/** @brief Personalization checksum (set by SecurityPersonalizer.ino) */
+#define EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS (EEPROM_CONTROLLER_CONFIG_ADDRESS + SIZE_CONTROLLER_CONFIG)
 /** @brief Address firmware type */
-#define EEPROM_FIRMWARE_TYPE_ADDRESS (EEPROM_CONTROLLER_CONFIG_ADDRESS + SIZE_CONTROLLER_CONFIG)
+#define EEPROM_FIRMWARE_TYPE_ADDRESS (EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS + SIZE_PERSONALIZATION_CHECKSUM)
 /** @brief Address firmware version */
 #define EEPROM_FIRMWARE_VERSION_ADDRESS (EEPROM_FIRMWARE_TYPE_ADDRESS + SIZE_FIRMWARE_TYPE)
 /** @brief Address firmware blocks */

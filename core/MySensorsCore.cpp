@@ -118,6 +118,7 @@ void _begin(void)
 	ledsInit();
 #endif
 
+	(void)signerValidatePersonalization();
 	signerInit();
 
 	// Read latest received controller configuration from EEPROM

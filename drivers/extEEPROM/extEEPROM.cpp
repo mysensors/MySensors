@@ -122,16 +122,16 @@ byte extEEPROM::begin(twiClockFreq_t twiFreq)
 //from the Arduino Wire library is passed back through to the caller.
 byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
 {
-	uint8_t ctrlByte;       //control byte (I2C device address & chip/block select bits)
 	uint8_t txStatus = 0;   //transmit status
-	uint16_t nWrite;        //number of bytes to write
-	uint16_t nPage;         //number of bytes remaining on current page, starting at addr
 
 	if (addr + nBytes > _totalCapacity) {   //will this write go past the top of the EEPROM?
 		return EEPROM_ADDR_ERR;             //yes, tell the caller
 	}
 
 	while (nBytes > 0) {
+		uint8_t ctrlByte;       //control byte (I2C device address & chip/block select bits)
+		uint16_t nWrite;        //number of bytes to write
+		uint16_t nPage;         //number of bytes remaining on current page, starting at addr
 		nPage = _pageSize - ( addr & (_pageSize - 1) );
 		//find min(nBytes, nPage, BUFFER_LENGTH) -- BUFFER_LENGTH is defined in the Wire library.
 		nWrite = nBytes < nPage ? nBytes : nPage;
@@ -178,16 +178,15 @@ byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
 //from the Arduino Wire library is passed back through to the caller.
 byte extEEPROM::read(unsigned long addr, byte *values, unsigned int nBytes)
 {
-	byte ctrlByte;
-	byte rxStatus;
-	uint16_t nRead;             //number of bytes to read
-	uint16_t nPage;             //number of bytes remaining on current page, starting at addr
-
 	if (addr + nBytes > _totalCapacity) {   //will this read take us past the top of the EEPROM?
 		return EEPROM_ADDR_ERR;             //yes, tell the caller
 	}
 
 	while (nBytes > 0) {
+		byte ctrlByte;
+		byte rxStatus;
+		uint16_t nRead;             //number of bytes to read
+		uint16_t nPage;             //number of bytes remaining on current page, starting at addr
 		nPage = _pageSize - ( addr & (_pageSize - 1) );
 		nRead = nBytes < nPage ? nBytes : nPage;
 		nRead = BUFFER_LENGTH < nRead ? BUFFER_LENGTH : nRead;
