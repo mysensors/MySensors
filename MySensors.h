@@ -66,6 +66,8 @@
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "core/MyHwSAMD.cpp"
+#elif defined(__arm__) && defined(TEENSYDUINO)
+#include "core/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "core/MyHwLinuxGeneric.cpp"
 #endif

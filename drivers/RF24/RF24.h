@@ -46,7 +46,9 @@ _SPI;
 #include <stdio.h>
 #include <string.h>
 
+#ifndef _BV
 #define _BV(x) (1<<(x))
+#endif
 
 #if defined(__arm__) || defined(__linux__)
 #include <SPI.h>
