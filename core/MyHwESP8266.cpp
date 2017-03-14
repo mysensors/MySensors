@@ -61,6 +61,17 @@ void hwWriteConfig(const int addr, uint8_t value)
 	hwWriteConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
 }
 
+bool hwUniqueID(unique_id_t *uniqueID)
+{
+	// padding
+	memset((uint8_t*)uniqueID, 0x0A, sizeof(unique_id_t));
+	uint32_t val = ESP.getChipId();
+	(void)memcpy((uint8_t*)uniqueID, &val, 4);
+	val = ESP.getFlashChipId();
+	(void)memcpy((uint8_t*)uniqueID + 4, &val, 4);
+	return true;
+}
+
 
 int8_t hwSleep(unsigned long ms)
 {
