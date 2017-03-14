@@ -256,68 +256,90 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 // Helper to calculate signature of msg (returned in _signing_rx_buffer[SHA204_BUFFER_POS_DATA])
 static void signerCalculateSignature(MyMessage &msg, bool signing)
 {
-	(void)atsha204_wakeup(_signing_temp_message);
-	memset(_signing_temp_message, 0, 32);
-	memcpy(_signing_temp_message, (uint8_t*)&msg.data[1-HEADER_SIZE],
-	       min(MAX_MESSAGE_LENGTH-1-(MAX_PAYLOAD-mGetLength(msg)), 32));
+	// Signature is calculated on everything expect the first byte in the header
+	uint16_t bytes_left = mGetLength(msg)+HEADER_SIZE-1;
+	int16_t current_pos = 1-(int16_t)HEADER_SIZE; // Start at the second byte in the header
 
-	// Program the data to sign into the ATSHA204
-	SIGN_DEBUG(PSTR("Current nonce: "
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-	           signing ? _signing_signing_nonce[0]  : _signing_verifying_nonce[0],
-	           signing ? _signing_signing_nonce[1]  : _signing_verifying_nonce[1],
-	           signing ? _signing_signing_nonce[2]  : _signing_verifying_nonce[2],
-	           signing ? _signing_signing_nonce[3]  : _signing_verifying_nonce[3],
-	           signing ? _signing_signing_nonce[4]  : _signing_verifying_nonce[4],
-	           signing ? _signing_signing_nonce[5]  : _signing_verifying_nonce[5],
-	           signing ? _signing_signing_nonce[6]  : _signing_verifying_nonce[6],
-	           signing ? _signing_signing_nonce[7]  : _signing_verifying_nonce[7],
-	           signing ? _signing_signing_nonce[8]  : _signing_verifying_nonce[8],
-	           signing ? _signing_signing_nonce[9]  : _signing_verifying_nonce[9],
-	           signing ? _signing_signing_nonce[10] : _signing_verifying_nonce[10],
-	           signing ? _signing_signing_nonce[11] : _signing_verifying_nonce[11],
-	           signing ? _signing_signing_nonce[12] : _signing_verifying_nonce[12],
-	           signing ? _signing_signing_nonce[13] : _signing_verifying_nonce[13],
-	           signing ? _signing_signing_nonce[14] : _signing_verifying_nonce[14],
-	           signing ? _signing_signing_nonce[15] : _signing_verifying_nonce[15],
-	           signing ? _signing_signing_nonce[16] : _signing_verifying_nonce[16],
-	           signing ? _signing_signing_nonce[17] : _signing_verifying_nonce[17],
-	           signing ? _signing_signing_nonce[18] : _signing_verifying_nonce[18],
-	           signing ? _signing_signing_nonce[19] : _signing_verifying_nonce[19],
-	           signing ? _signing_signing_nonce[20] : _signing_verifying_nonce[20],
-	           signing ? _signing_signing_nonce[21] : _signing_verifying_nonce[21],
-	           signing ? _signing_signing_nonce[22] : _signing_verifying_nonce[22],
-	           signing ? _signing_signing_nonce[23] : _signing_verifying_nonce[23],
-	           signing ? _signing_signing_nonce[24] : _signing_verifying_nonce[24],
-	           signing ? _signing_signing_nonce[25] : _signing_verifying_nonce[25],
-	           signing ? _signing_signing_nonce[26] : _signing_verifying_nonce[26],
-	           signing ? _signing_signing_nonce[27] : _signing_verifying_nonce[27],
-	           signing ? _signing_signing_nonce[28] : _signing_verifying_nonce[28],
-	           signing ? _signing_signing_nonce[29] : _signing_verifying_nonce[29],
-	           signing ? _signing_signing_nonce[30] : _signing_verifying_nonce[30],
-	           signing ? _signing_signing_nonce[31] : _signing_verifying_nonce[31]
-	          );
-	(void)atsha204_execute(SHA204_WRITE, SHA204_ZONE_DATA | SHA204_ZONE_COUNT_FLAG, 8 << 3, 32,
-	                       _signing_temp_message,
-	                       WRITE_COUNT_LONG, _signing_tx_buffer, WRITE_RSP_SIZE, _signing_rx_buffer);
+	while (bytes_left) {
+		uint16_t bytes_to_include = min(bytes_left, 32);
 
-	// Program the nonce to use for the signature (has to be done just before GENDIG due to chip limitations)
-	(void)atsha204_execute(SHA204_NONCE, NONCE_MODE_PASSTHROUGH, 0, NONCE_NUMIN_SIZE_PASSTHROUGH,
-	                       signing ? _signing_signing_nonce : _signing_verifying_nonce,
-	                       NONCE_COUNT_LONG, _signing_tx_buffer, NONCE_RSP_SIZE_SHORT, _signing_rx_buffer);
+		(void)atsha204_wakeup(_signing_temp_message); // Issue wakeup to reset watchdog
 
-	// Purge nonce when used
-	memset(signing ? _signing_signing_nonce : _signing_verifying_nonce, 0x00,
-	       NONCE_NUMIN_SIZE_PASSTHROUGH);
+		memset(_signing_temp_message, 0, 32);
+		memcpy(_signing_temp_message, (uint8_t*)&msg.data[current_pos], bytes_to_include);
 
-	// Generate digest of data and nonce
-	(void)atsha204_execute(SHA204_GENDIG, GENDIG_ZONE_DATA, 8, 0, NULL,
-	                       GENDIG_COUNT_DATA, _signing_tx_buffer, GENDIG_RSP_SIZE, _signing_rx_buffer);
+		if (bytes_left == mGetLength(msg)+HEADER_SIZE-1) {
+			// Program the data to sign into the ATSHA204
+			SIGN_DEBUG(PSTR("Current nonce: "
+			                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
+			                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
+			           signing ? _signing_signing_nonce[0]  : _signing_verifying_nonce[0],
+			           signing ? _signing_signing_nonce[1]  : _signing_verifying_nonce[1],
+			           signing ? _signing_signing_nonce[2]  : _signing_verifying_nonce[2],
+			           signing ? _signing_signing_nonce[3]  : _signing_verifying_nonce[3],
+			           signing ? _signing_signing_nonce[4]  : _signing_verifying_nonce[4],
+			           signing ? _signing_signing_nonce[5]  : _signing_verifying_nonce[5],
+			           signing ? _signing_signing_nonce[6]  : _signing_verifying_nonce[6],
+			           signing ? _signing_signing_nonce[7]  : _signing_verifying_nonce[7],
+			           signing ? _signing_signing_nonce[8]  : _signing_verifying_nonce[8],
+			           signing ? _signing_signing_nonce[9]  : _signing_verifying_nonce[9],
+			           signing ? _signing_signing_nonce[10] : _signing_verifying_nonce[10],
+			           signing ? _signing_signing_nonce[11] : _signing_verifying_nonce[11],
+			           signing ? _signing_signing_nonce[12] : _signing_verifying_nonce[12],
+			           signing ? _signing_signing_nonce[13] : _signing_verifying_nonce[13],
+			           signing ? _signing_signing_nonce[14] : _signing_verifying_nonce[14],
+			           signing ? _signing_signing_nonce[15] : _signing_verifying_nonce[15],
+			           signing ? _signing_signing_nonce[16] : _signing_verifying_nonce[16],
+			           signing ? _signing_signing_nonce[17] : _signing_verifying_nonce[17],
+			           signing ? _signing_signing_nonce[18] : _signing_verifying_nonce[18],
+			           signing ? _signing_signing_nonce[19] : _signing_verifying_nonce[19],
+			           signing ? _signing_signing_nonce[20] : _signing_verifying_nonce[20],
+			           signing ? _signing_signing_nonce[21] : _signing_verifying_nonce[21],
+			           signing ? _signing_signing_nonce[22] : _signing_verifying_nonce[22],
+			           signing ? _signing_signing_nonce[23] : _signing_verifying_nonce[23],
+			           signing ? _signing_signing_nonce[24] : _signing_verifying_nonce[24],
+			           signing ? _signing_signing_nonce[25] : _signing_verifying_nonce[25],
+			           signing ? _signing_signing_nonce[26] : _signing_verifying_nonce[26],
+			           signing ? _signing_signing_nonce[27] : _signing_verifying_nonce[27],
+			           signing ? _signing_signing_nonce[28] : _signing_verifying_nonce[28],
+			           signing ? _signing_signing_nonce[29] : _signing_verifying_nonce[29],
+			           signing ? _signing_signing_nonce[30] : _signing_verifying_nonce[30],
+			           signing ? _signing_signing_nonce[31] : _signing_verifying_nonce[31]
+			          );
+		}
 
-	// Calculate HMAC of message+nonce digest and secret key
-	(void)atsha204_execute(SHA204_HMAC, HMAC_MODE_SOURCE_FLAG_MATCH, 0, 0, NULL,
-	                       HMAC_COUNT, _signing_tx_buffer, HMAC_RSP_SIZE, _signing_rx_buffer);
+		// Program the data to sign into the ATSHA204
+		(void)atsha204_execute(SHA204_WRITE, SHA204_ZONE_DATA | SHA204_ZONE_COUNT_FLAG, 8 << 3, 32,
+		                       _signing_temp_message,
+		                       WRITE_COUNT_LONG, _signing_tx_buffer, WRITE_RSP_SIZE, _signing_rx_buffer);
+
+		// Program the nonce to use for the signature (has to be done just before GENDIG due to chip limitations)
+		(void)atsha204_execute(SHA204_NONCE, NONCE_MODE_PASSTHROUGH, 0, NONCE_NUMIN_SIZE_PASSTHROUGH,
+		                       signing ? _signing_signing_nonce : _signing_verifying_nonce,
+		                       NONCE_COUNT_LONG, _signing_tx_buffer, NONCE_RSP_SIZE_SHORT, _signing_rx_buffer);
+
+		// Purge nonce when used, to make sure no remains are left in RAM
+		memset(signing ? _signing_signing_nonce : _signing_verifying_nonce, 0x00,
+		       NONCE_NUMIN_SIZE_PASSTHROUGH);
+
+		// Generate digest of data and nonce
+		(void)atsha204_execute(SHA204_GENDIG, GENDIG_ZONE_DATA, 8, 0, NULL,
+		                       GENDIG_COUNT_DATA, _signing_tx_buffer, GENDIG_RSP_SIZE, _signing_rx_buffer);
+
+		// Calculate HMAC of message+nonce digest and secret key
+		(void)atsha204_execute(SHA204_HMAC, HMAC_MODE_SOURCE_FLAG_MATCH, 0, 0, NULL,
+		                       HMAC_COUNT, _signing_tx_buffer, HMAC_RSP_SIZE, _signing_rx_buffer);
+
+		bytes_left -= bytes_to_include;
+		current_pos += bytes_to_include;
+
+		if (bytes_left > 0) {
+			// We will do another pass, use current HMAC as nonce for the next HMAC
+			memcpy(signing ? _signing_signing_nonce : _signing_verifying_nonce,
+			       &_signing_rx_buffer[SHA204_BUFFER_POS_DATA], 32);
+			atsha204_idle(); // Idle the chip to allow the wakeup call to reset the watchdog
+		}
+	}
 
 	SIGN_DEBUG(PSTR("HMAC: "
 	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
