@@ -116,6 +116,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
+bool hwUniqueID(unique_id_t *uniqueID)
+{
+	(void)memcpy((uint8_t*)uniqueID, (uint32_t *)0x0080A00C, 4);
+	(void)memcpy((uint8_t*)uniqueID + 4, (uint32_t *)0x0080A040, 12);
+	return true;
+}
+
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage()
 {
