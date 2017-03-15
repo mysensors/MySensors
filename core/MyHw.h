@@ -56,6 +56,9 @@ uint8_t hwReadConfig(int adr);
  * @param ms   Time to sleep, in [ms].
  * @return Nonsense, please ignore.
  */
+
+typedef uint8_t unique_id_t[16];
+
 int8_t hwSleep(unsigned long ms);
 
 /**
@@ -78,6 +81,13 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
  */
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
                unsigned long ms);
+
+/**
+* Retrieve unique ID
+* @param uniqueID uniqueID
+* @return True if unique ID successfully retrieved
+*/
+bool hwUniqueID(unique_id_t* uniqueID);
 
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 /**

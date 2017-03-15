@@ -366,8 +366,8 @@
 *  Message Signing Settings
 ***********************************/
 /**
-* @def Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
-* @brief Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
+* @def Enable MY_DEBUG_VERBOSE_SIGNING
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
 */
 //#define MY_DEBUG_VERBOSE_SIGNING
 
@@ -961,7 +961,6 @@
 #define MY_DEBUG
 #define MY_SPECIAL_DEBUG
 #define MY_DISABLED_SERIAL
-#define MY_DEBUG_VERBOSE_SIGNING
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES

@@ -62,6 +62,17 @@ void hwWriteConfig(const int addr, uint8_t value)
 	hwWriteConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
 }
 
+bool hwUniqueID(unique_id_t *uniqueID)
+{
+	// padding
+	memset((uint8_t*)uniqueID, 0x0A, sizeof(unique_id_t));
+	uint32_t val = ESP.getChipId();
+	(void)memcpy((uint8_t*)uniqueID, &val, 4);
+	val = ESP.getFlashChipId();
+	(void)memcpy((uint8_t*)uniqueID + 4, &val, 4);
+	return true;
+}
+
 
 int8_t hwSleep(unsigned long ms)
 {
@@ -126,10 +137,9 @@ void hwDebugPrint(const char *fmt, ... )
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;%lu "), C_INTERNAL, I_LOG_MESSAGE,
+	           hwMillis());
 	MY_SERIALDEVICE.print(fmtBuffer);
-	MY_SERIALDEVICE.print(hwMillis());
-	MY_SERIALDEVICE.print(" ");
 #else
 	// prepend timestamp
 	MY_SERIALDEVICE.print(hwMillis());

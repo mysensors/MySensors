@@ -137,9 +137,7 @@ bool gatewayTransportInit(void)
 	delay(1000);
 #endif /* MY_GATEWAY_ESP8266 */
 
-#ifdef MY_USE_UDP
-	_ethernetServer.begin(_ethernetGatewayPort);
-#elif defined(MY_GATEWAY_CLIENT_MODE)
+#if defined(MY_GATEWAY_CLIENT_MODE)
 #if defined(MY_CONTROLLER_URL_ADDRESS)
 	if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
 #else
@@ -154,6 +152,8 @@ bool gatewayTransportInit(void)
 		client.stop();
 		debug(PSTR("Eth: Failed to connect\n"));
 	}
+#elif defined(MY_USE_UDP)
+	_ethernetServer.begin(_ethernetGatewayPort);
 #else
 #if defined(MY_GATEWAY_LINUX) && defined(MY_IP_ADDRESS)
 	_ethernetServer.begin(_ethernetGatewayIP);
@@ -162,6 +162,7 @@ bool gatewayTransportInit(void)
 	_ethernetServer.begin();
 #endif
 #endif /* USE_UDP */
+
 	_w5100_spi_en(false);
 	return true;
 }
@@ -204,7 +205,7 @@ bool gatewayTransportSend(MyMessage &message)
 			return false;
 		}
 	}
-	nbytes = client.write(_ethernetMsg, strlen(_ethernetMsg));
+	nbytes = client.write((const uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
 #endif
 #else
 	// Send message to connected clients
@@ -298,7 +299,7 @@ bool gatewayTransportAvailable(void)
 
 	if (packet_size) {
 		//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_CLIENT_MODE)
 		_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 		inputString[0].string[packet_size] = 0;
 		debug(PSTR("UDP packet received: %s\n"), inputString[0].string);

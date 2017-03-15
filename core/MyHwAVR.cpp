@@ -204,6 +204,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
+bool hwUniqueID(unique_id_t* uniqueID)
+{
+	// not implemented yet
+	(void)uniqueID;
+	return false;
+}
+
 uint16_t hwCPUVoltage()
 {
 	// Measure Vcc against 1.1V Vref
@@ -266,10 +273,9 @@ void hwDebugPrint(const char *fmt, ... )
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;%lu "), C_INTERNAL, I_LOG_MESSAGE,
+	           hwMillis());
 	MY_SERIALDEVICE.print(fmtBuffer);
-	MY_SERIALDEVICE.print(hwMillis());
-	MY_SERIALDEVICE.print(" ");
 #else
 	// prepend timestamp
 	MY_SERIALDEVICE.print(hwMillis());
