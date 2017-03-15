@@ -39,6 +39,7 @@
 *
 * |E| SYS	| SUB	| Message										| Comment
 * |-|-------|-------|-----------------------------------------------|----------------------------------------------------------------------------
+* |!| MCO	| BGN	| HW ERR										| Error HW initialization (e.g. ext. EEPROM)
 * | | MCO	| BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
 * | | MCO	| BGN	| BFR											| Callback before()
 * | | MCO	| BGN	| STP											| Callback setup()
@@ -83,6 +84,7 @@
 #define INTERRUPT_NOT_DEFINED	((uint8_t)255)			//!< _sleep() param: no interrupt defined
 #define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
 #define VALUE_NOT_DEFINED		((uint8_t)255)			//!< Value not defined
+#define FUNCTION_NOT_SUPPORTED ((uint16_t)0)			//!< Function not supported
 
 
 #ifdef MY_DEBUG

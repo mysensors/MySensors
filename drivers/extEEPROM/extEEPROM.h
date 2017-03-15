@@ -85,6 +85,13 @@ const uint8_t EEPROM_ADDR_ERR = 9;
 class extEEPROM
 {
 public:
+	/**
+	* @brief Constructor
+	* @param deviceCapacity
+	* @param nDevice
+	* @param pageSize
+	* @param eepromAddr
+	*/
 	extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize,
 	          byte eepromAddr = 0x50);
 	byte begin(twiClockFreq_t twiFreq = twiClock100kHz);	//!< begin()

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -26,7 +26,7 @@
 
 static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
 
-void hwInit()
+bool hwInit(void)
 {
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #ifdef MY_GATEWAY_SERIAL
@@ -37,6 +37,7 @@ void hwInit()
 	}
 #endif
 #endif
+	return true;
 }
 
 void hwReadConfigBlock(void* buf, void* addr, size_t length)
@@ -107,25 +108,23 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 uint16_t hwCPUFrequency()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 uint16_t hwFreeMem()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
-#endif
 
 void hwDigitalWrite(uint8_t pin, uint8_t value)
 {
@@ -142,13 +141,10 @@ void hwPinMode(uint8_t pin, uint8_t mode)
 	pinMode(pin, mode);
 }
 
-#ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ...)
 {
 	va_list args;
-
 	va_start(args, fmt);
 	vlogDebug(fmt, args);
 	va_end(args);
 }
-#endif

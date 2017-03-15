@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -88,7 +88,11 @@ void _begin(void)
 		preHwInit();
 	}
 
-	hwInit();
+	if (!hwInit()) {
+		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
+		setIndication(INDICATION_ERR_HW_INIT);
+		_infiniteLoop();
+	}
 
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER="
 	                MYSENSORS_LIBRARY_VERSION "\n"));
@@ -687,3 +691,6 @@ void _checkNodeLock(void)
 	}
 #endif
 }
+#if DOXYGEN
+
+#endif

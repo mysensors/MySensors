@@ -138,28 +138,27 @@ bool gatewayTransportInit(void)
 #endif /* MY_GATEWAY_ESP8266 */
 
 #if defined(MY_GATEWAY_CLIENT_MODE)
-	#if defined(MY_CONTROLLER_URL_ADDRESS)
-    if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
+#if defined(MY_CONTROLLER_URL_ADDRESS)
+	if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
 #else
-    if (client.connect(_ethernetControllerIP, MY_PORT)) {
+	if (client.connect(_ethernetControllerIP, MY_PORT)) {
 #endif
-        debug(PSTR("Eth: connect\n"));
-        _w5100_spi_en(false);
-        gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
-        _w5100_spi_en(true);
-        presentNode();
-    }
-    else {
-        client.stop();
-        debug(PSTR("Eth: Failed to connect\n"));
-    }
+		debug(PSTR("Eth: connect\n"));
+		_w5100_spi_en(false);
+		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
+		_w5100_spi_en(true);
+		presentNode();
+	} else {
+		client.stop();
+		debug(PSTR("Eth: Failed to connect\n"));
+	}
 #elif defined(MY_USE_UDP)
 	_ethernetServer.begin(_ethernetGatewayPort);
 #else
 #if defined(MY_GATEWAY_LINUX) && defined(MY_IP_ADDRESS)
 	_ethernetServer.begin(_ethernetGatewayIP);
 #else
-// we have to use pointers due to the constructor of EthernetServer
+	// we have to use pointers due to the constructor of EthernetServer
 	_ethernetServer.begin();
 #endif
 #endif /* USE_UDP */
