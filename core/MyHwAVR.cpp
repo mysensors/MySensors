@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -17,9 +17,16 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifdef ARDUINO_ARCH_AVR
-
 #include "MyHwAVR.h"
+
+bool hwInit(void)
+{
+#if !defined(MY_DISABLED_SERIAL)
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+#endif
+	return true;
+}
+
 
 #define INVALID_INTERRUPT_NUM	(0xFFu)
 
@@ -197,14 +204,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
-
 bool hwUniqueID(unique_id_t* uniqueID)
 {
 	// not implemented yet
 	(void)uniqueID;
 	return false;
 }
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
+
 uint16_t hwCPUVoltage()
 {
 	// Measure Vcc against 1.1V Vref
@@ -261,18 +267,17 @@ uint16_t hwFreeMem()
 	int v;
 	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
-#endif
 
-#ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... )
 {
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;"), C_INTERNAL, I_LOG_MESSAGE);
+	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;%lu "), C_INTERNAL, I_LOG_MESSAGE,
+	           hwMillis());
 	MY_SERIALDEVICE.print(fmtBuffer);
 #else
-	// prepend timestamp (AVR nodes)
+	// prepend timestamp
 	MY_SERIALDEVICE.print(hwMillis());
 	MY_SERIALDEVICE.print(" ");
 #endif
@@ -289,9 +294,4 @@ void hwDebugPrint(const char *fmt, ... )
 	va_end (args);
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();
-
-	//MY_SERIALDEVICE.write(freeRam());
 }
-#endif
-
-#endif // #ifdef ARDUINO_ARCH_AVR

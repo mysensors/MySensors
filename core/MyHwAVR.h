@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -38,35 +38,12 @@
 #define MY_SERIALDEVICE Serial
 #endif
 
-#if defined __AVR_ATmega328P__
-#ifndef sleep_bod_disable
-#define sleep_bod_disable() 										\
-	do { 																\
-		unsigned char tempreg; 											\
-		__asm__ __volatile__("in %[tempreg], %[mcucr]" "\n\t" 			\
-		                     "ori %[tempreg], %[bods_bodse]" "\n\t" 		\
-		                     "out %[mcucr], %[tempreg]" "\n\t" 			\
-		                     "andi %[tempreg], %[not_bodse]" "\n\t" 		\
-		                     "out %[mcucr], %[tempreg]" 					\
-		                     : [tempreg] "=&d" (tempreg) 					\
-		                     : [mcucr] "I" _SFR_IO_ADDR(MCUCR), 			\
-		                     [bods_bodse] "i" (_BV(BODS) | _BV(BODSE)), \
-		                     [not_bodse] "i" (~_BV(BODSE))); 			\
-	} while (0)
-#endif
-#endif
-
-
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
 #define hwPinMode(__pin, __value) pinModeFast(__pin, __value)
 
-#if defined(MY_DISABLED_SERIAL)
-#define hwInit()
-#else
-#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE)
-#endif
+bool hwInit(void);
 
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
@@ -76,8 +53,6 @@
 #define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t*)(__pos), (__val))
 #define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void*)(__buf), (void*)(__pos), (__length))
 #define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((void*)(__buf), (void*)(__pos), (__length))
-
-
 
 enum period_t {
 	SLEEP_15MS,

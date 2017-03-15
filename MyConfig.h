@@ -31,28 +31,35 @@
 *  Serial and debug options
 ***********************************/
 
-// Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
-// final sketch but is helpful to see what is actually is happening during development
+/**
+* @def MY_DEBUG
+* @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
+* final sketch but is helpful to see what is actually is happening during development
+*/
 //#define MY_DEBUG
 
-// Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
-// I_DEBUG requests are:
-// R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
-// V: CPU voltage
-// F: CPU frequency
-// M: free memory
-// E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+/**
+* @def MY_SPECIAL_DEBUG
+* @brief Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
+* I_DEBUG requests are:
+* R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+* V: CPU voltage
+* F: CPU frequency
+* M: free memory
+* E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+*/
 //#define MY_SPECIAL_DEBUG
 
-// Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
-// Requires DEBUG to be enabled.
-// This will add even more to the size of the final sketch!
-//#define MY_DEBUG_VERBOSE_SIGNING
-
-// Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
+/**
+* @def MY_DISABLED_SERIAL
+* @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
+*/
 //#define MY_DISABLED_SERIAL
 
-// Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+/**
+* @def MY_CORE_ONLY
+* @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+*/
 //#define MY_CORE_ONLY
 
 // Turn off debug if serial pins is used for other stuff
@@ -358,6 +365,12 @@
 /**********************************
 *  Message Signing Settings
 ***********************************/
+/**
+* @def Enable MY_DEBUG_VERBOSE_SIGNING
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
+*/
+//#define MY_DEBUG_VERBOSE_SIGNING
+
 /**
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
@@ -945,6 +958,9 @@
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN
+#define MY_DEBUG
+#define MY_SPECIAL_DEBUG
+#define MY_DISABLED_SERIAL
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
