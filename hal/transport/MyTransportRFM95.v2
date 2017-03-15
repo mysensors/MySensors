@@ -147,7 +147,7 @@ bool transportSanityCheck(void)
 uint8_t transportReceive(void* data)
 {
 	uint8_t len = RFM95_recv(eaxBuffer, sizeof(eaxBuffer));
-
+	
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
 	eax.setIV(eaxBuffer, IV_SIZE);
 	uint8_t addressing[] = { RFM95_getAddress() };
@@ -170,7 +170,7 @@ uint8_t transportReceive(void* data)
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
-
+	
 
 	MY_SERIALDEVICE.println("IV");
 	for (uint8_t i = 0; i < IV_SIZE; i++) {
@@ -195,7 +195,7 @@ uint8_t transportReceive(void* data)
 
 	*/
 
-
+	
 
 
 #endif

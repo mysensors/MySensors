@@ -33,26 +33,23 @@
 #include "drivers/Crypto/AESCommon.cpp"
 #include "drivers/Crypto/BlockCipher.cpp"
 
-#define IV_SIZE 16
-#define TAG_SIZE 16
-#define PSK_SIZE 16
 
+#include <string.h>
+#include <avr/pgmspace.h>
 #endif
 
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
 EAX<AES256> eax;
-uint8_t eaxBuffer[64];
 #endif
 
 bool transportInit(void)
 {
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
-	hwRandomNumberInit();
-	uint8_t _psk[PSK_SIZE];
+	uint8_t _psk[16];
 	//hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-	(void)memset(_psk, 0xAA, sizeof(_psk));
+	memset(_psk, 0xAA, sizeof(_psk));
 	eax.setKey(&_psk[0], sizeof(_psk));
-	(void)memset(_psk, 0, sizeof(_psk));
+	memset(_psk, 0, sizeof(_psk));
 #endif
 	const bool result = RFM95_initialise(MY_RFM95_FREQUENCY);
 #if defined(MY_RFM95_TCXO)
@@ -78,53 +75,56 @@ uint8_t transportGetAddress(void)
 bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
-	const uint8_t finalLength = len > 16 ? 32 : 16;
-	// randomize padding bytes - not really needed
-	for (uint8_t i = 0; i < IV_SIZE + finalLength; i++) {
-		eaxBuffer[i] = random(255);
+	const uint8_t finalLength = 32;
+	uint8_t sendBlock[64];
+	uint8_t ciphertext[32];
+	uint8_t tag[16];
+	uint8_t IV[8];
+
+	for (uint8_t i = 0; i < sizeof(IV); i++) {
+		IV[i] = random(255);
 	}
-	(void)memcpy(&eaxBuffer[IV_SIZE], data, len);
 
-	// add addressing information to MAC
-	eax.setIV(eaxBuffer, IV_SIZE);
-	uint8_t addressing[] = { to };
-
-	eax.addAuthData(addressing, sizeof(addressing));
-	eax.encrypt(eaxBuffer + IV_SIZE, &eaxBuffer[IV_SIZE], finalLength);
-	eax.computeTag(eaxBuffer + IV_SIZE + finalLength, TAG_SIZE);
-
-	/*
-	MY_SERIALDEVICE.println("IV");
-	for (uint8_t i = 0; i < IV_SIZE; i++) {
-		MY_SERIALDEVICE.print(eaxBuffer[i], HEX);
+	MY_SERIALDEVICE.print("IV: ");
+	for (uint8_t i = 0; i < sizeof(IV); i++) {
+		MY_SERIALDEVICE.print(IV[i], HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
-	MY_SERIALDEVICE.println("PT");
+	
+	eax.setIV(IV, sizeof(IV));	
+	eax.encrypt(ciphertext, (uint8_t*)data, finalLength);
+	eax.computeTag(tag, sizeof(tag));
+
+	MY_SERIALDEVICE.println("clear text");
 	for (uint8_t i = 0; i < len; i++) {
 		MY_SERIALDEVICE.print(*((uint8_t*)data+i), HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
-	MY_SERIALDEVICE.println("CT");
-	for (uint8_t i = 0; i < len; i++) {
-		MY_SERIALDEVICE.print(eaxBuffer[IV_SIZE +i], HEX);
+	MY_SERIALDEVICE.println("encrypted text");
+	for (uint8_t i = 0; i < finalLength; i++) {
+		MY_SERIALDEVICE.print(ciphertext[i], HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
-	MY_SERIALDEVICE.println("TAG");
-	for (uint8_t i = 0; i < TAG_SIZE; i++) {
-		MY_SERIALDEVICE.print(eaxBuffer[IV_SIZE + finalLength + i], HEX);
+	MY_SERIALDEVICE.println("tag");
+	for (uint8_t i = 0; i < sizeof(tag); i++) {
+		MY_SERIALDEVICE.print(tag[i], HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
-	*/
+	
+	(void)memcpy(&sendBlock, ciphertext, finalLength);
+	(void)memcpy(&sendBlock[finalLength], IV, sizeof(IV));
+	(void)memcpy(&sendBlock[finalLength + sizeof(IV)], tag, sizeof(tag));
+
 
 	if (noACK) {
-		(void)RFM95_sendWithRetry(to, eaxBuffer, finalLength + IV_SIZE + TAG_SIZE, 0, 0);
+		(void)RFM95_sendWithRetry(to, sendBlock, finalLength + sizeof(IV) + sizeof(tag), 0, 0);
 		return true;
 	}
-	return RFM95_sendWithRetry(to, eaxBuffer, finalLength + IV_SIZE + TAG_SIZE);
+	return RFM95_sendWithRetry(to, sendBlock, finalLength + sizeof(IV) + sizeof(tag));
 #else
 	if (noACK) {
 		(void)RFM95_sendWithRetry(to, data, len, 0, 0);
@@ -146,57 +146,54 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	uint8_t len = RFM95_recv(eaxBuffer, sizeof(eaxBuffer));
-
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-	eax.setIV(eaxBuffer, IV_SIZE);
-	uint8_t addressing[] = { RFM95_getAddress() };
-	eax.addAuthData(addressing, sizeof(addressing));
-	eax.decrypt((uint8_t*)data, &eaxBuffer[IV_SIZE], (len - IV_SIZE - TAG_SIZE));
-	// verify authenticity + integrity
-	if (!eax.checkTag(&eaxBuffer[len - TAG_SIZE], TAG_SIZE)) {
-		len = 0;
-		(void)memset(eaxBuffer, 0xFF, sizeof(eaxBuffer));
-		MY_SERIALDEVICE.println("bad data");
-	}
-
-	/*
+	uint8_t inBuffer[32 + 16 + 16];
+	uint8_t tag[16];
+	uint8_t IV[8];
+	uint8_t len = RFM95_recv(inBuffer, sizeof(inBuffer));
 	MY_SERIALDEVICE.print("LEN: ");
 	MY_SERIALDEVICE.println(len);
 
+#if defined(MY_RFM95_ENABLE_ENCRYPTION)
 	MY_SERIALDEVICE.println("cipher text");
-	for (uint8_t i = 0; i < (len - IV_SIZE - TAG_SIZE); i++) {
-		MY_SERIALDEVICE.print(eaxBuffer[IV_SIZE + i], HEX);
+	for (uint8_t i = 0; i < (len - sizeof(IV) - sizeof(tag)); i++) {
+		MY_SERIALDEVICE.print(inBuffer[i], HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
 
+	(void)memcpy(&IV, &inBuffer[len - sizeof(IV) - sizeof(tag)], sizeof(IV));
 
 	MY_SERIALDEVICE.println("IV");
-	for (uint8_t i = 0; i < IV_SIZE; i++) {
-		MY_SERIALDEVICE.print(eaxBuffer[i], HEX);
+	for (uint8_t i = 0; i < sizeof(IV); i++) {
+		MY_SERIALDEVICE.print(IV[i], HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
 
+	(void)memcpy(&tag, &inBuffer[len - sizeof(tag)], sizeof(tag));
 
 	MY_SERIALDEVICE.println("tag");
-	for (uint8_t i = 0; i < TAG_SIZE; i++) {
-		MY_SERIALDEVICE.print(eaxBuffer[len - IV_SIZE - TAG_SIZE + i], HEX);
+	for (uint8_t i = 0; i < sizeof(tag); i++) {
+		MY_SERIALDEVICE.print(tag[i], HEX);
 		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
+
+	eax.setIV(IV, sizeof(IV));
+	eax.decrypt((uint8_t*)data, inBuffer, (len - sizeof(IV) - sizeof(tag)));
+
+	if (!eax.checkTag(tag, sizeof(tag))) {
+		// The data was invalid - do not use it.
+		MY_SERIALDEVICE.println("not guddis");
+	}
+	
+
 	MY_SERIALDEVICE.println("clear text");
-	for (uint8_t i = 0; i <  (len - IV_SIZE - TAG_SIZE); i++) {
-	MY_SERIALDEVICE.print(*((uint8_t*)data + i), HEX);
-	MY_SERIALDEVICE.print(" ");
+	for (uint8_t i = 0; i <  (len - sizeof(IV) - sizeof(tag)); i++) {
+		MY_SERIALDEVICE.print(*((uint8_t*)data + i), HEX);
+		MY_SERIALDEVICE.print(" ");
 	}
 	MY_SERIALDEVICE.println();
-
-	*/
-
-
-
 
 #endif
 	return len;

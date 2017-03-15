@@ -1,0 +1,22 @@
+{
+    "name": "Crypto",
+    "version": "0.1.0",
+    "keywords": "AES128,AES192,AES256,Speck,CTR,CFB,CBC,OFB,EAX,GCM,XTS,ChaCha,ChaChaPoly,EAX,GCM,SHA256,SHA512,SHA3_256,SHA3_512,BLAKE2s,BLAKE2b,SHAKE128,SHAKE256,Poly1305,GHASH,OMAC,Curve25519,Ed25519,P521,RNG,NOISE",
+    "description": "Arduino CryptoLibs - All cryptographic algorithms have been optimized for 8-bit Arduino platforms like the Uno",
+    "authors":
+    {
+        "name": "Rhys Weatherley",
+        "email": "rhys.weatherley@gmail.com",
+        "url": "https://rweather.github.io/arduinolibs/crypto.html"
+    },
+    "export": {
+      "include": "libraries/Crypto"
+    },
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/rweather/arduinolibs.git"
+    },
+    "frameworks": "arduino",
+    "platforms": "*"
+}

@@ -51,7 +51,7 @@
 *   - TSF:SND						from @ref transportSendRoute(), sends message if transport is ready (exposed)
 *   - TSF:TDI						from @ref transportDisable()
 *   - TSF:TRI						from @ref transportReInitialise()
-*   - TSF:SIR						from @ref transportGetSignalReport()
+*   - TSF:SIR						from @ref transportSignalReport()
 *
 * Transport debug log messages:
 *

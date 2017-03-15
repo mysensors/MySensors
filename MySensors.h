@@ -352,6 +352,9 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 #include "hal/transport/MyTransportRFM69.cpp"
 #elif defined(MY_RADIO_RFM95)
+#if defined(MY_RFM95_ENABLE_ENCRYPTION)
+#include "drivers/AES/AES.cpp"
+#endif
 #include "drivers/RFM95/RFM95.cpp"
 #include "hal/transport/MyTransportRFM95.cpp"
 #endif
