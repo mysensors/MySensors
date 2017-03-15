@@ -137,10 +137,10 @@ bool gatewayTransportInit(void)
 #if defined(MY_ESP8266_HOSTNAME)
 	WiFi.hostname(MY_ESP8266_HOSTNAME);
 #endif
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 #ifdef MY_IP_ADDRESS
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif
+	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 #endif
 
 	gatewayTransportConnect();

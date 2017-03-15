@@ -108,9 +108,6 @@ void transportSetTargetRSSI(int16_t targetSignalStrength)
 #endif
 }
 
-// experimental
-// **********************************************
-
 int16_t transportGetSendingRSSI(void)
 {
 	return RFM69_getSendingRSSI();
@@ -234,8 +231,6 @@ void transportPowerUp(void)
 	_radio.powerUp();
 }
 
-// experimental
-// **********************************************
 int16_t transportGetSendingRSSI(void)
 {
 	return INVALID_RSSI;
@@ -265,7 +260,5 @@ int16_t transportGetTxPowerLevel(void)
 {
 	return 0;
 }
-
-// **********************************************
 
 #endif

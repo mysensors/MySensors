@@ -51,7 +51,7 @@
 *   - TSF:SND						from @ref transportSendRoute(), sends message if transport is ready (exposed)
 *   - TSF:TDI						from @ref transportDisable()
 *   - TSF:TRI						from @ref transportReInitialise()
-
+*   - TSF:SIR						from @ref transportGetSignalReport()
 *
 * Transport debug log messages:
 *
@@ -125,7 +125,8 @@
 * | | TSF	| TDI		| TPD						| Power down transport
 * | | TSF	| TRI		| TRI						| Reinitialise transport
 * | | TSF	| TRI		| TSB						| Set transport to standby
-
+* | | TSF	| SIR		| CMD=%d,VAL=%d				| Get signal report
+*
 *
 * Incoming / outgoing messages:
 *
@@ -159,6 +160,7 @@
 #define MyTransport_h
 
 #include "MySensorsCore.h"
+#include "hal/transport/MyTransportHAL.h"
 
 #ifndef MY_TRANSPORT_MAX_TX_FAILURES
 #if defined(MY_REPEATER_FEATURE)
@@ -516,6 +518,24 @@ void transportDisable(void);
 * @brief Reinitialise transport. Put transport to standby - If xxx_POWER_PIN set, power up and go to standby
 */
 void transportReInitialise(void);
+/**
+* @brief Get transport signal report
+* @param command
+* S=SNR (if available) of incoming message (this)
+* R=RSSI (if available) of incoming message (this)
+* P=TX powerlevel in %
+* T=TX powerlevel in dBm
+* U=Uplink quality
+* @return report
+*/
+int16_t transportSignalReport(const char command);
+
+/**
+* @brief Get transport signal report
+* @param signalReport
+* @return report
+*/
+int16_t transportGetSignalReport(const signalReport_t signalReport);
 
 #endif // MyTransport_h
 /** @}*/

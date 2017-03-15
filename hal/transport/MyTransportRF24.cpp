@@ -167,10 +167,6 @@ void transportPowerUp(void)
 	RF24_powerUp();
 }
 
-
-// experimental
-// **********************************************
-
 int16_t transportGetSendingRSSI(void)
 {
 	return RF24_getSendingRSSI();
@@ -205,5 +201,5 @@ bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
 	return RF24_setTxPowerPercent(powerPercent);
 }
-// **********************************************
+
 

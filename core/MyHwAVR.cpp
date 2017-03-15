@@ -197,6 +197,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
+
+bool hwUniqueID(unique_id_t* uniqueID)
+{
+	// not implemented yet
+	(void)uniqueID;
+	return false;
+}
 #if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 uint16_t hwCPUVoltage()
 {

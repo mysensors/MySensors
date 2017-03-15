@@ -378,10 +378,6 @@ void transportStandBy(void)
 
 }
 
-
-// experimental
-// **********************************************
-
 int16_t transportGetSendingRSSI(void)
 {
 	// not implemented
@@ -424,6 +420,3 @@ bool transportSetTxPowerPercent(const uint8_t powerPercent)
 	(void)powerPercent;
 	return false;
 }
-
-
-// **********************************************

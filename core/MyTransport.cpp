@@ -1069,9 +1069,7 @@ void transportReportRoutingTable(void)
 		}
 	}
 #endif
-
 }
-
 
 void transportTogglePassiveMode(const bool OnOff)
 {
@@ -1081,8 +1079,6 @@ void transportTogglePassiveMode(const bool OnOff)
 	(void)OnOff;
 #endif
 }
-
-// experimental
 
 int16_t transportGetSignalReport(const signalReport_t signalReport)
 {
@@ -1113,6 +1109,7 @@ int16_t transportGetSignalReport(const signalReport_t signalReport)
 		result = 0;
 		break;
 	}
+	TRANSPORT_DEBUG(PSTR("TSF:SIR:CMD=%d,VAL=%d\n"), signalReport, result);
 	return result;
 }
 
@@ -1133,21 +1130,16 @@ int16_t transportSignalReport(const char command)
 		reportCommand = SR_TX_POWER_PERCENT;
 		break;
 	case 'T':
-		// TX powerlevel in %
+		// TX powerlevel in dBm
 		reportCommand = SR_TX_POWER_LEVEL;
 		break;
 	case 'U':
 		// Uplink quality
 		reportCommand = SR_UPLINK_QUALITY;
 		break;
-	default: {
+	default:
 		reportCommand = SR_NOT_DEFINED;
 		break;
 	}
-	}
-	const int16_t value = transportGetSignalReport(reportCommand);
-	TRANSPORT_DEBUG(PSTR("TSF:SIR:CMD=%d,VAL=%d\n"), reportCommand, value);
-	return value;
+	return transportGetSignalReport(reportCommand);
 }
-
-// **********************************************

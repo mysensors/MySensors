@@ -69,6 +69,13 @@ unsigned long hwMillis()
 	return millis();
 }
 
+bool hwUniqueID(unique_id_t *uniqueID)
+{
+	// not implemented yet
+	(void)uniqueID;
+	return false;
+}
+
 // Not supported!
 int8_t hwSleep(unsigned long ms)
 {

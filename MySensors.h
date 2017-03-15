@@ -70,7 +70,7 @@
 #endif
 
 // transport layer files
-#define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)
+#define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 
 
 // Enable sensor network "feature" if one of the transport types was enabled
@@ -85,6 +85,7 @@
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
 #include "core/MyHwAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
+#include "drivers/extEEPROM/extEEPROM.cpp"
 #include "core/MyHwSAMD.cpp"
 #elif defined(__linux__)
 #include "core/MyHwLinuxGeneric.cpp"

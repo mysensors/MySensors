@@ -93,10 +93,6 @@ void transportToggleATCmode(const bool OnOff, const int16_t targetRSSI)
 	RFM95_ATCmode(OnOff, targetRSSI);
 }
 
-
-// experimental
-// **********************************************
-
 int16_t transportGetSendingRSSI(void)
 {
 	return RFM95_getSendingRSSI();
@@ -132,5 +128,3 @@ bool transportSetTxPowerPercent(const uint8_t powerPercent)
 	return RFM95_setTxPowerPercent(powerPercent);
 }
 
-
-// **********************************************
