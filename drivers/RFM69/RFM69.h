@@ -31,6 +31,7 @@
 #ifndef RFM69_h
 #define RFM69_h
 #include <Arduino.h>            // assumes Arduino IDE v1.0 or greater
+#include <SPI.h>
 
 #define RF69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
 #define RF69_SPI_CS             SS // SS is the SPI slave select pin, for instance D10 on ATmega328
@@ -45,12 +46,37 @@
 #elif defined(__AVR_ATmega32U4__)
 #define RF69_IRQ_PIN          3
 #define RF69_IRQ_NUM          0
-#elif defined(__arm__)//Use pin 10 or any pin you want
+#elif defined(__STM32F1__)
+#define RF69_IRQ_PIN          PA3
+#define RF69_IRQ_NUM          PA3
+#elif defined(__arm__)	//generic ARM
 #define RF69_IRQ_PIN          10
 #define RF69_IRQ_NUM          10
+#elif defined(ARDUINO_ARCH_ESP8266)
+#define RF69_IRQ_PIN          2
+#define RF69_IRQ_NUM          2
 #else
 #define RF69_IRQ_PIN          2
 #define RF69_IRQ_NUM          0
+#endif
+
+// SPI clock@2-4Mhz
+#if (F_CPU>=512000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV256
+#elif (F_CPU>=256000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV128
+#elif (F_CPU>=128000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV64
+#elif (F_CPU>=64000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV32
+#elif (F_CPU>=32000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV16
+#elif (F_CPU>=16000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV8
+#elif (F_CPU>=8000000)
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV4
+#else
+#define RF69_SPI_CLOCK_DIV SPI_CLOCK_DIV2
 #endif
 
 
@@ -148,7 +174,6 @@ public:
 	uint8_t readReg(uint8_t addr); //!< readReg
 	void writeReg(uint8_t addr, uint8_t val); //!< writeReg
 	void readAllRegs(); //!< readAllRegs
-
 protected:
 	static void isr0(); //!< isr0
 	void virtual interruptHandler(); //!< interruptHandler

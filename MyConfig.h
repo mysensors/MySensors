@@ -529,6 +529,8 @@
 #define MY_RF24_CS_PIN 3
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define MY_RF24_CS_PIN 24
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define MY_RF24_CS_PIN SS
 #else
 #define MY_RF24_CS_PIN 10
 #endif
@@ -680,6 +682,14 @@
 #endif
 
 /**
+* @def MY_RF69_IRQ_NUM
+* @brief RF69 IRQ pin number.
+*/
+#ifndef MY_RF69_IRQ_NUM
+#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+#endif
+
+/**
  * @def MY_RF69_SPI_CS
  * @brief RF69 SPI chip select pin.
  */
@@ -687,16 +697,13 @@
 #define MY_RF69_SPI_CS RF69_SPI_CS
 #endif
 
+
 /**
- * @def MY_RF69_IRQ_NUM
- * @brief RF69 IRQ pin number.
- */
-#ifndef MY_RF69_IRQ_NUM
-#if defined(ARDUINO_ARCH_ESP8266)
-#define MY_RF69_IRQ_NUM RF69_IRQ_PIN
-#else
-#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
-#endif
+* @def MY_RF69_SPI_CLOCK_DIV
+* @brief RF69 SPI Clock divider.
+*/
+#ifndef MY_RF69_SPI_CLOCK_DIV
+#define MY_RF69_SPI_CLOCK_DIV RF69_SPI_CLOCK_DIV
 #endif
 
 // Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
