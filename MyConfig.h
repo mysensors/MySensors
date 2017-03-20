@@ -805,6 +805,12 @@
 #endif
 #endif
 
+/**
+ * @def MY_MQTT_CLIENT_PUBLISH_RETAIN
+ * @brief Enables MQTT client to set the retain flag when publishing specific messages.
+ */
+//#define MY_MQTT_CLIENT_PUBLISH_RETAIN
+
 // Static ip address of gateway (if this is disabled, DHCP will be used)
 //#define MY_IP_ADDRESS 192,168,178,66
 
@@ -982,4 +988,5 @@
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
 #define MY_INDICATION_HANDLER
+#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 #endif
