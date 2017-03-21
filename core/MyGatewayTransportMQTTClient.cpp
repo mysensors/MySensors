@@ -56,7 +56,13 @@ bool gatewayTransportSend(MyMessage &message)
 	setIndication(INDICATION_GW_TX);
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	debug(PSTR("Sending message on topic: %s\n"), topic);
-	return _MQTT_client.publish(topic, message.getString(_convBuffer));
+	#ifdef MY_MQTT_CLIENT_PUBLISH_RETAIN
+	bool retain = mGetCommand(message) == C_SET || 
+		(mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
+	#else
+	bool retain = false;
+	#endif
+	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
 
 void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
