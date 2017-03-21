@@ -37,9 +37,10 @@ Installation options:
 MySensors options:
     --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
     --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
-    --my-gateway=[ethernet|serial|mqtt]
-                                Gateway type, set to none to disable gateway feature. [ethernet]
-    --my-node-id=<ID>           Disable gateway feature and run as a node with given id.
+    --my-gateway=[none|ethernet|serial|mqtt]
+                                Set the protocol used to communicate with the controller.
+                                [ethernet]
+    --my-node-id=<ID>           Disable gateway feature and run as a node with the specified id.
     --my-controller-url-address=<URL>
                                 Controller or MQTT broker url.
     --my-controller-ip-address=<IP>
@@ -54,12 +55,15 @@ MySensors options:
     --my-serial-groupname=<GROUP>
                                 Grant access to the specified system group for the serial device.
     --my-mqtt-client-id=<ID>    MQTT client id.
+    --my-mqtt-user=<UID>        MQTT user id.
+    --my-mqtt-password=<PASS>   MQTT password.
     --my-mqtt-publish-topic-prefix=<PREFIX>
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
     --my-transport=[none|nrf24|rs485|rfm95]
-                                Transport type, set to none to disable transport feature. [nrf24]
+                                Set the transport to be used to communicate with other nodes.
+                                [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
@@ -77,7 +81,7 @@ MySensors options:
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
     --my-rs485-de-pin=<PIN>     Pin number connected to RS485 driver enable pin.
     --my-rs485-max-msg-length=<LENGTH>
-                                The maximum message length used for RS485.
+                                The maximum message length used for RS485. [40]
     --my-leds-err-pin=<PIN>     Error LED pin.
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
@@ -108,7 +112,7 @@ function detect_rpi_revision {
 
 function detect_machine {
     local cpu=$(eval "uname -m 2>/dev/null")
-    local machine=$(eval "cat /sys/firmware/devicetree/base/model 2>/dev/null")
+    local machine=$(eval "cat /sys/firmware/devicetree/base/model |tr -d '\0' 2>/dev/null")
     local hardware=$(eval "grep sunxi_platform /sys/class/sunxi_info/sys_info 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
     if [ -z "$hardware" ]; then
         local hardware=$(eval "grep Hardware /proc/cpuinfo 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
@@ -354,6 +358,12 @@ for opt do
     --my-mqtt-client-id=*)
         CPPFLAGS="-DMY_MQTT_CLIENT_ID=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
+    --my-mqtt-user=*)
+        CPPFLAGS="-DMY_MQTT_USER=\\\"${optarg}\\\" $CPPFLAGS"
+        ;;
+    --my-mqtt-password=*)
+        CPPFLAGS="-DMY_MQTT_PASSWORD=\\\"${optarg}\\\" $CPPFLAGS"
+        ;; 
     --my-mqtt-publish-topic-prefix=*)
         CPPFLAGS="-DMY_MQTT_PUBLISH_TOPIC_PREFIX=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
