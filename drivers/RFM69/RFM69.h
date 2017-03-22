@@ -32,6 +32,8 @@
 #define RFM69_h
 #include <Arduino.h>            // assumes Arduino IDE v1.0 or greater
 
+#include <SPI.h>
+
 #define RF69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
 #define RF69_SPI_CS             SS // SS is the SPI slave select pin, for instance D10 on ATmega328
 
@@ -78,6 +80,13 @@
 #define RFM69_CTL_SENDACK   0x80
 #define RFM69_CTL_REQACK    0x40
 
+#if defined(ARDUINO_ARCH_STM32F1)
+#define RF69_SPI_CLOCK_DIV  SPI_CLOCK_DIV32
+#else
+// decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
+#define RF69_SPI_CLOCK_DIV  SPI_CLOCK_DIV4
+#endif
+
 /** RFM69 class */
 class RFM69
 {
@@ -100,9 +109,10 @@ public:
 	 * @param interruptPin Interrupt pin.
 	 * @param isRFM69HW Set to @c true to indicate RFM69HW variant.
 	 * @param interruptNum Interrupt number.
+	 * @param spiClockDiv  SPI clock divider
 	 */
 	RFM69(uint8_t slaveSelectPin=RF69_SPI_CS, uint8_t interruptPin=RF69_IRQ_PIN, bool isRFM69HW=false,
-	      uint8_t interruptNum=RF69_IRQ_NUM)
+	      uint8_t interruptNum=RF69_IRQ_NUM, unsigned int spiClockDiv=RF69_SPI_CLOCK_DIV)
 	{
 		_slaveSelectPin = slaveSelectPin;
 		_interruptPin = interruptPin;
@@ -111,6 +121,7 @@ public:
 		_promiscuousMode = false;
 		_powerLevel = 31;
 		_isRFM69HW = isRFM69HW;
+		_spiClockDiv = spiClockDiv;
 		_address = RF69_BROADCAST_ADDR;
 #if defined (SPCR) && defined (SPSR)
 		_SPCR = 0;
@@ -161,6 +172,7 @@ protected:
 	uint8_t _interruptPin; //!< _interruptPin
 	uint8_t _interruptNum; //!< _interruptNum
 	uint8_t _address; //!< _address
+	uint8_t _spiClockDiv; //!< _spiClockDiv
 	bool _promiscuousMode; //!< _promiscuousMode
 	uint8_t _powerLevel; //!< _powerLevel
 	bool _isRFM69HW; //!< _isRFM69HW
