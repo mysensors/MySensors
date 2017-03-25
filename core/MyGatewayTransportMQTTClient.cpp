@@ -82,7 +82,7 @@ bool reconnectMQTT(void)
 		// Once connected, publish an announcement...
 		//_MQTT_client.publish("outTopic","hello world");
 		// ... and resubscribe
-		_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
+		_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
 		return true;
 	}
 	return false;
