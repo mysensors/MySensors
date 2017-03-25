@@ -49,7 +49,7 @@
 #define hwPinMode(__pin, __value) nrf5_pinMode(__pin, __value)
 #define hwMillis() millis()
 
-void hwInit();
+bool hwInit();
 void hwWatchdogReset();
 void hwReboot();
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
