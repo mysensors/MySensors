@@ -66,6 +66,8 @@
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "core/MyHwSAMD.cpp"
+#elif defined(ARDUINO_ARCH_STM32F1)
+#include "core/MyHwSTM32F1.cpp"
 #elif defined(__linux__)
 #include "core/MyHwLinuxGeneric.cpp"
 #endif
@@ -341,6 +343,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "core/MyMainESP8266.cpp"
 #elif defined(__linux__)
 #include "core/MyMainLinux.cpp"
+#elif defined(ARDUINO_ARCH_STM32F1)
+#include "core/MyMainSTM32F1.cpp"
 #else
 #include "core/MyMainDefault.cpp"
 #endif
