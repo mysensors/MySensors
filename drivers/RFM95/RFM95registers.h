@@ -33,6 +33,7 @@
 // Register access
 #define RFM95_READ_REGISTER						(0x7Fu)	//!< reading register
 #define RFM95_WRITE_REGISTER					(0x80u)	//!< writing register
+#define RFM95_NOP								(0x00u)	//!< NOP
 
 // Registers, available in LoRa mode
 #define RFM95_REG_00_FIFO						0x00 //!< REG_00_FIFO
@@ -122,7 +123,7 @@
 #define RFM95_PA_RAMP_15US						0x0D //!< PA_RAMP_15US
 #define RFM95_PA_RAMP_12US						0x0E //!< PA_RAMP_12US
 #define RFM95_PA_RAMP_10US						0x0F //!< PA_RAMP_10US
-#define RFM95_LOW_PN_TX_PLL_OFF					0x10 //!<LOW_PN_TX_PLL_OFF
+#define RFM95_LOW_PN_TX_PLL_OFF					0x10 //!< LOW_PN_TX_PLL_OFF
 
 // RFM95_REG_0B_OCP 0x0b
 #define RFM95_OCP_TRIM							0x1f //!< OCP_TRIM
