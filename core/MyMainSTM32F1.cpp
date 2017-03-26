@@ -17,18 +17,29 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyProtocol_h
-#define MyProtocol_h
+// Initialize library and handle sketch functions like we want to
 
-#include "MySensorsCore.h"
+extern "C" void __libc_init_array(void);
 
+// Force init to be called *first*, i.e. before static object allocation.
+// Otherwise, statically allocated objects that need libmaple may fail.
+__attribute__(( constructor (101))) void premain()
+{
+	init();
+}
 
-// parse(message, inputString)
-// parse a string into a message element
-// returns true if successfully parsed the input string
-bool protocolParse(MyMessage &message, char *inputString);
+int main(void)
+{
+	_begin();
 
-// Format MyMessage to the protocol represenataion
-char *protocolFormat(MyMessage &message);
-
-#endif
+	for(;;) {
+		_process();
+		if (loop) {
+			loop();
+		}
+		if (serialEventRun) {
+			serialEventRun();
+		}
+	}
+	return 0;
+}

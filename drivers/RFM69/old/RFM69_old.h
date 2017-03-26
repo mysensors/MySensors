@@ -31,18 +31,31 @@
 #ifndef RFM69_h
 #define RFM69_h
 #include <Arduino.h>            // assumes Arduino IDE v1.0 or greater
+#include <SPI.h>
 
 #define RFM69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
 
+#if defined(ARDUINO_ARCH_AVR)
 // INT0 on AVRs should be connected to RFM69's DIO0 (ex on ATmega328 it's D2, on ATmega644/1284 it's D2)
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
 #define DEFAULT_RFM69_IRQ_PIN			(2)
-#elif defined(__AVR_ATmega32U4__)
-#define DEFAULT_RFM69_IRQ_PIN			(3)
-#elif defined(__arm__)//Use pin 10 or any pin you want
-#define DEFAULT_RFM69_IRQ_PIN			(10)
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)
+#elif defined(ARDUINO_ARCH_ESP8266)
+#define DEFAULT_RFM69_IRQ_PIN			(2)
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)
+#elif defined(ARDUINO_ARCH_ESP32)
+#warning not implemented yet
+#elif defined(ARDUINO_ARCH_SAMD)
+#define DEFAULT_RFM69_IRQ_PIN			(2)
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)
+#elif defined(LINUX_ARCH_RASPBERRYPI)
+#define DEFAULT_RFM69_IRQ_PIN			(22)					//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN	//!< DEFAULT_RFM69_IRQ_NUM
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define DEFAULT_RFM69_IRQ_PIN			(PA3)
+#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN
 #else
 #define DEFAULT_RFM69_IRQ_PIN			(2)
+#define DEFAULT_RFM69_IRQ_NUM			(2)
 #endif
 
 #define DEFAULT_RFM69_CS_PIN			(SS)	// SS is the SPI slave select pin, for instance D10 on ATmega328
@@ -60,8 +73,10 @@
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV32			//!< SPI clock divider 32
 #elif (MY_RFM69_SPI_SPEED >= F_CPU / 64)
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV64			//!< SPI clock divider 64
-#else
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 128)
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV128		//!< SPI clock divider 128
+#else
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV256		//!< SPI clock divider 256
 #endif
 
 // powerup delay
@@ -85,7 +100,9 @@
 #define RFM69_BROADCAST_ADDR 255
 #define RFM69_CSMA_LIMIT_MS 1000
 #define RFM69_TX_LIMIT_MS   1000
-#define RFM69_FSTEP  61.03515625 // == FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
+
+#define RFM69_FXOSC			(32*1000000ul)				//!< The crystal oscillator frequency of the module, 32MHz
+#define RFM69_FSTEP			(RFM69_FXOSC / 524288ul)	//!< The Frequency Synthesizer step
 
 // TWS: define CTLbyte bits
 #define RFM69_CTL_SENDACK   0x80
@@ -172,7 +189,6 @@ public:
 	uint8_t readReg(uint8_t addr); //!< readReg
 	void writeReg(uint8_t addr, uint8_t val); //!< writeReg
 	void readAllRegs(); //!< readAllRegs
-
 protected:
 	static void isr0(); //!< isr0
 	void virtual interruptHandler(); //!< interruptHandler

@@ -31,28 +31,35 @@
 *  Serial and debug options
 ***********************************/
 
-// Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
-// final sketch but is helpful to see what is actually is happening during development
+/**
+* @def MY_DEBUG
+* @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
+* final sketch but is helpful to see what is actually is happening during development
+*/
 //#define MY_DEBUG
 
-// Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
-// I_DEBUG requests are:
-// R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
-// V: CPU voltage
-// F: CPU frequency
-// M: free memory
-// E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+/**
+* @def MY_SPECIAL_DEBUG
+* @brief Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
+* I_DEBUG requests are:
+* R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+* V: CPU voltage
+* F: CPU frequency
+* M: free memory
+* E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+*/
 //#define MY_SPECIAL_DEBUG
 
-// Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
-// Requires DEBUG to be enabled.
-// This will add even more to the size of the final sketch!
-//#define MY_DEBUG_VERBOSE_SIGNING
-
-// Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
+/**
+* @def MY_DISABLED_SERIAL
+* @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
+*/
 //#define MY_DISABLED_SERIAL
 
-// Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+/**
+* @def MY_CORE_ONLY
+* @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+*/
 //#define MY_CORE_ONLY
 
 // Turn off debug if serial pins is used for other stuff
@@ -90,6 +97,7 @@
 //#define MY_RADIO_RFM95
 //#define MY_RS485
 
+// legacy
 #ifdef MY_RADIO_NRF24
 //MY_RADIO_NRF24 is deprecated
 #define MY_RADIO_RF24
@@ -373,6 +381,12 @@
 *  Message Signing Settings
 ***********************************/
 /**
+* @def MY_DEBUG_VERBOSE_SIGNING
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
+*/
+//#define MY_DEBUG_VERBOSE_SIGNING
+
+/**
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
  *
@@ -488,12 +502,15 @@
 *  NRF24L01P Driver Defaults
 ***********************************/
 
-// Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+/**
+ * @def MY_RF24_ENABLE_ENCRYPTION
+ * @brief Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+ */
 //#define MY_RF24_ENABLE_ENCRYPTION
 
 /**
  * @def MY_DEBUG_VERBOSE_RF24
- * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled.
+ * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver.
  */
 //#define MY_DEBUG_VERBOSE_RF24
 
@@ -637,7 +654,7 @@
 
 /**
 * @def MY_DEBUG_VERBOSE_RFM69
-* @brief Enable MY_DEBUG_VERBOSE_RFM69 flag for verbose debug prints related to the RFM69 driver. Requires DEBUG to be enabled.
+* @brief Enable MY_DEBUG_VERBOSE_RFM69 flag for verbose debug prints related to the RFM69 driver.
 */
 //#define MY_DEBUG_VERBOSE_RFM69
 
@@ -734,13 +751,28 @@
  * @brief RFM69 IRQ pin.
  */
 #ifndef MY_RFM69_IRQ_PIN
-// legacy
 #ifdef MY_RF69_IRQ_PIN
+// legacy, older board files
 #define MY_RFM69_IRQ_PIN				MY_RF69_IRQ_PIN
 #else
 #define MY_RFM69_IRQ_PIN				DEFAULT_RFM69_IRQ_PIN
 #endif
 #endif
+
+
+/**
+ * @def MY_RFM69_IRQ_NUM
+ * @brief RFM69 IRQ number.
+ */
+#ifndef MY_RFM69_IRQ_NUM
+#ifdef MY_RF69_IRQ_NUM
+// legacy, older board files
+#define MY_RFM69_IRQ_NUM				MY_RF69_IRQ_NUM
+#else
+#define MY_RFM69_IRQ_NUM				DEFAULT_RFM69_IRQ_NUM
+#endif
+#endif
+
 
 /**
  * @def MY_RFM69_CS_PIN
@@ -755,11 +787,6 @@
 #endif
 #endif
 
-
-
-
-
-
 /**
  * @def MY_RFM69_SPI_SPEED
  * @brief Set to overrule default RFM69 SPI speed.
@@ -767,6 +794,7 @@
 #ifndef MY_RFM69_SPI_SPEED
 #define MY_RFM69_SPI_SPEED				(4*1000000ul)	// datasheet says 10Mhz max.
 #endif
+
 /**
  * @def MY_RFM69_ENABLE_ENCRYPTION
  * Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
@@ -810,6 +838,12 @@
 ***********************************/
 
 /**
+* @def MY_DEBUG_VERBOSE_RFM95
+* @brief Enable MY_DEBUG_VERBOSE_RFM95 flag for verbose debug prints related to the RFM95 driver.
+*/
+//#define MY_DEBUG_VERBOSE_RFM95
+
+/**
  * @def MY_RFM95_FREQUENCY
  * @brief RFM95 frequency
  *
@@ -818,9 +852,10 @@
 #ifndef MY_RFM95_FREQUENCY
 #define MY_RFM95_FREQUENCY				(868.1f)
 #endif
+
 /**
 * @def MY_RFM95_MODEM_CONFIGRUATION
-* @brief RFM95 modem configuration, see table
+* @brief RFM95 modem configuration, see table. Default RFM95 modem configuration: RFM95_BW125CR45SF128
 *
 * BW = Bandwidth in kHz
 * CR = Error correction code
@@ -833,11 +868,6 @@
 * | RFM95_BW31_25CR48SF512	| 31.25 | 4/8 | 512  | Slow, long range
 * | RFM95_BW125CR48SF4096	| 125   | 4/8 | 4096 | Slow, long range
 *
-*/
-
-/**
-* @def MY_RFM95_MODEM_CONFIGRUATION
-* @brief Default RFM95 modem configuration
 */
 #ifndef MY_RFM95_MODEM_CONFIGRUATION
 #define MY_RFM95_MODEM_CONFIGRUATION	RFM95_BW125CR45SF128
@@ -864,12 +894,21 @@
 #endif
 
 /**
+* @def MY_RFM95_IRQ_NUM
+* @brief RFM95 IRQ number
+*/
+#ifndef MY_RFM95_IRQ_NUM
+#define MY_RFM95_IRQ_NUM				DEFAULT_RFM95_IRQ_NUM
+#endif
+
+/**
  * @def MY_RFM95_CS_PIN
  * @brief RFM95 SPI chip select pin
  */
 #ifndef MY_RFM95_CS_PIN
 #define MY_RFM95_CS_PIN					DEFAULT_RFM95_CS_PIN
 #endif
+
 /**
 * @def MY_RFM95_SPI_SPEED
 * @brief Set to overrule default RFM95 SPI speed, default 4Mhz.
@@ -929,6 +968,12 @@
 #define MY_PORT 5003
 #endif
 #endif
+
+/**
+ * @def MY_MQTT_CLIENT_PUBLISH_RETAIN
+ * @brief Enables MQTT client to set the retain flag when publishing specific messages.
+ */
+//#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 
 // Static ip address of gateway (if this is disabled, DHCP will be used)
 //#define MY_IP_ADDRESS 192,168,178,66
@@ -1083,37 +1128,55 @@
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN
+// debug
+#define MY_DEBUG
+#define MY_SPECIAL_DEBUG
+#define MY_DISABLED_SERIAL
+// linux
+#define MY_LINUX_SERIAL_GROUPNAME
+#define MY_LINUX_IS_SERIAL_PTY
+// transport
+#define MY_PARENT_NODE_IS_STATIC
+#define MY_REGISTRATION_CONTROLLER
+#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+#define MY_TRANSPORT_SANITY_CHECK
+#define MY_NODE_LOCK_FEATURE
+#define MY_REPEATER_FEATURE
+#define MY_PASSIVE_NODE
+#define MY_MQTT_CLIENT_PUBLISH_RETAIN
+// general
+#define MY_INDICATION_HANDLER
+// signing
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_DEBUG_VERBOSE_SIGNING
+// RS485
 #define MY_RS485_HWSERIAL
-#define MY_IS_RFM69HW
-#define MY_RFM69_ATC_MODE_DISABLED
-#define MY_RFM69_RST_PIN
-#define MY_PARENT_NODE_IS_STATIC
-#define MY_REGISTRATION_CONTROLLER
-#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+// RF24
 #define MY_DEBUG_VERBOSE_RF24
-#define MY_TRANSPORT_SANITY_CHECK
+#define MY_RF24_POWER_PIN
+#define MY_RF24_ENABLE_ENCRYPTION
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
-#define MY_NODE_LOCK_FEATURE
-#define MY_REPEATER_FEATURE
-#define MY_LINUX_SERIAL_GROUPNAME
-#define MY_LINUX_IS_SERIAL_PTY
-#define MY_RFM95_ATC_MODE_DISABLED
-#define MY_RFM95_RST_PIN
-#define MY_RFM95_MODEM_CONFIGRUATION RFM95_BW125CR45SF128
-#define MY_RF24_POWER_PIN
-#define MY_DEBUG_VERBOSE_RFM69
-#define MY_DEBUG_VERBOSE_RFM69_REGISTERS
+// RFM69
+#define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER
 #define MY_RFM69_POWER_PIN
 #define MY_RFM69_ENABLE_LISTENMODE
+#define MY_RFM69_ENABLE_ENCRYPTION
+#define MY_RFM69_ATC_MODE_DISABLED
+#define MY_RFM69_RST_PIN
+#define MY_DEBUG_VERBOSE_RFM69
+#define MY_DEBUG_VERBOSE_RFM69_REGISTERS
+// RFM95
+#define MY_DEBUG_VERBOSE_RFM95
+#define MY_RFM95_ATC_MODE_DISABLED
+#define MY_RFM95_RST_PIN
+#define MY_RFM95_MODEM_CONFIGRUATION
 #define MY_RFM95_POWER_PIN
 #define MY_RFM95_TCXO
-#define MY_PASSIVE_NODE
-#define MY_INDICATION_HANDLER
+
 #endif

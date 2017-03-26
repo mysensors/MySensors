@@ -18,17 +18,15 @@
  *
  */
 
-#include "MyTransportHAL.h"
+#include "MyConfig.h"
+#include "MyTransport.h"
 #include "drivers/RFM95/RFM95.h"
 
 bool transportInit(void)
 {
 	const bool result = RFM95_initialise(MY_RFM95_FREQUENCY);
-#if defined(MY_RFM95_TCXO)
-	RFM95_enableTCXO();
-#endif
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM95_ATC_MODE_DISABLED)
-	// only enable ATC mode in nodes
+	// only enable ATC mode nodes
 	RFM95_ATCmode(true, MY_RFM95_ATC_TARGET_RSSI);
 #endif
 	return result;
@@ -44,12 +42,8 @@ uint8_t transportGetAddress(void)
 	return RFM95_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len)
 {
-	if (noACK) {
-		(void)RFM95_sendWithRetry(to, data, len, 0, 0);
-		return true;
-	}
 	return RFM95_sendWithRetry(to, data, len);
 }
 
@@ -65,67 +59,34 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	const uint8_t len = RFM95_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
-	return len;
-}
-
-void transportSleep(void)
-{
-	(void)RFM95_sleep();
-}
-
-void transportStandBy(void)
-{
-	(void)RFM95_standBy();
+	return RFM95_recv((uint8_t*)data);
 }
 
 void transportPowerDown(void)
 {
-	RFM95_powerDown();
+	(void)RFM95_sleep();
 }
 
-void transportPowerUp(void)
-{
-	RFM95_powerUp();
-}
-
-void transportToggleATCmode(const bool OnOff, const int16_t targetRSSI)
-{
-	RFM95_ATCmode(OnOff, targetRSSI);
-}
-
-int16_t transportGetSendingRSSI(void)
-{
-	return RFM95_getSendingRSSI();
-}
-
-int16_t transportGetReceivingRSSI(void)
+// experimental
+// **********************************************
+int16_t transportGetReceivingSignalStrength(void)
 {
 	return RFM95_getReceivingRSSI();
 }
-
-int16_t transportGetSendingSNR(void)
+int16_t transportGetSendingSignalStrength(void)
 {
-	return static_cast<int16_t>(RFM95_getSendingSNR());
+	return RFM95_getSendingRSSI();
 }
-
-int16_t transportGetReceivingSNR(void)
+int8_t transportGetReceivingSNR(void)
 {
-	return static_cast<int16_t>(RFM95_getReceivingSNR());
+	return RFM95_getReceivingSNR();
 }
-
-int16_t transportGetTxPowerPercent(void)
+int8_t transportGetSendingSNR(void)
 {
-	return static_cast<int16_t>(RFM95_getTxPowerPercent());
+	return RFM95_getSendingSNR();
 }
-
-int16_t transportGetTxPowerLevel(void)
+uint8_t transportGetTxPower(void)
 {
-	return static_cast<int16_t>(RFM95_getTxPowerLevel());
+	return RFM95_getTxPowerPercent();
 }
-
-bool transportSetTxPowerPercent(const uint8_t powerPercent)
-{
-	return RFM95_setTxPowerPercent(powerPercent);
-}
-
+// **********************************************

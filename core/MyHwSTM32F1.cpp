@@ -17,17 +17,49 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyHwESP8266.h"
+#include "MyHwSTM32F1.h"
 #include <EEPROM.h>
 
+
+/*
+* Pinout STM32F103C8 dev board:
+* http://wiki.stm32duino.com/images/a/ae/Bluepillpinout.gif
+*
+* Wiring RFM69 radio / SPI1
+* --------------------------------------------------
+* CLK	PA5
+* MISO	PA6
+* MOSI	PA7
+* CSN	PA4
+* CE	NA
+* IRQ	PA3 (default)
+*
+* Wiring RFM69 radio / SPI1
+* --------------------------------------------------
+* CLK	PA5
+* MISO	PA6
+* MOSI	PA7
+* CSN	PA4
+* CE	PB0 (default)
+* IRQ	NA
+*
+*/
 bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
-	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1);
-	MY_SERIALDEVICE.setDebugOutput(true);
+	Serial.begin(MY_BAUD_RATE);
 #endif
-	EEPROM.begin(EEPROM_size);
-	return true;
+	if (EEPROM.init() == EEPROM_OK) {
+
+		uint16 cnt;
+		EEPROM.count(&cnt);
+		if(cnt>=EEPROM.maxcount()) {
+			// tmp, WIP: format eeprom if full
+			EEPROM.format();
+		}
+		return true;
+	}
+	return false;
 }
 
 void hwReadConfigBlock(void* buf, void* addr, size_t length)
@@ -46,8 +78,6 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 	while (length-- > 0) {
 		EEPROM.write(pos++, *src++);
 	}
-	// see implementation, commit only executed if diff
-	EEPROM.commit();
 }
 
 uint8_t hwReadConfig(const int addr)
@@ -61,18 +91,6 @@ void hwWriteConfig(const int addr, uint8_t value)
 {
 	hwWriteConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
 }
-
-bool hwUniqueID(unique_id_t *uniqueID)
-{
-	// padding
-	memset((uint8_t*)uniqueID, 0x0A, sizeof(unique_id_t));
-	uint32_t val = ESP.getChipId();
-	(void)memcpy((uint8_t*)uniqueID, &val, 4);
-	val = ESP.getFlashChipId();
-	(void)memcpy((uint8_t*)uniqueID + 4, &val, 4);
-	return true;
-}
-
 
 int8_t hwSleep(unsigned long ms)
 {
@@ -102,37 +120,32 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-#if defined(MY_SPECIAL_DEBUG)
-// settings for getVcc()
-ADC_MODE(ADC_VCC);
-#else
-// [default] settings for analogRead(A0)
-ADC_MODE(ADC_TOUT);
-#endif
+bool hwUniqueID(unique_id_t* uniqueID)
+{
+	(void)memcpy((uint8_t*)uniqueID, (uint32_t*)0x1FFFF7E0, 16);
+	return true;
+}
 
 uint16_t hwCPUVoltage()
 {
-#if defined(MY_SPECIAL_DEBUG)
-	// in mV, requires ADC_VCC set
-	return ESP.getVcc();
-#else
-	// not possible
-	return FUNCTION_NOT_SUPPORTED;
-#endif
+	adc_reg_map *regs = ADC1->regs;
+	regs->CR2 |= ADC_CR2_TSVREFE;    // enable VREFINT and temp sensor
+	regs->SMPR1 =  ADC_SMPR1_SMP17;  // sample rate for VREFINT ADC channel
+	return 1200 * 4096 / adc_read(ADC1, 17);
 }
 
 uint16_t hwCPUFrequency()
 {
-	// in 1/10Mhz
-	return ESP.getCpuFreqMHz()*10;
+	return F_CPU/100000UL;
 }
 
 uint16_t hwFreeMem()
 {
-	return ESP.getFreeHeap();
+	//Not yet implemented
+	return 0;
 }
 
-void hwDebugPrint(const char *fmt, ... )
+void hwDebugPrint(const char *fmt, ...)
 {
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_FEATURE
@@ -146,7 +159,7 @@ void hwDebugPrint(const char *fmt, ... )
 	MY_SERIALDEVICE.print(" ");
 #endif
 	va_list args;
-	va_start (args, fmt );
+	va_start(args, fmt);
 #ifdef MY_GATEWAY_FEATURE
 	// Truncate message if this is gateway node
 	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
@@ -155,7 +168,7 @@ void hwDebugPrint(const char *fmt, ... )
 #else
 	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #endif
-	va_end (args);
+	va_end(args);
 	MY_SERIALDEVICE.print(fmtBuffer);
 	MY_SERIALDEVICE.flush();
 }

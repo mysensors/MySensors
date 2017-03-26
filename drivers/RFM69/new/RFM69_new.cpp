@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -23,7 +23,7 @@
  * - Automatic Transmit Power Control class derived from RFM69 library.
  *	  Discussion and details in this forum post: https://lowpowerlab.com/forum/index.php/topic,688.0.html
  *	  Copyright Thomas Studwell (2014,2015)
- * - Mysensors generic radio driver implementation Copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
+ * - Mysensors generic radio driver implementation Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
  *
  * Changes by : @tekka, @scalz, @marceloagno
  *
@@ -33,7 +33,6 @@
  */
 
 #include "RFM69_new.h"
-#include "RFM69registers_new.h"
 
 // debug
 #if defined(MY_DEBUG_VERBOSE_RFM69)
@@ -124,7 +123,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	*ptx++ = cmd;
 	while (len--) {
 		if (aReadMode) {
-			*ptx++ = (uint8_t)0x00;
+			*ptx++ = (uint8_t)RFM69_NOP;
 		} else {
 			*ptx++ = *current++;
 		}
@@ -147,7 +146,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	status = _SPI.transfer(cmd);
 	while (len--) {
 		if (aReadMode) {
-			status = _SPI.transfer((uint8_t)0x00);
+			status = _SPI.transfer((uint8_t)RFM69_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
@@ -205,10 +204,11 @@ LOCAL bool RFM69_initialise(const float frequency)
 	hwDigitalWrite(MY_RFM69_RST_PIN, LOW);
 	// wait until chip ready
 	delay(5);
-	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,IRQ=%d,CS=%d,RST=%d\n"), MY_RFM69_IRQ_PIN, MY_RFM69_CS_PIN,
-	            MY_RFM69_RST_PIN);
+	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,CS=%d,IQP=%d,IQN=%d,RST=%d\n"), MY_RFM69_CS_PIN,MY_RFM69_IRQ_PIN,
+	            MY_RFM69_IRQ_NUM,MY_RFM69_RST_PIN);
 #else
-	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,IRQ=%d,CS=%d\n"), MY_RFM69_IRQ_PIN, MY_RFM69_CS_PIN);
+	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,CS=%d,IQP=%d,IQN=%d\n"),MY_RFM69_CS_PIN, MY_RFM69_IRQ_PIN,
+	            MY_RFM69_IRQ_NUM);
 #endif
 
 	// set variables

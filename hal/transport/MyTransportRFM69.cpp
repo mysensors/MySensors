@@ -35,7 +35,7 @@ bool transportInit(void)
 	uint8_t _psk[16];
 	hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 	RFM69_encrypt((const char*)_psk);
-	memset(_psk, 0, 16); // Make sure it is purged from memory when set
+	(void)memset(_psk, 0, 16); // Make sure it is purged from memory when set
 #endif
 
 	return result;
@@ -146,8 +146,7 @@ bool transportSetTxPowerPercent(const uint8_t powerPercent)
 
 #include "drivers/RFM69/old/RFM69_old.h"
 
-RFM69 _radio(MY_RFM69_CS_PIN, MY_RFM69_IRQ_PIN, MY_RFM69HW,
-             digitalPinToInterrupt(MY_RFM69_IRQ_PIN));
+RFM69 _radio(MY_RFM69_CS_PIN, MY_RFM69_IRQ_PIN, MY_RFM69HW, MY_RFM69_IRQ_NUM);
 uint8_t _address;
 
 bool transportInit(void)
@@ -164,7 +163,7 @@ bool transportInit(void)
 		uint8_t _psk[16];
 		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 		_radio.encrypt((const char*)_psk);
-		memset(_psk, 0, 16); // Make sure it is purged from memory when set
+		(void)memset(_psk, 0, 16); // Make sure it is purged from memory when set
 #endif
 		return true;
 	}

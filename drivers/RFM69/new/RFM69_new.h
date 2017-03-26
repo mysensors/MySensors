@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -23,7 +23,7 @@
  * - Automatic Transmit Power Control class derived from RFM69 library.
  *	  Discussion and details in this forum post: https://lowpowerlab.com/forum/index.php/topic,688.0.html
  *	  Copyright Thomas Studwell (2014,2015)
- * - Mysensors generic radio driver implementation, Copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
+ * - Mysensors generic radio driver implementation, Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
  *
  * Changes by : @tekka, @scalz, @marceloagno
  *
@@ -42,20 +42,20 @@
 * RFM69 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS	 | SUB  | Message						| Comment
-* |-|-------|-------|-------------------------------|----------------------------------------------------------------------------
-* | | RFM69 | INIT  |								| Initialise RFM69 radio
-* | | RFM69 | INIT  | PIN,IRQ=%d,CS=%d[,RST=%d]		| Assigned pins
-* |!| RFM69 | INIT  | SANCHK FAIL					| Sanity check failed, check wiring or replace module
-* | | RFM69 | PTX   | NO ADJ						| TX power level, no adjustment
-* | | RFM69 | PTX   | LEVEL=%d dbM					| TX power level, set to (LEVEL) dBm
-* | | RFM69 | SLEEP |								| Radio in sleep mode
-* | | RFM69 | SAC   | SEND ACK,TO=%d,RSSI=%d		| ACK sent to (TO), RSSI of incoming message (RSSI)
-* | | RFM69 | ATC   | ADJ TXL,cR=%d,tR=%d,TXL=%d	| Adjust TX power level (TXL) to match set RSSI (sR), current RSSI (cR)
-* | | RFM69 | SWR   | SEND,TO=%d,RETRY=%d			| Send to (TO), retry if no ACK received (RETRY)
-* | | RFM69 | SWR   | ACK,FROM=%d,SEQ=%d,RSSI=%d	| ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
-* |!| RFM69 | SWR   | NACK							| Message sent, no ACK received
-* | | RFM69 | SPP	| PCT=%d,TX LEVEL=%d			| Set TX level, input TX percent (PCT)
+* |E| SYS	 | SUB  | Message							| Comment
+* |-|-------|-------|-----------------------------------|-----------------------------------------------------------------------------------
+* | | RFM69 | INIT  |									| Initialise RFM69 radio
+* | | RFM69 | INIT  | PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d]	| Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
+* |!| RFM69 | INIT  | SANCHK FAIL						| Sanity check failed, check wiring or replace module
+* | | RFM69 | PTX   | NO ADJ							| TX power level, no adjustment
+* | | RFM69 | PTX   | LEVEL=%d dbM						| TX power level, set to (LEVEL) dBm
+* | | RFM69 | SLEEP |									| Radio in sleep mode
+* | | RFM69 | SAC   | SEND ACK,TO=%d,RSSI=%d			| ACK sent to (TO), RSSI of incoming message (RSSI)
+* | | RFM69 | ATC   | ADJ TXL,cR=%d,tR=%d,TXL=%d		| Adjust TX power level (TXL) to match set RSSI (sR), current RSSI (cR)
+* | | RFM69 | SWR   | SEND,TO=%d,RETRY=%d				| Send to (TO), retry if no ACK received (RETRY)
+* | | RFM69 | SWR   | ACK,FROM=%d,SEQ=%d,RSSI=%d		| ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
+* |!| RFM69 | SWR   | NACK								| Message sent, no ACK received
+* | | RFM69 | SPP	| PCT=%d,TX LEVEL=%d				| Set TX level, input TX percent (PCT)
 *
 * @brief API declaration for RFM69
 *
@@ -64,21 +64,37 @@
 #ifndef _RFM69_h
 #define _RFM69_h
 
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-#define DEFAULT_RFM69_IRQ_PIN		(2)					//!< DEFAULT_RFM69_IRQ_PIN
-#elif defined(__AVR_ATmega32U4__)
-#define DEFAULT_RFM69_IRQ_PIN		(3)					//!< DEFAULT_RFM69_IRQ_PIN
+#include "RFM69registers_new.h"
+
+#if defined(ARDUINO_ARCH_AVR)
+// INT0 on AVRs should be connected to RFM69's DIO0 (ex on ATmega328 it's D2, on ATmega644/1284 it's D2)
+#define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
+#elif defined(ARDUINO_ARCH_ESP8266)
+#define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
+#elif defined(ARDUINO_ARCH_ESP32)
+#warning not implemented yet
+#elif defined(ARDUINO_ARCH_SAMD)
+#define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(LINUX_ARCH_RASPBERRYPI)
-#define DEFAULT_RFM69_IRQ_PIN		(22)				//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_PIN			(22)											//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN							//!< DEFAULT_RFM69_IRQ_NUM
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define DEFAULT_RFM69_IRQ_PIN			(PA3)											//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN							//!< DEFAULT_RFM69_IRQ_NUM
 #else
-#define DEFAULT_RFM69_IRQ_PIN		(2)					//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			(2)												//!< DEFAULT_RFM69_IRQ_NUM
 #endif
 
-#define DEFAULT_RFM69_CS_PIN		(SS)				//!< DEFAULT_RFM69_CS_PIN
+#define DEFAULT_RFM69_CS_PIN			(SS)											//!< DEFAULT_RFM69_CS_PIN
 
 // SPI settings
-#define RFM69_SPI_DATA_ORDER	MSBFIRST		//!< SPI data order
-#define RFM69_SPI_DATA_MODE		SPI_MODE0		//!< SPI mode
+#define RFM69_SPI_DATA_ORDER			MSBFIRST		//!< SPI data order
+#define RFM69_SPI_DATA_MODE				SPI_MODE0		//!< SPI mode
+
 // SPI clock divier for non-transaction implementations
 #if (MY_RFM69_SPI_SPEED >= F_CPU / 2)
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV2			//!< SPI clock divider 2
@@ -92,8 +108,10 @@
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV32			//!< SPI clock divider 32
 #elif (MY_RFM69_SPI_SPEED >= F_CPU / 64)
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV64			//!< SPI clock divider 64
-#else
+#elif (MY_RFM69_SPI_SPEED >= F_CPU / 128)
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV128		//!< SPI clock divider 128
+#else
+#define RFM69_CLOCK_DIV SPI_CLOCK_DIV256		//!< SPI clock divider 256
 #endif
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)

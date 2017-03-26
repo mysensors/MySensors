@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -41,8 +41,9 @@
 * - [!] Exclamation mark is prepended in case of error
 *
 * |E| SYS	| SUB	| Message							| Comment
-* |-|-------|-------|-----------------------------------|---------------------------------------------------------------------
+* |-|-------|-------|-----------------------------------|-----------------------------------------------------------------------------------
 * | | RFM95 | INIT	|									| Initialise RFM95 radio
+* | | RFM95 | INIT	| PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d]	| Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
 * |!| RFM95 | INIT	| SANCHK FAIL						| Sanity check failed, check wiring or replace module
 * | | RFM95 | RCV	| SEND ACK							| ACK request received, sending ACK back
 * | | RFM95 | PTC	| LEVEL=%d							| Set TX power level
@@ -78,21 +79,33 @@
 #include "RFM95registers.h"
 
 // default PIN assignments, can be overridden
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-#define DEFAULT_RFM95_IRQ_PIN		(2)		//!< DEFAULT_RFM95_IRQ_PIN
-#elif defined(__AVR_ATmega32U4__)
-#define DEFAULT_RFM95_IRQ_PIN		(3)		//!< DEFAULT_RFM95_IRQ_PIN
-#elif defined(__arm__)
-#define DEFAULT_RFM95_IRQ_PIN		(10)	//!< DEFAULT_RFM95_IRQ_PIN
+#if defined(ARDUINO_ARCH_AVR)
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(ARDUINO_ARCH_ESP8266)
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(ARDUINO_ARCH_ESP32)
+#warning not implemented yet
+#elif defined(ARDUINO_ARCH_SAMD)
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(LINUX_ARCH_RASPBERRYPI)
+#define DEFAULT_RFM95_IRQ_PIN			(22)												//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define DEFAULT_RFM95_IRQ_PIN			(PA3)												//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
 #else
-#define DEFAULT_RFM95_IRQ_PIN		(2)		//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
 #endif
-#define DEFAULT_RFM95_CS_PIN		(SS)	//!< DEFAULT_RFM95_CS_PIN
+
+#define DEFAULT_RFM95_CS_PIN			(SS)												//!< DEFAULT_RFM95_CS_PIN
 
 // SPI settings
 #define MY_RFM95_SPI_DATA_ORDER		MSBFIRST		//!< SPI data order
 #define MY_RFM95_SPI_DATA_MODE		SPI_MODE0		//!< SPI mode
-
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 #include <SPI.h>
@@ -121,7 +134,7 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_BW125CR48SF4096	RFM95_BW_125KHZ | RFM95_CODING_RATE_4_8, RFM95_SPREADING_FACTOR_4096CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON | RFM95_LOW_DATA_RATE_OPTIMIZE	//!< 0x78,0xc4,0x0C
 
 #if !defined(RFM95_RETRY_TIMEOUT_MS)
-// air-time approximation for timeout, 1 hop ~15 bytes payload - adjust if using thing modem configuration
+// air-time approximation for timeout, 1 hop ~15 bytes payload - adjust if needed
 // BW125/SF128: 50ms
 // BW500/SF128: 15ms
 // BW31.25/SF512: 900ms

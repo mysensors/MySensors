@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2016 Sensnology AB
+* Copyright (C) 2013-2017 Sensnology AB
 * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -56,7 +56,13 @@ bool gatewayTransportSend(MyMessage &message)
 	setIndication(INDICATION_GW_TX);
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	debug(PSTR("Sending message on topic: %s\n"), topic);
-	return _MQTT_client.publish(topic, message.getString(_convBuffer));
+#ifdef MY_MQTT_CLIENT_PUBLISH_RETAIN
+	bool retain = mGetCommand(message) == C_SET ||
+	              (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
+#else
+	bool retain = false;
+#endif
+	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
 
 void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)

@@ -23,7 +23,7 @@
  * - Automatic Transmit Power Control class derived from RFM69 library.
  *	  Discussion and details in this forum post: https://lowpowerlab.com/forum/index.php/topic,688.0.html
  *	  Copyright Thomas Studwell (2014,2015)
- * - Mysensors generic radio driver implementation, Copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
+ * - Mysensors generic radio driver implementation, Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
  *
  * Changes by : @tekka, @scalz, @marceloagno
  *
@@ -419,6 +419,8 @@
 #define RFM69_FRFMSB_928             0xE8
 #define RFM69_FRFMID_928             0x00
 #define RFM69_FRFLSB_928             0x00
+
+#define RFM69_NOP					 0x00
 
 
 // RegOsc1

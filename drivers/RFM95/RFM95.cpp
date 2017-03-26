@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -71,7 +71,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	*ptx++ = cmd;
 	while (len--) {
 		if (aReadMode) {
-			*ptx++ = RF24_NOP;
+			*ptx++ = (uint8_t)RFM95_NOP;
 		} else {
 			*ptx++ = *current++;
 		}
@@ -94,7 +94,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	status = _SPI.transfer(cmd);
 	while (len--) {
 		if (aReadMode) {
-			status = _SPI.transfer((uint8_t)0x00);
+			status = _SPI.transfer((uint8_t)RFM95_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
@@ -144,6 +144,11 @@ LOCAL bool RFM95_initialise(const float frequency)
 	hwDigitalWrite(MY_RFM95_RST_PIN, LOW);
 	// wait until chip ready
 	delay(5);
+	RFM95_DEBUG(PSTR("RFM95:INIT:PIN,CS=%d,IQP=%d,IQN=%d,RST=%d\n"), MY_RFM95_CS_PIN, MY_RFM95_IRQ_PIN,
+	            MY_RFM95_IRQ_NUM,MY_RFM95_RST_PIN);
+#else
+	RFM95_DEBUG(PSTR("RFM95:INIT:PIN,CS=%d,IQP=%d,IQN=%d\n"), MY_RFM95_CS_PIN, MY_RFM95_IRQ_PIN,
+	            MY_RFM95_IRQ_NUM);
 #endif
 
 	// set variables
@@ -182,8 +187,8 @@ LOCAL bool RFM95_initialise(const float frequency)
 
 	// IRQ
 	hwPinMode(MY_RFM95_IRQ_PIN, INPUT);
-#if defined (SPI_HAS_TRANSACTION) && !defined (ESP8266) && !defined (MY_SOFTSPI)
-	_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM95_IRQ_PIN));
+#if defined(SPI_HAS_TRANSACTION) && !defined(ESP8266) && !defined(MY_SOFTSPI)
+	_SPI.usingInterrupt(MY_RFM95_IRQ_NUM);
 #endif
 
 	if (!RFM95_sanityCheck()) {

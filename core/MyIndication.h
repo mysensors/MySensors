@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -47,6 +47,7 @@ typedef enum {
 	INDICATION_FW_UPDATE_RX_ERR,              //!< Received wrong piece of firmware data.
 
 	INDICATION_ERR_START = 100,
+	INDICATION_ERR_HW_INIT,					  //!< HW initialization error
 	INDICATION_ERR_TX,                        //!< Failed to transmit message.
 	INDICATION_ERR_TRANSPORT_FAILURE,		  //!< Transport failure.
 	INDICATION_ERR_INIT_TRANSPORT,            //!< MySensors transport hardware (radio) init failure.
