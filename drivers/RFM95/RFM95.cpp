@@ -55,7 +55,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	*ptx++ = cmd;
 	while (len--) {
 		if (aReadMode) {
-			*ptx++ = RF24_NOP;
+			*ptx++ = (uint8_t)RFM95_NOP;
 		} else {
 			*ptx++ = *current++;
 		}
@@ -78,7 +78,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	status = _SPI.transfer(cmd);
 	while (len--) {
 		if (aReadMode) {
-			status = _SPI.transfer((uint8_t)0x00);
+			status = _SPI.transfer((uint8_t)RFM95_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
