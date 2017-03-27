@@ -446,6 +446,8 @@ LOCAL void RF24_registerReceiveCallback(RF24_receiveCallbackType cb)
 
 LOCAL bool RF24_initialize(void)
 {
+	RF24_DEBUG(PSTR("RF24:INIT\n"));
+	RF24_DEBUG(PSTR("RF24:INIT:PIN,CE=%d,CS=%d\n"), MY_RF24_CE_PIN, MY_RF24_CS_PIN);
 	// Initialize pins & HW
 #if defined(MY_RF24_POWER_PIN)
 	hwPinMode(MY_RF24_POWER_PIN, OUTPUT);

@@ -80,7 +80,11 @@
 
 // default PIN assignments, can be overridden
 #if defined(ARDUINO_ARCH_AVR)
+#if defined(__AVR_ATmega32U4__)
+#define DEFAULT_RFM95_IRQ_PIN			(3)													//!< DEFAULT_RFM95_IRQ_PIN
+#else
 #define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#endif
 #define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
@@ -142,8 +146,14 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_RETRY_TIMEOUT_MS			(500ul)			//!< Timeout for ACK, adjustments needed if modem configuration changed (air time different)
 #endif
 
-#define RFM95_RETRIES					(5u)			//!< Retries in case of failed transmission
+// Frequency definitions
+#define RFM95_169MHZ					(169000000ul)	//!< 169 Mhz
+#define RFM95_315MHZ					(315000000ul)	//!< 315 Mhz
+#define RFM95_434MHZ					(433920000ul)	//!< 433.92 Mhz
+#define RFM95_868MHZ					(868100000ul)	//!< 868.1 Mhz
+#define RFM95_915MHZ					(915000000ul)	//!< 915 Mhz
 
+#define RFM95_RETRIES					(5u)			//!< Retries in case of failed transmission
 #define RFM95_FIFO_SIZE					(0xFFu)			//!< Max number of bytes the LORA Rx/Tx FIFO can hold
 #define RFM95_RX_FIFO_ADDR				(0x00u)			//!< RX FIFO addr pointer
 #define RFM95_TX_FIFO_ADDR				(0x80u)			//!< TX FIFO addr pointer
@@ -165,7 +175,7 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_PROMISCUOUS				(false)			//!< RFM95 promiscuous mode
 
 #define RFM95_FXOSC						(32*1000000ul)				//!< The crystal oscillator frequency of the module
-#define RFM95_FSTEP						(RFM95_FXOSC / 524288ul)	//!< The Frequency Synthesizer step = RFM95_FXOSC / 
+#define RFM95_FSTEP						(RFM95_FXOSC / 524288.0f)	//!< The Frequency Synthesizer step = RFM95_FXOSC / 
 
 // helper macros
 #define RFM95_getACKRequested(__value) ((bool)bitRead(__value, RFM95_BIT_ACK_REQUESTED))				//!< getACKRequested
@@ -179,8 +189,9 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_internalToSNR(__value)	((int8_t)(__value / 4))						//!< Convert internal SNR to SNR
 
 #define RFM95_MIN_POWER_LEVEL_DBM		((rfm95_powerLevel_t)5u)	//!< min. power level
+#if !defined(RFM95_MAX_POWER_LEVEL_DBM)
 #define RFM95_MAX_POWER_LEVEL_DBM		((rfm95_powerLevel_t)23u)	//!< max. power level
-
+#endif
 /**
 * @brief Radio modes
 */
@@ -344,9 +355,9 @@ LOCAL bool RFM95_sendFrame(rfm95_packet_t &packet, const bool increaseSequenceCo
 LOCAL void RFM95_setPreambleLength(const uint16_t preambleLength);
 /**
 * @brief Sets the transmitter and receiver centre frequency
-* @param centre Frequency in MHz (137.0 to 1020.0)
+* @param frequencyHz Frequency in Hz
 */
-LOCAL void RFM95_setFrequency(const float centre);
+LOCAL void RFM95_setFrequency(const uint32_t frequencyHz);
 /**
 * @brief Sets the transmitter power output level, and configures the transmitter pin
 * @param newPowerLevel Transmitter power level in dBm (+5 to +23)

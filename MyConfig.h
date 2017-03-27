@@ -82,9 +82,10 @@
 #define MY_SERIAL_OUTPUT_SIZE			(120u)
 #endif
 
-
-
-// Disables over-the-air reset of node
+/**
+* @def MY_DISABLE_REMOTE_RESET
+* @brief Disables over-the-air reset of node
+*/
 //#define MY_DISABLE_REMOTE_RESET
 
 /**********************************
@@ -672,7 +673,7 @@
 
 /**
  * @def MY_RFM69_FREQUENCY
- * @brief RFM69 frequency to use (RFM69_433MHZ for 433MHz, RFM69_868MHZ for 868MHz or RFM69_915MHZ for 915MHz).
+ * @brief RFM69 frequency to use: RFM69_433MHZ, RFM69_868MHZ, RFM69_915MHZ, or custom frequency in Hz (new RFM69 driver only).
  *
  * This must match the hardware version of the RFM69 radio.
  */
@@ -719,6 +720,13 @@
 //#define MY_RFM69_ATC_MODE_DISABLED
 
 /**
+ * @def RFM69_MAX_POWER_LEVEL_DBM
+ * @brief Set max TX power in dBm if local legislation requires
+ * 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
+ */
+//#define RFM69_MAX_POWER_LEVEL_DBM		(10u)
+
+/**
  * @def MY_RFM69_NETWORKID
  * @brief RFM69 Network ID. Use the same for all nodes that will talk to each other.
  */
@@ -732,11 +740,9 @@
  */
 //#define MY_RFM69_RST_PIN				(9)
 
-#ifndef MY_RFM69_RST_PIN
-// legacy
+// legacy, older board files
 #ifdef MY_RF69_RESET
 #define MY_RFM69_RST_PIN				MY_RF69_RESET
-#endif
 #endif
 
 /**
@@ -802,9 +808,7 @@
 //#define MY_RFM69_ENABLE_ENCRYPTION
 
 /**
- * @def MY_RFM69_ENABLE_LISTENMODE
- * Enables RFM69 listen mode
- * @brief Uncomment if you need listenmode. else comment it and save memory
+ * Uncomment if you need listenmode. else comment it and save memory
  */
 //#define MY_RFM69_ENABLE_LISTENMODE
 
@@ -845,12 +849,12 @@
 
 /**
  * @def MY_RFM95_FREQUENCY
- * @brief RFM95 frequency
+ * @brief RFM95 frequency to use: RFM95_169MHZ, RFM95_315MHZ, RFM95_434MHZ, RFM95_868MHZ, RFM95_915MHZ, or custom frequency in Hz.
  *
  * This must match the hardware version of the RFM95 radio.
  */
 #ifndef MY_RFM95_FREQUENCY
-#define MY_RFM95_FREQUENCY				(868.1f)
+#define MY_RFM95_FREQUENCY				RFM95_868MHZ
 #endif
 
 /**
@@ -922,7 +926,7 @@
  * @brief RFM95 TX power level.
  */
 #ifndef MY_RFM95_TX_POWER_DBM
-#define MY_RFM95_TX_POWER_DBM			(13u)
+#define MY_RFM95_TX_POWER_DBM			(13u)	// 20mW
 #endif
 
 /**
@@ -938,6 +942,13 @@
 #ifndef MY_RFM95_ATC_TARGET_RSSI
 #define MY_RFM95_ATC_TARGET_RSSI		(-60)
 #endif
+
+/**
+* @def RFM95_MAX_POWER_LEVEL_DBM
+* @brief Set max TX power in dBm if local legislation requires
+* 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
+*/
+//#define RFM95_MAX_POWER_LEVEL_DBM		(10u)
 
 /**
 * @def MY_RFM95_TCXO
@@ -1146,6 +1157,7 @@
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
 // general
 #define MY_INDICATION_HANDLER
+#define MY_DISABLE_REMOTE_RESET
 // signing
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
@@ -1165,9 +1177,9 @@
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER
 #define MY_RFM69_POWER_PIN
-#define MY_RFM69_ENABLE_LISTENMODE
 #define MY_RFM69_ENABLE_ENCRYPTION
 #define MY_RFM69_ATC_MODE_DISABLED
+#define RFM69_MAX_POWER_LEVEL_DBM
 #define MY_RFM69_RST_PIN
 #define MY_DEBUG_VERBOSE_RFM69
 #define MY_DEBUG_VERBOSE_RFM69_REGISTERS

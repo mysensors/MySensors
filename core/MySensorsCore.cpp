@@ -412,7 +412,7 @@ bool _processInternalMessages(void)
 #endif
 			}
 		} else if (type == I_DEBUG) {
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
+#if defined(MY_SPECIAL_DEBUG)
 			const char debug_msg = _msg.data[0];
 			if (debug_msg == 'R') {		// routing table
 #if defined(MY_REPEATER_FEATURE) && defined(MY_SENSOR_NETWORK)

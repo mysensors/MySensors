@@ -34,7 +34,7 @@
 * CE	NA
 * IRQ	PA3 (default)
 *
-* Wiring RFM69 radio / SPI1
+* Wiring RF24 radio / SPI1
 * --------------------------------------------------
 * CLK	PA5
 * MISO	PA6

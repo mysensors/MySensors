@@ -183,11 +183,7 @@ LOCAL uint8_t RFM69_RAW_writeByteRegister(const uint8_t address, uint8_t value)
 #define RFM69_burstReadReg(__reg, __buf, __len) RFM69_spiMultiByteTransfer( __reg & RFM69_READ_REGISTER, (uint8_t*)__buf, __len, true )
 #define RFM69_burstWriteReg(__reg, __buf, __len) RFM69_spiMultiByteTransfer( __reg | RFM69_WRITE_REGISTER, (uint8_t*)__buf, __len, false )
 
-// ======================================================================
-// RFM69 functions
-// ======================================================================
-
-LOCAL bool RFM69_initialise(const float frequency)
+LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 {
 	RFM69_DEBUG(PSTR("RFM69:INIT\n"));
 	// power up radio if power pin defined
@@ -227,7 +223,8 @@ LOCAL bool RFM69_initialise(const float frequency)
 	hwPinMode(MY_RFM69_CS_PIN, OUTPUT);
 	_SPI.begin();
 
-	RFM69_setConfiguration();  // Config registers
+	RFM69_setConfiguration();
+	RFM69_setFrequency(frequencyHz);
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
 
 	// Encryption is persistent between resets and can trip you up during debugging.
@@ -432,9 +429,9 @@ LOCAL bool RFM69_send(const uint8_t recipient, uint8_t* data, const uint8_t len,
 	return RFM69_sendFrame(packet, increaseSequenceCounter);
 }
 
-LOCAL void RFM69_setFrequency(const float centre)
+LOCAL void RFM69_setFrequency(const uint32_t frequencyHz)
 {
-	const uint32_t freqHz = centre / RFM69_FSTEP; // divide down by FSTEP to get FRF
+	const uint32_t freqHz = (uint32_t)(frequencyHz / RFM69_FSTEP);
 	RFM69_writeReg(RFM69_REG_FRFMSB, freqHz >> 16);
 	RFM69_writeReg(RFM69_REG_FRFMID, freqHz >> 8);
 	RFM69_writeReg(RFM69_REG_FRFLSB, freqHz);
@@ -495,71 +492,6 @@ LOCAL void RFM69_setAddress(const uint8_t addr)
 LOCAL uint8_t RFM69_getAddress(void)
 {
 	return RFM69.address;
-}
-
-LOCAL void RFM69_setListenConfig(const uint8_t listenResolIdle, const uint8_t listenResolRx,
-                                 const uint8_t listenCriteria, const uint8_t listenEnd)
-{
-	/*
-	         ListenResolIdle one of:
-	                 RFM69_LISTEN_RESOL_IDLE_64US
-	                 RFM69_LISTEN_RESOL_IDLE_4_1MS
-	                 RFM69_LISTEN_RESOL_IDLE_262MS
-	             Sets the listen mode idle time to 64 usec, 4.1ms or 262 ms
-	         ListenResolRx one of:
-	                 RFM69_LISTEN_RESOL_RX_64US
-	                 RFM69_LISTEN_RESOL_RX_4_1MS
-	                 RFM69_LISTEN_RESOL_RX_262MS
-	             Sets the listen mode Rx time to 64 usec, 4.1ms or 262 ms
-	         ListenCriteria
-	             Criteria for packet acceptance in listen mode, either:
-	                 RFM69_LISTEN_CRITERIA_RSSI
-	                     signal strength above RssiThreshold
-	                 RFM69_LISTEN_CRITERIA_RSSI_SYNC
-	                     Signal strength above RssiThresshold and SyncAddress matched.
-	         ListenEnd:
-	             Action taken after acceptance of a packet in Listen mode:
-	                 RFM69_LISTEN_END_STAY_RX_LISTEN_STOP
-	                     Chip stays in Rx mode, listen mode stops and must be disabled.
-	                 RFM69_LISTEN_END_RX_UNTIL_LISTEN_STOP
-	                     Chip stays in Rx mode until PayloadReady or Timeout interrupt
-	                     occurs. Listen mode stops and must be disabled.
-	                 RFM69_LISTEN_END_RX_UNTIL_LISTEN_RESUME
-	                     Chip stays in Rx mode until PayloadReady or Timeout interrupt
-	                     occurs. Listen mode then resumes in Idle State.
-	                     FIFO lost at next RX wakeup.
-	         Default: (RFM69_LISTEN_RESOL_IDLE_4_1MS, RFM69_LISTEN_RESOL_RX_64US,
-	             RFM69_LISTEN_CRITERIA_RSSI, RFM69_LISTEN_END_RX_UNTIL_LISTEN_STOP)
-	     */
-
-	RFM69_writeReg(RFM69_REG_LISTEN1, listenResolIdle | listenResolRx | listenCriteria | listenEnd);
-}
-
-LOCAL void RFM69_setListenCoefIdle(const uint8_t coeffIdle)
-{
-	/*
-	Duration of the Idle phase in Listen mode.
-	t ListenIdle = ListenCoefIdle * ListenResolIdle
-	Default 0xf5; 245
-	*/
-
-	RFM69_writeReg(RFM69_REG_LISTEN2, coeffIdle);
-}
-
-LOCAL void RFM69_setListenCoefRx(const uint8_t coeffRX)
-{
-	/*
-	Duration of the Rx phase in Listen mode.
-	t ListenRx = ListenCoefRx * ListenResolRx
-	Default 0x20; 32
-	*/
-
-	RFM69_writeReg(RFM69_REG_LISTEN3, coeffRX);
-}
-
-LOCAL uint8_t RFM69_getVersion(void)
-{
-	return RFM69_readReg(RFM69_REG_VERSION);
 }
 
 LOCAL bool RFM69_setRadioMode(const rfm69_radio_mode_t newRadioMode)
@@ -722,10 +654,17 @@ LOCAL bool RFM69_executeATC(const rfm69_RSSI_t currentRSSI, const rfm69_RSSI_t t
 	return RFM69_setTxPowerLevel(newPowerLevel);
 }
 
-LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
-                               const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTime)
+LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI)
 {
-	for (uint8_t retry = 0; retry < retries; retry++) {
+	RFM69.ATCenabled = onOff;
+	RFM69.ATCtargetRSSI = RFM69_RSSItoInternal(targetRSSI);
+}
+
+
+LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
+                               const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTimeMS)
+{
+	for (uint8_t retry = 0; retry <= retries; retry++) {
 		RFM69_DEBUG(PSTR("RFM69:SWR:SEND,TO=%d,RETRY=%d\n"), recipient, retry);
 		rfm69_controlFlags_t flags = 0x00; // reset all flags
 		RFM69_setACKRequested(flags, (recipient != RFM69_BROADCAST_ADDRESS));
@@ -737,7 +676,7 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
 		}
 		// radio is in RX
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < RFM69_RETRY_TIMEOUT_MS) {
+		while (hwMillis() - enterMS < retryWaitTimeMS) {
 			if (RFM69.ackReceived) {
 				// radio is in stdby
 				const uint8_t sender = RFM69.currentPacket.header.sender;
@@ -747,7 +686,7 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
 				RFM69.ackReceived = false;
 				// packet read, back to RX
 				RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
-				if (sender == recipient && (ACKsequenceNumber == RFM69.txSequenceNumber)) {
+				if (sender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
 					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%d,SEQ=%d,RSSI=%d\n"),sender,ACKsequenceNumber,
 					            RFM69_internalToRSSI(RSSI));
 
@@ -780,7 +719,7 @@ LOCAL int16_t RFM69_getSendingRSSI(void)
 {
 	// own RSSI, as measured by the recipient - ACK part
 	if (RFM69_getACKRSSIReport(RFM69.currentPacket.header.controlFlags)) {
-		return RFM69.currentPacket.ACK.RSSI;
+		return RFM69_internalToRSSI(RFM69.currentPacket.ACK.RSSI);
 	} else {
 		// not valid
 		return 127;
@@ -804,19 +743,6 @@ LOCAL bool RFM69_setTxPowerPercent(uint8_t newPowerPercent)
 }
 
 
-// Wait until no channel activity detected or timeout
-LOCAL bool RFM69_waitCAD(void)
-{
-	const uint32_t enterMS = hwMillis();
-	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
-	while (RFM69.radioMode == RFM69_RADIO_MODE_RX && !RFM69.dataReceived &&
-	        RFM69_RSSItoInternal(RFM69_readRSSI()) > RFM69_RSSItoInternal(RFM69_CSMA_LIMIT_DBM)) {
-		if (hwMillis() - enterMS > RFM69_CSMA_TIMEOUT_MS) {
-			return false;
-		}
-	}
-	return true;
-}
 
 LOCAL rfm69_powerlevel_t RFM69_getTxPowerLevel(void)
 {
@@ -834,13 +760,6 @@ LOCAL uint8_t RFM69_getTxPowerPercent(void)
 	return result;
 }
 
-
-LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI)
-{
-	RFM69.ATCenabled = onOff;
-	RFM69.ATCtargetRSSI = RFM69_RSSItoInternal(targetRSSI);
-}
-
 LOCAL bool RFM69_sanityCheck(void)
 {
 	bool result = true; // default
@@ -852,10 +771,6 @@ LOCAL bool RFM69_sanityCheck(void)
 	// default: 5KHz, (FDEV + BitRate / 2 <= 500KHz)
 	result &= RFM69_readReg(RFM69_REG_FDEVMSB) == RFM69_FDEVMSB_50000;
 	result &= RFM69_readReg(RFM69_REG_FDEVLSB) == RFM69_FDEVLSB_50000;
-	// Check radio frequency band
-	result &= RFM69_readReg(RFM69_REG_FRFMSB) == RFM69_FREQ_MSB;
-	result &= RFM69_readReg(RFM69_REG_FRFMID) == RFM69_FREQ_MID;
-	result &= RFM69_readReg(RFM69_REG_FRFLSB) == RFM69_FREQ_LSB;
 	// check network
 	result &= RFM69_readReg(RFM69_REG_SYNCVALUE2) == MY_RFM69_NETWORKID;
 	return result;
@@ -870,9 +785,9 @@ LOCAL void RFM69_setConfiguration(void)
 		{ RFM69_REG_BITRATELSB, MY_RFM69_BITRATE_LSB },
 		{ RFM69_REG_FDEVMSB, RFM69_FDEVMSB_50000 },
 		{ RFM69_REG_FDEVLSB, RFM69_FDEVLSB_50000 },
-		{ RFM69_REG_FRFMSB, RFM69_FREQ_MSB },
-		{ RFM69_REG_FRFMID, RFM69_FREQ_MID },
-		{ RFM69_REG_FRFLSB, RFM69_FREQ_LSB },
+		//{ RFM69_REG_FRFMSB, RFM69_FREQ_MSB },
+		//{ RFM69_REG_FRFMID, RFM69_FREQ_MID },
+		//{ RFM69_REG_FRFLSB, RFM69_FREQ_LSB },
 		{ RFM69_REG_LNA, RFM69_LNA_ZIN_200 | RFM69_LNA_CURRENTGAIN },
 		{ RFM69_REG_RXBW, RFM69_RXBW_DCCFREQ_010 | RFM69_RXBW_MANT_16 | RFM69_RXBW_EXP_2 },
 		//{ RFM69_REG_DIOMAPPING1, RFM69_DIOMAPPING1_DIO0_01 },
@@ -912,13 +827,42 @@ LOCAL bool RFM69_isModeReady(void)
 	return false;
 }
 
+LOCAL void RFM69_encrypt(const char* key)
+{
+	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
+	if (key != NULL) {
+		RFM69_burstWriteReg(RFM69_REG_AESKEY1, key, 16);
+	}
+	RFM69_writeReg(RFM69_REG_PACKETCONFIG2,
+	               (RFM69_readReg(RFM69_REG_PACKETCONFIG2) & 0xFE) | (key ? 1 : 0));
+}
+
+LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger)
+{
+	// RSSI trigger not needed if DAGC is in continuous mode (we are)
+	if (forceTrigger) {
+		RFM69_writeReg(RFM69_REG_RSSICONFIG, RFM69_RSSI_START);
+		uint16_t timeout = 0xFFFF;
+		while (!(RFM69_readReg(RFM69_REG_RSSICONFIG) & RFM69_RSSI_DONE) && timeout--) {
+		};
+	}
+	return RFM69_readReg(RFM69_REG_RSSIVALUE);
+}
+
+/* UNUSED
+
+LOCAL uint8_t RFM69_getVersion(void)
+{
+	return RFM69_readReg(RFM69_REG_VERSION);
+}
+
 LOCAL uint8_t RFM69_readTemperature(const uint8_t calFactor)
 {
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
 	RFM69_writeReg(RFM69_REG_TEMP1, RFM69_TEMP1_MEAS_START);
 	const uint32_t enterMS = hwMillis();
 	while ((RFM69_readReg(RFM69_REG_TEMP1) & RFM69_TEMP1_MEAS_RUNNING) && hwMillis() - enterMS < 500);
-	return ~RFM69_readReg(RFM69_REG_TEMP2) + COURSE_TEMP_COEF +
+	return ~RFM69_readReg(RFM69_REG_TEMP2) + RFM69_COURSE_TEMP_COEF +
 	       calFactor; // 'complement' corrects the slope, rising temp = rising val
 }
 
@@ -938,32 +882,91 @@ LOCAL uint8_t RFM69_setLNA(const uint8_t newReg)
 	return oldReg;  // return the original value in case we need to restore it
 }
 
-LOCAL void RFM69_encrypt(const char* key)
+LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI)
 {
-	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
-	if (key!=NULL) {
-		RFM69_burstWriteReg(RFM69_REG_AESKEY1, key, 16);
-	}
-	RFM69_writeReg(RFM69_REG_PACKETCONFIG2,
-	               (RFM69_readReg(RFM69_REG_PACKETCONFIG2) & 0xFE) | (key ? 1 : 0));
+	RFM69.ATCenabled = onOff;
+	RFM69.ATCtargetRSSI = RFM69_RSSItoInternal(targetRSSI);
 }
 
-LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger)
+LOCAL bool RFM69_waitCAD(void)
 {
-	// RSSI trigger not needed if DAGC is in continuous mode (we are)
-	if (forceTrigger) {
-		RFM69_writeReg(RFM69_REG_RSSICONFIG, RFM69_RSSI_START);
-		uint16_t timeout = 0xFFFF;
-		while (!(RFM69_readReg(RFM69_REG_RSSICONFIG) & RFM69_RSSI_DONE) && timeout--) {
-		};
+	const uint32_t enterMS = hwMillis();
+	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
+	while (RFM69.radioMode == RFM69_RADIO_MODE_RX && !RFM69.dataReceived &&
+		RFM69_RSSItoInternal(RFM69_readRSSI()) > RFM69_RSSItoInternal(RFM69_CSMA_LIMIT_DBM)) {
+		if (hwMillis() - enterMS > RFM69_CSMA_TIMEOUT_MS) {
+			return false;
+		}
 	}
-	return RFM69_readReg(RFM69_REG_RSSIVALUE);
+	return true;
 }
+
+*/
 
 
 // ************************  LISTENMODE SECTION   ************************
 
 #if defined(MY_RFM69_ENABLE_LISTENMODE)
+LOCAL void RFM69_setListenConfig(const uint8_t listenResolIdle, const uint8_t listenResolRx,
+                                 const uint8_t listenCriteria, const uint8_t listenEnd)
+{
+	/*
+	ListenResolIdle one of:
+	RFM69_LISTEN_RESOL_IDLE_64US
+	RFM69_LISTEN_RESOL_IDLE_4_1MS
+	RFM69_LISTEN_RESOL_IDLE_262MS
+	Sets the listen mode idle time to 64 usec, 4.1ms or 262 ms
+	ListenResolRx one of:
+	RFM69_LISTEN_RESOL_RX_64US
+	RFM69_LISTEN_RESOL_RX_4_1MS
+	RFM69_LISTEN_RESOL_RX_262MS
+	Sets the listen mode Rx time to 64 usec, 4.1ms or 262 ms
+	ListenCriteria
+	Criteria for packet acceptance in listen mode, either:
+	RFM69_LISTEN_CRITERIA_RSSI
+	signal strength above RssiThreshold
+	RFM69_LISTEN_CRITERIA_RSSI_SYNC
+	Signal strength above RssiThresshold and SyncAddress matched.
+	ListenEnd:
+	Action taken after acceptance of a packet in Listen mode:
+	RFM69_LISTEN_END_STAY_RX_LISTEN_STOP
+	Chip stays in Rx mode, listen mode stops and must be disabled.
+	RFM69_LISTEN_END_RX_UNTIL_LISTEN_STOP
+	Chip stays in Rx mode until PayloadReady or Timeout interrupt
+	occurs. Listen mode stops and must be disabled.
+	RFM69_LISTEN_END_RX_UNTIL_LISTEN_RESUME
+	Chip stays in Rx mode until PayloadReady or Timeout interrupt
+	occurs. Listen mode then resumes in Idle State.
+	FIFO lost at next RX wakeup.
+	Default: (RFM69_LISTEN_RESOL_IDLE_4_1MS, RFM69_LISTEN_RESOL_RX_64US,
+	RFM69_LISTEN_CRITERIA_RSSI, RFM69_LISTEN_END_RX_UNTIL_LISTEN_STOP)
+	*/
+
+	RFM69_writeReg(RFM69_REG_LISTEN1, listenResolIdle | listenResolRx | listenCriteria | listenEnd);
+}
+
+LOCAL void RFM69_setListenCoefIdle(const uint8_t coeffIdle)
+{
+	/*
+	Duration of the Idle phase in Listen mode.
+	t ListenIdle = ListenCoefIdle * ListenResolIdle
+	Default 0xf5; 245
+	*/
+
+	RFM69_writeReg(RFM69_REG_LISTEN2, coeffIdle);
+}
+
+LOCAL void RFM69_setListenCoefRx(const uint8_t coeffRX)
+{
+	/*
+	Duration of the Rx phase in Listen mode.
+	t ListenRx = ListenCoefRx * ListenResolRx
+	Default 0x20; 32
+	*/
+
+	RFM69_writeReg(RFM69_REG_LISTEN3, coeffRX);
+}
+
 LOCAL void RFM69_listenModeApplyHighSpeedSettings(void)
 {
 	if (!_isHighSpeed) {
@@ -1199,8 +1202,7 @@ LOCAL void RFM69_listenModeGetDurations(uint32_t &rxDuration, uint32_t &idleDura
 
 #endif
 
-// ************************  DEBUG   ************************
-
+#ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
 
 LOCAL void RFM69_readAllRegs(void)
 {
@@ -1461,3 +1463,5 @@ LOCAL void RFM69_readAllRegs(void)
 		(void)regVal;
 	}
 }
+
+#endif

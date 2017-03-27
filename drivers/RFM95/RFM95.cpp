@@ -182,9 +182,7 @@ LOCAL bool RFM95_initialise(const float frequency)
 	RFM95_setModemRegisters(&configuration);
 	RFM95_setPreambleLength(RFM95_PREAMBLE_LENGTH);
 	RFM95_setFrequency(frequency);
-	// set power level
 	(void)RFM95_setTxPowerLevel(MY_RFM95_TX_POWER_DBM);
-
 	// IRQ
 	hwPinMode(MY_RFM95_IRQ_PIN, INPUT);
 #if defined(SPI_HAS_TRANSACTION) && !defined(ESP8266) && !defined(MY_SOFTSPI)
@@ -331,12 +329,12 @@ LOCAL bool RFM95_send(const uint8_t recipient, uint8_t* data, const uint8_t len,
 	return RFM95_sendFrame(packet, increaseSequenceCounter);
 }
 
-LOCAL void RFM95_setFrequency(const float centre)
+LOCAL void RFM95_setFrequency(const uint32_t frequencyHz)
 {
-	const uint32_t freq = (centre * 1000000.0) / RFM95_FSTEP;
-	RFM95_writeReg(RFM95_REG_06_FRF_MSB, (freq >> 16) & 0xff);
-	RFM95_writeReg(RFM95_REG_07_FRF_MID, (freq >> 8) & 0xff);
-	RFM95_writeReg(RFM95_REG_08_FRF_LSB, freq & 0xff);
+	const uint32_t freqReg = (uint32_t)(frequencyHz / RFM95_FSTEP);
+	RFM95_writeReg(RFM95_REG_06_FRF_MSB, (freqReg >> 16) & 0xff);
+	RFM95_writeReg(RFM95_REG_07_FRF_MID, (freqReg >> 8) & 0xff);
+	RFM95_writeReg(RFM95_REG_08_FRF_LSB, freqReg & 0xff);
 }
 
 LOCAL bool RFM95_setTxPowerLevel(rfm95_powerLevel_t newPowerLevel)
@@ -498,7 +496,7 @@ LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t t
 LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void* buffer,
                                const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTime)
 {
-	for (uint8_t retry = 0; retry < retries; retry++) {
+	for (uint8_t retry = 0; retry <= retries; retry++) {
 		RFM95_DEBUG(PSTR("RFM95:SWR:SEND,TO=%d,SEQ=%d,RETRY=%d\n"), recipient, RFM95.txSequenceNumber,
 		            retry);
 		rfm95_controlFlags_t flags = 0x00;

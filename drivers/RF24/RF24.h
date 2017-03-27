@@ -37,6 +37,7 @@
 * |E| SYS	| SUB	| Message							| Comment
 * |-|-------|-------|-----------------------------------|---------------------------------------------------------------------
 * | | RF24	| INIT	|									| Initialise RF24 radio
+* | | RF24	| INIT	| PIN,CE=%d,CS=%d					| Pin configuration: chip enable (CE), chip select (CS)
 * |!| RF24	| INIT	| SANCHK FAIL						| Sanity check failed, check wiring or replace module
 * | | RF24	| SPP	| PCT=%d,TX LEVEL=%d				| Set TX level, input TX percent (PCT)
 * | | RF24	| RBR	| REG=%d,VAL=%d						| Read register (REG), value=(VAL)
@@ -73,7 +74,7 @@
 #define DEFAULT_RF24_CE_PIN				(22)	//!< DEFAULT_RF24_CE_PIN
 //#define DEFAULT_RF24_CS_PIN			(24)	//!< DEFAULT_RF24_CS_PIN
 #elif defined(ARDUINO_ARCH_STM32F1)
-#define DEFAULT_RF24_CE_PIN				(22)	//!< DEFAULT_RF24_CE_PIN
+#define DEFAULT_RF24_CE_PIN				(PB0)	//!< DEFAULT_RF24_CE_PIN
 #else
 #define DEFAULT_RF24_CE_PIN				(9)		//!< DEFAULT_RF24_CE_PIN
 #endif

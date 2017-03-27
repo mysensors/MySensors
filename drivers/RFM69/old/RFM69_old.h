@@ -36,29 +36,32 @@
 #define RFM69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
 
 #if defined(ARDUINO_ARCH_AVR)
-// INT0 on AVRs should be connected to RFM69's DIO0 (ex on ATmega328 it's D2, on ATmega644/1284 it's D2)
-#define DEFAULT_RFM69_IRQ_PIN			(2)
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)
+#if defined(__AVR_ATmega32U4__)
+#define DEFAULT_RFM69_IRQ_PIN			(3)													//!< DEFAULT_RFM69_IRQ_PIN
+#else
+#define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
+#endif
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP8266)
-#define DEFAULT_RFM69_IRQ_PIN			(2)
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)
+#define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP32)
 #warning not implemented yet
 #elif defined(ARDUINO_ARCH_SAMD)
-#define DEFAULT_RFM69_IRQ_PIN			(2)
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)
+#define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(LINUX_ARCH_RASPBERRYPI)
-#define DEFAULT_RFM69_IRQ_PIN			(22)					//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN	//!< DEFAULT_RFM69_IRQ_NUM
+#define DEFAULT_RFM69_IRQ_PIN			(22)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN								//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_STM32F1)
-#define DEFAULT_RFM69_IRQ_PIN			(PA3)
-#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_PIN			(PA3)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN								//!< DEFAULT_RFM69_IRQ_NUM
 #else
-#define DEFAULT_RFM69_IRQ_PIN			(2)
-#define DEFAULT_RFM69_IRQ_NUM			(2)
+#define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			(2)													//!< DEFAULT_RFM69_IRQ_NUM
 #endif
 
-#define DEFAULT_RFM69_CS_PIN			(SS)	// SS is the SPI slave select pin, for instance D10 on ATmega328
+#define DEFAULT_RFM69_CS_PIN			(SS)												//!< DEFAULT_RFM69_CS_PIN
 
 // SPI clock divier for non-transaction implementations
 #if (MY_RFM69_SPI_SPEED >= F_CPU / 2)

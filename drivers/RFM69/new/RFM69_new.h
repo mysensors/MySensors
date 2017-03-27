@@ -67,8 +67,11 @@
 #include "RFM69registers_new.h"
 
 #if defined(ARDUINO_ARCH_AVR)
-// INT0 on AVRs should be connected to RFM69's DIO0 (ex on ATmega328 it's D2, on ATmega644/1284 it's D2)
+#if defined(__AVR_ATmega32U4__)
+#define DEFAULT_RFM69_IRQ_PIN			(3)												//!< DEFAULT_RFM69_IRQ_PIN
+#else
 #define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
+#endif
 #define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
@@ -141,12 +144,17 @@ extern HardwareSPI SPI;		//!< SPI
 // RFM69H(C)W
 #define RFM69_VERSION_HW	//!< HW version
 #define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-2)	//!< min. power level, -18dBm
+#if !defined(RFM69_MAX_POWER_LEVEL_DBM)
 #define RFM69_MAX_POWER_LEVEL_DBM		((rfm69_powerlevel_t)20)	//!< max. power level, +20dBm
+#endif
 #else
 // RFM69(C)W
 #define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-18)	//!< min. power level, -18dBm
+#if !defined(RFM69_MAX_POWER_LEVEL_DBM)
 #define RFM69_MAX_POWER_LEVEL_DBM		((rfm69_powerlevel_t)13)	//!< max. power level, +13dBm
 #endif
+#endif
+
 #define RFM69_FIFO_SIZE					(0xFFu)			//!< Max number of bytes the Rx/Tx FIFO can hold
 #define RFM69_MAX_PACKET_LEN			(0x40u)			//!< This is the maximum number of bytes that can be carried 
 #define RFM69_ATC_TARGET_RANGE_PERCENT	(5u)			//!< ATC target range +/-%
@@ -191,18 +199,27 @@ extern HardwareSPI SPI;		//!< SPI
 #define RFM69_POWERUP_DELAY_MS	(100u)			//!< Power up delay, allow VCC to settle, transport to become fully operational
 
 // available frequency bands, non trivial values to avoid misconfiguration
-#define RFM69_315MHZ            (31)	//!< RFM69_315MHZ
-#define RFM69_433MHZ            (43)	//!< RFM69_433MHZ
-#define RFM69_868MHZ            (86)	//!< RFM69_868MHZ
-#define RFM69_915MHZ            (91)	//!< RFM69_915MHZ
+#define RFM69_315MHZ            (315000000ul)	//!< RFM69_315MHZ
+#define RFM69_433MHZ            (433920000ul)	//!< RFM69_433MHZ, center frequencz 433.92 MHz
+#define RFM69_868MHZ            (868000000ul)	//!< RFM69_868MHZ
+#define RFM69_915MHZ            (915000000ul)	//!< RFM69_915MHZ
 
-#define RFM69_FREQ_MSB (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFMSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFMSB_433 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFMSB_868 : RFM69_FRFMSB_915)))	//!< FREQ_MSB
-#define RFM69_FREQ_MID (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFMID_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFMID_433 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFMID_868 : RFM69_FRFMID_915)))	//!< FREQ_MID
-#define RFM69_FREQ_LSB (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFLSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFLSB_433 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFLSB_868 : RFM69_FRFLSB_915)))	//!< FREQ_LSB
+/*
+#if !defined(RFM69_FREQ_MSB)
+#define RFM69_FREQ_MSB (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFMSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFMSB_433_92 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFMSB_868 : RFM69_FRFMSB_915)))	//!< FREQ_MSB
+#endif
 
-#define COURSE_TEMP_COEF		(-90)			//!< puts the temperature reading in the ballpark, user can fine tune the returned value
+#if !defined(RFM69_FREQ_MID)
+#define RFM69_FREQ_MID (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFMID_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFMID_433_92 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFMID_868 : RFM69_FRFMID_915)))	//!< FREQ_MID
+#endif
+
+#if !defined(RFM69_FREQ_LSB)
+#define RFM69_FREQ_LSB (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFLSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFLSB_433_92 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFLSB_868 : RFM69_FRFLSB_915)))	//!< FREQ_LSB
+#endif
+*/
+#define RFM69_COURSE_TEMP_COEF		(-90)			//!< puts the temperature reading in the ballpark, user can fine tune the returned value
 #define RFM69_FXOSC				(32*1000000ul)	//!< OSC freq, 32MHz
-#define RFM69_FSTEP				(RFM69_FXOSC / 524288ul)	//!< FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
+#define RFM69_FSTEP				(RFM69_FXOSC / 524288.0f)	//!< FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
 
 #if defined(MY_RFM69_ENABLE_LISTENMODE)
 #define  RFM69_LISTEN_RX_US		MY_RFM69_DEFAULT_LISTEN_RX_US		//!<  RFM69_LISTEN_RX_US
@@ -316,10 +333,10 @@ uint32_t listenCycleDurationUs;
 
 /**
 * @brief Initialise the driver transport hardware and software
-* @param frequency
+* @param frequencyHz Frequency in Hz
 * @return True if initialisation succeeded
 */
-LOCAL bool RFM69_initialise(const float frequency);
+LOCAL bool RFM69_initialise(const uint32_t frequencyHz);
 
 /**
 * @brief Set the driver/node address
@@ -368,10 +385,10 @@ LOCAL bool RFM69_send(const uint8_t recipient, uint8_t* data, const uint8_t len,
                       const rfm69_controlFlags_t flags, const bool increaseSequenceCounter = true);
 
 /**
-* @brief Sets the transmitter and receiver centre frequency
-* @param centre Frequency in MHz (137.0 to 1020.0)
+* @brief Sets the transmitter and receiver center frequency
+* @param frequencyHz Frequency in Hz
 */
-LOCAL void RFM69_setFrequency(const float centre);
+LOCAL void RFM69_setFrequency(const uint32_t frequencyHz);
 
 /**
 * @brief Sets the transmitter power output level, and configures the transmitter pin
@@ -424,18 +441,12 @@ LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t s
 * @param buffer
 * @param bufferSize
 * @param retries
-* @param retryWaitTime
+* @param retryWaitTimeMS
 * @return True if packet successfully sent
 */
 LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
                                const uint8_t bufferSize,
-                               const uint8_t retries = RFM69_RETRIES, const uint32_t retryWaitTime = RFM69_RETRY_TIMEOUT_MS);
-
-/**
-* @brief RFM69_waitCAD
-* @return True if no channel activity detected
-*/
-LOCAL bool RFM69_waitCAD(void);
+                               const uint8_t retries = RFM69_RETRIES, const uint32_t retryWaitTimeMS = RFM69_RETRY_TIMEOUT_MS);
 
 /**
 * @brief RFM69_setRadioMode
@@ -468,32 +479,11 @@ LOCAL int16_t RFM69_getReceivingRSSI(void);
 */
 LOCAL bool RFM69_executeATC(const rfm69_RSSI_t currentRSSI, const rfm69_RSSI_t targetRSSI);
 
-/**
-* @brief RFM69_getTxPower
-* @return Current power level
-*/
-LOCAL rfm69_powerlevel_t RFM69_getTxPower(void);
-
-/**
-* @brief RFM69_ATCmode
-* @param targetRSSI Target RSSI for transmitter (default -60)
-* @param onOff True to enable ATC
-*/
-LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARGET_RSSI_DBM);
-
-
 // TEMP ADDED
 /**
 * @brief RFM69_setConfiguration Set general radio register configuration TODO temp use setmodemregisters
 */
 LOCAL void RFM69_setConfiguration(void);
-
-/**
-* @brief RFM69_setBitrate Set the radio bitrate
-* @param bitrate_msb
-* @param bitrate_lsb
-*/
-LOCAL void RFM69_setBitrate(const uint8_t bitrate_msb, const uint8_t bitrate_lsb);
 
 /**
 * @brief RFM69_isModeReady
@@ -507,24 +497,6 @@ LOCAL bool RFM69_isModeReady(void);
 */
 LOCAL bool RFM69_sanityCheck(void);
 
-/**
-* @brief RFM69_readTemperature
-* @param calFactor
-* @return centigrad
-*/
-LOCAL uint8_t RFM69_readTemperature(const uint8_t calFactor);
-
-/**
-* @brief RFM69_rcCalibration
-*/
-LOCAL void RFM69_rcCalibration(void);
-
-/**
-* @brief RFM69_setLNA used for power level testing and used to disable LNA AGC for testing purposes
-* @param newReg
-* @return LNA
-*/
-LOCAL uint8_t RFM69_setLNA(const uint8_t newReg);
 
 /**
 * @brief RFM69_encrypt Set encryption mode
@@ -539,19 +511,6 @@ LOCAL void RFM69_encrypt(const char* key);
 LOCAL void RFM69_setHighPowerRegs(const bool onOff);
 
 /**
-* @brief RFM69_setHighPower for RFM69HW only: you must call setHighPower(true) after initialize()
-*        or else transmission won't work
-* @param onOff
-*/
-LOCAL void RFM69_setHighPower(const bool onOff);
-
-/**
-* @brief RFM69_setNetwork
-* @param networkID
-*/
-LOCAL void RFM69_setNetwork(const uint8_t networkID);
-
-/**
 * @brief RFM69_readRSSI
 * @param forceTrigger
 * @return RSSI (internal format)
@@ -559,9 +518,15 @@ LOCAL void RFM69_setNetwork(const uint8_t networkID);
 LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger = false);
 
 /**
-* @brief RFM69_readAllRegs Read all RFM69 registers, except the two last PA (todo)
+* @brief RFM69_ATCmode
+* @param targetRSSI Target RSSI for transmitter (default -60)
+* @param onOff True to enable ATC
 */
-LOCAL void RFM69_readAllRegs(void);
+LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARGET_RSSI_DBM);
+
+// ************************  LISTENMODE SECTION   ************************
+
+#if defined(MY_RFM69_ENABLE_LISTENMODE)
 
 /**
 * @brief RFM69_listenModeApplyHighSpeedSettings Set high speed settings
@@ -641,6 +606,8 @@ LOCAL bool RFM69_listenModeSetDurations(uint32_t& rxDuration, uint32_t& idleDura
 * @param idleDuration
 */
 LOCAL void RFM69_listenModeGetDurations(uint32_t &rxDuration, uint32_t &idleDuration);
+
+#endif
 
 #endif
 

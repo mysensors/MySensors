@@ -37,7 +37,13 @@
 #if defined(MY_RADIO_NRF24)
 #define MY_CAP_RADIO "N"
 #elif defined(MY_RADIO_RFM69)
+#if !defined(MY_RFM69_NEW_DRIVER)
+// old RFM69 driver
 #define MY_CAP_RADIO "R"
+#else
+// new RFM69 driver
+#define MY_CAP_RADIO "P"
+#endif
 #elif defined(MY_RADIO_RFM95)
 #define MY_CAP_RADIO "L"
 #elif defined(MY_RS485)
