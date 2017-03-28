@@ -128,7 +128,7 @@ LOCAL uint8_t RFM95_RAW_writeByteRegister(const uint8_t address, uint8_t value)
 #define RFM95_burstReadReg(__reg, __buf, __len) RFM95_spiMultiByteTransfer( __reg & RFM95_READ_REGISTER, (uint8_t*)__buf, __len, true )
 #define RFM95_burstWriteReg(__reg, __buf, __len) RFM95_spiMultiByteTransfer( __reg | RFM95_WRITE_REGISTER, (uint8_t*)__buf, __len, false )
 
-LOCAL bool RFM95_initialise(const float frequency)
+LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 {
 	RFM95_DEBUG(PSTR("RFM95:INIT\n"));
 	// reset radio module if rst pin defined
@@ -181,7 +181,7 @@ LOCAL bool RFM95_initialise(const float frequency)
 	const rfm95_modemConfig_t configuration = { MY_RFM95_MODEM_CONFIGRUATION };
 	RFM95_setModemRegisters(&configuration);
 	RFM95_setPreambleLength(RFM95_PREAMBLE_LENGTH);
-	RFM95_setFrequency(frequency);
+	RFM95_setFrequency(frequencyHz);
 	(void)RFM95_setTxPowerLevel(MY_RFM95_TX_POWER_DBM);
 	// IRQ
 	hwPinMode(MY_RFM95_IRQ_PIN, INPUT);
@@ -438,7 +438,7 @@ LOCAL void RFM95_powerUp(void)
 LOCAL void RFM95_powerDown(void)
 {
 #if defined(MY_RFM95_POWER_PIN)
-	hwDigitalWrite(RFM69_POWER_PIN, LOW);
+	hwDigitalWrite(MY_RFM95_POWER_PIN, LOW);
 #endif
 }
 

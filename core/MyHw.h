@@ -26,14 +26,6 @@
 #ifndef MyHw_h
 #define MyHw_h
 
-#include "MyConfig.h"
-#include "MyMessage.h"
-
-
-#ifdef __cplusplus
-#include <Arduino.h>
-#endif
-
 // Implement these as functions or macros
 /*
 #define hwInit() MY_SERIALDEVICE.begin(BAUD_RATE)

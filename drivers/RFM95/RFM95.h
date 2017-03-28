@@ -60,14 +60,14 @@
 * CR = Error correction code
 * SF = Spreading factor, chips / symbol
 *
-* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment					| air-time (~15 bytes)
+* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment					| air-time (15 bytes)
 * |------------------|--------|--------|--------|-------|-----|------|------------------------------------------------
 * | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range	| 50ms
 * | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range		| 15ms
 * | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range			| 900ms
 * | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range			| 1500ms
 *
-* See here for air-time calculation: https://docs.google.com/spreadsheets/d/1voGAtQAjC1qBmaVuP1ApNKs1ekgUjavHuVQIXyYSvNc/edit#gid=0
+* See here for air-time calculation: https://docs.google.com/spreadsheets/d/1voGAtQAjC1qBmaVuP1ApNKs1ekgUjavHuVQIXyYSvNc
 *
 * @brief API declaration for RFM95
 *
@@ -189,7 +189,9 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_internalToSNR(__value)	((int8_t)(__value / 4))						//!< Convert internal SNR to SNR
 
 #define RFM95_MIN_POWER_LEVEL_DBM		((rfm95_powerLevel_t)5u)	//!< min. power level
-#if !defined(RFM95_MAX_POWER_LEVEL_DBM)
+#if defined(MY_RFM95_MAX_POWER_LEVEL_DBM)
+#define RFM95_MAX_POWER_LEVEL_DBM		MY_RFM95_MAX_POWER_LEVEL_DBM	//!< MY_RFM95_MAX_POWER_LEVEL_DBM
+#else
 #define RFM95_MAX_POWER_LEVEL_DBM		((rfm95_powerLevel_t)23u)	//!< max. power level
 #endif
 /**
@@ -298,10 +300,10 @@ typedef struct {
 
 /**
 * @brief Initialise the driver transport hardware and software
-* @param frequency
+* @param frequencyHz Transmitter frequency in Hz
 * @return True if initialisation succeeded
 */
-LOCAL bool RFM95_initialise(const float frequency);
+LOCAL bool RFM95_initialise(const uint32_t frequencyHz);
 /**
 * @brief Set the driver/node address
 * @param addr

@@ -252,12 +252,12 @@ int16_t transportGetReceivingSNR(void)
 
 int16_t transportGetTxPowerPercent(void)
 {
-	return 0;
+	return INVALID_PERCENT;
 }
 
 int16_t transportGetTxPowerLevel(void)
 {
-	return 0;
+	return INVALID_LEVEL;
 }
 
 #endif
