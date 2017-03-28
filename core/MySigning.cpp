@@ -25,7 +25,7 @@
 #define SIGNING_PRESENTATION_REQUIRE_WHITELISTING (1 << 1)
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
-#define SIGN_DEBUG(x,...) debug(x, ##__VA_ARGS__)
+#define SIGN_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)
 #else
 #define SIGN_DEBUG(x,...)
 #endif

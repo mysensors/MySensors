@@ -89,7 +89,6 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 */
 bool hwUniqueID(unique_id_t* uniqueID);
 
-#if defined(MY_DEBUG) || defined(MY_SPECIAL_DEBUG)
 /**
  * CPU voltage
  * @return CPU voltage in mV
@@ -107,9 +106,8 @@ uint16_t hwCPUFrequency();
  * @return free memory in bytes
  */
 uint16_t hwFreeMem();
-#endif
 
-#ifdef MY_DEBUG
+#if defined(DEBUG_OUTPUT_ENABLED)
 void hwDebugPrint(const char *fmt, ... );
 #endif
 

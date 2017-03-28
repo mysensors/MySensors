@@ -17,28 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  *
  *******************************
- *
- * DESCRIPTION
- *
- * This sketch clears radioId, relayId and other routing information in EEPROM back to factory default
- *
  */
-// load core modules only
-#define MY_CORE_ONLY
-
+#define MY_RADIO_RFM69
+#define MY_RFM69_NEW_DRIVER
+#define MY_DEBUG_VERBOSE_RFM69
 #include <MySensors.h>
-
-void setup()
-{
-	Serial.begin(MY_BAUD_RATE);
-	Serial.println("Started clearing. Please wait...");
-	for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
-		hwWriteConfig(i,0xFF);
-	}
-	Serial.println("Clearing done.");
-}
-
-void loop()
-{
-	// Nothing to do here...
-}

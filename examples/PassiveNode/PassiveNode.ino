@@ -1,4 +1,4 @@
-/*
+/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -18,27 +18,51 @@
  *
  *******************************
  *
- * DESCRIPTION
+ * REVISION HISTORY
+ * Version 1.0 - tekka
  *
- * This sketch clears radioId, relayId and other routing information in EEPROM back to factory default
+ * DESCRIPTION
+ * Passive node example: This is a passive & independent reporting node
  *
  */
-// load core modules only
-#define MY_CORE_ONLY
+
+// Enable debug prints
+#define MY_DEBUG
+
+// Enable passive mode
+#define MY_PASSIVE_NODE
+
+// Passive mode requires static node ID
+#define MY_NODE_ID 100
+
+// Enable and select radio type attached
+#define MY_RADIO_NRF24
+//#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
+#define CHILD_ID 0   // Id of the sensor child
+
+// Initialize general message
+MyMessage msg(CHILD_ID, V_TEMP);
+
 void setup()
 {
-	Serial.begin(MY_BAUD_RATE);
-	Serial.println("Started clearing. Please wait...");
-	for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
-		hwWriteConfig(i,0xFF);
-	}
-	Serial.println("Clearing done.");
+}
+
+void presentation()
+{
+	// Send the sketch version information to the gateway and controller
+	sendSketchInfo("Passive node", "1.0");
+
+	// Register all sensors to gw (they will be created as child devices)
+	present(CHILD_ID, S_TEMP);
 }
 
 void loop()
 {
-	// Nothing to do here...
+	// generate some random data
+	send(msg.set(25.0+random(0,30)/10.0,2));
+	sleep(2000);
 }

@@ -68,7 +68,7 @@
 #define MY_OTA_BOOTLOADER_MINOR_VERSION (0u)		//!< Bootloader version minor
 #define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)	//!< Bootloader version
 
-#if defined(MY_DEBUG)
+#if defined(MY_DEBUG_VERBOSE_OTA_UPDATE)
 #define OTA_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
 #else
 #define OTA_DEBUG(x,...)	//!< debug NULL

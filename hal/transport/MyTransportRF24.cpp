@@ -17,18 +17,16 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyConfig.h"
-#include "MyTransport.h"
-
+#include "MyTransportHAL.h"
 #include "drivers/RF24/RF24.h"
-
-#include "drivers/CircularBuffer/CircularBuffer.h"
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 #include "drivers/AES/AES.h"
 #endif
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+#include "drivers/CircularBuffer/CircularBuffer.h"
+
 typedef struct _transportQueuedMessage {
 	uint8_t m_len;                        // Length of the data
 	uint8_t m_data[MAX_MESSAGE_LENGTH];   // The raw data
@@ -94,7 +92,7 @@ uint8_t transportGetAddress(void)
 	return RF24_getNodeID();
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	// copy input data because it is read-only
@@ -104,9 +102,9 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len)
 	const uint8_t finalLength = len > 16 ? 32 : 16;
 	//encrypt data
 	_aes.cbc_encrypt(_dataenc, _dataenc, finalLength /16);
-	return RF24_sendMessage(to, _dataenc, finalLength);
+	return RF24_sendMessage(to, _dataenc, finalLength, noACK);
 #else
-	return RF24_sendMessage(to, data, len);
+	return RF24_sendMessage(to, data, len, noACK);
 #endif
 }
 
@@ -149,7 +147,59 @@ uint8_t transportReceive(void* data)
 	return len;
 }
 
+void transportSleep(void)
+{
+	RF24_sleep();
+}
+
+void transportStandBy(void)
+{
+	RF24_standBy();
+}
+
 void transportPowerDown(void)
 {
 	RF24_powerDown();
 }
+
+void transportPowerUp(void)
+{
+	RF24_powerUp();
+}
+
+int16_t transportGetSendingRSSI(void)
+{
+	return RF24_getSendingRSSI();
+}
+int16_t transportGetReceivingRSSI(void)
+{
+	// not available, only bool RPD
+	return static_cast<int16_t>(INVALID_RSSI);
+}
+
+int16_t transportGetSendingSNR(void)
+{
+	return static_cast<int16_t>(INVALID_SNR);
+}
+
+int16_t transportGetReceivingSNR(void)
+{
+	return static_cast<int16_t>(INVALID_SNR);
+}
+
+int16_t transportGetTxPowerPercent(void)
+{
+	return static_cast<int16_t>(RF24_getTxPowerPercent());
+}
+
+int16_t transportGetTxPowerLevel(void)
+{
+	return static_cast<int16_t>(RF24_getTxPowerLevel());
+}
+
+bool transportSetTxPowerPercent(const uint8_t powerPercent)
+{
+	return RF24_setTxPowerPercent(powerPercent);
+}
+
+

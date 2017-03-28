@@ -161,35 +161,40 @@ typedef enum {
 
 /// @brief Type of internal messages (for internal messages)
 typedef enum {
-	I_BATTERY_LEVEL			= 0,	//!< Battery level
-	I_TIME					= 1,	//!< Time (request/response)
-	I_VERSION				= 2,	//!< Version
-	I_ID_REQUEST			= 3,	//!< ID request
-	I_ID_RESPONSE			= 4,	//!< ID response
-	I_INCLUSION_MODE		= 5,	//!< Inclusion mode
-	I_CONFIG				= 6,	//!< Config (request/response)
-	I_FIND_PARENT_REQUEST	= 7,	//!< Find parent
-	I_FIND_PARENT_RESPONSE	= 8,	//!< Find parent response
-	I_LOG_MESSAGE			= 9,	//!< Log message
-	I_CHILDREN				= 10,	//!< Children
-	I_SKETCH_NAME			= 11,	//!< Sketch name
-	I_SKETCH_VERSION		= 12,	//!< Sketch version
-	I_REBOOT				= 13,	//!< Reboot request
-	I_GATEWAY_READY			= 14,	//!< Gateway ready
-	I_SIGNING_PRESENTATION	= 15,	//!< Provides signing related preferences (first byte is preference version)
-	I_NONCE_REQUEST			= 16,	//!< Request for a nonce
-	I_NONCE_RESPONSE		= 17,	//!< Payload is nonce data
-	I_HEARTBEAT_REQUEST		= 18,	//!< Heartbeat request
-	I_PRESENTATION			= 19,	//!< Presentation message
-	I_DISCOVER_REQUEST		= 20,	//!< Discover request
-	I_DISCOVER_RESPONSE		= 21,	//!< Discover response
-	I_HEARTBEAT_RESPONSE	= 22,	//!< Heartbeat response
-	I_LOCKED				= 23,	//!< Node is locked (reason in string-payload)
-	I_PING					= 24,	//!< Ping sent to node, payload incremental hop counter
-	I_PONG					= 25,	//!< In return to ping, sent back to sender, payload incremental hop counter
-	I_REGISTRATION_REQUEST	= 26,	//!< Register request to GW
-	I_REGISTRATION_RESPONSE	= 27,	//!< Register response from GW
-	I_DEBUG					= 28	//!< Debug message
+	I_BATTERY_LEVEL				= 0,	//!< Battery level
+	I_TIME						= 1,	//!< Time (request/response)
+	I_VERSION					= 2,	//!< Version
+	I_ID_REQUEST				= 3,	//!< ID request
+	I_ID_RESPONSE				= 4,	//!< ID response
+	I_INCLUSION_MODE			= 5,	//!< Inclusion mode
+	I_CONFIG					= 6,	//!< Config (request/response)
+	I_FIND_PARENT_REQUEST		= 7,	//!< Find parent
+	I_FIND_PARENT_RESPONSE		= 8,	//!< Find parent response
+	I_LOG_MESSAGE				= 9,	//!< Log message
+	I_CHILDREN					= 10,	//!< Children
+	I_SKETCH_NAME				= 11,	//!< Sketch name
+	I_SKETCH_VERSION			= 12,	//!< Sketch version
+	I_REBOOT					= 13,	//!< Reboot request
+	I_GATEWAY_READY				= 14,	//!< Gateway ready
+	I_SIGNING_PRESENTATION		= 15,	//!< Provides signing related preferences (first byte is preference version)
+	I_NONCE_REQUEST				= 16,	//!< Request for a nonce
+	I_NONCE_RESPONSE			= 17,	//!< Payload is nonce data
+	I_HEARTBEAT_REQUEST			= 18,	//!< Heartbeat request
+	I_PRESENTATION				= 19,	//!< Presentation message
+	I_DISCOVER_REQUEST			= 20,	//!< Discover request
+	I_DISCOVER_RESPONSE			= 21,	//!< Discover response
+	I_HEARTBEAT_RESPONSE		= 22,	//!< Heartbeat response
+	I_LOCKED					= 23,	//!< Node is locked (reason in string-payload)
+	I_PING						= 24,	//!< Ping sent to node, payload incremental hop counter
+	I_PONG						= 25,	//!< In return to ping, sent back to sender, payload incremental hop counter
+	I_REGISTRATION_REQUEST		= 26,	//!< Register request to GW
+	I_REGISTRATION_RESPONSE		= 27,	//!< Register response from GW
+	I_DEBUG						= 28,	//!< Debug message
+	I_SIGNAL_REPORT_REQUEST		= 29,	//!< Device signal strength request
+	I_SIGNAL_REPORT_REVERSE		= 30,	//!< Internal
+	I_SIGNAL_REPORT_RESPONSE	= 31,	//!< Device signal strength response (RSSI)
+	I_PRE_SLEEP_NOTIFICATION	= 32,	//!< Message sent before node is going to sleep
+	I_POST_SLEEP_NOTIFICATION	= 33	//!< Message sent after node woke up (if enabled)
 } mysensor_internal;
 
 
