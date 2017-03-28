@@ -76,7 +76,8 @@ MySensors options:
                                 personalized with the same AES key
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
-    --my-rs485-serial-port=<PORT>
+    --my-rf69-irq-pin=<PIN>     Pin number connected to RFM69 IRQ pin.
+	--my-rs485-serial-port=<PORT>
                                 RS485 serial port. You must provide a port.
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
     --my-rs485-de-pin=<PIN>     Pin number connected to RS485 driver enable pin.
@@ -379,6 +380,9 @@ for opt do
     --my-rx-message-buffer-size=*)
         CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CPPFLAGS"
         ;;
+    --my-rf69-irq-pin=*)
+        CPPFLAGS="-DMY_RF69_IRQ_PIN=${optarg} $CPPFLAGS"
+		;;
     --my-rs485-serial-port=*)
         CPPFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
@@ -502,6 +506,8 @@ if [[ ${transport_type} == "none" ]]; then
     :
 elif [[ ${transport_type} == "nrf24" ]]; then
     CPPFLAGS="-DMY_RADIO_NRF24 $CPPFLAGS"
+elif [[ ${transport_type} == "rfm69" ]]; then
+	CPPFLAGS="-DMY_RADIO_RFM69 $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then
     CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm95" ]]; then

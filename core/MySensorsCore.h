@@ -50,14 +50,13 @@
 * | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
 * |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
 * | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
-* | | MCO	| PIM	| ROUTE N=%%d,R=%%d								| Routing table, messages to node (N) are routed via node (R)
 * | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
-* | | MCO	| SLP	| TPD											| Sleep node, powerdown transport
 * | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
 * |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
 * |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
+* |!| MCO	| SLP	| TNR											| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
 * | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
-* | | MCO	| NLK	| TPD											| Powerdown transport
+* | | MCO	| NLK	| TSL											| Set transport to sleep
 *
 *
 * @brief API declaration for MySensorsCore
@@ -85,16 +84,6 @@
 #define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
 #define VALUE_NOT_DEFINED		((uint8_t)255)			//!< Value not defined
 #define FUNCTION_NOT_SUPPORTED ((uint16_t)0)			//!< Function not supported
-
-
-#ifdef MY_DEBUG
-#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)			//!< debug, to be removed (follow-up PR)
-#define CORE_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
-#else
-#define debug(x,...)										//!< debug NULL, to be removed (follow-up PR)
-#define CORE_DEBUG(x,...)									//!< debug NULL
-#endif
-
 
 /**
  * @brief Controller configuration
@@ -166,7 +155,6 @@ bool sendSketchInfo(const char *name, const char *version, const bool ack = fals
 */
 bool send(MyMessage &msg, const bool ack = false);
 
-
 /**
  * Send this nodes battery level to gateway.
  * @param level Level between 0-100(%)
@@ -182,6 +170,22 @@ bool sendBatteryLevel(const uint8_t level, const bool ack = false);
  * @return true Returns true if message reached the first stop on its way to destination.
  */
 bool sendHeartbeat(const bool ack = false);
+
+/**
+* Send this nodes signal strength to gateway.
+* @param level Signal strength can be rssi if the radio provide it, or another kind of calculation
+* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+* @return true Returns true if message reached the first stop on its way to destination.
+*/
+bool sendSignalStrength(const int16_t level, const bool ack = false);
+
+/**
+* Send this nodes TX power level to gateway.
+* @param level For instance, can be TX power level in dbm
+* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+* @return true Returns true if message reached the first stop on its way to destination.
+*/
+bool sendTXPowerLevel(const uint8_t level, const bool ack = false);
 
 /**
 * Requests a value from gateway or some other sensor in the radio network.

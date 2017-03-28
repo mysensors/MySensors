@@ -279,7 +279,7 @@ void hwDebugPrint(const char *fmt, ... )
 #else
 	// prepend timestamp
 	MY_SERIALDEVICE.print(hwMillis());
-	MY_SERIALDEVICE.print(" ");
+	MY_SERIALDEVICE.print(F(" "));
 #endif
 	va_list args;
 	va_start (args, fmt );
