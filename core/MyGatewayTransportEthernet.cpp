@@ -17,7 +17,9 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+
 #include "MyGatewayTransport.h"
+
 
 // global variables
 extern MyMessage _msgTmp;
@@ -43,7 +45,9 @@ typedef struct {
 #if defined(MY_GATEWAY_ESP8266)
 // Some re-defines to make code more readable below
 #define EthernetServer WiFiServer
-#define EthernetClient WiFiClient
+//#define EthernetClient WiFiClient
+#include <WiFiClientSecure.h> /// ADDING FOR TEST
+#define EthernetClient WiFiClientSecure
 #define EthernetUDP WiFiUDP
 
 #if defined(MY_IP_ADDRESS)

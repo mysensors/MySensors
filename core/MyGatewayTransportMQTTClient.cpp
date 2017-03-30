@@ -21,13 +21,14 @@
 // Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
 #include "MyGatewayTransport.h"
+#include <WiFiClientSecure.h> /// ADDING FOR TEST
 
 #if defined MY_CONTROLLER_IP_ADDRESS
 IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 #endif
 
 #if defined(MY_GATEWAY_ESP8266)
-#define EthernetClient WiFiClient
+#define EthernetClient WiFiClientSecure
 #if defined(MY_IP_ADDRESS)
 IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
 IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
@@ -41,9 +42,10 @@ uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
 #if defined(MY_IP_ADDRESS)
 IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
 #endif
-
+//static WifiClientSecure _MQTT_ethClient;
 static EthernetClient _MQTT_ethClient;
 static PubSubClient _MQTT_client(_MQTT_ethClient);
+//static PubSubClient _MQTT_client(MY_CONTROLLER_URL_ADDRESS,MY_PORT,incomingMQTT,_MQTT_ethClient);
 static bool _MQTT_connecting = true;
 static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
@@ -69,11 +71,13 @@ bool reconnectMQTT(void)
 {
 	debug(PSTR("Attempting MQTT connection...\n"));
 	// Attempt to connect
-	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID
-#if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
-	                         , MY_MQTT_USER, MY_MQTT_PASSWORD
-#endif
-	                        )) {
+	//wait(100);
+	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID, MY_MQTT_USER, MY_MQTT_PASSWORD )) {
+//#if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
+//	                         , MY_MQTT_USER, MY_MQTT_PASSWORD
+//#endif
+//	                        )) {
+
 		debug(PSTR("MQTT connected\n"));
 
 		// Send presentation of locally attached sensors (and node if applicable)
@@ -128,19 +132,19 @@ bool gatewayTransportInit(void)
 #else
 	_MQTT_client.setServer(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
 #endif
-
+	debug(PSTR("MQTT connected to the server\n"));
 	_MQTT_client.setCallback(incomingMQTT);
-
+	debug(PSTR("MQTT callback set\n"));
 #if defined(MY_GATEWAY_ESP8266)
 	// Turn off access point
 	WiFi.mode(WIFI_STA);
 #if defined(MY_ESP8266_HOSTNAME)
-	WiFi.hostname(MY_ESP8266_HOSTNAME);
+//	WiFi.hostname(MY_ESP8266_HOSTNAME);
 #endif
 #ifdef MY_IP_ADDRESS
-	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
+//	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
+//	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 #endif
 
 	gatewayTransportConnect();
@@ -157,6 +161,7 @@ bool gatewayTransportAvailable(void)
 	//keep lease on dhcp address
 	//Ethernet.maintain();
 	if (!_MQTT_client.connected()) {
+	//while (!_MQTT_client.connected()) {
 		//reinitialise client
 		if (gatewayTransportConnect()) {
 			reconnectMQTT();

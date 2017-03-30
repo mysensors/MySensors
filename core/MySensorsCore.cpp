@@ -354,6 +354,11 @@ bool requestTime(const bool ack)
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, ack).set(""));
 }
 
+bool requestheduler(const bool ack)
+{
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, ack).set(""));
+}
+
 // Message delivered through _msg
 bool _processInternalMessages(void)
 {
@@ -387,6 +392,11 @@ bool _processInternalMessages(void)
 			// Deliver time to callback
 			if (receiveTime) {
 				receiveTime(_msg.getULong());
+			}
+		} else if (type == I_SCHEDULER) {
+			// Deliver scheduler to callback
+			if (receiveScheduler) {
+				receiveScheduler(_msg.getULong());
 			}
 		} else if (type == I_CHILDREN) {
 #if defined(MY_REPEATER_FEATURE)

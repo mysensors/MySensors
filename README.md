@@ -1,5 +1,13 @@
 MySensors Library v2.2.0-beta
 
+Fork by getlarge
+
+Mods in :
+MyGatewayTransportMQTTClient.cpp l.85 ;  MyProtocolMySensors.cpp from l.130 to 192 ;  MyMessage.h l.193 ; MySensorsCore.h l.202,l.400 ;  MySensorsCore.cpp l.357,l.396 ;  MyGatewayTransportEthernet.cpp l.45 ;  PubSubClient.h l.19-21 ;
+
+
+
+
 Please visit www.mysensors.org for more information
 
 Doxygen
