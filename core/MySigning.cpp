@@ -438,13 +438,7 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 #endif
 #endif // MY_SIGNING_REQUEST_SIGNATURES
 #if defined(MY_SIGNING_NODE_WHITELISTING)
-#if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL)
 	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
-#else
-	if (DO_WHITELIST(sender)) {
-		msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_WHITELISTING;
-	}
-#endif
 #endif // MY_SIGNING_NODE_WHITELISTING
 	if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_SIGNATURES) {
 		SIGN_DEBUG(PSTR("Informing node %d that we require signatures\n"), sender);
