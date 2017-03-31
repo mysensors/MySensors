@@ -33,9 +33,6 @@
 #if defined(MY_SIGNING_REQUEST_SIGNATURES) && (!defined(MY_SIGNING_ATSHA204) && !defined(MY_SIGNING_SOFT))
 #error You have to pick either MY_SIGNING_ATSHA204 or MY_SIGNING_SOFT in order to require signatures!
 #endif
-#if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL) && !defined(MY_SIGNING_REQUEST_SIGNATURES)
-#error You have to require signatures if you want to require signatures from all (also enable MY_SIGNING_REQUEST_SIGNATURES in your gateway)
-#endif
 #if defined(MY_SIGNING_SOFT) && defined(MY_SIGNING_ATSHA204)
 #error You have to pick one and only one signing backend
 #endif
@@ -56,10 +53,14 @@ enum { SIGN_WAITING_FOR_NONCE = 0, SIGN_OK = 1 };
 // Macros for manipulating signing requirement tables
 #define DO_SIGN(node) (~_doSign[node>>3]&(1<<node%8))
 #define SET_SIGN(node) (_doSign[node>>3]&=~(1<<node%8))
+#if defined(MY_SIGNING_WEAK_SECURITY)
 #define CLEAR_SIGN(node) (_doSign[node>>3]|=(1<<node%8))
+#endif
 #define DO_WHITELIST(node) (~_doWhitelist[node>>3]&(1<<node%8))
 #define SET_WHITELIST(node) (_doWhitelist[node>>3]&=~(1<<node%8))
+#if defined(MY_SIGNING_WEAK_SECURITY)
 #define CLEAR_WHITELIST(node) (_doWhitelist[node>>3]|=(1<<node%8))
+#endif
 
 #if defined(MY_SIGNING_SOFT)
 extern bool signerAtsha204SoftInit(void);
@@ -255,10 +256,10 @@ bool signerVerifyMsg(MyMessage &msg)
 #if defined(MY_SIGNING_FEATURE) && defined(MY_SIGNING_REQUEST_SIGNATURES)
 	// If we are a node, or we are a gateway and the sender require signatures (or just a strict gw)
 	// and we are the destination...
-#if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL)
-	if (msg.destination == getNodeId()) {
-#else
+#if defined(MY_SIGNING_WEAK_SECURITY)
 	if ((!MY_IS_GATEWAY || DO_SIGN(msg.sender)) && msg.destination == getNodeId()) {
+#else
+	if (msg.destination == getNodeId()) {
 #endif
 		// Internal messages of certain types are not verified
 		if (skipSign(msg)) {
@@ -404,18 +405,32 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 		SIGN_DEBUG(PSTR("Mark node %d as one that require signed messages\n"), sender);
 		SET_SIGN(sender);
 	} else {
+#if defined(MY_SIGNING_WEAK_SECURITY)
 		// We received an indicator that the sender does not require us to sign all messages we send to it
 		SIGN_DEBUG(PSTR("Mark node %d as one that do not require signed messages\n"), sender);
 		CLEAR_SIGN(sender);
+#else
+		if (DO_SIGN(sender)) {
+			SIGN_DEBUG(PSTR("Node %d indicated no signature requirement, but we have received"), sender);
+			SIGN_DEBUG(PSTR(" signature requirement from this node before, so we keep it\n"));
+		}
+#endif
 	}
 	if (msg.data[1] & SIGNING_PRESENTATION_REQUIRE_WHITELISTING) {
 		// We received an indicator that the sender require us to salt signatures with serial
 		SIGN_DEBUG(PSTR("Mark node %d as one that require whitelisting\n"), sender);
 		SET_WHITELIST(sender);
 	} else {
+#if defined(MY_SIGNING_WEAK_SECURITY)
 		// We received an indicator that the sender does not require us to sign all messages we send to it
 		SIGN_DEBUG(PSTR("Mark node %d as one that do not require whitelisting\n"), sender);
 		CLEAR_WHITELIST(sender);
+#else
+		if (DO_WHITELIST(sender)) {
+			SIGN_DEBUG(PSTR("Node %d indicated no whitelisting requirement, but we have"), sender);
+			SIGN_DEBUG(PSTR(" received signature requirement from this node before, so we keep it\n"));
+		}
+#endif
 	}
 
 	// Save updated tables
@@ -429,12 +444,12 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 #if defined(MY_GATEWAY_FEATURE)
 	prepareSigningPresentation(msg, sender);
 #if defined(MY_SIGNING_REQUEST_SIGNATURES)
-#if defined(MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL)
-	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
-#else
+#if defined(MY_SIGNING_WEAK_SECURITY)
 	if (DO_SIGN(sender)) {
 		msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
 	}
+#else
+	msg.data[1] |= SIGNING_PRESENTATION_REQUIRE_SIGNATURES;
 #endif
 #endif // MY_SIGNING_REQUEST_SIGNATURES
 #if defined(MY_SIGNING_NODE_WHITELISTING)

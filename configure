@@ -97,9 +97,9 @@ MySensors options:
     --my-signing-request-signatures
                                 Enable signature request from nodes that in turn requested
                                 gateway signature.
-    --my-signing-request-gw-signatures-from-all
-                                Require all nodes in the network to sign messages sent to the
-                                gateway.
+    --my-signing-weak_security
+                                Enable this to permit downgrade of security preferences and
+                                relaxed gateway signing requirements.
 
 EOF
 }
@@ -459,9 +459,9 @@ for opt do
     --my-signing-request-signatures*)
         signing_request_signatures=true
         ;;
-    --my-signing-request-gw-signatures-from-all*)
+    --my-signing-weak_security*)
         signing_request_signatures=true
-        CPPFLAGS="-DMY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL $CPPFLAGS"
+        CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"

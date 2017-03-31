@@ -432,14 +432,19 @@
 //#define MY_SIGNING_REQUEST_SIGNATURES
 
 /**
- * @def MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
- * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it.
- * @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
+ * @def MY_SIGNING_WEAK_SECURITY
+ * @brief Enable this to permit downgrade of security preferences and relaxed gateway signing requirements.
  *
- * Use this for maximum security, but be aware that every single node will have to be personalized before they can be used.
- * Note that if this is enabled, and whitelisting is also enabled, whitelisting will also be in effect for all nodes.
+ * Use this for evaluating security. It allows for gradual introduction of signing requirements in
+ * a network. Nodes that present themselves as not requiering signing or whitelisting will be
+ * cleared of this requirement at the receiving end. A gateway which require signatures will only do
+ * so from nodes that in turn require signatures.
+ * When not set, any node that has presented themselves as a node that require signatures or
+ * whitelisting, will be permaently remembered as doing so at the receiver until EEPROM is cleared.
+ *
+ * @warning This flag when set will weaken security significantly
  */
-//#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+//#define MY_SIGNING_WEAK_SECURITY
 
 /**
  * @def MY_VERIFICATION_TIMEOUT_MS
@@ -1297,7 +1302,7 @@
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
-#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+#define MY_SIGNING_WEAK_SECURITY
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 #define MY_DEBUG_VERBOSE_SIGNING
 // RS485

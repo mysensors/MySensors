@@ -61,11 +61,11 @@
 //#define MY_SIGNING_SOFT
 // Enable signing related debug
 //#define MY_DEBUG_VERBOSE_SIGNING
-// Enable this to request signatures from nodes that in turn request signatures from gateway
+// Enable this to request signatures
 //#define MY_SIGNING_REQUEST_SIGNATURES
-// Enable this to have gateway require all nodes in the network to sign messages sent to it
-// Note: MY_SIGNING_REQUEST_SIGNATURES must also be set
-//#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+// Enable this to to weaken security for gradual deployment purpose
+// (see signing documentation for details)
+//#define MY_SIGNING_WEAK_SECURITY
 
 // Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be
 // personalized with the same AES key)

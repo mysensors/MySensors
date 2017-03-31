@@ -153,11 +153,15 @@
  * It is legal to mix hardware- and software-based backends in a network. They work together.
  *
  * You also need to decide if the node (or gateway) in question require and verify signatures in addition to calculating them.
- * This has to be set by at least one of the node in a "pair" or nobody will actually start calculating a signature for a message.
+ * This has to be set by at least one of the nodes in a "pair" or nobody will actually start calculating a signature for a message.
  * Just set the flag @ref MY_SIGNING_REQUEST_SIGNATURES and the node will inform the gateway that it expects the gateway to sign all
- * messages sent to the node. If this is set in a gateway, it will @b NOT force all nodes to sign messages to it. It will only require
- * signatures from nodes that in turn require signatures. If it is desired that the gateway should require signatures from all nodes,
- * @ref MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL can be set in the gateway sketch.<br>
+ * messages sent to the node. Note that when set in a gateway, the gateway will require ALL nodes in the network to sign messages.
+ * If this behaviour is undesired, enable the flag @ref MY_SIGNING_WEAK_SECURITY which will enable the gateway to only require
+ * signatures from nodes that in turn require signatures. It will also allow the gateway (and all nodes) to "downgrade" security
+ * by clearing the signing/whitelisting requirements in the EEPROM if a node presents itself as not having any security requirements.
+ * If @ref MY_SIGNING_WEAK_SECURITY is not set, any node that has presented itself with signing/whitelisting requirements will
+ * be permanently marked as such by the receiver (typically the gateway). The only way then to reset/revert this requirement
+ * is to clear the EEPROM at the receiver.<br>
  * If you want to have two nodes communicate securely directly with each other, the nodes that require signatures must send a presentation
  * message to all nodes it expect signed messages from (only the gateway is informed automatically). See @ref signerPresentation().<br>
  * A node can have three "states" with respect to signing:
@@ -230,16 +234,16 @@
  * @ref PERSONALIZE_ATSHA204A or @ref PERSONALIZE_SOFT as needed by the hardware.
  *
  * If a node does require signing, any unsigned message sent to the node will be rejected.<br>
- * This also applies to the gateway. However, the difference is that the gateway will only require signed messages from nodes it knows in turn
- * require signed messages (unless @ref MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL is set).<br>
+ * This also applies to the gateway.<br>
  * A node can also inform a different node that it expects to receive signed messages from it. This is done by transmitting an internal message
  * of type @ref I_SIGNING_PRESENTATION and provide flags as payload that inform the receiver of the signing preferences of the sender.<br>
  * All nodes and gateways in a network maintain a table where the signing preferences of all nodes are stored. This is also stored in EEPROM so
  * if the gateway reboots, the nodes does not have to retransmit a signing presentation to the gateway for the gateway to realize that the node
  * expect signed messages.<br>
- * Also, the nodes that do not require signed messages will also inform gateway of this, so if you reprogram a node to stop require signing,
- * the gateway will adhere to this as soon as the new node has presented itself to the gateway. Note however, that if the gateway sets
- * @ref MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL a node that does not support signing will be unable to send any data to the gateway.
+ * By default, the signing preferences are not "downgradeable". That is, any node that at any point in time has indicated a signing
+ * requirement will not be able to revert this requirement at the receiving end (except by manual erase of the EEPROM).<br>
+ * If you for some reason need to be able to downgrade the security requirements, you can set @ref MY_SIGNING_WEAK_SECURITY
+ * at the receiver to allow it to downgrade the security expectations of the node in question.<br>
  *
  * The following sequence diagram illustrate how messages are passed in a MySensors network with respect to signing:
  * @image html MySigning/signingsequence.png
