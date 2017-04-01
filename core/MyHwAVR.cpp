@@ -37,24 +37,31 @@ volatile uint8_t _wakeUp1Interrupt  =
 volatile uint8_t _wakeUp2Interrupt  =
     INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
 
-void wakeUp1()	 //place to send the interrupts
+void wakeUp1()
 {
+    // Disable sleep. When an interrupt occurs after attachInterrupt,
+    // but before sleeping the CPU would not wake up.
+    // Ref: http://playground.arduino.cc/Learning/ArduinoSleepCode
+    sleep_disable();
 	detachInterrupt(_wakeUp1Interrupt);
-	if (_wakeUp2Interrupt != INVALID_INTERRUPT_NUM) {
-		detachInterrupt(_wakeUp2Interrupt);
-	}
-	_wokeUpByInterrupt = _wakeUp1Interrupt;
+    // First interrupt occurred will be reported only
+    if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt)
+    {
+        _wokeUpByInterrupt = _wakeUp1Interrupt;
+    }
 }
-void wakeUp2()	 //place to send the second interrupts
+void wakeUp2()
 {
+    sleep_disable();
 	detachInterrupt(_wakeUp2Interrupt);
-	if (_wakeUp1Interrupt != INVALID_INTERRUPT_NUM) {
-		detachInterrupt(_wakeUp1Interrupt);
-	}
-	_wokeUpByInterrupt = _wakeUp2Interrupt;
+    // First interrupt occurred will be reported only
+    if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt)
+    {
+        _wokeUpByInterrupt = _wakeUp2Interrupt;
+    }
 }
 
-bool interruptWakeUp()
+inline bool interruptWakeUp()
 {
 	return _wokeUpByInterrupt != INVALID_INTERRUPT_NUM;
 }
@@ -87,7 +94,8 @@ void hwPowerDown(period_t period)
 #endif
 	// Enable interrupts & sleep until WDT or ext. interrupt
 	sei();
-	// Directly sleep CPU, to prevent race conditions! (see chapter 7.7 of ATMega328P datasheet)
+	// Directly sleep CPU, to prevent race conditions!
+    // Ref: chapter 7.7 of ATMega328P datasheet
 	sleep_cpu();
 	sleep_disable();
 	// restore previous WDT settings
@@ -108,46 +116,31 @@ void hwInternalSleep(unsigned long ms)
 #ifndef MY_DISABLED_SERIAL
 	MY_SERIALDEVICE.flush();
 #endif
-	while (!interruptWakeUp() && ms >= 8000) {
-		hwPowerDown(SLEEP_8S);
-		ms -= 8000;
-	}
-	if (!interruptWakeUp() && ms >= 4000)    {
-		hwPowerDown(SLEEP_4S);
-		ms -= 4000;
-	}
-	if (!interruptWakeUp() && ms >= 2000)    {
-		hwPowerDown(SLEEP_2S);
-		ms -= 2000;
-	}
-	if (!interruptWakeUp() && ms >= 1000)    {
-		hwPowerDown(SLEEP_1S);
-		ms -= 1000;
-	}
-	if (!interruptWakeUp() && ms >= 500)     {
-		hwPowerDown(SLEEP_500MS);
-		ms -= 500;
-	}
-	if (!interruptWakeUp() && ms >= 250)     {
-		hwPowerDown(SLEEP_250MS);
-		ms -= 250;
-	}
-	if (!interruptWakeUp() && ms >= 125)     {
-		hwPowerDown(SLEEP_120MS);
-		ms -= 120;
-	}
-	if (!interruptWakeUp() && ms >= 64)      {
-		hwPowerDown(SLEEP_60MS);
-		ms -= 60;
-	}
-	if (!interruptWakeUp() && ms >= 32)      {
-		hwPowerDown(SLEEP_30MS);
-		ms -= 30;
-	}
-	if (!interruptWakeUp() && ms >= 16)      {
-		hwPowerDown(SLEEP_15MS);
-		ms -= 15;
-	}
+
+    static const struct {
+        uint16_t ms;
+        period_t period;
+    } wdtTimes[] = {
+        { 8000u, SLEEP_8S    },
+        { 4000u, SLEEP_4S    },
+        { 2000u, SLEEP_2S    },
+        { 1000u, SLEEP_1S    },
+        {  500u, SLEEP_500MS },
+        {  250u, SLEEP_250MS },
+        {  120u, SLEEP_120MS },
+        {   60u, SLEEP_60MS  },
+        {   30u, SLEEP_30MS  },
+        {   15u, SLEEP_15MS  },
+    };
+
+    for (size_t i = 0; i < sizeof(wdtTimes)/sizeof(wdtTimes[0]); ++i)
+    {
+        while (ms >= wdtTimes[i].ms && !interruptWakeUp() )
+        {
+            hwPowerDown(wdtTimes[i].period);
+            ms -= wdtTimes[i].ms;
+        }
+    }
 }
 
 int8_t hwSleep(unsigned long ms)
@@ -164,16 +157,26 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
                unsigned long ms)
 {
+    // ATMega328P supports following modes to wake from sleep: LOW, CHANGE, RISING, FALLING
+    // Datasheet states only LOW can be used with INT0/1 to wake from sleep, which is incorrect.
+    // Ref: http://gammon.com.au/interrupts
+
 	// Disable interrupts until going to sleep, otherwise interrupts occurring between attachInterrupt()
 	// and sleep might cause the ATMega to not wakeup from sleep as interrupt has already be handled!
 	cli();
 	// attach interrupts
 	_wakeUp1Interrupt  = interrupt1;
 	_wakeUp2Interrupt  = interrupt2;
-	if (interrupt1 != INVALID_INTERRUPT_NUM) {
+
+    // Attach external interrupt handlers, and clear any pending interrupt flag
+    // to prevent waking immediately again.
+    // Ref: https://forum.arduino.cc/index.php?topic=59217.0
+    if (interrupt1 != INVALID_INTERRUPT_NUM) {
+        EIFR = _BV(INTF0);
 		attachInterrupt(interrupt1, wakeUp1, mode1);
 	}
 	if (interrupt2 != INVALID_INTERRUPT_NUM) {
+        EIFR = _BV(INTF1);
 		attachInterrupt(interrupt2, wakeUp2, mode2);
 	}
 
@@ -194,7 +197,8 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	}
 
 	// Return what woke the mcu.
-	int8_t ret = MY_WAKE_UP_BY_TIMER;       // default: no interrupt triggered, timer wake up
+    // Default: no interrupt triggered, timer wake up
+	int8_t ret = MY_WAKE_UP_BY_TIMER;
 	if (interruptWakeUp()) {
 		ret = static_cast<int8_t>(_wokeUpByInterrupt);
 	}
