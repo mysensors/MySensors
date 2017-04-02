@@ -54,20 +54,6 @@ bool hwInit(void);
 #define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void*)(__buf), (void*)(__pos), (__length))
 #define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((void*)(__buf), (void*)(__pos), (__length))
 
-enum period_t {
-	SLEEP_15MS,
-	SLEEP_30MS,
-	SLEEP_60MS,
-	SLEEP_120MS,
-	SLEEP_250MS,
-	SLEEP_500MS,
-	SLEEP_1S,
-	SLEEP_2S,
-	SLEEP_4S,
-	SLEEP_8S,
-	SLEEP_FOREVER
-};
-
 void hwInternalSleep(unsigned long ms);
 
 #ifndef DOXYGEN
