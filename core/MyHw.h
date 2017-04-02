@@ -59,6 +59,11 @@ uint8_t hwReadConfig(int adr);
 
 typedef uint8_t unique_id_t[16];
 
+/**
+ * Sleep for a defined time, using minimum power.
+ * @param ms         Time to sleep, in [ms].
+ * @return -1.
+ */
 int8_t hwSleep(unsigned long ms);
 
 /**
