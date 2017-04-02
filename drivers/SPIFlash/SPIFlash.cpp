@@ -290,11 +290,10 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len)
 	command(SPIFLASH_WRITEDISABLE); //end AAI programming
 	unselect();
 #else
-	uint16_t n;
 	uint16_t maxBytes = 256-(addr%256);  // force the first set of bytes to stay within the first page
 	uint16_t offset = 0;
 	while (len>0) {
-		n = (len<=maxBytes) ? len : maxBytes;
+		uint16_t n = (len<=maxBytes) ? len : maxBytes;
 		command(SPIFLASH_BYTEPAGEPROGRAM, true);  // Byte/Page Program
 		SPI.transfer(addr >> 16);
 		SPI.transfer(addr >> 8);
