@@ -161,17 +161,20 @@
  * by clearing the signing/whitelisting requirements in the EEPROM if a node presents itself as not having any security requirements.
  * If @ref MY_SIGNING_WEAK_SECURITY is not set, any node that has presented itself with signing/whitelisting requirements will
  * be permanently marked as such by the receiver (typically the gateway). The only way then to reset/revert this requirement
- * is to clear the EEPROM at the receiver.<br>
+ * is to clear the EEPROM at the receiver (or disable @ref MY_SIGNING_REQUEST_SIGNATURES, but the preference will be remembered if the
+ * request flag is re-enabled until EEPROM is cleared).<br>
  * If you want to have two nodes communicate securely directly with each other, the nodes that require signatures must send a presentation
  * message to all nodes it expect signed messages from (only the gateway is informed automatically). See @ref signerPresentation().<br>
  * A node can have three "states" with respect to signing:
  * 1. Node does not support signing in any way (neither @ref MY_SIGNING_ATSHA204 nor @ref MY_SIGNING_SOFT is set)
- * 2. Node does support signing but don't require messages sent to it to be signed (@ref MY_SIGNING_REQUEST_SIGNATURES is not set)
- * 3. Node does support signing and require messages sent to it to be signed (@ref MY_SIGNING_REQUEST_SIGNATURES is set)
+ * 2. Node does support signing but don't require messages sent to it to be signed (neither @ref MY_SIGNING_REQUEST_SIGNATURES nor
+ *    @ref MY_SIGNING_SIMPLE_PASSWD is set)
+ * 3. Node does support signing and require messages sent to it to be signed (@ref MY_SIGNING_REQUEST_SIGNATURES or
+ *    @ref MY_SIGNING_SIMPLE_PASSWD are set)
  *
  * <b>Secondly</b>, you need to verify the configuration for the backend.<br>
  * For hardware backed signing it is the pin the device is connected to. In MyConfig.h there are defaults which you might need to adjust to
- * match your personal build. The setting is defined using @ref MY_SIGNING_ATSHA204_PIN and the default is to use pin A3.<br>
+ * match your personal build. The setting is defined using @ref MY_SIGNING_ATSHA204_PIN.<br>
  * Similar to picking your backend, this can also be set in your sketch:
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
@@ -182,10 +185,12 @@
  * @endcode
  * For the software backed signingbackend, an unconnected analog pin is required to set a random seed for the pseudo-random generator.
  * It is important that the pin is floating, or the output of the pseudo-random generator will be predictable, and thus compromise the
- * signatures. The setting is defined using @ref MY_SIGNING_SOFT_RANDOMSEED_PIN and the default is to use pin A7. The same configuration
+ * signatures. The setting is defined using @ref MY_SIGNING_SOFT_RANDOMSEED_PIN. The same configuration
  * possibilities exist as with the other configuration options.
  *
- * <b>Thirdly</b>, if you use the software backend, you need to personalize the node (see @ref personalization).
+ * <b>Thirdly</b>, if you use the software backend and you don't use @ref MY_SIGNING_SIMPLE_PASSWD, you need to personalize the node
+ * (see @ref personalization).
+ *
  * @code{.cpp}
  * #define MY_SIGNING_SOFT
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7

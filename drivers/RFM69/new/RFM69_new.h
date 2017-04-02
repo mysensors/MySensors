@@ -33,7 +33,7 @@
  */
 
 /**
-* @file RFM69.h
+* @file RFM69_new.h
 *
 * @defgroup RFM69Newgrp RFM69New
 * @ingroup internals

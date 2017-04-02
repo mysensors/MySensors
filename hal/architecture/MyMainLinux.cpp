@@ -273,7 +273,12 @@ void print_aes_key(uint8_t *key_ptr = NULL)
 	uint8_t key[16];
 
 	if (key_ptr == NULL) {
+#ifdef MY_SIGNING_SIMPLE_PASSWD
+		memset(key, 0, 16);
+		memcpy(key, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+#else
 		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+#endif
 		key_ptr = key;
 	}
 

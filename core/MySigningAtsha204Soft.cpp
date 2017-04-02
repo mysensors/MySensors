@@ -23,19 +23,42 @@
  * ATSHA204 emulated signing backend. The emulated ATSHA204 implementation offers pseudo random
  * number generation and HMAC-SHA256 authentication compatible with a "physical" ATSHA204.
  * NOTE: Key is stored in clear text in the Arduino firmware. Therefore, the use of this back-end
- * could compromise the key used in the signed message infrastructure if device is lost and its memory
- * dumped.
+ * could compromise the key used in the signed message infrastructure if device is lost and its
+ * memory dumped.
  *
  */
 
 #include "MySigning.h"
+
 #ifdef MY_SIGNING_SOFT
 #include "drivers/ATSHA204/sha256.h"
-
 #define SIGNING_IDENTIFIER (1) //HMAC-SHA256
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
 #define SIGN_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+static char printStr[65];
+static char i2h(uint8_t i)
+{
+	uint8_t k = i & 0x0F;
+	if (k <= 9) {
+		return '0' + k;
+	} else {
+		return 'A' + k - 10;
+	}
+}
+
+static void buf2str(const uint8_t* buf, size_t sz)
+{
+	uint8_t i;
+	if (sz > 32) {
+		sz = 32; //clamp to 32 bytes
+	}
+	for (i = 0; i < sz; i++) {
+		printStr[i * 2] = i2h(buf[i] >> 4);
+		printStr[(i * 2) + 1] = i2h(buf[i]);
+	}
+	printStr[sz * 2] = '\0';
+}
 #else
 #define SIGN_DEBUG(x,...)
 #endif
@@ -67,8 +90,22 @@ bool signerAtsha204SoftInit(void)
 	// initialize pseudo-RNG
 	hwRandomNumberInit();
 	// Set secrets
+#ifdef MY_SIGNING_SIMPLE_PASSWD
+	if (strnlen(MY_SIGNING_SIMPLE_PASSWD, 32) < 8) {
+		SIGN_DEBUG(PSTR("!SGN:BND:INIT PWD")); //Could not get ATSHA204A serial
+		init_ok = false;
+	} else {
+		memset(_signing_hmac_key, 0, 32);
+		memcpy(_signing_hmac_key, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 32));
+		memset(_signing_node_serial_info, 0, 9);
+		memcpy(_signing_node_serial_info, MY_SIGNING_SIMPLE_PASSWD,
+		       strnlen(MY_SIGNING_SIMPLE_PASSWD, 8));
+		_signing_node_serial_info[8] = getNodeId();
+	}
+#else
 	hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
 	hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
+#endif
 	if (!memcmp(_signing_node_serial_info, reset_serial, 9)) {
 		unique_id_t uniqueID;
 		// There is no serial, attempt to get unique ID for serial instead
@@ -86,8 +123,15 @@ bool signerAtsha204SoftCheckTimer(void)
 		return false;
 	}
 	if (_signing_verification_ongoing) {
-		if (hwMillis() < _signing_timestamp ||
-		        hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+		unsigned long time_now = hwMillis();
+		// If timestamp is taken so late a rollover can take place during the timeout,
+		// offset both timestamp and current time to make sure no rollover takes place during the
+		// timeout
+		if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < _signing_timestamp) {
+			_signing_timestamp += MY_VERIFICATION_TIMEOUT_MS;
+			time_now += MY_VERIFICATION_TIMEOUT_MS;
+		}
+		if (time_now > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			SIGN_DEBUG(PSTR("!SGN:BND:TMR")); //Verification timeout
 			// Purge nonce
 			memset(_signing_signing_nonce, 0xAA, 32);
@@ -106,11 +150,11 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 	}
 
 #ifdef MY_HW_HAS_GETRANDOM
-	// Try to get MAX_PAYLOAD random bytes
+	// Try to get MAX_PAYLOAD (or 32) random bytes
 	while (hwGetentropy(&_signing_verifying_nonce, min(MAX_PAYLOAD, 32)) != min(MAX_PAYLOAD, 32));
 #else
-	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter and then the byte is
-	// hashed (SHA256) to produce the resulting nonce
+	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter
+	// and then the byte is hashed (SHA256) to produce the resulting nonce
 	_signing_sha256.init();
 	for (int i = 0; i < 32; i++) {
 		_signing_sha256.write(random(256) ^ (hwMillis()&0xFF));
@@ -162,17 +206,17 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 	signerCalculateSignature(msg, true);
 
 	if (DO_WHITELIST(msg.destination)) {
-		// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has provided
-		// We can reuse the nonce buffer now since it is no longer needed
+		// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has
+		// provided. We can reuse the nonce buffer now since it is no longer needed
 		memcpy(_signing_signing_nonce, _signing_hmac, 32);
 		_signing_signing_nonce[32] = msg.sender;
 		memcpy(&_signing_signing_nonce[33], _signing_node_serial_info, 9);
 		memcpy(_signing_hmac, signerSha256(_signing_signing_nonce, 32+1+9), 32);
 		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI ID=%d\n"), msg.sender);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI SERIAL=%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-		           _signing_node_serial_info[0], _signing_node_serial_info[1], _signing_node_serial_info[2],
-		           _signing_node_serial_info[3], _signing_node_serial_info[4], _signing_node_serial_info[5],
-		           _signing_node_serial_info[6], _signing_node_serial_info[7], _signing_node_serial_info[8]);
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+		buf2str(_signing_node_serial_info, 9);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI SERIAL=%s\n"), printStr);
+#endif
 	}
 
 	// Overwrite the first byte in the signature with the signing identifier
@@ -215,10 +259,10 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 				memcpy(&_signing_verifying_nonce[33], _signing_whitelist[j].serial, 9);
 				memcpy(_signing_hmac, signerSha256(_signing_verifying_nonce, 32+1+9), 32);
 				SIGN_DEBUG(PSTR("SGN:BND:VER WHI ID=%d\n"), msg.sender);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI SERIAL=%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-				           _signing_whitelist[j].serial[0], _signing_whitelist[j].serial[1], _signing_whitelist[j].serial[2],
-				           _signing_whitelist[j].serial[3], _signing_whitelist[j].serial[4], _signing_whitelist[j].serial[5],
-				           _signing_whitelist[j].serial[6], _signing_whitelist[j].serial[7], _signing_whitelist[j].serial[8]);
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+				buf2str(_signing_whitelist[j].serial, 9);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI SERIAL=%s\n"), printStr);
+#endif
 				break;
 			}
 		}
@@ -232,7 +276,8 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 		// Compare the caluclated signature with the provided signature
-		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac, min(MAX_PAYLOAD-mGetLength(msg), 32))) {
+		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
+		                 min(MAX_PAYLOAD-mGetLength(msg), 32))) {
 			return false;
 		} else {
 			return true;
@@ -248,14 +293,10 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 	int16_t current_pos = 1-(int16_t)HEADER_SIZE; // Start at the second byte in the header
 	uint8_t* nonce = signing ? _signing_signing_nonce : _signing_verifying_nonce;
 
-	SIGN_DEBUG(PSTR("SGN:BND:NONCE="
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-	           nonce[0],  nonce[1],  nonce[2],  nonce[3],  nonce[4],  nonce[5],  nonce[6],  nonce[7],
-	           nonce[8],  nonce[9],  nonce[10], nonce[11], nonce[12], nonce[13], nonce[14], nonce[15],
-	           nonce[16], nonce[17], nonce[18], nonce[19], nonce[20], nonce[21], nonce[22], nonce[23],
-	           nonce[24], nonce[25], nonce[26], nonce[27], nonce[28], nonce[29], nonce[30], nonce[31]
-	          );
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+	buf2str(nonce, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:NONCE=%s\n"), printStr);
+#endif
 
 	while (bytes_left) {
 		uint16_t bytes_to_include = min(bytes_left, 32);
@@ -276,17 +317,10 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 			memcpy(nonce, _signing_hmac, 32);
 		}
 	}
-	SIGN_DEBUG(PSTR("SGN:BND:HMAC="
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-	           _signing_hmac[0],  _signing_hmac[1],  _signing_hmac[2],  _signing_hmac[3],
-	           _signing_hmac[4],  _signing_hmac[5],  _signing_hmac[6],  _signing_hmac[7],
-	           _signing_hmac[8],  _signing_hmac[9],  _signing_hmac[10], _signing_hmac[11],
-	           _signing_hmac[12], _signing_hmac[13], _signing_hmac[14], _signing_hmac[15],
-	           _signing_hmac[16], _signing_hmac[17], _signing_hmac[18], _signing_hmac[19],
-	           _signing_hmac[20], _signing_hmac[21], _signing_hmac[22], _signing_hmac[23],
-	           _signing_hmac[24], _signing_hmac[25], _signing_hmac[26], _signing_hmac[27],
-	           _signing_hmac[28], _signing_hmac[29], _signing_hmac[30], _signing_hmac[31]);
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+	buf2str(_signing_hmac, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:HMAC=%s\n"), printStr);
+#endif
 }
 
 // Helper to calculate a ATSHA204A specific HMAC-SHA256 using provided 32 byte nonce and data
@@ -337,7 +371,7 @@ static uint8_t* signerAtsha204AHmac(const uint8_t* nonce, const uint8_t* data)
 	memcpy(_signing_hmac, _signing_sha256.result(), 32);
 
 	// Feed "message" to HMAC calculator
-	_signing_sha256.initHmac(_signing_hmac_key,32); // Set the key to use
+	_signing_sha256.initHmac(_signing_hmac_key, 32); // Set the key to use
 	for (int i=0; i<32; i++) {
 		_signing_sha256.write(0x00); // 32 bytes zeroes
 	}

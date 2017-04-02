@@ -400,17 +400,43 @@
 *  Message Signing Settings
 ***********************************/
 /**
- * @def MY_DEBUG_VERBOSE_SIGNING
- * @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled.
- * This will add even more to the size of the final sketch!
- */
+* @def MY_DEBUG_VERBOSE_SIGNING
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled.
+ *       This will add even more to the size of the final sketch!
+*/
 //#define MY_DEBUG_VERBOSE_SIGNING
+
+/**
+ * @def MY_SIGNING_SIMPLE_PASSWD
+ * @brief Enables SW backed signing functionality in library and uses provided password as key.
+ *
+ * This flag will enable signing, signature requests and encryption. It has to be identical on ALL
+ * nodes in the network.<br>
+ * Whitelisting is supported and serial will be the first 8 characters of the password, the ninth
+ * character will be the node ID (to make each node have a unique serial).<br>
+ * As with the regular signing modes, whitelisting is only activated if a whitelist is specified in
+ * the sketch.
+ * No personalization is required for this mode.<br>
+ * It is allowed to set @ref MY_SIGNING_WEAK_SECURITY for deployment purposes in this mode as it is
+ * with the regular software and ATSHA204A based modes.<br>
+ * If the provided password is shorter than the size of the HMAC or AES key, it will be null-padded
+ * to accomodate the key size in question. A 32 character password is the maximum length. Any
+ * password longer than that will be truncated.
+ */
+//#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
+#if defined(MY_SIGNING_SIMPLE_PASSWD)
+#define MY_SIGNING_SOFT
+#define MY_SIGNING_REQUEST_SIGNATURES
+#define MY_RF24_ENABLE_ENCRYPTION
+#define MY_RFM69_ENABLE_ENCRYPTION
+#endif
 
 /**
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
  *
- * For any signing related functionality to be included, this define or @ref MY_SIGNING_SOFT has to be enabled.
+ * For any signing related functionality to be included, this define or @ref MY_SIGNING_SOFT has to
+ * be enabled.
  */
 //#define MY_SIGNING_ATSHA204
 
@@ -418,7 +444,8 @@
  * @def MY_SIGNING_SOFT
  * @brief Enables SW backed signing functionality in library.
  *
- * For any signing related functionality to be included, this define or @ref MY_SIGNING_ATSHA204 has to be enabled.
+ * For any signing related functionality to be included, this define or @ref MY_SIGNING_ATSHA204 has
+ * to be enabled.
  */
 //#define MY_SIGNING_SOFT
 
@@ -433,14 +460,16 @@
 
 /**
  * @def MY_SIGNING_WEAK_SECURITY
- * @brief Enable this to permit downgrade of security preferences and relaxed gateway signing requirements.
+ * @brief Enable this to permit downgrade of security preferences and relaxed gateway signing
+ *        requirements.
  *
  * Use this for evaluating security. It allows for gradual introduction of signing requirements in
  * a network. Nodes that present themselves as not requiering signing or whitelisting will be
  * cleared of this requirement at the receiving end. A gateway which require signatures will only do
- * so from nodes that in turn require signatures.
+ * so from nodes that in turn require signatures.<br>
  * When not set, any node that has presented themselves as a node that require signatures or
- * whitelisting, will be permaently remembered as doing so at the receiver until EEPROM is cleared.
+ * whitelisting, will be permanently remembered as doing so at the receiver until EEPROM is cleared
+ * or the receiver is reconfigured with this flag set or has signing disabled alltogether.
  *
  * @warning This flag when set will weaken security significantly
  */
@@ -1299,6 +1328,7 @@
 #define MY_INDICATION_HANDLER
 #define MY_DISABLE_REMOTE_RESET
 // signing
+#define MY_SIGNING_SIMPLE_PASSWD
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES

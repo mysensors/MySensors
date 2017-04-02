@@ -32,6 +32,29 @@
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
 #define SIGN_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+static char printStr[65];
+static char i2h(uint8_t i)
+{
+	uint8_t k = i & 0x0F;
+	if (k <= 9) {
+		return '0' + k;
+	} else {
+		return 'A' + k - 10;
+	}
+}
+
+static void buf2str(const uint8_t* buf, size_t sz)
+{
+	uint8_t i;
+	if (sz > 32) {
+		sz = 32; //clamp to 32 bytes
+	}
+	for (i = 0; i < sz; i++) {
+		printStr[i * 2] = i2h(buf[i] >> 4);
+		printStr[(i * 2) + 1] = i2h(buf[i]);
+	}
+	printStr[sz * 2] = '\0';
+}
 #else
 #define SIGN_DEBUG(x,...)
 #endif
@@ -86,8 +109,15 @@ bool signerAtsha204CheckTimer(void)
 		return false;
 	}
 	if (_signing_verification_ongoing) {
-		if (hwMillis() < _signing_timestamp ||
-		        hwMillis() > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
+		unsigned long time_now = hwMillis();
+		// If timestamp is taken so late a rollover can take place during the timeout,
+		// offset both timestamp and current time to make sure no rollover takes place during the
+		// timeout
+		if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < _signing_timestamp) {
+			_signing_timestamp += MY_VERIFICATION_TIMEOUT_MS;
+			time_now += MY_VERIFICATION_TIMEOUT_MS;
+		}
+		if (time_now > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
 			SIGN_DEBUG(PSTR("!SGN:BND:TMR")); //Verification timeout
 			// Purge nonce
 			memset(_signing_signing_nonce, 0xAA, 32);
@@ -105,19 +135,23 @@ bool signerAtsha204GetNonce(MyMessage &msg)
 		return false;
 	}
 
-	// We used a basic whitening technique that XORs each byte in a 32byte random value with current hwMillis() counter
-	// This 32-byte random value is then hashed (SHA256) to produce the resulting nonce
+	// We used a basic whitening technique that XORs each byte in a 32byte random value with current
+	// hwMillis() counter. This 32-byte random value is then hashed (SHA256) to produce the resulting
+	// nonce
 	(void)atsha204_wakeup(_signing_temp_message);
 	if (atsha204_execute(SHA204_RANDOM, RANDOM_SEED_UPDATE, 0, 0, NULL,
-	                     RANDOM_COUNT, _signing_tx_buffer, RANDOM_RSP_SIZE, _signing_rx_buffer) != SHA204_SUCCESS) {
+	                     RANDOM_COUNT, _signing_tx_buffer, RANDOM_RSP_SIZE, _signing_rx_buffer) !=
+	        SHA204_SUCCESS) {
 		return false;
 	}
 	for (int i = 0; i < 32; i++) {
 		_signing_verifying_nonce[i] = _signing_rx_buffer[SHA204_BUFFER_POS_DATA+i] ^ (hwMillis()&0xFF);
 	}
-	memcpy(_signing_verifying_nonce, signerSha256(_signing_verifying_nonce, 32), min(MAX_PAYLOAD, 32));
+	memcpy(_signing_verifying_nonce, signerSha256(_signing_verifying_nonce, 32),
+	       min(MAX_PAYLOAD, 32));
 
-	atsha204_idle(); // We just idle the chip now since we expect to use it soon when the signed message arrives
+	// We just idle the chip now since we expect to use it soon when the signed message arrives
+	atsha204_idle();
 
 	if (MAX_PAYLOAD < 32) {
 		// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
@@ -128,12 +162,6 @@ bool signerAtsha204GetNonce(MyMessage &msg)
 	msg.set(_signing_verifying_nonce, min(MAX_PAYLOAD, 32));
 	_signing_verification_ongoing = true;
 	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
-	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
-	// Note that if message is "too" quick, and arrives before turnover, it will be rejected
-	// but this is consider such a rare case that it is accepted and rejects are 'safe'
-	if (_signing_timestamp + MY_VERIFICATION_TIMEOUT_MS < hwMillis()) {
-		_signing_timestamp = 0;
-	}
 	return true;
 }
 
@@ -171,10 +199,10 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 		// We can 'void' sha256 because the hash is already put in the correct place
 		(void)signerSha256(_signing_signing_nonce, 32+1+9);
 		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI ID=%d\n"), msg.sender);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI SERIAL=%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-		           _signing_node_serial_info[0], _signing_node_serial_info[1], _signing_node_serial_info[2],
-		           _signing_node_serial_info[3], _signing_node_serial_info[4], _signing_node_serial_info[5],
-		           _signing_node_serial_info[6], _signing_node_serial_info[7], _signing_node_serial_info[8]);
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+		buf2str(_signing_node_serial_info, 9);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI SERIAL=%s\n"), printStr);
+#endif
 	}
 
 	// Put device back to sleep
@@ -221,10 +249,10 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 				// We can 'void' sha256 because the hash is already put in the correct place
 				(void)signerSha256(_signing_verifying_nonce, 32+1+9);
 				SIGN_DEBUG(PSTR("SGN:BND:VER WHI ID=%d\n"), msg.sender);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI SERIAL=%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-				           _signing_whitelist[j].serial[0], _signing_whitelist[j].serial[1], _signing_whitelist[j].serial[2],
-				           _signing_whitelist[j].serial[3], _signing_whitelist[j].serial[4], _signing_whitelist[j].serial[5],
-				           _signing_whitelist[j].serial[6], _signing_whitelist[j].serial[7], _signing_whitelist[j].serial[8]);
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+				buf2str(_signing_whitelist[j].serial, 9);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI SERIAL=%s\n"), printStr);
+#endif
 				break;
 			}
 		}
@@ -243,7 +271,8 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 		// Compare the caluclated signature with the provided signature
-		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac, min(MAX_PAYLOAD-mGetLength(msg), 32))) {
+		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
+		                 min(MAX_PAYLOAD-mGetLength(msg), 32))) {
 			return false;
 		} else {
 			return true;
@@ -260,14 +289,10 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 	int16_t current_pos = 1-(int16_t)HEADER_SIZE; // Start at the second byte in the header
 	uint8_t* nonce = signing ? _signing_signing_nonce : _signing_verifying_nonce;
 
-	SIGN_DEBUG(PSTR("SGN:BND:NONCE="
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-	           nonce[0],  nonce[1],  nonce[2],  nonce[3],  nonce[4],  nonce[5],  nonce[6],  nonce[7],
-	           nonce[8],  nonce[9],  nonce[10], nonce[11], nonce[12], nonce[13], nonce[14], nonce[15],
-	           nonce[16], nonce[17], nonce[18], nonce[19], nonce[20], nonce[21], nonce[22], nonce[23],
-	           nonce[24], nonce[25], nonce[26], nonce[27], nonce[28], nonce[29], nonce[30], nonce[31]
-	          );
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+	buf2str(nonce, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:NONCE=%s\n"), printStr);
+#endif
 
 	while (bytes_left) {
 		uint16_t bytes_to_include = min(bytes_left, 32);
@@ -290,17 +315,10 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 			atsha204_idle(); // Idle the chip to allow the wakeup call to reset the watchdog
 		}
 	}
-	SIGN_DEBUG(PSTR("SGN:BND:HMAC="
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
-	                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
-	           _signing_hmac[0],  _signing_hmac[1],  _signing_hmac[2],  _signing_hmac[3],
-	           _signing_hmac[4],  _signing_hmac[5],  _signing_hmac[6],  _signing_hmac[7],
-	           _signing_hmac[8],  _signing_hmac[9],  _signing_hmac[10], _signing_hmac[11],
-	           _signing_hmac[12], _signing_hmac[13], _signing_hmac[14], _signing_hmac[15],
-	           _signing_hmac[16], _signing_hmac[17], _signing_hmac[18], _signing_hmac[19],
-	           _signing_hmac[20], _signing_hmac[21], _signing_hmac[22], _signing_hmac[23],
-	           _signing_hmac[24], _signing_hmac[25], _signing_hmac[26], _signing_hmac[27],
-	           _signing_hmac[28], _signing_hmac[29], _signing_hmac[30], _signing_hmac[31]);
+#ifdef MY_DEBUG_VERBOSE_SIGNING
+	buf2str(_signing_hmac, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:HMAC=%s\n"), printStr);
+#endif
 }
 
 // Helper to calculate a ATSHA204A specific HMAC-SHA256 using provided 32 byte nonce and data
@@ -314,13 +332,16 @@ static uint8_t* signerAtsha204AHmac(const uint8_t* nonce, const uint8_t* data)
 	                       (uint8_t*)data,
 	                       WRITE_COUNT_LONG, _signing_tx_buffer, WRITE_RSP_SIZE, _signing_rx_buffer);
 
-	// Program the nonce to use for the signature (has to be done just before GENDIG due to chip limitations)
+	// Program the nonce to use for the signature (has to be done just before GENDIG
+	// due to chip limitations)
 	(void)atsha204_execute(SHA204_NONCE, NONCE_MODE_PASSTHROUGH, 0, 32, (uint8_t*)nonce,
-	                       NONCE_COUNT_LONG, _signing_tx_buffer, NONCE_RSP_SIZE_SHORT, _signing_rx_buffer);
+	                       NONCE_COUNT_LONG, _signing_tx_buffer, NONCE_RSP_SIZE_SHORT,
+	                       _signing_rx_buffer);
 
 	// Generate digest of data and nonce
 	(void)atsha204_execute(SHA204_GENDIG, GENDIG_ZONE_DATA, 8, 0, NULL,
-	                       GENDIG_COUNT_DATA, _signing_tx_buffer, GENDIG_RSP_SIZE, _signing_rx_buffer);
+	                       GENDIG_COUNT_DATA, _signing_tx_buffer, GENDIG_RSP_SIZE,
+	                       _signing_rx_buffer);
 
 	// Calculate HMAC of message+nonce digest and secret key
 	(void)atsha204_execute(SHA204_HMAC, HMAC_MODE_SOURCE_FLAG_MATCH, 0, 0, NULL,
@@ -329,12 +350,14 @@ static uint8_t* signerAtsha204AHmac(const uint8_t* nonce, const uint8_t* data)
 }
 
 // Helper to calculate a generic SHA256 digest of provided buffer (only supports one block)
-// The pointer to the hash is returned, but the hash is also stored in _signing_rx_buffer[SHA204_BUFFER_POS_DATA])
+// The pointer to the hash is returned, but the hash is also stored in
+// _signing_rx_buffer[SHA204_BUFFER_POS_DATA])
 static uint8_t* signerSha256(const uint8_t* data, size_t sz)
 {
 	// Initiate SHA256 calculator
 	(void)atsha204_execute(SHA204_SHA, SHA_INIT, 0, 0, NULL,
-	                       SHA_COUNT_SHORT, _signing_tx_buffer, SHA_RSP_SIZE_SHORT, _signing_rx_buffer);
+	                       SHA_COUNT_SHORT, _signing_tx_buffer, SHA_RSP_SIZE_SHORT,
+	                       _signing_rx_buffer);
 
 	// Calculate a hash
 	memset(_signing_temp_message, 0x00, SHA_MSG_SIZE);

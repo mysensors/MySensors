@@ -658,7 +658,8 @@ void transportProcessMessage(void)
 
 	TRANSPORT_DEBUG(PSTR("TSF:MSG:READ,%d-%d-%d,s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 	                sender, last, destination, _msg.sensor, command, type, mGetPayloadType(_msg), msgLength,
-	                mGetSigned(_msg), _msg.getString(_convBuf));
+	                mGetSigned(_msg), ((command == C_INTERNAL &&
+	                                    type == I_NONCE_RESPONSE) ? "<NONCE>" : _msg.getString(_convBuf)));
 
 	// Reject payloads with incorrect length
 	if (payloadLength != expectedMessageLength) {
@@ -993,7 +994,8 @@ bool transportSendWrite(const uint8_t to, MyMessage &message)
 	                mGetPayloadType(message), mGetLength(message), mGetSigned(message),
 	                _transportSM.failedUplinkTransmissions,
 	                (result ? "OK" : "NACK"),
-	                message.getString(_convBuf));
+	                ((mGetCommand(message) == C_INTERNAL &&
+	                  message.type == I_NONCE_RESPONSE) ? "<NONCE>" : message.getString(_convBuf)));
 
 	return result;
 }

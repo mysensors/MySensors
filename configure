@@ -91,7 +91,7 @@ MySensors options:
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
     --my-leds-blinking-inverse  Inverse the blinking feature.
-    --my-signing=[none|software]
+    --my-signing=[none|software|password]
                                 Message signing. [none]
     --my-signing-debug          Enable signing related debug.
     --my-signing-request-signatures
@@ -460,7 +460,6 @@ for opt do
         signing_request_signatures=true
         ;;
     --my-signing-weak_security*)
-        signing_request_signatures=true
         CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
         ;;
     *)
@@ -572,7 +571,8 @@ elif [[ ${signing} == "software" ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
 else
-    die "Invalid message signing option." 4
+    echo "Simplified signing using password"
+    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing}\\\" $CPPFLAGS"
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
