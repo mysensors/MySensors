@@ -159,7 +159,6 @@
 #ifndef MyTransport_h
 #define MyTransport_h
 
-#include "MySensorsCore.h"
 #include "hal/transport/MyTransportHAL.h"
 
 #ifndef MY_TRANSPORT_MAX_TX_FAILURES
@@ -520,13 +519,15 @@ void transportDisable(void);
 void transportReInitialise(void);
 /**
 * @brief Get transport signal report
-* @param command
-* S=SNR (if available) of incoming message (this)
-* R=RSSI (if available) of incoming message (this)
-* P=TX powerlevel in %
-* T=TX powerlevel in dBm
-* U=Uplink quality
-* @return report
+* @param command:
+* R = RSSI (if available) of incoming @ref I_SIGNAL_REPORT_REQUEST message (from last hop)
+* R! = RSSI (if available) of ACK to @ref I_SIGNAL_REPORT_REVERSE message received from last hop
+* S = SNR (if available) of incoming @ref I_SIGNAL_REPORT_REQUEST message (from last hop)
+* S! = SNR (if available) of ACK to @ref I_SIGNAL_REPORT_REVERSE message received from last hop
+* P = TX powerlevel in %
+* T = TX powerlevel in dBm
+* U = Uplink quality (via ACK from parent node), avg. RSSI
+* @return Signal report (if report is not available, INVALID_RSSI, INVALID_SNR, INVALID_PERCENT, or INVALID_LEVEL is sent instead)
 */
 int16_t transportSignalReport(const char command);
 

@@ -381,25 +381,25 @@ void transportStandBy(void)
 int16_t transportGetSendingRSSI(void)
 {
 	// not implemented
-	return static_cast<int16_t>(INVALID_RSSI);
+	return INVALID_RSSI;
 }
 
 int16_t transportGetReceivingRSSI(void)
 {
 	// not implemented
-	return static_cast<int16_t>(INVALID_RSSI);
+	return INVALID_RSSI;
 }
 
 int16_t transportGetSendingSNR(void)
 {
 	// not implemented
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetReceivingSNR(void)
 {
 	// not implemented
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetTxPowerPercent(void)

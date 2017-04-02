@@ -428,7 +428,7 @@ void gatewayTransportRenewIP(void)
 	 3 - rebinf failed
 	 4 - rebind success
 	 */
-	static unsigned long next_time = hwMillis() + MY_IP_RENEWAL_INTERVAL;
+	static unsigned long next_time = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
 	unsigned long now = hwMillis();
 
 	// http://playground.arduino.cc/Code/TimingRollover
@@ -441,6 +441,6 @@ void gatewayTransportRenewIP(void)
 		return;
 	}
 	_w5100_spi_en(false);
-	next_time = now + MY_IP_RENEWAL_INTERVAL;
+	next_time = now + MY_IP_RENEWAL_INTERVAL_MS;
 }
 #endif

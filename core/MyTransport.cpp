@@ -559,12 +559,13 @@ bool transportRouteMessage(MyMessage &message)
 			_transportSM.failedUplinkTransmissions++;
 		} else {
 			_transportSM.failedUplinkTransmissions = 0u;
+#if defined(MY_SIGNAL_REPORT_ENABLED)
 			// update uplink quality monitor
 			const int16_t signalStrengthRSSI = transportGetSignalReport(SR_TX_RSSI);
 			_transportSM.uplinkQualityRSSI = static_cast<transportRSSI_t>((1 - UPLINK_QUALITY_WEIGHT) *
 			                                 _transportSM.uplinkQualityRSSI
 			                                 + (UPLINK_QUALITY_WEIGHT * transportRSSItoInternal(signalStrengthRSSI)));
-
+#endif
 		}
 	}
 #else
@@ -791,21 +792,27 @@ void transportProcessMessage(void)
 					return; // no further processing required
 				}
 				if (type == I_SIGNAL_REPORT_REVERSE) {
-					if (_msg.data[1] == '!') {
-						const int16_t value = transportSignalReport(_msg.data[0]);
-						(void)_msg.set(value);
-						_msg.type = I_SIGNAL_REPORT_RESPONSE;
-					}
+					return; // no further processing required
 				}
 				if (type == I_SIGNAL_REPORT_REQUEST) {
+					const char command = _msg.data[0];
+					int16_t value = INVALID_RSSI;
+#if defined(MY_SIGNAL_REPORT_ENABLED)
 					if (_msg.data[1] != '!') {
-						const int16_t value = transportSignalReport(_msg.data[0]);
-						(void)transportRouteMessage(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
-						                                  I_SIGNAL_REPORT_RESPONSE).set(value));
+						value = transportSignalReport(command);
 					} else {
-						(void)transportRouteMessage(build(_msgTmp, _msg.sender, NODE_SENSOR_ID, C_INTERNAL,
-						                                  I_SIGNAL_REPORT_REVERSE).set(_msg.data, 2));
+						// send request
+						if (transportRouteMessage(build(_msgTmp, _msg.last, NODE_SENSOR_ID, C_INTERNAL,
+						                                I_SIGNAL_REPORT_REVERSE).set((uint8_t)255))) {
+							// S>s, R>r, ascii delta = 32
+							value = transportSignalReport(command + 32);	// reverse
+						};
 					}
+#else
+					(void)command;
+#endif
+					(void)transportRouteMessage(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
+					                                  I_SIGNAL_REPORT_RESPONSE).set(value));
 					return;
 				}
 			} else if (command == C_STREAM) {
@@ -1117,12 +1124,20 @@ int16_t transportSignalReport(const char command)
 	signalReport_t reportCommand;
 	switch (command) {
 	case 'S':
-		// SNR (if available) of incoming message (this)
+		// SNR (if available) of incoming message
 		reportCommand = SR_RX_SNR;
 		break;
+	case 's':
+		// SNR (if available) of incoming ACK message
+		reportCommand = SR_TX_SNR;
+		break;
 	case 'R':
-		// RSSI (if available) of incoming message (this)
+		// RSSI (if available) of incoming message
 		reportCommand = SR_RX_RSSI;
+		break;
+	case 'r':
+		// RSSI (if available) of incoming ACK message
+		reportCommand = SR_TX_RSSI;
 		break;
 	case 'P':
 		// TX powerlevel in %

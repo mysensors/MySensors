@@ -35,7 +35,7 @@
 /**
 * @file RFM69.h
 *
-* @defgroup RFM69grp RFM69
+* @defgroup RFM69Newgrp RFM69New
 * @ingroup internals
 * @{
 *
@@ -144,13 +144,17 @@ extern HardwareSPI SPI;		//!< SPI
 // RFM69H(C)W
 #define RFM69_VERSION_HW	//!< HW version
 #define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-2)	//!< min. power level, -18dBm
-#if !defined(RFM69_MAX_POWER_LEVEL_DBM)
+#if defined(MY_RFM69_MAX_POWER_LEVEL_DBM)
+#define RFM69_MAX_POWER_LEVEL_DBM		MY_RFM69_MAX_POWER_LEVEL_DBM //!< MY_RFM69_MAX_POWER_LEVEL_DBM
+#else
 #define RFM69_MAX_POWER_LEVEL_DBM		((rfm69_powerlevel_t)20)	//!< max. power level, +20dBm
 #endif
 #else
 // RFM69(C)W
 #define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-18)	//!< min. power level, -18dBm
-#if !defined(RFM69_MAX_POWER_LEVEL_DBM)
+#if defined(MY_RFM69_MAX_POWER_LEVEL_DBM)
+#define RFM69_MAX_POWER_LEVEL_DBM		MY_RFM69_MAX_POWER_LEVEL_DBM //!< MY_RFM69_MAX_POWER_LEVEL_DBM
+#else
 #define RFM69_MAX_POWER_LEVEL_DBM		((rfm69_powerlevel_t)13)	//!< max. power level, +13dBm
 #endif
 #endif
@@ -352,7 +356,7 @@ LOCAL uint8_t RFM69_getAddress(void);
 
 /**
 * @brief Tests whether a new message is available
-* @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM95_recv()
+* @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM69_recv()
 */
 LOCAL bool RFM69_available(void);
 

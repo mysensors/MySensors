@@ -106,22 +106,22 @@ int16_t transportGetReceivingRSSI(void)
 
 int16_t transportGetSendingSNR(void)
 {
-	return static_cast<int16_t>(RFM95_getSendingSNR());
+	return RFM95_getSendingSNR();
 }
 
 int16_t transportGetReceivingSNR(void)
 {
-	return static_cast<int16_t>(RFM95_getReceivingSNR());
+	return RFM95_getReceivingSNR();
 }
 
 int16_t transportGetTxPowerPercent(void)
 {
-	return static_cast<int16_t>(RFM95_getTxPowerPercent());
+	return RFM95_getTxPowerPercent();
 }
 
 int16_t transportGetTxPowerLevel(void)
 {
-	return static_cast<int16_t>(RFM95_getTxPowerLevel());
+	return RFM95_getTxPowerLevel();
 }
 
 bool transportSetTxPowerPercent(const uint8_t powerPercent)

@@ -325,7 +325,6 @@ bool RFM69::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferS
 		uint32_t sentTime = hwMillis();
 		while (hwMillis() - sentTime < retryWaitTime) {
 			if (ACKReceived(toAddress)) {
-				//Serial.print(" ~ms:"); Serial.print(millis() - sentTime);
 				return true;
 			}
 		}
