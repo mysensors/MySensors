@@ -25,7 +25,11 @@
 #ifndef MySensors_h
 #define MySensors_h
 
+#ifdef __cplusplus
 #include <Arduino.h>
+#endif
+
+#include "MyConfig.h"
 #include "core/MySensorsCore.h"
 
 // Detect node type
@@ -57,13 +61,13 @@
 // DEBUG
 #if defined(MY_DEBUG)
 // standard debug output
-#define MY_DEBUG_VERBOSE_CORE
-#define MY_DEBUG_VERBOSE_TRANSPORT
-#define MY_DEBUG_VERBOSE_OTA_UPDATE
+#define MY_DEBUG_VERBOSE_CORE	//!< MY_DEBUG_VERBOSE_CORE
+#define MY_DEBUG_VERBOSE_TRANSPORT	//!< MY_DEBUG_VERBOSE_TRANSPORT
+#define MY_DEBUG_VERBOSE_OTA_UPDATE	//!< MY_DEBUG_VERBOSE_OTA_UPDATE
 #endif
 
 #if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
-#define DEBUG_OUTPUT_ENABLED
+#define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
 #define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
 #else
 #define DEBUG_OUTPUT(x,...)								//!< debug NULL
@@ -112,17 +116,6 @@ define MY_DEFAULT_ERR_LED_PIN, MY_DEFAULT_TX_LED_PIN or\
 MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
-// tk: move to MyConfig.h
-/**
- * @def MY_DEFAULT_LED_BLINK_PERIOD
- * @brief Default LEDs blinking period in milliseconds.
- */
-#ifndef MY_DEFAULT_LED_BLINK_PERIOD
-#define MY_DEFAULT_LED_BLINK_PERIOD 300
-#endif
-
-// ===
-
 #if defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 #include "core/MyLeds.cpp"
 #else
@@ -140,7 +133,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-#define MY_SIGNING_FEATURE
+#define MY_SIGNING_FEATURE	//!< MY_SIGNING_FEATURE
 #endif
 #include "core/MySigning.cpp"
 #include "drivers/ATSHA204/sha256.cpp"

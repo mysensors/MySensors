@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -32,34 +32,34 @@
 ***********************************/
 
 /**
-* @def MY_DEBUG
-* @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
-* final sketch but is helpful to see what is actually is happening during development
-*/
+ * @def MY_DEBUG
+ * @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
+ * final sketch but is helpful to see what is actually is happening during development
+ */
 //#define MY_DEBUG
 
 /**
-* @def MY_SPECIAL_DEBUG
-* @brief Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
-* I_DEBUG requests are:
-* R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
-* V: CPU voltage
-* F: CPU frequency
-* M: free memory
-* E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
-*/
+ * @def MY_SPECIAL_DEBUG
+ * @brief Enable MY_SPECIAL_DEBUG to enable I_DEBUG messages.
+ * I_DEBUG requests are:
+ * R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+ * V: CPU voltage
+ * F: CPU frequency
+ * M: free memory
+ * E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+ */
 //#define MY_SPECIAL_DEBUG
 
 /**
-* @def MY_DISABLED_SERIAL
-* @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
-*/
+ * @def MY_DISABLED_SERIAL
+ * @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
+ */
 //#define MY_DISABLED_SERIAL
 
 /**
-* @def MY_CORE_ONLY
-* @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
-*/
+ * @def MY_CORE_ONLY
+ * @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+ */
 //#define MY_CORE_ONLY
 
 // Turn off debug if serial pins is used for other stuff
@@ -75,17 +75,17 @@
 #define MY_BAUD_RATE					(115200ul)
 #endif
 /**
-* @def MY_SERIAL_OUTPUT_SIZE
-* @brief Max. characters for serial output.
-*/
+ * @def MY_SERIAL_OUTPUT_SIZE
+ * @brief Max. characters for serial output.
+ */
 #ifndef MY_SERIAL_OUTPUT_SIZE
 #define MY_SERIAL_OUTPUT_SIZE			(120u)
 #endif
 
 /**
-* @def MY_DISABLE_REMOTE_RESET
-* @brief Disables over-the-air reset of node
-*/
+ * @def MY_DISABLE_REMOTE_RESET
+ * @brief Disables over-the-air reset of node
+ */
 //#define MY_DISABLE_REMOTE_RESET
 
 /**********************************
@@ -105,37 +105,37 @@
 #endif
 
 /**
-* @def MY_RAM_ROUTING_TABLE_FEATURE
-* @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
-* note: AVR has limited memory, use with care
-*/
+ * @def MY_RAM_ROUTING_TABLE_FEATURE
+ * @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
+ * note: AVR has limited memory, use with care
+ */
 #define MY_RAM_ROUTING_TABLE_FEATURE
 
 /**
-* @def MY_ROUTING_TABLE_SAVE_INTERVAL_MS
-* @brief Interval to dump content of routing table to eeprom
-*/
+ * @def MY_ROUTING_TABLE_SAVE_INTERVAL_MS
+ * @brief Interval to dump content of routing table to eeprom
+ */
 #ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
 #define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(30*60*1000ul)
 #endif
 /**
-* @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure.
-* This feature is enabled for all repeater nodes (incl. GW)
-*/
+ * @def MY_TRANSPORT_SANITY_CHECK
+ * @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure.
+ * This feature is enabled for all repeater nodes (incl. GW)
+ */
 //#define MY_TRANSPORT_SANITY_CHECK
 
 /**
-* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-* @brief Interval (in ms) for transport sanity checks
-*/
+ * @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
+ * @brief Interval (in ms) for transport sanity checks
+ */
 #ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
 #define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15*60*1000ul)
 #endif
 /**
-* @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
-*/
+ * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
+ * @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
+ */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
 #define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (20*60*1000ul)
 #endif
@@ -159,9 +159,9 @@
 #define MY_REGISTRATION_FEATURE
 
 /**
-* @def MY_REGISTRATION_RETRIES
-* @brief Number of registration retries if no reply received from GW/controller
-*/
+ * @def MY_REGISTRATION_RETRIES
+ * @brief Number of registration retries if no reply received from GW/controller
+ */
 
 #ifndef MY_REGISTRATION_RETRIES
 #define MY_REGISTRATION_RETRIES			(3u)
@@ -174,32 +174,32 @@
 #define MY_REGISTRATION_DEFAULT			true
 
 /**
-* @def MY_REGISTRATION_CONTROLLER
-* @brief If enabled, node registration request has to be handled by controller
-*/
+ * @def MY_REGISTRATION_CONTROLLER
+ * @brief If enabled, node registration request has to be handled by controller
+ */
 // #define MY_REGISTRATION_CONTROLLER
 
 /**
-* @def MY_CORE_COMPATIBILITY_CHECK
-* @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
-*/
+ * @def MY_CORE_COMPATIBILITY_CHECK
+ * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
+ */
 #define MY_CORE_COMPATIBILITY_CHECK
 
 /**
-* @def MY_TRANSPORT_WAIT_READY_MS
-* @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
-*/
+ * @def MY_TRANSPORT_WAIT_READY_MS
+ * @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
+ */
 #ifndef MY_TRANSPORT_WAIT_READY_MS
 #define MY_TRANSPORT_WAIT_READY_MS		(0ul)
 #endif
 
 /**
-* @def MY_PASSIVE_NODE
-* @brief If enabled, the node operates fully autonomously, i.e. messages are sent without ACKing
-* note: All transport-related checks and safety-mechanisms are disabled, also @ref MY_NODE_ID,
-* @ref MY_PARENT_NODE_ID and @ref MY_PARENT_NODE_IS_STATIC need to be set.
-* Singing, registration, and OTA FW update are disabled.
-*/
+ * @def MY_PASSIVE_NODE
+ * @brief If enabled, the node operates fully autonomously, i.e. messages are sent without ACKing.
+ * note: All transport-related checks and safety-mechanisms are disabled.
+ * Requirement: @ref MY_NODE_ID needs to be set, @ref MY_PARENT_NODE_ID and @ref MY_PARENT_NODE_IS_STATIC are optional.
+ * Singing, registration, and OTA FW update are disabled.
+ */
 //#define MY_PASSIVE_NODE
 
 
@@ -226,15 +226,15 @@
 //#define MY_PARENT_NODE_IS_STATIC
 
 /**
-* @def MY_REPEATER_FEATURE
-* @brief Enables repeater functionality (relays messages from other nodes)
-*/
+ * @def MY_REPEATER_FEATURE
+ * @brief Enables repeater functionality (relays messages from other nodes)
+ */
 //#define MY_REPEATER_FEATURE
 
 /**
-* @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
-* @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
-*/
+ * @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
+ * @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
+ */
 #ifndef MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
 #define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS (10*1000ul)
 #endif
@@ -270,7 +270,7 @@
 
 /**
  * @def MY_OTA_FLASH_JDECID
- * @brief Flash jdecid.
+ * @brief Flash JDECID. Use (0x00) if unknown.
  */
 #ifndef MY_OTA_FLASH_JDECID
 #define MY_OTA_FLASH_JDECID				(0x1F65)
@@ -320,26 +320,43 @@
 //#define MY_DEFAULT_TX_LED_PIN x
 //#define MY_DEFAULT_RX_LED_PIN x
 
-// The following setting allows you to inverse the LED blinking
-// When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
-// off when blinking
-
+/**
+ * @def MY_WITH_LEDS_BLINKING_INVERSE
+ * @brief The following setting allows you to inverse the LED blinking.
+ * When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches off when blinking.
+ */
 //#define MY_WITH_LEDS_BLINKING_INVERSE
 
 /**
-* @def MY_INDICATION_HANDLER
-* @brief Enable to use own indication handler
-*/
+ * @def MY_INDICATION_HANDLER
+ * @brief Enable to use own indication handler.
+ */
 //#define MY_INDICATION_HANDLER
+
+/**
+* @def MY_DEFAULT_LED_BLINK_PERIOD
+* @brief Default LEDs blinking period in milliseconds.
+*/
+#ifndef MY_DEFAULT_LED_BLINK_PERIOD
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
+#endif
+
 
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
 **********************************************/
-// Enabled inclusion mode feature
+
+/**
+* @def MY_INCLUSION_MODE_FEATURE
+* @brief Enables inclusion mode feature.
+*/
 //#define MY_INCLUSION_MODE_FEATURE
 
-// Enables inclusion-mode button feature on the gateway device
+/**
+* @def MY_INCLUSION_BUTTON_FEATURE
+* @brief Enables inclusion-mode button feature on the gateway device
+*/
 //#define MY_INCLUSION_BUTTON_FEATURE
 
 // Disable inclusion mode button if inclusion mode feature is not enabled
@@ -373,7 +390,7 @@
  * @brief The logical level indicating a pressed inclusion mode button.
  */
 #if defined(MY_INCLUSION_BUTTON_EXTERNAL_PULLUP)
-#define MY_INCLUSION_BUTTON_PRESSED HIGH
+#define MY_INCLUSION_BUTTON_PRESSED		HIGH
 #else
 #define MY_INCLUSION_BUTTON_PRESSED		LOW
 #endif
@@ -382,9 +399,10 @@
 *  Message Signing Settings
 ***********************************/
 /**
-* @def MY_DEBUG_VERBOSE_SIGNING
-* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
-*/
+ * @def MY_DEBUG_VERBOSE_SIGNING
+ * @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled.
+ * This will add even more to the size of the final sketch!
+ */
 //#define MY_DEBUG_VERBOSE_SIGNING
 
 /**
@@ -414,7 +432,8 @@
 
 /**
  * @def MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
- * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it. @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
+ * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it.
+ * @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
  *
  * Use this for maximum security, but be aware that every single node will have to be personalized before they can be used.
  * Note that if this is enabled, and whitelisting is also enabled, whitelisting will also be in effect for all nodes.
@@ -540,17 +559,17 @@
 #endif
 
 /**
-* @def MY_RF24_POWER_PIN
-* @brief NRF24 power pin, uncomment if used
-*/
+ * @def MY_RF24_POWER_PIN
+ * @brief NRF24 power pin, uncomment if used
+ */
 //#define MY_RF24_POWER_PIN				(3)
 
 /**
-* @def MY_RX_MESSAGE_BUFFER_FEATURE
-* @brief This enabled the receiving buffer feature.
-*
-* This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
-*/
+ * @def MY_RX_MESSAGE_BUFFER_FEATURE
+ * @brief This enabled the receiving buffer feature.
+ *
+ * This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
+ */
 //#define MY_RX_MESSAGE_BUFFER_FEATURE
 
 /**
@@ -654,21 +673,22 @@
 ***********************************/
 
 /**
-* @def MY_DEBUG_VERBOSE_RFM69
-* @brief Enable MY_DEBUG_VERBOSE_RFM69 flag for verbose debug prints related to the RFM69 driver.
-*/
+ * @def MY_DEBUG_VERBOSE_RFM69
+ * @brief Enable MY_DEBUG_VERBOSE_RFM69 flag for verbose debug prints related to the RFM69 driver.
+ */
 //#define MY_DEBUG_VERBOSE_RFM69
 
 /**
-* @def MY_DEBUG_VERBOSE_RFM69_REGISTERS
-* @brief Enable MY_DEBUG_VERBOSE_RFM69_REGISTERS
-*/
+ * @def MY_DEBUG_VERBOSE_RFM69_REGISTERS
+ * @brief Print content of RFM69 radio registers.
+ */
 //#define MY_DEBUG_VERBOSE_RFM69_REGISTERS
 
 /**
-* @def MY_RFM69_NEW_DRIVER
-* @brief Enable MY_RFM69_NEW_DRIVER to include the refactored RFM69 driver
-*/
+ * @def MY_RFM69_NEW_DRIVER
+ * @brief Enable MY_RFM69_NEW_DRIVER to enable the refactored RFM69 driver.
+ * IMPORTANT: This driver is not compatible with the old (=default) RFM69 driver.
+ */
 //#define MY_RFM69_NEW_DRIVER
 
 /**
@@ -676,6 +696,7 @@
  * @brief RFM69 frequency to use: RFM69_433MHZ, RFM69_868MHZ, RFM69_915MHZ, or custom frequency in Hz (new RFM69 driver only).
  *
  * This must match the hardware version of the RFM69 radio.
+ * Additional information: https://en.wikipedia.org/wiki/Short_Range_Devices
  */
 #ifndef MY_RFM69_FREQUENCY
 #define MY_RFM69_FREQUENCY				RFM69_868MHZ
@@ -699,7 +720,7 @@
 
 /**
  * @def MY_RFM69_TX_POWER_DBM
- * @brief Set TX power level (0..31), default 5
+ * @brief Set TX power level, default 5dBm (overriden if ATC mode enabled).
  */
 #ifndef MY_RFM69_TX_POWER_DBM
 #define MY_RFM69_TX_POWER_DBM			(5)
@@ -707,7 +728,7 @@
 
 /**
  * @def MY_RFM69_ATC_TARGET_RSSI_DBM
- * @brief MY_RFM69_ATC_TARGET_RSSI_DBM
+ * @brief Target RSSI level (in dBm) for RFM69 ATC mode.
  */
 #ifndef MY_RFM69_ATC_TARGET_RSSI_DBM
 #define MY_RFM69_ATC_TARGET_RSSI_DBM	(-80)
@@ -715,16 +736,17 @@
 
 /**
  * @def MY_RFM69_ATC_MODE_DISABLED
- * @brief MY_RFM69_ATC_MODE_DISABLED
+ * @brief Switch to disable ATC mode of RFM69 driver.
  */
 //#define MY_RFM69_ATC_MODE_DISABLED
 
 /**
- * @def RFM69_MAX_POWER_LEVEL_DBM
+ * @def MY_RFM69_MAX_POWER_LEVEL_DBM
  * @brief Set max TX power in dBm if local legislation requires
  * 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
+ * see here:  https://en.wikipedia.org/wiki/Short_Range_Devices
  */
-//#define RFM69_MAX_POWER_LEVEL_DBM		(10u)
+//#define MY_RFM69_MAX_POWER_LEVEL_DBM		(10u)
 
 /**
  * @def MY_RFM69_NETWORKID
@@ -736,25 +758,24 @@
 
 /**
  * @def MY_RFM69_RST_PIN
- * @brief RFM69 Reset pin, uncomment if used
+ * @brief RFM69 reset pin, uncomment if used.
  */
 //#define MY_RFM69_RST_PIN				(9)
 
-// legacy, older board files
 #ifdef MY_RF69_RESET
+// legacy, older board files
 #define MY_RFM69_RST_PIN				MY_RF69_RESET
 #endif
 
 /**
-* @def MY_RFM69_POWER_PIN
-* @brief RFM69 power pin, uncomment if used
-*/
+ * @def MY_RFM69_POWER_PIN
+ * @brief RFM69 power pin
+ */
 //#define MY_RFM69_POWER_PIN			(3)
-
 
 /**
  * @def MY_RFM69_IRQ_PIN
- * @brief RFM69 IRQ pin.
+ * @brief RFM69 IRQ pin
  */
 #ifndef MY_RFM69_IRQ_PIN
 #ifdef MY_RF69_IRQ_PIN
@@ -808,7 +829,7 @@
 //#define MY_RFM69_ENABLE_ENCRYPTION
 
 /**
- * Uncomment if you need listenmode. else comment it and save memory
+ * Uncomment if you need listenmode, else comment it and save memory
  */
 //#define MY_RFM69_ENABLE_LISTENMODE
 
@@ -842,9 +863,9 @@
 ***********************************/
 
 /**
-* @def MY_DEBUG_VERBOSE_RFM95
-* @brief Enable MY_DEBUG_VERBOSE_RFM95 flag for verbose debug prints related to the RFM95 driver.
-*/
+ * @def MY_DEBUG_VERBOSE_RFM95
+ * @brief Enable MY_DEBUG_VERBOSE_RFM95 flag for verbose debug prints related to the RFM95 driver.
+ */
 //#define MY_DEBUG_VERBOSE_RFM95
 
 /**
@@ -852,110 +873,125 @@
  * @brief RFM95 frequency to use: RFM95_169MHZ, RFM95_315MHZ, RFM95_434MHZ, RFM95_868MHZ, RFM95_915MHZ, or custom frequency in Hz.
  *
  * This must match the hardware version of the RFM95 radio.
+ * Additional information: https://en.wikipedia.org/wiki/Short_Range_Devices
+
  */
 #ifndef MY_RFM95_FREQUENCY
 #define MY_RFM95_FREQUENCY				RFM95_868MHZ
 #endif
 
 /**
-* @def MY_RFM95_MODEM_CONFIGRUATION
-* @brief RFM95 modem configuration, see table. Default RFM95 modem configuration: RFM95_BW125CR45SF128
-*
-* BW = Bandwidth in kHz
-* CR = Error correction code
-* SF = Spreading factor, chips / symbol
-*
-* | CONFIG					| BW    | CR  | SF   | Comment
-* |-------------------------|-------|-----|------|-----------------------------
-* | RFM95_BW125CR45SF128	| 125   | 4/5 | 128  | Default, medium range
-* | RFM95_BW500CR45SF128	| 500   | 4/5 | 128  | Fast, short range
-* | RFM95_BW31_25CR48SF512	| 31.25 | 4/8 | 512  | Slow, long range
-* | RFM95_BW125CR48SF4096	| 125   | 4/8 | 4096 | Slow, long range
-*
-*/
+ * @def MY_RFM95_MODEM_CONFIGRUATION
+ * @brief RFM95 modem configuration, see table. Default RFM95 modem configuration: @ref RFM95_BW125CR45SF128
+ *
+ * BW = Bandwidth in kHz
+ * CR = Error correction code
+ * SF = Spreading factor, chips / symbol
+ *
+ * | CONFIG					| BW    | CR  | SF   | Comment
+ * |------------------------|-------|-----|------|-----------------------------
+ * | RFM95_BW125CR45SF128	| 125   | 4/5 | 128  | Default, medium range
+ * | RFM95_BW500CR45SF128	| 500   | 4/5 | 128  | Fast, short range
+ * | RFM95_BW31_25CR48SF512	| 31.25 | 4/8 | 512  | Slow, long range
+ * | RFM95_BW125CR48SF4096	| 125   | 4/8 | 4096 | Slow, long range
+ *
+ */
 #ifndef MY_RFM95_MODEM_CONFIGRUATION
 #define MY_RFM95_MODEM_CONFIGRUATION	RFM95_BW125CR45SF128
 #endif
 
 /**
  * @def MY_RFM95_RST_PIN
- * @brief RFM95 reset pin, uncomment if used
+ * @brief RFM95 reset pin, uncomment if used.
  */
 //#define MY_RFM95_RST_PIN				(9)
 
 /**
-* @def MY_RFM95_POWER_PIN
-* @brief RFM95 power pin, uncomment if used
-*/
+ * @def MY_RFM95_POWER_PIN
+ * @brief RFM95 power pin, uncomment if used
+ */
 //#define MY_RFM95_POWER_PIN			(3)
 
 /**
  * @def MY_RFM95_IRQ_PIN
- * @brief RFM95 IRQ pin
+ * @brief RFM95 IRQ pin.
  */
 #ifndef MY_RFM95_IRQ_PIN
 #define MY_RFM95_IRQ_PIN				DEFAULT_RFM95_IRQ_PIN
 #endif
 
 /**
-* @def MY_RFM95_IRQ_NUM
-* @brief RFM95 IRQ number
-*/
+ * @def MY_RFM95_IRQ_NUM
+ * @brief RFM95 IRQ number.
+ */
 #ifndef MY_RFM95_IRQ_NUM
 #define MY_RFM95_IRQ_NUM				DEFAULT_RFM95_IRQ_NUM
 #endif
 
 /**
  * @def MY_RFM95_CS_PIN
- * @brief RFM95 SPI chip select pin
+ * @brief RFM95 SPI chip select pin.
  */
 #ifndef MY_RFM95_CS_PIN
 #define MY_RFM95_CS_PIN					DEFAULT_RFM95_CS_PIN
 #endif
 
 /**
-* @def MY_RFM95_SPI_SPEED
-* @brief Set to overrule default RFM95 SPI speed, default 4Mhz.
-*/
+ * @def MY_RFM95_SPI_SPEED
+ * @brief Set to overrule default RFM95 SPI speed, default 4Mhz.
+ */
 #ifndef MY_RFM95_SPI_SPEED
 #define MY_RFM95_SPI_SPEED				(4*1000000ul)
 #endif
 
 /**
  * @def MY_RFM95_TX_POWER_DBM
- * @brief RFM95 TX power level.
+ * @brief Set TX power level, default 13dBm (overriden if ATC mode enabled)
+ * see here: https://en.wikipedia.org/wiki/Short_Range_Devices
  */
 #ifndef MY_RFM95_TX_POWER_DBM
 #define MY_RFM95_TX_POWER_DBM			(13u)	// 20mW
 #endif
 
 /**
-* @def MY_RFM95_ATC_MODE_DISABLED
-* @brief Enable to disable ATC mode
-*/
+ * @def MY_RFM95_ATC_MODE_DISABLED
+ * @brief Switch to disable RFM95 ATC mode
+ */
 //#define MY_RFM95_ATC_MODE_DISABLED
 
 /**
-* @def MY_RFM95_ATC_TARGET_RSSI
-* @brief Traget RSSI level for ATC mode
-*/
+ * @def MY_RFM95_ATC_TARGET_RSSI
+ * @brief Target RSSI level (in dBm) for RFM95 ATC mode
+ */
 #ifndef MY_RFM95_ATC_TARGET_RSSI
 #define MY_RFM95_ATC_TARGET_RSSI		(-60)
 #endif
 
 /**
-* @def RFM95_MAX_POWER_LEVEL_DBM
-* @brief Set max TX power in dBm if local legislation requires
-* 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
-*/
-//#define RFM95_MAX_POWER_LEVEL_DBM		(10u)
+ * @def MY_RFM95_MAX_POWER_LEVEL_DBM
+ * @brief Set max TX power in dBm if local legislation requires
+ * 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
+ * see here: https://en.wikipedia.org/wiki/Short_Range_Devices
+ */
+//#define MY_RFM95_MAX_POWER_LEVEL_DBM		(10u)
 
 /**
-* @def MY_RFM95_TCXO
-* @brief Enable to force your radio to use an external frequency source (e.g. TCXO, if present).
-* This allows for better stability using SF 9 to 12.
-*/
+ * @def MY_RFM95_TCXO
+ * @brief Enable to force your radio to use an external frequency source (e.g. TCXO, if present).
+ * This allows for better stability using SF 9 to 12.
+ */
 //#define MY_RFM95_TCXO
+
+/**************************************
+* Signal report
+***************************************/
+
+/**
+ * @def MY_SIGNAL_REPORT_ENABLED
+ * @brief Enables signal report functionality, see @ref transportSignalReport().
+ * NOTE: This feature adds ~1kB code to the sketch.
+ */
+#define MY_SIGNAL_REPORT_ENABLED
 
 
 /**************************************
@@ -993,11 +1029,11 @@
 //#define MY_USE_UDP
 
 /**
- * @def MY_IP_RENEWAL_INTERVAL
+ * @def MY_IP_RENEWAL_INTERVAL_MS
  * @brief DHCP, default renewal setting in milliseconds.
  */
-#ifndef MY_IP_RENEWAL_INTERVAL
-#define MY_IP_RENEWAL_INTERVAL			(60*1000ul)
+#ifndef MY_IP_RENEWAL_INTERVAL_MS
+#define MY_IP_RENEWAL_INTERVAL_MS		(60*1000ul)
 #endif
 
 /**
@@ -1146,6 +1182,9 @@
 // linux
 #define MY_LINUX_SERIAL_GROUPNAME
 #define MY_LINUX_IS_SERIAL_PTY
+// inclusion mode
+#define MY_INCLUSION_MODE_FEATURE
+#define MY_INCLUSION_BUTTON_FEATURE
 // transport
 #define MY_PARENT_NODE_IS_STATIC
 #define MY_REGISTRATION_CONTROLLER
@@ -1156,6 +1195,7 @@
 #define MY_PASSIVE_NODE
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
 // general
+#define MY_WITH_LEDS_BLINKING_INVERSE
 #define MY_INDICATION_HANDLER
 #define MY_DISABLE_REMOTE_RESET
 // signing
@@ -1179,7 +1219,7 @@
 #define MY_RFM69_POWER_PIN
 #define MY_RFM69_ENABLE_ENCRYPTION
 #define MY_RFM69_ATC_MODE_DISABLED
-#define RFM69_MAX_POWER_LEVEL_DBM
+#define MY_RFM69_MAX_POWER_LEVEL_DBM
 #define MY_RFM69_RST_PIN
 #define MY_DEBUG_VERBOSE_RFM69
 #define MY_DEBUG_VERBOSE_RFM69_REGISTERS
@@ -1190,5 +1230,6 @@
 #define MY_RFM95_MODEM_CONFIGRUATION
 #define MY_RFM95_POWER_PIN
 #define MY_RFM95_TCXO
+#define MY_RFM95_MAX_POWER_LEVEL_DBM
 
 #endif

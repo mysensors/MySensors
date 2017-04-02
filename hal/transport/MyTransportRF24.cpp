@@ -174,17 +174,17 @@ int16_t transportGetSendingRSSI(void)
 int16_t transportGetReceivingRSSI(void)
 {
 	// not available, only bool RPD
-	return static_cast<int16_t>(INVALID_RSSI);
+	return INVALID_RSSI;
 }
 
 int16_t transportGetSendingSNR(void)
 {
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetReceivingSNR(void)
 {
-	return static_cast<int16_t>(INVALID_SNR);
+	return INVALID_SNR;
 }
 
 int16_t transportGetTxPowerPercent(void)

@@ -23,6 +23,7 @@
 #define INVALID_SNR					((int16_t)-256)	//!< INVALID_SNR
 #define INVALID_RSSI				((int16_t)-256)	//!< INVALID_RSSI
 #define INVALID_PERCENT				((int16_t)-100)	//!< INVALID_PERCENT
+#define INVALID_LEVEL				((int16_t)-256)	//!< INVALID_LEVEL
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 #if defined(MY_RADIO_RFM69)
@@ -92,11 +93,11 @@ bool transportSanityCheck(void);
 */
 uint8_t transportReceive(void* data);
 /**
-* @brief Power down transport HW (if corresponding MY_XXXX_POWER_PIN defined)
+* @brief Power down transport HW (if corresponding MY_XYZ_POWER_PIN defined)
 */
 void transportPowerDown(void);
 /**
-* @brief Power up transport HW (if corresponding MY_XXXX_POWER_PIN defined)
+* @brief Power up transport HW (if corresponding MY_XYZ_POWER_PIN defined)
 */
 void transportPowerUp(void);
 /**
@@ -107,22 +108,6 @@ void transportSleep(void);
 * @brief Set transport HW to standby
 */
 void transportStandBy(void);
-
-
-// experimental
-
-/**
-* @brief transportSignalReport
-* @param command
-* @return
-*/
-int16_t transportSignalReport(const char command);
-/**
-* @brief transportGetSignalReport
-* @param signalReport
-* @return
-*/
-int16_t transportGetSignalReport(const signalReport_t signalReport = SR_RX_RSSI);
 /**
 * @brief transportGetSendingRSSI
 * @return RSSI

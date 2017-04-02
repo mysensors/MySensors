@@ -1093,7 +1093,7 @@ LOCAL void RFM69_listenModeSendBurst(const uint8_t recipient, uint8_t* data, con
 	RFM69_DEBUG(PSTR("RFM69:LSM:Send burst for %d ms\n"), cycleDurationMs);
 
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_TX);
-	uint32_t startTime = millis();
+	uint32_t startTime = hwMillis();
 
 	while (timeRemaining.l > 0) {
 		// send burst
@@ -1119,7 +1119,7 @@ LOCAL void RFM69_listenModeSendBurst(const uint8_t recipient, uint8_t* data, con
 
 		while ((RFM69_readReg(RFM69_REG_IRQFLAGS2) & RFM69_IRQFLAGS2_FIFONOTEMPTY) !=
 		        0x00);  // make sure packet is sent before putting more into the FIFO
-		timeRemaining.l = cycleDurationMs - (millis() - startTime);
+		timeRemaining.l = cycleDurationMs - (hwMillis() - startTime);
 	}
 
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_TX);
