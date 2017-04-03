@@ -163,11 +163,11 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	// to prevent waking immediately again.
 	// Ref: https://forum.arduino.cc/index.php?topic=59217.0
 	if (interrupt1 != INVALID_INTERRUPT_NUM) {
-		EIFR = _BV(INTF0);
+		EIFR = _BV(interrupt1 == 0 ? INTF0 : INTF1);
 		attachInterrupt(interrupt1, wakeUp1, mode1);
 	}
 	if (interrupt2 != INVALID_INTERRUPT_NUM) {
-		EIFR = _BV(INTF1);
+		EIFR = _BV(interrupt2 == 0 ? INTF0 : INTF1);
 		attachInterrupt(interrupt2, wakeUp2, mode2);
 	}
 
