@@ -24,7 +24,7 @@ Building options:
     --extra-cxxflags=<CXXFLAGS> Extra C++ flags passed to C++ compilation. []
     --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
     --c_compiler=<CC>           C compiler. [arm-linux-gnueabihf-gcc][gcc]
-    --cxx_compiler=<CXX>        C++ compiler [arm-linux-gnueabihf-g++][g++]
+    --cxx_compiler=<CXX>        C++ compiler. [arm-linux-gnueabihf-g++][g++]
     --build-dir=<DIR>           Compiler directory to store object files. [build]
     --bin-dir=<DIR>             Compiler directory to store binary files. [bin]
     --arduino-lib-dir=<DIR>     Arduino library directory.
@@ -61,10 +61,10 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485|rfm95]
+    --my-transport=[none|nrf24|rs485|rfm95|rfm69]
                                 Set the transport to be used to communicate with other nodes.
                                 [nrf24]
-    --my-rf24-channel=<0-125>   RF channel for the sensor net, 0-125. [76]
+    --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-ce-pin=<PIN>      Pin number to use for rf24 Chip-Enable.
@@ -76,8 +76,12 @@ MySensors options:
                                 personalized with the same AES key
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
-    --my-rf69-irq-pin=<PIN>     Pin number connected to RFM69 IRQ pin.
-	--my-rs485-serial-port=<PORT>
+    --my-rfm69-frequency=[315|433|868|915]
+                                RFM69 Module Frequency. [868]
+    --my-is-rfm69hw             Enable high-powered rfm69hw.
+    --my-rfm69-irq-pin=<PIN>    Pin number connected to RFM69 IRQ pin.
+    --my-rfm69-cs-pin=<PIN>     Pin number to use for RFM69 Chip-Select.
+    --my-rs485-serial-port=<PORT>
                                 RS485 serial port. You must provide a port.
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
     --my-rs485-de-pin=<PIN>     Pin number connected to RS485 driver enable pin.
@@ -400,9 +404,28 @@ for opt do
     --my-rx-message-buffer-size=*)
         CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_SIZE=${optarg} $CPPFLAGS"
         ;;
-    --my-rf69-irq-pin=*)
-        CPPFLAGS="-DMY_RF69_IRQ_PIN=${optarg} $CPPFLAGS"
-		;;
+    --my-rfm69-frequency=*)
+        if [[ ${optarg} == "315" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_315MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "433" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_433MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "868" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_868MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "915" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_915MHZ $CPPFLAGS"
+        else
+            echo "[WARNING] Illegal value for --my-rfm69-frequency=${optarg}, ignored"
+        fi
+        ;;
+    --my-is-rfm69hw*)
+        CPPFLAGS="-DMY_IS_RFM69HW $CPPFLAGS"
+        ;;
+    --my-rfm69-irq-pin=*)
+        CPPFLAGS="-DMY_RFM69_IRQ_PIN=${optarg} $CPPFLAGS"
+        ;;
+    --my-rfm69-cs-pin=*)
+        CPPFLAGS="-DMY_RFM69_CS_PIN=${optarg} $CPPFLAGS"
+        ;;
     --my-rs485-serial-port=*)
         CPPFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
@@ -527,7 +550,7 @@ if [[ ${transport_type} == "none" ]]; then
 elif [[ ${transport_type} == "nrf24" ]]; then
     CPPFLAGS="-DMY_RADIO_NRF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm69" ]]; then
-	CPPFLAGS="-DMY_RADIO_RFM69 $CPPFLAGS"
+    CPPFLAGS="-DMY_RADIO_RFM69 -DMY_RFM69_NEW_DRIVER $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then
     CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm95" ]]; then
