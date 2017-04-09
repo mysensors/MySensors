@@ -31,11 +31,11 @@ bool hwInit(void)
 #define INVALID_INTERRUPT_NUM	(0xFFu)
 
 volatile uint8_t _wokeUpByInterrupt =
-	INVALID_INTERRUPT_NUM;    // Interrupt number that woke the mcu.
+    INVALID_INTERRUPT_NUM;    // Interrupt number that woke the mcu.
 volatile uint8_t _wakeUp1Interrupt  =
-	INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp1-callback.
+    INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp1-callback.
 volatile uint8_t _wakeUp2Interrupt  =
-	INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
+    INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
 
 void wakeUp1()
 {
@@ -45,8 +45,7 @@ void wakeUp1()
 	sleep_disable();
 	detachInterrupt(_wakeUp1Interrupt);
 	// First interrupt occurred will be reported only
-	if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt)
-	{
+	if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt) {
 		_wokeUpByInterrupt = _wakeUp1Interrupt;
 	}
 }
@@ -55,8 +54,7 @@ void wakeUp2()
 	sleep_disable();
 	detachInterrupt(_wakeUp2Interrupt);
 	// First interrupt occurred will be reported only
-	if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt)
-	{
+	if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt) {
 		_wokeUpByInterrupt = _wakeUp2Interrupt;
 	}
 }
@@ -128,7 +126,7 @@ void hwInternalSleep(unsigned long ms)
 	ms += 15u;
 
 	while (!interruptWakeUp() && ms >= 16) {
-		for (uint8_t period = 9u; ;--period) {
+		for (uint8_t period = 9u; ; --period) {
 			const uint16_t comparatorMS = 1 << (period + 4);
 			if ( ms >= comparatorMS) {
 				hwPowerDown(period); // 8192ms => 9, 16ms => 0
@@ -151,7 +149,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
-							 unsigned long ms)
+               unsigned long ms)
 {
 	// ATMega328P supports following modes to wake from sleep: LOW, CHANGE, RISING, FALLING
 	// Datasheet states only LOW can be used with INT0/1 to wake from sleep, which is incorrect.
@@ -193,7 +191,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	}
 
 	// Return what woke the mcu.
-		// Default: no interrupt triggered, timer wake up
+	// Default: no interrupt triggered, timer wake up
 	int8_t ret = MY_WAKE_UP_BY_TIMER;
 	if (interruptWakeUp()) {
 		ret = static_cast<int8_t>(_wokeUpByInterrupt);
@@ -274,7 +272,7 @@ void hwDebugPrint(const char *fmt, ... )
 #ifdef MY_GATEWAY_FEATURE
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;%lu "),
-				C_INTERNAL, I_LOG_MESSAGE, hwMillis());
+	           C_INTERNAL, I_LOG_MESSAGE, hwMillis());
 	MY_SERIALDEVICE.print(fmtBuffer);
 #else
 	// prepend timestamp
