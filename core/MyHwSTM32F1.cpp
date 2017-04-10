@@ -47,7 +47,7 @@
 bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
-	Serial.begin(MY_BAUD_RATE);
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #endif
 	if (EEPROM.init() == EEPROM_OK) {
 
@@ -170,5 +170,7 @@ void hwDebugPrint(const char *fmt, ...)
 #endif
 	va_end(args);
 	MY_SERIALDEVICE.print(fmtBuffer);
-	MY_SERIALDEVICE.flush();
+	// Disable flush since current STM32duino implementation performs a reset
+	// instead of an actual flush
+	//MY_SERIALDEVICE.flush();
 }
