@@ -144,7 +144,7 @@ extern HardwareSPI SPI;		//!< SPI
 // Additional radio settings
 #define RFM69_SYNCVALUE1		(0x2D)					//!< Make this compatible with sync1 byte of RFM12B lib
 
-#if (MY_RFM69HW==true)
+#if (MY_RFM69HW)
 // RFM69H(C)W
 #define RFM69_VERSION_HW	//!< HW version
 #define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-2)	//!< min. power level, -18dBm
@@ -178,7 +178,7 @@ extern HardwareSPI SPI;		//!< SPI
 #define RFM69_ACK_RSSI_REPORT			(5u)			//!< RFM69 header, controlFlag, bit 5
 
 #define RFM69_BROADCAST_ADDRESS			(255u)			//!< Broadcasting address 
-#define RFM69_TARGET_RSSI_DBM			(-60)			//!< RSSI target
+#define RFM69_TARGET_RSSI_DBM			(-75)			//!< RSSI target
 #define RFM69_HIGH_POWER_DBM			(18u)			//!< High power threshold, dBm
 #define RFM69_PROMISCUOUS				(false)			//!< RFM69 promiscuous mode
 
@@ -199,9 +199,8 @@ extern HardwareSPI SPI;		//!< SPI
 #define RFM69_WRITE_REGISTER	(0x80u)			//!< writing register
 
 // CAD & CSMA
-#define RFM69_CAD_TIMEOUT_MS	(2*1000ul)		//!< Channel activity detection timeout
-#define RFM69_CSMA_LIMIT_DBM	(-90)			//!< upper RX signal sensitivity threshold in dBm for carrier sense access
-#define RFM69_CSMA_TIMEOUT_MS	(1000ul)		//!< CSMA timeout
+#define RFM69_CAD_TIMEOUT_MS	(1000ul)		//!< Channel activity detection timeout
+#define RFM69_CSMA_LIMIT_DBM	(-100)			//!< upper RX signal sensitivity threshold in dBm for carrier sense access
 
 // powerup delay
 #define RFM69_POWERUP_DELAY_MS	(100u)			//!< Power up delay, allow VCC to settle, transport to become fully operational
@@ -346,7 +345,7 @@ LOCAL uint8_t RFM69_getAddress(void);
 
 /**
 * @brief Tests whether a new message is available
-* @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM69_recv()
+* @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM69_receive()
 */
 LOCAL bool RFM69_available(void);
 
@@ -356,7 +355,7 @@ LOCAL bool RFM69_available(void);
 * @param maxBufSize Max buffer size
 * @return Number of bytes
 */
-LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize);
+LOCAL uint8_t RFM69_receive(uint8_t* buf, const uint8_t maxBufSize);
 
 /**
 * @brief RFM69_sendFrame
@@ -509,7 +508,7 @@ LOCAL void RFM69_setHighPowerRegs(const bool onOff);
 * @param forceTrigger
 * @return RSSI (internal format)
 */
-LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger = false);
+LOCAL rfm69_RSSI_t RFM69_readRSSI(const bool forceTrigger = false);
 
 /**
 * @brief RFM69_ATCmode
@@ -518,12 +517,19 @@ LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger = false);
 */
 LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARGET_RSSI_DBM);
 
+/**
+* @brief RFM69_canSend
+* @return
+*/
+LOCAL bool RFM69_canSend(void);
+
 #ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
 /**
 * @brief RFM69_readAllRegs Read and display RFM69 register contents
 */
 LOCAL void RFM69_readAllRegs(void);
 #endif
+
 // ************************  LISTENMODE SECTION   ************************
 
 #if defined(MY_RFM69_ENABLE_LISTENMODE)

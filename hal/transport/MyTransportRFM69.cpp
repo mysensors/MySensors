@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -27,8 +27,10 @@ bool transportInit(void)
 {
 	const bool result = RFM69_initialise(MY_RFM69_FREQUENCY);
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
-	// only enable ATC mode nodes
+	// only enable ATC mode on nodes
 	RFM69_ATCmode(true, MY_RFM69_ATC_TARGET_RSSI_DBM);
+#else
+	(void)RFM69_ATCmode;
 #endif
 
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
@@ -77,7 +79,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	return RFM69_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	return RFM69_receive((uint8_t*)data, MAX_MESSAGE_LENGTH);
 }
 
 void transportSleep(void)
@@ -137,12 +139,12 @@ int16_t transportGetReceivingSNR(void)
 
 int16_t transportGetTxPowerPercent(void)
 {
-	return RFM69_getTxPowerPercent();
+	return (int16_t)RFM69_getTxPowerPercent();
 }
 
 int16_t transportGetTxPowerLevel(void)
 {
-	return RFM69_getTxPowerLevel();
+	return (int16_t)RFM69_getTxPowerLevel();
 }
 bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
