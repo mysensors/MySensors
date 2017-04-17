@@ -30,31 +30,6 @@ void initVariant() {}
 
 int main(void)
 {
-
-	// Power down most internal hardware (nRF51)
-#if defined(NRF51)
-	NRF_RADIO->POWER = 0;
-	NRF_SPI0->POWER = 0;
-	NRF_SPI1->POWER = 0;
-	NRF_SPIS1->POWER = 0;
-	NRF_SPIM1->POWER = 0;
-	NRF_TWI0->POWER = 0;
-	NRF_TWI1->POWER = 0;
-	// NRF_GPIOTE->POWER = 0;
-	NRF_ADC->POWER = 0;
-	NRF_TIMER0->POWER = 0;
-	NRF_TIMER1->POWER = 0;
-	NRF_TIMER2->POWER = 0;
-	NRF_RTC0->POWER = 0;
-	NRF_TEMP->POWER = 0;
-	NRF_RNG->POWER = 0;
-	NRF_ECB->POWER = 0;
-	NRF_AAR->POWER = 0;
-	NRF_CCM->POWER = 0;
-	NRF_WDT->POWER = 0;
-	NRF_QDEC->POWER = 0;
-	NRF_LPCOMP->POWER = 0;
-#endif
 	// Suspend UART
 	NRF_UART0->TASKS_STOPRX = 1;
 	NRF_UART0->TASKS_STOPTX = 1;

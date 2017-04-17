@@ -161,19 +161,6 @@ void hwSleepPrepare(unsigned long ms)
 	nrf5_pwr_hfclk = NRF_CLOCK->EVENTS_HFCLKSTARTED;
 	NRF_CLOCK->TASKS_HFCLKSTOP = 1;
 
-	// Stop Peripherie (ADC, WDT, UART...)
-#ifdef NRF51
-	CORE_DEBUG(
-	    PSTR("HW:SLP:PWR R=%d U=%d S=%d%d%d%d T=%d%d G=%d A=%d T=%d%d%d R=%d%d "
-	         "T=%d R=%d E=%d A=%d C=%d W=%d W=%d L=%d\n"),
-	    NRF_RADIO->POWER, NRF_UART0->POWER, NRF_SPI0->POWER, NRF_SPI1->POWER,
-	    NRF_SPIS1->POWER, NRF_SPIM1->POWER, NRF_TWI0->POWER, NRF_TWI1->POWER,
-	    NRF_GPIOTE->POWER, NRF_ADC->POWER, NRF_TIMER0->POWER, NRF_TIMER1->POWER,
-	    NRF_TIMER2->POWER, NRF_RTC0->POWER, NRF_RTC1->POWER, NRF_TEMP->POWER,
-	    NRF_RNG->POWER, NRF_ECB->POWER, NRF_AAR->POWER, NRF_CCM->POWER,
-	    NRF_WDT->POWER, NRF_QDEC->POWER, NRF_LPCOMP->POWER);
-#endif
-
 	// Idle serial device
 #ifndef MY_DISABLED_SERIAL
 	NRF_UART0->TASKS_STOPRX = 1;
@@ -255,22 +242,25 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
 {
 	// Disable interrupts until going to sleep, otherwise interrupts occurring
 	// between attachInterrupt()
-	// and sleep might cause the ATMega to not wakeup from sleep as interrupt has
+	// and sleep might cause the MCU to not wakeup from sleep as interrupt has
 	// already be handled!
-	// cli();
-	// attach interrupts
-	_wakeUp1Interrupt = interrupt1;
-	_wakeUp2Interrupt = interrupt2;
+	MY_CRITICAL_SECTION {
+		// attach interrupts
+		_wakeUp1Interrupt = interrupt1;
+		_wakeUp2Interrupt = interrupt2;
 
-	if (interrupt1 != INVALID_INTERRUPT_NUM) {
-		attachInterrupt(interrupt1, wakeUp1, mode1);
-	}
-	if (interrupt2 != INVALID_INTERRUPT_NUM) {
-		attachInterrupt(interrupt2, wakeUp2, mode2);
-	}
+		if (interrupt1 != INVALID_INTERRUPT_NUM)
+		{
+			attachInterrupt(interrupt1, wakeUp1, mode1);
+		}
+		if (interrupt2 != INVALID_INTERRUPT_NUM)
+		{
+			attachInterrupt(interrupt2, wakeUp2, mode2);
+		}
 
-	// Reset attrubute
-	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+		// Reset attrubute
+		_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+	}
 
 	// Prepare Timer and Hardware
 	hwSleepPrepare(ms);
