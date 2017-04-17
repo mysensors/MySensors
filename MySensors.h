@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -84,17 +84,17 @@
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
-#include "core/MyHwESP8266.cpp"
+#include "hal/architecture/MyHwESP8266.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
-#include "core/MyHwAVR.cpp"
+#include "hal/architecture/MyHwAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
-#include "core/MyHwSAMD.cpp"
+#include "hal/architecture/MyHwSAMD.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
-#include "core/MyHwSTM32F1.cpp"
+#include "hal/architecture/MyHwSTM32F1.cpp"
 #elif defined(__linux__)
-#include "core/MyHwLinuxGeneric.cpp"
+#include "hal/architecture/MyHwLinuxGeneric.cpp"
 #endif
 
 // LEDS
@@ -398,13 +398,13 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // HW mains
 #if !defined(MY_CORE_ONLY)
 #if defined(ARDUINO_ARCH_ESP8266)
-#include "core/MyMainESP8266.cpp"
+#include "hal/architecture/MyMainESP8266.cpp"
 #elif defined(__linux__)
-#include "core/MyMainLinux.cpp"
+#include "hal/architecture/MyMainLinux.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
-#include "core/MyMainSTM32F1.cpp"
+#include "hal/architecture/MyMainSTM32F1.cpp"
 #else
-#include "core/MyMainDefault.cpp"
+#include "hal/architecture/MyMainDefault.cpp"
 #endif
 #endif
 
