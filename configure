@@ -126,6 +126,17 @@ function detect_machine {
     fi
 
     case $hardware in
+    BCM2835)
+        soc="BCM2835"
+        if [[ $machine == "Raspberry"* ]]; then
+            local rev=($(detect_rpi_revision))
+            if [[ $rev == "a02082" || $rev == "a22082" ]]; then
+                tp="RPi3"
+            else
+                tp="Rpi2"
+            fi
+        fi
+        ;;
     BCM2708)
         soc="BCM2835"
         if [[ $machine == "Raspberry"* ]]; then
