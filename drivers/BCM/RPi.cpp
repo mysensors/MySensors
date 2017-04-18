@@ -19,6 +19,7 @@
 
 #include "RPi.h"
 #include <stdlib.h>
+#include <string.h>
 #include "log.h"
 
 const static int pin_to_gpio_rev1[41] = {-1, -1, -1, 0, -1, 1, -1, 4, 14, -1, 15, 17, 18, 21, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -26,67 +27,55 @@ const static int pin_to_gpio_rev2[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15
 const static int pin_to_gpio_rev3[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 18, 27, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, 5, -1, 6, 12, 13, -1, 19, 16, 26, 20, -1, 21 };
 
 // Declare a single default instance
-RPi rpi = RPi();
+RPiClass RPi = RPiClass();
 
-const int* RPi::pin_to_gpio = NULL;
-rpi_info RPi::rpiinfo;
+const int* RPiClass::pin_to_gpio = NULL;
+#ifndef RPI_TYPE
+#error Raspberry Pi type not set
+#endif
+const char* RPiClass::type = RPI_TYPE;
 
-RPi::RPi()
-{
-	if (!bcm2835_init()) {
-		logError("Failed to initialized bcm2835.\n");
-		exit(1);
-	}
-}
-
-RPi::~RPi()
-{
-	bcm2835_close();
-}
-
-void RPi::pinMode(uint8_t physPin, uint8_t mode)
+void RPiClass::pinMode(uint8_t physPin, uint8_t mode)
 {
 	uint8_t gpioPin;
 
-	if (physToGPIO(physPin, &gpioPin)) {
+	if (physToGPIO(physPin, &gpioPin) != 0) {
 		logError("pinMode: invalid pin: %d\n", physPin);
 		return;
 	}
 
-	bcm2835_gpio_fsel(gpioPin, mode);
+	BCM.pinMode(gpioPin, mode);
 }
 
-void RPi::digitalWrite(uint8_t physPin, uint8_t value)
+void RPiClass::digitalWrite(uint8_t physPin, uint8_t value)
 {
 	uint8_t gpioPin;
 
-	if (physToGPIO(physPin, &gpioPin)) {
+	if (physToGPIO(physPin, &gpioPin) != 0) {
 		logError("digitalWrite: invalid pin: %d\n", physPin);
 		return;
 	}
 
-	bcm2835_gpio_write(gpioPin, value);
-	// Delay to allow any change in state to be reflected in the LEVn, register bit.
-	delayMicroseconds(1);
+	BCM.digitalWrite(gpioPin, value);
 }
 
-uint8_t RPi::digitalRead(uint8_t physPin)
+uint8_t RPiClass::digitalRead(uint8_t physPin)
 {
 	uint8_t gpioPin;
 
-	if (physToGPIO(physPin, &gpioPin)) {
+	if (physToGPIO(physPin, &gpioPin) != 0) {
 		logError("digitalRead: invalid pin: %d\n", physPin);
 		return 0;
 	}
 
-	return bcm2835_gpio_lev(gpioPin);
+	return BCM.digitalRead(gpioPin);
 }
 
-uint8_t RPi::digitalPinToInterrupt(uint8_t physPin)
+uint8_t RPiClass::digitalPinToInterrupt(uint8_t physPin)
 {
 	uint8_t gpioPin;
 
-	if (physToGPIO(physPin, &gpioPin)) {
+	if (physToGPIO(physPin, &gpioPin) != 0) {
 		logError("digitalPinToInterrupt: invalid pin: %d\n", physPin);
 		return 0;
 	}
@@ -94,33 +83,30 @@ uint8_t RPi::digitalPinToInterrupt(uint8_t physPin)
 	return gpioPin;
 }
 
-int RPi::physToGPIO(uint8_t physPin, uint8_t *gpio)
+int RPiClass::physToGPIO(uint8_t physPin, uint8_t *gpio)
 {
 	if (pin_to_gpio == NULL) {
-		// detect board revision and set up accordingly
-		if (get_rpi_info(&rpiinfo)) {
-			logError("This module can only be run on a Raspberry Pi!\n");
+		if (strncmp(type,"rpi1", 4) == 0) {
+			pin_to_gpio = &pin_to_gpio_rev1[0];
+		} else if (strncmp(type,"rpi2", 4) == 0) {
+			pin_to_gpio = &pin_to_gpio_rev2[0];
+		} else if (strncmp(type,"rpi3", 4) == 0) {
+			pin_to_gpio = &pin_to_gpio_rev3[0];
+		} else {
+			logError("Invalid Raspberry Pi type!\n");
 			exit(1);
 		}
-
-		if (rpiinfo.p1_revision == 1) {
-			pin_to_gpio = &pin_to_gpio_rev1[0];
-		} else if (rpiinfo.p1_revision == 2) {
-			pin_to_gpio = &pin_to_gpio_rev2[0];
-		} else { // assume model B+ or A+ or 2B
-			pin_to_gpio = &pin_to_gpio_rev3[0];
-		}
 	}
 
-	if ((rpiinfo.p1_revision != 3 && physPin > 26)
-	        || (rpiinfo.p1_revision == 3 && physPin > 40)) {
+	if (gpio == NULL || physPin > 40) {
 		return -1;
 	}
 
-	if (*(pin_to_gpio+physPin) == -1) {
+	int pin = *(pin_to_gpio+physPin);
+	if (pin == -1) {
 		return -1;
 	} else {
-		*gpio = *(pin_to_gpio+physPin);
+		*gpio = pin;
 	}
 
 	return 0;

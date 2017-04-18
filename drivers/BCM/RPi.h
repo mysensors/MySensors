@@ -21,27 +21,15 @@
 #define	RPi_h
 
 #include <stdint.h>
-#include "bcm2835.h"
-#include "cpuinfo.h"
-
-#define INPUT BCM2835_GPIO_FSEL_INPT
-#define OUTPUT BCM2835_GPIO_FSEL_OUTP
+#include "BCM.h"
 
 /**
  * @brief RPi class
  */
-class RPi
+class RPiClass
 {
 
 public:
-	/**
-	 * @brief RPi constructor.
-	 */
-	RPi();
-	/**
-	 * @brief RPi destructor.
-	 */
-	~RPi();
 	/**
 	 * @brief Configures the specified pin to behave either as an input or an output.
 	 *
@@ -81,9 +69,9 @@ public:
 
 private:
 	static const int *pin_to_gpio; //!< @brief Pointer to array of GPIO pins numbers.
-	static rpi_info rpiinfo; //!< @brief Board information.
+	static const char *type; //!< @brief Raspberry Pi type.
 };
 
-extern RPi rpi;
+extern RPiClass RPi;
 
 #endif
