@@ -105,6 +105,8 @@ void transportSetTargetRSSI(int16_t targetSignalStrength)
 {
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
 	RFM69_ATCmode(true, targetSignalStrength);
+#else
+	(void)targetSignalStrength;
 #endif
 }
 
@@ -203,7 +205,7 @@ bool transportSanityCheck(void)
 uint8_t transportReceive(void* data)
 {
 	// save payload length
-	const uint8_t dataLen = min(MAX_MESSAGE_LENGTH,_radio.DATALEN);
+	const uint8_t dataLen = _radio.DATALEN < MAX_MESSAGE_LENGTH? _radio.DATALEN : MAX_MESSAGE_LENGTH;
 	(void)memcpy((void*)data, (void*)_radio.DATA, dataLen);
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.ACKRequested()) {
