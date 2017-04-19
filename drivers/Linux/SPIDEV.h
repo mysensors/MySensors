@@ -19,8 +19,8 @@
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
 
-#ifndef SPI_H
-#define	SPI_H
+#ifndef SPIDEV_h
+#define SPIDEV_h
 
 #include <stdint.h>
 #include <string>
@@ -102,17 +102,20 @@ private:
 		dmode = dataMode;
 	}
 
-	friend class SPIClass;
+	friend class SPIDEVClass;
 };
 
-class SPIClass
+/**
+ * SPIDEV class
+ */
+class SPIDEVClass
 {
 
 public:
 	/**
-	 * @brief SPIClass constructor.
+	 * @brief SPIDEVClass constructor.
 	 */
-	SPIClass();
+	SPIDEVClass();
 	/**
 	 * @brief Start SPI operations.
 	 */
@@ -201,6 +204,6 @@ private:
 	static void init();
 };
 
-extern SPIClass SPI;
+extern SPIDEVClass SPIDEV;
 
 #endif

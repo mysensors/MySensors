@@ -19,7 +19,7 @@
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
 
-#include "SPI.h"
+#include "SPIBCM.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include "log.h"
@@ -27,11 +27,11 @@
 static pthread_mutex_t spiMutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Declare a single default instance
-SPIClass SPI = SPIClass();
+SPIBCMClass SPIBCM = SPIBCMClass();
 
-uint8_t SPIClass::initialized = 0;
+uint8_t SPIBCMClass::initialized = 0;
 
-void SPIClass::begin()
+void SPIBCMClass::begin()
 {
 	if (!initialized) {
 		if (!bcm2835_spi_begin()) {
@@ -43,7 +43,7 @@ void SPIClass::begin()
 	initialized++; // reference count
 }
 
-void SPIClass::end()
+void SPIBCMClass::end()
 {
 	if (initialized) {
 		initialized--;
@@ -55,22 +55,22 @@ void SPIClass::end()
 	}
 }
 
-void SPIClass::setBitOrder(uint8_t bit_order)
+void SPIBCMClass::setBitOrder(uint8_t bit_order)
 {
 	bcm2835_spi_setBitOrder(bit_order);
 }
 
-void SPIClass::setDataMode(uint8_t data_mode)
+void SPIBCMClass::setDataMode(uint8_t data_mode)
 {
 	bcm2835_spi_setDataMode(data_mode);
 }
 
-void SPIClass::setClockDivider(uint16_t divider)
+void SPIBCMClass::setClockDivider(uint16_t divider)
 {
 	bcm2835_spi_setClockDivider(divider);
 }
 
-void SPIClass::chipSelect(int csn_pin)
+void SPIBCMClass::chipSelect(int csn_pin)
 {
 	if (csn_pin == RPI_GPIO_P1_26) {
 		csn_pin = BCM2835_SPI_CS1;
@@ -83,7 +83,7 @@ void SPIClass::chipSelect(int csn_pin)
 	delayMicroseconds(5);
 }
 
-void SPIClass::beginTransaction(SPISettings settings)
+void SPIBCMClass::beginTransaction(SPISettings settings)
 {
 	pthread_mutex_lock(&spiMutex);
 	setBitOrder(settings.border);
@@ -91,17 +91,17 @@ void SPIClass::beginTransaction(SPISettings settings)
 	setClockDivider(settings.cdiv);
 }
 
-void SPIClass::endTransaction()
+void SPIBCMClass::endTransaction()
 {
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::usingInterrupt(uint8_t interruptNumber)
+void SPIBCMClass::usingInterrupt(uint8_t interruptNumber)
 {
 	(void)interruptNumber;
 }
 
-void SPIClass::notUsingInterrupt(uint8_t interruptNumber)
+void SPIBCMClass::notUsingInterrupt(uint8_t interruptNumber)
 {
 	(void)interruptNumber;
 }

@@ -17,75 +17,64 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef GPIO_h
-#define	GPIO_h
+#ifndef BCM_h
+#define	BCM_h
 
 #include <stdint.h>
+#include "bcm2835.h"
 
-#define INPUT 0
-#define OUTPUT 1
-
-#define LOW 0
-#define HIGH 1
+#define INPUT BCM2835_GPIO_FSEL_INPT
+#define OUTPUT BCM2835_GPIO_FSEL_OUTP
 
 /**
- * @brief GPIO class
+ * @brief BCM class
  */
-class GPIOClass
+class BCMClass
 {
 
 public:
 	/**
-	 * @brief GPIOClass constructor.
+	 * @brief BCMClass destructor.
 	 */
-	GPIOClass();
-	/**
-	 * @brief GPIOClass copy constructor.
-	 */
-	GPIOClass(const GPIOClass& other);
-	/**
-	 * @brief GPIOClass destructor.
-	 */
-	~GPIOClass();
+	~BCMClass();
 	/**
 	 * @brief Configures the specified pin to behave either as an input or an output.
 	 *
-	 * @param pin The number of the pin.
+	 * @param gpio The GPIO pin number.
 	 * @param mode INPUT or OUTPUT.
 	 */
-	void pinMode(uint8_t pin, uint8_t mode);
+	void pinMode(uint8_t gpio, uint8_t mode);
 	/**
 	 * @brief Write a high or a low value for the given pin.
 	 *
-	 * @param pin number.
+	 * @param gpio The GPIO pin number.
 	 * @param value HIGH or LOW.
 	 */
-	void digitalWrite(uint8_t pin, uint8_t value);
+	void digitalWrite(uint8_t gpio, uint8_t value);
 	/**
 	 * @brief Reads the value from a specified pin.
 	 *
-	 * @param pin The number of the pin.
+	 * @param gpio The GPIO pin number.
 	 * @return HIGH or LOW.
 	 */
-	uint8_t digitalRead(uint8_t pin);
+	uint8_t digitalRead(uint8_t gpio);
 	/**
-	 * @brief Arduino compatibility function, returns the same given pin.
+	 * @brief Returns the same GPIO, no conversion is required.
 	 *
-	 * @param pin The number of the pin.
-	 * @return The same parameter pin number.
+	 * @param gpio The GPIO pin number.
+	 * @return The GPIO pin number.
 	 */
-	uint8_t digitalPinToInterrupt(uint8_t pin);
-	/**
-	 * @brief Overloaded assign operator.
-	 *
-	 */
-	GPIOClass& operator=(const GPIOClass& other);
+	inline uint8_t digitalPinToInterrupt(uint8_t gpio);
 
 private:
-	int lastPinNum; //!< @brief Highest pin number supported.
-	uint8_t *exportedPins; //!< @brief Array with information of which pins were exported.
+	static uint8_t initialized; //!< @brief BCM initialized flag.
 };
 
-extern GPIOClass GPIO;
+uint8_t BCMClass::digitalPinToInterrupt(uint8_t gpio)
+{
+	return gpio;
+}
+
+extern BCMClass BCM;
 
 #endif
