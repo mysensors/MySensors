@@ -19,12 +19,12 @@
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
 
-#ifndef _SPI_H_
-#define _SPI_H_
+#ifndef SPIBCM_h
+#define SPIBCM_h
 
 #include <stdio.h>
 #include "bcm2835.h"
-#include "RPi.h"
+#include "BCM.h"
 
 #define SPI_HAS_TRANSACTION
 
@@ -151,13 +151,13 @@ private:
 		dmode = dataMode;
 	}
 
-	friend class SPIClass;
+	friend class SPIBCMClass;
 };
 
 /**
- * SPIClass class
+ * SPIBCM class
  */
-class SPIClass
+class SPIBCMClass
 {
 
 public:
@@ -242,21 +242,21 @@ private:
 	static uint8_t initialized; //!< @brief SPI initialized flag.
 };
 
-uint8_t SPIClass::transfer(uint8_t data)
+uint8_t SPIBCMClass::transfer(uint8_t data)
 {
 	return bcm2835_spi_transfer(data);
 }
 
-void SPIClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
+void SPIBCMClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
 {
 	bcm2835_spi_transfernb( tbuf, rbuf, len);
 }
 
-void SPIClass::transfern(char* buf, uint32_t len)
+void SPIBCMClass::transfern(char* buf, uint32_t len)
 {
 	transfernb(buf, buf, len);
 }
 
-extern SPIClass SPI;
+extern SPIBCMClass SPIBCM;
 
 #endif

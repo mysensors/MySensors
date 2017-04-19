@@ -34,16 +34,16 @@
 
 #ifdef LINUX_ARCH_RASPBERRYPI
 #include "RPi.h"
-#define pinMode(pin, direction) rpi.pinMode(pin, direction)
-#define digitalWrite(pin, value) rpi.digitalWrite(pin, value)
-#define digitalRead(pin) rpi.digitalRead(pin)
-#define digitalPinToInterrupt(pin) rpi.digitalPinToInterrupt(pin)
+#define pinMode(pin, direction) RPi.pinMode(pin, direction)
+#define digitalWrite(pin, value) RPi.digitalWrite(pin, value)
+#define digitalRead(pin) RPi.digitalRead(pin)
+#define digitalPinToInterrupt(pin) RPi.digitalPinToInterrupt(pin)
 #else
 #include "GPIO.h"
-#define pinMode(pin, direction) gpio.pinMode(pin, direction)
-#define digitalWrite(pin, value) gpio.digitalWrite(pin, value)
-#define digitalRead(pin) gpio.digitalRead(pin)
-#define digitalPinToInterrupt(pin) gpio.digitalPinToInterrupt(pin)
+#define pinMode(pin, direction) GPIO.pinMode(pin, direction)
+#define digitalWrite(pin, value) GPIO.digitalWrite(pin, value)
+#define digitalRead(pin) GPIO.digitalRead(pin)
+#define digitalPinToInterrupt(pin) GPIO.digitalPinToInterrupt(pin)
 #endif
 
 #include "interrupt.h"

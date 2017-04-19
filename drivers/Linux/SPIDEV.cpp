@@ -19,7 +19,7 @@
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
 
-#include "SPI.h"
+#include "SPIDEV.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -32,22 +32,22 @@ static pthread_mutex_t spiMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutexattr_t attr;
 
 // Declare a single default instance
-SPIClass SPI = SPIClass();
+SPIDEVClass SPIDEV = SPIDEVClass();
 
-uint8_t SPIClass::initialized = 0;
-int SPIClass::fd = -1;
-std::string SPIClass::device = SPI_SPIDEV_DEVICE;
-uint32_t SPIClass::speed = SPI_CLOCK_BASE;
-uint32_t SPIClass::speed_temp = SPI_CLOCK_BASE;
-struct spi_ioc_transfer SPIClass::tr = {0,0,0,0,0,8,1,0,0,0};	// 8 bits_per_word, 1 cs_change
+uint8_t SPIDEVClass::initialized = 0;
+int SPIDEVClass::fd = -1;
+std::string SPIDEVClass::device = SPI_SPIDEV_DEVICE;
+uint32_t SPIDEVClass::speed = SPI_CLOCK_BASE;
+uint32_t SPIDEVClass::speed_temp = SPI_CLOCK_BASE;
+struct spi_ioc_transfer SPIDEVClass::tr = {0,0,0,0,0,8,1,0,0,0};	// 8 bits_per_word, 1 cs_change
 
-SPIClass::SPIClass()
+SPIDEVClass::SPIDEVClass()
 {
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&spiMutex, &attr);
 }
 
-void SPIClass::begin(int busNo)
+void SPIDEVClass::begin(int busNo)
 {
 	if (!initialized) {
 		/* set spidev accordingly to busNo like:
@@ -64,7 +64,7 @@ void SPIClass::begin(int busNo)
 	initialized++; // reference count
 }
 
-void SPIClass::end()
+void SPIDEVClass::end()
 {
 	if (initialized) {
 		initialized--;
@@ -78,7 +78,7 @@ void SPIClass::end()
 	}
 }
 
-void SPIClass::setBitOrder(uint8_t bit_order)
+void SPIDEVClass::setBitOrder(uint8_t bit_order)
 {
 	pthread_mutex_lock(&spiMutex);
 
@@ -95,7 +95,7 @@ void SPIClass::setBitOrder(uint8_t bit_order)
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::setDataMode(uint8_t data_mode)
+void SPIDEVClass::setDataMode(uint8_t data_mode)
 {
 	pthread_mutex_lock(&spiMutex);
 
@@ -111,7 +111,7 @@ void SPIClass::setDataMode(uint8_t data_mode)
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::setClockDivider(uint16_t divider)
+void SPIDEVClass::setClockDivider(uint16_t divider)
 {
 	pthread_mutex_lock(&spiMutex);
 
@@ -128,7 +128,7 @@ void SPIClass::setClockDivider(uint16_t divider)
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::chipSelect(int csn_chip)
+void SPIDEVClass::chipSelect(int csn_chip)
 {
 	if (csn_chip >= 0 && csn_chip <= 9) {
 		device[13] = '0' + (csn_chip % 10);
@@ -137,7 +137,7 @@ void SPIClass::chipSelect(int csn_chip)
 	}
 }
 
-uint8_t SPIClass::transfer(uint8_t data)
+uint8_t SPIDEVClass::transfer(uint8_t data)
 {
 	int ret;
 	uint8_t tx[1] = {data};
@@ -161,7 +161,7 @@ uint8_t SPIClass::transfer(uint8_t data)
 	return rx[0];
 }
 
-void SPIClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
+void SPIDEVClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
 {
 	int ret;
 
@@ -181,12 +181,12 @@ void SPIClass::transfernb(char* tbuf, char* rbuf, uint32_t len)
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::transfern(char* buf, uint32_t len)
+void SPIDEVClass::transfern(char* buf, uint32_t len)
 {
 	transfernb(buf, buf, len);
 }
 
-void SPIClass::beginTransaction(SPISettings settings)
+void SPIDEVClass::beginTransaction(SPISettings settings)
 {
 	int ret;
 
@@ -215,23 +215,23 @@ void SPIClass::beginTransaction(SPISettings settings)
 	}
 }
 
-void SPIClass::endTransaction()
+void SPIDEVClass::endTransaction()
 {
 	speed = speed_temp;
 	pthread_mutex_unlock(&spiMutex);
 }
 
-void SPIClass::usingInterrupt(uint8_t interruptNumber)
+void SPIDEVClass::usingInterrupt(uint8_t interruptNumber)
 {
 	(void)interruptNumber;
 }
 
-void SPIClass::notUsingInterrupt(uint8_t interruptNumber)
+void SPIDEVClass::notUsingInterrupt(uint8_t interruptNumber)
 {
 	(void)interruptNumber;
 }
 
-void SPIClass::init()
+void SPIDEVClass::init()
 {
 	pthread_mutex_lock(&spiMutex);
 
