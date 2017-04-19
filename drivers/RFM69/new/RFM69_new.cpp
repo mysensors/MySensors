@@ -52,7 +52,7 @@ uint8_t _SPCR; //!< _SPCR
 uint8_t _SPSR; //!< _SPSR
 #endif
 
-#ifdef LINUX_ARCH_RASPBERRYPI
+#ifdef LINUX_SPI_BCM
 // SPI RX and TX buffers (max packet len + 1 byte for the command)
 uint8_t spi_rxbuff[RFM69_MAX_PACKET_LEN + 1];
 uint8_t spi_txbuff[RFM69_MAX_PACKET_LEN + 1];
@@ -115,7 +115,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	RFM69_prepareSPITransaction();
 	RFM69_csn(LOW);
 
-#ifdef LINUX_ARCH_RASPBERRYPI
+#ifdef LINUX_SPI_BCM
 	uint8_t * prx = spi_rxbuff;
 	uint8_t * ptx = spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
@@ -274,7 +274,7 @@ LOCAL void RFM69_interruptHandler(void)
 			RFM69_prepareSPITransaction();
 			RFM69_csn(LOW);
 
-#ifdef LINUX_ARCH_RASPBERRYPI
+#ifdef LINUX_SPI_BCM
 			char data[RFM69_MAX_PACKET_LEN + 1];   // max packet len + 1 byte for the command
 
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
@@ -357,7 +357,8 @@ LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize)
 	// atomic
 	noInterrupts();
 
-	const uint8_t payloadLen = min(RFM69.currentPacket.payloadLen, maxBufSize);
+	const uint8_t payloadLen = RFM69.currentPacket.payloadLen < maxBufSize?
+	                           RFM69.currentPacket.payloadLen : maxBufSize;
 	const uint8_t sender = RFM69.currentPacket.header.sender;
 	const rfm69_sequenceNumber_t sequenceNumber = RFM69.currentPacket.header.sequenceNumber;
 	const uint8_t controlFlags = RFM69.currentPacket.header.controlFlags;
@@ -734,7 +735,7 @@ LOCAL int16_t RFM69_getReceivingRSSI(void)
 
 LOCAL bool RFM69_setTxPowerPercent(uint8_t newPowerPercent)
 {
-	newPowerPercent = min(newPowerPercent, 100);	// limit
+	newPowerPercent = min(newPowerPercent, (uint8_t)100);	// limit
 	const rfm69_powerlevel_t newPowerLevel = static_cast<rfm69_powerlevel_t>
 	        (RFM69_MIN_POWER_LEVEL_DBM + (RFM69_MAX_POWER_LEVEL_DBM
 	                                      - RFM69_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));
