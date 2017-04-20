@@ -18,9 +18,7 @@
  */
 
 #include "MyIndication.h"
-#if defined(MY_DEFAULT_TX_LED_PIN)|| defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
-#include "MyLeds.h"
-#endif
+
 
 void setIndication( const indication_t ind )
 {
