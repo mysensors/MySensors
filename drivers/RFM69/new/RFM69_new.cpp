@@ -452,8 +452,8 @@ LOCAL void RFM69_setHighPowerRegs(const bool onOff)
 LOCAL bool RFM69_setTxPowerLevel(rfm69_powerlevel_t newPowerLevel)
 {
 	// limit power levels
-	newPowerLevel = max(RFM69_MIN_POWER_LEVEL_DBM, newPowerLevel);
-	newPowerLevel = min(RFM69_MAX_POWER_LEVEL_DBM, newPowerLevel);
+	newPowerLevel = max((rfm69_powerlevel_t)RFM69_MIN_POWER_LEVEL_DBM, newPowerLevel);
+	newPowerLevel = min((rfm69_powerlevel_t)RFM69_MAX_POWER_LEVEL_DBM, newPowerLevel);
 
 	if (RFM69.powerLevel == newPowerLevel) {
 		RFM69_DEBUG(PSTR("RFM69:PTX:NO ADJ\n"));
