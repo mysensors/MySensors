@@ -66,7 +66,7 @@
 #define MY_DEBUG_VERBOSE_OTA_UPDATE	//!< MY_DEBUG_VERBOSE_OTA_UPDATE
 #endif
 
-#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
+#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
 #define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
 #define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
 #else
@@ -78,7 +78,7 @@
 
 
 // Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 #define MY_SENSOR_NETWORK
 #endif
 
@@ -93,6 +93,10 @@
 #include "hal/architecture/MyHwSAMD.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/MyHwSTM32F1.cpp"
+#elif defined(ARDUINO_ARCH_NRF5)
+#include "drivers/NVM/VirtualPage.cpp"
+#include "drivers/NVM/NVRAM.cpp"
+#include "hal/architecture/MyHwNRF5.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyHwLinuxGeneric.cpp"
 #endif
@@ -247,7 +251,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(MY_RADIO_RF24)
 #define __RF24CNT 1		//!< __RF24CNT
 #else
-#define __RF24CNT 0		//!< __RF24CNT 
+#define __RF24CNT 0		//!< __RF24CNT
+#endif
+#if defined(MY_RADIO_NRF5_ESB)
+#define __NRF5ESBCNT 1 //!< __NRF5ESBCNT
+#else
+#define __NRF5ESBCNT 0 //!< __NRF5ESBCNT
 #endif
 #if defined(MY_RADIO_RFM69)
 #define __RFM69CNT 1	//!< __RFM69CNT
@@ -265,12 +274,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define __RS485CNT 0	//!< __RS485CNT
 #endif
 
-#if (__RF24CNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
+#if (__RF24CNT + __NRF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
 #error Only one forward link driver can be activated
 #endif
 
 // TRANSPORT INCLUDES
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 #include "hal/transport/MyTransportHAL.h"
 #include "core/MyTransport.h"
 
@@ -292,7 +301,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // RAM ROUTING TABLE
 #if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(__linux__)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR)
 #if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__)
@@ -331,6 +340,16 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 #include "drivers/RF24/RF24.cpp"
 #include "hal/transport/MyTransportRF24.cpp"
+#elif defined(MY_RADIO_NRF5_ESB)
+#if  !defined(ARDUINO_ARCH_NRF5)
+#error No support for nRF5 radio on this platform
+#endif
+#if defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
+#include "drivers/AES/AES.cpp"
+#endif
+#include "drivers/NRF5/Radio.cpp"
+#include "drivers/NRF5/Radio_ESB.cpp"
+#include "hal/transport/MyTransportNRF5_ESB.cpp"
 #elif defined(MY_RS485)
 #if !defined(MY_RS485_HWSERIAL)
 #if defined(__linux__)
@@ -399,6 +418,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if !defined(MY_CORE_ONLY)
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/MyMainESP8266.cpp"
+#elif defined(ARDUINO_ARCH_NRF5)
+#include "hal/architecture/MyMainNRF5.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyMainLinux.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
