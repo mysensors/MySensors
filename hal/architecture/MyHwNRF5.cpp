@@ -84,6 +84,9 @@ bool hwInit()
 	return true;
 }
 
+static nrf_ecb_t hwRngData;
+static int8_t hwRndDataReadPos = -1;
+
 void hwRandomNumberInit()
 {
 	// Start HWRNG
@@ -106,11 +109,71 @@ void hwRandomNumberInit()
 	}
 	randomSeed(seed);
 
+	// Fill ESB data structure for fast random data generation
+	uint8_t *ecbstruct = (uint8_t *)&hwRngData;
+	for (uint8_t i = 0; i<sizeof(hwRngData); i++) {
+		while (NRF_RNG->EVENTS_VALRDY == 0) {
+			yield();
+		}
+		ecbstruct[i] = NRF_RNG->VALUE;
+		NRF_RNG->EVENTS_VALRDY = 0;
+	}
+	hwRndDataReadPos = 0;
+
 	// Stop HWRNG
 	NRF_RNG->TASKS_STOP = 1;
 #ifdef NRF51
 	NRF_RNG->POWER = 0;
 #endif
+}
+
+ssize_t hwGetentropy(void *__buffer, size_t __length)
+{
+	if (hwRndDataReadPos<0) {
+		// Not initialized
+		hwRandomNumberInit();
+	}
+
+	// cut length if > 256
+	if (__length > 256) {
+		__length = 256;
+	}
+	uint8_t *dst = (uint8_t *)__buffer;
+
+	// Start random number generator
+	for (size_t i = 0; i < __length; i++) {
+		dst[i] = hwRngData.ciphertext[hwRndDataReadPos & 0xfu];
+		MY_CRITICAL_SECTION {
+			if (hwRndDataReadPos >= ((int8_t)sizeof(hwRngData.ciphertext)-1))
+			{
+				// Retry until no error
+				bool need_data = true;
+				while (need_data) {
+					// Stop if another task is running
+					NRF_ECB->TASKS_STOPECB = 1;
+					NRF_ECB->EVENTS_ERRORECB = 0;
+					NRF_ECB->EVENTS_ENDECB = 0;
+					uint32_t ptrbackup = NRF_ECB->ECBDATAPTR;
+					NRF_ECB->ECBDATAPTR = (uint32_t)&hwRngData;
+					NRF_ECB->TASKS_STARTECB = 1;
+					while (!NRF_ECB->EVENTS_ENDECB);
+					NRF_ECB->ECBDATAPTR = ptrbackup;
+					if (NRF_ECB->EVENTS_ERRORECB == 0) {
+						need_data = false;
+					}
+				}
+				hwRndDataReadPos=0;
+				for (uint8_t i=0; i<sizeof(hwRngData.ciphertext); i++) {
+					hwRngData.cleartext[i] ^= hwRngData.ciphertext[i];
+				}
+			} else
+			{
+				hwRndDataReadPos++;
+			}
+		}
+	}
+
+	return __length;
 }
 
 void hwWatchdogReset()

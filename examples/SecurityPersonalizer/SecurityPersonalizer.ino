@@ -72,7 +72,7 @@
  *
  * @b Important<br>
  * You will need to ensure @ref MY_SIGNING_SOFT_RANDOMSEED_PIN is set to an unconnected analog pin
- * in order to provide entropy to the software RNG.
+ * in order to provide entropy to the software RNG if your hardware has no HWRNG.
  *
  * @note The generated keys displayed in the serial log with this setting needs to be written down
  *       and transferred to all nodes this gateway will communicate with. This is mandatory for ALL
@@ -436,7 +436,7 @@ void setup()
 	while (hwMillis() - enter < (unsigned long)500);
 #ifdef USE_SOFT_SIGNING
 	// initialize pseudo-RNG
-	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+	hwRandomNumberInit();
 #endif
 
 	Serial.begin(MY_BAUD_RATE);
