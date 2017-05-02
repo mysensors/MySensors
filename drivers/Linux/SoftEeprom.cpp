@@ -1,13 +1,13 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <string.h>
+#include <errno.h>
 #include "log.h"
 #include "SoftEeprom.h"
 
@@ -31,7 +32,7 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 
 	_fileName = strdup(fileName);
 	if (_fileName == NULL) {
-		perror("Error: ");
+		logError("Error: %s\n", strerror(errno));
 		exit(1);
 	}
 
@@ -52,7 +53,8 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 		myFile.write((const char*)_values, _length);
 		myFile.close();
 	} else if (fileInfo.st_size < 0 || (size_t)fileInfo.st_size != _length) {
-		logError("Config file %s is not the correct size of %zu.  Please remove the file and a new one will be created.\n", _fileName, _length);
+		logError("Config file %s is not the correct size of %zu.  Please remove the file and a new one will be created.\n",
+		         _fileName, _length);
 		exit(1);
 	} else {
 		//Read config into local memory.
@@ -63,6 +65,17 @@ SoftEeprom::SoftEeprom(const char *fileName, size_t length)
 		}
 		myFile.read((char*)_values, _length);
 		myFile.close();
+	}
+}
+
+SoftEeprom::SoftEeprom(const SoftEeprom& other)
+{
+	_fileName = strdup(other._fileName);
+
+	_length = other._length;
+	_values = new uint8_t[_length];
+	for (size_t i = 0; i < _length; ++i) {
+		_values[i] = other._values[i];
 	}
 }
 
@@ -98,10 +111,10 @@ void SoftEeprom::readBlock(void* buf, void* addr, size_t length)
 void SoftEeprom::writeBlock(void* buf, void* addr, size_t length)
 {
 	unsigned long int offs = reinterpret_cast<unsigned long int>(addr);
-	
+
 	if (length && offs + length <= _length) {
 		memcpy(_values+offs, buf, length);
-		
+
 		std::ofstream myFile(_fileName, std::ios::out | std::ios::in | std::ios::binary);
 		if (!myFile) {
 			logError("Unable to write config to file %s.\n", _fileName);
@@ -126,4 +139,18 @@ void SoftEeprom::writeByte(int addr, uint8_t value)
 	if (curr != value) {
 		writeBlock(&value, reinterpret_cast<void*>(addr), 1);
 	}
+}
+
+SoftEeprom& SoftEeprom::operator=(const SoftEeprom& other)
+{
+	if (this != &other) {
+		_fileName = strdup(other._fileName);
+
+		_length = other._length;
+		_values = new uint8_t[_length];
+		for (size_t i = 0; i < _length; ++i) {
+			_values[i] = other._values[i];
+		}
+	}
+	return *this;
 }

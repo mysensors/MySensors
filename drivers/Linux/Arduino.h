@@ -1,3 +1,22 @@
+/*
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
+
 #ifndef Arduino_h
 #define Arduino_h
 
@@ -14,9 +33,20 @@
 #include "stdlib_noniso.h"
 
 #ifdef LINUX_ARCH_RASPBERRYPI
-	#include "rpi_util.h"
-	using namespace rpi_util;
+#include "RPi.h"
+#define pinMode(pin, direction) RPi.pinMode(pin, direction)
+#define digitalWrite(pin, value) RPi.digitalWrite(pin, value)
+#define digitalRead(pin) RPi.digitalRead(pin)
+#define digitalPinToInterrupt(pin) RPi.digitalPinToInterrupt(pin)
+#else
+#include "GPIO.h"
+#define pinMode(pin, direction) GPIO.pinMode(pin, direction)
+#define digitalWrite(pin, value) GPIO.digitalWrite(pin, value)
+#define digitalRead(pin) GPIO.digitalRead(pin)
+#define digitalPinToInterrupt(pin) GPIO.digitalPinToInterrupt(pin)
 #endif
+
+#include "interrupt.h"
 
 #undef PSTR
 #define PSTR(x) (x)
@@ -57,7 +87,11 @@
 #define random(...) GET_MACRO(_0, ##__VA_ARGS__, randMinMax, randMax, rand)(__VA_ARGS__)
 
 #ifndef delay
-	#define delay _delay_ms
+#define delay _delay_milliseconds
+#endif
+
+#ifndef delayMicroseconds
+#define delayMicroseconds _delay_microseconds
 #endif
 
 using std::string;
@@ -68,11 +102,13 @@ using std::abs;
 typedef bool boolean;
 typedef uint8_t byte;
 typedef string String;
+typedef char __FlashStringHelper;
 
 void yield(void);
 unsigned long millis(void);
 unsigned long micros(void);
-void _delay_ms(unsigned int millis);
+void _delay_milliseconds(unsigned int millis);
+void _delay_microseconds(unsigned int micro);
 void randomSeed(unsigned long seed);
 long randMax(long howbig);
 long randMinMax(long howsmall, long howbig);

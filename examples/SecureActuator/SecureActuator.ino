@@ -48,7 +48,7 @@
 // Enable and select radio type attached
 #define MY_RADIO_NRF24 //!< NRF24L01 radio driver
 //#define MY_RADIO_RFM69 //!< RFM69 radio driver
- 
+
 // Select soft/hardware signing method
 #define MY_SIGNING_SOFT //!< Software signing
 //#define MY_SIGNING_ATSHA204 //!< Hardware signing using ATSHA204A
@@ -73,29 +73,30 @@
 #define LOCK_LOCK 1   //!< GPIO value to write to lock attached lock
 #define LOCK_UNLOCK 0 //!< GPIO value to write to unlock attached lock
 
-void setup() {
-  for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS;lock++, pin++) {
-    // Set lock pins in output mode
-    pinMode(pin, OUTPUT);   
-    // Set lock to last known state (using eeprom storage) 
-    digitalWrite(pin, loadState(lock)?LOCK_LOCK:LOCK_UNLOCK);
-  }
+void setup()
+{
+	for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS; lock++, pin++) {
+		// Set lock pins in output mode
+		pinMode(pin, OUTPUT);
+		// Set lock to last known state (using eeprom storage)
+		digitalWrite(pin, loadState(lock)?LOCK_LOCK:LOCK_UNLOCK);
+	}
 }
 
-void presentation()  
+void presentation()
 {
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Secure Lock", "1.0");
+	// Send the sketch version information to the gateway and Controller
+	sendSketchInfo("Secure Lock", "1.0");
 
-  // Fetch lock status
-  for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS;lock++, pin++) {
-    // Register all locks to gw (they will be created as child devices)
-    present(lock, S_LOCK, "SecureActuator", false);
-  }
+	// Fetch lock status
+	for (int lock=1, pin=LOCK_1; lock<=NOF_LOCKS; lock++, pin++) {
+		// Register all locks to gw (they will be created as child devices)
+		present(lock, S_LOCK, "SecureActuator", false);
+	}
 }
 
 /** @brief Sketch execution code */
-void loop() 
+void loop()
 {
 }
 
@@ -104,19 +105,20 @@ void loop()
  *
  * @param message The message to handle.
  */
-void receive(const MyMessage &message) {
-  // We only expect one type of message from controller. But we better check anyway.
-  // And acks are not accepted as control messages
-  if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS && !mGetAck(message)) {
-     // Change relay state
-     digitalWrite(message.sensor-1+LOCK_1, message.getBool()?LOCK_LOCK:LOCK_UNLOCK);
-     // Store state in eeprom
-     saveState(message.sensor, message.getBool());
-     // Write some debug info
-     Serial.print("Incoming change for lock:");
-     Serial.print(message.sensor);
-     Serial.print(", New status: ");
-     Serial.println(message.getBool());
-   } 
+void receive(const MyMessage &message)
+{
+	// We only expect one type of message from controller. But we better check anyway.
+	// And acks are not accepted as control messages
+	if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS && !mGetAck(message)) {
+		// Change relay state
+		digitalWrite(message.sensor-1+LOCK_1, message.getBool()?LOCK_LOCK:LOCK_UNLOCK);
+		// Store state in eeprom
+		saveState(message.sensor, message.getBool());
+		// Write some debug info
+		Serial.print("Incoming change for lock:");
+		Serial.print(message.sensor);
+		Serial.print(", New status: ");
+		Serial.println(message.getBool());
+	}
 }
 /** @}*/

@@ -2,6 +2,10 @@
 #
 # Makefile for MySensors
 #
+#  
+# The arduino library build part were inspired by
+#   Arduino-Makefile project, Copyright (C) 2012 Sudar <http://sudarmuthu.com>
+#
 # Description:
 # ------------
 # use make all and make install to install the gateway
@@ -11,42 +15,92 @@ CONFIG_FILE=Makefile.inc
 
 include $(CONFIG_FILE)
 
-GATEWAY_BIN=mysGateway
-GATEWAY=examples_linux/$(GATEWAY_BIN)
+CPPFLAGS+=-Ofast -g -Wall -Wextra
+DEPFLAGS=-MT $@ -MMD -MP
+
+GATEWAY_BIN=mysgw
+GATEWAY=$(BINDIR)/$(GATEWAY_BIN)
 GATEWAY_C_SOURCES=$(wildcard drivers/Linux/*.c)
-GATEWAY_CPP_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysGateway.cpp
-OBJECTS=$(patsubst %.c,%.o,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,%.o,$(GATEWAY_CPP_SOURCES))
+GATEWAY_CPP_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysgw.cpp
+GATEWAY_OBJECTS=$(patsubst %.c,$(BUILDDIR)/%.o,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(GATEWAY_CPP_SOURCES))
 
-DEPS+=$(patsubst %.c,%.d,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,%.d,$(GATEWAY_CPP_SOURCES))
+INCLUDES=-I. -I./core -I./drivers/Linux
 
-CINCLUDE=-I. -I./core -I./drivers/Linux
+ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836 BCM2837))
+BCM_C_SOURCES=$(wildcard drivers/BCM/*.c)
+BCM_CPP_SOURCES=$(wildcard drivers/BCM/*.cpp)
+GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(BCM_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(BCM_CPP_SOURCES))
 
-ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836))
-RPI_C_SOURCES=$(wildcard drivers/RPi/*.c)
-RPI_CPP_SOURCES=$(wildcard drivers/RPi/*.cpp)
-OBJECTS+=$(patsubst %.c,%.o,$(RPI_C_SOURCES)) $(patsubst %.cpp,%.o,$(RPI_CPP_SOURCES))
-
-DEPS+=$(patsubst %.c,%.d,$(RPI_C_SOURCES)) $(patsubst %.cpp,%.d,$(RPI_CPP_SOURCES))
-
-CINCLUDE+=-I./drivers/RPi
+INCLUDES+=-I./drivers/BCM
 endif
 
-.PHONY: all gateway cleanconfig clean install uninstall force
+# Gets include flags for library
+get_library_includes = $(if $(and $(wildcard $(1)/src), $(wildcard $(1)/library.properties)), \
+							-I$(1)/src, \
+							$(addprefix -I,$(1) $(wildcard $(1)/utility)))
 
-all: $(GATEWAY)
+# Gets all sources with given extension (param2) for library (path = param1)
+# for old (1.0.x) layout looks in . and "utility" directories
+# for new (1.5.x) layout looks in src and recursively its subdirectories
+get_library_files  = $(if $(and $(wildcard $(1)/src), $(wildcard $(1)/library.properties)), \
+						$(call rwildcard,$(1)/src/,*.$(2)), \
+						$(wildcard $(1)/*.$(2) $(1)/utility/*.$(2)))
+
+ifdef ARDUINO_LIB_DIR
+ARDUINO=arduino
+ARDUINO_LIBS:=$(shell find $(ARDUINO_LIB_DIR) -mindepth 1 -maxdepth 1 -type d)
+ARDUINO_INCLUDES:=$(foreach lib, $(ARDUINO_LIBS), $(call get_library_includes,$(lib)))
+ARDUINO_LIB_CPP_SRCS:=$(foreach lib, $(ARDUINO_LIBS), $(call get_library_files,$(lib),cpp))
+ARDUINO_LIB_C_SRCS:=$(foreach lib, $(ARDUINO_LIBS), $(call get_library_files,$(lib),c))
+ARDUINO_LIB_AS_SRCS:=$(foreach lib, $(ARDUINO_LIBS), $(call get_library_files,$(lib),S))
+ARDUINO_LIB_OBJS=$(patsubst $(ARDUINO_LIB_DIR)/%.cpp,$(BUILDDIR)/arduinolibs/%.cpp.o,$(ARDUINO_LIB_CPP_SRCS)) \
+				$(patsubst $(ARDUINO_LIB_DIR)/%.c,$(BUILDDIR)/arduinolibs/%.c.o,$(ARDUINO_LIB_C_SRCS)) \
+				$(patsubst $(ARDUINO_LIB_DIR)/%.S,$(BUILDDIR)/arduinolibs/%.S.o,$(ARDUINO_LIB_AS_SRCS))
+
+INCLUDES+=$(ARDUINO_INCLUDES)
+DEPS+=$(ARDUINO_LIB_OBJS:.o=.d)
+endif
+
+DEPS+=$(GATEWAY_OBJECTS:.o=.d)
+
+.PHONY: all createdir cleanconfig clean install uninstall
+
+all: createdir $(ARDUINO) $(GATEWAY)
+
+createdir:
+	@mkdir -p $(BUILDDIR) $(BINDIR)
+
+# Arduino libraries Build
+$(ARDUINO): CPPFLAGS+=-DARDUINO=100
+$(ARDUINO): $(ARDUINO_LIB_OBJS)
+	@printf "[Done building Arduino Libraries]\n"
 
 # Gateway Build
-$(GATEWAY): $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
+$(GATEWAY): $(GATEWAY_OBJECTS) $(ARDUINO_LIB_OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $(GATEWAY_OBJECTS) $(ARDUINO_LIB_OBJS)
 
 # Include all .d files
 -include $(DEPS)
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CINCLUDE) -MMD -c -o $@ $<
+$(BUILDDIR)/arduinolibs/%.cpp.o: $(ARDUINO_LIB_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(DEPFLAGS) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) $(CINCLUDE) -MMD -c -o $@ $<
+$(BUILDDIR)/arduinolibs/%.c.o: $(ARDUINO_LIB_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILDDIR)/arduinolibs/%.S.o: $(ARDUINO_LIB_DIR)/%.S
+	@mkdir -p $(dir $@)
+	$(CC) $(DEPFLAGS) $(CPPFLAGS) $(ASFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILDDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(DEPFLAGS) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILDDIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # clear configuration files
 cleanconfig:
@@ -56,7 +110,7 @@ cleanconfig:
 # clear build files
 clean:
 	@echo "[Cleaning]"
-	rm -rf build $(OBJECTS) $(GATEWAY) $(DEPS)
+	rm -rf $(BUILDDIR) $(BINDIR)
 
 $(CONFIG_FILE):
 	@echo "[Running configure]"
@@ -65,36 +119,36 @@ $(CONFIG_FILE):
 install: all install-gateway install-initscripts
 
 install-gateway: 
-	@echo "Installing $(GATEWAY) to $(GATEWAY_DIR)"
-	@install -m 0755 $(GATEWAY) $(GATEWAY_DIR)
+	@echo "Installing $(GATEWAY) to ${DESTDIR}$(GATEWAY_DIR)"
+	@install -m 0755 $(GATEWAY) ${DESTDIR}$(GATEWAY_DIR)
 
 install-initscripts:
 ifeq ($(INIT_SYSTEM), systemd)
-	install -m0644 initscripts/mysgateway.systemd /etc/systemd/system/mysgateway.service
-	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/systemd/system/mysgateway.service
+	install -m0644 initscripts/mysgw.systemd ${DESTDIR}/etc/systemd/system/mysgw.service
+	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" ${DESTDIR}/etc/systemd/system/mysgw.service
 	systemctl daemon-reload
 	@echo "MySensors gateway has been installed, to add to the boot run:"
-	@echo "  sudo systemctl enable mysgateway.service"
+	@echo "  sudo systemctl enable mysgw.service"
 	@echo "To start the gateway run:"
-	@echo "  sudo systemctl start mysgateway.service"
+	@echo "  sudo systemctl start mysgw.service"
 else ifeq ($(INIT_SYSTEM), sysvinit)
-	install -m0755 initscripts/mysgateway.sysvinit /etc/init.d/mysgateway
-	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" /etc/init.d/mysgateway
+	install -m0755 initscripts/mysgw.sysvinit ${DESTDIR}/etc/init.d/mysgw
+	@sed -i -e "s|%gateway_dir%|${GATEWAY_DIR}|g" ${DESTDIR}/etc/init.d/mysgw
 	@echo "MySensors gateway has been installed, to add to the boot run:"
-	@echo "  sudo update-rc.d mysgateway defaults"
+	@echo "  sudo update-rc.d mysgw defaults"
 	@echo "To start the gateway run:"
-	@echo "  sudo service mysgateway start"
+	@echo "  sudo service mysgw start"
 endif
 
 uninstall:
 ifeq ($(INIT_SYSTEM), systemd)
-	@echo "Stopping daemon mysgateway (ignore errors)"
-	-@systemctl stop mysgateway.service
+	@echo "Stopping daemon mysgw (ignore errors)"
+	-@systemctl stop mysgw.service
 	@echo "removing files"
-	rm /etc/systemd/system/mysgateway.service $(GATEWAY_DIR)/$(GATEWAY_BIN)
+	rm /etc/systemd/system/mysgw.service $(GATEWAY_DIR)/$(GATEWAY_BIN)
 else ifeq ($(INIT_SYSTEM), sysvinit)
-	@echo "Stopping daemon mysgateway (ignore errors)"
-	-@service mysgateway stop
+	@echo "Stopping daemon mysgw (ignore errors)"
+	-@service mysgw stop
 	@echo "removing files"
-	rm /etc/init.d/mysgateway $(GATEWAY_DIR)/$(GATEWAY_BIN)
+	rm /etc/init.d/mysgw $(GATEWAY_DIR)/$(GATEWAY_BIN)
 endif

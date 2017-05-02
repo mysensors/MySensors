@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -99,7 +99,7 @@
  * scramble into “garbage” when transmitted over the air and then reassembled by a receiving node before being fed in “the clear” up the stack
  * at the receiving end.
  *
- * There are methods and possibilities to provide encryption also in software, but if this is done, it is my recommendation that this is done 
+ * There are methods and possibilities to provide encryption also in software, but if this is done, it is my recommendation that this is done
  * after integrity- and authentication information has been provided to the message (if this is desired). Integrity and authentication is of
  * course not mandatory and some might be happy with only having encryption to cover their need for security. I, however, have only focused on
  * <i>integrity</i> and <i>authenticity</i> while at the same time keeping the current message routing mechanisms intact and therefore leave
@@ -195,76 +195,39 @@
  * @anchor personalization If you use the “real” ATSHA204A, before any signing operations can be done, the device needs to be <i>personalized</i>.
  * This can be a daunting process as it involves irreversibly writing configurations to the device, which cannot be undone. I have however tried
  * to simplify the process as much as possibly by creating a helper-sketch specifically for this purpose in @ref SecurityPersonalizer.ino
- * Note that you also need to do personalization for software signing, but then the values are stored in EEPROM (described below).
+ * Note that you also need to do personalization for software signing, but then the values are stored in EEPROM.
  *
- * The process of personalizing the ATSHA204A involves
- * - Writing and locking chip configuration
- * - (optionally) Generating and (mandatory) writing HMAC key
- * - (optionally) Locking data sections
+ * To personalize a ATSHA204A do the following procedure:
+ * 1. Enable @ref GENERATE_KEYS_ATSHA204A<br>
+ *    This will lock the ATSHA204A and generate random keys for HMAC (signing) and AES (encryption).
+ *    Copy the keys generated and replace the corresponding definitions under
+ *    "User defined key data", specifically @ref MY_HMAC_KEY and @ref MY_AES_KEY.
+ * 2. Disable @ref GENERATE_KEYS_ATSHA204A and enable @ref PERSONALIZE_ATSHA204A<br>
+ *    This will store the HMAC key to the ATSHA204A and the AES key to EEPROM. It will also write
+ *    a checksum of the personalization data in EEPROM to be able to detect if the data is
+ *    altered.<br>
+ *    Personalization is now complete.
  *
- * First execute the sketch without modifications to make sure communications with the device can be established. It is highly recommended that
- * the first time this is done, a device with serial debug possibilities is used.<br>
- * When this has been confirmed, it is time to decide what type of personalization is desired.<br>
- * There are a few options here.<br>
- * Firstly, enable @ref LOCK_CONFIGURATION to allow the sketch to lock the chip configuration. The sketch will write the default settings to the
- * chip because these are fine for our purposes. This also enables the RNG which is required to allow the sketch to automatically generate a PSK
- * if this is desired.<br>
- * Now it is possible to execute the sketch to lock the configuration and enable the RNG.<br>
- * Next step is to decide if a new key should be generated or an existing key should be stored to the device. This is determined using
- * @ref USER_KEY, which, if defined, will use the data in the variable user_key_data.<br>
- * If @ref USER_KEY is disabled, the RNG will be used to generate a key. This key obviously need to be made available to you so you can use
- * it in other devices in the network, and this key is therefore also printed on the serial console when it has been generated.<br>
- * The key (generated or provided) will be written to the device unless @ref SKIP_KEY_STORAGE is set. As long as the data zone is kept unlocked
- * the key can be replaced at any time. However, Atmel suggests the data region to be locked for maximum security. On the other hand, they also
- * claim that the key is not readable from the device even if the data zone remains unlocked so the need for locking the data region is optional
- * for MySensors usage.<br>
- * For devices that does not have serial debug possibilities, it is possible to set @ref SKIP_UART_CONFIRMATION, but it is required to set
- * @ref USER_KEY if this option is enabled since a generated and potentially unknown key could be written to the device and thus rendering
- * it useless (if the data zone is also locked).<br>
- * For devices with serial debug possibilities it is recommended to not use @ref SKIP_UART_CONFIRMATION as the sketch without that setting will
- * ask user to send a ‘space’ character on the serial terminal before any locking operations are executed as an additional confirmation that
- * this irreversible operation is done. However, if a number of nodes are to undergo personalization, this option can be enabled to streamline
- * the personalization.<br>
- * This is a condensed description of settings to fully personalize and lock down a set of sensors (and gateways):
- * - Pick a “master” device with serial debug port.
- * - Set the following sketch configuration of the personalizer:
- *  -# Enable @ref LOCK_CONFIGURATION
- *  -# Disable @ref LOCK_DATA
- *  -# Enable @ref SKIP_KEY_STORAGE
- *  -# Disable @ref SKIP_UART_CONFIRMATION
- *  -# Disable @ref USER_KEY
- * - Execute the sketch on the “master” device to obtain a randomized key. Save this key to a secure location and keep it confidential so that\n
-     you can retrieve it if you need to personalize more devices later on.
- * - Now reconfigure the sketch with these settings:
- *  -# Enable @ref LOCK_CONFIGURATION
- *  -# Enable @ref LOCK_DATA (if you are sure you do not need to replace/revoke the key, this is the most secure option to protect from key readout\n
- *     according to Atmel, but they also claim that key is not readable even if data region remains unlocked from the slot we are using)
- *  -# Disable @ref SKIP_KEY_STORAGE
- *  -# Enable @ref SKIP_UART_CONFIRMATION
- *  -# Enable @ref USER_KEY
- * - Put the saved key in the user_key_data variable.
- * - Now execute the sketch on all devices you want to personalize with this secret key.
+ * To personalize for software signing do the following procedure:
+ * 1. Enable @ref GENERATE_KEYS_SOFT<br>
+ *    This will generate random keys for HMAC (signing) and AES (encryption).
+ *    Copy the keys generated and replace the corresponding definitions under
+ *    "User defined key data", specifically @ref MY_HMAC_KEY and @ref MY_AES_KEY.
+ * 2. Disable @ref GENERATE_KEYS_SOFT and enable @ref PERSONALIZE_SOFT<br>
+ *    This will store the HMAC key and the AES key to EEPROM. It will also write
+ *    a checksum of the personalization data in EEPROM to be able to detect if the data is
+ *    altered.<br>
+ *    Personalization is now complete.
  *
- * For software signing the personalization procedure looks slightly different.<br>
- * - If you do not have the ATSHA204A device and need to generate random keys:
- *  -# Enable @ref USE_SOFT_SIGNING
- * - If you do have the ATSHA204A and want to use it to generate random keys for soft signing:
- *  -# Disable @ref USE_SOFT_SIGNING
- * - If you want to review existing EEPROM configuration to determine if anything needs to be updated:
- *  -# Make sure to disable any ATSHA204A update features if you use it (enable @ref SKIP_KEY_STORAGE, disable @ref LOCK_CONFIGURATION and @ref LOCK_DATA)
- *  -# Disable @ref STORE_SOFT_KEY
- *  -# Disable @ref STORE_SOFT_SERIAL
- *  -# Disable @ref STORE_AES_KEY
- * - Execute the sketch and the EEPROM configuration will be printed on the serial console.
- * - Decide what you want to update and enable the corresponding flags (@ref STORE_SOFT_KEY, @ref STORE_SOFT_SERIAL, @ref STORE_AES_KEY).
- * - If you have existing keys and want to use them instead of having the values randomized:
- * - Enable the corresponding flag (@ref USER_SOFT_KEY, @ref USER_SOFT_SERIAL, @ref USER_AES_KEY) and also set the appropriate values
- *   (@ref user_soft_key_data, @ref user_soft_serial, @ref user_aes_key)
+ * If you want to use soft signing and you want to use whitelisting (the ability to revoke/ban
+ * compromised nodes in the network) and your target does not provide a unique device ID, you have
+ * to generate a unique serial and store it in EEPROM. This can be done by replacing
+ * @ref PERSONALIZE_SOFT in step 2 above with @ref PERSONALIZE_SOFT_RANDOM_SERIAL. See the output
+ * under "Hardware security peripherals" to determine if this is necessary.
  *
- * The personalizer also takes care of generation and storage of the AES key used for RF traffic encryption.
- * See the software signing personalization flow for how to manage it.
- *
- * That’s it. Personalization is done and the device is ready to execute signing operations which are valid only on your personal network.
+ * When you have personalized your first device after step 2 above, you can run the same sketch on
+ * all devices in your network that needs to be personalized in a compatible manner. Pick
+ * @ref PERSONALIZE_ATSHA204A or @ref PERSONALIZE_SOFT as needed by the hardware.
  *
  * If a node does require signing, any unsigned message sent to the node will be rejected.<br>
  * This also applies to the gateway. However, the difference is that the gateway will only require signed messages from nodes it knows in turn
@@ -313,7 +276,7 @@
  * The whitelist is stored on the node that require signatures. When a received message is verified, the serial of the sender is looked up in a
  * list stored on the receiving node, and the corresponding serial stored in the list for that sender is then included in the signature verification
  * process. The list is stored as the value of the flag that enables whitelisting, @ref MY_SIGNING_NODE_WHITELISTING.<br>
- * 
+ *
  * Whitelisting is achieved by 'salting' the signature with some node-unique information known to the receiver. In the case of ATSHA204A this is the
  * unique serial number programmed into the circuit. This unique number is never transmitted over the air in clear text, so Eve will not be able to
  * figure out a "trusted" serial by snooping on the traffic.<br>
@@ -490,14 +453,6 @@ typedef struct {
 /** @brief Helper macro to determine the number of elements in a array */
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
-/** @brief Helper macro to determine if node require serial salted signatures */
-#define DO_WHITELIST(node) (~_doWhitelist[node>>3]&(1<<node%8))
-/** @brief Helper macro to set that node require serial salted signatures */
-#define SET_WHITELIST(node) (_doWhitelist[node>>3]&=~(1<<node%8))
-/** @brief Helper macro to set that node does not require serial salted signatures */
-#define CLEAR_WHITELIST(node) (_doWhitelist[node>>3]|=(1<<node%8))
-
-
 /**
  * @brief Initializes signing infrastructure and associated backend.
  *
@@ -506,6 +461,16 @@ typedef struct {
  * \n@b Usage: This fuction should be called before any signing related operations take place.
  */
 void signerInit(void);
+
+/**
+ * @brief Validates personalization data
+ *
+ * This function checks that the personalization details are in order.
+ * \n@b Usage: This fuction should be called before any signing related operations take place.
+ *
+ * @returns @c true if personalization data is valid.
+ */
+bool signerValidatePersonalization(void);
 
 /**
  * @brief Does signing specific presentation for a node.
@@ -523,7 +488,7 @@ void signerInit(void);
  * @param destination Node ID of the destination.
  */
 void signerPresentation(MyMessage &msg, uint8_t destination);
- 
+
 /**
  * @brief Manages internal signing message handshaking.
  *
@@ -574,7 +539,7 @@ bool signerPutNonce(MyMessage &msg);
  * deinitializations and enter a power saving state within this call.
  * \n@b Usage: This function is typically called as action when receiving a @ref I_NONCE_RESPONSE
  * message and after @ref signerPutNonce() has successfully been executed.
- * 
+ *
  * @param msg The message to sign.
  * @returns @c true if successful, else @c false.
 */

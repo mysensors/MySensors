@@ -1,9 +1,0 @@
-[Unit]
-Description=MySensors Gateway daemon
-Requires=network.target
-
-[Service]
-ExecStart=%gateway_dir%/mysGateway
-
-[Install]
-WantedBy=multi-user.target

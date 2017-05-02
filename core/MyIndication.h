@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -24,44 +24,46 @@
  * Indication type
  */
 typedef enum {
-    INDICATION_TX = 0,                        //!< Sent a message.
-    INDICATION_RX,                            //!< Received a message.
-                                             
-    INDICATION_GW_TX,                         //!< Gateway transmit message.
-    INDICATION_GW_RX,                         //!< Gateway receive message.
-                                             
-    INDICATION_FIND_PARENT,                   //!< Start finding parent node.
-    INDICATION_GOT_PARENT,                    //!< Found parent node.
-    INDICATION_REQ_NODEID,                    //!< Request node ID.
-    INDICATION_GOT_NODEID,                    //!< Got a node ID.
-	INDICATION_CHECK_UPLINK,				  //!< Check uplink
-    INDICATION_REQ_REGISTRATION,              //!< Request node registration.
-    INDICATION_GOT_REGISTRATION,              //!< Got registration reponse.
-    INDICATION_REBOOT,                        //!< Rebooting node.
-    INDICATION_PRESENT,                       //!< Presenting node to gateway.
-    INDICATION_CLEAR_ROUTING,                 //!< Clear routing table requested.
-    INDICATION_SLEEP,                         //!< Node goes to sleep.
-    INDICATION_WAKEUP,                        //!< Node just woke from sleep.
-    INDICATION_FW_UPDATE_START,               //!< Start of OTA firmware update process.
-    INDICATION_FW_UPDATE_RX,                  //!< Received a piece of firmware data.
+	INDICATION_TX = 0,                        //!< Sent a message.
+	INDICATION_RX,                            //!< Received a message.
 
-    INDICATION_ERR_START = 100,
-    INDICATION_ERR_TX,                        //!< Failed to transmit message.
+	INDICATION_GW_TX,                         //!< Gateway transmit message.
+	INDICATION_GW_RX,                         //!< Gateway receive message.
+
+	INDICATION_FIND_PARENT,                   //!< Start finding parent node.
+	INDICATION_GOT_PARENT,                    //!< Found parent node.
+	INDICATION_REQ_NODEID,                    //!< Request node ID.
+	INDICATION_GOT_NODEID,                    //!< Got a node ID.
+	INDICATION_CHECK_UPLINK,				  //!< Check uplink
+	INDICATION_REQ_REGISTRATION,              //!< Request node registration.
+	INDICATION_GOT_REGISTRATION,              //!< Got registration reponse.
+	INDICATION_REBOOT,                        //!< Rebooting node.
+	INDICATION_PRESENT,                       //!< Presenting node to gateway.
+	INDICATION_CLEAR_ROUTING,                 //!< Clear routing table requested.
+	INDICATION_SLEEP,                         //!< Node goes to sleep.
+	INDICATION_WAKEUP,                        //!< Node just woke from sleep.
+	INDICATION_FW_UPDATE_START,               //!< Start of OTA firmware update process.
+	INDICATION_FW_UPDATE_RX,                  //!< Received a piece of firmware data.
+	INDICATION_FW_UPDATE_RX_ERR,              //!< Received wrong piece of firmware data.
+
+	INDICATION_ERR_START = 100,
+	INDICATION_ERR_HW_INIT,					  //!< HW initialization error
+	INDICATION_ERR_TX,                        //!< Failed to transmit message.
 	INDICATION_ERR_TRANSPORT_FAILURE,		  //!< Transport failure.
-    INDICATION_ERR_INIT_TRANSPORT,            //!< MySensors transport hardware (radio) init failure.
-    INDICATION_ERR_FIND_PARENT,               //!< Failed to find parent node.
-    INDICATION_ERR_GET_NODEID,                //!< Failed to receive node ID.
+	INDICATION_ERR_INIT_TRANSPORT,            //!< MySensors transport hardware (radio) init failure.
+	INDICATION_ERR_FIND_PARENT,               //!< Failed to find parent node.
+	INDICATION_ERR_GET_NODEID,                //!< Failed to receive node ID.
 	INDICATION_ERR_CHECK_UPLINK,              //!< Failed to check uplink
-    INDICATION_ERR_SIGN,                      //!< Error signing.
+	INDICATION_ERR_SIGN,                      //!< Error signing.
 	INDICATION_ERR_LENGTH,					  //!< Invalid message length.
-    INDICATION_ERR_VERSION,                   //!< Protocol version mismatch.
-    INDICATION_ERR_NET_FULL,                  //!< Network full. All node ID's are taken.
-    INDICATION_ERR_INIT_GWTRANSPORT,          //!< Gateway transport hardware init failure.
-    INDICATION_ERR_LOCKED,                    //!< Node is locked.
-    INDICATION_ERR_FW_FLASH_INIT,             //!< Firmware update flash initialisation failure.
-    INDICATION_ERR_FW_TIMEOUT,                //!< Firmware update timeout.
-    INDICATION_ERR_FW_CHECKSUM,               //!< Firmware update checksum mismatch.
-    INDICATION_ERR_END
+	INDICATION_ERR_VERSION,                   //!< Protocol version mismatch.
+	INDICATION_ERR_NET_FULL,                  //!< Network full. All node ID's are taken.
+	INDICATION_ERR_INIT_GWTRANSPORT,          //!< Gateway transport hardware init failure.
+	INDICATION_ERR_LOCKED,                    //!< Node is locked.
+	INDICATION_ERR_FW_FLASH_INIT,             //!< Firmware update flash initialisation failure.
+	INDICATION_ERR_FW_TIMEOUT,                //!< Firmware update timeout.
+	INDICATION_ERR_FW_CHECKSUM,               //!< Firmware update checksum mismatch.
+	INDICATION_ERR_END
 } indication_t;
 
 /**
@@ -73,6 +75,6 @@ void setIndication( const indication_t ind );
 /**
  * Allow user to define their own indication handler.
  */
-void indication( const indication_t ) __attribute__((weak));
+void indication( const indication_t );
 
 #endif

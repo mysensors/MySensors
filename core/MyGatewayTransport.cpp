@@ -24,10 +24,9 @@ extern bool transportSendRoute(MyMessage &message);
 // global variables
 extern MyMessage _msg;
 extern MyMessage _msgTmp;
-extern NodeConfig _nc;
 
-
-inline void gatewayTransportProcess() {
+inline void gatewayTransportProcess(void)
+{
 	if (gatewayTransportAvailable()) {
 		_msg = gatewayTransportReceive();
 		if (_msg.destination == GATEWAY_ADDRESS) {
@@ -36,9 +35,10 @@ inline void gatewayTransportProcess() {
 			if (mGetRequestAck(_msg)) {
 				// Copy message
 				_msgTmp = _msg;
-				mSetRequestAck(_msgTmp, false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+				mSetRequestAck(_msgTmp,
+				               false); // Reply without ack flag (otherwise we would end up in an eternal loop)
 				mSetAck(_msgTmp, true);
-				_msgTmp.sender = _nc.nodeId;
+				_msgTmp.sender = getNodeId();
 				_msgTmp.destination = _msg.sender;
 				gatewayTransportSend(_msgTmp);
 			}
@@ -46,11 +46,11 @@ inline void gatewayTransportProcess() {
 				if (_msg.type == I_VERSION) {
 					// Request for version. Create the response
 					gatewayTransportSend(buildGw(_msgTmp, I_VERSION).set(MYSENSORS_LIBRARY_VERSION));
-				#ifdef MY_INCLUSION_MODE_FEATURE
+#ifdef MY_INCLUSION_MODE_FEATURE
 				} else if (_msg.type == I_INCLUSION_MODE) {
 					// Request to change inclusion mode
 					inclusionModeSet(atoi(_msg.data) == 1);
-				#endif
+#endif
 				} else {
 					_processInternalMessages();
 				}
@@ -61,9 +61,9 @@ inline void gatewayTransportProcess() {
 				}
 			}
 		} else {
-			#if defined(MY_SENSOR_NETWORK)
-				transportSendRoute(_msg);
-			#endif
+#if defined(MY_SENSOR_NETWORK)
+			transportSendRoute(_msg);
+#endif
 		}
 	}
 }

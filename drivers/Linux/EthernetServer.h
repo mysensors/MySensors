@@ -5,9 +5,9 @@
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Marcelo Aquino <marceloaqno@gmail.org>
- * Copyright (C) 2016 Marcelo Aquino
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -28,10 +28,10 @@
 #include "IPAddress.h"
 
 #ifdef ETHERNETSERVER_MAX_CLIENTS
-	#define ETHERNETSERVER_BACKLOG ETHERNETSERVER_MAX_CLIENTS //!< Maximum length to which the queue of pending connections may grow.
+#define ETHERNETSERVER_BACKLOG ETHERNETSERVER_MAX_CLIENTS //!< Maximum length to which the queue of pending connections may grow.
 #else
-	#define ETHERNETSERVER_MAX_CLIENTS 10 //!< Default value for max_clients.
-	#define ETHERNETSERVER_BACKLOG 10 //!< Maximum length to which the queue of pending connections may grow.
+#define ETHERNETSERVER_MAX_CLIENTS 10 //!< Default value for max_clients.
+#define ETHERNETSERVER_BACKLOG 10 //!< Maximum length to which the queue of pending connections may grow.
 #endif
 
 class EthernetClient;
@@ -39,20 +39,8 @@ class EthernetClient;
 /**
  * @brief EthernetServer class
  */
-class EthernetServer : public Server {
-
-private:
-	uint16_t port; //!< @brief Port number for the network socket.
-	std::list<int> new_clients; //!< Socket list of new clients.
-	std::vector<int> clients; //!< @brief Socket list of clients.
-	uint16_t max_clients; //!< @brief The maximum number of allowed clients.
-	int sockfd; //!< @brief Network socket used to accept connections.
-
-	/**
-	 * @brief Accept new clients if the total of connected clients is below max_clients.
-	 *
-	 */
-	void _accept();
+class EthernetServer : public Server
+{
 
 public:
 	/**
@@ -115,6 +103,19 @@ public:
 	 * @return 0 if FAILURE else the number of characters sent.
 	 */
 	size_t write(const char *buffer, size_t size);
+
+private:
+	uint16_t port; //!< @brief Port number for the network socket.
+	std::list<int> new_clients; //!< Socket list of new clients.
+	std::vector<int> clients; //!< @brief Socket list of clients.
+	uint16_t max_clients; //!< @brief The maximum number of allowed clients.
+	int sockfd; //!< @brief Network socket used to accept connections.
+
+	/**
+	 * @brief Accept new clients if the total of connected clients is below max_clients.
+	 *
+	 */
+	void _accept();
 };
 
 #endif

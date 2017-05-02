@@ -20,15 +20,15 @@
  *
  * REVISION HISTORY
  * Version 1.0 - Henrik Ekblad
- * 
+ *
  * DESCRIPTION
- * Example sketch showing how to control physical relays. 
+ * Example sketch showing how to control physical relays.
  * This example will remember relay state after power failure.
  * http://www.mysensors.org/build/relay
- */ 
+ */
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG 
+#define MY_DEBUG
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -45,48 +45,51 @@
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
 
-void before() { 
-  for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
-    // Then set relay pins in output mode
-    pinMode(pin, OUTPUT);   
-    // Set relay to last known state (using eeprom storage) 
-    digitalWrite(pin, loadState(sensor)?RELAY_ON:RELAY_OFF);
-  }
-}
-
-void setup() {
-  
-}
-
-void presentation()  
-{   
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Relay", "1.0");
-
-  for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS;sensor++, pin++) {
-    // Register all sensors to gw (they will be created as child devices)
-    present(sensor, S_BINARY);
-  }
-}
-
-
-void loop() 
+void before()
 {
-  
+	for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS; sensor++, pin++) {
+		// Then set relay pins in output mode
+		pinMode(pin, OUTPUT);
+		// Set relay to last known state (using eeprom storage)
+		digitalWrite(pin, loadState(sensor)?RELAY_ON:RELAY_OFF);
+	}
 }
 
-void receive(const MyMessage &message) {
-  // We only expect one type of message from controller. But we better check anyway.
-  if (message.type==V_STATUS) {
-     // Change relay state
-     digitalWrite(message.sensor-1+RELAY_1, message.getBool()?RELAY_ON:RELAY_OFF);
-     // Store state in eeprom
-     saveState(message.sensor, message.getBool());
-     // Write some debug info
-     Serial.print("Incoming change for sensor:");
-     Serial.print(message.sensor);
-     Serial.print(", New status: ");
-     Serial.println(message.getBool());
-   } 
+void setup()
+{
+
+}
+
+void presentation()
+{
+	// Send the sketch version information to the gateway and Controller
+	sendSketchInfo("Relay", "1.0");
+
+	for (int sensor=1, pin=RELAY_1; sensor<=NUMBER_OF_RELAYS; sensor++, pin++) {
+		// Register all sensors to gw (they will be created as child devices)
+		present(sensor, S_BINARY);
+	}
+}
+
+
+void loop()
+{
+
+}
+
+void receive(const MyMessage &message)
+{
+	// We only expect one type of message from controller. But we better check anyway.
+	if (message.type==V_STATUS) {
+		// Change relay state
+		digitalWrite(message.sensor-1+RELAY_1, message.getBool()?RELAY_ON:RELAY_OFF);
+		// Store state in eeprom
+		saveState(message.sensor, message.getBool());
+		// Write some debug info
+		Serial.print("Incoming change for sensor:");
+		Serial.print(message.sensor);
+		Serial.print(", New status: ");
+		Serial.println(message.getBool());
+	}
 }
 

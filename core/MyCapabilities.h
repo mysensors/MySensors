@@ -1,12 +1,12 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
  * repeater and gateway builds a routing tables in EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
- * Created by Tomas Hozza <thozza@gmail.com>
- * Copyright (C) 2015  Tomas Hozza
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -22,61 +22,77 @@
 #define MyCapabilities_h
 
 #if defined(MY_DISABLE_REMOTE_RESET)
-	#define MY_CAP_RESET "N"
+#define MY_CAP_RESET "N"
 #else
-	#define MY_CAP_RESET "R"
+#define MY_CAP_RESET "R"
 #endif
 
 #if defined(MY_OTA_FIRMWARE_FEATURE)
-	#define MY_CAP_OTA_FW "O"
+#define MY_CAP_OTA_FW "O"
 #else
-	#define MY_CAP_OTA_FW "N"
+#define MY_CAP_OTA_FW "N"
 #endif
 
 
 #if defined(MY_RADIO_NRF24)
-	#define MY_CAP_RADIO "N"
+#define MY_CAP_RADIO "N"
 #elif defined(MY_RADIO_RFM69)
-	#define MY_CAP_RADIO "R"
-#elif defined(MY_RS485)
-	#define MY_CAP_RADIO "S"
+#if !defined(MY_RFM69_NEW_DRIVER)
+// old RFM69 driver
+#define MY_CAP_RADIO "R"
 #else
-	#define MY_CAP_RADIO "-"
+// new RFM69 driver
+#define MY_CAP_RADIO "P"
+#endif
+#elif defined(MY_RADIO_RFM95)
+#define MY_CAP_RADIO "L"
+#elif defined(MY_RS485)
+#define MY_CAP_RADIO "S"
+#else
+#define MY_CAP_RADIO "-"
 #endif
 
 #if defined(MY_GATEWAY_FEATURE)
-	#define MY_CAP_TYPE "G"
+#define MY_CAP_TYPE "G"
 #elif defined(MY_REPEATER_FEATURE)
-	#define MY_CAP_TYPE "R"
+#define MY_CAP_TYPE "R"
+#elif defined(MY_PASSIVE_NODE)
+#define MY_CAP_TYPE "P"
 #else
-	#define MY_CAP_TYPE "N"
+#define MY_CAP_TYPE "N"
 #endif
 
 #if defined(ARDUINO_ARCH_SAMD)
-	#define MY_CAP_ARCH "S"
+#define MY_CAP_ARCH "S"
 #elif defined(ARDUINO_ARCH_ESP8266)
-	#define MY_CAP_ARCH "E"
+#define MY_CAP_ARCH "E"
 #elif defined(ARDUINO_ARCH_AVR)
-	#define MY_CAP_ARCH "A"
+#define MY_CAP_ARCH "A"
 #else
-	#define MY_CAP_ARCH "-"
+#define MY_CAP_ARCH "-"
 #endif
 
 #if defined(MY_SIGNING_ATSHA204)
-	#define MY_CAP_SIGN "A"
+#define MY_CAP_SIGN "A"
 #elif defined(MY_SIGNING_SOFT)
-	#define MY_CAP_SIGN "S"
+#define MY_CAP_SIGN "S"
 #else
-	#define MY_CAP_SIGN "-"
+#define MY_CAP_SIGN "-"
 #endif
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-	#define MY_CAP_RXBUF "Q"
+#define MY_CAP_RXBUF "Q"
 #else
-	#define MY_CAP_RXBUF "-"
+#define MY_CAP_RXBUF "-"
+#endif
+
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION)
+#define MY_CAP_ENCR "X"
+#else
+#define MY_CAP_ENCR "-"
 #endif
 
 
-#define MY_CAPABILITIES MY_CAP_RESET MY_CAP_RADIO MY_CAP_OTA_FW MY_CAP_TYPE MY_CAP_ARCH MY_CAP_SIGN MY_CAP_RXBUF
+#define MY_CAPABILITIES MY_CAP_RESET MY_CAP_RADIO MY_CAP_OTA_FW MY_CAP_TYPE MY_CAP_ARCH MY_CAP_SIGN MY_CAP_RXBUF MY_CAP_ENCR
 
 #endif /* MyCapabilities_h */

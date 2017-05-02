@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -31,28 +31,35 @@
 *  Serial and debug options
 ***********************************/
 
-// Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
-// final sketch but is helpful to see what is actually is happening during development
+/**
+ * @def MY_DEBUG
+ * @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
+ * final sketch but is helpful to see what is actually is happening during development
+ */
 //#define MY_DEBUG
 
-// Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
-// I_DEBUG requests are:
-// R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
-// V: CPU voltage
-// F: CPU frequency
-// M: free memory
-// E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+/**
+ * @def MY_SPECIAL_DEBUG
+ * @brief Enable MY_SPECIAL_DEBUG to enable I_DEBUG messages.
+ * I_DEBUG requests are:
+ * R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+ * V: CPU voltage
+ * F: CPU frequency
+ * M: free memory
+ * E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+ */
 //#define MY_SPECIAL_DEBUG
 
-// Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
-// Requires DEBUG to be enabled.
-// This will add even more to the size of the final sketch!
-//#define MY_DEBUG_VERBOSE_SIGNING
-
-// Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
+/**
+ * @def MY_DISABLED_SERIAL
+ * @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
+ */
 //#define MY_DISABLED_SERIAL
 
-// Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+/**
+ * @def MY_CORE_ONLY
+ * @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+ */
 //#define MY_CORE_ONLY
 
 // Turn off debug if serial pins is used for other stuff
@@ -65,19 +72,20 @@
  * @brief Serial output baud rate (debug prints and serial gateway speed).
  */
 #ifndef MY_BAUD_RATE
-#define MY_BAUD_RATE 115200
+#define MY_BAUD_RATE					(115200ul)
 #endif
- /**
+/**
  * @def MY_SERIAL_OUTPUT_SIZE
  * @brief Max. characters for serial output.
  */
 #ifndef MY_SERIAL_OUTPUT_SIZE
-#define MY_SERIAL_OUTPUT_SIZE (120u)
+#define MY_SERIAL_OUTPUT_SIZE			(120u)
 #endif
 
-
-
-// Disables over-the-air reset of node
+/**
+ * @def MY_DISABLE_REMOTE_RESET
+ * @brief Disables over-the-air reset of node
+ */
 //#define MY_DISABLE_REMOTE_RESET
 
 /**********************************
@@ -85,45 +93,51 @@
 ***********************************/
 
 // Selecting uplink transport layer is optional (for a gateway node).
-
-//#define MY_RADIO_NRF24
+//#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 //#define MY_RS485
 
+// legacy
+#ifdef MY_RADIO_NRF24
+//MY_RADIO_NRF24 is deprecated
+#define MY_RADIO_RF24
+#endif
+
 /**
-* @def MY_RAM_ROUTING_TABLE_FEATURE
-* @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
-* note: AVR has limited memory, use with care
-*/
+ * @def MY_RAM_ROUTING_TABLE_FEATURE
+ * @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
+ * note: AVR has limited memory, use with care
+ */
 #define MY_RAM_ROUTING_TABLE_FEATURE
 
 /**
-* @def MY_ROUTING_TABLE_SAVE_INTERVAL_MS
-* @brief Interval to dump content of routing table to eeprom
-*/
+ * @def MY_ROUTING_TABLE_SAVE_INTERVAL_MS
+ * @brief Interval to dump content of routing table to eeprom
+ */
 #ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
-#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(10*60*1000ul)
+#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(30*60*1000ul)
 #endif
 /**
-* @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. 
-* This feature is enabled for all repeater nodes (incl. GW)
-*/
+ * @def MY_TRANSPORT_SANITY_CHECK
+ * @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure.
+ * This feature is enabled for all repeater nodes (incl. GW)
+ */
 //#define MY_TRANSPORT_SANITY_CHECK
 
 /**
-* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-* @brief Interval (in ms) of transport sanity checks
-*/
+ * @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
+ * @brief Interval (in ms) for transport sanity checks
+ */
 #ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (60*1000ul)
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15*60*1000ul)
 #endif
 /**
-* @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks 
-*/
+ * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
+ * @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
+ */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
+#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (20*60*1000ul)
 #endif
 
 /**
@@ -131,12 +145,6 @@
  *@brief If set, uplink check to GW is disabled during transport initialisation
  */
 //#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-
-/**
-*@def MY_TRANSPORT_DONT_CARE_MODE
-*@brief If set, transport traffic is unmonitored and GW connection is optional
-*/
-//#define MY_TRANSPORT_DONT_CARE_MODE
 
 /**
  *@def MY_TRANSPORT_MAX_TX_FAILURES
@@ -150,39 +158,57 @@
  */
 #define MY_REGISTRATION_FEATURE
 
- /**
+/**
  * @def MY_REGISTRATION_RETRIES
  * @brief Number of registration retries if no reply received from GW/controller
  */
 
 #ifndef MY_REGISTRATION_RETRIES
-#define MY_REGISTRATION_RETRIES (3u)
+#define MY_REGISTRATION_RETRIES			(3u)
 #endif
 
- /**
- * @def MY_REGISTRATION_DEFAULT
- * @brief Node registration default - this applies if no registration response is received from controller
- */
-#define MY_REGISTRATION_DEFAULT true
+/**
+* @def MY_REGISTRATION_DEFAULT
+* @brief Node registration default - this applies if no registration response is received from controller
+*/
+#define MY_REGISTRATION_DEFAULT			true
 
- /**
+/**
  * @def MY_REGISTRATION_CONTROLLER
  * @brief If enabled, node registration request has to be handled by controller
  */
- // #define MY_REGISTRATION_CONTROLLER
+// #define MY_REGISTRATION_CONTROLLER
 
- /**
+/**
  * @def MY_CORE_COMPATIBILITY_CHECK
  * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
  */
 #define MY_CORE_COMPATIBILITY_CHECK
 
 /**
+ * @def MY_TRANSPORT_WAIT_READY_MS
+ * @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
+ */
+#ifndef MY_TRANSPORT_WAIT_READY_MS
+#define MY_TRANSPORT_WAIT_READY_MS		(0ul)
+#endif
+
+/**
+ * @def MY_PASSIVE_NODE
+ * @brief If enabled, the node operates fully autonomously, i.e. messages are sent without ACKing.
+ * note: All transport-related checks and safety-mechanisms are disabled.
+ * Requirement: @ref MY_NODE_ID needs to be set, @ref MY_PARENT_NODE_ID and @ref MY_PARENT_NODE_IS_STATIC are optional.
+ * Singing, registration, and OTA FW update are disabled.
+ */
+//#define MY_PASSIVE_NODE
+
+
+/**
  * @def MY_NODE_ID
  * @brief Node id defaults to AUTO (tries to fetch id from controller).
  */
 #ifndef MY_NODE_ID
-#define MY_NODE_ID AUTO
+#define MY_NODE_ID						AUTO
 #endif
 
 /**
@@ -190,7 +216,7 @@
  * @brief Node parent defaults to AUTO (tries to find a parent automatically).
  */
 #ifndef MY_PARENT_NODE_ID
-#define MY_PARENT_NODE_ID AUTO
+#define MY_PARENT_NODE_ID				AUTO
 #endif
 
 /**
@@ -200,15 +226,15 @@
 //#define MY_PARENT_NODE_IS_STATIC
 
 /**
-* @def MY_REPEATER_FEATURE
-* @brief Enables repeater functionality (relays messages from other nodes)
-*/
+ * @def MY_REPEATER_FEATURE
+ * @brief Enables repeater functionality (relays messages from other nodes)
+ */
 //#define MY_REPEATER_FEATURE
 
 /**
-* @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
-* @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
-*/
+ * @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
+ * @brief Timeout (in ms) to re-establish link if node is send to sleep and transport is not ready.
+ */
 #ifndef MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
 #define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS (10*1000ul)
 #endif
@@ -252,15 +278,15 @@
  * @brief Slave select pin for external flash.
  */
 #ifndef MY_OTA_FLASH_SS
-#define MY_OTA_FLASH_SS 8
+#define MY_OTA_FLASH_SS					(8)
 #endif
 
 /**
  * @def MY_OTA_FLASH_JDECID
- * @brief Flash jdecid.
+ * @brief Flash JDECID. Use (0x00) if unknown.
  */
 #ifndef MY_OTA_FLASH_JDECID
-#define MY_OTA_FLASH_JDECID 0x1F65
+#define MY_OTA_FLASH_JDECID				(0x1F65)
 #endif
 
 
@@ -273,7 +299,7 @@
  * @brief Max buffersize needed for messages coming from controller.
  */
 #ifndef MY_GATEWAY_MAX_RECEIVE_LENGTH
-#define MY_GATEWAY_MAX_RECEIVE_LENGTH (100u)
+#define MY_GATEWAY_MAX_RECEIVE_LENGTH	(100u)
 #endif
 
 /**
@@ -281,7 +307,7 @@
  * @brief Max buffer size when sending messages.
  */
 #ifndef MY_GATEWAY_MAX_SEND_LENGTH
-#define MY_GATEWAY_MAX_SEND_LENGTH (120u)
+#define MY_GATEWAY_MAX_SEND_LENGTH		(120u)
 #endif
 
 /**
@@ -289,7 +315,7 @@
  * @brief Max number of parallel clients (sever mode).
  */
 #ifndef MY_GATEWAY_MAX_CLIENTS
-#define MY_GATEWAY_MAX_CLIENTS (1u)
+#define MY_GATEWAY_MAX_CLIENTS			(1u)
 #endif
 
 
@@ -307,20 +333,43 @@
 //#define MY_DEFAULT_TX_LED_PIN x
 //#define MY_DEFAULT_RX_LED_PIN x
 
-// The following setting allows you to inverse the LED blinking
-// When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches
-// off when blinking
-
+/**
+ * @def MY_WITH_LEDS_BLINKING_INVERSE
+ * @brief The following setting allows you to inverse the LED blinking.
+ * When MY_WITH_LEDS_BLINKING_INVERSE is enabled LEDSs are normally turned on and switches off when blinking.
+ */
 //#define MY_WITH_LEDS_BLINKING_INVERSE
+
+/**
+ * @def MY_INDICATION_HANDLER
+ * @brief Enable to use own indication handler.
+ */
+//#define MY_INDICATION_HANDLER
+
+/**
+* @def MY_DEFAULT_LED_BLINK_PERIOD
+* @brief Default LEDs blinking period in milliseconds.
+*/
+#ifndef MY_DEFAULT_LED_BLINK_PERIOD
+#define MY_DEFAULT_LED_BLINK_PERIOD 300
+#endif
+
 
 
 /**********************************************
 *  Gateway inclusion button/mode configuration
 **********************************************/
-// Enabled inclusion mode feature
+
+/**
+* @def MY_INCLUSION_MODE_FEATURE
+* @brief Enables inclusion mode feature.
+*/
 //#define MY_INCLUSION_MODE_FEATURE
 
-// Enables inclusion-mode button feature on the gateway device
+/**
+* @def MY_INCLUSION_BUTTON_FEATURE
+* @brief Enables inclusion-mode button feature on the gateway device
+*/
 //#define MY_INCLUSION_BUTTON_FEATURE
 
 // Disable inclusion mode button if inclusion mode feature is not enabled
@@ -333,11 +382,11 @@
  * @brief The default input pin used for the inclusion mode button.
  */
 #ifndef MY_INCLUSION_MODE_BUTTON_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_INCLUSION_MODE_BUTTON_PIN 5
-	#else
-		#define MY_INCLUSION_MODE_BUTTON_PIN 3
-	#endif
+#if defined(ARDUINO_ARCH_ESP8266)
+#define MY_INCLUSION_MODE_BUTTON_PIN	(5)
+#else
+#define MY_INCLUSION_MODE_BUTTON_PIN	(3)
+#endif
 #endif
 
 /**
@@ -346,7 +395,7 @@
  */
 
 #ifndef MY_INCLUSION_MODE_DURATION
-#define MY_INCLUSION_MODE_DURATION 60
+#define MY_INCLUSION_MODE_DURATION		(60)
 #endif
 
 /**
@@ -354,14 +403,21 @@
  * @brief The logical level indicating a pressed inclusion mode button.
  */
 #if defined(MY_INCLUSION_BUTTON_EXTERNAL_PULLUP)
-#define MY_INCLUSION_BUTTON_PRESSED HIGH
+#define MY_INCLUSION_BUTTON_PRESSED		HIGH
 #else
-#define MY_INCLUSION_BUTTON_PRESSED LOW
+#define MY_INCLUSION_BUTTON_PRESSED		LOW
 #endif
 
 /**********************************
 *  Message Signing Settings
 ***********************************/
+/**
+ * @def MY_DEBUG_VERBOSE_SIGNING
+ * @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled.
+ * This will add even more to the size of the final sketch!
+ */
+//#define MY_DEBUG_VERBOSE_SIGNING
+
 /**
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
@@ -389,7 +445,8 @@
 
 /**
  * @def MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
- * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it. @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
+ * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it.
+ * @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
  *
  * Use this for maximum security, but be aware that every single node will have to be personalized before they can be used.
  * Note that if this is enabled, and whitelisting is also enabled, whitelisting will also be in effect for all nodes.
@@ -404,7 +461,7 @@
  * which might vary, especially in networks with many hops. 5s ought to be enough for anyone.
  */
 #ifndef MY_VERIFICATION_TIMEOUT_MS
-#define MY_VERIFICATION_TIMEOUT_MS 5000
+#define MY_VERIFICATION_TIMEOUT_MS		(5*1000ul)
 #endif
 
 /**
@@ -429,7 +486,7 @@
  * Pin where ATSHA204 is attached
  */
 #ifndef MY_SIGNING_ATSHA204_PIN
-#define MY_SIGNING_ATSHA204_PIN 17
+#define MY_SIGNING_ATSHA204_PIN			(17)
 #endif
 
 /**
@@ -439,7 +496,7 @@
  * Do not connect anything to this when soft signing is enabled
  */
 #ifndef MY_SIGNING_SOFT_RANDOMSEED_PIN
-#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+#define MY_SIGNING_SOFT_RANDOMSEED_PIN	(7)
 #endif
 
 /**********************************
@@ -451,7 +508,7 @@
  * @brief The RS485 BAUD rate.
  */
 #ifndef MY_RS485_BAUD_RATE
-#define MY_RS485_BAUD_RATE 9600
+#define MY_RS485_BAUD_RATE				(9600)
 #endif
 
 /**
@@ -459,54 +516,51 @@
  * @brief The maximum message length used for RS485.
  */
 #ifndef MY_RS485_MAX_MESSAGE_LENGTH
-#define MY_RS485_MAX_MESSAGE_LENGTH 40
+#define MY_RS485_MAX_MESSAGE_LENGTH		(40)
 #endif
 
 /**
  * @def MY_RS485_DE_PIN
  * @brief RS485 driver enable pin.
  */
-//#define MY_RS485_DE_PIN 2
+//#define MY_RS485_DE_PIN				(2)
 
 /**
  * @def MY_RS485_HWSERIAL
  * @brief Enable this if RS485 is connected to a hardware serial port.
  */
-//#define MY_RS485_HWSERIAL Serial1
+//#define MY_RS485_HWSERIAL				Serial1
 
 /**********************************
 *  NRF24L01P Driver Defaults
 ***********************************/
 
-// Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+/**
+ * @def MY_RF24_ENABLE_ENCRYPTION
+ * @brief Enables RF24 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+ */
 //#define MY_RF24_ENABLE_ENCRYPTION
 
 /**
  * @def MY_DEBUG_VERBOSE_RF24
- * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver. Requires DEBUG to be enabled.
+ * @brief Enable MY_DEBUG_VERBOSE_RF24 flag for verbose debug prints related to the RF24 driver.
  */
 //#define MY_DEBUG_VERBOSE_RF24
 
 /**
- * @def MY_RF24_SPI_MAX_SPEED
- * @brief MY_RF24_SPI_MAX_SPEED to overrule default nRF24L01+ SPI speed.
+ * @def MY_RF24_SPI_SPEED
+ * @brief MY_RF24_SPI_SPEED to overrule default nRF24L01+ SPI speed, 2MHz - safe for nRF24L01+ clones
  */
-//#define MY_RF24_SPI_MAX_SPEED 4000000
+#ifndef MY_RF24_SPI_SPEED
+#define MY_RF24_SPI_SPEED				(2*1000000ul)
+#endif
 
 /**
  * @def MY_RF24_CE_PIN
  * @brief Default RF24 chip enable pin setting. Override in sketch if needed.
  */
 #ifndef MY_RF24_CE_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF24_CE_PIN 4
-	#elif defined(ARDUINO_ARCH_SAMD)
-		#define MY_RF24_CE_PIN 27
-	#elif defined(LINUX_ARCH_RASPBERRYPI)
-		#define MY_RF24_CE_PIN 22
-	#else
-		#define MY_RF24_CE_PIN 9
-	#endif
+#define MY_RF24_CE_PIN					DEFAULT_RF24_CE_PIN
 #endif
 
 /**
@@ -514,23 +568,21 @@
  * @brief Default RF24 chip select pin setting. Override in sketch if needed.
  */
 #ifndef MY_RF24_CS_PIN
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF24_CS_PIN 15
-	#elif defined(ARDUINO_ARCH_SAMD)
-		#define MY_RF24_CS_PIN 3
-	#elif defined(LINUX_ARCH_RASPBERRYPI)
-		#define MY_RF24_CS_PIN 24
-	#else
-		#define MY_RF24_CS_PIN 10
-	#endif
+#define MY_RF24_CS_PIN					DEFAULT_RF24_CS_PIN
 #endif
 
 /**
-* @def MY_RX_MESSAGE_BUFFER_FEATURE
-* @brief This enabled the receiving buffer feature.
-*
-* This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
-*/
+ * @def MY_RF24_POWER_PIN
+ * @brief NRF24 power pin, uncomment if used
+ */
+//#define MY_RF24_POWER_PIN				(3)
+
+/**
+ * @def MY_RX_MESSAGE_BUFFER_FEATURE
+ * @brief This enabled the receiving buffer feature.
+ *
+ * This feature is currently not supported for RFM69 and RS485, for RF24 MY_RF24_IRQ_PIN has to be defined.
+ */
 //#define MY_RX_MESSAGE_BUFFER_FEATURE
 
 /**
@@ -538,17 +590,22 @@
  * @brief Declare the amount of incoming messages that can be buffered.
  */
 #ifdef MY_RX_MESSAGE_BUFFER_FEATURE
-	#ifndef MY_RX_MESSAGE_BUFFER_SIZE
-		#define MY_RX_MESSAGE_BUFFER_SIZE  (20)
-	#endif
+#ifndef MY_RX_MESSAGE_BUFFER_SIZE
+#define MY_RX_MESSAGE_BUFFER_SIZE		(20)
+#endif
 #endif
 
 /**
  * @def MY_RF24_PA_LEVEL
  * @brief Default RF24 PA level. Override in sketch if needed.
+ *
+ * RF24_PA_LOW = -18dBm
+ * RF24_PA_MID = -12dBm
+ * RF24_PA_HIGH = -6dBm
+ * RF24_PA_MAX = 0dBm
  */
 #ifndef MY_RF24_PA_LEVEL
-#define MY_RF24_PA_LEVEL RF24_PA_MAX
+#define MY_RF24_PA_LEVEL				RF24_PA_HIGH
 #endif
 
 /**
@@ -566,7 +623,7 @@
  * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
  */
 #ifndef MY_RF24_CHANNEL
-#define MY_RF24_CHANNEL	76
+#define MY_RF24_CHANNEL					(76)
 #endif
 
 /**
@@ -574,7 +631,7 @@
  * @brief RF24 datarate (RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps or RF24_2MBPS for 2Mbps).
  */
 #ifndef MY_RF24_DATARATE
-#define MY_RF24_DATARATE RF24_250KBPS
+#define MY_RF24_DATARATE				RF24_250KBPS
 #endif
 
 /**
@@ -584,7 +641,7 @@
  * This acts as base value for sensor nodeId addresses. Change this (or channel) if you have more than one sensor network.
  */
 #ifndef MY_RF24_BASE_RADIO_ID
-#define MY_RF24_BASE_RADIO_ID 0x00,0xFC,0xE1,0xA8,0xA8
+#define MY_RF24_BASE_RADIO_ID			0x00,0xFC,0xE1,0xA8,0xA8
 #endif
 
 /**
@@ -594,7 +651,7 @@
  * This defines the width of the base address.
  */
 #ifndef MY_RF24_ADDR_WIDTH
-#define MY_RF24_ADDR_WIDTH 5
+#define MY_RF24_ADDR_WIDTH				(5)
 #endif
 
 // Enable SOFTSPI for NRF24L01, useful for the W5100 Ethernet module
@@ -605,7 +662,7 @@
  * @brief Soft SPI SCK pin.
  */
 #ifndef MY_SOFT_SPI_SCK_PIN
-#define MY_SOFT_SPI_SCK_PIN 14
+#define MY_SOFT_SPI_SCK_PIN				(14)
 #endif
 
 /**
@@ -613,7 +670,7 @@
  * @brief Soft SPI MISO pin.
  */
 #ifndef MY_SOFT_SPI_MISO_PIN
-#define MY_SOFT_SPI_MISO_PIN 16
+#define MY_SOFT_SPI_MISO_PIN			(16)
 #endif
 
 /**
@@ -621,7 +678,7 @@
  * @brief Soft SPI MOSI pin.
  */
 #ifndef MY_SOFT_SPI_MOSI_PIN
-#define MY_SOFT_SPI_MOSI_PIN 15
+#define MY_SOFT_SPI_MOSI_PIN			(15)
 #endif
 
 /**********************************
@@ -629,13 +686,33 @@
 ***********************************/
 
 /**
+ * @def MY_DEBUG_VERBOSE_RFM69
+ * @brief Enable MY_DEBUG_VERBOSE_RFM69 flag for verbose debug prints related to the RFM69 driver.
+ */
+//#define MY_DEBUG_VERBOSE_RFM69
+
+/**
+ * @def MY_DEBUG_VERBOSE_RFM69_REGISTERS
+ * @brief Print content of RFM69 radio registers.
+ */
+//#define MY_DEBUG_VERBOSE_RFM69_REGISTERS
+
+/**
+ * @def MY_RFM69_NEW_DRIVER
+ * @brief Enable MY_RFM69_NEW_DRIVER to enable the refactored RFM69 driver.
+ * IMPORTANT: This driver is not compatible with the old (=default) RFM69 driver.
+ */
+//#define MY_RFM69_NEW_DRIVER
+
+/**
  * @def MY_RFM69_FREQUENCY
- * @brief RFM69 frequency to use (RF69_433MHZ for 433MHz, RF69_868MHZ for 868MHz or RF69_915MHZ for 915MHz).
+ * @brief RFM69 frequency to use: RFM69_433MHZ, RFM69_868MHZ, RFM69_915MHZ, or custom frequency in Hz (new RFM69 driver only).
  *
  * This must match the hardware version of the RFM69 radio.
+ * Additional information: https://en.wikipedia.org/wiki/Short_Range_Devices
  */
 #ifndef MY_RFM69_FREQUENCY
-#define MY_RFM69_FREQUENCY   RF69_868MHZ
+#define MY_RFM69_FREQUENCY				RFM69_868MHZ
 #endif
 
 /**
@@ -649,49 +726,286 @@
  * @brief Set to true if @ref MY_IS_RFM69HW is set.
  */
 #ifdef MY_IS_RFM69HW
-	#define MY_RFM69HW true
+#define MY_RFM69HW true
 #else
-	#define MY_RFM69HW false
+#define MY_RFM69HW false
 #endif
+
+/**
+ * @def MY_RFM69_TX_POWER_DBM
+ * @brief Set TX power level, default 5dBm (overriden if ATC mode enabled).
+ */
+#ifndef MY_RFM69_TX_POWER_DBM
+#define MY_RFM69_TX_POWER_DBM			(5)
+#endif
+
+/**
+ * @def MY_RFM69_ATC_TARGET_RSSI_DBM
+ * @brief Target RSSI level (in dBm) for RFM69 ATC mode.
+ */
+#ifndef MY_RFM69_ATC_TARGET_RSSI_DBM
+#define MY_RFM69_ATC_TARGET_RSSI_DBM	(-80)
+#endif
+
+/**
+ * @def MY_RFM69_ATC_MODE_DISABLED
+ * @brief Switch to disable ATC mode of RFM69 driver.
+ */
+//#define MY_RFM69_ATC_MODE_DISABLED
+
+/**
+ * @def MY_RFM69_MAX_POWER_LEVEL_DBM
+ * @brief Set max TX power in dBm if local legislation requires
+ * 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
+ * see here:  https://en.wikipedia.org/wiki/Short_Range_Devices
+ */
+//#define MY_RFM69_MAX_POWER_LEVEL_DBM		(10u)
 
 /**
  * @def MY_RFM69_NETWORKID
  * @brief RFM69 Network ID. Use the same for all nodes that will talk to each other.
  */
 #ifndef MY_RFM69_NETWORKID
-#define MY_RFM69_NETWORKID     100
+#define MY_RFM69_NETWORKID				(100)
 #endif
 
 /**
- * @def MY_RF69_IRQ_PIN
- * @brief RF69 IRQ pin.
+ * @def MY_RFM69_RST_PIN
+ * @brief RFM69 reset pin, uncomment if used.
  */
-#ifndef MY_RF69_IRQ_PIN
-#define MY_RF69_IRQ_PIN RF69_IRQ_PIN
+//#define MY_RFM69_RST_PIN				(9)
+
+#ifdef MY_RF69_RESET
+// legacy, older board files
+#define MY_RFM69_RST_PIN				MY_RF69_RESET
 #endif
 
 /**
- * @def MY_RF69_SPI_CS
- * @brief RF69 SPI chip select pin.
+ * @def MY_RFM69_POWER_PIN
+ * @brief RFM69 power pin
  */
-#ifndef MY_RF69_SPI_CS
-#define MY_RF69_SPI_CS RF69_SPI_CS
+//#define MY_RFM69_POWER_PIN			(3)
+
+/**
+ * @def MY_RFM69_IRQ_PIN
+ * @brief RFM69 IRQ pin
+ */
+#ifndef MY_RFM69_IRQ_PIN
+#ifdef MY_RF69_IRQ_PIN
+// legacy, older board files
+#define MY_RFM69_IRQ_PIN				MY_RF69_IRQ_PIN
+#else
+#define MY_RFM69_IRQ_PIN				DEFAULT_RFM69_IRQ_PIN
+#endif
+#endif
+
+
+/**
+ * @def MY_RFM69_IRQ_NUM
+ * @brief RFM69 IRQ number.
+ */
+#ifndef MY_RFM69_IRQ_NUM
+#ifdef MY_RF69_IRQ_NUM
+// legacy, older board files
+#define MY_RFM69_IRQ_NUM				MY_RF69_IRQ_NUM
+#else
+#define MY_RFM69_IRQ_NUM				DEFAULT_RFM69_IRQ_NUM
+#endif
+#endif
+
+
+/**
+ * @def MY_RFM69_CS_PIN
+ * @brief RFM69 SPI chip select pin.
+ */
+#ifndef MY_RFM69_CS_PIN
+#ifdef MY_RF69_SPI_CS
+// legacy, older board files
+#define MY_RFM69_CS_PIN					MY_RF69_SPI_CS
+#else
+#define MY_RFM69_CS_PIN					DEFAULT_RFM69_CS_PIN
+#endif
 #endif
 
 /**
- * @def MY_RF69_IRQ_NUM
- * @brief RF69 IRQ pin number.
+ * @def MY_RFM69_SPI_SPEED
+ * @brief Set to overrule default RFM69 SPI speed.
  */
-#ifndef MY_RF69_IRQ_NUM
-	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
-	#else
-		#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
-	#endif
+#ifndef MY_RFM69_SPI_SPEED
+#define MY_RFM69_SPI_SPEED				(4*1000000ul)	// datasheet says 10Mhz max.
 #endif
 
-// Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+/**
+ * @def MY_RFM69_ENABLE_ENCRYPTION
+ * Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
+ */
 //#define MY_RFM69_ENABLE_ENCRYPTION
+
+/**
+ * Uncomment if you need listenmode, else comment it and save memory
+ */
+//#define MY_RFM69_ENABLE_LISTENMODE
+
+#if defined(MY_RFM69_ENABLE_LISTENMODE) && !defined(MY_RFM69_DEFAULT_LISTEN_RX_US)
+// By default, receive for 256uS in listen mode and idle for ~1s
+#define MY_RFM69_DEFAULT_LISTEN_RX_US	(256)
+#endif
+
+#if defined(MY_RFM69_ENABLE_LISTENMODE) && !defined(MY_RFM69_DEFAULT_LISTEN_IDLE_US)
+// By default, receive for 256uS in listen mode and idle for ~1s
+#define  MY_RFM69_DEFAULT_LISTEN_IDLE_US (1*1000000ul)
+#endif
+
+
+/**
+ * @def MY_RFM69_BITRATE_MSB
+ * The bit rate. Most significant bits. Bitrate between the transmitter and the receiver must be better than 6.5. Refer to RFM69registers.h (L.153) for settings or http://www.semtech.com/apps/filedown/down.php?file=sx1231.pdf
+ * @brief Datarate value. Note : RFM69_FOSC(Hz)/MSB_LSBVALUE = Bitrate in kbits
+ *
+ * @def MY_RFM69_BITRATE_LSB
+ * The bit rate. Less significant bits. Bitrate between the transmitter and the receiver must be better than 6.5. Refer to RFM69registers.h (L.153) for settings or http://www.semtech.com/apps/filedown/down.php?file=sx1231.pdf
+ * @brief Datarate value. Note : RFM69_FOSC(Hz)/MSB_LSBVALUE = Bitrate in kbits
+ */
+#if !defined(MY_RFM69_BITRATE_MSB) && !defined(MY_RFM69_BITRATE_LSB)
+#define MY_RFM69_BITRATE_MSB			RFM69_BITRATEMSB_55555
+#define MY_RFM69_BITRATE_LSB			RFM69_BITRATELSB_55555
+#endif
+
+/**********************************
+*  RFM95 driver defaults
+***********************************/
+
+/**
+ * @def MY_DEBUG_VERBOSE_RFM95
+ * @brief Enable MY_DEBUG_VERBOSE_RFM95 flag for verbose debug prints related to the RFM95 driver.
+ */
+//#define MY_DEBUG_VERBOSE_RFM95
+
+/**
+ * @def MY_RFM95_FREQUENCY
+ * @brief RFM95 frequency to use: RFM95_169MHZ, RFM95_315MHZ, RFM95_434MHZ, RFM95_868MHZ, RFM95_915MHZ, or custom frequency in Hz.
+ *
+ * This must match the hardware version of the RFM95 radio.
+ * Additional information: https://en.wikipedia.org/wiki/Short_Range_Devices
+
+ */
+#ifndef MY_RFM95_FREQUENCY
+#define MY_RFM95_FREQUENCY				RFM95_868MHZ
+#endif
+
+/**
+ * @def MY_RFM95_MODEM_CONFIGRUATION
+ * @brief RFM95 modem configuration, see table. Default RFM95 modem configuration: @ref RFM95_BW125CR45SF128
+ *
+ * BW = Bandwidth in kHz
+ * CR = Error correction code
+ * SF = Spreading factor, chips / symbol
+ *
+ * | CONFIG					| BW    | CR  | SF   | Comment
+ * |------------------------|-------|-----|------|-----------------------------
+ * | RFM95_BW125CR45SF128	| 125   | 4/5 | 128  | Default, medium range
+ * | RFM95_BW500CR45SF128	| 500   | 4/5 | 128  | Fast, short range
+ * | RFM95_BW31_25CR48SF512	| 31.25 | 4/8 | 512  | Slow, long range
+ * | RFM95_BW125CR48SF4096	| 125   | 4/8 | 4096 | Slow, long range
+ *
+ */
+#ifndef MY_RFM95_MODEM_CONFIGRUATION
+#define MY_RFM95_MODEM_CONFIGRUATION	RFM95_BW125CR45SF128
+#endif
+
+/**
+ * @def MY_RFM95_RST_PIN
+ * @brief RFM95 reset pin, uncomment if used.
+ */
+//#define MY_RFM95_RST_PIN				(9)
+
+/**
+ * @def MY_RFM95_POWER_PIN
+ * @brief RFM95 power pin, uncomment if used
+ */
+//#define MY_RFM95_POWER_PIN			(3)
+
+/**
+ * @def MY_RFM95_IRQ_PIN
+ * @brief RFM95 IRQ pin.
+ */
+#ifndef MY_RFM95_IRQ_PIN
+#define MY_RFM95_IRQ_PIN				DEFAULT_RFM95_IRQ_PIN
+#endif
+
+/**
+ * @def MY_RFM95_IRQ_NUM
+ * @brief RFM95 IRQ number.
+ */
+#ifndef MY_RFM95_IRQ_NUM
+#define MY_RFM95_IRQ_NUM				DEFAULT_RFM95_IRQ_NUM
+#endif
+
+/**
+ * @def MY_RFM95_CS_PIN
+ * @brief RFM95 SPI chip select pin.
+ */
+#ifndef MY_RFM95_CS_PIN
+#define MY_RFM95_CS_PIN					DEFAULT_RFM95_CS_PIN
+#endif
+
+/**
+ * @def MY_RFM95_SPI_SPEED
+ * @brief Set to overrule default RFM95 SPI speed, default 4Mhz.
+ */
+#ifndef MY_RFM95_SPI_SPEED
+#define MY_RFM95_SPI_SPEED				(4*1000000ul)
+#endif
+
+/**
+ * @def MY_RFM95_TX_POWER_DBM
+ * @brief Set TX power level, default 13dBm (overriden if ATC mode enabled)
+ * see here: https://en.wikipedia.org/wiki/Short_Range_Devices
+ */
+#ifndef MY_RFM95_TX_POWER_DBM
+#define MY_RFM95_TX_POWER_DBM			(13u)	// 20mW
+#endif
+
+/**
+ * @def MY_RFM95_ATC_MODE_DISABLED
+ * @brief Switch to disable RFM95 ATC mode
+ */
+//#define MY_RFM95_ATC_MODE_DISABLED
+
+/**
+ * @def MY_RFM95_ATC_TARGET_RSSI
+ * @brief Target RSSI level (in dBm) for RFM95 ATC mode
+ */
+#ifndef MY_RFM95_ATC_TARGET_RSSI
+#define MY_RFM95_ATC_TARGET_RSSI		(-60)
+#endif
+
+/**
+ * @def MY_RFM95_MAX_POWER_LEVEL_DBM
+ * @brief Set max TX power in dBm if local legislation requires
+ * 1mW = 0dBm, 10mW = 10dBm, 25mW = 14dBm, 100mW = 20dBm
+ * see here: https://en.wikipedia.org/wiki/Short_Range_Devices
+ */
+//#define MY_RFM95_MAX_POWER_LEVEL_DBM		(10u)
+
+/**
+ * @def MY_RFM95_TCXO
+ * @brief Enable to force your radio to use an external frequency source (e.g. TCXO, if present).
+ * This allows for better stability using SF 9 to 12.
+ */
+//#define MY_RFM95_TCXO
+
+/**************************************
+* Signal report
+***************************************/
+
+/**
+ * @def MY_SIGNAL_REPORT_ENABLED
+ * @brief Enables signal report functionality, see @ref transportSignalReport().
+ * NOTE: This feature adds ~1kB code to the sketch.
+ */
+#define MY_SIGNAL_REPORT_ENABLED
+
 
 /**************************************
 * Ethernet Gateway Transport  Defaults
@@ -708,12 +1022,18 @@
  * @brief The Ethernet TCP/UDP port to open on controller or gateway.
  */
 #ifndef MY_PORT
-	#ifdef MY_GATEWAY_MQTT_CLIENT
-		#define MY_PORT 1883
-	#else
-		#define MY_PORT 5003
-	#endif
+#ifdef MY_GATEWAY_MQTT_CLIENT
+#define MY_PORT 1883
+#else
+#define MY_PORT 5003
 #endif
+#endif
+
+/**
+ * @def MY_MQTT_CLIENT_PUBLISH_RETAIN
+ * @brief Enables MQTT client to set the retain flag when publishing specific messages.
+ */
+//#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 
 // Static ip address of gateway (if this is disabled, DHCP will be used)
 //#define MY_IP_ADDRESS 192,168,178,66
@@ -722,11 +1042,11 @@
 //#define MY_USE_UDP
 
 /**
- * @def MY_IP_RENEWAL_INTERVAL
+ * @def MY_IP_RENEWAL_INTERVAL_MS
  * @brief DHCP, default renewal setting in milliseconds.
  */
-#ifndef MY_IP_RENEWAL_INTERVAL
-#define MY_IP_RENEWAL_INTERVAL 60000
+#ifndef MY_IP_RENEWAL_INTERVAL_MS
+#define MY_IP_RENEWAL_INTERVAL_MS		(60*1000ul)
 #endif
 
 /**
@@ -736,7 +1056,7 @@
  * This needs to be unique on the network.
  */
 #ifndef MY_MAC_ADDRESS
-#define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+#define MY_MAC_ADDRESS					0xDE,0xAD,0xBE,0xEF,0xFE,0xED
 #endif
 
 // Controller ip-address, if this is defined, gateway will act as a client trying to contact controller on MY_PORT.
@@ -789,7 +1109,7 @@
  * using serial protocol to erase EEPROM to unlock the node.
  */
 #ifndef MY_NODE_UNLOCK_PIN
-#define MY_NODE_UNLOCK_PIN 14
+#define MY_NODE_UNLOCK_PIN				(14)
 #endif
 
 /**
@@ -799,7 +1119,7 @@
  * Counter decrements on reoccuring incidents but resets if legitimate behaviour is identified.
  */
 #ifndef MY_NODE_LOCK_COUNTER_MAX
-#define MY_NODE_LOCK_COUNTER_MAX 5
+#define MY_NODE_LOCK_COUNTER_MAX		(5)
 #endif
 /** @}*/ // Node lock group
 
@@ -816,7 +1136,7 @@
  * SERIAL_RX_ONLY: allows to use TX (GPIO1) as a general purpose input/output.
  */
 #ifndef MY_ESP8266_SERIAL_MODE
-#define MY_ESP8266_SERIAL_MODE SERIAL_FULL
+#define MY_ESP8266_SERIAL_MODE			SERIAL_FULL
 #endif
 
 /**************************************
@@ -828,30 +1148,30 @@
  * @brief Serial device port
  */
 #ifndef MY_LINUX_SERIAL_PORT
-#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+#define MY_LINUX_SERIAL_PORT			"/dev/ttyACM0"
 #endif
 
 /**
- * @def MY_IS_SERIAL_PTY
+ * @def MY_LINUX_IS_SERIAL_PTY
  * @brief Set serial as a pseudo terminal.
  *
  * Enable this if you need to connect to a controller running on the same device.
  */
-//#define MY_IS_SERIAL_PTY
+//#define MY_LINUX_IS_SERIAL_PTY
 
 /**
  * @def MY_LINUX_SERIAL_PTY
  * @brief Symlink name for the PTY device.
  */
 #ifndef MY_LINUX_SERIAL_PTY
-#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+#define MY_LINUX_SERIAL_PTY				"/dev/ttyMySensorsGateway"
 #endif
 
 /**
  * @def MY_LINUX_SERIAL_GROUPNAME
  * @brief Grant access to the specified system group for the serial device.
  */
-//#define MY_LINUX_SERIAL_GROUPNAME "tty"
+//#define MY_LINUX_SERIAL_GROUPNAME		"tty"
 
 /**
  * @def MY_LINUX_CONFIG_FILE
@@ -860,7 +1180,7 @@
  * For now the configuration file is only used to store the emulated eeprom state
  */
 #ifndef MY_LINUX_CONFIG_FILE
-#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+#define MY_LINUX_CONFIG_FILE			"/etc/mysensors.dat"
 #endif
 
 #endif	// MyConfig_h
@@ -868,23 +1188,61 @@
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN
+// debug
+#define MY_DEBUG
+#define MY_SPECIAL_DEBUG
+#define MY_DISABLED_SERIAL
+// linux
+#define MY_LINUX_SERIAL_GROUPNAME
+#define MY_LINUX_IS_SERIAL_PTY
+// inclusion mode
+#define MY_INCLUSION_MODE_FEATURE
+#define MY_INCLUSION_BUTTON_FEATURE
+// transport
+#define MY_PARENT_NODE_IS_STATIC
+#define MY_REGISTRATION_CONTROLLER
+#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+#define MY_TRANSPORT_SANITY_CHECK
+#define MY_NODE_LOCK_FEATURE
+#define MY_REPEATER_FEATURE
+#define MY_PASSIVE_NODE
+#define MY_MQTT_CLIENT_PUBLISH_RETAIN
+// general
+#define MY_WITH_LEDS_BLINKING_INVERSE
+#define MY_INDICATION_HANDLER
+#define MY_DISABLE_REMOTE_RESET
+// signing
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_DEBUG_VERBOSE_SIGNING
+// RS485
 #define MY_RS485_HWSERIAL
-#define MY_IS_RFM69HW
-#define MY_PARENT_NODE_IS_STATIC
-#define MY_REGISTRATION_CONTROLLER
+// RF24
 #define MY_DEBUG_VERBOSE_RF24
-#define MY_TRANSPORT_SANITY_CHECK
-#define MY_RF24_IRQ_PIN
+#define MY_RF24_POWER_PIN
+#define MY_RF24_ENABLE_ENCRYPTION
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
-#define MY_NODE_LOCK_FEATURE
-#define MY_REPEATER_FEATURE
-#define MY_TRANSPORT_DONT_CARE_MODE
-#define MY_LINUX_SERIAL_GROUPNAME
-#define MY_IS_SERIAL_PTY
+// RFM69
+#define MY_IS_RFM69HW
+#define MY_RFM69_NEW_DRIVER
+#define MY_RFM69_POWER_PIN
+#define MY_RFM69_ENABLE_ENCRYPTION
+#define MY_RFM69_ATC_MODE_DISABLED
+#define MY_RFM69_MAX_POWER_LEVEL_DBM
+#define MY_RFM69_RST_PIN
+#define MY_DEBUG_VERBOSE_RFM69
+#define MY_DEBUG_VERBOSE_RFM69_REGISTERS
+// RFM95
+#define MY_DEBUG_VERBOSE_RFM95
+#define MY_RFM95_ATC_MODE_DISABLED
+#define MY_RFM95_RST_PIN
+#define MY_RFM95_MODEM_CONFIGRUATION
+#define MY_RFM95_POWER_PIN
+#define MY_RFM95_TCXO
+#define MY_RFM95_MAX_POWER_LEVEL_DBM
+
 #endif

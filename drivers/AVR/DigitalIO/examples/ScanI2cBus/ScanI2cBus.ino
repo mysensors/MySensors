@@ -26,52 +26,59 @@ const uint8_t SCL_PIN = A5;
 SoftI2cMaster i2c(SCL_PIN, SDA_PIN);
 //FastI2cMaster<SCL_PIN, SDA_PIN> i2c;
 //------------------------------------------------------------------------------
-void setup() {
+void setup()
+{
 
-  Serial.begin(9600);
-  while (!Serial);
-  
-  if (!digitalRead(SDA_PIN) && !digitalRead(SCL_PIN)) {
-    Serial.println("External pull-up resistors appear to be missing.");
-    Serial.println("Many false responses may be detected.");
-    Serial.println("Type any character to continue.");
+	Serial.begin(9600);
+	while (!Serial);
 
-    while (!Serial.available());
-    Serial.println();
+	if (!digitalRead(SDA_PIN) && !digitalRead(SCL_PIN)) {
+		Serial.println("External pull-up resistors appear to be missing.");
+		Serial.println("Many false responses may be detected.");
+		Serial.println("Type any character to continue.");
 
-  }
-  uint8_t add = 0;
-  bool found = false;
-  do {
-    bool wr = i2c.transfer(add | I2C_WRITE, 0, 0);
-    bool rd = i2c.transfer(add | I2C_READ, 0, 0, I2C_CONTINUE);
-    if (rd) {
-      uint8_t dummy;
-      // Must read byte, send NACK, and issue STOP.
-      i2c.transferContinue(&dummy, 1);
-    }
-    if (rd || wr) {
-      found = true;
-      Serial.print("Device at address: 0X");
-      Serial.print(add, HEX);
-      Serial.print(" responds to ");
-      if (rd) Serial.print("Read");
-      if (rd && wr) Serial.print(" and ");
-      if (wr) Serial.print("Write");
-      Serial.println('.');
-    }
-    add += 2;
-  }
-  while (add);
+		while (!Serial.available());
+		Serial.println();
 
-  if (!found) {
-    Serial.println("No devices found.");
-  }
-  Serial.println("Done");
+	}
+	uint8_t add = 0;
+	bool found = false;
+	do {
+		bool wr = i2c.transfer(add | I2C_WRITE, 0, 0);
+		bool rd = i2c.transfer(add | I2C_READ, 0, 0, I2C_CONTINUE);
+		if (rd) {
+			uint8_t dummy;
+			// Must read byte, send NACK, and issue STOP.
+			i2c.transferContinue(&dummy, 1);
+		}
+		if (rd || wr) {
+			found = true;
+			Serial.print("Device at address: 0X");
+			Serial.print(add, HEX);
+			Serial.print(" responds to ");
+			if (rd) {
+				Serial.print("Read");
+			}
+			if (rd && wr) {
+				Serial.print(" and ");
+			}
+			if (wr) {
+				Serial.print("Write");
+			}
+			Serial.println('.');
+		}
+		add += 2;
+	} while (add);
+
+	if (!found) {
+		Serial.println("No devices found.");
+	}
+	Serial.println("Done");
 }
 //------------------------------------------------------------------------------
-void loop() {
-  // Not used.
+void loop()
+{
+	// Not used.
 }
 
 
