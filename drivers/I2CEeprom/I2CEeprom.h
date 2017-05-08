@@ -85,8 +85,14 @@ public:
 		return 0xDEAD;
 	};
 	void chipErase() {};
-	void blockErase4K(uint32_t address) {};
-	void blockErase32K(uint32_t address) {};
+	void blockErase4K(uint32_t address)
+	{
+		(void)address;
+	};
+	void blockErase32K(uint32_t address)
+	{
+		(void)address;
+	};
 	void sleep() {};
 	void wakeup() {};
 	void end() {};
@@ -94,7 +100,6 @@ public:
 protected:
 
 	uint8_t m_addr; //!< I2C address
-
 };
 
 #endif
