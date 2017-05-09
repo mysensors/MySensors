@@ -116,14 +116,13 @@ bool firmwareOTAUpdateProcess(void)
 			while (_flash.busy()) {}
 #ifdef OTA_EXTRA_FLASH_DEBUG
 			{
-				uint8_t data;
 				char prbuf[8];
 				uint32_t addr = ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET;
 				OTA_DEBUG(PSTR("OTA:FWP:FL DUMP "));
 				sprintf_P(prbuf,PSTR("%04X:"), (uint16_t)addr);
 				MY_SERIALDEVICE.print(prbuf);
 				for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
-					data = _flash.readByte(addr + i);
+					uint8_t data = _flash.readByte(addr + i);
 					sprintf_P(prbuf,PSTR("%02X"), (unsigned int)data);
 					MY_SERIALDEVICE.print(prbuf);
 				}

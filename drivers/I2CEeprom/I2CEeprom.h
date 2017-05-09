@@ -53,13 +53,15 @@
 #define I2CEEPROM_TWI_CLK twiClock400kHz
 #endif
 
-// EEPROM page size. Typically 64 (see data sheet for your EEPROM)
+/// EEPROM page size
+//Typically 64 (see data sheet for your EEPROM)
 // Some 512kbit chips use 128 byte pages (e.g. Atmel AT24C512)
 #ifndef I2CEEPROM_PAGE_SIZE
 #define I2CEEPROM_PAGE_SIZE 64
 #endif
 
-// EEPROM size. 24C256 is 32kB, minimum that fits code for ATmega328
+/// EEPROM size
+// 24C256 is 32kB, minimum that fits code for ATmega328
 // Use extEEPROM type
 #ifndef I2CEEPROM_CHIP_SIZE
 #define I2CEEPROM_CHIP_SIZE kbits_256
@@ -70,7 +72,7 @@ class I2CEeprom : extEEPROM
 {
 public:
 
-	I2CEeprom(uint8_t addr); //!< Constructor
+	explicit I2CEeprom(uint8_t addr); //!< Constructor
 	boolean initialize(); //!< setup
 	uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
 	void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read unlimited # of bytes
@@ -79,27 +81,28 @@ public:
 	                uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if define SPIFLASH_SST25TYPE is set AAI Word Programming will be used
 	boolean busy(); //!< check if the chip is busy erasing/writing
 
-	// not needed for EEPROMs, but kept so SPI flash code compiles as is (functions are NOP)
-	uint16_t readDeviceId()
+	// the rest not needed for EEPROMs, but kept so SPI flash code compiles as is (functions are NOP)
+
+	uint16_t readDeviceId() //!< dummy function
 	{
 		return 0xDEAD;
 	};
-	void chipErase() {};
-	void blockErase4K(uint32_t address)
+	void chipErase() {}; //!< dummy function
+	void blockErase4K(uint32_t address) //!< dummy function
 	{
 		(void)address;
 	};
-	void blockErase32K(uint32_t address)
+	void blockErase32K(uint32_t address) //!< dummy function
 	{
 		(void)address;
 	};
-	void sleep() {};
-	void wakeup() {};
-	void end() {};
+	void sleep() {}; //!< dummy function
+	void wakeup() {}; //!< dummy function
+	void end() {}; //!< dummy function
 
 protected:
 
-	uint8_t m_addr; //!< I2C address
+	uint8_t m_addr; //!< I2C address for busy
 };
 
 #endif

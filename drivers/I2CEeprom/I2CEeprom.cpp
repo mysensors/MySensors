@@ -35,7 +35,7 @@ I2CEeprom::I2CEeprom(uint8_t addr) : extEEPROM(I2CEEPROM_CHIP_SIZE, 1, I2CEEPROM
 	m_addr = addr;    // we only need this for busy()
 }
 
-// setup
+/// setup
 boolean I2CEeprom::initialize()
 {
 	return extEEPROM::begin(I2CEEPROM_TWI_CLK) ? false : true;
