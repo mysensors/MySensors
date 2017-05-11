@@ -70,7 +70,7 @@ public:
 	/**
 	 * @brief Get the new connected client.
 	 *
-	 * @return client class object if a new client has connected else -1.
+	 * @return a EthernetClient object; if no new client has connected, this object will evaluate to false.
 	 */
 	EthernetClient available();
 	/**
@@ -106,8 +106,8 @@ public:
 
 private:
 	uint16_t port; //!< @brief Port number for the network socket.
-	std::list<int> new_clients; //!< Socket list of new clients.
-	std::vector<int> clients; //!< @brief Socket list of clients.
+	std::list<int> new_clients; //!< Socket list of new connected clients.
+	std::vector<int> clients; //!< @brief Socket list of connected clients.
 	uint16_t max_clients; //!< @brief The maximum number of allowed clients.
 	int sockfd; //!< @brief Network socket used to accept connections.
 
