@@ -117,7 +117,7 @@ function detect_rpi_revision {
 
 function detect_machine {
     local cpu=$(eval "uname -m 2>/dev/null")
-    local machine=$(eval "cat /sys/firmware/devicetree/base/model |tr -d '\0' 2>/dev/null")
+    local machine=$(eval "cat /sys/firmware/devicetree/base/model 2>/dev/null |tr -d '\0'")
     local hardware=$(eval "grep sunxi_platform /sys/class/sunxi_info/sys_info 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
     if [ -z "$hardware" ]; then
         local hardware=$(eval "grep Hardware /proc/cpuinfo 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
