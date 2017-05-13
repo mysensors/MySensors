@@ -138,6 +138,9 @@ bool gatewayTransportInit(void)
 #endif /* MY_GATEWAY_ESP8266 */
 
 #if defined(MY_GATEWAY_CLIENT_MODE)
+#if defined(MY_GATEWAY_LINUX) && defined(MY_IP_ADDRESS)
+	client.bind(_ethernetGatewayIP);
+#endif
 #if defined(MY_CONTROLLER_URL_ADDRESS)
 	if (client.connect(MY_CONTROLLER_URL_ADDRESS, MY_PORT)) {
 #else

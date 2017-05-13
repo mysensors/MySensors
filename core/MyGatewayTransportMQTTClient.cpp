@@ -105,7 +105,7 @@ bool gatewayTransportConnect(void)
 	MY_SERIALDEVICE.println(WiFi.localIP());
 #elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
-	//TODO
+	_MQTT_ethClient.bind(_MQTT_clientIp);
 #endif
 #else
 #ifdef MY_IP_ADDRESS
