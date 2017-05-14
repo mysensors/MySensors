@@ -34,7 +34,7 @@
 #endif
 
 
-#if defined(MY_RADIO_NRF24)
+#if defined(MY_RADIO_NRF24) || defined(MY_RADIO_NRF5_ESB)
 #define MY_CAP_RADIO "N"
 #elif defined(MY_RADIO_RFM69)
 #if !defined(MY_RFM69_NEW_DRIVER)
@@ -64,6 +64,8 @@
 
 #if defined(ARDUINO_ARCH_SAMD)
 #define MY_CAP_ARCH "S"
+#elif defined(ARDUINO_ARCH_NRF5)
+#define MY_CAP_ARCH "N"
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define MY_CAP_ARCH "E"
 #elif defined(ARDUINO_ARCH_AVR)
