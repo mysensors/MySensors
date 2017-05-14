@@ -71,6 +71,15 @@
 // personalized with the same AES key)
 //#define MY_RF24_ENABLE_ENCRYPTION
 
+// Enable inclusion mode if your HA Controller supports it (e.g. Vera Controller)
+//#define MY_INCLUSION_MODE_FEATURE
+// Enable Inclusion mode button on gateway
+//#define MY_INCLUSION_BUTTON_FEATURE
+// Set inclusion mode duration (in seconds)
+//#define MY_INCLUSION_MODE_DURATION 60
+// Digital pin used for inclusion mode button
+//#define MY_INCLUSION_MODE_BUTTON_PIN  3
+
 #include <MySensors.h>
 
 #define ARDUINO 100
