@@ -26,6 +26,9 @@
 #define INVALID_LEVEL				((int16_t)-256)	//!< INVALID_LEVEL
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+#if defined(MY_RADIO_NRF5_ESB)
+#error Receive message buffering not supported for NRF5 radio! Please define MY_NRF5_RX_BUFFER_SIZE
+#endif
 #if defined(MY_RADIO_RFM69)
 #error Receive message buffering not supported for RFM69!
 #endif
