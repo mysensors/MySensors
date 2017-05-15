@@ -48,6 +48,7 @@
 #include <Arduino.h>
 #include <extEEPROM.h>
 
+/// I2C speed
 // 400kHz clock as default. Use extEEPROM type
 #ifndef I2CEEPROM_TWI_CLK
 #define I2CEEPROM_TWI_CLK twiClock400kHz
@@ -75,7 +76,7 @@ public:
 	explicit I2CEeprom(uint8_t addr); //!< Constructor
 	boolean initialize(); //!< setup
 	uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
-	void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read unlimited # of bytes
+	void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read multiple bytes
 	void writeByte(uint32_t addr, uint8_t byt); //!< Write 1 byte to flash memory
 	void writeBytes(uint32_t addr, const void* buf,
 	                uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if define SPIFLASH_SST25TYPE is set AAI Word Programming will be used
@@ -83,26 +84,33 @@ public:
 
 	// the rest not needed for EEPROMs, but kept so SPI flash code compiles as is (functions are NOP)
 
-	uint16_t readDeviceId() //!< dummy function
+	/// dummy function for SPI flash compatibility
+	uint16_t readDeviceId()
 	{
 		return 0xDEAD;
 	};
-	void chipErase() {}; //!< dummy function
-	void blockErase4K(uint32_t address) //!< dummy function
+	/// dummy function for SPI flash compatibility
+	void chipErase() {};
+	/// dummy function for SPI flash compatibility
+	void blockErase4K(uint32_t address)
 	{
 		(void)address;
 	};
-	void blockErase32K(uint32_t address) //!< dummy function
+	/// dummy function for SPI flash compatibility
+	void blockErase32K(uint32_t address)
 	{
 		(void)address;
 	};
-	void sleep() {}; //!< dummy function
-	void wakeup() {}; //!< dummy function
-	void end() {}; //!< dummy function
+	/// dummy function for SPI flash compatibility
+	void sleep() {};
+	/// dummy function for SPI flash compatibility
+	void wakeup() {};
+	/// dummy function for SPI flash compatibility
+	void end() {};
 
 protected:
 
-	uint8_t m_addr; //!< I2C address for busy
+	uint8_t m_addr; ///< I2C address for busy()
 };
 
 #endif
