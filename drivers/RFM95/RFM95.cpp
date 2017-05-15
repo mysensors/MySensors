@@ -267,7 +267,8 @@ LOCAL uint8_t RFM95_recv(uint8_t* buf, const uint8_t maxBufSize)
 
 	noInterrupts();
 
-	const uint8_t payloadLen = min(RFM95.currentPacket.payloadLen, maxBufSize);
+	const uint8_t payloadLen = RFM95.currentPacket.payloadLen < maxBufSize?
+	                           RFM95.currentPacket.payloadLen : maxBufSize;
 	const uint8_t sender = RFM95.currentPacket.header.sender;
 	const rfm95_sequenceNumber_t sequenceNumber = RFM95.currentPacket.header.sequenceNumber;
 	const rfm95_controlFlags_t controlFlags = RFM95.currentPacket.header.controlFlags;
@@ -340,8 +341,8 @@ LOCAL void RFM95_setFrequency(const uint32_t frequencyHz)
 LOCAL bool RFM95_setTxPowerLevel(rfm95_powerLevel_t newPowerLevel)
 {
 	// RFM95/96/97/98 does not have RFO pins connected to anything. Only PA_BOOST
-	newPowerLevel = max((uint8_t)RFM95_MIN_POWER_LEVEL_DBM, newPowerLevel);
-	newPowerLevel = min((uint8_t)RFM95_MAX_POWER_LEVEL_DBM, newPowerLevel);
+	newPowerLevel = max((int8_t)RFM95_MIN_POWER_LEVEL_DBM, newPowerLevel);
+	newPowerLevel = min((int8_t)RFM95_MAX_POWER_LEVEL_DBM, newPowerLevel);
 	if (newPowerLevel != RFM95.powerLevel) {
 		RFM95.powerLevel = newPowerLevel;
 		uint8_t val;
