@@ -227,6 +227,9 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "core/MyGatewayTransportEthernet.cpp"
 #elif defined(MY_GATEWAY_LINUX)
 // GATEWAY - Generic Linux
+#if defined(MY_USE_UDP)
+#error UDP mode is not available for Linux
+#endif
 #include "drivers/Linux/EthernetClient.h"
 #include "drivers/Linux/EthernetServer.h"
 #include "drivers/Linux/IPAddress.h"
