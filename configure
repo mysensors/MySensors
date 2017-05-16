@@ -510,12 +510,16 @@ if [ -z "${SPI_DRIVER}" ]; then
     if [ -n "${SPI_DRIVER}" ]; then
         echo "  [OK] SPI driver detected:${SPI_DRIVER}."
     else
-        echo "  [WARNING] No supported SPI driver detected."
+        echo "  [WARNING] No supported SPI driver detected. Using SPIDEV."
+        SPI_DRIVER=SPIDEV
     fi
 fi
 if [ -n "${SPI_DRIVER}" ]; then
     case ${SPI_DRIVER} in
         BCM)
+            if [[ $SOC != "BCM2835" && $SOC != "BCM2836" && $SOC != "BCM2837" ]]; then
+                die "BCM SPI driver is only supported for SOCs BCM2835, BCM2836 or BCM2837" 5
+            fi
             CPPFLAGS="-DLINUX_SPI_BCM $CPPFLAGS"
             ;;
         SPIDEV)

@@ -120,7 +120,7 @@ _SPI;
 #define _SPI SPI					//!< SPI
 #endif
 #else
-#if defined(__arm__)
+#if defined(__arm__) || defined(__linux__)
 #include <SPI.h>
 #else
 extern HardwareSPI SPI;				//!< SPI
