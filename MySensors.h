@@ -334,10 +334,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // Transport drivers
 #if defined(MY_RADIO_RF24)
-#if defined(__linux__) && !(defined(LINUX_SPI_BCM) || defined(LINUX_SPI_SPIDEV))
-#error No support for nRF24 radio on this platform
-#endif
-
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 #include "drivers/AES/AES.cpp"
 #endif

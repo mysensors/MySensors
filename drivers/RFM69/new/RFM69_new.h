@@ -125,7 +125,7 @@ SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_S
 #define _SPI SPI
 #endif
 #else
-#if defined(__arm__)
+#if defined(__arm__) || defined(__linux__)
 #include <SPI.h>
 #else
 extern HardwareSPI SPI;		//!< SPI
