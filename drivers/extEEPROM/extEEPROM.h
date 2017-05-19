@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------------*
+﻿/*-----------------------------------------------------------------------------*
  * extEEPROM.h - Arduino library to support external I2C EEPROMs.              *
  *                                                                             *
  * This library will work with most I2C serial EEPROM chips between 2k bits    *
@@ -92,7 +92,7 @@ public:
 	* @param pageSize
 	* @param eepromAddr
 	*/
-	extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, //!< extEEPROM()
+	extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize,
 	          byte eepromAddr = 0x50);
 	byte begin(twiClockFreq_t twiFreq = twiClock100kHz);	//!< begin()
 	byte write(unsigned long addr, byte *values, unsigned int nBytes);	//!< write()

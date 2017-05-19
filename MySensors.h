@@ -97,6 +97,8 @@
 #include "drivers/NVM/VirtualPage.cpp"
 #include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/MyHwNRF5.cpp"
+#elif defined(__arm__) && defined(TEENSYDUINO)
+#include "hal/architecture/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyHwLinuxGeneric.cpp"
 #endif
@@ -423,6 +425,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/MyMainLinux.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/MyMainSTM32F1.cpp"
+#elif defined(TEENSYDUINO)
+#include "hal/architecture/MyMainTeensy3.cpp"
 #else
 #include "hal/architecture/MyMainDefault.cpp"
 #endif
