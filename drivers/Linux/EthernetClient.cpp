@@ -43,11 +43,13 @@ EthernetClient::EthernetClient(int sock) : _sock(sock)
 
 int EthernetClient::connect(const char* host, uint16_t port)
 {
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo, *localinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 	char port_str[6];
+	bool use_bind = (_srcip != 0);
+
+	close();
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -58,17 +60,31 @@ int EthernetClient::connect(const char* host, uint16_t port)
 		logError("getaddrinfo: %s\n", gai_strerror(rv));
 		return -1;
 	}
+	if (use_bind) {
+		if ((rv = getaddrinfo(_srcip.toString().c_str(), port_str, &hints, &localinfo)) != 0) {
+			logError("getaddrinfo: %s\n", gai_strerror(rv));
+			return -1;
+		}
+	}
 
 	// loop through all the results and connect to the first we can
 	for (p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-		                     p->ai_protocol)) == -1) {
+		if ((_sock = socket(p->ai_family, p->ai_socktype,
+		                    p->ai_protocol)) == -1) {
 			logError("socket: %s\n", strerror(errno));
 			continue;
 		}
 
-		if (::connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-			::close(sockfd);
+		if (use_bind) {
+			if (::bind(_sock, localinfo->ai_addr, localinfo->ai_addrlen) == -1) {
+				close();
+				logError("bind: %s\n", strerror(errno));
+				return -1;
+			}
+		}
+
+		if (::connect(_sock, p->ai_addr, p->ai_addrlen) == -1) {
+			close();
 			logError("connect: %s\n", strerror(errno));
 			continue;
 		}
@@ -81,13 +97,14 @@ int EthernetClient::connect(const char* host, uint16_t port)
 		return -1;
 	}
 
-	_sock = sockfd;
-
 	void *addr = &(((struct sockaddr_in*)p->ai_addr)->sin_addr);
 	inet_ntop(p->ai_family, addr, s, sizeof s);
 	logDebug("connected to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
+	if (use_bind) {
+		freeaddrinfo(localinfo); // all done with this structure
+	}
 
 	return 1;
 }
@@ -271,6 +288,11 @@ void EthernetClient::close()
 		::close(_sock);
 		_sock = -1;
 	}
+}
+
+void EthernetClient::bind(IPAddress ip)
+{
+	_srcip = ip;
 }
 
 int EthernetClient::getSocketNumber()

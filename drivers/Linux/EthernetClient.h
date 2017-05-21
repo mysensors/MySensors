@@ -156,6 +156,10 @@ public:
 	 */
 	void close();
 	/**
+	 * @brief Bind the conection to the specified local ip.
+	 */
+	void bind(IPAddress ip);
+	/**
 	 * @brief Get the internal socket file descriptor.
 	 *
 	 * @return an integer, that is the socket number.
@@ -200,7 +204,8 @@ public:
 	friend class EthernetServer;
 
 private:
-	int _sock; //!< @brief Network socket.
+	int _sock; //!< @brief Network socket file descriptor.
+	IPAddress _srcip; //!< @brief Local ip to bind to.
 };
 
 #endif
