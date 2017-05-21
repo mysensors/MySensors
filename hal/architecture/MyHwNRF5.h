@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -43,6 +43,7 @@
 #include <nrf.h>
 
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
+#define printf_P printf
 
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
@@ -110,7 +111,9 @@ static __inline__ void __priMaskRestore(const uint32_t *priMask)
 #endif
 
 #ifndef DOXYGEN
-#define MY_CRITICAL_SECTION                                                    \
+#define MY_CRITICAL_SECTION
+// temp. commented, to fix "CircularBuffer.h:94:2: warning: control reaches end of non-void function" error
+#define __MY_CRITICAL_SECTION                                                    \
 	for (uint32_t __savePriMask                                                  \
 	        __attribute__((__cleanup__(__priMaskRestore))) = __get_PRIMASK(),       \
 	        __ToDo = __disableIntsRetVal();                                         \

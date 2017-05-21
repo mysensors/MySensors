@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -249,7 +249,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
 	// already be handled!
 	MY_CRITICAL_SECTION {
 		// Fix cppcheck "(style) Variable '__savePriMask' is assigned a value that is never used."
-		(void)__savePriMask;
+		//(void)__savePriMask;
 		// attach interrupts
 		_wakeUp1Interrupt = interrupt1;
 		_wakeUp2Interrupt = interrupt2;

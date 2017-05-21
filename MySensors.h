@@ -76,6 +76,12 @@
 // transport layer files
 #define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 
+// temp. workaround for nRF5 verifier: redirect RF24 to NRF_ESB
+#if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF24) )
+#undef MY_RADIO_RF24
+#undef MY_RADIO_NRF24
+#define MY_RADIO_NRF5_ESB
+#endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
