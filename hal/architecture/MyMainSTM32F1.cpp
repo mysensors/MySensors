@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -17,8 +17,6 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-// Initialize library and handle sketch functions like we want to
-
 extern "C" void __libc_init_array(void);
 
 // Force init to be called *first*, i.e. before static object allocation.
@@ -28,13 +26,13 @@ __attribute__(( constructor (101))) void premain()
 	init();
 }
 
+// Initialize library and handle sketch functions like we want to
 int main(void)
 {
-	_begin();
-
+	_begin(); // Startup MySensors library
 	for(;;) {
-		_process();
-		if (loop) {
+		_process();	// Process incoming data
+		if (loop) {	 // Call sketch loop
 			loop();
 		}
 		if (serialEventRun) {
