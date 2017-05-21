@@ -16,12 +16,13 @@
 * modify it under the terms of the GNU General Public License
 * version 2 as published by the Free Software Foundation.
 *
-* Radio wiring: Teensy3.x / LC
+* Radio wiring Teensy3.x: RF24, RFM69, RFM95:
 * MISO	12
 * MOSI	11
 * SCK	13
 * CSN	10
-* CE	9 (default)
+* CE	9 (RF24)
+* IRQ	8 (opt. RF24, RFM69, RFM95)
 */
 
 #ifndef MyHwTeensy3_h
