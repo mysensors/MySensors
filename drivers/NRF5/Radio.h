@@ -1,4 +1,4 @@
-
+﻿
 /**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
@@ -43,9 +43,9 @@
 
 // debug
 #if defined(MY_DEBUG_VERBOSE_NRF5_ESB)
-#define NRF5_RADIO_DEBUG(x, ...) debug(x, ##__VA_ARGS__)
+#define NRF5_RADIO_DEBUG(x, ...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< DEBUG
 #else
-#define NRF5_RADIO_DEBUG(x, ...)
+#define NRF5_RADIO_DEBUG(x, ...)  //!< DEBUG null
 #endif
 
 // tx power

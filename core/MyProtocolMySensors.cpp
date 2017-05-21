@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -82,7 +82,6 @@ bool protocolParse(MyMessage &message, char *inputString)
 		}
 		i++;
 	}
-	//debug(PSTR("Received %d"), i);
 	// Check for invalid input
 	if (i < 5) {
 		return false;
