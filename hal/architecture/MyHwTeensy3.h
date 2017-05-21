@@ -15,6 +15,13 @@
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
 * version 2 as published by the Free Software Foundation.
+*
+* Radio wiring: Teensy3.x / LC
+* MISO	12
+* MOSI	11
+* SCK	13
+* CSN	10
+* CE	9 (default)
 */
 
 #ifndef MyHwTeensy3_h

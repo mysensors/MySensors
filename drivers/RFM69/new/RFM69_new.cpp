@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -273,10 +273,8 @@ LOCAL void RFM69_interruptHandler(void)
 		if (regIrqFlags2 & RFM69_IRQFLAGS2_FIFOLEVEL) {
 			RFM69_prepareSPITransaction();
 			RFM69_csn(LOW);
-
 #ifdef LINUX_SPI_BCM
 			char data[RFM69_MAX_PACKET_LEN + 1];   // max packet len + 1 byte for the command
-
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
 			SPI.transfern(data, 3);
 
