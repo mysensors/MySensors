@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -18,8 +18,6 @@
  */
 
 #include "MyHwSTM32F1.h"
-#include <EEPROM.h>
-
 
 /*
 * Pinout STM32F103C8 dev board:
@@ -50,7 +48,6 @@ bool hwInit(void)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #endif
 	if (EEPROM.init() == EEPROM_OK) {
-
 		uint16 cnt;
 		EEPROM.count(&cnt);
 		if(cnt>=EEPROM.maxcount()) {
@@ -120,6 +117,31 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
+
+void hwRandomNumberInit(void)
+{
+	// use internal temperature sensor as noise source
+	adc_reg_map *regs = ADC1->regs;
+	regs->CR2 |= ADC_CR2_TSVREFE;
+	regs->SMPR1 |= ADC_SMPR1_SMP16;
+
+	uint32_t seed = 0;
+	uint16_t currentValue, newValue = 0;
+
+	for (uint8_t i = 0; i<32; i++) {
+		const uint32_t timeout = hwMillis() + 20;
+		while (timeout >= hwMillis()) {
+			newValue = adc_read(ADC1, 16);
+			if (newValue != currentValue) {
+				currentValue = newValue;
+				break;
+			}
+		}
+		seed ^= ( (newValue + hwMillis()) & 7) << i;
+	}
+	randomSeed(seed);
+}
+
 bool hwUniqueID(unique_id_t* uniqueID)
 {
 	(void)memcpy((uint8_t*)uniqueID, (uint32_t*)0x1FFFF7E0, 16);
@@ -142,7 +164,7 @@ uint16_t hwCPUFrequency()
 uint16_t hwFreeMem()
 {
 	//Not yet implemented
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 void hwDebugPrint(const char *fmt, ...)
