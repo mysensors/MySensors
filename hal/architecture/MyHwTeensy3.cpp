@@ -91,18 +91,33 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 #if defined(__MKL26Z64__)
-	memcpy((uint8_t*)uniqueID, &SIM_UIDMH, 12);
-	memset((uint8_t*)uniqueID + 12, 0, 4);
+	(void)memcpy((uint8_t*)uniqueID, &SIM_UIDMH, 12);
+	(void)memset((uint8_t*)uniqueID + 12, 0, 4);
 #else
-	memcpy((uint8_t*)uniqueID, &SIM_UIDH, 16);
+	(void)memcpy((uint8_t*)uniqueID, &SIM_UIDH, 16);
 #endif
 	return true;
 }
 
 uint16_t hwCPUVoltage()
 {
-	// TODO: Not supported!
-	return 0;
+	analogReference(DEFAULT);
+	analogReadResolution(12);
+	analogReadAveraging(32);
+#if defined(__MK20DX128__) || defined(__MK20DX256__)
+	// Teensy 3.0/3.1/3.2
+	return 1195 * 4096 / analogRead(39);
+#elif defined(__MK64FX512__) || defined(__MK66FX1M0__)
+	// Teensy 3.6
+	return 1195 * 4096 / analogRead(71);
+#elif defined(__MKL26Z64__)
+	// Teensy LC
+	// not supported
+	return FUNCTION_NOT_SUPPORTED;
+#else
+	// not supported
+	return FUNCTION_NOT_SUPPORTED;
+#endif
 }
 
 uint16_t hwCPUFrequency()
@@ -114,7 +129,7 @@ uint16_t hwCPUFrequency()
 uint16_t hwFreeMem()
 {
 	// TODO: Not supported!
-	return 0;
+	return FUNCTION_NOT_SUPPORTED;
 }
 
 void hwDebugPrint(const char *fmt, ...)
