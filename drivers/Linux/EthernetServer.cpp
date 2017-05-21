@@ -51,6 +51,11 @@ void EthernetServer::begin(IPAddress address)
 	char ipstr[INET_ADDRSTRLEN];
 	char portstr[6];
 
+	if (sockfd != -1) {
+		close(sockfd);
+		sockfd = -1;
+	}
+
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
