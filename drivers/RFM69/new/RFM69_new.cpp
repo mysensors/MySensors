@@ -314,7 +314,7 @@ LOCAL void RFM69_interruptHandler(void)
 					if (RFM69.currentPacket.header.version >= RFM69_MIN_PACKET_HEADER_VERSION) {
 						// read payload
 						readingLength = RFM69.currentPacket.header.packetLen - (RFM69_HEADER_LEN - 1);
-						if (readingLength < RFM69_MAX_PACKET_LEN) {
+						if (readingLength > RFM69_MAX_PACKET_LEN) {
 							readingLength = RFM69_MAX_PACKET_LEN;
 						}
 						RFM69.currentPacket.payloadLen = readingLength;
