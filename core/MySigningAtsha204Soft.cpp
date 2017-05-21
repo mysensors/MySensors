@@ -109,6 +109,10 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 	}
 	SIGN_DEBUG(PSTR("Signing backend: ATSHA204Soft\n"));
 
+#ifdef MY_HW_HAS_GETRANDOM
+	// Try to get MAX_PAYLOAD random bytes
+	while (hwGetentropy(&_signing_verifying_nonce, MAX_PAYLOAD) != MAX_PAYLOAD);
+#else
 	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter and then the byte is
 	// hashed (SHA256) to produce the resulting nonce
 	_signing_sha256.init();
@@ -116,6 +120,7 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 		_signing_sha256.write(random(256) ^ (hwMillis()&0xFF));
 	}
 	memcpy(_signing_verifying_nonce, _signing_sha256.result(), MAX_PAYLOAD);
+#endif
 
 	// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 	memset(&_signing_verifying_nonce[MAX_PAYLOAD], 0xAA, sizeof(_signing_verifying_nonce)-MAX_PAYLOAD);

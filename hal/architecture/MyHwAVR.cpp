@@ -202,6 +202,41 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
+inline void hwRandomNumberInit()
+{
+	// This function initializes the random number generator with a seed
+	// of 32 bits.  This method is good enough to earn FIPS 140-2 conform
+	// random data. This should reach to generate 32 Bit for randomSeed().
+	unsigned long seed = 0;
+	unsigned long start = millis();
+	unsigned long timeout = start + 20;
+
+	// Trigger floating effect of an unconnected pin
+	pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
+	pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
+	delay(10);
+
+	// Generate 32 bits of datas
+	for (uint8_t i=0; i<32; i++) {
+		int pinValue = analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN);
+		// Wait until the analog value has changed
+		while ((pinValue == analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN)) && (timeout>=millis())) {
+			seed ^= (millis() << i);
+			// Check of data generation is slow
+			if (timeout<=millis()) {
+				// Trigger pin again
+				pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
+				pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
+				// Pause a short while
+				delay(seed % 10);
+				timeout = millis()+20;
+			}
+		}
+	}
+
+	randomSeed(seed);
+}
+
 bool hwUniqueID(unique_id_t* uniqueID)
 {
 	// not implemented yet

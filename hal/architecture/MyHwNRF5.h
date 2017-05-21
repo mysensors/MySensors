@@ -59,6 +59,8 @@ void hwWriteConfigBlock(void *buf, void *adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 void hwRandomNumberInit();
+ssize_t hwGetentropy(void *__buffer, size_t __length);
+#define MY_HW_HAS_GETRANDOM
 
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
@@ -109,6 +111,20 @@ static __inline__ void __priMaskRestore(const uint32_t *priMask)
 #define MY_HW_RTC_IRQ_HANDLER RTC0_IRQHandler
 #define MY_HW_RTC_IRQN RTC0_IRQn
 #endif
+
+/** Datastructure for AES ECB unit
+ */
+typedef struct {
+	/** AES Key
+	 */
+	uint8_t key[16];
+	/** Unencrypted data
+	 */
+	uint8_t cleartext[16];
+	/** Encrypted data
+	 */
+	uint8_t ciphertext[16];
+} nrf_ecb_t;
 
 #ifndef DOXYGEN
 #define MY_CRITICAL_SECTION

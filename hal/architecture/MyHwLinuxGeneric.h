@@ -54,6 +54,8 @@ inline void hwWriteConfigBlock(void* buf, void* addr, size_t length);
 inline uint8_t hwReadConfig(int addr);
 inline void hwWriteConfig(int addr, uint8_t value);
 inline void hwRandomNumberInit();
+ssize_t hwGetentropy(void *__buffer, size_t __length);
+#define MY_HW_HAS_GETRANDOM
 inline unsigned long hwMillis();
 
 #ifdef MY_RF24_IRQ_PIN

@@ -19,7 +19,13 @@
 
 #include "MyHwLinuxGeneric.h"
 
+#include <errno.h>
+#include <linux/random.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <syscall.h>
+#include <unistd.h>
 #include <time.h>
 #include "SoftEeprom.h"
 #include "log.h"
@@ -62,7 +68,15 @@ void hwWriteConfig(int addr, uint8_t value)
 
 void hwRandomNumberInit()
 {
-	randomSeed(time(NULL));
+	unsigned long seed=0;
+	while (hwGetentropy(&seed, sizeof(seed)) != sizeof(seed));
+	randomSeed(seed);
+}
+
+ssize_t hwGetentropy(void *__buffer, size_t __length)
+{
+	// getrandom syscall
+	return syscall(SYS_getrandom, __buffer, __length, GRND_NONBLOCK);
 }
 
 unsigned long hwMillis()
