@@ -44,6 +44,14 @@ uint8_t hwReadConfig(int adr);
 */
 
 /**
+ * @def MY_HW_HAS_GETRANDOM
+ * @brief Define this, if hwGetentropy is implemented
+ *
+ * ssize_t hwGetentropy(void *__buffer, size_t __length);
+ */
+//#define MY_HW_HAS_GETRANDOM
+
+/**
  * Sleep for a defined time, using minimum power.
  * @param ms   Time to sleep, in [ms].
  * @return Nonsense, please ignore.
@@ -138,6 +146,7 @@ void hwDebugPrint(const char *fmt, ... );
  */
 #ifdef DOXYGEN
 #define MY_CRITICAL_SECTION
+#define MY_HW_HAS_GETRANDOM
 #endif  /* DOXYGEN */
 
 #endif // #ifdef MyHw_h
