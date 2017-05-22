@@ -38,15 +38,25 @@
 #define _BV(x) (1<<(x))
 #endif
 
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+#define RNG_CR_GO_MASK			0x1u
+#define RNG_CR_HA_MASK			0x2u
+#define RNG_CR_INTM_MASK		0x4u
+#define RNG_CR_CLRI_MASK		0x8u
+#define RNG_CR_SLP_MASK			0x10u
+#define RNG_SR_OREG_LVL_MASK	0xFF00u
+#define RNG_SR_OREG_LVL_SHIFT	8
+#define RNG_SR_OREG_LVL(x)		(((uint32_t)(((uint32_t)(x))<<RNG_SR_OREG_LVL_SHIFT))&RNG_SR_OREG_LVL_MASK)
+#define SIM_SCGC6_RNGA			((uint32_t)0x00000200)
+#endif
+
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
 #define hwPinMode(__pin, __value) pinMode(__pin, __value)
 #define hwMillis() millis()
 
-// TODO: use hardware random number generator if Teensy 3.5 or 3.6
-#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
-
+void hwRandomNumberInit(void);
 bool hwInit(void);
 void hwWatchdogReset(void);
 void hwReboot(void);
