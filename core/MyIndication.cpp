@@ -19,7 +19,6 @@
 
 #include "MyIndication.h"
 
-
 void setIndication( const indication_t ind )
 {
 #if defined(MY_DEFAULT_TX_LED_PIN)
