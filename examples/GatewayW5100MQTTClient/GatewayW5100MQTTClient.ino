@@ -26,35 +26,14 @@
  * The node also listens to MY_MQTT_TOPIC_PREFIX and sends out those messages to the radio network
  *
  * LED purposes:
- * - To use the feature, uncomment WITH_LEDS_BLINKING in MyConfig.h
  * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error
+ *  See https://www.mysensors.org/build/advanced_gateway for Inclusion Mode Button and Radio Traffic LEDs
  *
- * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
- * nRF24L01+  ESP8266
- * VCC        VCC
- * CE         GPIO4
- * CSN/CS     GPIO15
- * SCK        GPIO14
- * MISO       GPIO12
- * MOSI       GPIO13
- *
- * Not all ESP8266 modules have all pins available on their external interface.
- * This code has been tested on an ESP-12 module.
- * The ESP8266 requires a certain pin configuration to download code, and another one to run code:
- * - Connect REST (reset) via 10K pullup resistor to VCC, and via switch to GND ('reset switch')
- * - Connect GPIO15 via 10K pulldown resistor to GND
- * - Connect CH_PD via 10K resistor to VCC
- * - Connect GPIO2 via 10K resistor to VCC
- * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
- *
-  * Inclusion mode button:
- * - Connect GPIO5 via switch to GND ('inclusion switch')
- *
- * Hardware SHA204 signing is currently not supported!
- *
- * Make sure to fill in your ssid and WiFi password below for ssid & pass.
+ * See https://www.mysensors.org/build/ethernet_gateway for wiring instructions.
+ * The MQTT gateway is basically a Ethernet Gateway with modified software which makes it act as a MQTT broker. 
+ * Start by building the physical gateway by following ethernet gateway instructions.
  */
 
 
