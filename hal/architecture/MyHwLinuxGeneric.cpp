@@ -25,12 +25,11 @@
 #include <stdlib.h>
 #include <syscall.h>
 #include <unistd.h>
-#include <time.h>
 #include "SoftEeprom.h"
 #include "log.h"
 
 static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
-static FILE *randomFp;
+static FILE *randomFp = NULL;
 
 bool hwInit(void)
 {
@@ -43,10 +42,7 @@ bool hwInit(void)
 	}
 #endif
 #endif
-	if (!(randomFp = fopen("/dev/urandom", "r"))) {
-		logError("Cannot open '/dev/urandom'.\n");
-		exit(2);
-	}
+
 	return true;
 }
 
@@ -73,6 +69,15 @@ void hwWriteConfig(int addr, uint8_t value)
 void hwRandomNumberInit()
 {
 	unsigned long seed=0;
+
+	if (randomFp != NULL) {
+		fclose(randomFp);
+	}
+	if (!(randomFp = fopen("/dev/urandom", "r"))) {
+		logError("Cannot open '/dev/urandom'.\n");
+		exit(2);
+	}
+
 	while (hwGetentropy(&seed, sizeof(seed)) != sizeof(seed));
 	randomSeed(seed);
 }
