@@ -132,6 +132,24 @@ uint16_t hwFreeMem()
 	return FUNCTION_NOT_SUPPORTED;
 }
 
+void hwRandomNumberInit(void)
+{
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+	// use HW RNG present on Teensy3.5/3.6
+	// init RNG
+	SIM_SCGC6 |= SIM_SCGC6_RNGA; // enable RNG
+	RNG_CR &= ~RNG_CR_SLP_MASK;
+	RNG_CR |= RNG_CR_HA_MASK;  // high assurance
+	// get random number
+	RNG_CR |= RNG_CR_GO_MASK;
+	while (!(RNG_SR & RNG_SR_OREG_LVL(0xF)));
+	const uint32_t seed = RNG_OR;
+	randomSeed(seed);
+#else
+	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));
+#endif
+}
+
 void hwDebugPrint(const char *fmt, ...)
 {
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
