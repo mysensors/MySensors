@@ -190,7 +190,7 @@ typedef enum {
 	I_REGISTRATION_REQUEST	= 26,	//!< Register request to GW
 	I_REGISTRATION_RESPONSE	= 27,	//!< Register response from GW
 	I_DEBUG					= 28,	//!< Debug message
-	I_SCHEDULER = 29	// New function for the fork
+	I_OTA_SIGNAL = 29	// New function for the fork
 } mysensor_internal;
 
 
