@@ -20,7 +20,6 @@
 #include "MyHwLinuxGeneric.h"
 
 #include <errno.h>
-#include <linux/random.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +30,7 @@
 #include "log.h"
 
 static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
+static FILE *randomFp;
 
 bool hwInit(void)
 {
@@ -43,6 +43,10 @@ bool hwInit(void)
 	}
 #endif
 #endif
+	if (!(randomFp = fopen("/dev/urandom", "r"))) {
+		logError("Cannot open '/dev/urandom'.\n");
+		exit(2);
+	}
 	return true;
 }
 
@@ -75,8 +79,7 @@ void hwRandomNumberInit()
 
 ssize_t hwGetentropy(void *__buffer, size_t __length)
 {
-	// getrandom syscall
-	return syscall(SYS_getrandom, __buffer, __length, GRND_NONBLOCK);
+	return(fread(__buffer, 1, __length, randomFp));
 }
 
 unsigned long hwMillis()
