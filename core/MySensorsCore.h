@@ -200,7 +200,7 @@ bool request(const uint8_t childSensorId, const uint8_t variableType,
  */
 bool requestTime(const bool ack = false);
 
-bool requestScheduler(const bool ack = false);
+bool requestOtaSignal(const bool ack = false);
 
 /**
  * Returns the most recent node configuration received from controller
@@ -399,7 +399,8 @@ void receive(const MyMessage &message)  __attribute__((weak));
 */
 void receiveTime(unsigned long)  __attribute__((weak));
 
-void receiveScheduler(unsigned long) __attribute__((weak));
+//void receiveScheduler(const MyMessage &message) __attribute__((weak));
+void receiveOtaSignal(int) __attribute__((weak));
 
 /**
 * @brief Node presenation

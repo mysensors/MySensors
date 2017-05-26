@@ -354,9 +354,9 @@ bool requestTime(const bool ack)
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, ack).set(""));
 }
 
-bool requestheduler(const bool ack)
+bool requestOtaSignal(const bool ack)
 {
-	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, ack).set(""));
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_OTA_SIGNAL, ack).set(""));
 }
 
 // Message delivered through _msg
@@ -393,10 +393,11 @@ bool _processInternalMessages(void)
 			if (receiveTime) {
 				receiveTime(_msg.getULong());
 			}
-		} else if (type == I_SCHEDULER) {
+		} else if (type == I_OTA_SIGNAL) {
 			// Deliver scheduler to callback
-			if (receiveScheduler) {
-				receiveScheduler(_msg.getULong());
+			if (receiveOtaSignal) {
+				receiveOtaSignal(_msg.getInt());
+
 			}
 		} else if (type == I_CHILDREN) {
 #if defined(MY_REPEATER_FEATURE)

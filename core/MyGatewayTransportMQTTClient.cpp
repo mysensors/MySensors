@@ -21,14 +21,16 @@
 // Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
 #include "MyGatewayTransport.h"
-#include <WiFiClientSecure.h> /// ADDING FOR TEST
+
 
 #if defined MY_CONTROLLER_IP_ADDRESS
 IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 #endif
 
 #if defined(MY_GATEWAY_ESP8266)
+#include <WiFiClientSecure.h> /// ADDING FOR TEST
 #define EthernetClient WiFiClientSecure
+//#define EthernetClient WiFiClient
 #if defined(MY_IP_ADDRESS)
 IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
 IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
@@ -42,7 +44,7 @@ uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
 #if defined(MY_IP_ADDRESS)
 IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
 #endif
-//static WifiClientSecure _MQTT_ethClient;
+
 static EthernetClient _MQTT_ethClient;
 static PubSubClient _MQTT_client(_MQTT_ethClient);
 //static PubSubClient _MQTT_client(MY_CONTROLLER_URL_ADDRESS,MY_PORT,incomingMQTT,_MQTT_ethClient);
