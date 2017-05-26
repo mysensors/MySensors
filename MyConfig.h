@@ -1342,6 +1342,8 @@
  * @brief Define this for Ethernet GW based on the ENC28J60 module.
  * @def MY_GATEWAY_ESP8266
  * @brief Define this for Ethernet GW based on the ESP8266.
+ * @def MY_GATEWAY_ESP32
+ * @brief Define this for Ethernet GW based on the ESP32.
  * @def MY_GATEWAY_LINUX
  * @brief Define this for Ethernet GW based on Linux.
  * @def MY_GATEWAY_TINYGSM
@@ -1351,6 +1353,7 @@
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
+//#define MY_GATEWAY_ESP32
 //#define MY_GATEWAY_LINUX
 //#define MY_GATEWAY_TINYGSM
 
@@ -1824,6 +1827,19 @@
 /** @}*/ // End of ESP8266SettingGrpPub group
 
 /**
+* @defgroup ESP32SettingGrpPub ESP32
+* @ingroup PlatformSettingGrpPub
+* @brief These options control ESP32 specific configurations.
+* @{
+*/
+
+//
+// no ESP32 settings
+//
+
+/** @}*/ // End of ESP32SettingGrpPub group
+
+/**
  * @defgroup LinuxSettingGrpPub Linux
  * @ingroup PlatformSettingGrpPub
  * @brief These options control Linux specific configurations.
@@ -1891,7 +1907,7 @@
  * MY_IS_GATEWAY is true when @ref MY_GATEWAY_FEATURE is set.
  * MY_NODE_TYPE contain a string describing the class of sketch/node (gateway/repeater/node).
  */
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT) || defined(MY_GATEWAY_TINYGSM)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)|| defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT) || defined(MY_GATEWAY_TINYGSM)
 #define MY_GATEWAY_FEATURE
 #define MY_IS_GATEWAY (true)
 #define MY_NODE_TYPE "GW"
@@ -2053,6 +2069,7 @@
 #define MY_GATEWAY_W5100
 #define MY_GATEWAY_ENC28J60
 #define MY_GATEWAY_ESP8266
+#define MY_GATEWAY_ESP32
 #define MY_GATEWAY_LINUX
 #define MY_GATEWAY_TINYGSM
 #define MY_IP_ADDRESS 192,168,178,66

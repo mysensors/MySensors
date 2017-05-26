@@ -32,6 +32,7 @@
 #endif
 
 // message buffers
+
 MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 

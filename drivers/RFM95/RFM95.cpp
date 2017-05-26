@@ -214,7 +214,6 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	RFM95_setFrequency(frequencyHz);
 	(void)RFM95_setTxPowerLevel(MY_RFM95_TX_POWER_DBM);
 
-
 	if (!RFM95_sanityCheck()) {
 		// sanity check failed, check wiring or replace module
 		RFM95_DEBUG(PSTR("!RFM95:INIT:SANCHK FAIL\n"));

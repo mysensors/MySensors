@@ -46,7 +46,8 @@
 #define DEFAULT_RFM69_IRQ_PIN			(5)													//!< DEFAULT_RFM69_IRQ_PIN
 #define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(MY_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP32)
-#warning not implemented yet
+#define DEFAULT_RFM69_IRQ_PIN			(16)												//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_SAMD)
 #define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
 #define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(MY_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM

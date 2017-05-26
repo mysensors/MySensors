@@ -26,7 +26,9 @@ def parseWarnings(String key) {
  		excludePattern: '''.*/EEPROM\\.h,.*/Dns\\.cpp,.*/socket\\.cpp,.*/util\\.h,.*/Servo\\.cpp,
  											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,
  											 .*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/Wire\\.cpp,
- 											 .*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/libraries/SD/.*''',
+ 											 .*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/espressif/esp32.*,
+											 .*/libraries/SD/.*''',
+
  		healthy: '', includePattern: '', messagesPattern: '',
  		parserConfigurations: [[parserName: 'Arduino/AVR', pattern: 'compiler_'+key+'.log']],
  		unHealthy: '', unstableNewAll: '0', unstableTotalAll: '0'
@@ -47,6 +49,8 @@ def buildMySensorsMicro(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino') {
 				buildArduino(config, fqbn, sketches[sketch].path, key+'_MySensorsMicro')
 			}
@@ -80,6 +84,8 @@ def buildMySensorsGw(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewaySerialRS485/GatewaySerialRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino') {
 				buildArduino(config, fqbn, sketches[sketch].path, key+'_MySensorsGw')
@@ -112,6 +118,8 @@ def buildArduinoUno(config, sketches, String key) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino') {
 				buildArduino(config, fqbn, sketches[sketch].path, key+'_ArduinoUno')
 			}
@@ -143,6 +151,8 @@ def buildArduinoMega(config, sketches, String key) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino') {
 				buildArduino(config, fqbn, sketches[sketch].path, key+'_ArduinoMega')
 			}
@@ -174,6 +184,8 @@ def buildSTM32F1(config, sketches, String key) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino') {
 				buildArduino(config, fqbn, sketches[sketch].path, key+'_STM32F1')
 			}
@@ -209,6 +221,8 @@ def buildEsp8266(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/GatewayW5100/GatewayW5100.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayW5100MQTTClient/GatewayW5100MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SoilMoistSensor/SoilMoistSensor.ino') {
@@ -234,6 +248,54 @@ def buildEsp8266(config, sketches, String key) {
 	}
 }
 
+def buildEsp32(config, sketches, String key) {
+	def fqbn = '-fqbn espressif:esp32:node32s -warnings=default -prefs build.f_cpu=80000000 -prefs build.mcu=esp32'
+	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
+	try {
+		for (sketch = 0; sketch < sketches.size(); sketch++) {
+			if (sketches[sketch].path != config.library_root+'examples/BatteryPoweredSensor/BatteryPoweredSensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/BinarySwitchSleepSensor/BinarySwitchSleepSensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/CO2Sensor/CO2Sensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/DustSensor/DustSensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/DustSensorDSM/DustSensorDSM.ino' &&
+					sketches[sketch].path != config.library_root+'examples/EnergyMeterPulseSensor/EnergyMeterPulseSensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/LightSensor/LightSensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/LogOTANode/LogOTANode.ino' &&
+					sketches[sketch].path != config.library_root+'examples/MotionSensor/MotionSensor.ino' &&
+					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
+					sketches[sketch].path != config.library_root+'examples/PassiveNode/PassiveNode.ino' &&		
+					sketches[sketch].path != config.library_root+'examples/GatewaySerialRS485/GatewaySerialRS485.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayW5100/GatewayW5100.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayW5100MQTTClient/GatewayW5100MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino' &&
+					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
+					sketches[sketch].path != config.library_root+'examples/SoilMoistSensor/SoilMoistSensor.ino') {
+				buildArduino(config, '-prefs build.flash_freq=80m -prefs build.flash_size=4MB '+fqbn, sketches[sketch].path, key+'_Esp32')
+			}
+		}
+	} catch (ex) {
+		echo "Build failed with: "+ ex.toString()
+		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (ESP32 - '+key+')', 'Build error', '${BUILD_URL}')
+		throw ex
+	} finally {
+		parseWarnings(key+'_Esp32')
+	}
+	if (currentBuild.currentResult == 'UNSTABLE') {
+		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (ESP32 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
+		if (config.is_pull_request) {
+			error 'Termiated due to warnings found'
+		}
+	} else if (currentBuild.currentResult == 'FAILURE') {
+		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (ESP32 - '+key+')', 'Build error', '${BUILD_URL}')
+	} else {
+		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (ESP32 - '+key+')', 'Pass', '')
+	}
+} 
+
 def buildnRF5(config, sketches, String key) {
 	def fqbn = '-fqbn sandeepmistry:nRF5:Generic_nRF52832 -prefs build.f_cpu=16000000 -prefs build.mcu=cortex-m4'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
@@ -246,6 +308,8 @@ def buildnRF5(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewaySerialRS485/GatewaySerialRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayW5100/GatewayW5100.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayW5100MQTTClient/GatewayW5100MQTTClient.ino' &&
