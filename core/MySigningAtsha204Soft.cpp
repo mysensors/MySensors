@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -92,7 +92,7 @@ bool signerAtsha204SoftInit(void)
 	// Set secrets
 #ifdef MY_SIGNING_SIMPLE_PASSWD
 	if (strnlen(MY_SIGNING_SIMPLE_PASSWD, 32) < 8) {
-		SIGN_DEBUG(PSTR("!SGN:BND:INIT PWD")); //Could not get ATSHA204A serial
+		SIGN_DEBUG(PSTR("!SGN:BND:PWD<8\n")); //Password is too short to be acceptable
 		init_ok = false;
 	} else {
 		memset(_signing_hmac_key, 0, 32);
@@ -132,7 +132,7 @@ bool signerAtsha204SoftCheckTimer(void)
 			time_now += MY_VERIFICATION_TIMEOUT_MS;
 		}
 		if (time_now > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
-			SIGN_DEBUG(PSTR("!SGN:BND:TMR")); //Verification timeout
+			SIGN_DEBUG(PSTR("!SGN:BND:TMR\n")); //Verification timeout
 			// Purge nonce
 			memset(_signing_signing_nonce, 0xAA, 32);
 			memset(_signing_verifying_nonce, 0xAA, 32);
@@ -197,7 +197,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
-		SIGN_DEBUG(PSTR("!SGN:BND:SIG SIZE")); //Message too large
+		SIGN_DEBUG(PSTR("!SGN:BND:SIG,SIZE,%d>%d\n"), mGetLength(msg), MAX_PAYLOAD-2); //Message too large
 		return false;
 	}
 
@@ -212,10 +212,10 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 		_signing_signing_nonce[32] = msg.sender;
 		memcpy(&_signing_signing_nonce[33], _signing_node_serial_info, 9);
 		memcpy(_signing_hmac, signerSha256(_signing_signing_nonce, 32+1+9), 32);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI ID=%d\n"), msg.sender);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%d\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 		buf2str(_signing_node_serial_info, 9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI SERIAL=%s\n"), printStr);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), printStr);
 #endif
 	}
 
@@ -231,7 +231,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 {
 	if (!_signing_verification_ongoing) {
-		SIGN_DEBUG(PSTR("!SGN:BND:VER ONGOING"));
+		SIGN_DEBUG(PSTR("!SGN:BND:VER ONGOING\n"));
 		return false;
 	} else {
 		// Make sure we have not expired
@@ -242,7 +242,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 		_signing_verification_ongoing = false;
 
 		if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER IDENT=%d"), msg.data[mGetLength(msg)]);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER,IDENT=%d\n"), msg.data[mGetLength(msg)]);
 			return false;
 		}
 
@@ -258,16 +258,16 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 				_signing_verifying_nonce[32] = msg.sender;
 				memcpy(&_signing_verifying_nonce[33], _signing_whitelist[j].serial, 9);
 				memcpy(_signing_hmac, signerSha256(_signing_verifying_nonce, 32+1+9), 32);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI ID=%d\n"), msg.sender);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%d\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 				buf2str(_signing_whitelist[j].serial, 9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI SERIAL=%s\n"), printStr);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), printStr);
 #endif
 				break;
 			}
 		}
 		if (j == NUM_OF(_signing_whitelist)) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI ID=%d"), msg.sender);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI,ID=%d MISSING\n"), msg.sender);
 			return false;
 		}
 #endif

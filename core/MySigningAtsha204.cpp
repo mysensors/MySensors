@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -87,16 +87,16 @@ bool signerAtsha204Init(void)
 	// Read the configuration lock flag to determine if device is personalized or not
 	if (atsha204_read(_signing_tx_buffer, _signing_rx_buffer,
 	                  SHA204_ZONE_CONFIG, 0x15<<2) != SHA204_SUCCESS) {
-		SIGN_DEBUG(PSTR("!SGN:BND:INIT OK")); //Could not read ATSHA204A lock config
+		SIGN_DEBUG(PSTR("!SGN:BND:INIT FAIL\n")); //Could not read ATSHA204A lock config
 		init_ok = false;
 	} else if (_signing_rx_buffer[SHA204_BUFFER_POS_DATA+3] != 0x00) {
-		SIGN_DEBUG(PSTR("!SGN:BND:INIT PER")); //ATSHA204A not personalized
+		SIGN_DEBUG(PSTR("!SGN:BND:PER\n")); //ATSHA204A not personalized
 		init_ok = false;
 	}
 	if (init_ok) {
 		// Get and cache the serial of the ATSHA204A
 		if (atsha204_getSerialNumber(_signing_node_serial_info) != SHA204_SUCCESS) {
-			SIGN_DEBUG(PSTR("!SGN:BND:INIT SER")); //Could not get ATSHA204A serial
+			SIGN_DEBUG(PSTR("!SGN:BND:SER\n")); //Could not get ATSHA204A serial
 			init_ok = false;
 		}
 	}
@@ -118,7 +118,7 @@ bool signerAtsha204CheckTimer(void)
 			time_now += MY_VERIFICATION_TIMEOUT_MS;
 		}
 		if (time_now > _signing_timestamp + MY_VERIFICATION_TIMEOUT_MS) {
-			SIGN_DEBUG(PSTR("!SGN:BND:TMR")); //Verification timeout
+			SIGN_DEBUG(PSTR("!SGN:BND:TMR\n")); //Verification timeout
 			// Purge nonce
 			memset(_signing_signing_nonce, 0xAA, 32);
 			memset(_signing_verifying_nonce, 0xAA, 32);
@@ -182,7 +182,7 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
-		SIGN_DEBUG(PSTR("!SGN:BND:SIG SIZE")); //Message too large
+		SIGN_DEBUG(PSTR("!SGN:BND:SIG,SIZE,%d>%d\n"), mGetLength(msg), MAX_PAYLOAD-2); //Message too large
 		return false;
 	}
 
@@ -198,10 +198,10 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 		memcpy(&_signing_signing_nonce[33], _signing_node_serial_info, 9);
 		// We can 'void' sha256 because the hash is already put in the correct place
 		(void)signerSha256(_signing_signing_nonce, 32+1+9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI ID=%d\n"), msg.sender);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%d\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 		buf2str(_signing_node_serial_info, 9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI SERIAL=%s\n"), printStr);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), printStr);
 #endif
 	}
 
@@ -220,7 +220,7 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 bool signerAtsha204VerifyMsg(MyMessage &msg)
 {
 	if (!_signing_verification_ongoing) {
-		SIGN_DEBUG(PSTR("!SGN:BND:VER ONGOING"));
+		SIGN_DEBUG(PSTR("!SGN:BND:VER ONGOING\n"));
 		return false;
 	} else {
 		// Make sure we have not expired
@@ -231,7 +231,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		_signing_verification_ongoing = false;
 
 		if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER IDENT=%d"), msg.data[mGetLength(msg)]);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER,IDENT=%d\n"), msg.data[mGetLength(msg)]);
 			return false;
 		}
 
@@ -248,16 +248,16 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 				memcpy(&_signing_verifying_nonce[33], _signing_whitelist[j].serial, 9);
 				// We can 'void' sha256 because the hash is already put in the correct place
 				(void)signerSha256(_signing_verifying_nonce, 32+1+9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI ID=%d\n"), msg.sender);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%d\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 				buf2str(_signing_whitelist[j].serial, 9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI SERIAL=%s\n"), printStr);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), printStr);
 #endif
 				break;
 			}
 		}
 		if (j == NUM_OF(_signing_whitelist)) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI ID=%d"), msg.sender);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI,ID=%d MISSING\n"), msg.sender);
 			// Put device back to sleep
 			atsha204_sleep();
 			return false;

@@ -472,16 +472,6 @@ typedef struct {
 void signerInit(void);
 
 /**
- * @brief Validates personalization data
- *
- * This function checks that the personalization details are in order.
- * \n@b Usage: This fuction should be called before any signing related operations take place.
- *
- * @returns @c true if personalization data is valid.
- */
-bool signerValidatePersonalization(void);
-
-/**
  * @brief Does signing specific presentation for a node.
  *
  * This function makes sure any signing related presentation info is shared with the other part.
@@ -614,6 +604,92 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
 
 #endif
 /** @}*/
+
+/**
+ * @defgroup MySigningDebugMessages Signing related debug messages
+ * @ingroup MySigninggrp
+ * @{
+ *
+ * MySigning-related log messages, format: [!]SYSTEM:SUB SYSTEM:MESSAGE
+ * - [!] Exclamation mark is prepended in case of error or warning
+ * - SYSTEM:
+ *  - <b>SGN</b> messages emitted by MySigning
+ * - SUB SYSTEMS:
+ *  - SGN:<b>INI</b>	from @ref signerInit
+ *  - SGN:<b>PER</b>	from @ref signerInit
+ *  - SGN:<b>PRE</b>	from @ref signerPresentation
+ *  - SGN:<b>SGN</b>	from @ref signerSignMsg
+ *  - SGN:<b>VER</b>	from @ref signerVerifyMsg
+ *  - SGN:<b>SKP</b>	from @ref signerSignMsg or @ref signerVerifyMsg (skipSign)
+ *  - SGN:<b>NCE</b>	from @ref signerProcessInternal (signerInternalProcessNonceRequest)
+ *  - SGN:<b>BND</b>	from the signing backends
+ *
+ * MySigning debug log messages:
+ *
+ * |E| SYS | SUB | Message									| Comment
+ * |-|-----|-----|--------------------------|----------------------------------------------------------------------------
+ * | | SGN | INI | BND OK										| Backend has initialized ok
+ * |!| SGN | INI | BND FAIL									| Backend has not initialized ok
+ * | | SGN | PER | OK												| Personalization data is ok
+ * |!| SGN | PER | TAMPERED									| Personalization data has been tampered
+ * | | SGN | PRE | SGN REQ									| Signing required
+ * | | SGN | PRE | SGN REQ,TO='node'				| Tell 'node' that we require signing
+ * | | SGN | PRE | SGN REQ,FROM='node'			| Node 'node' require signing
+ * | | SGN | PRE | SGN NREQ									| Signing not required
+ * | | SGN | PRE | SGN REQ,TO='node'				| Tell 'node' that we do not require signing
+ * | | SGN | PRE | SGN NREQ,FROM='node'			| Node 'node' does not require signing
+ * |!| SGN | PRE | SGN NREQ,FROM='node' REJ	| Node 'node' does not require signing but used to (requirement remain unchanged)
+ * | | SGN | PRE | WHI REQ									| Whitelisting required
+ * | | SGN | PRE | WHI REQ;TO='node'				| Tell 'node' that we require whitelisting
+ * | | SGN | PRE | WHI REQ,FROM='node'			| Node 'node' require whitelisting
+ * | | SGN | PRE | WHI NREQ									| Whitelisting not required
+ * | | SGN | PRE | WHI NREQ,TO='node'				| Tell 'node' that we do not require whitelisting
+ * | | SGN | PRE | WHI NREQ,FROM='node'			| Node 'node' does not require whitelisting
+ * |!| SGN | PRE | WHI NREQ,FROM='node' REJ	| Node 'node' does not require whitelisting but used to (requirement remain unchanged)
+ * | | SGN | PRE | XMT,TO='node'						| Presentation data transmitted to 'node'
+ * |!| SGN | PRE | XMT,TO='node' FAIL				| Presentation data not properly transmitted to 'node'
+ * | | SGN | PRE | WAIT GW									| Waiting for gateway presentation data
+ * |!| SGN | PRE | VER='version'						| Presentation version 'version' is not supported
+ * | | SGN | PRE | NSUP											| Received signing presentation but signing is not supported
+ * | | SGN | PRE | NSUP,TO='node'						| Informing 'node' that we do not support signing
+ * | | SGN | SGN | NCE REQ,TO='node'				| Nonce request transmitted to 'node'
+ * |!| SGN | SGN | NCE REQ,TO='node' FAIL		| Nonce request not properly transmitted to 'node'
+ * |!| SGN | SGN | NCE TMO									| Timeout waiting for nonce
+ * | | SGN | SGN | SGN											| Message signed
+ * |!| SGN | SGN | SGN FAIL									| Message failed to be signed
+ * | | SGN | SGN | NREQ='node'							| 'node' does not require signed messages
+ * | | SGN | SGN | 'sender'!='us' NUS				| Will not sign because 'sender' is not 'us' (repeater)
+ * |!| SGN | VER | NSG											| Message was not signed, but it should have been
+ * |!| SGN | VER | FAIL											| Verification failed
+ * | | SGN | VER | OK												| Verification succeeded
+ * | | SGN | VER | LEFT='number'						| 'number' of failed verifications left in a row before node is locked
+ * | | SGN | SKP | MSG CMD='cmd',TYPE='type'| Message with command 'cmd' and type 'type' does not need to be signed
+ * | | SGN | SKP | ACK CMD='cmd',TYPE='type'| ACK messages does not need to be signed
+ * | | SGN | NCE | LEFT='number'						| 'number' of nonce requests between successful verifications left before node is locked
+ * | | SGN | NCE | XMT,TO='node'						| Nonce data transmitted to 'node'
+ * |!| SGN | NCE | XMT,TO='node' FAIL				| Nonce data not properly transmitted to 'node'
+ * |!| SGN | NCE | GEN											| Failed to generate nonce
+ * | | SGN | NCE | NSUP (DROPPED)						| Ignored nonce/request for nonce (signing not supported)
+ * | | SGN | NCE | FROM='node'							| Received nonce from 'node'
+ * | | SGN | NCE | 'sender'!='dst' (DROPPED)| Ignoring nonce as it did not come from the desgination of the message to sign
+ * |!| SGN | BND | INIT FAIL								| Failed to initialize signing backend
+ * |!| SGN | BND | PWD<8										| Signing password too short
+ * |!| SGN | BND | PER											| Backend not personalized
+ * |!| SGN | BND | SER											| Could not get device unique serial from backend
+ * |!| SGN | BND | TMR											| Backend timed out
+ * |!| SGN | BND | SIG,SIZE,'message'>'max'	| Refusing to sign 'message' because it is bigger than 'max' allowed size
+ * | | SGN | BND | SIG WHI,ID='id'					| Salting message with our 'id'
+ * | | SGN | BND | SIG WHI,SERIAL='serial'	| Salting message with our 'serial'
+ * |!| SGN | BND | VER ONGOING							| Verification failed, no ongoing session
+ * |!| SGN | BND | VER,IDENT='identifier'		| Verification failed, 'identifier' is unknown
+ * | | SGN | BND | VER WHI,ID='sender'			| 'sender' found in whitelist
+ * | | SGN | BND | VER WHI,SERIAL='serial'	| Expecting 'serial' for this sender
+ * |!| SGN | BND | VER WHI,ID='id' MISSING	| 'id' not found in whitelist
+ * | | SGN | BND | NONCE='nonce'						| Calculating signature using 'nonce'
+ * | | SGN | BND | HMAC='hmac'							| Calculated signature is 'hmac'
+ */
+/** @}*/
+
 /**
  * @defgroup MySigningTroubleshootinggrp Troubleshooting
  * @ingroup MySigninggrp
