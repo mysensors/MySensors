@@ -646,7 +646,7 @@ void transportProcessMessage(void)
 	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
 	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
 	// payload length = a multiple of blocksize length for decrypted messages, i.e. cannot be used for payload length check
 	payloadLength = expectedMessageLength;
 #endif
