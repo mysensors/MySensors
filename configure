@@ -91,15 +91,15 @@ MySensors options:
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
     --my-leds-blinking-inverse  Inverse the blinking feature.
-    --my-signing=[none|software]
+    --my-signing=[none|software|password]
                                 Message signing. [none]
     --my-signing-debug          Enable signing related debug.
     --my-signing-request-signatures
                                 Enable signature request from nodes that in turn requested
                                 gateway signature.
-    --my-signing-request-gw-signatures-from-all
-                                Require all nodes in the network to sign messages sent to the
-                                gateway.
+    --my-signing-weak_security
+                                Enable this to permit downgrade of security preferences and
+                                relaxed gateway signing requirements.
 
 EOF
 }
@@ -459,9 +459,8 @@ for opt do
     --my-signing-request-signatures*)
         signing_request_signatures=true
         ;;
-    --my-signing-request-gw-signatures-from-all*)
-        signing_request_signatures=true
-        CPPFLAGS="-DMY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL $CPPFLAGS"
+    --my-signing-weak_security*)
+        CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
@@ -572,7 +571,8 @@ elif [[ ${signing} == "software" ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
 else
-    die "Invalid message signing option." 4
+    echo "Simplified signing using password"
+    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing}\\\" $CPPFLAGS"
 fi
 
 LDFLAGS="-pthread $LDFLAGS"

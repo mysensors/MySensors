@@ -39,7 +39,12 @@ uint8_t _psk[16];
 bool transportInit(void)
 {
 #if defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
-	hwReadConfigBlock((void *)_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+#ifdef MY_SIGNING_SIMPLE_PASSWD
+	memset(_psk, 0, 16);
+	memcpy(_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+#else
+	hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+#endif
 	// set up AES-key
 	_aes.set_key(_psk, 16);
 	// Make sure it is purged from memory when set
