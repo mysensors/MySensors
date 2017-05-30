@@ -149,9 +149,9 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 		return false;
 	}
 
-#ifdef MY_HW_HAS_GETRANDOM
-	// Try to get MAX_PAYLOAD (or 32) random bytes
-	while (hwGetentropy(&_signing_verifying_nonce, MIN(MAX_PAYLOAD, 32)) != MIN(MAX_PAYLOAD, 32));
+#ifdef MY_HW_HAS_GETENTROPY
+	// Try to get MAX_PAYLOAD random bytes
+	while (hwGetentropy(&_signing_verifying_nonce, MAX_PAYLOAD) != MAX_PAYLOAD);
 #else
 	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter
 	// and then the byte is hashed (SHA256) to produce the resulting nonce

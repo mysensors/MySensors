@@ -148,11 +148,7 @@ void generate_soft_sign_hmac_key()
 {
 	uint8_t key[32];
 
-	for (int i = 0; i < 32; i++) {
-		key[i] = random(256) ^ micros();
-		unsigned long enter = hwMillis();
-		while (hwMillis() - enter < (unsigned long)2);
-	}
+	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
 
 	print_soft_sign_hmac_key(key);
 
@@ -223,11 +219,7 @@ void generate_soft_sign_serial_key()
 {
 	uint8_t key[9];
 
-	for (int i = 0; i < 9; i++) {
-		key[i] = random(256) ^ micros();
-		unsigned long enter = hwMillis();
-		while (hwMillis() - enter < (unsigned long)2);
-	}
+	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
 
 	print_soft_sign_serial_key(key);
 
@@ -303,11 +295,7 @@ void generate_aes_key()
 {
 	uint8_t key[16];
 
-	for (int i = 0; i < 16; i++) {
-		key[i] = random(256) ^ micros();
-		unsigned long enter = hwMillis();
-		while (hwMillis() - enter < (unsigned long)2);
-	}
+	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
 
 	print_aes_key(key);
 

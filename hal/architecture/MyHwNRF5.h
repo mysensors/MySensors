@@ -63,7 +63,7 @@ void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 void hwRandomNumberInit();
 ssize_t hwGetentropy(void *__buffer, size_t __length);
-#define MY_HW_HAS_GETRANDOM
+#define MY_HW_HAS_GETENTROPY
 
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial

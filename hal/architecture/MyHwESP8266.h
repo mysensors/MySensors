@@ -52,7 +52,7 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
-//#define MY_HW_HAS_GETRANDOM
+//#define MY_HW_HAS_GETENTROPY
 
 /**
  * Restore interrupt state.
