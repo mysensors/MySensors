@@ -74,6 +74,10 @@ void hwReboot(void);
 #define MY_SERIALDEVICE Serial
 #endif
 
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+#define MY_HW_HAS_GETENTROPY
+#endif
+
 #define MY_CRITICAL_SECTION ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 
 #endif
