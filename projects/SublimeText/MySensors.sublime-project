@@ -19,7 +19,6 @@
 
 		// EasyClangComplete is a clang based plugin that provides autocompletion features.
 		// Installation instructions is available here: https://github.com/niosus/EasyClangComplete
-		"ecc_errors_on_save": false, // disable clang error checking since it is hard to figure out the standard library locations and this gives many false positives
 
 		// MySensors core library uses some coding style rules. Artistic Style can be used to format the code according to these rules
 		// The below settings enable automatic formatting of the code upon saving in Sublime Text
@@ -55,7 +54,11 @@
 			"cppcheck":
 			{
 				"@disable": false,
-				"args": ["--force", "--library=avr"],
+				"args": ["--force", "--library=avr",
+				         "--suppressions-list=$project_path/../../.mystools/cppcheck/config/suppressions.cfg",
+				         "-I$project_path/../../", "-I$project_path/../../core",
+				         "-DMY_SIGNING_NODE_WHITELISTING",
+				         "-DMY_SIGNING_SIMPLE_PASSWD"],
 				"enable": "style,information",
 				"excludes": [],
 				"std": []

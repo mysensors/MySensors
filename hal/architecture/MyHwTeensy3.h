@@ -50,6 +50,9 @@
 #define SIM_SCGC6_RNGA			((uint32_t)0x00000200)
 #endif
 
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
+
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
 #define hwDigitalRead(__pin) digitalReadFast(__pin)

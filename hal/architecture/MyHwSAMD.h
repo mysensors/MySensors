@@ -39,6 +39,8 @@ extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 
 // Define these as macros to save valuable space

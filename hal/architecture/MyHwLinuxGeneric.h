@@ -40,6 +40,9 @@ SerialSimulator Serial = SerialSimulator();
 #define MY_SERIALDEVICE Serial
 #endif
 
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#define MAX(a,b) ((a)>(b)?(a):(b))
+
 // Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
