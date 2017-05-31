@@ -31,6 +31,8 @@
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
 
 #define EEPROM_size (1024)
 
