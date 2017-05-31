@@ -42,6 +42,9 @@
 #define MY_SERIALDEVICE Serial
 #endif
 
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
+
 #ifndef digitalPinToInterrupt
 #define digitalPinToInterrupt(__pin) (__pin)
 #endif

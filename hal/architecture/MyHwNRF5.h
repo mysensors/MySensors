@@ -45,6 +45,9 @@
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 #define printf_P printf
 
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
+
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
 #define hwDigitalRead(__pin) digitalRead(__pin)

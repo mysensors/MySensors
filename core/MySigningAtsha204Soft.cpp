@@ -151,7 +151,7 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 
 #ifdef MY_HW_HAS_GETRANDOM
 	// Try to get MAX_PAYLOAD (or 32) random bytes
-	while (hwGetentropy(&_signing_verifying_nonce, min(MAX_PAYLOAD, 32)) != min(MAX_PAYLOAD, 32));
+	while (hwGetentropy(&_signing_verifying_nonce, MIN(MAX_PAYLOAD, 32)) != MIN(MAX_PAYLOAD, 32));
 #else
 	// We used a basic whitening technique that XORs a random byte with the current hwMillis() counter
 	// and then the byte is hashed (SHA256) to produce the resulting nonce
@@ -159,7 +159,7 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 	for (int i = 0; i < 32; i++) {
 		_signing_sha256.write(random(256) ^ (hwMillis()&0xFF));
 	}
-	memcpy(_signing_verifying_nonce, _signing_sha256.result(), min(MAX_PAYLOAD, 32));
+	memcpy(_signing_verifying_nonce, _signing_sha256.result(), MIN(MAX_PAYLOAD, 32));
 #endif
 
 	if (MAX_PAYLOAD < 32) {
@@ -168,7 +168,7 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 	}
 
 	// Transfer the first part of the nonce to the message
-	msg.set(_signing_verifying_nonce, min(MAX_PAYLOAD, 32));
+	msg.set(_signing_verifying_nonce, MIN(MAX_PAYLOAD, 32));
 	_signing_verification_ongoing = true;
 	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
@@ -186,7 +186,7 @@ void signerAtsha204SoftPutNonce(MyMessage &msg)
 		return;
 	}
 
-	memcpy(_signing_signing_nonce, (uint8_t*)msg.getCustom(), min(MAX_PAYLOAD, 32));
+	memcpy(_signing_signing_nonce, (uint8_t*)msg.getCustom(), MIN(MAX_PAYLOAD, 32));
 	if (MAX_PAYLOAD < 32) {
 		// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 		memset(&_signing_signing_nonce[MAX_PAYLOAD], 0xAA, 32-MAX_PAYLOAD);
@@ -223,7 +223,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 	_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 	// Transfer as much signature data as the remaining space in the message permits
-	memcpy(&msg.data[mGetLength(msg)], _signing_hmac, min(MAX_PAYLOAD-mGetLength(msg), 32));
+	memcpy(&msg.data[mGetLength(msg)], _signing_hmac, MIN(MAX_PAYLOAD-mGetLength(msg), 32));
 
 	return true;
 }
@@ -277,7 +277,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 
 		// Compare the caluclated signature with the provided signature
 		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
-		                 min(MAX_PAYLOAD-mGetLength(msg), 32))) {
+		                 MIN(MAX_PAYLOAD-mGetLength(msg), 32))) {
 			return false;
 		} else {
 			return true;
@@ -299,7 +299,7 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 #endif
 
 	while (bytes_left) {
-		uint16_t bytes_to_include = min(bytes_left, 32);
+		uint16_t bytes_to_include = MIN(bytes_left, 32);
 
 		memset(_signing_temp_message, 0, 32);
 		memcpy(_signing_temp_message, (uint8_t*)&msg.data[current_pos], bytes_to_include);

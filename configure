@@ -97,9 +97,10 @@ MySensors options:
     --my-signing-request-signatures
                                 Enable signature request from nodes that in turn requested
                                 gateway signature.
-    --my-signing-weak_security
-                                Enable this to permit downgrade of security preferences and
+    --my-signing-weak_security  Enable this to permit downgrade of security preferences and
                                 relaxed gateway signing requirements.
+    --my-signing-password=<PASSWORD>
+                                If you are using password as the signature type, set your password here.
 
 EOF
 }
@@ -462,6 +463,9 @@ for opt do
     --my-signing-weak_security*)
         CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
         ;;
+    --my-signing-password=*)
+        signing_password=${optarg}
+        ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
         ;;
@@ -570,9 +574,14 @@ elif [[ ${signing} == "software" ]]; then
     if [[ ${signing_request_signatures} == true ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
-else
+elif [[ ${signing} == "password" ]]; then
+    if [ -z "${signing_password}" ]; then
+        die "You need to set the password for signing with --my-signing-password= option" 6
+    fi
     echo "Simplified signing using password"
-    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing}\\\" $CPPFLAGS"
+    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing_password}\\\" $CPPFLAGS"
+else
+    die "Invalid signing type." 7
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
