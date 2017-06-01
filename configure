@@ -54,6 +54,8 @@ MySensors options:
     --my-serial-pty=<NAME>      Symlink name for the PTY device. [/dev/ttyMySensorsGateway]
     --my-serial-groupname=<GROUP>
                                 Grant access to the specified system group for the serial device.
+    --my-mqtt-user=<UID>        MQTT user id.
+    --my-mqtt-password=<PASS>   MQTT password                              
     --my-mqtt-client-id=<ID>    MQTT client id.
     --my-mqtt-user=<UID>        MQTT user id.
     --my-mqtt-password=<PASS>   MQTT password.
@@ -381,6 +383,12 @@ for opt do
     --my-port=*)
         CPPFLAGS="-DMY_PORT=${optarg} $CPPFLAGS"
         ;;
+    --my-mqtt-user=*)
+        CPPFLAGS="-DMY_MQTT_USER=\\\"${optarg}\\\" $CPPFLAGS"
+        ;;
+    --my-mqtt-password=*)
+        CPPFLAGS="-DMY_MQTT_PASSWORD=\\\"${optarg}\\\" $CPPFLAGS"
+        ;;     
     --my-mqtt-client-id=*)
         CPPFLAGS="-DMY_MQTT_CLIENT_ID=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
