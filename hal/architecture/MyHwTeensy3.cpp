@@ -132,18 +132,33 @@ uint16_t hwFreeMem()
 	return FUNCTION_NOT_SUPPORTED;
 }
 
-void hwRandomNumberInit(void)
+#if defined(MY_HW_HAS_GETENTROPY)
+ssize_t hwGetentropy(void *__buffer, const size_t __length)
 {
-#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
-	// use HW RNG present on Teensy3.5/3.6
-	// init RNG
 	SIM_SCGC6 |= SIM_SCGC6_RNGA; // enable RNG
 	RNG_CR &= ~RNG_CR_SLP_MASK;
-	RNG_CR |= RNG_CR_HA_MASK;  // high assurance
-	// get random number
-	RNG_CR |= RNG_CR_GO_MASK;
-	while (!(RNG_SR & RNG_SR_OREG_LVL(0xF)));
-	const uint32_t seed = RNG_OR;
+	RNG_CR |= RNG_CR_HA_MASK; //high assurance, not needed
+	size_t pos = 0;
+	while (pos < __length) {
+		RNG_CR |= RNG_CR_GO_MASK;
+		while (!(RNG_SR & RNG_SR_OREG_LVL(0xF)));
+		const uint32_t rndVar = RNG_OR;
+		const uint8_t bsize = (__length - pos) > sizeof(rndVar) ? sizeof(rndVar) : (__length - pos);
+		(void)memcpy((uint8_t*)__buffer + pos, &rndVar, bsize);
+		pos += bsize;
+	}
+	SIM_SCGC6 &= ~SIM_SCGC6_RNGA; // disable RNG
+	return pos;
+}
+#endif
+
+void hwRandomNumberInit(void)
+{
+#if defined(MY_HW_HAS_GETENTROPY)
+	// use HW RNG present on Teensy3.5/3.6
+	// init RNG
+	uint32_t seed = 0;
+	hwGetentropy(&seed, sizeof(seed));
 	randomSeed(seed);
 #else
 	randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN));

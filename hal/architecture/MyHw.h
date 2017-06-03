@@ -44,12 +44,12 @@ uint8_t hwReadConfig(int adr);
 */
 
 /**
- * @def MY_HW_HAS_GETRANDOM
+ * @def MY_HW_HAS_GETENTROPY
  * @brief Define this, if hwGetentropy is implemented
  *
  * ssize_t hwGetentropy(void *__buffer, size_t __length);
  */
-//#define MY_HW_HAS_GETRANDOM
+//#define MY_HW_HAS_GETENTROPY
 
 /// @brief unique ID
 typedef uint8_t unique_id_t[16];
@@ -141,7 +141,7 @@ void hwDebugPrint(const char *fmt, ... );
  */
 #ifdef DOXYGEN
 #define MY_CRITICAL_SECTION
-#define MY_HW_HAS_GETRANDOM
+#define MY_HW_HAS_GETENTROPY
 #endif  /* DOXYGEN */
 
 #endif // #ifdef MyHw_h
