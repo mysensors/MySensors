@@ -45,6 +45,7 @@
 /** \file */
 /** \defgroup avr_watchdog <avr/wdt.h>: Watchdog timer handling
     \code #include <avr/wdt.h> \endcode
+    @ingroup internals
 
     This header file declares the interface to some inline macros
     handling the watchdog timer like present in many AVR devices.
