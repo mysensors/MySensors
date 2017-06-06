@@ -19,8 +19,6 @@ const uint32_t sha256K[] PROGMEM = {
 	0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 };
 
-#define BUFFER_SIZE 64
-
 const uint8_t sha256InitState[] PROGMEM = {
 	0x67,0xe6,0x09,0x6a, // H0
 	0x85,0xae,0x67,0xbb, // H1
@@ -110,7 +108,7 @@ void Sha256Class::addUncounted(uint8_t data)
 {
 	buffer.b[bufferOffset ^ 3] = data;
 	bufferOffset++;
-	if (bufferOffset == BUFFER_SIZE) {
+	if (bufferOffset == BLOCK_LENGTH) {
 		hashBlock();
 		bufferOffset = 0;
 	}
@@ -166,9 +164,6 @@ uint8_t* Sha256Class::result(void)
 
 #define HMAC_IPAD 0x36
 #define HMAC_OPAD 0x5c
-
-uint8_t keyBuffer[BLOCK_LENGTH]; // K0 in FIPS-198a
-uint8_t innerHash[HASH_LENGTH];
 
 void Sha256Class::initHmac(const uint8_t* key, int keyLength)
 {
