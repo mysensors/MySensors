@@ -325,6 +325,9 @@ public:
 	// Setters for payload
 	MyMessage& set(void* payload, uint8_t length);
 	MyMessage& set(const char* value);
+#if !defined(__linux__)
+	MyMessage& set(const __FlashStringHelper* value);
+#endif
 	MyMessage& set(float value, uint8_t decimals);
 	MyMessage& set(bool value);
 	MyMessage& set(uint8_t value);
