@@ -90,7 +90,6 @@ extern bool signerAtsha204SignMsg(MyMessage &msg);
 #define signerBackendVerifyMsg  signerAtsha204VerifyMsg
 #define signerBackendSignMsg    signerAtsha204SignMsg
 #endif
-static bool signerValidatePersonalization(void);
 static bool skipSign(MyMessage &msg);
 #else // not MY_SIGNING_FEATURE
 #define signerBackendCheckTimer() true
@@ -103,8 +102,6 @@ static bool signerInternalProcessNonceResponse(MyMessage &msg);
 void signerInit(void)
 {
 #if defined(MY_SIGNING_FEATURE)
-	(void)signerValidatePersonalization();
-
 	// Read out the signing requirements from EEPROM
 	hwReadConfigBlock((void*)_doSign, (void*)EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS,
 	                  sizeof(_doSign));
@@ -341,33 +338,6 @@ int signerMemcmp(const void* a, const void* b, size_t sz)
 
 #if defined(MY_SIGNING_FEATURE)
 // Helper function to centralize signing/verification exceptions
-static bool signerValidatePersonalization(void)
-{
-#ifdef MY_SIGNING_SIMPLE_PASSWD
-	return true;
-#else
-	uint8_t buffer[32];
-	uint8_t* hash;
-	uint8_t checksum;
-	signerSha256Init();
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-	signerSha256Update(buffer, 32);
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-	signerSha256Update(buffer, 16);
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-	signerSha256Update(buffer, 9);
-	hash = signerSha256Final();
-	hwReadConfigBlock((void*)&checksum, (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS, 1);
-	if (checksum != hash[0]) {
-		SIGN_DEBUG(PSTR("!SGN:PER:TAMPERED\n"));
-		return false;
-	} else {
-		SIGN_DEBUG(PSTR("SGN:PER:OK\n"));
-		return true;
-	}
-#endif
-}
-
 static bool skipSign(MyMessage &msg)
 {
 	bool ret = false;
