@@ -63,7 +63,7 @@ static void buf2str(const uint8_t* buf, size_t sz)
 #define SIGN_DEBUG(x,...)
 #endif
 
-Sha256Class _signing_sha256;
+HmacClass _signing_sha256;
 static unsigned long _signing_timestamp;
 static bool _signing_verification_ongoing = false;
 static uint8_t _signing_verifying_nonce[32+9+1];

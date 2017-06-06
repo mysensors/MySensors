@@ -165,7 +165,7 @@ uint8_t* Sha256Class::result(void)
 #define HMAC_IPAD 0x36
 #define HMAC_OPAD 0x5c
 
-void Sha256Class::initHmac(const uint8_t* key, int keyLength)
+void HmacClass::initHmac(const uint8_t* key, int keyLength)
 {
 	uint8_t i;
 	memset(keyBuffer,0,BLOCK_LENGTH);
@@ -187,7 +187,7 @@ void Sha256Class::initHmac(const uint8_t* key, int keyLength)
 	}
 }
 
-uint8_t* Sha256Class::resultHmac(void)
+uint8_t* HmacClass::resultHmac(void)
 {
 	uint8_t i;
 	// Complete inner hash
