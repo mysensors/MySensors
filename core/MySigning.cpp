@@ -284,12 +284,10 @@ bool signerVerifyMsg(MyMessage &msg)
 	return verificationResult;
 }
 
-static uint8_t sha256_hash[32];
 Sha256Class _soft_sha256;
 
 void signerSha256Init(void)
 {
-	memset(sha256_hash, 0, 32);
 	_soft_sha256.init();
 }
 
@@ -302,8 +300,7 @@ void signerSha256Update(const uint8_t* data, size_t sz)
 
 uint8_t* signerSha256Final(void)
 {
-	memcpy(sha256_hash, _soft_sha256.result(), 32);
-	return sha256_hash;
+	return _soft_sha256.result();
 }
 
 int signerMemcmp(const void* a, const void* b, size_t sz)
