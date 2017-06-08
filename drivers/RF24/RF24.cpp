@@ -422,8 +422,13 @@ LOCAL void RF24_irqHandler(void)
 
 		// Start checking if RX-FIFO is not empty, as we might end up here from an interrupt
 		// for a message we've already read.
-		while (RF24_isDataAvailable()) {
-			RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
+		if (RF24_isDataAvailable()) {
+			do {
+				RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
+			} while (RF24_isDataAvailable());
+		} else {
+			// Occasionally interrupt is triggered but no data available - clear RX interrupt only
+			RF24_setStatus(_BV(RF24_RX_DR));
 		}
 		// Restore our interrupt handler.
 #if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
