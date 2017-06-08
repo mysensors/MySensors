@@ -181,6 +181,7 @@ uint16_t hwFreeMem()
 
 void hwDebugPrint(const char *fmt, ... )
 {
+#ifndef MY_DISABLED_SERIAL
 	if (MY_SERIALDEVICE) {
 		char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_FEATURE
@@ -207,4 +208,5 @@ void hwDebugPrint(const char *fmt, ... )
 		MY_SERIALDEVICE.print(fmtBuffer);
 		//	MY_SERIALDEVICE.flush();
 	}
+#endif
 }
