@@ -1,7 +1,7 @@
 #ifndef ATSHA204_H
 #define ATSHA204_H
 #if !DOXYGEN
-#include "Arduino.h"
+#include <Arduino.h>
 
 /* This is a scaled down variant of the ATSHA204 library, tweaked to meet the specific needs of the MySensors library. */
 

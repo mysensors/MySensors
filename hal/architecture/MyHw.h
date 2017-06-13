@@ -44,17 +44,20 @@ uint8_t hwReadConfig(int adr);
 */
 
 /**
- * Sleep for a defined time, using minimum power.
- * @param ms   Time to sleep, in [ms].
- * @return Nonsense, please ignore.
+ * @def MY_HW_HAS_GETENTROPY
+ * @brief Define this, if hwGetentropy is implemented
+ *
+ * ssize_t hwGetentropy(void *__buffer, size_t __length);
  */
+//#define MY_HW_HAS_GETENTROPY
 
+/// @brief unique ID
 typedef uint8_t unique_id_t[16];
 
 /**
  * Sleep for a defined time, using minimum power.
  * @param ms         Time to sleep, in [ms].
- * @return -1.
+ * @return MY_WAKE_UP_BY_TIMER.
  */
 int8_t hwSleep(unsigned long ms);
 
@@ -63,7 +66,7 @@ int8_t hwSleep(unsigned long ms);
  * @param interrupt  Interrupt number, which can wake the mcu from sleep.
  * @param mode       Interrupt mode, as passed to attachInterrupt.
  * @param ms         Time to sleep, in [ms].
- * @return -1 when woken by timer, or interrupt number when woken by interrupt.
+ * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
 int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
 
@@ -74,14 +77,14 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
  * @param interrupt2  Interrupt2 number, which can wake the mcu from sleep.
  * @param mode2       Interrupt2 mode, as passed to attachInterrupt.
  * @param ms          Time to sleep, in [ms].
- * @return -1 when woken by timer, or interrupt number when woken by interrupt.
+ * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
                unsigned long ms);
 
 /**
 * Retrieve unique ID
-* @param uniqueID uniqueID
+* @param uniqueID unique ID
 * @return True if unique ID successfully retrieved
 */
 bool hwUniqueID(unique_id_t* uniqueID);
@@ -138,6 +141,7 @@ void hwDebugPrint(const char *fmt, ... );
  */
 #ifdef DOXYGEN
 #define MY_CRITICAL_SECTION
+#define MY_HW_HAS_GETENTROPY
 #endif  /* DOXYGEN */
 
 #endif // #ifdef MyHw_h

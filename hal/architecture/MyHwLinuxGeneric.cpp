@@ -19,12 +19,17 @@
 
 #include "MyHwLinuxGeneric.h"
 
+#include <errno.h>
 #include <stdarg.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <syscall.h>
+#include <unistd.h>
 #include "SoftEeprom.h"
 #include "log.h"
 
 static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
+static FILE *randomFp = NULL;
 
 bool hwInit(void)
 {
@@ -37,6 +42,7 @@ bool hwInit(void)
 	}
 #endif
 #endif
+
 	return true;
 }
 
@@ -62,7 +68,23 @@ void hwWriteConfig(int addr, uint8_t value)
 
 void hwRandomNumberInit()
 {
-	randomSeed(time(NULL));
+	unsigned long seed=0;
+
+	if (randomFp != NULL) {
+		fclose(randomFp);
+	}
+	if (!(randomFp = fopen("/dev/urandom", "r"))) {
+		logError("Cannot open '/dev/urandom'.\n");
+		exit(2);
+	}
+
+	while (hwGetentropy(&seed, sizeof(seed)) != sizeof(seed));
+	randomSeed(seed);
+}
+
+ssize_t hwGetentropy(void *__buffer, size_t __length)
+{
+	return(fread(__buffer, 1, __length, randomFp));
 }
 
 unsigned long hwMillis()

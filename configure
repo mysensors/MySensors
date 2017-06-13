@@ -91,15 +91,16 @@ MySensors options:
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
     --my-leds-blinking-inverse  Inverse the blinking feature.
-    --my-signing=[none|software]
+    --my-signing=[none|software|password]
                                 Message signing. [none]
     --my-signing-debug          Enable signing related debug.
     --my-signing-request-signatures
                                 Enable signature request from nodes that in turn requested
                                 gateway signature.
-    --my-signing-request-gw-signatures-from-all
-                                Require all nodes in the network to sign messages sent to the
-                                gateway.
+    --my-signing-weak_security  Enable this to permit downgrade of security preferences and
+                                relaxed gateway signing requirements.
+    --my-signing-password=<PASSWORD>
+                                If you are using password as the signature type, set your password here.
 
 EOF
 }
@@ -117,7 +118,7 @@ function detect_rpi_revision {
 
 function detect_machine {
     local cpu=$(eval "uname -m 2>/dev/null")
-    local machine=$(eval "cat /sys/firmware/devicetree/base/model |tr -d '\0' 2>/dev/null")
+    local machine=$(eval "cat /sys/firmware/devicetree/base/model 2>/dev/null |tr -d '\0'")
     local hardware=$(eval "grep sunxi_platform /sys/class/sunxi_info/sys_info 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
     if [ -z "$hardware" ]; then
         local hardware=$(eval "grep Hardware /proc/cpuinfo 2>/dev/null | sed 's/^.*: \(.*\)$/\1/'")
@@ -459,9 +460,11 @@ for opt do
     --my-signing-request-signatures*)
         signing_request_signatures=true
         ;;
-    --my-signing-request-gw-signatures-from-all*)
-        signing_request_signatures=true
-        CPPFLAGS="-DMY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL $CPPFLAGS"
+    --my-signing-weak_security*)
+        CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
+        ;;
+    --my-signing-password=*)
+        signing_password=${optarg}
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
@@ -510,12 +513,16 @@ if [ -z "${SPI_DRIVER}" ]; then
     if [ -n "${SPI_DRIVER}" ]; then
         echo "  [OK] SPI driver detected:${SPI_DRIVER}."
     else
-        echo "  [WARNING] No supported SPI driver detected."
+        echo "  [WARNING] No supported SPI driver detected. Using SPIDEV."
+        SPI_DRIVER=SPIDEV
     fi
 fi
 if [ -n "${SPI_DRIVER}" ]; then
     case ${SPI_DRIVER} in
         BCM)
+            if [[ $SOC != "BCM2835" && $SOC != "BCM2836" && $SOC != "BCM2837" ]]; then
+                die "BCM SPI driver is only supported for SOCs BCM2835, BCM2836 or BCM2837" 5
+            fi
             CPPFLAGS="-DLINUX_SPI_BCM $CPPFLAGS"
             ;;
         SPIDEV)
@@ -567,8 +574,14 @@ elif [[ ${signing} == "software" ]]; then
     if [[ ${signing_request_signatures} == true ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
+elif [[ ${signing} == "password" ]]; then
+    if [ -z "${signing_password}" ]; then
+        die "You need to set the password for signing with --my-signing-password= option" 6
+    fi
+    echo "Simplified signing using password"
+    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing_password}\\\" $CPPFLAGS"
 else
-    die "Invalid message signing option." 4
+    die "Invalid signing type." 7
 fi
 
 LDFLAGS="-pthread $LDFLAGS"

@@ -148,11 +148,7 @@ void generate_soft_sign_hmac_key()
 {
 	uint8_t key[32];
 
-	for (int i = 0; i < 32; i++) {
-		key[i] = random(256) ^ micros();
-		unsigned long enter = hwMillis();
-		while (hwMillis() - enter < (unsigned long)2);
-	}
+	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
 
 	print_soft_sign_hmac_key(key);
 
@@ -223,11 +219,7 @@ void generate_soft_sign_serial_key()
 {
 	uint8_t key[9];
 
-	for (int i = 0; i < 9; i++) {
-		key[i] = random(256) ^ micros();
-		unsigned long enter = hwMillis();
-		while (hwMillis() - enter < (unsigned long)2);
-	}
+	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
 
 	print_soft_sign_serial_key(key);
 
@@ -273,7 +265,12 @@ void print_aes_key(uint8_t *key_ptr = NULL)
 	uint8_t key[16];
 
 	if (key_ptr == NULL) {
+#ifdef MY_SIGNING_SIMPLE_PASSWD
+		memset(key, 0, 16);
+		memcpy(key, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+#else
 		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+#endif
 		key_ptr = key;
 	}
 
@@ -298,11 +295,7 @@ void generate_aes_key()
 {
 	uint8_t key[16];
 
-	for (int i = 0; i < 16; i++) {
-		key[i] = random(256) ^ micros();
-		unsigned long enter = hwMillis();
-		while (hwMillis() - enter < (unsigned long)2);
-	}
+	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
 
 	print_aes_key(key);
 

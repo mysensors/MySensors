@@ -646,7 +646,7 @@ void transportProcessMessage(void)
 	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
 	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
 	// payload length = a multiple of blocksize length for decrypted messages, i.e. cannot be used for payload length check
 	payloadLength = expectedMessageLength;
 #endif
@@ -658,7 +658,8 @@ void transportProcessMessage(void)
 
 	TRANSPORT_DEBUG(PSTR("TSF:MSG:READ,%d-%d-%d,s=%d,c=%d,t=%d,pt=%d,l=%d,sg=%d:%s\n"),
 	                sender, last, destination, _msg.sensor, command, type, mGetPayloadType(_msg), msgLength,
-	                mGetSigned(_msg), _msg.getString(_convBuf));
+	                mGetSigned(_msg), ((command == C_INTERNAL &&
+	                                    type == I_NONCE_RESPONSE) ? "<NONCE>" : _msg.getString(_convBuf)));
 
 	// Reject payloads with incorrect length
 	if (payloadLength != expectedMessageLength) {
@@ -993,7 +994,8 @@ bool transportSendWrite(const uint8_t to, MyMessage &message)
 	                mGetPayloadType(message), mGetLength(message), mGetSigned(message),
 	                _transportSM.failedUplinkTransmissions,
 	                (result ? "OK" : "NACK"),
-	                message.getString(_convBuf));
+	                ((mGetCommand(message) == C_INTERNAL &&
+	                  message.type == I_NONCE_RESPONSE) ? "<NONCE>" : message.getString(_convBuf)));
 
 	return result;
 }

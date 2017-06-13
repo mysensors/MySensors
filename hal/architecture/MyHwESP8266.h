@@ -31,6 +31,8 @@
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
 
 #define EEPROM_size (1024)
 
@@ -41,13 +43,16 @@
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() ESP.restart()
 #define hwMillis() millis()
-#define hwRandomNumberInit() randomSeed(RANDOM_REG32)
+// The use of randomSeed switch to pseudo random number. Keep hwRandomNumberInit empty
+#define hwRandomNumberInit()
 
 bool hwInit(void);
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
+ssize_t hwGetentropy(void *__buffer, size_t __length);
+//#define MY_HW_HAS_GETENTROPY
 
 /**
  * Restore interrupt state.

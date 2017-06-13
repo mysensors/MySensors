@@ -1,4 +1,4 @@
-// **********************************************************************************
+﻿// **********************************************************************************
 // Driver definition for HopeRF RFM69W/RFM69HW/RFM69CW/RFM69HCW, Semtech SX1231/1231H
 // **********************************************************************************
 // Copyright Felix Rusu (2014), felix@lowpowerlab.com
@@ -56,6 +56,9 @@
 #elif defined(ARDUINO_ARCH_STM32F1)
 #define DEFAULT_RFM69_IRQ_PIN			(PA3)												//!< DEFAULT_RFM69_IRQ_PIN
 #define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN								//!< DEFAULT_RFM69_IRQ_NUM
+#elif defined(TEENSYDUINO)
+#define DEFAULT_RFM69_IRQ_PIN			(8)													//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #else
 #define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
 #define DEFAULT_RFM69_IRQ_NUM			(2)													//!< DEFAULT_RFM69_IRQ_NUM

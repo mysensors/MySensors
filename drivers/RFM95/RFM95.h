@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -100,6 +100,9 @@
 #elif defined(ARDUINO_ARCH_STM32F1)
 #define DEFAULT_RFM95_IRQ_PIN			(PA3)												//!< DEFAULT_RFM95_IRQ_PIN
 #define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(TEENSYDUINO)
+#define DEFAULT_RFM95_IRQ_PIN			(8)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
 #else
 #define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
 #define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
@@ -120,7 +123,7 @@ _SPI;
 #define _SPI SPI					//!< SPI
 #endif
 #else
-#if defined(__arm__)
+#if defined(__arm__) || defined(__linux__)
 #include <SPI.h>
 #else
 extern HardwareSPI SPI;				//!< SPI

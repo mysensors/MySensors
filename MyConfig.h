@@ -94,6 +94,7 @@
 
 // Selecting uplink transport layer is optional (for a gateway node).
 //#define MY_RADIO_RF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
 //#define MY_RADIO_RFM95
 //#define MY_RS485
@@ -412,17 +413,44 @@
 *  Message Signing Settings
 ***********************************/
 /**
- * @def MY_DEBUG_VERBOSE_SIGNING
- * @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled.
- * This will add even more to the size of the final sketch!
- */
+* @def MY_DEBUG_VERBOSE_SIGNING
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled.
+ *       This will add even more to the size of the final sketch!
+*/
 //#define MY_DEBUG_VERBOSE_SIGNING
+
+/**
+ * @def MY_SIGNING_SIMPLE_PASSWD
+ * @brief Enables SW backed signing functionality in library and uses provided password as key.
+ *
+ * This flag will enable signing, signature requests and encryption. It has to be identical on ALL
+ * nodes in the network.<br>
+ * Whitelisting is supported and serial will be the first 8 characters of the password, the ninth
+ * character will be the node ID (to make each node have a unique serial).<br>
+ * As with the regular signing modes, whitelisting is only activated if a whitelist is specified in
+ * the sketch.
+ * No personalization is required for this mode.<br>
+ * It is allowed to set @ref MY_SIGNING_WEAK_SECURITY for deployment purposes in this mode as it is
+ * with the regular software and ATSHA204A based modes.<br>
+ * If the provided password is shorter than the size of the HMAC or AES key, it will be null-padded
+ * to accomodate the key size in question. A 32 character password is the maximum length. Any
+ * password longer than that will be truncated.
+ */
+//#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
+#if defined(MY_SIGNING_SIMPLE_PASSWD)
+#define MY_SIGNING_SOFT
+#define MY_SIGNING_REQUEST_SIGNATURES
+#define MY_RF24_ENABLE_ENCRYPTION
+#define MY_RFM69_ENABLE_ENCRYPTION
+#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+#endif
 
 /**
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
  *
- * For any signing related functionality to be included, this define or @ref MY_SIGNING_SOFT has to be enabled.
+ * For any signing related functionality to be included, this define or @ref MY_SIGNING_SOFT has to
+ * be enabled.
  */
 //#define MY_SIGNING_ATSHA204
 
@@ -430,7 +458,8 @@
  * @def MY_SIGNING_SOFT
  * @brief Enables SW backed signing functionality in library.
  *
- * For any signing related functionality to be included, this define or @ref MY_SIGNING_ATSHA204 has to be enabled.
+ * For any signing related functionality to be included, this define or @ref MY_SIGNING_ATSHA204 has
+ * to be enabled.
  */
 //#define MY_SIGNING_SOFT
 
@@ -444,14 +473,21 @@
 //#define MY_SIGNING_REQUEST_SIGNATURES
 
 /**
- * @def MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
- * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it.
- * @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
+ * @def MY_SIGNING_WEAK_SECURITY
+ * @brief Enable this to permit downgrade of security preferences and relaxed gateway signing
+ *        requirements.
  *
- * Use this for maximum security, but be aware that every single node will have to be personalized before they can be used.
- * Note that if this is enabled, and whitelisting is also enabled, whitelisting will also be in effect for all nodes.
+ * Use this for evaluating security. It allows for gradual introduction of signing requirements in
+ * a network. Nodes that present themselves as not requiering signing or whitelisting will be
+ * cleared of this requirement at the receiving end. A gateway which require signatures will only do
+ * so from nodes that in turn require signatures.<br>
+ * When not set, any node that has presented themselves as a node that require signatures or
+ * whitelisting, will be permanently remembered as doing so at the receiver until EEPROM is cleared
+ * or the receiver is reconfigured with this flag set or has signing disabled alltogether.
+ *
+ * @warning This flag when set will weaken security significantly
  */
-//#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+//#define MY_SIGNING_WEAK_SECURITY
 
 /**
  * @def MY_VERIFICATION_TIMEOUT_MS
@@ -680,6 +716,100 @@
 #ifndef MY_SOFT_SPI_MOSI_PIN
 #define MY_SOFT_SPI_MOSI_PIN			(15)
 #endif
+
+/**********************************
+*  NRF5_ESB Driver Defaults
+*  The NRF5_ESB driver is compatible
+*  to RF24
+***********************************/
+
+/**
+ * @def MY_NRF5_ESB_ENABLE_ENCRYPTION
+ * @brief Enables RF24 compatible ncryption (all nodes and gateway must have
+ * this enabled, and all must be personalized with the same AES key)
+ * This is compatible to MY_RF24_ENABLE_ENCRYPTION. Because the Initialization
+ * Vector is always 0, the Encryption is weak.
+ */
+//#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+
+/**
+ * @def MY_DEBUG_VERBOSE_NRF5_ESB
+ * @brief Enable MY_DEBUG_VERBOSE_NRF5_ESB flag for verbose debug prints related
+ * to the NRF5_ESB driver. Requires DEBUG to be enabled.
+ */
+//#define MY_DEBUG_VERBOSE_NRF5_ESB
+
+/**
+ * @def MY_NRF5_ESB_PA_LEVEL
+ * @brief Default NRF5 PA level. Override in sketch if needed.
+ */
+#ifndef MY_NRF5_ESB_PA_LEVEL
+#define MY_NRF5_ESB_PA_LEVEL NRF5_PA_MAX
+#endif
+
+/**
+ * @def MY_NRF5_ESB_CHANNEL
+ * @brief RF channel for the sensor net, 0-125.
+ * Frequence: 2400 Mhz - 2525 Mhz Channels: 126
+ * http://www.mysensors.org/radio/nRF24L01Plus.pdf
+ * 0 => 2400 Mhz (RF24 channel 1)
+ * 1 => 2401 Mhz (RF24 channel 2)
+ * 76 => 2476 Mhz (RF24 channel 77)
+ * 83 => 2483 Mhz (RF24 channel 84)
+ * 124 => 2524 Mhz (RF24 channel 125)
+ * 125 => 2525 Mhz (RF24 channel 126)
+ * In some countries there might be limitations, in Germany for example only the
+ * range 2400,0 - 2483,5 Mhz is allowed
+ * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
+ */
+#ifndef MY_NRF5_ESB_CHANNEL
+#define MY_NRF5_ESB_CHANNEL 76
+#endif
+
+/**
+ * @def MY_NRF5_ESB_MODE
+ * @brief NRF5 mode (NRF5_250KBPS for 250kbs, NRF5_1MBPS for 1Mbps or NRF5_2MBPS
+ * for 2Mbps).
+ */
+#ifndef MY_NRF5_ESB_MODE
+#define MY_NRF5_ESB_MODE NRF5_250KBPS
+#endif
+
+/**
+ * @def MY_NRF5_ESB_BASE_RADIO_ID
+ * @brief NRF5 radio network identifier.
+ *
+ * This acts as base value for sensor nodeId addresses. Change this (or channel)
+ * if you have more than one sensor network.
+ */
+#ifndef MY_NRF5_ESB_BASE_RADIO_ID
+#define MY_NRF5_ESB_BASE_RADIO_ID 0x00, 0xFC, 0xE1, 0xA8, 0xA8
+#endif
+
+/**
+ * @def MY_NRF5_ESB_ADDR_WIDTH
+ * @brief NRF5 address width.
+ *
+ * This defines the width of the complete address.
+ */
+#ifndef MY_NRF5_ESB_ADDR_WIDTH
+#define MY_NRF5_ESB_ADDR_WIDTH 5
+#endif
+
+/**
+ * @def MY_NRF5_ESB_RX_BUFFER_SIZE
+ * @brief Declare the amount of incoming messages that can be buffered at driver
+ * level.
+ */
+#ifndef MY_NRF5_ESB_RX_BUFFER_SIZE
+#define MY_NRF5_ESB_RX_BUFFER_SIZE (20)
+#endif
+
+/**
+ * @def MY_NRF5_ESB_REVERSE_ACK
+ * @brief Switch to SI24R1 or faked NRF24L01+ compatible ACK mode.
+ */
+//#define MY_NRF5_ESB_REVERSE_ACK
 
 /**********************************
 *  RFM69 Driver Defaults
@@ -1212,10 +1342,11 @@
 #define MY_INDICATION_HANDLER
 #define MY_DISABLE_REMOTE_RESET
 // signing
+#define MY_SIGNING_SIMPLE_PASSWD
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
-#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+#define MY_SIGNING_WEAK_SECURITY
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 #define MY_DEBUG_VERBOSE_SIGNING
 // RS485
@@ -1226,6 +1357,10 @@
 #define MY_RF24_ENABLE_ENCRYPTION
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
+// NRF5_ESB
+#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+#define MY_DEBUG_VERBOSE_NRF5_ESB
+#define MY_NRF5_ESB_REVERSE_ACK
 // RFM69
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER

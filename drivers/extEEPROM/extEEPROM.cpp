@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------------*
+﻿/*-----------------------------------------------------------------------------*
  * extEEPROM.cpp - Arduino library to support external I2C EEPROMs.            *
  *                                                                             *
  * This library will work with most I2C serial EEPROM chips between 2k bits    *
@@ -240,7 +240,7 @@ int extEEPROM::read(unsigned long addr)
 //For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
 byte extEEPROM::update(unsigned long addr, byte *values, unsigned int nBytes)
 {
-	for (uint8_t i = 0; i < nBytes; i++) {
+	for (unsigned int i = 0; i < nBytes; i++) {
 		const uint8_t newValue = values[i];
 		if (newValue != read(addr + i)) {
 			write(addr + i, newValue);

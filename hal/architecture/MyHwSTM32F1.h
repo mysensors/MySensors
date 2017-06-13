@@ -24,7 +24,7 @@
 
 #include <libmaple/iwdg.h>
 #include <itoa.h>
-
+#include <EEPROM.h>
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
@@ -33,34 +33,37 @@
 #define snprintf_P snprintf
 #define vsnprintf_P vsnprintf
 
-
 // emulated EEPROM (experimental)
 #define EEPROM_PAGE_SIZE		(uint16_t)1024
 #define EEPROM_SIZE				(uint16_t)2048
 #define EEPROM_START_ADDRESS	((uint32_t)(0x8000000 + 128 * EEPROM_PAGE_SIZE - 2 * EEPROM_PAGE_SIZE))
 
-
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
 #endif
 
-// Define these as macros to save valuable space
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
+
+#ifndef digitalPinToInterrupt
+#define digitalPinToInterrupt(__pin) (__pin)
+#endif
+
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
 #define hwDigitalRead(__pin) digitalRead(__pin)
 #define hwPinMode(__pin, __value) pinMode(__pin, __value)
 #define hwWatchdogReset() iwdg_feed()
 #define hwReboot() nvic_sys_reset()
 #define hwMillis() millis()
-void (*serialEventRun)() = NULL;
 
+extern void serialEventRun(void) __attribute__((weak));
+//void (*serialEventRun)() = NULL;
 bool hwInit(void);
+void hwRandomNumberInit(void);
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
-
-
-#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
 
 #ifndef DOXYGEN
 #define MY_CRITICAL_SECTION

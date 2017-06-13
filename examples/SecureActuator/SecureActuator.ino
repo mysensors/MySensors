@@ -63,7 +63,9 @@
 #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 //!< Unconnected analog pin for random seed
 
 // SETTINGS FOR MY_SIGNING_ATSHA204
+#ifndef MY_SIGNING_ATSHA204_PIN
 #define MY_SIGNING_ATSHA204_PIN 17 //!< A3 - pin where ATSHA204 is attached
+#endif
 
 #include <MySensors.h>
 

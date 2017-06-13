@@ -40,6 +40,9 @@ SerialSimulator Serial = SerialSimulator();
 #define MY_SERIALDEVICE Serial
 #endif
 
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#define MAX(a,b) ((a)>(b)?(a):(b))
+
 // Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
@@ -54,6 +57,8 @@ inline void hwWriteConfigBlock(void* buf, void* addr, size_t length);
 inline uint8_t hwReadConfig(int addr);
 inline void hwWriteConfig(int addr, uint8_t value);
 inline void hwRandomNumberInit();
+ssize_t hwGetentropy(void *__buffer, size_t __length);
+#define MY_HW_HAS_GETENTROPY
 inline unsigned long hwMillis();
 
 #ifdef MY_RF24_IRQ_PIN
