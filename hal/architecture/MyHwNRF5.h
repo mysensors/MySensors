@@ -130,9 +130,7 @@ typedef struct {
 } nrf_ecb_t;
 
 #ifndef DOXYGEN
-#define MY_CRITICAL_SECTION
-// temp. commented, to fix "CircularBuffer.h:94:2: warning: control reaches end of non-void function" error
-#define __MY_CRITICAL_SECTION                                                    \
+#define MY_CRITICAL_SECTION                                                    \
 	for (uint32_t __savePriMask                                                  \
 	        __attribute__((__cleanup__(__priMaskRestore))) = __get_PRIMASK(),       \
 	        __ToDo = __disableIntsRetVal();                                         \
