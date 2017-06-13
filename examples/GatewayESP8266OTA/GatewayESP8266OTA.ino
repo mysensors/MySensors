@@ -88,14 +88,14 @@
 // #define MY_ESP8266_HOSTNAME "sensor-ota-gateway"
 
 // Enable UDP communication
-//#define MY_USE_UDP
+//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 //#define MY_IP_ADDRESS 192,168,178,87
 
-// If using static ip you need to define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
-#define MY_IP_SUBNET_ADDRESS 255,255,255,0
+// If using static ip you can define Gateway and Subnet address as well
+//#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 // The port to keep open on node server mode
 #define MY_PORT 5003
@@ -117,7 +117,6 @@
 // Digital pin used for inclusion mode button
 #define MY_INCLUSION_MODE_BUTTON_PIN  3
 
-
 // Set blinking period
 // #define MY_DEFAULT_LED_BLINK_PERIOD 300
 
@@ -137,45 +136,41 @@
 
 void setup()
 {
-
+  // Setup locally attached sensors
 	ArduinoOTA.onStart([]() {
-		Serial.println("ArduinoOTA start");
+		debug("ArduinoOTA start\n");
 	});
 	ArduinoOTA.onEnd([]() {
-		Serial.println("\nArduinoOTA end");
+		debug("\nArduinoOTA end\n");
 	});
 	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-		Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100)));
+		debug("OTA Progress: %u%%\r", (progress / (total / 100)));
 	});
 	ArduinoOTA.onError([](ota_error_t error) {
-		Serial.printf("Error[%u]: ", error);
+		debug("Error[%u]: ", error);
 		if (error == OTA_AUTH_ERROR) {
-			Serial.println("Auth Failed");
+			debug("Auth Failed\n");
 		} else if (error == OTA_BEGIN_ERROR) {
-			Serial.println("Begin Failed");
+			debug("Begin Failed\n");
 		} else if (error == OTA_CONNECT_ERROR) {
-			Serial.println("Connect Failed");
+			debug("Connect Failed\n");
 		} else if (error == OTA_RECEIVE_ERROR) {
-			Serial.println("Receive Failed");
+			debug("Receive Failed\n");
 		} else if (error == OTA_END_ERROR) {
-			Serial.println("End Failed");
+			debug("End Failed\n");
 		}
 	});
 	ArduinoOTA.begin();
-	Serial.println("Ready");
-	Serial.print("IP address: ");
-	Serial.println(WiFi.localIP());
-
 }
 
 void presentation()
 {
-	// Present locally attached sensors here
+  // Present locally attached sensors here
 }
-
 
 void loop()
 {
-	// Send locally attech sensors data here
+  // Send locally attech sensors data here
 	ArduinoOTA.handle();
 }
+

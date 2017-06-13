@@ -102,9 +102,9 @@
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 #define MY_IP_ADDRESS 192,168,178,87
 
-// If using static ip you need to define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
-#define MY_IP_SUBNET_ADDRESS 255,255,255,0
+// If using static ip you can define Gateway and Subnet address as well
+//#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 // MQTT broker ip address or url. Define one or the other.
 //#define MY_CONTROLLER_URL_ADDRESS "m20.cloudmqtt.com"
@@ -138,15 +138,16 @@
 
 void setup()
 {
+  // Setup locally attached sensors
 }
 
 void presentation()
 {
-	// Present locally attached sensors here
+  // Present locally attached sensors here
 }
-
 
 void loop()
 {
-	// Send locally attached sensors data here
+  // Send locally attached sensors data here
 }
+
