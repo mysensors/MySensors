@@ -358,6 +358,22 @@ bool sendSketchInfo(const char *name, const char *version, const bool ack)
 	return result;
 }
 
+#if !defined(__linux__)
+bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version, const bool ack)
+{
+	bool result = true;
+	if (name) {
+		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME,
+		                           ack).set(name));
+	}
+	if (version) {
+		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION,
+		                           ack).set(version));
+	}
+	return result;
+}
+#endif
+
 bool request(const uint8_t childSensorId, const uint8_t variableType, const uint8_t destination)
 {
 	return _sendRoute(build(_msgTmp, destination, childSensorId, C_REQ, variableType).set(""));
