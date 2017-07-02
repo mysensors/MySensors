@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -145,7 +145,10 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // SIGNING
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-#define MY_SIGNING_FEATURE	//!< MY_SIGNING_FEATURE
+#define MY_SIGNING_FEATURE //!< MY_SIGNING_FEATURE
+#endif
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
+#define MY_ENCRYPTION_FEATURE //!< MY_ENCRYPTION_FEATURE
 #endif
 #include "core/MySigning.cpp"
 #include "drivers/ATSHA204/sha256.cpp"
