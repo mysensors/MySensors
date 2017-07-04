@@ -790,10 +790,12 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * |!| SGN | SGN | SGN FAIL									| Message failed to be signed
  * | | SGN | SGN | NREQ='node'							| 'node' does not require signed messages
  * | | SGN | SGN | 'sender'!='us' NUS				| Will not sign because 'sender' is not 'us' (repeater)
+ * |!| SGN | SGN | STATE  									| Security system in a invalid state (personalization data tampered)
  * |!| SGN | VER | NSG											| Message was not signed, but it should have been
  * |!| SGN | VER | FAIL											| Verification failed
  * | | SGN | VER | OK												| Verification succeeded
  * | | SGN | VER | LEFT='number'						| 'number' of failed verifications left in a row before node is locked
+ * |!| SGN | VER | STATE  									| Security system in a invalid state (personalization data tampered)
  * | | SGN | SKP | MSG CMD='cmd',TYPE='type'| Message with command 'cmd' and type 'type' does not need to be signed
  * | | SGN | SKP | ACK CMD='cmd',TYPE='type'| ACK messages does not need to be signed
  * | | SGN | NCE | LEFT='number'						| 'number' of nonce requests between successful verifications left before node is locked
