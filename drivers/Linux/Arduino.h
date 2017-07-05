@@ -99,7 +99,7 @@ using std::min;
 using std::max;
 using std::abs;
 
-typedef bool boolean;
+typedef bool bool;
 typedef uint8_t byte;
 typedef string String;
 typedef char __FlashStringHelper;
