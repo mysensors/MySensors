@@ -95,7 +95,7 @@ void SPIFlash::unselect()
 }
 
 /// setup SPI, read device ID etc...
-boolean SPIFlash::initialize()
+bool SPIFlash::initialize()
 {
 #if defined(SPCR) && defined(SPSR)
 	_SPCR = SPCR;
@@ -180,7 +180,7 @@ void SPIFlash::readBytes(uint32_t addr, void* buf, uint16_t len)
 }
 
 /// Send a command to the flash chip, pass TRUE for isWrite when its a write command
-void SPIFlash::command(uint8_t cmd, boolean isWrite)
+void SPIFlash::command(uint8_t cmd, bool isWrite)
 {
 #if defined(__AVR_ATmega32U4__) // Arduino Leonardo, MoteinoLeo
 	DDRB |= B00000001;            // Make sure the SS pin (PB0 - used by RFM12B on MoteinoLeo R1) is set as output HIGH!
@@ -201,7 +201,7 @@ void SPIFlash::command(uint8_t cmd, boolean isWrite)
 }
 
 /// check if the chip is busy erasing/writing
-boolean SPIFlash::busy()
+bool SPIFlash::busy()
 {
 	/*
 	select();
