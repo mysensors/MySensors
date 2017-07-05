@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -96,14 +96,19 @@ void _begin(void)
 		preHwInit();
 	}
 
-	if (!hwInit()) {
+	const bool hwInitResult = hwInit();
+
+#if !defined(MY_SPLASH_SCREEN_DISABLED)
+	displaySplashScreen();
+#endif
+
+	CORE_DEBUG(PSTR("MCO:BGN:INIT CP=" MY_CAPABILITIES "\n"));
+
+	if (!hwInitResult) {
 		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
 		setIndication(INDICATION_ERR_HW_INIT);
 		_infiniteLoop();
 	}
-
-	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER="
-	                MYSENSORS_LIBRARY_VERSION "\n"));
 
 	// set defaults
 	_coreConfig.presentationSent = false;
