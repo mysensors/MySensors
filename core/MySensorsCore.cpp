@@ -359,7 +359,8 @@ bool sendSketchInfo(const char *name, const char *version, const bool ack)
 }
 
 #if !defined(__linux__)
-bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version, const bool ack)
+bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version,
+                    const bool ack)
 {
 	bool result = true;
 	if (name) {

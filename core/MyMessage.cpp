@@ -253,7 +253,7 @@ MyMessage& MyMessage::set(const char* value)
 MyMessage& MyMessage::set(const __FlashStringHelper* value)
 {
 	uint8_t length = value == NULL ? 0
-		: min(strlen_P(reinterpret_cast<const char *>(value)), (size_t)MAX_PAYLOAD);
+	                 : min(strlen_P(reinterpret_cast<const char *>(value)), (size_t)MAX_PAYLOAD);
 	miSetLength(length);
 	miSetPayloadType(P_STRING);
 	if (length) {

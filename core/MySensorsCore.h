@@ -146,7 +146,8 @@ bool present(const uint8_t sensorId, const uint8_t sensorType, const char *descr
  */
 bool sendSketchInfo(const char *name, const char *version, const bool ack = false);
 #if !defined(__linux__)
-bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version, const bool ack = false);
+bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version,
+                    const bool ack = false);
 #endif
 
 /**

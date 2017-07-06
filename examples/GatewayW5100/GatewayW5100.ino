@@ -123,16 +123,16 @@
 
 void setup()
 {
-  // Setup locally attached sensors
+	// Setup locally attached sensors
 }
 
 void presentation()
 {
-  // Present locally attached sensors here
+	// Present locally attached sensors here
 }
 
 void loop()
 {
-  // Send locally attached sensors data here
+	// Send locally attached sensors data here
 }
 
