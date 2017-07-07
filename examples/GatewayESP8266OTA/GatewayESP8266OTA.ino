@@ -136,7 +136,7 @@
 
 void setup()
 {
-  // Setup locally attached sensors
+	// Setup locally attached sensors
 	ArduinoOTA.onStart([]() {
 		debug("ArduinoOTA start\n");
 	});
@@ -165,12 +165,12 @@ void setup()
 
 void presentation()
 {
-  // Present locally attached sensors here
+	// Present locally attached sensors here
 }
 
 void loop()
 {
-  // Send locally attech sensors data here
+	// Send locally attech sensors data here
 	ArduinoOTA.handle();
 }
 
