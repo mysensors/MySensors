@@ -36,7 +36,7 @@ I2CEeprom::I2CEeprom(uint8_t addr) : extEEPROM(I2CEEPROM_CHIP_SIZE, 1, I2CEEPROM
 }
 
 /// setup
-boolean I2CEeprom::initialize()
+bool I2CEeprom::initialize()
 {
 	return extEEPROM::begin(I2CEEPROM_TWI_CLK) ? false : true;
 }
@@ -56,7 +56,7 @@ void I2CEeprom::readBytes(uint32_t addr, void* buf, uint16_t len)
 }
 
 /// check if the chip is busy
-boolean I2CEeprom::busy()
+bool I2CEeprom::busy()
 {
 	Wire.beginTransmission(m_addr);
 	Wire.write(0);

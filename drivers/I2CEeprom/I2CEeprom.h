@@ -74,13 +74,13 @@ class I2CEeprom : extEEPROM
 public:
 
 	explicit I2CEeprom(uint8_t addr); //!< Constructor
-	boolean initialize(); //!< setup
+	bool initialize(); //!< setup
 	uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
 	void readBytes(uint32_t addr, void* buf, uint16_t len); //!< read multiple bytes
 	void writeByte(uint32_t addr, uint8_t byt); //!< Write 1 byte to flash memory
 	void writeBytes(uint32_t addr, const void* buf,
 	                uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if define SPIFLASH_SST25TYPE is set AAI Word Programming will be used
-	boolean busy(); //!< check if the chip is busy erasing/writing
+	bool busy(); //!< check if the chip is busy erasing/writing
 
 	// the rest not needed for EEPROMs, but kept so SPI flash code compiles as is (functions are NOP)
 
