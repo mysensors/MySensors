@@ -103,33 +103,6 @@ bool signerAtsha204SoftInit(void)
 		_signing_node_serial_info[8] = getNodeId();
 	}
 #else
-	uint8_t buffer[32];
-	uint8_t* hash;
-	uint8_t checksum;
-
-	_signing_sha256.init();
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-	for (int i = 0; i < 32; i++) {
-		_signing_sha256.write(buffer[i]);
-	}
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-	for (int i = 0; i < 16; i++) {
-		_signing_sha256.write(buffer[i]);
-	}
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-	for (int i = 0; i < 9; i++) {
-		_signing_sha256.write(buffer[i]);
-	}
-	hash = _signing_sha256.result();
-	hwReadConfigBlock((void*)&checksum, (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS, 1);
-	if (checksum != hash[0]) {
-		SIGN_DEBUG(PSTR("!SGN:PER:TAMPERED\n"));
-		init_ok = false;
-	} else {
-		SIGN_DEBUG(PSTR("SGN:PER:OK\n"));
-		init_ok = true;
-	}
-
 	if (init_ok) {
 		hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
 		hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
