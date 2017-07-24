@@ -261,6 +261,19 @@
 // requires the MYSBootloader and disabled MY_OTA_FIRMWARE_FEATURE
 //#define MY_OTA_FIRMWARE_FEATURE
 
+// Define or uncomment MY_OTA_USE_I2C_EEPROM below if you want I2C EEPROM instead
+// of a SPI flash. Used EEPROM needs to be large enough, an 24(L)C256 will do as minimum.
+// HW I2C assumed. This will exclude the SPI flash code.
+// Note that you also need an updated DualOptiboot supporting I2C EEPROM!
+//#define MY_OTA_USE_I2C_EEPROM
+
+#ifdef MY_OTA_USE_I2C_EEPROM
+// I2C address of EEPROM. Wire will shift this left, i.e. 0x50->0xA0
+#ifndef MY_OTA_I2C_ADDR
+#define MY_OTA_I2C_ADDR		0x50
+#endif
+#endif
+
 /**
  * @def MY_OTA_FLASH_SS
  * @brief Slave select pin for external flash.

@@ -70,6 +70,7 @@
 
 #if defined(MY_DEBUG_VERBOSE_OTA_UPDATE)
 #define OTA_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+//#define OTA_EXTRA_FLASH_DEBUG	//!< Dumps flash after each FW block
 #else
 #define OTA_DEBUG(x,...)	//!< debug NULL
 #endif

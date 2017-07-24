@@ -172,7 +172,11 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // FLASH
 #if defined(MY_OTA_FIRMWARE_FEATURE)
+#if defined(MY_OTA_USE_I2C_EEPROM)
+#include "drivers/I2CEeprom/I2CEeprom.cpp"
+#else
 #include "drivers/SPIFlash/SPIFlash.cpp"
+#endif
 #include "core/MyOTAFirmwareUpdate.cpp"
 #endif
 

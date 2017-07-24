@@ -24,7 +24,11 @@ extern MyMessage _msg;
 extern MyMessage _msgTmp;
 
 // local variables
+#ifdef MY_OTA_USE_I2C_EEPROM
+I2CEeprom _flash(MY_OTA_I2C_ADDR);
+#else
 SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
+#endif
 nodeFirmwareConfig_t _nodeFirmwareConfig;
 bool _firmwareUpdateOngoing;
 uint32_t _firmwareLastRequest;
@@ -110,6 +114,21 @@ bool firmwareOTAUpdateProcess(void)
 			                   firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 			// wait until flash written
 			while (_flash.busy()) {}
+#ifdef OTA_EXTRA_FLASH_DEBUG
+			{
+				char prbuf[8];
+				uint32_t addr = ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET;
+				OTA_DEBUG(PSTR("OTA:FWP:FL DUMP "));
+				sprintf_P(prbuf,PSTR("%04X:"), (uint16_t)addr);
+				MY_SERIALDEVICE.print(prbuf);
+				for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
+					uint8_t data = _flash.readByte(addr + i);
+					sprintf_P(prbuf,PSTR("%02X"), (unsigned int)data);
+					MY_SERIALDEVICE.print(prbuf);
+				}
+				OTA_DEBUG(PSTR("\n"));
+			}
+#endif
 			_firmwareBlock--;
 			if (!_firmwareBlock) {
 				// We're done! Do a checksum and reboot.
