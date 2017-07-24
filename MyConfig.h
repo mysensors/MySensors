@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -61,6 +61,12 @@
  * @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
  */
 //#define MY_CORE_ONLY
+
+/**
+* @def MY_SPLASH_SCREEN_DISABLED
+* @brief Set MY_SPLASH_SCREEN_DISABLED to disable MySensors splash screen. (This saves 120 bytes of flash)
+*/
+//#define MY_DISABLED_SERIAL
 
 // Turn off debug if serial pins is used for other stuff
 #ifdef MY_DISABLED_SERIAL
@@ -1341,6 +1347,7 @@
 #define MY_WITH_LEDS_BLINKING_INVERSE
 #define MY_INDICATION_HANDLER
 #define MY_DISABLE_REMOTE_RESET
+#define MY_SPLASH_SCREEN_DISABLED
 // signing
 #define MY_SIGNING_SIMPLE_PASSWD
 #define MY_SIGNING_ATSHA204

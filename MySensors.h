@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -30,6 +30,7 @@
 #endif
 
 #include "MyConfig.h"
+#include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
 
 // Detect node type
@@ -426,6 +427,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 #include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
+#include "core/MySplashScreen.cpp"
 #include "core/MySensorsCore.cpp"
 
 // HW mains
