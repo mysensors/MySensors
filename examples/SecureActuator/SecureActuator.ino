@@ -47,7 +47,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24 //!< NRF24L01 radio driver
+//#define MY_RADIO_NRF5_ESB //!< nRF5 radio driver (NRF24 compatible)
 //#define MY_RADIO_RFM69 //!< RFM69 radio driver
+//#define MY_RADIO_RFM95 //!< RFM95 radio driver
 
 // Select soft/hardware signing method
 #define MY_SIGNING_SOFT //!< Software signing
