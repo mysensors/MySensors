@@ -102,7 +102,8 @@ void _begin(void)
 	displaySplashScreen();
 #endif
 
-	CORE_DEBUG(PSTR("MCO:BGN:INIT CP=" MY_CAPABILITIES "\n"));
+	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER="
+	                MYSENSORS_LIBRARY_VERSION "\n"));
 
 	if (!hwInitResult) {
 		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
