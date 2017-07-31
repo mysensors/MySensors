@@ -74,6 +74,7 @@
 // Enables and select radio type (if attached)
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #define MY_GATEWAY_ESP8266
 
