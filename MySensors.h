@@ -18,9 +18,21 @@
  */
 
 /**
+ * @defgroup MySensorsgrp MySensors
+ * @ingroup publics
+ * @{
+ * @brief The primary public API declaration for the MySensors library
+ *
+ *
+ */
+
+/**
  * @file MySensors.h
  *
- * MySensors main interface (includes all necessary code for the library)
+ * @brief API declaration for MySensors
+ *
+ * Include this header into your sketch to include the MySensors library and harness the power of
+ * all those sensors!
  */
 #ifndef MySensors_h
 #define MySensors_h
@@ -32,62 +44,6 @@
 #include "MyConfig.h"
 #include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
-
-// Detect node type
-/**
- * @def MY_GATEWAY_FEATURE
- * @brief Is set for gateway sketches.
- */
-/**
- * @def MY_IS_GATEWAY
- * @brief Is true when @ref MY_GATEWAY_FEATURE is set.
- */
-/**
- * @def MY_NODE_TYPE
- * @brief Contain a string describing the class of sketch/node (gateway/repeater/node).
- */
-
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT)
-#define MY_GATEWAY_FEATURE
-#define MY_IS_GATEWAY (true)
-#define MY_NODE_TYPE "GW"
-#elif defined(MY_REPEATER_FEATURE)
-#define MY_IS_GATEWAY (false)
-#define MY_NODE_TYPE "REPEATER"
-#else
-#define MY_IS_GATEWAY (false)
-#define MY_NODE_TYPE "NODE"
-#endif
-
-// DEBUG
-#if defined(MY_DEBUG)
-// standard debug output
-#define MY_DEBUG_VERBOSE_CORE	//!< MY_DEBUG_VERBOSE_CORE
-#define MY_DEBUG_VERBOSE_TRANSPORT	//!< MY_DEBUG_VERBOSE_TRANSPORT
-#define MY_DEBUG_VERBOSE_OTA_UPDATE	//!< MY_DEBUG_VERBOSE_OTA_UPDATE
-#endif
-
-#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
-#define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
-#define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
-#else
-#define DEBUG_OUTPUT(x,...)								//!< debug NULL
-#endif
-
-// transport layer files
-#define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
-
-// temp. workaround for nRF5 verifier: redirect RF24 to NRF_ESB
-#if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF24) )
-#undef MY_RADIO_RF24
-#undef MY_RADIO_NRF24
-#define MY_RADIO_NRF5_ESB
-#endif
-
-// Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
-#define MY_SENSOR_NETWORK
-#endif
 
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
@@ -108,19 +64,6 @@
 #include "hal/architecture/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyHwLinuxGeneric.cpp"
-#endif
-
-// LEDS
-#if !defined(MY_DEFAULT_ERR_LED_PIN) && defined(MY_HW_ERR_LED_PIN)
-#define MY_DEFAULT_ERR_LED_PIN MY_HW_ERR_LED_PIN
-#endif
-
-#if !defined(MY_DEFAULT_TX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
-#define MY_DEFAULT_TX_LED_PIN MY_HW_TX_LED_PIN
-#endif
-
-#if !defined(MY_DEFAULT_RX_LED_PIN) && defined(MY_HW_TX_LED_PIN)
-#define MY_DEFAULT_RX_LED_PIN MY_HW_TX_LED_PIN
 #endif
 
 #if defined(MY_LEDS_BLINKING_FEATURE)
@@ -145,12 +88,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 
 // SIGNING
-#if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
-#define MY_SIGNING_FEATURE //!< MY_SIGNING_FEATURE
-#endif
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
-#define MY_ENCRYPTION_FEATURE //!< MY_ENCRYPTION_FEATURE
-#endif
 #include "core/MySigning.cpp"
 #include "drivers/ATSHA204/sha256.cpp"
 #if defined(MY_SIGNING_FEATURE)
@@ -266,6 +203,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 // TRANSPORT
+#ifndef DOXYGEN
 // count enabled transports
 #if defined(MY_RADIO_RF24)
 #define __RF24CNT 1		//!< __RF24CNT
@@ -296,17 +234,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if (__RF24CNT + __NRF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
 #error Only one forward link driver can be activated
 #endif
+#endif //DOXYGEN
 
 // TRANSPORT INCLUDES
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 #include "hal/transport/MyTransportHAL.h"
 #include "core/MyTransport.h"
-
-
-// SANITY CHECK FEATURE
-#if defined(MY_REPEATER_FEATURE)
-#define MY_TRANSPORT_SANITY_CHECK
-#endif
 
 // PARENT CHECK
 #if defined(MY_PARENT_NODE_IS_STATIC) && (MY_PARENT_NODE_ID == AUTO)
@@ -342,10 +275,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 // POWER PIN
+#ifndef DOXYGEN
 #if defined(MY_RF24_POWER_PIN) || defined(MY_RFM69_POWER_PIN) || defined(MY_RFM95_POWER_PIN)
 #define RADIO_CAN_POWER_OFF (true)
 #else
 #define RADIO_CAN_POWER_OFF (false)
+#endif
 #endif
 
 // Transport drivers
@@ -389,9 +324,9 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 // PASSIVE MODE
-#if defined(MY_PASSIVE_NODE)
+#if defined(MY_PASSIVE_NODE) && !defined(DOXYGEN)
 #define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-#define MY_PARENT_NODE_IS_STATIC // prevents searching new parent
+#define MY_PARENT_NODE_IS_STATIC
 #undef MY_REGISTRATION_FEATURE
 #undef MY_SIGNING_FEATURE
 #undef MY_OTA_FIRMWARE_FEATURE
@@ -449,9 +384,4 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 #endif
 
-// Doxygen specific constructs, not included when built normally
-// This is used to enable disabled macros/definitions to be included in the documentation as well.
-#if DOXYGEN
-#define MY_GATEWAY_FEATURE
-#define MY_LEDS_BLINKING_FEATURE //!< \deprecated use MY_DEFAULT_RX_LED_PIN, MY_DEFAULT_TX_LED_PIN and/or MY_DEFAULT_ERR_LED_PIN instead **** DEPRECATED, DO NOT USE ****
-#endif
+/** @}*/

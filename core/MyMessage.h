@@ -22,6 +22,7 @@
  *
  * @brief API and type declarations for MySensors messages
  * @defgroup MyMessagegrp MyMessage
+ * @ingroup publics
  * @{
  *
  * @brief Here you can find all message types used by the MySensors protocol as well as macros for
@@ -55,7 +56,7 @@ typedef enum {
 	S_MOTION				= 1,	//!< Motion sensor, V_TRIPPED, V_ARMED
 	S_SMOKE					= 2,	//!< Smoke sensor, V_TRIPPED, V_ARMED
 	S_BINARY				= 3,	//!< Binary light or relay, V_STATUS, V_WATT
-	S_LIGHT					= 3,	//!< \deprecated Same as S_BINARY, **** DEPRECATED, DO NOT USE ****
+	S_LIGHT					= 3,	//!< \deprecated Same as S_BINARY
 	S_DIMMER				= 4,	//!< Dimmable light or fan device, V_STATUS (on/off), V_PERCENTAGE (dimmer level 0-100), V_WATT
 	S_COVER					= 5,	//!< Blinds or window cover, V_UP, V_DOWN, V_STOP, V_PERCENTAGE (open/close to a percentage)
 	S_TEMP					= 6,	//!< Temperature sensor, V_TEMP
@@ -99,9 +100,9 @@ typedef enum {
 	V_TEMP					= 0,	//!< S_TEMP. Temperature S_TEMP, S_HEATER, S_HVAC
 	V_HUM					= 1,	//!< S_HUM. Humidity
 	V_STATUS				= 2,	//!< S_BINARY, S_DIMMER, S_SPRINKLER, S_HVAC, S_HEATER. Used for setting/reporting binary (on/off) status. 1=on, 0=off
-	V_LIGHT					= 2,	//!< \deprecated Same as V_STATUS, **** DEPRECATED, DO NOT USE ****
+	V_LIGHT					= 2,	//!< \deprecated Same as V_STATUS
 	V_PERCENTAGE			= 3,	//!< S_DIMMER. Used for sending a percentage value 0-100 (%).
-	V_DIMMER				= 3,	//!< \deprecated Same as V_PERCENTAGE, **** DEPRECATED, DO NOT USE ****
+	V_DIMMER				= 3,	//!< \deprecated Same as V_PERCENTAGE
 	V_PRESSURE				= 4,	//!< S_BARO. Atmospheric Pressure
 	V_FORECAST				= 5,	//!< S_BARO. Whether forecast. string of "stable", "sunny", "cloudy", "unstable", "thunderstorm" or "unknown"
 	V_RAIN					= 6,	//!< S_RAIN. Amount of rain
@@ -120,7 +121,7 @@ typedef enum {
 	V_SCENE_ON				= 19,	//!< S_SCENE_CONTROLLER. Turn on a scene
 	V_SCENE_OFF				= 20,	//!< S_SCENE_CONTROLLER. Turn of a scene
 	V_HVAC_FLOW_STATE		= 21,	//!< S_HEATER, S_HVAC. HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver")
-	V_HEATER				= 21,	//!< \deprecated Same as V_HVAC_FLOW_STATE, **** DEPRECATED, DO NOT USE ****
+	V_HEATER				= 21,	//!< \deprecated Same as V_HVAC_FLOW_STATE
 	V_HVAC_SPEED			= 22,	//!< S_HVAC, S_HEATER. HVAC/Heater fan speed ("Min", "Normal", "Max", "Auto")
 	V_LIGHT_LEVEL			= 23,	//!< S_LIGHT_LEVEL. Uncalibrated light level. 0-100%. Use V_LEVEL for light level in lux
 	V_VAR1					= 24,	//!< VAR1

@@ -17,14 +17,14 @@
  * version 2 as published by the Free Software Foundation.
  */
 /**
- * @defgroup MySigninggrp MySigning
- * @ingroup internals
+ * @defgroup MySigninggrpPub Message signing
+ * @ingroup publics
  * @{
  *
- * @brief The signing driver provides a generic API for various signing backends to offer
- * signing of MySensors messages.
+ * @brief The message signing infrastructure provides message authenticity to users by signing
+ * MySensors messages.
  *
- * Signing support created by Patrick "Anticimex" Fallberg (<patrick@fallberg.net>)
+ * Signing support created by Patrick "Anticimex" Fallberg.
  *
  * @section MySigninggrptoc Table of contents
  *
@@ -47,6 +47,12 @@
  * (hardware backed) and @ref MY_SIGNING_SOFT (software backed). There also exist a simplified
  * variant (@ref MY_SIGNING_SIMPLE_PASSWD) of the software backend which only require one setting
  * to activate.
+ *
+ * If you use hardware backed signing, then connect the device as follows:
+ * @image html MySigning/wiring.png
+ * @note The pull-up resistor is optional but recommended.
+ * @note If you change the default pin (A3) make sure you use a pin that supports input/output
+ *       (ex. A6 & A7 on a Pro Mini are input only pins).
  *
  * To use signng, you need to perform three major steps which are described below.
  *
@@ -139,22 +145,22 @@
  *
  * To personalize a ATSHA204A do the following procedure:
  * 1. Enable @ref GENERATE_KEYS_ATSHA204A<br>
- *    This will lock the ATSHA204A and generate random keys for HMAC (signing) and AES (encryption).
+ *    This will lock the ATSHA204A and generate random keys for HMAC (signing) and %AES (encryption).
  *    Copy the keys generated and replace the corresponding definitions under
  *    "User defined key data", specifically @ref MY_HMAC_KEY and @ref MY_AES_KEY.
  * 2. Disable @ref GENERATE_KEYS_ATSHA204A and enable @ref PERSONALIZE_ATSHA204A<br>
- *    This will store the HMAC key to the ATSHA204A and the AES key to EEPROM. It will also write
+ *    This will store the HMAC key to the ATSHA204A and the %AES key to EEPROM. It will also write
  *    a checksum of the personalization data in EEPROM to be able to detect if the data is
  *    altered.<br>
  *    Personalization is now complete.
  *
  * To personalize for software signing do the following procedure:
  * 1. Enable @ref GENERATE_KEYS_SOFT<br>
- *    This will generate random keys for HMAC (signing) and AES (encryption).
+ *    This will generate random keys for HMAC (signing) and %AES (encryption).
  *    Copy the keys generated and replace the corresponding definitions under
  *    "User defined key data", specifically @ref MY_HMAC_KEY and @ref MY_AES_KEY.
  * 2. Disable @ref GENERATE_KEYS_SOFT and enable @ref PERSONALIZE_SOFT<br>
- *    This will store the HMAC key and the AES key to EEPROM. It will also write
+ *    This will store the HMAC key and the %AES key to EEPROM. It will also write
  *    a checksum of the personalization data in EEPROM to be able to detect if the data is
  *    altered.<br>
  *    Personalization is now complete.
@@ -382,7 +388,6 @@
  * The following sequence diagram illustrate how messages are passed in a MySensors network with
  * respect to signing:
  * @image html MySigning/signingsequence.png
- * @image latex MySigning/signingsequence.eps "Signing sequence diagram" width=9cm
  *
  * None of this activity is “visible” to you (as the sensor sketch implementor). All you need to do
  * is to set your preferences in your sketch and personalize accordingly.
@@ -395,7 +400,6 @@
  * The following illustration shows what part of the message is signed, and where the signature is
  * stored:
  * @image html MySigning/signingillustrated1.png
- * @image latex MySigning/signingillustrated1.eps "Message structure" width=11cm
  *
  * The first byte of the header is not covered by the signature, because in the network, this byte
  * is used to track hops in the network and therefore might change if the message is passing a relay
@@ -413,7 +417,6 @@
  *
  * The signatures are calculates in the following way:
  * @image html MySigning/signingillustrated2.png
- * @image latex MySigning/signingillustrated2.eps "HMAC processing" width=10cm
  *
  * Exactly how this is done can be reviewed in the source for the software backend
  * (MySigningAtsha204Soft.cpp) and the ATSHA204A
@@ -447,7 +450,6 @@
  * chooses, instead of Alice. Such an attack is known as a <b>replay attack</b>.<br>
  * <i>Authenticity</i> permits Bob to determine if Alice is the true sender of a message.
  * @image html MySigning/alicenfriends.png
- * @image latex MySigning/alicenfriends.eps "Alice with Eve and Bob" width=6cm
  *
  * It can also be interesting for Bob to know that the message Alice sent has not been tampered with
  * in any way. This is the <i>integrity</i> of the message. We now introduce Mallory, who could be
@@ -461,7 +463,6 @@
  * This is achieved by adding a <i>signature</i> to the message, which Bob can inspect to validate
  * that Alice is the author.
  * @image html MySigning/alicenfriends2.png
- * @image latex MySigning/alicenfriends2.eps "Alice with Mallory and Bob" width=9cm
  *
  * The signing scheme used, needs to address both these attack scenarios. Neither Eve nor Mallory
  * must be permitted to interfere with the message exchange between Alice and Bob.
@@ -501,7 +502,6 @@
  *
  * The flow can be described like this:
  * @image html MySigning/alicenbob.png
- * @image latex MySigning/alicenbob.eps "Alice and Bob" width=8cm
  * The benefits for MySensors to support this are obvious. Nobody wants others to be able to control
  * or manipulate any actuators in their home.
  *
@@ -557,7 +557,7 @@
  * keeping the current message routing mechanisms intact and therefore leave the matter of
  * <i>secrecy</i> to be implemented in the “physical” transport layer. With the <i>integrity</i> and
  * <i>authenticity</i> handled in the protocol it ought to be enough for a simple encryption
- * (nonce-less AES with a PSK for instance) on the message as it is sent to the RF backend. Atmel
+ * (nonce-less %AES with a PSK for instance) on the message as it is sent to the RF backend. Atmel
  * does provide such circuits as well but I have not investigated the matter further as it given the
  * current size of the ethernet gateway sketch is close to the size limit on an Arduino Nano, so it
  * will be difficult to fit this into some existing gateway designs.<br>
@@ -571,7 +571,17 @@
  * This might change in the future as more powerful platforms emerge which permit more complex
  * security schemes and better hardware acceleration.
  */
+/** @}*/
 
+/**
+ * @defgroup MySigninggrp MySigning
+ * @ingroup internals
+ * @{
+ *
+ * @brief API declaration for MySigning signing backend
+ *
+ * @see MySigninggrpPub
+ */
 /**
  * @file MySigning.h
  *
@@ -738,8 +748,10 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
 
 /**
  * @defgroup MySigningDebugMessages Signing related debug messages
- * @ingroup MySigninggrp
+ * @ingroup MySigninggrpPub
  * @{
+ *
+ * @brief Explanation of the abstract signing related debug messages
  *
  * MySigning-related log messages, format: [!]SYSTEM:SUB SYSTEM:MESSAGE
  * - [!] Exclamation mark is prepended in case of error or warning
@@ -825,8 +837,10 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
 
 /**
  * @defgroup MySigningTroubleshootinggrp Signing troubleshooting
- * @ingroup MySigninggrp
+ * @ingroup MySigninggrpPub
  * @{
+ *
+ * @brief Typical signing related failure cases and how to solve them
  *
  * @section MySigningTroubleshootingSymptoms Symptoms and solutions
  *

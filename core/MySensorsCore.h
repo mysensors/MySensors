@@ -350,8 +350,15 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false,
               const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
 
 
+// **** private functions ********
+
 /**
- * @ingroup MyLockgrp
+ * @defgroup MyLockgrp MyNodeLock
+ * @ingroup internals
+ * @brief API declaration for MyNodeLock
+ * @{
+ */
+/**
  * @brief Lock a node and transmit provided message with 30m intervals
  *
  * This function is called if suspicious activity has exceeded the threshold (see
@@ -366,8 +373,7 @@ void _nodeLock(const char* str);
  * @brief Check node lock status and prevent node execution if locked.
  */
 void _checkNodeLock(void);
-
-// **** private functions ********
+/** @}*/ // Node lock group
 
 /**
 * @brief Node initialisation
