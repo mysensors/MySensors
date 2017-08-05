@@ -493,7 +493,7 @@ if [ -z "${CPUFLAGS}" ]; then
 fi
 
 if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
-    CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI -DRPI_TYPE=\\\"$TYPE\\\" $CPPFLAGS"
+    CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
 else
     echo "[SECTION] Checking GPIO Sysfs."
     if [[ $(eval 'ls /sys/class/gpio/export 2>/dev/null') ]]; then
