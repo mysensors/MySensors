@@ -68,8 +68,13 @@ public:
 	static int physToGPIO(uint8_t physPin, uint8_t *gpio);
 
 private:
-	static const int *pin_to_gpio; //!< @brief Pointer to array of GPIO pins numbers.
-	static const char *type; //!< @brief Raspberry Pi type.
+	static const int *phys_to_gpio; //!< @brief Pointer to array of GPIO pins numbers.
+	/**
+	 * @brief Get the gpio layout.
+	 *
+	 * @return The gpio layout number.
+	 */
+	static int rpiGpioLayout(void);
 };
 
 extern RPiClass RPi;

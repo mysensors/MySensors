@@ -19,21 +19,18 @@
 
 #include "RPi.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "log.h"
 
-const static int pin_to_gpio_rev1[41] = {-1, -1, -1, 0, -1, 1, -1, 4, 14, -1, 15, 17, 18, 21, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-const static int pin_to_gpio_rev2[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 18, 27, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-const static int pin_to_gpio_rev3[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 18, 27, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, 5, -1, 6, 12, 13, -1, 19, 16, 26, 20, -1, 21 };
+const static int phys_to_gpio_rev1[41] = {-1, -1, -1, 0, -1, 1, -1, 4, 14, -1, 15, 17, 18, 21, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+const static int phys_to_gpio_rev2[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 18, 27, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, -1, -1, 5, -1, 6, 12, 13, -1, 19, 16, 26, 20, -1, 21};
 
 // Declare a single default instance
 RPiClass RPi = RPiClass();
 
-const int* RPiClass::pin_to_gpio = NULL;
-#ifndef RPI_TYPE
-#error Raspberry Pi type not set
-#endif
-const char* RPiClass::type = RPI_TYPE;
+const int* RPiClass::phys_to_gpio = NULL;
 
 void RPiClass::pinMode(uint8_t physPin, uint8_t mode)
 {
@@ -83,18 +80,75 @@ uint8_t RPiClass::digitalPinToInterrupt(uint8_t physPin)
 	return gpioPin;
 }
 
+int RPiClass::rpiGpioLayout()
+{
+	/*
+	* Based on wiringPi Copyright (c) 2012 Gordon Henderson.
+	*/
+	FILE *fd;
+	char line[120];
+	char *c;
+
+	if ((fd = fopen("/proc/cpuinfo", "r")) == NULL) {
+		return -1;
+	}
+
+	while (fgets(line, 120, fd) != NULL) {
+		if (strncmp(line, "Revision", 8) == 0) {
+			fclose(fd);
+			// Chop trailing CR/NL
+			for (c = &line[strlen(line) - 1]; (*c == '\n') || (*c == '\r'); --c) {
+				*c = 0;
+			}
+			// Scan to the first character of the revision number
+			for (c = line; *c; ++c) {
+				if (*c == ':') {
+					// Chop spaces
+					++c;
+					while (isspace(*c)) {
+						++c;
+					}
+
+					// Check hex digit at start
+					if (!isxdigit(*c)) {
+						return -1;
+					}
+
+					// Check bogus revision line (too small)
+					if (strlen(c) < 4) {
+						return -1;
+					}
+
+					// Isolate last 4 characters: (in-case of overvolting or new encoding scheme)
+					c = c + strlen(c) - 4;
+
+					if ((strcmp(c, "0002") == 0) || (strcmp(c, "0003") == 0) ||
+					        (strcmp(c, "0004") == 0) || (strcmp(c, "0005") == 0) ||
+					        (strcmp(c, "0006") == 0) || (strcmp(c, "0007") == 0) ||
+					        (strcmp(c, "0008") == 0) || (strcmp(c, "0009") == 0) ||
+					        (strcmp(c, "000d") == 0) || (strcmp(c, "000e") == 0) ||
+					        (strcmp(c, "000f") == 0)) {
+						return 1;
+					} else {
+						return 2;
+					}
+				}
+			}
+		}
+	}
+	fclose(fd);
+	return -1;
+}
+
 int RPiClass::physToGPIO(uint8_t physPin, uint8_t *gpio)
 {
-	if (pin_to_gpio == NULL) {
-		if (strncmp(type,"rpi1", 4) == 0) {
-			pin_to_gpio = &pin_to_gpio_rev1[0];
-		} else if (strncmp(type,"rpi2", 4) == 0) {
-			pin_to_gpio = &pin_to_gpio_rev2[0];
-		} else if (strncmp(type,"rpi3", 4) == 0) {
-			pin_to_gpio = &pin_to_gpio_rev3[0];
+	if (phys_to_gpio == NULL) {
+		if (rpiGpioLayout() == 1) {
+			// A, B, Rev 1, 1.1
+			phys_to_gpio = &phys_to_gpio_rev1[0];
 		} else {
-			logError("Invalid Raspberry Pi type!\n");
-			exit(1);
+			// A2, B2, A+, B+, CM, Pi2, Pi3, Zero
+			phys_to_gpio = &phys_to_gpio_rev2[0];
 		}
 	}
 
@@ -102,7 +156,7 @@ int RPiClass::physToGPIO(uint8_t physPin, uint8_t *gpio)
 		return -1;
 	}
 
-	int pin = *(pin_to_gpio+physPin);
+	int pin = *(phys_to_gpio+physPin);
 	if (pin == -1) {
 		return -1;
 	} else {
