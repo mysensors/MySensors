@@ -29,9 +29,16 @@
 #include <Arduino.h>
 #endif
 
+// SS default
+#ifndef SS
+#define SS PA4
+#endif
+
 // mapping
 #define snprintf_P snprintf
 #define vsnprintf_P vsnprintf
+#define strncpy_P strncpy
+#define yield()				  // not defined
 
 // emulated EEPROM (experimental)
 #define EEPROM_PAGE_SIZE		(uint16_t)1024
