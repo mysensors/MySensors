@@ -196,6 +196,9 @@ void hwSleepPrepare(unsigned long ms)
 	// Enable low power sleep mode
 	NRF_POWER->TASKS_LOWPWR = 1;
 
+	// Reset RTC trigger flag
+	nrf5_rtc_event_triggered = false;
+
 	if (ms > 0) {
 		// Configure RTC
 #ifdef NRF51
@@ -204,16 +207,25 @@ void hwSleepPrepare(unsigned long ms)
 		// Reset RTC
 		MY_HW_RTC->TASKS_CLEAR = 1;
 
-		// Calculate sleep time
-		// 8 Hz -> max 582.542 hours sleep.
-		MY_HW_RTC->PRESCALER = 4095;
-		// Set compare register to 1/125ms + 2 to garantee event triggering
-		MY_HW_RTC->CC[0] = (ms / 125) + 2;
+		// Calculate sleep time and prescaler
+		if (ms<512000) {
+			// prescaler 0, 30.517 μs resolution -> max 512 s sleep
+			MY_HW_RTC->PRESCALER =  0;
+			// Set compare register to 1/30.517 µs to garantee event triggering
+			// A minimum of 2 ticks must be guaranteed
+			// (1000/32768)<<12 == 125
+			MY_HW_RTC->CC[0] = max((ms<<12 / 125), 2);
+		} else {
+			// 8 Hz -> max 582.542 hours sleep.
+			MY_HW_RTC->PRESCALER = 4095;
+			// Set compare register to 1/125ms
+			// A minimum of 2 ticks must be guaranteed
+			MY_HW_RTC->CC[0] = max((ms / 125), 2);
+		}
 
 		MY_HW_RTC->INTENSET = RTC_INTENSET_COMPARE0_Msk;
 		MY_HW_RTC->EVTENSET = RTC_EVTENSET_COMPARE0_Msk;
 		MY_HW_RTC->EVENTS_COMPARE[0] = 0;
-		nrf5_rtc_event_triggered = false;
 		MY_HW_RTC->TASKS_START = 1;
 		NVIC_SetPriority(MY_HW_RTC_IRQN, 15);
 		NVIC_ClearPendingIRQ(MY_HW_RTC_IRQN);
@@ -311,8 +323,6 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
 	// and sleep might cause the MCU to not wakeup from sleep as interrupt has
 	// already be handled!
 	MY_CRITICAL_SECTION {
-		// Fix cppcheck "(style) Variable '__savePriMask' is assigned a value that is never used."
-		//(void)__savePriMask;
 		// attach interrupts
 		_wakeUp1Interrupt = interrupt1;
 		_wakeUp2Interrupt = interrupt2;
