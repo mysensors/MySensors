@@ -35,7 +35,7 @@
 
 #define COMPARE_PH 1 // Send PH only if changed? 1 = Yes 0 = No
 
-unsigned long SLEEP_TIME = 60000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 60000; // Sleep time between reads (in milliseconds)
 float lastPH;
 bool receivedConfig = false;
 bool metric = true;

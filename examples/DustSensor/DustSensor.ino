@@ -52,7 +52,7 @@
 #define CHILD_ID_DUST 0
 #define DUST_SENSOR_ANALOG_PIN 1
 
-unsigned long SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
 //VARIABLES
 int val = 0;           // variable to store the value coming from the sensor
 float valDUST =0.0;

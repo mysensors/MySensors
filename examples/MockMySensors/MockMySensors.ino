@@ -86,7 +86,7 @@
 
 
 // Global Vars
-unsigned long SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
 bool metric = true;
 long randNumber;
 
@@ -721,7 +721,7 @@ void loop()
 }
 
 // This is called when a new time value was received
-void receiveTime(unsigned long controllerTime)
+void receiveTime(uint32_t controllerTime)
 {
 
 	Serial.print("Time value received: ");
