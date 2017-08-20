@@ -117,8 +117,8 @@ void loop()
 		if (!SLEEP_MODE && flow != oldflow) {
 			oldflow = flow;
 
-			Serial.print("l/min:");
-			Serial.println(flow);
+			MY_SERIALDEVICE.print("l/min:");
+			MY_SERIALDEVICE.println(flow);
 
 			// Check that we dont get unresonable large flow value.
 			// could hapen when long wraps or false interrupt triggered
@@ -136,8 +136,8 @@ void loop()
 		if ((pulseCount != oldPulseCount)||(!SLEEP_MODE)) {
 			oldPulseCount = pulseCount;
 
-			Serial.print("pulsecount:");
-			Serial.println(pulseCount);
+			MY_SERIALDEVICE.print("pulsecount:");
+			MY_SERIALDEVICE.println(pulseCount);
 
 			send(lastCounterMsg.set(pulseCount));                  // Send  pulsecount value to gw in VAR1
 
@@ -145,8 +145,8 @@ void loop()
 			if ((volume != oldvolume)||(!SLEEP_MODE)) {
 				oldvolume = volume;
 
-				Serial.print("volume:");
-				Serial.println(volume, 3);
+				MY_SERIALDEVICE.print("volume:");
+				MY_SERIALDEVICE.println(volume, 3);
 
 				send(volumeMsg.set(volume, 3));               // Send volume value to gw
 			}
@@ -163,8 +163,8 @@ void receive(const MyMessage &message)
 		unsigned long gwPulseCount=message.getULong();
 		pulseCount += gwPulseCount;
 		flow=oldflow=0;
-		Serial.print("Received last pulse count from gw:");
-		Serial.println(pulseCount);
+		MY_SERIALDEVICE.print("Received last pulse count from gw:");
+		MY_SERIALDEVICE.println(pulseCount);
 		pcReceived = true;
 	}
 }

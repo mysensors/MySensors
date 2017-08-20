@@ -97,10 +97,10 @@ void receive(const MyMessage &message)
 		requestedLevel = requestedLevel > 100 ? 100 : requestedLevel;
 		requestedLevel = requestedLevel < 0   ? 0   : requestedLevel;
 
-		Serial.print( "Changing level to " );
-		Serial.print( requestedLevel );
-		Serial.print( ", from " );
-		Serial.println( currentLevel );
+		MY_SERIALDEVICE.print( "Changing level to " );
+		MY_SERIALDEVICE.print( requestedLevel );
+		MY_SERIALDEVICE.print( ", from " );
+		MY_SERIALDEVICE.println( currentLevel );
 
 		fadeToLevel( requestedLevel );
 

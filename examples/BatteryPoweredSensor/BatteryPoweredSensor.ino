@@ -65,7 +65,7 @@ void loop()
 	// get the battery Voltage
 	int sensorValue = analogRead(BATTERY_SENSE_PIN);
 #ifdef MY_DEBUG
-	Serial.println(sensorValue);
+	MY_SERIALDEVICE.println(sensorValue);
 #endif
 
 	// 1M, 470K divider across battery and using internal ADC ref of 1.1V
@@ -77,13 +77,13 @@ void loop()
 
 #ifdef MY_DEBUG
 	float batteryV  = sensorValue * 0.003363075;
-	Serial.print("Battery Voltage: ");
-	Serial.print(batteryV);
-	Serial.println(" V");
+	MY_SERIALDEVICE.print("Battery Voltage: ");
+	MY_SERIALDEVICE.print(batteryV);
+	MY_SERIALDEVICE.println(" V");
 
-	Serial.print("Battery percent: ");
-	Serial.print(batteryPcnt);
-	Serial.println(" %");
+	MY_SERIALDEVICE.print("Battery percent: ");
+	MY_SERIALDEVICE.print(batteryPcnt);
+	MY_SERIALDEVICE.println(" %");
 #endif
 
 	if (oldBatteryPcnt != batteryPcnt) {

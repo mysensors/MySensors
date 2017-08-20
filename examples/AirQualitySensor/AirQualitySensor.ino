@@ -103,20 +103,20 @@ void presentation()
 void loop()
 {
 	uint16_t valMQ = MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_CO);
-	Serial.println(val);
+	MY_SERIALDEVICE.println(val);
 
-	Serial.print("LPG:");
-	Serial.print(MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_LPG) );
-	Serial.print( "ppm" );
-	Serial.print("    ");
-	Serial.print("CO:");
-	Serial.print(MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_CO) );
-	Serial.print( "ppm" );
-	Serial.print("    ");
-	Serial.print("SMOKE:");
-	Serial.print(MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_SMOKE) );
-	Serial.print( "ppm" );
-	Serial.print("\n");
+	MY_SERIALDEVICE.print("LPG:");
+	MY_SERIALDEVICE.print(MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_LPG) );
+	MY_SERIALDEVICE.print( "ppm" );
+	MY_SERIALDEVICE.print("    ");
+	MY_SERIALDEVICE.print("CO:");
+	MY_SERIALDEVICE.print(MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_CO) );
+	MY_SERIALDEVICE.print( "ppm" );
+	MY_SERIALDEVICE.print("    ");
+	MY_SERIALDEVICE.print("SMOKE:");
+	MY_SERIALDEVICE.print(MQGetGasPercentage(MQRead(MQ_SENSOR_ANALOG_PIN)/Ro,GAS_SMOKE) );
+	MY_SERIALDEVICE.print( "ppm" );
+	MY_SERIALDEVICE.print("\n");
 
 	if (valMQ != lastMQ) {
 		send(msg.set((int16_t)ceil(valMQ)));

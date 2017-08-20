@@ -338,22 +338,22 @@ void setup()
 	randomSeed(analogRead(0));
 
 	wait(LONG_WAIT);
-	Serial.println("GW Started");
+	MY_SERIALDEVICE.println("GW Started");
 }
 
 void presentation()
 {
 	// Send the Sketch Version Information to the Gateway
-	Serial.print("Send Sketch Info: ");
+	MY_SERIALDEVICE.print("Send Sketch Info: ");
 	sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
-	Serial.print(SKETCH_NAME);
-	Serial.println(SKETCH_VERSION);
+	MY_SERIALDEVICE.print(SKETCH_NAME);
+	MY_SERIALDEVICE.println(SKETCH_VERSION);
 	wait(LONG_WAIT);
 
 	// Get controller configuration
-	Serial.print("Get Config: ");
+	MY_SERIALDEVICE.print("Get Config: ");
 	metric = getControllerConfig().isMetric;
-	Serial.println(metric ? "Metric":"Imperial");
+	MY_SERIALDEVICE.println(metric ? "Metric":"Imperial");
 	wait(LONG_WAIT);
 
 	// Init Armed
@@ -362,173 +362,173 @@ void presentation()
 #endif
 
 	// Register all sensors to gw (they will be created as child devices)
-	Serial.println("Presenting Nodes");
-	Serial.println("________________");
+	MY_SERIALDEVICE.println("Presenting Nodes");
+	MY_SERIALDEVICE.println("________________");
 
 #ifdef ID_S_DOOR
-	Serial.println("  S_DOOR");
+	MY_SERIALDEVICE.println("  S_DOOR");
 	present(ID_S_DOOR,S_DOOR,"Outside Door");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_MOTION
-	Serial.println("  S_MOTION");
+	MY_SERIALDEVICE.println("  S_MOTION");
 	present(ID_S_MOTION,S_MOTION,"Outside Motion");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_SMOKE
-	Serial.println("  S_SMOKE");
+	MY_SERIALDEVICE.println("  S_SMOKE");
 	present(ID_S_SMOKE,S_SMOKE,"Kitchen Smoke");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_LIGHT
-	Serial.println("  S_LIGHT");
+	MY_SERIALDEVICE.println("  S_LIGHT");
 	present(ID_S_LIGHT,S_LIGHT,"Hall Light");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_DIMMER
-	Serial.println("  S_DIMMER");
+	MY_SERIALDEVICE.println("  S_DIMMER");
 	present(ID_S_DIMMER,S_DIMMER,"Living room dimmer");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_COVER
-	Serial.println("  S_COVER");
+	MY_SERIALDEVICE.println("  S_COVER");
 	present(ID_S_COVER,S_COVER,"Window cover");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_TEMP
-	Serial.println("  S_TEMP");
+	MY_SERIALDEVICE.println("  S_TEMP");
 	present(ID_S_TEMP,S_TEMP,"House Temperarue");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_HUM
-	Serial.println("  S_HUM");
+	MY_SERIALDEVICE.println("  S_HUM");
 	present(ID_S_HUM,S_HUM,"Current Humidity");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_BARO
-	Serial.println("  S_BARO");
+	MY_SERIALDEVICE.println("  S_BARO");
 	present(ID_S_BARO,S_BARO," Air pressure");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_WIND
-	Serial.println("  S_WIND");
+	MY_SERIALDEVICE.println("  S_WIND");
 	present(ID_S_WIND,S_WIND,"Wind Station");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_RAIN
-	Serial.println("  S_RAIN");
+	MY_SERIALDEVICE.println("  S_RAIN");
 	present(ID_S_RAIN,S_RAIN,"Rain Station");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_UV
-	Serial.println("  S_UV");
+	MY_SERIALDEVICE.println("  S_UV");
 	present(ID_S_UV,S_UV,"Ultra Violet");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_WEIGHT
-	Serial.println("  S_WEIGHT");
+	MY_SERIALDEVICE.println("  S_WEIGHT");
 	present(ID_S_WEIGHT,S_WEIGHT,"Outdoor Scale");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_POWER
-	Serial.println("  S_POWER");
+	MY_SERIALDEVICE.println("  S_POWER");
 	present(ID_S_POWER,S_POWER,"Power Metric");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_HEATER
-	Serial.println("  S_HEATER");
+	MY_SERIALDEVICE.println("  S_HEATER");
 	present(ID_S_HEATER,S_HEATER,"Garage Heater");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_DISTANCE
-	Serial.println("  S_DISTANCE");
+	MY_SERIALDEVICE.println("  S_DISTANCE");
 	present(ID_S_DISTANCE,S_DISTANCE,"Distance Measure");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_LIGHT_LEVEL
-	Serial.println("  S_LIGHT_LEVEL");
+	MY_SERIALDEVICE.println("  S_LIGHT_LEVEL");
 	present(ID_S_LIGHT_LEVEL,S_LIGHT_LEVEL,"Outside Light Level");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_LOCK
-	Serial.println("  S_LOCK");
+	MY_SERIALDEVICE.println("  S_LOCK");
 	present(ID_S_LOCK,S_LOCK,"Front Door Lock");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_IR
-	Serial.println("  S_IR");
+	MY_SERIALDEVICE.println("  S_IR");
 	present(ID_S_IR,S_IR,"Univeral Command");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_WATER
-	Serial.println("  S_WATER");
+	MY_SERIALDEVICE.println("  S_WATER");
 	present(ID_S_WATER,S_WATER,"Water Level");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_AIR_QUALITY
-	Serial.println("  S_AIR_QUALITY");
+	MY_SERIALDEVICE.println("  S_AIR_QUALITY");
 	present(ID_S_AIR_QUALITY,S_AIR_QUALITY,"Air Station");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_DUST
-	Serial.println("  S_DUST");
+	MY_SERIALDEVICE.println("  S_DUST");
 	present(ID_S_DUST,S_DUST,"Dust Level");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_SCENE_CONTROLLER
-	Serial.println("  S_SCENE_CONTROLLER");
+	MY_SERIALDEVICE.println("  S_SCENE_CONTROLLER");
 	present(ID_S_SCENE_CONTROLLER,S_SCENE_CONTROLLER,"Scene Controller");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_RGB_LIGHT
-	Serial.println("  RGB_LIGHT");
+	MY_SERIALDEVICE.println("  RGB_LIGHT");
 	present(ID_S_RGB_LIGHT,S_RGB_LIGHT,"Mood Light");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_RGBW_LIGHT
-	Serial.println("  RGBW_LIGHT");
+	MY_SERIALDEVICE.println("  RGBW_LIGHT");
 	present(ID_S_RGBW_LIGHT,S_RGBW_LIGHT,"Mood Light 2");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_COLOR_SENSOR
-	Serial.println("  COLOR_SENSOR");
+	MY_SERIALDEVICE.println("  COLOR_SENSOR");
 	present(ID_S_COLOR_SENSOR,S_COLOR_SENSOR,"Hall Painting");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_HVAC
-	Serial.println("  HVAC");
+	MY_SERIALDEVICE.println("  HVAC");
 	present(ID_S_HVAC,S_HVAC,"HVAC");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_MULTIMETER
-	Serial.println("  MULTIMETER");
+	MY_SERIALDEVICE.println("  MULTIMETER");
 	present(ID_S_MULTIMETER,S_MULTIMETER,"Electric Staion");
 	wait(SHORT_WAIT);
 #endif
@@ -545,40 +545,40 @@ void presentation()
 #endif
 
 #ifdef ID_S_MOISTURE
-	Serial.println("  S_MOISTURE");
+	MY_SERIALDEVICE.println("  S_MOISTURE");
 	present(ID_S_MOISTURE,S_MOISTURE,"Basement Sensor");
 	wait(SHORT_WAIT);
 #endif
 
 #ifdef ID_S_CUSTOM
-	Serial.println("  S_CUSTOM");
+	MY_SERIALDEVICE.println("  S_CUSTOM");
 	present(ID_S_CUSTOM,S_CUSTOM,"Other Stuff");
 	wait(SHORT_WAIT);
 #endif
 
 
 
-	Serial.println("________________");
+	MY_SERIALDEVICE.println("________________");
 
 }
 
 void loop()
 {
-	Serial.println("");
-	Serial.println("");
-	Serial.println("");
-	Serial.println("#########################");
+	MY_SERIALDEVICE.println("");
+	MY_SERIALDEVICE.println("");
+	MY_SERIALDEVICE.println("");
+	MY_SERIALDEVICE.println("#########################");
 	randNumber=random(0,101);
 
-	Serial.print("RandomNumber:");
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("RandomNumber:");
+	MY_SERIALDEVICE.println(randNumber);
 	// Send fake battery level
-	Serial.println("Send Battery Level");
+	MY_SERIALDEVICE.println("Send Battery Level");
 	sendBatteryLevel(randNumber);
 	wait(LONG_WAIT);
 
 	// Request time
-	Serial.println("Request Time");
+	MY_SERIALDEVICE.println("Request Time");
 	requestTime();
 	wait(LONG_WAIT);
 
@@ -716,7 +716,7 @@ void loop()
 
 	sendBatteryLevel(randNumber);
 	wait(SHORT_WAIT);
-	Serial.println("#########################");
+	MY_SERIALDEVICE.println("#########################");
 	wait(SLEEP_TIME); //sleep a bit
 }
 
@@ -724,8 +724,8 @@ void loop()
 void receiveTime(unsigned long controllerTime)
 {
 
-	Serial.print("Time value received: ");
-	Serial.println(controllerTime);
+	MY_SERIALDEVICE.print("Time value received: ");
+	MY_SERIALDEVICE.println(controllerTime);
 
 }
 
@@ -735,18 +735,18 @@ void receiveTime(unsigned long controllerTime)
 void door()
 {
 
-	Serial.print("Door is: " );
+	MY_SERIALDEVICE.print("Door is: " );
 
 	if (randNumber <= 50) {
-		Serial.println("Open");
+		MY_SERIALDEVICE.println("Open");
 		send(msg_S_DOOR_T.set((int16_t)1));
 	} else {
-		Serial.println("Closed");
+		MY_SERIALDEVICE.println("Closed");
 		send(msg_S_DOOR_T.set((int16_t)0));
 	}
 #ifdef ID_S_ARMED
-	Serial.print("System is: " );
-	Serial.println((isArmed ? "Armed":"Disarmed"));
+	MY_SERIALDEVICE.print("System is: " );
+	MY_SERIALDEVICE.println((isArmed ? "Armed":"Disarmed"));
 	send(msg_S_DOOR_A.set(isArmed));
 #endif
 }
@@ -756,19 +756,19 @@ void door()
 void motion()
 {
 
-	Serial.print("Motion is: " );
+	MY_SERIALDEVICE.print("Motion is: " );
 
 	if (randNumber <= 50) {
-		Serial.println("Active");
+		MY_SERIALDEVICE.println("Active");
 		send(msg_S_MOTION_T.set(1));
 	} else {
-		Serial.println("Quiet");
+		MY_SERIALDEVICE.println("Quiet");
 		send(msg_S_MOTION_T.set(0));
 	}
 
 #ifdef ID_S_ARMED
-	Serial.print("System is: " );
-	Serial.println((isArmed ? "Armed":"Disarmed"));
+	MY_SERIALDEVICE.print("System is: " );
+	MY_SERIALDEVICE.println((isArmed ? "Armed":"Disarmed"));
 	send(msg_S_MOTION_A.set(isArmed));
 #endif
 }
@@ -778,19 +778,19 @@ void motion()
 void smoke()
 {
 
-	Serial.print("Smoke is: " );
+	MY_SERIALDEVICE.print("Smoke is: " );
 
 	if (randNumber <= 50) {
-		Serial.println("Active");
+		MY_SERIALDEVICE.println("Active");
 		send(msg_S_SMOKE_T.set(1));
 	} else {
-		Serial.println("Quiet");
+		MY_SERIALDEVICE.println("Quiet");
 		send(msg_S_SMOKE_T.set(0));
 	}
 
 #ifdef ID_S_ARMED
-	Serial.print("System is: " );
-	Serial.println((isArmed ? "Armed":"Disarmed"));
+	MY_SERIALDEVICE.print("System is: " );
+	MY_SERIALDEVICE.println((isArmed ? "Armed":"Disarmed"));
 	send(msg_S_SMOKE_A.set(isArmed));
 #endif
 
@@ -801,8 +801,8 @@ void smoke()
 void light()
 {
 
-	Serial.print("Light is: " );
-	Serial.println((isLightOn ? "On":"Off"));
+	MY_SERIALDEVICE.print("Light is: " );
+	MY_SERIALDEVICE.println((isLightOn ? "On":"Off"));
 
 	send(msg_S_LIGHT.set(isLightOn));
 
@@ -813,8 +813,8 @@ void light()
 void dimmer()
 {
 
-	Serial.print("Dimmer is set to: " );
-	Serial.println(dimmerVal);
+	MY_SERIALDEVICE.print("Dimmer is set to: " );
+	MY_SERIALDEVICE.println(dimmerVal);
 
 	send(msg_S_DIMMER.set(dimmerVal));
 
@@ -825,16 +825,16 @@ void dimmer()
 void cover()
 {
 
-	Serial.print("Cover is : " );
+	MY_SERIALDEVICE.print("Cover is : " );
 
 	if (coverState == 1) {
-		Serial.println("Opening");
+		MY_SERIALDEVICE.println("Opening");
 		send(msg_S_COVER_U.set(1));
 	} else if (coverState == -1) {
-		Serial.println("Closing");
+		MY_SERIALDEVICE.println("Closing");
 		send(msg_S_COVER_D.set(0));
 	} else {
-		Serial.println("Idle");
+		MY_SERIALDEVICE.println("Idle");
 		send(msg_S_COVER_S.set(-1));
 	}
 	send(msg_S_COVER_V.set(coverState));
@@ -845,8 +845,8 @@ void cover()
 void temp()
 {
 
-	Serial.print("Temperature is: " );
-	Serial.println(map(randNumber,1,100,0,45));
+	MY_SERIALDEVICE.print("Temperature is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,45));
 
 	send(msg_S_TEMP.set(map(randNumber,1,100,0,45)));
 
@@ -857,8 +857,8 @@ void temp()
 void hum()
 {
 
-	Serial.print("Humitidty is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Humitidty is: " );
+	MY_SERIALDEVICE.println(randNumber);
 
 	send(msg_S_HUM.set(randNumber));
 
@@ -873,12 +873,12 @@ void baro()
 	long pressure = map(randNumber,1,100,870,1086);// hPa?
 	int forecast = map(randNumber,1,100,0,5);
 
-	Serial.print("Atmosferic Pressure is: " );
-	Serial.println(pressure);
+	MY_SERIALDEVICE.print("Atmosferic Pressure is: " );
+	MY_SERIALDEVICE.println(pressure);
 	send(msg_S_BARO_P.set(pressure));
 
-	Serial.print("Weather forecast: " );
-	Serial.println(weather[forecast]);
+	MY_SERIALDEVICE.print("Weather forecast: " );
+	MY_SERIALDEVICE.println(weather[forecast]);
 	send(msg_S_BARO_F.set(weather[forecast]));
 
 }
@@ -888,16 +888,16 @@ void baro()
 void wind()
 {
 
-	Serial.print("Wind Speed is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Wind Speed is: " );
+	MY_SERIALDEVICE.println(randNumber);
 	send(msg_S_WIND_S.set(randNumber));
 
-	Serial.print("Wind Gust is: " );
-	Serial.println(randNumber+10);
+	MY_SERIALDEVICE.print("Wind Gust is: " );
+	MY_SERIALDEVICE.println(randNumber+10);
 	send(msg_S_WIND_G.set(randNumber+10));
 
-	Serial.print("Wind Direction is: " );
-	Serial.println(map(randNumber,1,100,0,360));
+	MY_SERIALDEVICE.print("Wind Direction is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,360));
 	send(msg_S_WIND_D.set(map(randNumber,1,100,0,360)));
 
 }
@@ -907,13 +907,13 @@ void wind()
 void rain()
 {
 
-	Serial.print("Rain ammount  is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Rain ammount  is: " );
+	MY_SERIALDEVICE.println(randNumber);
 
 	send(msg_S_RAIN_A.set(randNumber));
 
-	Serial.print("Rain rate  is: " );
-	Serial.println(randNumber/60);
+	MY_SERIALDEVICE.print("Rain rate  is: " );
+	MY_SERIALDEVICE.println(randNumber/60);
 
 	send(msg_S_RAIN_R.set(randNumber/60,1));
 
@@ -924,8 +924,8 @@ void rain()
 void uv()
 {
 
-	Serial.print("Ultra Violet level is: " );
-	Serial.println(map(randNumber,1,100,0,15));
+	MY_SERIALDEVICE.print("Ultra Violet level is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,15));
 
 	send(msg_S_UV.set(map(randNumber,1,100,0,15)));
 
@@ -936,8 +936,8 @@ void uv()
 void weight()
 {
 
-	Serial.print("Weight is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("Weight is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 
 	send(msg_S_WEIGHT.set(map(randNumber,1,100,0,150)));
 
@@ -948,12 +948,12 @@ void weight()
 void power()
 {
 
-	Serial.print("Watt is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("Watt is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 	send(msg_S_POWER_W.set(map(randNumber,1,100,0,150)));
 
-	Serial.print("KWH is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("KWH is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 	send(msg_S_POWER_K.set(map(randNumber,1,100,0,150)));
 
 }
@@ -967,20 +967,20 @@ void heater()
 	//  bool heater_status=false;
 	//  String heatState="Off";
 
-	Serial.print("Heater flow state is: " );
-	Serial.println(heater_flow_state);
+	MY_SERIALDEVICE.print("Heater flow state is: " );
+	MY_SERIALDEVICE.println(heater_flow_state);
 	send(msg_S_HEATER_FLOW_STATE.set(heater_flow_state.c_str()));
 
-	//  Serial.print("Heater on/off is: " );
-	//  Serial.println((heater_status==true)?"On":"Off");
+	//  MY_SERIALDEVICE.print("Heater on/off is: " );
+	//  MY_SERIALDEVICE.println((heater_status==true)?"On":"Off");
 	//  send(msg_S_HEATER_STATUS.set(heater_status));
 
-	//  Serial.print("Heater Temperature is: " );
-	//  Serial.println(heater_temp,1);
+	//  MY_SERIALDEVICE.print("Heater Temperature is: " );
+	//  MY_SERIALDEVICE.println(heater_temp,1);
 	//  send(msg_S_HEATER_TEMP.set(heater_temp,1));
 
-	Serial.print("Heater Setpoint: " );
-	Serial.println(heater_setpoint,1);
+	MY_SERIALDEVICE.print("Heater Setpoint: " );
+	MY_SERIALDEVICE.println(heater_setpoint,1);
 	send(msg_S_HEATER_SET_POINT.set(heater_setpoint,1));
 }
 #endif
@@ -989,8 +989,8 @@ void heater()
 void distance()
 {
 
-	Serial.print("Distance is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("Distance is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 
 	send(msg_S_DISTANCE.set(map(randNumber,1,100,0,150)));
 
@@ -1001,8 +1001,8 @@ void distance()
 void light_level()
 {
 
-	Serial.print("Light is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("Light is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 
 	send(msg_S_LIGHT_LEVEL.set(map(randNumber,1,100,0,150)));
 
@@ -1013,8 +1013,8 @@ void light_level()
 void lock()
 {
 
-	Serial.print("Lock is: " );
-	Serial.println((isLocked ? "Locked":"Unlocked"));
+	MY_SERIALDEVICE.print("Lock is: " );
+	MY_SERIALDEVICE.println((isLocked ? "Locked":"Unlocked"));
 	send(msg_S_LOCK.set(isLocked));
 
 }
@@ -1024,8 +1024,8 @@ void lock()
 void ir()
 {
 
-	Serial.print("Infrared is: " );
-	Serial.println(irVal);
+	MY_SERIALDEVICE.print("Infrared is: " );
+	MY_SERIALDEVICE.println(irVal);
 
 	send(msg_S_IR_S.set(irVal));
 	send(msg_S_IR_R.set(irVal));
@@ -1037,13 +1037,13 @@ void ir()
 void water()
 {
 
-	Serial.print("Water flow is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("Water flow is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 
 	send(msg_S_WATER_F.set(map(randNumber,1,100,0,150)));
 
-	Serial.print("Water volume is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("Water volume is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 
 	send(msg_S_WATER_V.set(map(randNumber,1,100,0,150)));
 
@@ -1054,8 +1054,8 @@ void water()
 void air()
 {
 
-	Serial.print("Air Quality is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Air Quality is: " );
+	MY_SERIALDEVICE.println(randNumber);
 
 	send(msg_S_AIR_QUALITY.set(randNumber));
 
@@ -1066,8 +1066,8 @@ void air()
 void dust()
 {
 
-	Serial.print("Dust level is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Dust level is: " );
+	MY_SERIALDEVICE.println(randNumber);
 
 	send(msg_S_DUST.set(randNumber));
 
@@ -1078,8 +1078,8 @@ void dust()
 void scene()
 {
 
-	Serial.print("Scene is: " );
-	Serial.println(scenes[sceneVal]);
+	MY_SERIALDEVICE.print("Scene is: " );
+	MY_SERIALDEVICE.println(scenes[sceneVal]);
 
 	if(sceneValPrevious != sceneVal) {
 		send(msg_S_SCENE_CONTROLLER_OF.set(sceneValPrevious));
@@ -1094,12 +1094,12 @@ void scene()
 void rgbLight()
 {
 
-	Serial.print("RGB Light state is: " );
-	Serial.println(rgbState);
+	MY_SERIALDEVICE.print("RGB Light state is: " );
+	MY_SERIALDEVICE.println(rgbState);
 	send(msg_S_RGB_LIGHT_V_RGB.set(rgbState.c_str()));
 
-	Serial.print("RGB Light Watt is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("RGB Light Watt is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 	send(msg_S_RGB_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
 
 }
@@ -1109,12 +1109,12 @@ void rgbLight()
 void rgbwLight()
 {
 
-	Serial.print("RGBW Light state is: " );
-	Serial.println(rgbwState);
+	MY_SERIALDEVICE.print("RGBW Light state is: " );
+	MY_SERIALDEVICE.println(rgbwState);
 	send(msg_S_RGBW_LIGHT_V_RGBW.set(rgbwState.c_str()));
 
-	Serial.print("RGBW Light Watt is: " );
-	Serial.println(map(randNumber,1,100,0,150));
+	MY_SERIALDEVICE.print("RGBW Light Watt is: " );
+	MY_SERIALDEVICE.println(map(randNumber,1,100,0,150));
 	send(msg_S_RGBW_LIGHT_V_WATT.set(map(randNumber,1,100,0,150)));
 
 }
@@ -1131,8 +1131,8 @@ void color()
 
 	colorState=String(red + green + blue);
 
-	Serial.print("Color state is: " );
-	Serial.println(colorState);
+	MY_SERIALDEVICE.print("Color state is: " );
+	MY_SERIALDEVICE.println(colorState);
 	send(msg_S_COLOR_SENSOR_V_RGB.set(colorState.c_str()));
 
 }
@@ -1148,24 +1148,24 @@ void hvac()
 	//  String hvac_FlowMode    = "Auto";
 	//  String hvac_Speed       = "Normal";
 
-	Serial.print("HVAC Set Point Heat is: " );
-	Serial.println(hvac_SetPointHeat);
+	MY_SERIALDEVICE.print("HVAC Set Point Heat is: " );
+	MY_SERIALDEVICE.println(hvac_SetPointHeat);
 	send(msg_S_HVAC_V_HVAC_SETPOINT_HEAT.set(hvac_SetPointHeat,1));
 
-	Serial.print("HVAC Set Point Cool is: " );
-	Serial.println(hvac_SetPointCool);
+	MY_SERIALDEVICE.print("HVAC Set Point Cool is: " );
+	MY_SERIALDEVICE.println(hvac_SetPointCool);
 	send(msg_S_HVAC_V_HVAC_SETPOINT_COOL.set(hvac_SetPointCool,1));
 
-	Serial.print("HVAC Flow State is: " );
-	Serial.println(hvac_FlowState);
+	MY_SERIALDEVICE.print("HVAC Flow State is: " );
+	MY_SERIALDEVICE.println(hvac_FlowState);
 	send(msg_S_HVAC_V_HVAC_FLOW_STATET.set(hvac_FlowState.c_str()));
 
-	Serial.print("HVAC Flow Mode is: " );
-	Serial.println(hvac_FlowMode);
+	MY_SERIALDEVICE.print("HVAC Flow Mode is: " );
+	MY_SERIALDEVICE.println(hvac_FlowMode);
 	send(msg_S_HVAC_V_HVAC_FLOW_MODE.set(hvac_FlowMode.c_str()));
 
-	Serial.print("HVAC Speed is: " );
-	Serial.println(hvac_Speed);
+	MY_SERIALDEVICE.print("HVAC Speed is: " );
+	MY_SERIALDEVICE.println(hvac_Speed);
 	send(msg_S_HVAC_V_HVAC_SPEED.set(hvac_Speed.c_str()));
 
 }
@@ -1178,16 +1178,16 @@ void multimeter()
 	int volt=map(randNumber,1,100,0,380);
 	int amps=map(randNumber,1,100,0,16);
 
-	Serial.print("Impedance is: " );
-	Serial.println(impedance);
+	MY_SERIALDEVICE.print("Impedance is: " );
+	MY_SERIALDEVICE.println(impedance);
 	send(msg_S_MULTIMETER_V_IMPEDANCE.set(impedance));
 
-	Serial.print("Voltage is: " );
-	Serial.println(volt);
+	MY_SERIALDEVICE.print("Voltage is: " );
+	MY_SERIALDEVICE.println(volt);
 	send(msg_S_MULTIMETER_V_VOLTAGE.set(volt));
 
-	Serial.print("Current is: " );
-	Serial.println(amps);
+	MY_SERIALDEVICE.print("Current is: " );
+	MY_SERIALDEVICE.println(amps);
 	send(msg_S_MULTIMETER_V_CURRENT.set(amps));
 
 }
@@ -1208,8 +1208,8 @@ void multimeter()
 void moisture()
 {
 
-	Serial.print("Moisture level is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Moisture level is: " );
+	MY_SERIALDEVICE.println(randNumber);
 
 	send(msg_S_MOISTURE.set(randNumber));
 }
@@ -1219,8 +1219,8 @@ void moisture()
 void custom()
 {
 
-	Serial.print("Custom value is: " );
-	Serial.println(randNumber);
+	MY_SERIALDEVICE.print("Custom value is: " );
+	MY_SERIALDEVICE.println(randNumber);
 
 	send(msg_S_CUSTOM_1.set(randNumber));
 	send(msg_S_CUSTOM_2.set(randNumber));
@@ -1238,10 +1238,10 @@ void receive(const MyMessage &message)
 #ifdef ID_S_ARMED
 	case V_ARMED:
 		isArmed = message.getBool();
-		Serial.print("Incoming change for ID_S_ARMED:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println((isArmed ? "Armed":"Disarmed" ));
+		MY_SERIALDEVICE.print("Incoming change for ID_S_ARMED:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println((isArmed ? "Armed":"Disarmed" ));
 #ifdef ID_S_DOOR
 		door();//temp ack for door
 #endif
@@ -1259,20 +1259,20 @@ void receive(const MyMessage &message)
 #ifdef ID_S_LIGHT
 		if(message.sensor==ID_S_LIGHT) {
 			isLightOn =  message.getBool();
-			Serial.print("Incoming change for ID_S_LIGHT:");
-			Serial.print(message.sensor);
-			Serial.print(", New status: ");
-			Serial.println((isLightOn ? "On":"Off"));
+			MY_SERIALDEVICE.print("Incoming change for ID_S_LIGHT:");
+			MY_SERIALDEVICE.print(message.sensor);
+			MY_SERIALDEVICE.print(", New status: ");
+			MY_SERIALDEVICE.println((isLightOn ? "On":"Off"));
 			light(); // temp ack
 		}
 #endif
 		//    #ifdef ID_S_HEATER
 		//        if(message.sensor == ID_S_HEATER){
 		//          heater_status = message.getBool();
-		//          Serial.print("Incoming change for ID_S_HEATER:");
-		//          Serial.print(message.sensor);
-		//          Serial.print(", New status: ");
-		//          Serial.println(heater_status);
+		//          MY_SERIALDEVICE.print("Incoming change for ID_S_HEATER:");
+		//          MY_SERIALDEVICE.print(message.sensor);
+		//          MY_SERIALDEVICE.print(", New status: ");
+		//          MY_SERIALDEVICE.println(heater_status);
 		//          heater();//temp ack
 		//        }
 		//    #endif
@@ -1282,14 +1282,14 @@ void receive(const MyMessage &message)
 #ifdef ID_S_DIMMER
 	case V_DIMMER:
 		if ((message.getInt()<0)||(message.getInt()>100)) {
-			Serial.println( "V_DIMMER data invalid (should be 0..100)" );
+			MY_SERIALDEVICE.println( "V_DIMMER data invalid (should be 0..100)" );
 			break;
 		}
 		dimmerVal= message.getInt();
-		Serial.print("Incoming change for ID_S_DIMMER:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(message.getInt());
+		MY_SERIALDEVICE.print("Incoming change for ID_S_DIMMER:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(message.getInt());
 		dimmer();// temp ack
 		break;
 #endif
@@ -1297,28 +1297,28 @@ void receive(const MyMessage &message)
 #ifdef ID_S_COVER
 	case V_UP:
 		coverState=1;
-		Serial.print("Incoming change for ID_S_COVER:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println("V_UP");
+		MY_SERIALDEVICE.print("Incoming change for ID_S_COVER:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println("V_UP");
 		cover(); // temp ack
 		break;
 
 	case V_DOWN:
 		coverState=-1;
-		Serial.print("Incoming change for ID_S_COVER:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println("V_DOWN");
+		MY_SERIALDEVICE.print("Incoming change for ID_S_COVER:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println("V_DOWN");
 		cover(); //temp ack
 		break;
 
 	case V_STOP:
 		coverState=0;
-		Serial.print("Incoming change for ID_S_COVER:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println("V_STOP");
+		MY_SERIALDEVICE.print("Incoming change for ID_S_COVER:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println("V_STOP");
 		cover(); //temp ack
 		break;
 #endif
@@ -1330,10 +1330,10 @@ void receive(const MyMessage &message)
 		if(message.sensor == ID_S_HEATER) {
 			heater_setpoint=message.getFloat();
 
-			Serial.print("Incoming set point for ID_S_HEATER:");
-			Serial.print(message.sensor);
-			Serial.print(", New status: ");
-			Serial.println(heater_setpoint,1);
+			MY_SERIALDEVICE.print("Incoming set point for ID_S_HEATER:");
+			MY_SERIALDEVICE.print(message.sensor);
+			MY_SERIALDEVICE.print(", New status: ");
+			MY_SERIALDEVICE.println(heater_setpoint,1);
 			heater();//temp ack
 		}
 #endif
@@ -1341,10 +1341,10 @@ void receive(const MyMessage &message)
 #ifdef ID_S_HVAC
 		if(message.sensor == ID_S_HVAC) {
 			hvac_SetPointHeat=message.getFloat();
-			Serial.print("Incoming set point for ID_S_HVAC:");
-			Serial.print(message.sensor);
-			Serial.print(", New status: ");
-			Serial.println(hvac_SetPointHeat,1);
+			MY_SERIALDEVICE.print("Incoming set point for ID_S_HVAC:");
+			MY_SERIALDEVICE.print(message.sensor);
+			MY_SERIALDEVICE.print(", New status: ");
+			MY_SERIALDEVICE.println(hvac_SetPointHeat,1);
 			hvac();//temp ack
 		}
 #endif
@@ -1354,10 +1354,10 @@ void receive(const MyMessage &message)
 #ifdef ID_S_HEATER
 		if(message.sensor == ID_S_HEATER) {
 			heater_flow_state=message.getString();
-			Serial.print("Incoming flow state change for ID_S_HEATER:");
-			Serial.print(message.sensor);
-			Serial.print(", New status: ");
-			Serial.println(heater_flow_state);
+			MY_SERIALDEVICE.print("Incoming flow state change for ID_S_HEATER:");
+			MY_SERIALDEVICE.print(message.sensor);
+			MY_SERIALDEVICE.print(", New status: ");
+			MY_SERIALDEVICE.println(heater_flow_state);
 			heater();//temp ack
 		}
 #endif
@@ -1366,10 +1366,10 @@ void receive(const MyMessage &message)
 		if(message.sensor == ID_S_HVAC) {
 			hvac_FlowState=message.getString();
 
-			Serial.print("Incoming set point for ID_S_HVAC:");
-			Serial.print(message.sensor);
-			Serial.print(", New status: ");
-			Serial.println(hvac_FlowState);
+			MY_SERIALDEVICE.print("Incoming set point for ID_S_HVAC:");
+			MY_SERIALDEVICE.print(message.sensor);
+			MY_SERIALDEVICE.print(", New status: ");
+			MY_SERIALDEVICE.println(hvac_FlowState);
 			hvac();//temp ack
 		}
 #endif
@@ -1378,10 +1378,10 @@ void receive(const MyMessage &message)
 #ifdef ID_S_LOCK
 	case V_LOCK_STATUS:
 		isLocked =  message.getBool();
-		Serial.print("Incoming change for ID_S_LOCK:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(message.getBool()?"Locked":"Unlocked");
+		MY_SERIALDEVICE.print("Incoming change for ID_S_LOCK:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(message.getBool()?"Locked":"Unlocked");
 		lock(); //temp ack
 		break;
 #endif
@@ -1389,18 +1389,18 @@ void receive(const MyMessage &message)
 #ifdef ID_S_IR
 	case V_IR_SEND:
 		irVal = message.getLong();
-		Serial.print("Incoming change for ID_S_IR:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(irVal);
+		MY_SERIALDEVICE.print("Incoming change for ID_S_IR:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(irVal);
 		ir(); // temp ack
 		break;
 	case V_IR_RECEIVE:
 		irVal = message.getLong();
-		Serial.print("Incoming change for ID_S_IR:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(irVal);
+		MY_SERIALDEVICE.print("Incoming change for ID_S_IR:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(irVal);
 		ir(); // temp ack
 		break;
 #endif
@@ -1408,20 +1408,20 @@ void receive(const MyMessage &message)
 #ifdef ID_S_SCENE_CONTROLLER
 	case V_SCENE_ON:
 		sceneVal = message.getInt();
-		Serial.print("Incoming change for ID_S_SCENE_CONTROLLER:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.print(scenes[sceneVal]);
-		Serial.println(" On");
+		MY_SERIALDEVICE.print("Incoming change for ID_S_SCENE_CONTROLLER:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.print(scenes[sceneVal]);
+		MY_SERIALDEVICE.println(" On");
 		scene();// temp ack
 		break;
 	case V_SCENE_OFF:
 		sceneVal = message.getInt();
-		Serial.print("Incoming change for ID_S_SCENE_CONTROLLER:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.print(scenes[sceneVal]);
-		Serial.println(" Off");
+		MY_SERIALDEVICE.print("Incoming change for ID_S_SCENE_CONTROLLER:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.print(scenes[sceneVal]);
+		MY_SERIALDEVICE.println(" Off");
 		scene();// temp ack
 		break;
 #endif
@@ -1429,10 +1429,10 @@ void receive(const MyMessage &message)
 #ifdef ID_S_RGB_LIGHT
 	case V_RGB:
 		rgbState=message.getString();
-		Serial.print("Incoming flow state change for ID_S_RGB_LIGHT:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(rgbState);
+		MY_SERIALDEVICE.print("Incoming flow state change for ID_S_RGB_LIGHT:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(rgbState);
 		rgbLight(); // temp ack
 
 		break;
@@ -1441,10 +1441,10 @@ void receive(const MyMessage &message)
 #ifdef ID_S_RGBW_LIGHT
 	case V_RGBW:
 		rgbwState=message.getString();
-		Serial.print("Incoming flow state change for ID_S_RGBW_LIGHT:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(rgbwState);
+		MY_SERIALDEVICE.print("Incoming flow state change for ID_S_RGBW_LIGHT:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(rgbwState);
 		rgbwLight();
 		break;
 #endif
@@ -1459,37 +1459,37 @@ void receive(const MyMessage &message)
 	case V_HVAC_SETPOINT_COOL:
 		hvac_SetPointCool=message.getFloat();
 
-		Serial.print("Incoming set point for ID_S_HVAC:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(hvac_SetPointCool,1);
+		MY_SERIALDEVICE.print("Incoming set point for ID_S_HVAC:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(hvac_SetPointCool,1);
 		hvac();//temp ack
 		break;
 
 	case V_HVAC_FLOW_MODE:
 		hvac_Speed=message.getString();
 
-		Serial.print("Incoming set point for ID_S_HVAC:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(hvac_Speed);
+		MY_SERIALDEVICE.print("Incoming set point for ID_S_HVAC:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(hvac_Speed);
 		hvac();//temp ack
 		break;
 
 	case V_HVAC_SPEED:
 		hvac_FlowMode=message.getString();
 
-		Serial.print("Incoming set point for ID_S_HVAC:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(hvac_FlowMode);
+		MY_SERIALDEVICE.print("Incoming set point for ID_S_HVAC:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(hvac_FlowMode);
 		hvac();//temp ack
 		break;
 #endif
 
 	default:
-		Serial.print("Unknown/UnImplemented message type: ");
-		Serial.println(message.type);
+		MY_SERIALDEVICE.print("Unknown/UnImplemented message type: ");
+		MY_SERIALDEVICE.println(message.type);
 	}
 
 }

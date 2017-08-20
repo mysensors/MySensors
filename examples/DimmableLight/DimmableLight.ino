@@ -73,7 +73,7 @@ void setup()
 	//Here you actualy switch on/off the light with the last known dim level
 	SetCurrentState2Hardware();
 
-	Serial.println( "Node ready to receive messages..." );
+	MY_SERIALDEVICE.println( "Node ready to receive messages..." );
 }
 
 void presentation()
@@ -91,11 +91,11 @@ void loop()
 void receive(const MyMessage &message)
 {
 	if (message.type == V_LIGHT) {
-		Serial.println( "V_LIGHT command received..." );
+		MY_SERIALDEVICE.println( "V_LIGHT command received..." );
 
 		int lstate= atoi( message.data );
 		if ((lstate<0)||(lstate>1)) {
-			Serial.println( "V_LIGHT data invalid (should be 0/1)" );
+			MY_SERIALDEVICE.println( "V_LIGHT data invalid (should be 0/1)" );
 			return;
 		}
 		LastLightState=lstate;
@@ -113,10 +113,10 @@ void receive(const MyMessage &message)
 		//This means if you previously set the lights dimmer value to 50%, and turn the light ON
 		//it will do so at 50%
 	} else if (message.type == V_DIMMER) {
-		Serial.println( "V_DIMMER command received..." );
+		MY_SERIALDEVICE.println( "V_DIMMER command received..." );
 		int dimvalue= atoi( message.data );
 		if ((dimvalue<0)||(dimvalue>100)) {
-			Serial.println( "V_DIMMER data invalid (should be 0..100)" );
+			MY_SERIALDEVICE.println( "V_DIMMER data invalid (should be 0..100)" );
 			return;
 		}
 		if (dimvalue==0) {
@@ -127,7 +127,7 @@ void receive(const MyMessage &message)
 			saveState(EPROM_DIMMER_LEVEL, LastDimValue);
 		}
 	} else {
-		Serial.println( "Invalid command received..." );
+		MY_SERIALDEVICE.println( "Invalid command received..." );
 		return;
 	}
 
@@ -138,10 +138,10 @@ void receive(const MyMessage &message)
 void SetCurrentState2Hardware()
 {
 	if (LastLightState==LIGHT_OFF) {
-		Serial.println( "Light state: OFF" );
+		MY_SERIALDEVICE.println( "Light state: OFF" );
 	} else {
-		Serial.print( "Light state: ON, Level: " );
-		Serial.println( LastDimValue );
+		MY_SERIALDEVICE.print( "Light state: ON, Level: " );
+		MY_SERIALDEVICE.println( LastDimValue );
 	}
 
 	//Send current state to the controller

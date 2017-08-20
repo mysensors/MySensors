@@ -88,7 +88,7 @@ void loop()
 	// Read digital motion value
 	bool tripped = digitalRead(DIGITAL_INPUT_SENSOR) == HIGH;
 
-	Serial.println(tripped);
+	MY_SERIALDEVICE.println(tripped);
 	send(msg.set(tripped?"1":"0"));  // Send tripped value to gw
 
 	// Sleep until interrupt comes in on motion sensor. Send update every two minute.
