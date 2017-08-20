@@ -120,22 +120,22 @@ void loop()
 {
 
 	measure(6,7,1);
-	Serial.print ("\t");
-	Serial.println (average());
+	MY_SERIALDEVICE.print ("\t");
+	MY_SERIALDEVICE.println (average());
 	long read1 = average();
 
 	measure(7,6,0);
-	Serial.print ("\t");
-	Serial.println (average());
+	MY_SERIALDEVICE.print ("\t");
+	MY_SERIALDEVICE.println (average());
 	long read2= average();
 
 	long sensor1 = (read1 + read2)/2;
 
-	Serial.print ("resistance bias =" );
-	Serial.println (read1-read2);
-	Serial.print ("sensor bias compensated value = ");
-	Serial.println (sensor1);
-	Serial.println ();
+	MY_SERIALDEVICE.print ("resistance bias =" );
+	MY_SERIALDEVICE.println (read1-read2);
+	MY_SERIALDEVICE.print ("sensor bias compensated value = ");
+	MY_SERIALDEVICE.println (sensor1);
+	MY_SERIALDEVICE.println ();
 
 	//send back the values
 	send(msg.set((long int)ceil(sensor1)));
@@ -171,8 +171,8 @@ void measure (int phase_b, int phase_a, int analog_input)
 
 		delay(1);
 		addReading(resistance);
-		Serial.print (resistance);
-		Serial.print ("\t");
+		MY_SERIALDEVICE.print (resistance);
+		MY_SERIALDEVICE.print ("\t");
 	}
 }
 

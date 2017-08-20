@@ -134,13 +134,13 @@ void preHwInit()
 	}
 	digitalWrite(LED_BLUE, LOW);
 	if (Serial) {
-		Serial.println("Sensebender GateWay test routine");
-		Serial.print("Mysensors core version : ");
-		Serial.println(MYSENSORS_LIBRARY_VERSION);
-		Serial.print("GateWay sketch version : ");
-		Serial.println(SKETCH_VERSION);
-		Serial.println("----------------------------------");
-		Serial.println();
+		MY_SERIALDEVICE.println("Sensebender GateWay test routine");
+		MY_SERIALDEVICE.print("Mysensors core version : ");
+		MY_SERIALDEVICE.println(MYSENSORS_LIBRARY_VERSION);
+		MY_SERIALDEVICE.print("GateWay sketch version : ");
+		MY_SERIALDEVICE.println(SKETCH_VERSION);
+		MY_SERIALDEVICE.println("----------------------------------");
+		MY_SERIALDEVICE.println();
 	}
 	if (testSha204()) {
 		digitalWrite(LED_GREEN, HIGH);
@@ -183,7 +183,7 @@ bool testSha204()
 	uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
 	uint8_t ret_code;
 	if (Serial) {
-		Serial.print("- > SHA204 ");
+		MY_SERIALDEVICE.print("- > SHA204 ");
 	}
 	atsha204_init(MY_SIGNING_ATSHA204_PIN);
 	ret_code = atsha204_wakeup(rx_buffer);
@@ -192,25 +192,25 @@ bool testSha204()
 		ret_code = atsha204_getSerialNumber(rx_buffer);
 		if (ret_code != SHA204_SUCCESS) {
 			if (Serial) {
-				Serial.println(F("Failed to obtain device serial number. Response: "));
+				MY_SERIALDEVICE.println(F("Failed to obtain device serial number. Response: "));
 			}
-			Serial.println(ret_code, HEX);
+			MY_SERIALDEVICE.println(ret_code, HEX);
 		} else {
 			if (Serial) {
-				Serial.print(F("Ok (serial : "));
+				MY_SERIALDEVICE.print(F("Ok (serial : "));
 				for (int i=0; i<9; i++) {
 					if (rx_buffer[i] < 0x10) {
-						Serial.print('0'); // Because Serial.print does not 0-pad HEX
+						MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 					}
-					Serial.print(rx_buffer[i], HEX);
+					MY_SERIALDEVICE.print(rx_buffer[i], HEX);
 				}
-				Serial.println(")");
+				MY_SERIALDEVICE.println(")");
 			}
 			return true;
 		}
 	} else {
 		if (Serial) {
-			Serial.println(F("Failed to wakeup SHA204"));
+			MY_SERIALDEVICE.println(F("Failed to wakeup SHA204"));
 		}
 	}
 	return false;
@@ -219,28 +219,28 @@ bool testSha204()
 bool testSDCard()
 {
 	if (Serial) {
-		Serial.print("- > SD CARD ");
+		MY_SERIALDEVICE.print("- > SD CARD ");
 	}
 	if (!card.init(SPI_HALF_SPEED, MY_SDCARD_CS)) {
 		if (Serial) {
-			Serial.println("SD CARD did not initialize!");
+			MY_SERIALDEVICE.println("SD CARD did not initialize!");
 		}
 	} else {
 		if (Serial) {
-			Serial.print("SD Card initialized correct! - ");
-			Serial.print("type detected : ");
+			MY_SERIALDEVICE.print("SD Card initialized correct! - ");
+			MY_SERIALDEVICE.print("type detected : ");
 			switch(card.type()) {
 			case SD_CARD_TYPE_SD1:
-				Serial.println("SD1");
+				MY_SERIALDEVICE.println("SD1");
 				break;
 			case SD_CARD_TYPE_SD2:
-				Serial.println("SD2");
+				MY_SERIALDEVICE.println("SD2");
 				break;
 			case SD_CARD_TYPE_SDHC:
-				Serial.println("SDHC");
+				MY_SERIALDEVICE.println("SDHC");
 				break;
 			default:
-				Serial.println("Unknown");
+				MY_SERIALDEVICE.println("Unknown");
 			}
 		}
 		return true;
@@ -270,12 +270,12 @@ bool testEEProm()
 bool testAnalog()
 {
 	int bat_detect = analogRead(MY_BAT_DETECT);
-	Serial.print("-> analog : ");
-	Serial.print(bat_detect);
+	MY_SERIALDEVICE.print("-> analog : ");
+	MY_SERIALDEVICE.print(bat_detect);
 	if (bat_detect < 400 || bat_detect > 650) {
-		Serial.println(" Failed");
+		MY_SERIALDEVICE.println(" Failed");
 		return false;
 	}
-	Serial.println(" Passed");
+	MY_SERIALDEVICE.println(" Passed");
 	return true;
 }

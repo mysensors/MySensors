@@ -102,8 +102,8 @@ void loop()
 			if (watt<((unsigned long)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
 			}
-			Serial.print("Watt:");
-			Serial.println(watt);
+			MY_SERIALDEVICE.print("Watt:");
+			MY_SERIALDEVICE.println(watt);
 			oldWatt = watt;
 		}
 
@@ -133,8 +133,8 @@ void receive(const MyMessage &message)
 {
 	if (message.type==V_VAR1) {
 		pulseCount = oldPulseCount = message.getLong();
-		Serial.print("Received last pulse count from gw:");
-		Serial.println(pulseCount);
+		MY_SERIALDEVICE.print("Received last pulse count from gw:");
+		MY_SERIALDEVICE.println(pulseCount);
 		pcReceived = true;
 	}
 }

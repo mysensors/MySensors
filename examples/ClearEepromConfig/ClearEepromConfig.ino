@@ -31,11 +31,11 @@
 void setup()
 {
 	Serial.begin(MY_BAUD_RATE);
-	Serial.println("Started clearing. Please wait...");
+	MY_SERIALDEVICE.println("Started clearing. Please wait...");
 	for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
 		hwWriteConfig(i,0xFF);
 	}
-	Serial.println("Clearing done.");
+	MY_SERIALDEVICE.println("Clearing done.");
 }
 
 void loop()

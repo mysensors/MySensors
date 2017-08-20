@@ -90,9 +90,9 @@ void loop()
 
 	//get PM 2.5 density of particles over 2.5 μm.
 	concentrationPM25=(long)getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
-	Serial.print("PM25: ");
-	Serial.println(concentrationPM25);
-	Serial.print("\n");
+	MY_SERIALDEVICE.print("PM25: ");
+	MY_SERIALDEVICE.println(concentrationPM25);
+	MY_SERIALDEVICE.print("\n");
 
 	if ((concentrationPM25 != lastDUSTPM25)&&(concentrationPM25>0)) {
 		send(dustMsgPM25.set((long)ceil(concentrationPM25)));
@@ -101,9 +101,9 @@ void loop()
 
 	//get PM 1.0 - density of particles over 1 μm.
 	concentrationPM10=getPM(DUST_SENSOR_DIGITAL_PIN_PM10);
-	Serial.print("PM10: ");
-	Serial.println(concentrationPM10);
-	Serial.print("\n");
+	MY_SERIALDEVICE.print("PM10: ");
+	MY_SERIALDEVICE.println(concentrationPM10);
+	MY_SERIALDEVICE.print("\n");
 	//ppmv=mg/m3 * (0.08205*Tmp)/Molecular_mass
 	//0.08205   = Universal gas constant in atm·m3/(kmol·K)
 	int temp=20; //external temperature, if you can replace this with a DHT11 or better
@@ -134,15 +134,15 @@ long getPM(int DUST_SENSOR_DIGITAL_PIN)
 		if ((endtime-starttime) > sampletime_ms) {
 			ratio = (lowpulseoccupancy-endtime+starttime)/(sampletime_ms*10.0);  // Integer percentage 0=>100
 			long concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
-			//Serial.print("lowpulseoccupancy:");
-			//Serial.print(lowpulseoccupancy);
-			//Serial.print("\n");
-			//Serial.print("ratio:");
-			//Serial.print(ratio);
-			//Serial.print("\n");
-			//Serial.print("DSM501A:");
-			//Serial.println(concentration);
-			//Serial.print("\n");
+			//MY_SERIALDEVICE.print("lowpulseoccupancy:");
+			//MY_SERIALDEVICE.print(lowpulseoccupancy);
+			//MY_SERIALDEVICE.print("\n");
+			//MY_SERIALDEVICE.print("ratio:");
+			//MY_SERIALDEVICE.print(ratio);
+			//MY_SERIALDEVICE.print("\n");
+			//MY_SERIALDEVICE.print("DSM501A:");
+			//MY_SERIALDEVICE.println(concentration);
+			//MY_SERIALDEVICE.print("\n");
 
 			lowpulseoccupancy = 0;
 			return(concentration);

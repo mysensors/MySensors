@@ -26,7 +26,7 @@ void log(const char *fmt, ... )
 	vsnprintf(buff, sizeof(buff), fmt, args);
 	va_end (args);
 	buff[sizeof(buff)/sizeof(buff[0])-1]='\0';
-	Serial.print(buff);
+	MY_SERIALDEVICE.print(buff);
 }
 
 void log(const __FlashStringHelper *fmt, ... )
@@ -40,7 +40,7 @@ void log(const __FlashStringHelper *fmt, ... )
 	vsnprintf(buf, sizeof(buf), (const char *)fmt, args); // for the rest of the world
 #endif
 	va_end(args);
-	Serial.print(buf);
+	MY_SERIALDEVICE.print(buf);
 }
 
 #endif

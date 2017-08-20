@@ -188,7 +188,7 @@ void listenToSecretKnock()
 		knockSensorValue = digitalRead(knockSensor);
 
 		if (knockSensorValue == 0) {                  // Here's another knock. Save the time between knocks.
-			Serial.println("knock");
+			MY_SERIALDEVICE.println("knock");
 
 			now=millis();
 			knockReadings[currentKnockNumber] = now - startTime;
@@ -212,7 +212,7 @@ void listenToSecretKnock()
 
 		// Stop listening if there are too many knocks or there is too much time between knocks.
 	} while ((now-startTime < knockComplete) && (currentKnockNumber < maximumKnocks));
-	Serial.println("end");
+	MY_SERIALDEVICE.println("end");
 
 	//we've got our knock recorded, lets see if it's valid
 	if (programModeActive == false) {          // Only do this if we're not recording a new knock.
@@ -222,7 +222,7 @@ void listenToSecretKnock()
 			chirp(500, 1000);
 			setLockState(!lockStatus, true);
 		} else {
-			Serial.println("fail unlock");
+			MY_SERIALDEVICE.println("fail unlock");
 
 			// knock is invalid. Blink the LED as a warning to others.
 			for (i=0; i < 4; i++) {
@@ -242,9 +242,9 @@ void listenToSecretKnock()
 void setLockState(bool state, bool doSend)
 {
 	if (state) {
-		Serial.println("open lock");
+		MY_SERIALDEVICE.println("open lock");
 	} else {
-		Serial.println("close lock");
+		MY_SERIALDEVICE.println("close lock");
 	}
 	if (doSend) {
 		send(lockMsg.set(state));
@@ -403,8 +403,8 @@ void receive(const MyMessage &message)
 		setLockState(message.getBool(), false);
 
 		// Write some debug info
-		Serial.print("Incoming lock status:");
-		Serial.println(message.getBool());
+		MY_SERIALDEVICE.print("Incoming lock status:");
+		MY_SERIALDEVICE.println(message.getBool());
 	}
 }
 

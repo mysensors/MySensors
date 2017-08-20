@@ -79,8 +79,8 @@ void loop()
 		uv=1170;
 	}
 
-	//Serial.print("UV Analog reading: ");
-	//Serial.println(uv);
+	//MY_SERIALDEVICE.print("UV Analog reading: ");
+	//MY_SERIALDEVICE.println(uv);
 
 	int i;
 	for (i = 0; i < 12; i++) {
@@ -97,8 +97,8 @@ void loop()
 		uvIndex+=(1.0/vRange)*vCalc-1.0;
 	}
 
-	//Serial.print("UVI: ");
-	//Serial.println(uvIndex,2);
+	//MY_SERIALDEVICE.print("UVI: ");
+	//MY_SERIALDEVICE.println(uvIndex,2);
 
 	//Send value to gateway if changed, or at least every 5 minutes
 	if ((uvIndex != lastUV)||(currentTime-lastSend >= 5UL*60UL*1000UL)) {

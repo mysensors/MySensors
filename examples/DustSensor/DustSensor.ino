@@ -87,14 +87,14 @@ void loop()
 	// Chris Nafis (c) 2012
 	dustDensity = (0.17 * calcVoltage - 0.1)*1000;
 
-	Serial.print("Raw Signal Value (0-1023): ");
-	Serial.print(voMeasured);
+	MY_SERIALDEVICE.print("Raw Signal Value (0-1023): ");
+	MY_SERIALDEVICE.print(voMeasured);
 
-	Serial.print(" - Voltage: ");
-	Serial.print(calcVoltage);
+	MY_SERIALDEVICE.print(" - Voltage: ");
+	MY_SERIALDEVICE.print(calcVoltage);
 
-	Serial.print(" - Dust Density: ");
-	Serial.println(dustDensity); // unit: ug/m3
+	MY_SERIALDEVICE.print(" - Dust Density: ");
+	MY_SERIALDEVICE.println(dustDensity); // unit: ug/m3
 
 	if (ceil(dustDensity) != lastDUST) {
 		send(dustMsg.set((int16_t)ceil(dustDensity)));

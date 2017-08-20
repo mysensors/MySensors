@@ -469,7 +469,7 @@ void setup()
 	// Print current EEPROM
 	print_eeprom_data();
 	print_whitelisting_entry();
-	Serial.println();
+	MY_SERIALDEVICE.println();
 
 	print_ending();
 	halt(true);
@@ -483,35 +483,37 @@ void loop()
 /** @brief Print a notice and halt the execution */
 static void halt(bool success)
 {
-	Serial.println();
-	Serial.println(
+	MY_SERIALDEVICE.println();
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                  Execution result                                  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 	if (success) {
-		Serial.println(F(
-		                   "| SUCCESS                                                                            |"));
+		MY_SERIALDEVICE.println(F(
+		                            "| SUCCESS                                                                            |"));
 	} else {
-		Serial.print(F(
-		                 "| FAILURE "));
+		MY_SERIALDEVICE.print(F(
+		                          "| FAILURE "));
 #ifdef USE_SOFT_SIGNING
-		Serial.println(F("                                                                           |"));
+		MY_SERIALDEVICE.println(
+		    F("                                                                           |"));
 #else
 		if (ret_code != SHA204_SUCCESS) {
-			Serial.print(F("(last ATSHA204A return code: 0x"));
+			MY_SERIALDEVICE.print(F("(last ATSHA204A return code: 0x"));
 			if (ret_code < 0x10) {
-				Serial.print('0'); // Because Serial.print does not 0-pad HEX
+				MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 			}
-			Serial.print(ret_code, HEX);
-			Serial.println(F(")                                         |"));
+			MY_SERIALDEVICE.print(ret_code, HEX);
+			MY_SERIALDEVICE.println(F(")                                         |"));
 		} else {
-			Serial.println(F("                                                                           |"));
+			MY_SERIALDEVICE.println(
+			    F("                                                                           |"));
 		}
 #endif
 	}
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 	while(1) {
 		doYield();
@@ -552,86 +554,87 @@ static bool generate_random_data(uint8_t* data, size_t sz)
 static void generate_keys(void)
 {
 #ifdef GENERATE_SOMETHING
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                   Key generation                                   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Key ID | Status | Key                                                              |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
 #endif
 #ifdef GENERATE_HMAC_KEY
-	Serial.print(F("| HMAC   | "));
+	MY_SERIALDEVICE.print(F("| HMAC   | "));
 	if (!generate_random_data(user_hmac_key, 32)) {
 		memset(user_hmac_key, 0xFF, 32);
-		Serial.print(F("FAILED | "));
+		MY_SERIALDEVICE.print(F("FAILED | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	print_hex_buffer(user_hmac_key, 32);
-	Serial.println(F(" |"));
+	MY_SERIALDEVICE.println(F(" |"));
 #endif
 #ifdef GENERATE_AES_KEY
-	Serial.print(F("| AES    | "));
+	MY_SERIALDEVICE.print(F("| AES    | "));
 	if (!generate_random_data(user_aes_key, 16)) {
 		memset(user_aes_key, 0xFF, 16);
-		Serial.print(F("FAILED | "));
+		MY_SERIALDEVICE.print(F("FAILED | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	print_hex_buffer(user_aes_key, 16);
-	Serial.println(F("                                 |"));
+	MY_SERIALDEVICE.println(F("                                 |"));
 #endif
 #ifdef GENERATE_SOFT_SERIAL
-	Serial.print(F("| SERIAL | "));
+	MY_SERIALDEVICE.print(F("| SERIAL | "));
 	if (has_device_unique_id) {
-		Serial.println(F("N/A    | MCU has a unique serial which will be used instead.              |"));
+		MY_SERIALDEVICE.println(
+		    F("N/A    | MCU has a unique serial which will be used instead.              |"));
 	} else {
 		if (!generate_random_data(user_soft_serial, 9)) {
 			memset(user_soft_serial, 0xFF, 9);
-			Serial.print(F("FAILED | "));
+			MY_SERIALDEVICE.print(F("FAILED | "));
 		} else {
-			Serial.print(F("OK     | "));
+			MY_SERIALDEVICE.print(F("OK     | "));
 		}
 		print_hex_buffer(user_soft_serial, 9);
-		Serial.println(F("                                               |"));
+		MY_SERIALDEVICE.println(F("                                               |"));
 	}
 #endif
 #if defined(GENERATE_SOMETHING) && !defined(PERSONALIZE_SOFT_RANDOM_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println();
-	Serial.println(
+	MY_SERIALDEVICE.println();
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                  Key copy section                                  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #ifdef GENERATE_HMAC_KEY
-	Serial.print(F("#define MY_HMAC_KEY "));
+	MY_SERIALDEVICE.print(F("#define MY_HMAC_KEY "));
 	print_c_friendly_hex_buffer(user_hmac_key, 32);
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #endif
 #ifdef GENERATE_AES_KEY
-	Serial.print(F("#define MY_AES_KEY "));
+	MY_SERIALDEVICE.print(F("#define MY_AES_KEY "));
 	print_c_friendly_hex_buffer(user_aes_key, 16);
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #endif
 #ifdef GENERATE_SOFT_SERIAL
-	Serial.print(F("#define MY_SOFT_SERIAL "));
+	MY_SERIALDEVICE.print(F("#define MY_SOFT_SERIAL "));
 	print_c_friendly_hex_buffer(user_soft_serial, 9);
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #endif
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #elif defined(PERSONALIZE_SOFT_RANDOM_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #endif
 }
 
@@ -640,44 +643,50 @@ static void generate_keys(void)
 static void	reset_eeprom(void)
 {
 	uint8_t validation_buffer[32];
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                   EEPROM reset                                     |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+---------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Key ID | Status                                                                    |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+---------------------------------------------------------------------------+"));
-	Serial.print(F("| HMAC   | "));
+	MY_SERIALDEVICE.print(F("| HMAC   | "));
 	hwWriteConfigBlock((void*)reset_buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
 	// Validate data written
 	hwReadConfigBlock((void*)validation_buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
 	if (memcmp(validation_buffer, reset_buffer,	32) != 0) {
-		Serial.println(F("FAILED                                                                    |"));
+		MY_SERIALDEVICE.println(
+		    F("FAILED                                                                    |"));
 	} else {
-		Serial.println(F("OK                                                                        |"));
+		MY_SERIALDEVICE.println(
+		    F("OK                                                                        |"));
 	}
-	Serial.print(F("| AES    | "));
+	MY_SERIALDEVICE.print(F("| AES    | "));
 	hwWriteConfigBlock((void*)reset_buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 	// Validate data written
 	hwReadConfigBlock((void*)validation_buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 	if (memcmp(validation_buffer, reset_buffer,	16) != 0) {
-		Serial.println(F("FAILED                                                                    |"));
+		MY_SERIALDEVICE.println(
+		    F("FAILED                                                                    |"));
 	} else {
-		Serial.println(F("OK                                                                        |"));
+		MY_SERIALDEVICE.println(
+		    F("OK                                                                        |"));
 	}
-	Serial.print(F("| SERIAL | "));
+	MY_SERIALDEVICE.print(F("| SERIAL | "));
 	hwWriteConfigBlock((void*)reset_buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
 	// Validate data written
 	hwReadConfigBlock((void*)validation_buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
 	if (memcmp(validation_buffer, reset_buffer,	9) != 0) {
-		Serial.println(F("FAILED                                                                    |"));
+		MY_SERIALDEVICE.println(
+		    F("FAILED                                                                    |"));
 	} else {
-		Serial.println(F("OK                                                                        |"));
+		MY_SERIALDEVICE.println(
+		    F("OK                                                                        |"));
 	}
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+---------------------------------------------------------------------------+"));
 }
 #endif // RESET_EEPROM_PERSONALIZATION
@@ -701,58 +710,58 @@ static void write_eeprom_checksum(void)
 static void store_keys(void)
 {
 #if defined(STORE_HMAC_KEY) || defined(STORE_AES_KEY) || defined(STORE_SOFT_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                    Key storage                                     |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Key ID | Status | Key                                                              |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
 #endif
 #ifdef STORE_HMAC_KEY
-	Serial.print(F("| HMAC   | "));
+	MY_SERIALDEVICE.print(F("| HMAC   | "));
 	if (!store_hmac_key_data(user_hmac_key)) {
-		Serial.print(F("FAILED | "));
+		MY_SERIALDEVICE.print(F("FAILED | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	print_hex_buffer(user_hmac_key, 32);
-	Serial.println(F(" |"));
+	MY_SERIALDEVICE.println(F(" |"));
 #endif
 #ifdef STORE_AES_KEY
-	Serial.print(F("| AES    | "));
+	MY_SERIALDEVICE.print(F("| AES    | "));
 	if (!store_aes_key_data(user_aes_key)) {
-		Serial.print(F("FAILED | "));
+		MY_SERIALDEVICE.print(F("FAILED | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	print_hex_buffer(user_aes_key, 16);
-	Serial.println(F("                                 |"));
+	MY_SERIALDEVICE.println(F("                                 |"));
 #endif
 #ifdef STORE_SOFT_SERIAL
-	Serial.print(F("| SERIAL | "));
+	MY_SERIALDEVICE.print(F("| SERIAL | "));
 	if (has_device_unique_id) {
 		memset(user_soft_serial, 0xFF, 9);
 	}
 	if (!store_soft_serial_data(user_soft_serial)) {
-		Serial.print(F("FAILED | "));
+		MY_SERIALDEVICE.print(F("FAILED | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	if (has_device_unique_id) {
-		Serial.println(F("EEPROM reset. MCU has a unique serial which will be used instead.|"));
+		MY_SERIALDEVICE.println(F("EEPROM reset. MCU has a unique serial which will be used instead.|"));
 	} else {
 		print_hex_buffer(user_soft_serial, 9);
-		Serial.println(F("                                               |"));
+		MY_SERIALDEVICE.println(F("                                               |"));
 	}
 #endif
 #if defined(STORE_HMAC_KEY) || defined(STORE_AES_KEY) || defined(STORE_SOFT_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #endif
 }
 
@@ -765,9 +774,9 @@ static void print_hex_buffer(uint8_t* data, size_t sz)
 {
 	for (size_t i=0; i<sz; i++) {
 		if (data[i] < 0x10) {
-			Serial.print('0'); // Because Serial.print does not 0-pad HEX
+			MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 		}
-		Serial.print(data[i], HEX);
+		MY_SERIALDEVICE.print(data[i], HEX);
 	}
 }
 
@@ -779,13 +788,13 @@ static void print_hex_buffer(uint8_t* data, size_t sz)
 static void print_c_friendly_hex_buffer(uint8_t* data, size_t sz)
 {
 	for (size_t i=0; i<sz; i++) {
-		Serial.print("0x");
+		MY_SERIALDEVICE.print("0x");
 		if (data[i] < 0x10) {
-			Serial.print('0'); // Because Serial.print does not 0-pad HEX
+			MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 		}
-		Serial.print(data[i], HEX);
+		MY_SERIALDEVICE.print(data[i], HEX);
 		if (i < sz-1) {
-			Serial.print(',');
+			MY_SERIALDEVICE.print(',');
 		}
 	}
 }
@@ -883,11 +892,11 @@ static void init_atsha204a_state(void)
 #ifdef LOCK_ATSHA204A_CONFIGURATION
 static void	lock_atsha204a_config(void)
 {
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                           ATSHA204A configuration locking                          |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 	if (lockConfig != 0x00) {
 		uint16_t crc;
@@ -898,7 +907,7 @@ static void	lock_atsha204a_config(void)
 
 		// List current configuration before attempting to lock
 #ifdef PRINT_DETAILED_ATSHA204A_CONFIG
-		Serial.println(
+		MY_SERIALDEVICE.println(
 		    F("|                             New ATSHA204A Configuration                            |"));
 		dump_detailed_atsha204a_configuration();
 #endif // PRINT_DETAILED_ATSHA204A_CONFIG
@@ -908,19 +917,19 @@ static void	lock_atsha204a_config(void)
 		while (Serial.available()) {
 			Serial.read();
 		}
-		Serial.println(
+		MY_SERIALDEVICE.println(
 		    F("| * Send SPACE character now to lock the configuration...                            |"));
 
 		while (Serial.available() == 0);
 		if (Serial.read() == ' ')
 #endif //not SKIP_UART_CONFIRMATION
 		{
-			Serial.print(F("| * Locking configuration..."));
+			MY_SERIALDEVICE.print(F("| * Locking configuration..."));
 
 			// Correct sequence, resync chip
 			ret_code = sha204.sha204c_resync(SHA204_RSP_SIZE_MAX, rx_buffer);
 			if (ret_code != SHA204_SUCCESS && ret_code != SHA204_RESYNC_WITH_WAKEUP) {
-				Serial.println(
+				MY_SERIALDEVICE.println(
 				    F("+------------------------------------------------------------------------------------+"));
 				halt(false);
 			}
@@ -930,17 +939,17 @@ static void	lock_atsha204a_config(void)
 			                                  crc, 0, NULL, 0, NULL, 0, NULL,
 			                                  LOCK_COUNT, tx_buffer, LOCK_RSP_SIZE, rx_buffer);
 			if (ret_code != SHA204_SUCCESS) {
-				Serial.println(F("Failed                                                   |"));
-				Serial.println(
+				MY_SERIALDEVICE.println(F("Failed                                                   |"));
+				MY_SERIALDEVICE.println(
 				    F("+------------------------------------------------------------------------------------+"));
 				halt(false);
 			} else {
-				Serial.println(F("Done                                                     |"));
+				MY_SERIALDEVICE.println(F("Done                                                     |"));
 
 				// Update lock flags after locking
 				ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, 0x15<<2);
 				if (ret_code != SHA204_SUCCESS) {
-					Serial.println(
+					MY_SERIALDEVICE.println(
 					    F("+------------------------------------------------------------------------------------+"));
 					halt(false);
 				} else {
@@ -951,19 +960,19 @@ static void	lock_atsha204a_config(void)
 		}
 #ifndef SKIP_UART_CONFIRMATION
 		else {
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("| * Unexpected answer. Skipping locking.                                             |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+------------------------------------------------------------------------------------+"));
 		}
 #endif //not SKIP_UART_CONFIRMATION
 	} else {
-		Serial.println(
+		MY_SERIALDEVICE.println(
 		    F("| * Skipping configuration write and lock (configuration already locked).            |"));
-		Serial.println(
+		MY_SERIALDEVICE.println(
 		    F("+------------------------------------------------------------------------------------+"));
 	}
-	Serial.println();
+	MY_SERIALDEVICE.println();
 }
 
 /**
@@ -1036,7 +1045,7 @@ static uint16_t write_atsha204a_config_and_get_crc(void)
 			// All other configs are untouched
 			ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, i);
 			if (ret_code != SHA204_SUCCESS) {
-				Serial.println(
+				MY_SERIALDEVICE.println(
 				    F("+------------------------------------------------------------------------------------+"));
 				halt(false);
 			}
@@ -1057,7 +1066,7 @@ static uint16_t write_atsha204a_config_and_get_crc(void)
 			                                  i >> 2, 4, config_word, 0, NULL, 0, NULL,
 			                                  WRITE_COUNT_SHORT, tx_buffer, WRITE_RSP_SIZE, rx_buffer);
 			if (ret_code != SHA204_SUCCESS) {
-				Serial.println(
+				MY_SERIALDEVICE.println(
 				    F("+------------------------------------------------------------------------------------+"));
 				halt(false);
 			}
@@ -1102,168 +1111,168 @@ static bool write_atsha204a_key(uint8_t* key)
 /** @brief Print a greeting on serial console */
 static void print_greeting(void)
 {
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                           MySensors security personalizer                          |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #ifdef NO_SETTINGS_DEFINED
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| You are running without any configuration flags set.                               |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| No changes will be made to ATSHA204A or EEPROM except for the EEPROM checksum      |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| which will be updated.                                                             |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                                                                    |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| If you want to personalize your device, you have two options.                      |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                                                                    |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| 1. a. Enable either GENERATE_KEYS_ATSHA204A or GENERATE_KEYS_SOFT                  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       This will generate keys for ATSHA204A or software signing.                   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|    b. Execute the sketch. You will be guided through the steps below under         |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       WHAT TO DO NEXT?                                                             |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|    c. Copy the generated keys and replace the topmost definitions in this file.    |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|    d. Save the sketch and then disable the flag you just enabled.                  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|    e. Enable PERSONALIZE_ATSHA204A to personalize the ATSHA204A device.            |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       or                                                                           |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       Enable PERSONALIZE_SOFT to personalize the EEPROM for software signing.      |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       If you want to use whitelisting you need to pick a unique serial number      |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       for each device you run the sketch on and fill in MY_SOFT_SERIAL.            |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       or                                                                           |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       Enable PERSONALIZE_SOFT_RANDOM_SERIAL to personalzie the EEPROM and          |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       include a new random serial number every time the sketch is executed.        |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       Take note of each saved serial number if you plan to use whitelisting.       |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|    f. Execute the sketch on each device you want to personalize that is supposed   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|       to communicate securely.                                                     |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                                                                    |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| 2. Enable any configuration flag as you see fit.                                   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|    It is assumed that you know what you are doing.                                 |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #else
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                               Configuration settings                               |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #if defined(GENERATE_KEYS_ATSHA204A)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Guided key generation for ATSHA204A using ATSHA024A                              |"));
 #endif
 #if defined(GENERATE_KEYS_SOFT)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Guided key generation for EEPROM using software                                  |"));
 #endif
 #if defined(PERSONALIZE_ATSHA204A)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Guided personalization/storage of keys in ATSHA204A                              |"));
 #endif
 #if defined(PERSONALIZE_SOFT)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Guided personalization/storage of keys in EEPROM                                 |"));
 #endif
 #if defined(PERSONALIZE_SOFT_RANDOM_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Guided storage and generation of random serial in EEPROM                         |"));
 #endif
 #if defined(USE_SOFT_SIGNING)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Software based personalization (no ATSHA204A usage whatsoever)                   |"));
 #else
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * ATSHA204A based personalization                                                  |"));
 #endif
 #if defined(LOCK_ATSHA204A_CONFIGURATION)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will lock ATSHA204A configuration                                                |"));
 #endif
 #if defined(SKIP_UART_CONFIRMATION)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will not require any UART confirmations                                          |"));
 #endif
 #if defined(GENERATE_HMAC_KEY)
-	Serial.print(
+	MY_SERIALDEVICE.print(
 	    F("| * Will generate HMAC key using "));
 #if defined(USE_SOFT_SIGNING)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("software                                            |"));
 #else
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("ATSHA204A                                           |"));
 #endif
 #endif
 #if defined(STORE_HMAC_KEY)
-	Serial.print(F("| * Will store HMAC key to "));
+	MY_SERIALDEVICE.print(F("| * Will store HMAC key to "));
 #if defined(USE_SOFT_SIGNING)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("EEPROM                                                    |"));
 #else
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("ATSHA204A                                                 |"));
 #endif
 #endif
 #if defined(GENERATE_AES_KEY)
-	Serial.print(
+	MY_SERIALDEVICE.print(
 	    F("| * Will generate AES key using "));
 #if defined(USE_SOFT_SIGNING)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("software                                             |"));
 #else
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("ATSHA204A                                            |"));
 #endif
 #endif
 #if defined(STORE_AES_KEY)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will store AES key to EEPROM                                                     |"));
 #endif
 #if defined(GENERATE_SOFT_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will generate soft serial using software                                         |"));
 #endif
 #if defined(STORE_SOFT_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will store soft serial to EEPROM                                                 |"));
 #endif
 #if defined(PRINT_DETAILED_ATSHA204A_CONFIG)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will print detailed ATSHA204A configuration                                      |"));
 #endif
 #if defined(RESET_EEPROM_PERSONALIZATION)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| * Will reset EEPROM personalization data                                           |"));
 #endif
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 #endif // not NO_SETTINGS_DEFINED
 	probe_and_print_peripherals();
 }
@@ -1271,52 +1280,52 @@ static void print_greeting(void)
 static void print_ending(void)
 {
 #if defined(GUIDED_MODE) || defined(NO_SETTINGS_DEFINED)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                  WHAT TO DO NEXT?                                  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #ifdef NO_SETTINGS_DEFINED
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| To proceed with the personalization, enable GENERATE_KEYS_ATSHA204A or             |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| GENERATE_KEYS_SOFT depending on what type of signing backend you plan to use.      |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Both options will generate an AES key for encryption if you plan to use that.      |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Recompile, upload and run the sketch again for further instructions.               |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #endif
 #ifdef GENERATE_KEYS_ATSHA204A
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| To proceed with the personalization, copy the keys shown in the Key copy section,  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| and replace the corresponding definitions in the top of the sketch, then disable   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| GENERATE_KEYS_ATSHA204A and enable PERSONALIZE_ATSHA204A.                          |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #endif
 #ifdef GENERATE_KEYS_SOFT
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| To proceed with the personalization, copy the keys shown in the Key copy section,  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| and replace the corresponding definitions in the top of the sketch, then disable   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| GENERATE_KEYS_SOFT and enable PERSONALIZE_SOFT or PERSONALIZE_SOFT_RANDOM_SERIAL.  |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #endif
 #if defined(PERSONALIZE_ATSHA204A) ||\
 	defined(PERSONALIZE_SOFT) ||\
 	defined(PERSONALIZE_SOFT_RANDOM_SERIAL)
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| This device has now been personalized. Run this sketch with its current settings   |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| on all the devices in your network that have security enabled.                     |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 #endif
 #endif // GUIDED_MODE or NO_SETTINGS_DEFINED
@@ -1326,135 +1335,136 @@ static void	probe_and_print_peripherals(void)
 {
 	unique_id_t uniqueID;
 
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                           Hardware security peripherals                            |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------------+--------------+--------------+------------------------------+--------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Device       | Status       | Revision     | Serial number                | Locked |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------------+--------------+--------------+------------------------------+--------+"));
 #if defined(ARDUINO_ARCH_AVR)
-	Serial.print(F("| AVR          | DETECTED     | N/A          | "));
+	MY_SERIALDEVICE.print(F("| AVR          | DETECTED     | N/A          | "));
 #elif defined(ARDUINO_ARCH_ESP8266)
-	Serial.print(F("| ESP8266      | DETECTED     | N/A          | "));
+	MY_SERIALDEVICE.print(F("| ESP8266      | DETECTED     | N/A          | "));
 #elif defined(ARDUINO_ARCH_SAMD)
-	Serial.print(F("| SAMD         | DETECTED     | N/A          | "));
+	MY_SERIALDEVICE.print(F("| SAMD         | DETECTED     | N/A          | "));
 #elif defined(ARDUINO_ARCH_STM32F1)
-	Serial.print(F("| STM32F1      | DETECTED     | N/A          | "));
+	MY_SERIALDEVICE.print(F("| STM32F1      | DETECTED     | N/A          | "));
 #elif defined(__linux__)
-	Serial.print(F("| Linux        | DETECTED     | N/A          | "));
+	MY_SERIALDEVICE.print(F("| Linux        | DETECTED     | N/A          | "));
 #else
-	Serial.print(F("| Unknown      | DETECTED     | N/A          | "));
+	MY_SERIALDEVICE.print(F("| Unknown      | DETECTED     | N/A          | "));
 #endif
 	if (hwUniqueID(&uniqueID)) {
 		has_device_unique_id = true;
 		print_hex_buffer(uniqueID, 9);
-		Serial.println(F("           | N/A    |"));
+		MY_SERIALDEVICE.println(F("           | N/A    |"));
 	} else {
-		Serial.println(F("N/A (generation required)    | N/A    |"));
+		MY_SERIALDEVICE.println(F("N/A (generation required)    | N/A    |"));
 	}
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------------+--------------+--------------+------------------------------+--------+"));
 #ifndef USE_SOFT_SIGNING
-	Serial.print(F("| ATSHA204A    | "));
+	MY_SERIALDEVICE.print(F("| ATSHA204A    | "));
 	ret_code = sha204.sha204c_wakeup(rx_buffer);
 	if (ret_code != SHA204_SUCCESS) {
 		ret_code = SHA204_SUCCESS; // Reset retcode to avoid false negative execution result
-		Serial.println(F("NOT DETECTED | N/A          | N/A                          | N/A    |"));
+		MY_SERIALDEVICE.println(F("NOT DETECTED | N/A          | N/A                          | N/A    |"));
 	} else {
 		uint8_t buffer[9];
-		Serial.print(F("DETECTED     | "));
+		MY_SERIALDEVICE.print(F("DETECTED     | "));
 		ret_code = sha204.sha204m_dev_rev(tx_buffer, rx_buffer);
 		if (ret_code != SHA204_SUCCESS) {
-			Serial.print(F("FAILED       | "));
+			MY_SERIALDEVICE.print(F("FAILED       | "));
 		} else {
 			print_hex_buffer(&rx_buffer[SHA204_BUFFER_POS_DATA], 4);
-			Serial.print(F("     | "));
+			MY_SERIALDEVICE.print(F("     | "));
 		}
 		if (!get_atsha204a_serial(buffer)) {
 			memset(buffer, 0xFF, 9);
-			Serial.print(F("FAILED                       | "));
+			MY_SERIALDEVICE.print(F("FAILED                       | "));
 		} else {
 			print_hex_buffer(buffer, 9);
-			Serial.print(F("           | "));
+			MY_SERIALDEVICE.print(F("           | "));
 		}
 		ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, 0x15<<2);
 		if (ret_code != SHA204_SUCCESS) {
-			Serial.println("FAILED |");
+			MY_SERIALDEVICE.println("FAILED |");
 		} else {
 			if (rx_buffer[SHA204_BUFFER_POS_DATA+3] == 0x00) {
-				Serial.println("YES    |");
+				MY_SERIALDEVICE.println("YES    |");
 			} else {
-				Serial.println("NO     |");
+				MY_SERIALDEVICE.println("NO     |");
 			}
 		}
 	}
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------------+--------------+--------------+------------------------------+--------+"));
 #ifdef PRINT_DETAILED_ATSHA204A_CONFIG
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                          Current ATSHA204A Configuration                           |"));
 	dump_detailed_atsha204a_configuration();
 #endif
 #endif // not USE_SOFT_SIGNING
-	Serial.println();
+	MY_SERIALDEVICE.println();
 }
 
 static void print_eeprom_data(void)
 {
 	uint8_t buffer[32];
 
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                                       EEPROM                                       |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("| Key ID | Status | Key                                                              |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.print(F("| HMAC   | "));
+	MY_SERIALDEVICE.print(F("| HMAC   | "));
 	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
 	if (!memcmp(buffer, reset_buffer, 32)) {
-		Serial.print(F("RESET  | "));
+		MY_SERIALDEVICE.print(F("RESET  | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	print_hex_buffer(buffer, 32);
-	Serial.println(F(" |"));
-	Serial.print(F("| AES    | "));
+	MY_SERIALDEVICE.println(F(" |"));
+	MY_SERIALDEVICE.print(F("| AES    | "));
 	hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 	if (!memcmp(buffer, reset_buffer, 16)) {
-		Serial.print(F("RESET  | "));
+		MY_SERIALDEVICE.print(F("RESET  | "));
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 	}
 	print_hex_buffer(buffer, 16);
-	Serial.println(F("                                 |"));
-	Serial.print(F("| SERIAL | "));
+	MY_SERIALDEVICE.println(F("                                 |"));
+	MY_SERIALDEVICE.print(F("| SERIAL | "));
 	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
 	if (!memcmp(buffer, reset_buffer, 9)) {
 		if (has_device_unique_id) {
-			Serial.println(F("N/A    | Device unique serial, not stored in EEPROM                       |"));
+			MY_SERIALDEVICE.println(
+			    F("N/A    | Device unique serial, not stored in EEPROM                       |"));
 		} else {
-			Serial.print(F("RESET  | "));
+			MY_SERIALDEVICE.print(F("RESET  | "));
 			print_hex_buffer(buffer, 9);
-			Serial.println(F("                                               |"));
+			MY_SERIALDEVICE.println(F("                                               |"));
 		}
 	} else {
-		Serial.print(F("OK     | "));
+		MY_SERIALDEVICE.print(F("OK     | "));
 		print_hex_buffer(buffer, 9);
-		Serial.println(F("                                               |"));
+		MY_SERIALDEVICE.println(F("                                               |"));
 	}
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+--------+--------+------------------------------------------------------------------+"));
-	Serial.println();
+	MY_SERIALDEVICE.println();
 }
 
 static void print_whitelisting_entry(void)
@@ -1475,16 +1485,16 @@ static void print_whitelisting_entry(void)
 		memset(buffer, 0xFF, 9);
 	}
 #endif
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                      This nodes whitelist entry on other nodes                     |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
-	Serial.print(F("{.nodeId = <ID of this node>,.serial = {"));
+	MY_SERIALDEVICE.print(F("{.nodeId = <ID of this node>,.serial = {"));
 	print_c_friendly_hex_buffer(buffer, 9);
-	Serial.println(F("}}"));
-	Serial.println(
+	MY_SERIALDEVICE.println(F("}}"));
+	MY_SERIALDEVICE.println(
 	    F("+------------------------------------------------------------------------------------+"));
 }
 
@@ -1492,351 +1502,351 @@ static void print_whitelisting_entry(void)
 /** @brief Dump current configuration to UART */
 static void dump_detailed_atsha204a_configuration(void)
 {
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+---------------------------------------------------------------++-------------------+"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("|                           Fieldname                           ||       Data        |"));
-	Serial.println(
+	MY_SERIALDEVICE.println(
 	    F("+-------------------------------+-------------------------------++---------+---------+"));
 	for (int i=0; i < 88; i += 4) {
 		ret_code = sha204.sha204m_read(tx_buffer, rx_buffer, SHA204_ZONE_CONFIG, i);
 		if (ret_code != SHA204_SUCCESS) {
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+------------------------------------------------------------------------------------+"));
 			halt(false);
 		}
 		if (i == 0x00) {
-			Serial.print(F("|            SN[0:1]            |            SN[2:3]            || "));
+			MY_SERIALDEVICE.print(F("|            SN[0:1]            |            SN[2:3]            || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x04) {
-			Serial.print(F("|                            Revnum                             || "));
+			MY_SERIALDEVICE.print(F("|                            Revnum                             || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------------------------------------------------------++-------------------+"));
 		} else if (i == 0x08) {
-			Serial.print(F("|                            SN[4:7]                            || "));
+			MY_SERIALDEVICE.print(F("|                            SN[4:7]                            || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x0C) {
-			Serial.print(F("|     SN[8]     |  Reserved13   |   I2CEnable   |  Reserved15   || "));
+			MY_SERIALDEVICE.print(F("|     SN[8]     |  Reserved13   |   I2CEnable   |  Reserved15   || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x10) {
-			Serial.print(F("|  I2CAddress   |  TempOffset   |    OTPmode    | SelectorMode  || "));
+			MY_SERIALDEVICE.print(F("|  I2CAddress   |  TempOffset   |    OTPmode    | SelectorMode  || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x14) {
-			Serial.print(F("|          SlotConfig00         |         SlotConfig01          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig00         |         SlotConfig01          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x18) {
-			Serial.print(F("|          SlotConfig02         |         SlotConfig03          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig02         |         SlotConfig03          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x1C) {
-			Serial.print(F("|          SlotConfig04         |         SlotConfig05          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig04         |         SlotConfig05          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x20) {
-			Serial.print(F("|          SlotConfig06         |         SlotConfig07          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig06         |         SlotConfig07          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x24) {
-			Serial.print(F("|          SlotConfig08         |         SlotConfig09          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig08         |         SlotConfig09          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x28) {
-			Serial.print(F("|          SlotConfig0A         |         SlotConfig0B          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig0A         |         SlotConfig0B          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x2C) {
-			Serial.print(F("|          SlotConfig0C         |         SlotConfig0D          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig0C         |         SlotConfig0D          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+-------------------------------+-------------------------------++---------+---------+"));
 		} else if (i == 0x30) {
-			Serial.print(F("|          SlotConfig0E         |         SlotConfig0F          || "));
+			MY_SERIALDEVICE.print(F("|          SlotConfig0E         |         SlotConfig0F          || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j == 1) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x34) {
-			Serial.print(F("|   UseFlag00   | UpdateCount00 |   UseFlag01   | UpdateCount01 || "));
+			MY_SERIALDEVICE.print(F("|   UseFlag00   | UpdateCount00 |   UseFlag01   | UpdateCount01 || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x38) {
-			Serial.print(F("|   UseFlag02   | UpdateCount02 |   UseFlag03   | UpdateCount03 || "));
+			MY_SERIALDEVICE.print(F("|   UseFlag02   | UpdateCount02 |   UseFlag03   | UpdateCount03 || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x3C) {
-			Serial.print(F("|   UseFlag04   | UpdateCount04 |   UseFlag05   | UpdateCount05 || "));
+			MY_SERIALDEVICE.print(F("|   UseFlag04   | UpdateCount04 |   UseFlag05   | UpdateCount05 || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x40) {
-			Serial.print(F("|   UseFlag06   | UpdateCount06 |   UseFlag07   | UpdateCount07 || "));
+			MY_SERIALDEVICE.print(F("|   UseFlag06   | UpdateCount06 |   UseFlag07   | UpdateCount07 || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x44) {
-			Serial.print(F("|                        LastKeyUse[0:3]                        || "));
+			MY_SERIALDEVICE.print(F("|                        LastKeyUse[0:3]                        || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------------------------------------------------------++-------------------+"));
 		} else if (i == 0x48) {
-			Serial.print(F("|                        LastKeyUse[4:7]                        || "));
+			MY_SERIALDEVICE.print(F("|                        LastKeyUse[4:7]                        || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------------------------------------------------------++-------------------+"));
 		} else if (i == 0x4C) {
-			Serial.print(F("|                        LastKeyUse[8:B]                        || "));
+			MY_SERIALDEVICE.print(F("|                        LastKeyUse[8:B]                        || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------------------------------------------------------++-------------------+"));
 		} else if (i == 0x50) {
-			Serial.print(F("|                        LastKeyUse[C:F]                        || "));
+			MY_SERIALDEVICE.print(F("|                        LastKeyUse[C:F]                        || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F("   "));
+					MY_SERIALDEVICE.print(F("   "));
 				}
 			}
-			Serial.println(F(" |"));
-			Serial.println(
+			MY_SERIALDEVICE.println(F(" |"));
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		} else if (i == 0x54) {
-			Serial.print(F("|   UserExtra   |    Selector   |   LockValue   |  LockConfig   || "));
+			MY_SERIALDEVICE.print(F("|   UserExtra   |    Selector   |   LockValue   |  LockConfig   || "));
 			for (int j=0; j<4; j++) {
 				if (rx_buffer[SHA204_BUFFER_POS_DATA+j] < 0x10) {
-					Serial.print('0'); // Because Serial.print does not 0-pad HEX
+					MY_SERIALDEVICE.print('0'); // Because MY_SERIALDEVICE.print does not 0-pad HEX
 				}
-				Serial.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
+				MY_SERIALDEVICE.print(rx_buffer[SHA204_BUFFER_POS_DATA+j], HEX);
 				if (j < 3) {
-					Serial.print(F(" | "));
+					MY_SERIALDEVICE.print(F(" | "));
 				} else {
-					Serial.println(F(" |"));
+					MY_SERIALDEVICE.println(F(" |"));
 				}
 			}
-			Serial.println(
+			MY_SERIALDEVICE.println(
 			    F("+---------------+---------------+---------------+---------------++----+----+----+----+"));
 		}
 	}

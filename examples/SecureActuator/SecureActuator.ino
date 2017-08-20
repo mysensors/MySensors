@@ -119,10 +119,10 @@ void receive(const MyMessage &message)
 		// Store state in eeprom
 		saveState(message.sensor, message.getBool());
 		// Write some debug info
-		Serial.print("Incoming change for lock:");
-		Serial.print(message.sensor);
-		Serial.print(", New status: ");
-		Serial.println(message.getBool());
+		MY_SERIALDEVICE.print("Incoming change for lock:");
+		MY_SERIALDEVICE.print(message.sensor);
+		MY_SERIALDEVICE.print(", New status: ");
+		MY_SERIALDEVICE.println(message.getBool());
 	}
 }
 /** @}*/

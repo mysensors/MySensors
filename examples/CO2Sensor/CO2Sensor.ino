@@ -85,7 +85,7 @@ void loop()
 	//wait for the pin to go HIGH and measure HIGH time
 	unsigned long duration = pulseIn(AIQ_SENSOR_ANALOG_PIN, HIGH);
 
-	//Serial.print(duration/1000); Serial.println(" ms ");
+	//MY_SERIALDEVICE.print(duration/1000); MY_SERIALDEVICE.println(" ms ");
 	//from datasheet
 	//CO2 ppm = 2000 * (Th - 2ms) / (Th + Tl - 4ms)
 	//  given Tl + Th = 1004
@@ -93,13 +93,13 @@ void loop()
 	//        = 2000 * (Th - 2ms) / (Th + 1004 - Th -4ms)
 	//        = 2000 * (Th - 2ms) / 1000 = 2 * (Th - 2ms)
 	long co2ppm = 2 * ((duration/1000) - 2);
-	//Serial.print(co2ppm);
+	//MY_SERIALDEVICE.print(co2ppm);
 	if ((co2ppm != lastAIQ)&&(abs(co2ppm-lastAIQ)>=10)) {
 		send(msg.set((long)ceil(co2ppm)));
 		lastAIQ = ceil(co2ppm);
 	}
 
-	//Serial.println();
+	//MY_SERIALDEVICE.println();
 
 	// Power down the radio.  Note that the radio will get powered back up
 	// on the next write() call.
