@@ -827,6 +827,12 @@ void transportProcessMessage(void)
 			TRANSPORT_DEBUG(
 			    PSTR("TSF:MSG:ACK\n")); // received message is ACK, no internal processing, handover to msg callback
 		}
+#if defined(MY_OTA_LOG_RECEIVER_FEATURE)
+		if ((type == I_LOG_MESSAGE) && (command == C_INTERNAL)) {
+			OTALogPrint(_msg);
+			return; // no further processing required
+		}
+#endif //defined(MY_OTA_LOG_RECEIVER_FEATURE)
 #if defined(MY_GATEWAY_FEATURE)
 		// Hand over message to controller
 		(void)gatewayTransportSend(_msg);

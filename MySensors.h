@@ -45,6 +45,11 @@
 #include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
 
+// OTA Debug, have to defined before HAL
+#if defined(MY_OTA_LOG_SENDER_FEATURE) || defined(MY_OTA_LOG_RECEIVER_FEATURE)
+#include "core/MyOTALogging.h"
+#endif
+
 // HARDWARE
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/MyHwESP8266.cpp"
@@ -64,6 +69,11 @@
 #include "hal/architecture/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyHwLinuxGeneric.cpp"
+#endif
+
+// OTA Debug second part, depends on HAL
+#if defined(MY_OTA_LOG_SENDER_FEATURE) || defined(MY_OTA_LOG_RECEIVER_FEATURE)
+#include "core/MyOTALogging.cpp"
 #endif
 
 #if defined(MY_LEDS_BLINKING_FEATURE)
