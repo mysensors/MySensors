@@ -99,7 +99,8 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination);
 static bool signerInternalProcessPresentation(MyMessage &msg);
 static bool signerInternalProcessNonceRequest(MyMessage &msg);
 static bool signerInternalProcessNonceResponse(MyMessage &msg);
-#if defined(MY_ENCRYPTION_FEATURE) || defined(MY_SIGNING_FEATURE)
+#if (defined(MY_ENCRYPTION_FEATURE) || defined(MY_SIGNING_FEATURE)) &&\
+    !defined(MY_SIGNING_SIMPLE_PASSWD)
 static bool signerInternalValidatePersonalization(void);
 #endif
 
@@ -108,7 +109,8 @@ void signerInit(void)
 #if defined(MY_SIGNING_FEATURE)
 	stateValid = true;
 #endif
-#if defined (MY_ENCRYPTION_FEATURE) || defined (MY_SIGNING_FEATURE)
+#if (defined (MY_ENCRYPTION_FEATURE) || defined (MY_SIGNING_FEATURE)) &&\
+    !defined (MY_SIGNING_SIMPLE_PASSWD)
 	if (!signerInternalValidatePersonalization()) {
 		SIGN_DEBUG(PSTR("!SGN:PER:TAMPERED\n"));
 #if defined(MY_SIGNING_FEATURE)
@@ -563,7 +565,8 @@ static bool signerInternalProcessNonceResponse(MyMessage &msg)
 	return true; // No need to further process I_NONCE_RESPONSE
 }
 
-#if defined(MY_ENCRYPTION_FEATURE) || defined(MY_SIGNING_FEATURE)
+#if (defined(MY_ENCRYPTION_FEATURE) || defined(MY_SIGNING_FEATURE)) &&\
+    !defined(MY_SIGNING_SIMPLE_PASSWD)
 static bool signerInternalValidatePersonalization(void)
 {
 #ifdef __linux__

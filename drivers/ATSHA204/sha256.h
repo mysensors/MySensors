@@ -37,6 +37,7 @@ private:
 class HmacClass : public Sha256Class
 {
 public:
+	HmacClass(); // Constructor
 	void initHmac(const uint8_t* secret, int secretLength);
 	uint8_t* resultHmac(void);
 private:
