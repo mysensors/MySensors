@@ -214,7 +214,7 @@ void hwSleepPrepare(unsigned long ms)
 			// Set compare register to 1/30.517 µs to garantee event triggering
 			// A minimum of 2 ticks must be guaranteed
 			// (1000/32768)<<12 == 125
-			MY_HW_RTC->CC[0] = max((ms<<12 / 125), 2);
+			MY_HW_RTC->CC[0] = max(((ms << 12) / 125), 2);
 		} else {
 			// 8 Hz -> max 582.542 hours sleep.
 			MY_HW_RTC->PRESCALER = 4095;
