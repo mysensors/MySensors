@@ -165,6 +165,10 @@ uint8_t* Sha256Class::result(void)
 #define HMAC_IPAD 0x36
 #define HMAC_OPAD 0x5c
 
+HmacClass::HmacClass()
+{
+}
+
 void HmacClass::initHmac(const uint8_t* key, int keyLength)
 {
 	uint8_t i;
