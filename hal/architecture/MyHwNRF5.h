@@ -129,12 +129,14 @@ typedef struct {
 	uint8_t ciphertext[16];
 } nrf_ecb_t;
 
-#ifndef DOXYGEN
+#if !defined(DOXYGEN) && !defined(CPPCHECK)
 #define MY_CRITICAL_SECTION                                                    \
 	for (uint32_t __savePriMask                                                  \
 	        __attribute__((__cleanup__(__priMaskRestore))) = __get_PRIMASK(),       \
 	        __ToDo = __disableIntsRetVal();                                         \
 	        __ToDo; __ToDo = 0)
-#endif /* DOXYGEN */
+#else
+#define MY_CRITICAL_SECTION
+#endif /* DOXYGEN || CPPCHECK */
 
 #endif // #ifdef ARDUINO_ARCH_NRF5
