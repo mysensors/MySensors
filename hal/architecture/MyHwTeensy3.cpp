@@ -1,4 +1,4 @@
-﻿/**
+/**
 * The MySensors Arduino library handles the wireless radio link and protocol
 * between your home built sensors/actuators and HA controller of choice.
 * The sensors forms a self healing radio network with optional repeaters. Each
@@ -92,7 +92,7 @@ bool hwUniqueID(unique_id_t *uniqueID)
 {
 #if defined(__MKL26Z64__)
 	(void)memcpy((uint8_t*)uniqueID, &SIM_UIDMH, 12);
-	(void)memset((uint8_t*)uniqueID + 12, 0, 4);
+	(void)memset((uint8_t*)uniqueID + 12, MY_HWID_PADDING_BYTE, 4);
 #else
 	(void)memcpy((uint8_t*)uniqueID, &SIM_UIDH, 16);
 #endif

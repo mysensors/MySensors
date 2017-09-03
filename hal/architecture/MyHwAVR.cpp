@@ -18,6 +18,7 @@
  */
 
 #include "MyHwAVR.h"
+#include "avr/boot.h"
 
 bool hwInit(void)
 {
@@ -239,9 +240,18 @@ inline void hwRandomNumberInit()
 
 bool hwUniqueID(unique_id_t* uniqueID)
 {
-	// not implemented yet
-	(void)uniqueID;
-	return false;
+	// padding
+	(void)memset(uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
+	// no unique ID for non-PB AVR, use HW specifics for diversification
+	*((uint8_t*)uniqueID) = boot_signature_byte_get(0x00);
+	*((uint8_t*)uniqueID + 1) = boot_signature_byte_get(0x02);
+	*((uint8_t*)uniqueID + 2) = boot_signature_byte_get(0x04);
+	*((uint8_t*)uniqueID + 3) = boot_signature_byte_get(0x01); //OSCCAL
+	// ATMEGA328PB specifics, has unique ID
+	//for(uint8_t idx = 0; idx < 10; idx++) {
+	//	*((uint8_t*)uniqueID + 4 + idx) = boot_signature_byte_get(0xE + idx);
+	//}
+	return false;	// false, since no unique ID returned
 }
 
 uint16_t hwCPUVoltage()
