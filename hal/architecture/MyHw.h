@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -25,6 +25,8 @@
 
 #ifndef MyHw_h
 #define MyHw_h
+
+#define MY_HWID_PADDING_BYTE	(0xAAu)
 
 // Implement these as functions or macros
 /*
@@ -83,7 +85,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
                unsigned long ms);
 
 /**
-* Retrieve unique ID
+* Retrieve unique hardware ID
 * @param uniqueID unique ID
 * @return True if unique ID successfully retrieved
 */
