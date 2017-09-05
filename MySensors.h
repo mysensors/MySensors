@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -235,6 +235,11 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error Only one forward link driver can be activated
 #endif
 #endif //DOXYGEN
+
+// SANITY CHECK
+#if defined(MY_REPEATER_FEATURE) || defined(MY_GATEWAY_FEATURE)
+#define MY_TRANSPORT_SANITY_CHECK
+#endif
 
 // TRANSPORT INCLUDES
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
