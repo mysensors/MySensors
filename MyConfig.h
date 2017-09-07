@@ -919,9 +919,6 @@
  *       for battery powered operation.
  */
 //#define MY_REPEATER_FEATURE
-#if defined(MY_REPEATER_FEATURE)
-#define MY_TRANSPORT_SANITY_CHECK
-#endif
 
 /**
  * @def MY_PASSIVE_NODE
