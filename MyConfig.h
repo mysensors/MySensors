@@ -281,8 +281,8 @@
  * @def MY_RF24_PA_LEVEL
  * @brief Default RF24 PA level. Override in sketch if needed.
  *
- * - RF24_PA_LOW = -18dBm
- * - RF24_PA_MID = -12dBm
+ * - RF24_PA_MIN = -18dBm
+ * - RF24_PA_LOW = -12dBm
  * - RF24_PA_HIGH = -6dBm
  * - RF24_PA_MAX = 0dBm
  */
