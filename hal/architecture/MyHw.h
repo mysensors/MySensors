@@ -26,6 +26,10 @@
 #ifndef MyHw_h
 #define MyHw_h
 
+/**
+ * @def MY_HWID_PADDING_BYTE
+ * @brief HwID padding byte
+ */
 #define MY_HWID_PADDING_BYTE	(0xAAu)
 
 // Implement these as functions or macros
