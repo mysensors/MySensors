@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -169,7 +169,7 @@ void _begin(void)
 		setup();
 	}
 #if defined(MY_SENSOR_NETWORK)
-	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%d\n"), isTransportReady());
+	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%" PRIu8 "\n"), isTransportReady());
 #else
 	// no sensor network defined, call presentation & registration
 	_callbackTransportReady();
@@ -407,7 +407,7 @@ bool _processInternalMessages(void)
 #if defined (MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
 			_coreConfig.nodeRegistered = _msg.getBool();
 			setIndication(INDICATION_GOT_REGISTRATION);
-			CORE_DEBUG(PSTR("MCO:PIM:NODE REG=%d\n"), _coreConfig.nodeRegistered);	// node registration
+			CORE_DEBUG(PSTR("MCO:PIM:NODE REG=%" PRIu8 "\n"), _coreConfig.nodeRegistered);	// node registration
 #endif
 		} else if (type == I_CONFIG) {
 			// Pick up configuration from controller (currently only metric/imperial) and store it in eeprom if changed
@@ -540,7 +540,8 @@ void doYield(void)
 int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t interrupt1,
               const uint8_t mode1, const uint8_t interrupt2, const uint8_t mode2)
 {
-	CORE_DEBUG(PSTR("MCO:SLP:MS=%lu,SMS=%d,I1=%d,M1=%d,I2=%d,M2=%d\n"), sleepingMS, smartSleep,
+	CORE_DEBUG(PSTR("MCO:SLP:MS=%" PRIu32 ",SMS=%" PRIu8 ",I1=%" PRIu8 ",M1=%" PRIu8 ",I2=%" PRIu8
+	                ",M2=%" PRIu8 "\n"), sleepingMS, smartSleep,
 	           interrupt1, mode1, interrupt2, mode2);
 	// OTA FW feature: do not sleep if FW update ongoing
 #if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -577,7 +578,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		// sleep remainder
 		if (sleepDeltaMS < sleepingTimeMS) {
 			sleepingTimeMS -= sleepDeltaMS;		// calculate remaining sleeping time
-			CORE_DEBUG(PSTR("MCO:SLP:MS=%lu\n"), sleepingTimeMS);
+			CORE_DEBUG(PSTR("MCO:SLP:MS=%" PRIu32 "\n"), sleepingTimeMS);
 		} else {
 			// no sleeping time left
 			return MY_SLEEP_NOT_POSSIBLE;
@@ -617,7 +618,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		result = hwSleep(sleepingTimeMS);
 	}
 	setIndication(INDICATION_WAKEUP);
-	CORE_DEBUG(PSTR("MCO:SLP:WUP=%d\n"), result);	// sleep wake-up
+	CORE_DEBUG(PSTR("MCO:SLP:WUP=%" PRIi8 "\n"), result);	// sleep wake-up
 #if defined(MY_SENSOR_NETWORK)
 	transportReInitialise();
 #endif
@@ -677,7 +678,8 @@ void _nodeLock(const char* str)
 	hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, 0);
 	while (1) {
 		setIndication(INDICATION_ERR_LOCKED);
-		CORE_DEBUG(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %d AND RESET\n"), MY_NODE_UNLOCK_PIN);
+		CORE_DEBUG(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %" PRIu8 " AND RESET\n"),
+		           MY_NODE_UNLOCK_PIN);
 		doYield();
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED).set(str));
 #if defined(MY_SENSOR_NETWORK)

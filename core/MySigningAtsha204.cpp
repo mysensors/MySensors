@@ -182,7 +182,8 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 {
 	// If we cannot fit any signature in the message, refuse to sign it
 	if (mGetLength(msg) > MAX_PAYLOAD-2) {
-		SIGN_DEBUG(PSTR("!SGN:BND:SIG,SIZE,%d>%d\n"), mGetLength(msg), MAX_PAYLOAD-2); //Message too large
+		SIGN_DEBUG(PSTR("!SGN:BND:SIG,SIZE,%" PRIu8 ">%" PRIu8 "\n"), mGetLength(msg),
+		           MAX_PAYLOAD-2); //Message too large
 		return false;
 	}
 
@@ -198,7 +199,7 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 		memcpy(&_signing_signing_nonce[33], _signing_node_serial_info, 9);
 		// We can 'void' sha256 because the hash is already put in the correct place
 		(void)signerSha256(_signing_signing_nonce, 32+1+9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%d\n"), msg.sender);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%" PRIu8 "\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 		buf2str(_signing_node_serial_info, 9);
 		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), printStr);
@@ -231,7 +232,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		_signing_verification_ongoing = false;
 
 		if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER,IDENT=%d\n"), msg.data[mGetLength(msg)]);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER,IDENT=%" PRIu8 "\n"), msg.data[mGetLength(msg)]);
 			return false;
 		}
 
@@ -248,7 +249,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 				memcpy(&_signing_verifying_nonce[33], _signing_whitelist[j].serial, 9);
 				// We can 'void' sha256 because the hash is already put in the correct place
 				(void)signerSha256(_signing_verifying_nonce, 32+1+9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%d\n"), msg.sender);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%" PRIu8 "\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
 				buf2str(_signing_whitelist[j].serial, 9);
 				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), printStr);
@@ -257,7 +258,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 			}
 		}
 		if (j == NUM_OF(_signing_whitelist)) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI,ID=%d MISSING\n"), msg.sender);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI,ID=%" PRIu8 " MISSING\n"), msg.sender);
 			// Put device back to sleep
 			atsha204_sleep();
 			return false;

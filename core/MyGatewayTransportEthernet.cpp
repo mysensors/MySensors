@@ -256,7 +256,7 @@ bool _readFromClient(uint8_t i)
 			if (inChar == '\n' || inChar == '\r') {
 				// Add string terminator and prepare for the next message
 				inputString[i].string[inputString[i].idx] = 0;
-				debug(PSTR("Client %d: %s\n"), i, inputString[i].string);
+				debug(PSTR("Client %" PRIu8 ": %s\n"), i, inputString[i].string);
 				inputString[i].idx = 0;
 				if (protocolParse(_ethernetMsg, inputString[i].string)) {
 					return true;
@@ -268,7 +268,7 @@ bool _readFromClient(uint8_t i)
 			}
 		} else {
 			// Incoming message too long. Throw away
-			debug(PSTR("Client %d: Message too long\n"), i);
+			debug(PSTR("Client %" PRIu8 ": Message too long\n"), i);
 			inputString[i].idx = 0;
 			// Finished with this client's message. Next loop() we'll see if there's more to read.
 			break;
@@ -322,7 +322,7 @@ bool gatewayTransportAvailable(void)
 	int packet_size = _ethernetServer.parsePacket();
 
 	if (packet_size) {
-		//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
+		//debug(PSTR("UDP packet available. Size:%" PRIu8 "\n"), packet_size);
 		_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 		inputString.string[packet_size] = 0;
 		debug(PSTR("UDP packet received: %s\n"), inputString.string);
@@ -366,14 +366,14 @@ bool gatewayTransportAvailable(void)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (!clients[i].connected()) {
 			if (clientsConnected[i]) {
-				debug(PSTR("Client %d disconnected\n"), i);
+				debug(PSTR("Client %" PRIu8 " disconnected\n"), i);
 				clients[i].stop();
 			}
 			//check if there are any new clients
 			if (_ethernetServer.hasClient()) {
 				clients[i] = _ethernetServer.available();
 				inputString[i].idx = 0;
-				debug(PSTR("Client %d connected\n"), i);
+				debug(PSTR("Client %" PRIu8 " connected\n"), i);
 				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 				// Send presentation of locally attached sensors (and node if applicable)
 				presentNode();

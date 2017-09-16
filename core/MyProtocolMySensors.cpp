@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -99,7 +99,8 @@ bool protocolParse(MyMessage &message, char *inputString)
 
 char * protocolFormat(MyMessage &message)
 {
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender,
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
+	           PSTR("%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%s\n"), message.sender,
 	           message.sensor, (uint8_t)mGetCommand(message), (uint8_t)mGetAck(message), message.type,
 	           message.getString(_convBuffer));
 	return _fmtBuffer;
@@ -107,7 +108,8 @@ char * protocolFormat(MyMessage &message)
 
 char * protocolFormatMQTTTopic(const char* prefix, MyMessage &message)
 {
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%s/%d/%d/%d/%d/%d"), prefix,
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
+	           PSTR("%s/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 ""), prefix,
 	           message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
 	return _fmtBuffer;
 }

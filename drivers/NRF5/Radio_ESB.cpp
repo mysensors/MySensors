@@ -288,7 +288,8 @@ static uint8_t NRF5_ESB_readMessage(void *data)
 
 	// Debug message
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-	NRF5_RADIO_DEBUG(PSTR("NRF5:RX:LEN=%d,NOACK=%d,PID=%d,RSSI=%d,RX=%d\n"),
+	NRF5_RADIO_DEBUG(PSTR("NRF5:RX:LEN=%" PRIu8 ",NOACK=%" PRIu8 ",PID=%" PRIu8 ",RSSI=%" PRIi16 ",RX=%"
+	                      PRIu32 "\n"),
 	                 buffer->len, buffer->noack, buffer->pid, rssi_rx, buffer->rxmatch);
 #endif
 
@@ -380,7 +381,8 @@ void NRF5_ESB_endtx()
 
 static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len, const bool noACK)
 {
-	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:TO=%d,LEN=%d,PID=%d,NOACK=%d\n"), recipient, len, tx_buffer.pid,
+	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:TO=%" PRIu8 ",LEN=%" PRIu8 ",PID=%" PRIu8 ",NOACK=%" PRIu8 "\n"),
+	                 recipient, len, tx_buffer.pid,
 	                 tx_buffer.noack); // send message
 	// Check if radio is initialized
 	if (NRF_RADIO->POWER == 0) {
@@ -450,9 +452,9 @@ static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len
 		// Arbitrary definition: ARC 0 == -29, ARC 15 = -104
 		rssi_tx = (-29 - (8 * (tx_retries_start - tx_retries)));
 	}
-
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:END=%d,ACK=%d,RTRY=%d,RSSI=%d,WAKE=%d\n"),
+	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:END=%" PRIu8 ",ACK=%" PRIu8 ",RTRY=%" PRIi8 ",RSSI=%" PRIi16
+	                      ",WAKE=%" PRIu32 "\n"),
 	                 events_end_tx, ack_received, tx_retries_start - tx_retries, rssi_tx, wakeups);
 #endif
 

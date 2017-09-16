@@ -120,14 +120,14 @@ LOCAL uint8_t RF24_spiByteTransfer(const uint8_t cmd)
 LOCAL uint8_t RF24_RAW_readByteRegister(const uint8_t cmd)
 {
 	const uint8_t value = RF24_spiMultiByteTransfer(cmd, NULL, 1, true);
-	RF24_DEBUG(PSTR("RF24:RBR:REG=%d,VAL=%d\n"), cmd & RF24_REGISTER_MASK, value);
+	RF24_DEBUG(PSTR("RF24:RBR:REG=%" PRIu8 ",VAL=%" PRIu8 "\n"), cmd & RF24_REGISTER_MASK, value);
 	return value;
 }
 
 LOCAL uint8_t RF24_RAW_writeByteRegister(const uint8_t cmd, uint8_t value)
 {
-	RF24_DEBUG(PSTR("RF24:WBR:REG=%d,VAL=%d\n"), cmd & RF24_REGISTER_MASK, value);
-	return RF24_spiMultiByteTransfer( cmd , &value, 1, false);
+	RF24_DEBUG(PSTR("RF24:WBR:REG=%" PRIu8 ",VAL=%" PRIu8 "\n"), cmd & RF24_REGISTER_MASK, value);
+	return RF24_spiMultiByteTransfer( cmd, &value, 1, false);
 }
 
 LOCAL void RF24_flushRX(void)
@@ -224,7 +224,7 @@ LOCAL void RF24_enableFeatures(void)
 
 LOCAL void RF24_openWritingPipe(const uint8_t recipient)
 {
-	RF24_DEBUG(PSTR("RF24:OWP:RCPT=%d\n"), recipient); // open writing pipe
+	RF24_DEBUG(PSTR("RF24:OWP:RCPT=%" PRIu8 "\n"), recipient); // open writing pipe
 	// only write LSB of RX0 and TX pipe
 	RF24_setPipeLSB(RF24_REG_RX_ADDR_P0, recipient);
 	RF24_setPipeLSB(RF24_REG_TX_ADDR, recipient);
@@ -289,7 +289,7 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint
 	uint8_t RF24_status;
 	RF24_stopListening();
 	RF24_openWritingPipe( recipient );
-	RF24_DEBUG(PSTR("RF24:TXM:TO=%d,LEN=%d\n"),recipient,len); // send message
+	RF24_DEBUG(PSTR("RF24:TXM:TO=%" PRIu8 ",LEN=%" PRIu8 "\n"),recipient,len); // send message
 	// flush TX FIFO
 	RF24_flushTX();
 	// this command is affected in clones (e.g. Si24R1):  flipped NoACK bit when using W_TX_PAYLOAD_NO_ACK / W_TX_PAYLOAD
@@ -340,7 +340,7 @@ LOCAL bool RF24_isDataAvailable(void)
 LOCAL uint8_t RF24_readMessage(void* buf)
 {
 	const uint8_t len = RF24_getDynamicPayloadSize();
-	RF24_DEBUG(PSTR("RF24:RXM:LEN=%d\n"), len);	// read message
+	RF24_DEBUG(PSTR("RF24:RXM:LEN=%" PRIu8 "\n"), len);	// read message
 	RF24_spiMultiByteTransfer(RF24_CMD_READ_RX_PAYLOAD,(uint8_t*)buf,len,true);
 	// clear RX interrupt
 	RF24_setStatus(_BV(RF24_RX_DR));
@@ -385,7 +385,7 @@ LOCAL bool RF24_setTxPowerLevel(const uint8_t newPowerLevel)
 {
 	const uint8_t registerContent = RF24_readByteRegister(RF24_REG_RF_SETUP);
 	RF24_writeByteRegister(RF24_REG_RF_SETUP, (registerContent & 0xF9) | ((newPowerLevel & 3) << 1));
-	RF24_DEBUG(PSTR("RF24:STX:LEVEL=%d\n"), newPowerLevel);
+	RF24_DEBUG(PSTR("RF24:STX:LEVEL=%" PRIu8 "\n"), newPowerLevel);
 	return true;
 }
 
@@ -447,7 +447,7 @@ LOCAL void RF24_registerReceiveCallback(RF24_receiveCallbackType cb)
 LOCAL bool RF24_initialize(void)
 {
 	RF24_DEBUG(PSTR("RF24:INIT\n"));
-	RF24_DEBUG(PSTR("RF24:INIT:PIN,CE=%d,CS=%d\n"), MY_RF24_CE_PIN, MY_RF24_CS_PIN);
+	RF24_DEBUG(PSTR("RF24:INIT:PIN,CE=%" PRIu8 ",CS=%" PRIu8 "\n"), MY_RF24_CE_PIN, MY_RF24_CS_PIN);
 	// Initialize pins & HW
 #if defined(MY_RF24_POWER_PIN)
 	hwPinMode(MY_RF24_POWER_PIN, OUTPUT);
