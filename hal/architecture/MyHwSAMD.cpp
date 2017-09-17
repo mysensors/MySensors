@@ -186,8 +186,8 @@ void hwDebugPrint(const char *fmt, ... )
 		char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;%lu "), C_INTERNAL, I_LOG_MESSAGE,
-		         hwMillis());
+		snprintf(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
+		         C_INTERNAL, I_LOG_MESSAGE, hwMillis());
 		MY_SERIALDEVICE.print(fmtBuffer);
 #else
 		// prepend timestamp
@@ -206,5 +206,7 @@ void hwDebugPrint(const char *fmt, ... )
 		MY_SERIALDEVICE.print(fmtBuffer);
 		//	MY_SERIALDEVICE.flush();
 	}
+#else
+	(void)fmt;
 #endif
 }

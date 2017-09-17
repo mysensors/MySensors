@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -166,14 +166,14 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 LOCAL uint8_t RFM69_RAW_readByteRegister(const uint8_t address)
 {
 	const uint8_t value =  RFM69_spiMultiByteTransfer(address, NULL, 1, true);
-	//RFM69_DEBUG(PSTR("RFM69:read register, reg=0x%02x, value=%d\n"), address, value);
+	//RFM69_DEBUG(PSTR("RFM69:read register, reg=0x%02" PRIx8 ", value=%" PRIu8 "\n"), address, value);
 	return value;
 }
 
 // low level register access
 LOCAL uint8_t RFM69_RAW_writeByteRegister(const uint8_t address, uint8_t value)
 {
-	//RFM69_DEBUG(PSTR("RFM69:write register, reg=0x%02x, value=%d\n"), address & 0x7F, value);
+	//RFM69_DEBUG(PSTR("RFM69:write register, reg=0x%02" PRIx8 ", value=%" PRIu8 "\n"), address & 0x7F, value);
 	return RFM69_spiMultiByteTransfer(address, &value, 1, false);
 }
 
@@ -200,10 +200,12 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	hwDigitalWrite(MY_RFM69_RST_PIN, LOW);
 	// wait until chip ready
 	delay(5);
-	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,CS=%d,IQP=%d,IQN=%d,RST=%d\n"), MY_RFM69_CS_PIN,MY_RFM69_IRQ_PIN,
+	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,CS=%" PRIu8 ",IQP=%" PRIu8 ",IQN=%" PRIu8 ",RST=%" PRIu8 "\n"),
+	            MY_RFM69_CS_PIN,MY_RFM69_IRQ_PIN,
 	            MY_RFM69_IRQ_NUM,MY_RFM69_RST_PIN);
 #else
-	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,CS=%d,IQP=%d,IQN=%d\n"),MY_RFM69_CS_PIN, MY_RFM69_IRQ_PIN,
+	RFM69_DEBUG(PSTR("RFM69:INIT:PIN,CS=%" PRIu8 ",IQP=%" PRIu8 ",IQN=%" PRIu8 "\n"),MY_RFM69_CS_PIN,
+	            MY_RFM69_IRQ_PIN,
 	            MY_RFM69_IRQ_NUM);
 #endif
 
@@ -479,7 +481,7 @@ LOCAL bool RFM69_setTxPowerLevel(rfm69_powerlevel_t newPowerLevel)
 	}
 #endif
 	RFM69_writeReg(RFM69_REG_PALEVEL, palevel);
-	RFM69_DEBUG(PSTR("RFM69:PTX:LEVEL=%d dBm\n"),newPowerLevel);
+	RFM69_DEBUG(PSTR("RFM69:PTX:LEVEL=%" PRIi8 " dBm\n"),newPowerLevel);
 	return true;
 }
 
@@ -622,7 +624,8 @@ LOCAL bool RFM69_standBy(void)
 LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t sequenceNumber,
                          const rfm69_RSSI_t RSSI)
 {
-	RFM69_DEBUG(PSTR("RFM69:SAC:SEND ACK,TO=%d,RSSI=%d\n"),recipient, RFM69_internalToRSSI(RSSI));
+	RFM69_DEBUG(PSTR("RFM69:SAC:SEND ACK,TO=%" PRIu8 ",RSSI=%" PRIi16 "\n"),recipient,
+	            RFM69_internalToRSSI(RSSI));
 	rfm69_ack_t ACK;
 	ACK.sequenceNumber = sequenceNumber;
 	ACK.RSSI = RSSI;
@@ -649,7 +652,8 @@ LOCAL bool RFM69_executeATC(const rfm69_RSSI_t currentRSSI, const rfm69_RSSI_t t
 		// nothing to adjust
 		return false;
 	}
-	RFM69_DEBUG(PSTR("RFM69:ATC:ADJ TXL,cR=%d,tR=%d,TXL=%d\n"), RFM69_internalToRSSI(currentRSSI),
+	RFM69_DEBUG(PSTR("RFM69:ATC:ADJ TXL,cR=%" PRIi16 ",tR=%" PRIi16 ",TXL=%" PRIi16 "\n"),
+	            RFM69_internalToRSSI(currentRSSI),
 	            RFM69_internalToRSSI(targetRSSI), newPowerLevel);
 
 	return RFM69_setTxPowerLevel(newPowerLevel);
@@ -666,7 +670,7 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
                                const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTimeMS)
 {
 	for (uint8_t retry = 0; retry <= retries; retry++) {
-		RFM69_DEBUG(PSTR("RFM69:SWR:SEND,TO=%d,RETRY=%d\n"), recipient, retry);
+		RFM69_DEBUG(PSTR("RFM69:SWR:SEND,TO=%" PRIu8 ",RETRY=%" PRIu8 "\n"), recipient, retry);
 		rfm69_controlFlags_t flags = 0x00; // reset all flags
 		RFM69_setACKRequested(flags, (recipient != RFM69_BROADCAST_ADDRESS));
 		RFM69_setACKRSSIReport(flags, RFM69.ATCenabled);
@@ -688,7 +692,8 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
 				// packet read, back to RX
 				RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
 				if (sender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
-					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%d,SEQ=%d,RSSI=%d\n"),sender,ACKsequenceNumber,
+					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"),sender,
+					            ACKsequenceNumber,
 					            RFM69_internalToRSSI(RSSI));
 
 					// ATC
@@ -739,7 +744,7 @@ LOCAL bool RFM69_setTxPowerPercent(uint8_t newPowerPercent)
 	const rfm69_powerlevel_t newPowerLevel = static_cast<rfm69_powerlevel_t>
 	        (RFM69_MIN_POWER_LEVEL_DBM + (RFM69_MAX_POWER_LEVEL_DBM
 	                                      - RFM69_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));
-	RFM69_DEBUG(PSTR("RFM69:SPP:PCT=%d,TX LEVEL=%d\n"), newPowerPercent,newPowerLevel);
+	RFM69_DEBUG(PSTR("RFM69:SPP:PCT=%" PRIu8 ",TX LEVEL=%" PRIi8 "\n"), newPowerPercent,newPowerLevel);
 	return RFM69_setTxPowerLevel(newPowerLevel);
 }
 

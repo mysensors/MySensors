@@ -59,7 +59,8 @@ void firmwareOTAUpdateRequest(void)
 		firmwareRequest.type = _nodeFirmwareConfig.type;
 		firmwareRequest.version = _nodeFirmwareConfig.version;
 		firmwareRequest.block = (_firmwareBlock - 1);
-		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04X,V=%04X,B=%04X\n"), _nodeFirmwareConfig.type,
+		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04" PRIX16 ",V=%04" PRIX16 ",B=%04" PRIX16 "\n"),
+		          _nodeFirmwareConfig.type,
 		          _nodeFirmwareConfig.version, _firmwareBlock - 1); // request FW update block
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST,
 		                       false).set(&firmwareRequest, sizeof(requestFirmwareBlock_t)));
@@ -100,7 +101,7 @@ bool firmwareOTAUpdateProcess(void)
 			// extract FW block
 			replyFirmwareBlock_t *firmwareResponse = (replyFirmwareBlock_t *)_msg.data;
 
-			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04X\n"), firmwareResponse->block);	// received FW block
+			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04" PRIX16 "\n"), firmwareResponse->block);	// received FW block
 			if (firmwareResponse->block != _firmwareBlock - 1) {
 				OTA_DEBUG(PSTR("!OTA:FWP:WRONG FWB\n"));	// received FW block
 				// wrong firmware block received
@@ -119,14 +120,15 @@ bool firmwareOTAUpdateProcess(void)
 				char prbuf[8];
 				uint32_t addr = ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET;
 				OTA_DEBUG(PSTR("OTA:FWP:FL DUMP "));
-				sprintf_P(prbuf,PSTR("%04X:"), (uint16_t)addr);
+				sprintf_P(prbuf,PSTR("%04" PRIX16 ":"), (uint16_t)addr);
 				MY_SERIALDEVICE.print(prbuf);
 				for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
 					uint8_t data = _flash.readByte(addr + i);
-					sprintf_P(prbuf,PSTR("%02X"), (unsigned int)data);
+					sprintf_P(prbuf,PSTR("%02" PRIX8 ""), (uint8_t)data);
 					MY_SERIALDEVICE.print(prbuf);
 				}
 				OTA_DEBUG(PSTR("\n"));
+				8
 			}
 #endif
 			_firmwareBlock--;
@@ -195,7 +197,8 @@ bool transportIsValidFirmware(void)
 			}
 		}
 	}
-	OTA_DEBUG(PSTR("OTA:CRC:B=%04X,C=%04X,F=%04X\n"), _nodeFirmwareConfig.blocks,crc,
+	OTA_DEBUG(PSTR("OTA:CRC:B=%04" PRIX16 ",C=%04" PRIX16 ",F=%04" PRIX16 "\n"),
+	          _nodeFirmwareConfig.blocks,crc,
 	          _nodeFirmwareConfig.crc);
 	return crc == _nodeFirmwareConfig.crc;
 }
