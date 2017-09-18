@@ -381,7 +381,8 @@ static bool skipSign(MyMessage &msg)
 	              msg.type == I_FIND_PARENT_REQUEST		|| msg.type == I_FIND_PARENT_RESPONSE	||
 	              msg.type == I_HEARTBEAT_REQUEST			|| msg.type == I_HEARTBEAT_RESPONSE		||
 	              msg.type == I_PING									|| msg.type == I_PONG									||
-	              msg.type == I_DISCOVER_REQUEST	    || msg.type == I_DISCOVER_RESPONSE )) {
+	              msg.type == I_DISCOVER_REQUEST	    || msg.type == I_DISCOVER_RESPONSE    ||
+	              msg.type == I_LOG_MESSAGE)) {
 		ret = true;
 	} else if (mGetCommand(msg) == C_STREAM &&
 	           (msg.type == ST_SOUND            ||
