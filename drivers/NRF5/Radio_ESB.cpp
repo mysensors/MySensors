@@ -274,27 +274,27 @@ static bool NRF5_ESB_isDataAvailable()
 
 static uint8_t NRF5_ESB_readMessage(void *data)
 {
+	uint8_t ret = 0;
+
 	// get content from rx buffer
 	NRF5_ESB_Packet *buffer = rx_circular_buffer.getBack();
 	// Nothing to read?
-	if (buffer == NULL) {
-		return 0;
-	}
+	if (buffer != NULL) {
+		// copy content
+		memcpy(data, buffer->data, buffer->len);
+		ret = buffer->len;
+		rssi_rx = 0-buffer->rssi;
 
-	// copy content
-	memcpy(data, buffer->data, buffer->len);
-	uint8_t ret = buffer->len;
-	rssi_rx = 0-buffer->rssi;
-
-	// Debug message
+		// Debug message
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-	NRF5_RADIO_DEBUG(PSTR("NRF5:RX:LEN=%" PRIu8 ",NOACK=%" PRIu8 ",PID=%" PRIu8 ",RSSI=%" PRIi16 ",RX=%"
-	                      PRIu32 "\n"),
-	                 buffer->len, buffer->noack, buffer->pid, rssi_rx, buffer->rxmatch);
+		NRF5_RADIO_DEBUG(PSTR("NRF5:RX:LEN=%" PRIu8 ",NOACK=%" PRIu8 ",PID=%" PRIu8 ",RSSI=%" PRIi16 ",RX=%"
+		                      PRIu32 "\n"),
+		                 buffer->len, buffer->noack, buffer->pid, rssi_rx, buffer->rxmatch);
 #endif
 
-	// release buffer
-	rx_circular_buffer.popBack();
+		// release buffer
+		rx_circular_buffer.popBack();
+	}
 
 	// Check if radio was disabled by buffer end
 	if (radio_disabled == true) {
