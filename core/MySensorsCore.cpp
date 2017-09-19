@@ -98,7 +98,7 @@ void _begin(void)
 
 	const bool hwInitResult = hwInit();
 
-#if !defined(MY_SPLASH_SCREEN_DISABLED)
+#if !defined(MY_SPLASH_SCREEN_DISABLED) && !defined(MY_GATEWAY_FEATURE)
 	displaySplashScreen();
 #endif
 
