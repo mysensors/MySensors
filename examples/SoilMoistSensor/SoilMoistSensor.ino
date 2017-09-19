@@ -77,7 +77,7 @@
 #define CHILD_ID 0
 
 MyMessage msg(CHILD_ID, V_LEVEL);
-unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 
 long buffer[NUM_READS];
 int idx;

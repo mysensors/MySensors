@@ -41,7 +41,7 @@
 
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
 
-unsigned long SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
+uint32_t SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
 
 void setup()

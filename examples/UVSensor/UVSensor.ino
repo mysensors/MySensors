@@ -51,11 +51,11 @@
 
 #define CHILD_ID_UV 0
 
-unsigned long SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
 
 MyMessage uvMsg(CHILD_ID_UV, V_UV);
 
-unsigned long lastSend =0;
+uint32_t lastSend =0;
 float uvIndex;
 float lastUV = -1;
 uint16_t uvIndexValue [12] = { 50, 227, 318, 408, 503, 606, 696, 795, 881, 976, 1079, 1170};
@@ -72,7 +72,7 @@ void presentation()
 
 void loop()
 {
-	unsigned long currentTime = millis();
+	uint32_t currentTime = millis();
 
 	uint16_t uv = analogRead(UV_SENSOR_ANALOG_PIN);// Get UV value
 	if (uv>1170) {

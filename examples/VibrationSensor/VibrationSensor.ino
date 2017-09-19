@@ -48,7 +48,7 @@
 #define VIBRATION_SENSOR_DIGITAL_PIN 3
 #define SensorLED     13
 
-unsigned long SLEEP_TIME = 10*1000; // Sleep time between reads (in seconds)
+uint32_t SLEEP_TIME = 10*1000; // Sleep time between reads (in seconds)
 
 //VARIABLES
 int val = 0;           // variable to store the value coming from the sensor
