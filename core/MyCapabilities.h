@@ -21,19 +21,21 @@
 #ifndef MyCapabilities_h
 #define MyCapabilities_h
 
+// Remote reset
 #if defined(MY_DISABLE_REMOTE_RESET)
 #define MY_CAP_RESET "N"
 #else
 #define MY_CAP_RESET "R"
 #endif
 
+// OTA firmware uodate feature
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 #define MY_CAP_OTA_FW "O"
 #else
 #define MY_CAP_OTA_FW "N"
 #endif
 
-
+// Transport
 #if defined(MY_RADIO_NRF24) || defined(MY_RADIO_NRF5_ESB)
 #define MY_CAP_RADIO "N"
 #elif defined(MY_RADIO_RFM69)
@@ -52,6 +54,7 @@
 #define MY_CAP_RADIO "-"
 #endif
 
+// Node type
 #if defined(MY_GATEWAY_FEATURE)
 #define MY_CAP_TYPE "G"
 #elif defined(MY_REPEATER_FEATURE)
@@ -62,6 +65,7 @@
 #define MY_CAP_TYPE "N"
 #endif
 
+// Architecture
 #if defined(ARDUINO_ARCH_SAMD)
 #define MY_CAP_ARCH "S"
 #elif defined(ARDUINO_ARCH_NRF5)
@@ -70,10 +74,17 @@
 #define MY_CAP_ARCH "E"
 #elif defined(ARDUINO_ARCH_AVR)
 #define MY_CAP_ARCH "A"
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define MY_CAP_ARCH "F"
+#elif defined(__arm__) && defined(TEENSYDUINO)
+#define MY_CAP_ARCH "T"
+#elif defined(__linux__)
+#define MY_CAP_ARCH "L"
 #else
 #define MY_CAP_ARCH "-"
 #endif
 
+// Signing
 #if defined(MY_SIGNING_ATSHA204)
 #define MY_CAP_SIGN "A"
 #elif defined(MY_SIGNING_SOFT)
@@ -82,12 +93,14 @@
 #define MY_CAP_SIGN "-"
 #endif
 
+// RX queue
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 #define MY_CAP_RXBUF "Q"
 #else
 #define MY_CAP_RXBUF "-"
 #endif
 
+// Radio encryption
 #if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION)
 #define MY_CAP_ENCR "X"
 #else
