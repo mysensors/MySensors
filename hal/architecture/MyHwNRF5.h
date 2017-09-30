@@ -29,10 +29,15 @@
 #endif
 
 // Define NRF5_SOFTDEVICE when SoftDevice found
-#if defined(S110) || defined(S130) || defined(S132)
-#ifndef NRF5_SOFTDEVICE
-#define NRF5_SOFTDEVICE
+#if defined(S110) || defined(S130) || defined(S132) || defined(S140)
+#ifndef SOFTDEVICE_PRESENT
+#define SOFTDEVICE_PRESENT
 #endif
+#endif
+
+// Define ARDUINO_ARCH_NRF5, if not defined
+#ifndef ARDUINO_ARCH_NRF5
+#define ARDUINO_ARCH_NRF5
 #endif
 
 #include "drivers/NRF5/nrf5_wiring_digital.c"
@@ -42,8 +47,19 @@
 #include <avr/dtostrf.h>
 #include <nrf.h>
 
+// mapping
+#ifndef strncpy_P
+#define strncpy_P strncpy
+#endif
+#ifndef snprintf_P
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
+#endif
+#ifndef vsnprintf_P
+#define vsnprintf_P vsnprintf
+#endif
+#ifndef printf_P
 #define printf_P printf
+#endif
 
 #define MIN(a,b) min(a,b)
 #define MAX(a,b) max(a,b)
@@ -139,4 +155,4 @@ typedef struct {
 #define MY_CRITICAL_SECTION
 #endif /* DOXYGEN || CPPCHECK */
 
-#endif // #ifdef ARDUINO_ARCH_NRF5
+#endif // #ifndef MyHwNRF5_h

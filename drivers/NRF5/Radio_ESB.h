@@ -25,6 +25,11 @@
 #include "Radio.h"
 #include <Arduino.h>
 
+// Check SoftDevice presence
+#if defined(SOFTDEVICE_PRESENT) && !defined(FORCE_RADIO_ESB_WITH_SD)
+#error "NRF5 SoftDevice cannot be used with NRF5 Radio."
+#endif
+
 // Check maximum messae length
 #if MAX_MESSAGE_LENGTH > (32)
 #error "Unsupported message length. (MAX_MESSAGE_LENGTH)"
@@ -49,11 +54,14 @@
 // auto retry delay in us, don't set this value < 1500us@250kbit
 #define NRF5_ESB_ARD (1500)
 
-// auto retry count
-#define NRF5_ESB_ARC (15)
+// auto retry count with noACK is false
+#define NRF5_ESB_ARC_ACK (15)
+
+// auto retry count with noACK is true
+#define NRF5_ESB_ARC_NOACK (15)
 
 // How often broadcast messages are send
-#define NRF5_ESB_BC (1)
+#define NRF5_ESB_BC_ARC (15)
 
 // Node address index
 #define NRF5_ESB_NODE_ADDR (0)
@@ -153,5 +161,11 @@ typedef struct nrf5_radio_packet_s {
 	__attribute__((packed));
 #endif
 } NRF5_ESB_Packet;
+
+#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
+static uint32_t intcntr_bcmatch;
+static uint32_t intcntr_ready;
+static uint32_t intcntr_end;
+#endif
 
 #endif // __NRF5_H__
