@@ -367,7 +367,7 @@ void transportSwitchSM(transportState_t& newState)
 	} else {
 		_transportSM.stateRetries++;	// increment retries
 	}
-	if (_transportSM.currentState->Transition) {
+	if (_transportSM.currentState) {
 		_transportSM.currentState->Transition();	// State transition
 	}
 	_transportSM.stateEnter = hwMillis();	// save time
@@ -380,7 +380,7 @@ uint32_t transportTimeInState(void)
 
 void transportUpdateSM(void)
 {
-	if (_transportSM.currentState->Update) {
+	if (_transportSM.currentState) {
 		_transportSM.currentState->Update();
 	}
 }
