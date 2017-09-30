@@ -503,10 +503,16 @@
 #endif
 
 /**
- * @def MY_NRF5_ESB_REVERSE_ACK
- * @brief Switch to SI24R1 or faked nRF24L01+ compatible ACK mode.
+ * @def MY_NRF5_ESB_REVERSE_ACK_TX
+ * @brief Switch to SI24R1 or faked nRF24L01+ compatible ACK mode. ACK bit is reversed on TX side.
  */
-//#define MY_NRF5_ESB_REVERSE_ACK
+//#define MY_NRF5_ESB_REVERSE_ACK_TX
+
+/**
+ * @def MY_NRF5_ESB_REVERSE_ACK_RX
+ * @brief Switch to SI24R1 or faked nRF24L01+ compatible ACK mode. ACK bit is reversed on RX side.
+ */
+//#define MY_NRF5_ESB_REVERSE_ACK_RX
 /** @}*/ // End of NRF5SettingGrpPub group
 
 /**
@@ -1865,7 +1871,8 @@
 // NRF5_ESB
 #define MY_NRF5_ESB_ENABLE_ENCRYPTION
 #define MY_DEBUG_VERBOSE_NRF5_ESB
-#define MY_NRF5_ESB_REVERSE_ACK
+#define MY_NRF5_ESB_REVERSE_ACK_RX
+#define MY_NRF5_ESB_REVERSE_ACK_TX
 // RFM69
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER

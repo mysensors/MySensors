@@ -32,7 +32,13 @@ void nrf5_pinMode(uint32_t ulPin, uint32_t ulMode)
 		return;
 	}
 
+#ifdef ARDUINO_ARCH_NRF52
+	// Arduino: https://github.com/arduino-org/arduino-core-nrf52
+	ulPin = g_APinDescription[ulPin].ulPin;
+#else
+	// Sandeep Mistry: https://github.com/sandeepmistry/arduino-nRF5
 	ulPin = g_ADigitalPinMap[ulPin];
+#endif
 
 	// Set pin mode according to chapter '22.6.3 I/O Pin Configuration'
 	switch (ulMode) {

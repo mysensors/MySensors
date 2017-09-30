@@ -66,6 +66,25 @@ void hwWriteConfig(int adr, uint8_t value)
 
 bool hwInit()
 {
+	// Clock is manged by sleep modes. Radio depends on HFCLK.
+	// Force to start HFCLK
+	NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+	NRF_CLOCK->TASKS_HFCLKSTART = 1;
+	while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
+		;
+
+	// Enable low latency sleep mode
+	NRF_POWER->TASKS_CONSTLAT = 1;
+
+	// Enable cache on >= NRF52
+#ifndef NRF51
+	NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Msk;
+#endif
+
+	// Suspend UART
+	NRF_UART0->TASKS_STOPRX = 1;
+	NRF_UART0->TASKS_STOPTX = 1;
+	NRF_UART0->TASKS_SUSPEND = 1;
 
 #ifdef MY_DISABLED_SERIAL
 	// Disable UART, when not configured
@@ -471,7 +490,13 @@ uint16_t hwCPUVoltage()
 
 uint16_t hwCPUFrequency()
 {
-	return F_CPU / 100000UL;
+#if defined(VARIANT_MCK)
+	return (VARIANT_MCK) / 100000UL;
+#elif defined(F_CPU)
+	return (F_CPU) / 100000UL;
+#else
+	return 16;
+#endif
 }
 
 uint16_t hwFreeMem()

@@ -61,7 +61,7 @@
 #include "hal/architecture/MyHwSAMD.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/MyHwSTM32F1.cpp"
-#elif defined(ARDUINO_ARCH_NRF5)
+#elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
 #include "drivers/NVM/VirtualPage.cpp"
 #include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/MyHwNRF5.cpp"
@@ -291,7 +291,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // POWER PIN
 #ifndef DOXYGEN
-#if defined(MY_RF24_POWER_PIN) || defined(MY_RFM69_POWER_PIN) || defined(MY_RFM95_POWER_PIN)
+#if defined(MY_RF24_POWER_PIN) || defined(MY_RFM69_POWER_PIN) || defined(MY_RFM95_POWER_PIN) || defined(MY_RADIO_NRF5_ESB)
 #define RADIO_CAN_POWER_OFF (true)
 #else
 #define RADIO_CAN_POWER_OFF (false)
@@ -384,8 +384,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if !defined(MY_CORE_ONLY)
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/MyMainESP8266.cpp"
-#elif defined(ARDUINO_ARCH_NRF5)
-#include "hal/architecture/MyMainNRF5.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyMainLinux.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
