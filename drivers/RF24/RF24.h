@@ -147,7 +147,7 @@ extern HardwareSPI SPI;		//!<  SPI
 #else
 #define RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)		//!< RF24_CONFIGURATION
 #endif
-#define RF24_FEATURE (uint8_t)( _BV(RF24_EN_DPL) | _BV(RF24_EN_ACK_PAY) )	//!<  RF24_FEATURE
+#define RF24_FEATURE (uint8_t)( _BV(RF24_EN_DPL))	//!<  RF24_FEATURE
 #define RF24_RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 		//!< RF24_RF_SETUP, +1 for Si24R1 and LNA
 
 // powerup delay
