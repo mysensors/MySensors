@@ -64,6 +64,44 @@
 #define MIN(a,b) min(a,b)
 #define MAX(a,b) max(a,b)
 
+// redefine 8 bit types of inttypes.h until fix of https://github.com/sandeepmistry/arduino-nRF5/issues/197
+#undef PRId8
+#undef PRIi8
+#undef PRIo8
+#undef PRIu8
+#undef PRIx8
+#undef PRIX8
+#undef PRIdLEAST8
+#undef PRIiLEAST8
+#undef PRIoLEAST8
+#undef PRIuLEAST8
+#undef PRIxLEAST8
+#undef PRIXLEAST8
+#undef PRIdFAST8
+#undef PRIiFAST8
+#undef PRIoFAST8
+#undef PRIuFAST8
+#undef PRIxFAST8
+#undef PRIXFAST8
+#define PRId8		"hd"
+#define PRIi8		"hi"
+#define PRIo8		"ho"
+#define PRIu8		"hu"
+#define PRIx8		"hx"
+#define PRIX8		"hX"
+#define PRIdLEAST8	"hd"
+#define PRIiLEAST8	"hi"
+#define PRIoLEAST8	"ho"
+#define PRIuLEAST8	"hu"
+#define PRIxLEAST8	"hx"
+#define PRIXLEAST8	"hX"
+#define PRIdFAST8	"hd"
+#define PRIiFAST8	"hi"
+#define PRIoFAST8	"ho"
+#define PRIuFAST8	"hu"
+#define PRIxFAST8	"hx"
+#define PRIXFAST8	"hX"
+
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
 #define hwDigitalRead(__pin) digitalRead(__pin)
