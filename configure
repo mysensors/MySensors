@@ -22,6 +22,7 @@ Building options:
     --cpu-flags=<CPUFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
     --extra-cflags=<CFLAGS>     Extra C flags passed to C compilation. []
     --extra-cxxflags=<CXXFLAGS> Extra C++ flags passed to C++ compilation. []
+                                Example: --extra-cxxflags="-DMY_RX_MESSAGE_BUFFER_SIZE=\(32\) -DMY_RF24_DATARATE=\(RF24_2MBPS\)"
     --extra-ldflags=<LDFLAGS>   Extra C flags passed to linking. []
     --c_compiler=<CC>           C compiler. [arm-linux-gnueabihf-gcc][gcc]
     --cxx_compiler=<CXX>        C++ compiler. [arm-linux-gnueabihf-g++][g++]
@@ -32,14 +33,13 @@ Building options:
 
 Installation options:
     --prefix=<PREFIX>           Installation prefix path. [/usr/local]
-    --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]       
+    --gateway-dir=<DIR>         Gateway files installation directory. [PREFIX/bin]
 
 MySensors options:
     --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
     --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
     --my-gateway=[none|ethernet|serial|mqtt]
-                                Set the protocol used to communicate with the controller.
-                                [ethernet]
+                                Set the protocol used to communicate with the controller. [ethernet]
     --my-node-id=<ID>           Disable gateway feature and run as a node with the specified id.
     --my-controller-url-address=<URL>
                                 Controller or MQTT broker url.
@@ -62,8 +62,7 @@ MySensors options:
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
     --my-transport=[none|nrf24|rs485|rfm95|rfm69]
-                                Set the transport to be used to communicate with other nodes.
-                                [nrf24]
+                                Set the transport to be used to communicate with other nodes. [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
@@ -101,7 +100,6 @@ MySensors options:
                                 relaxed gateway signing requirements.
     --my-signing-password=<PASSWORD>
                                 If you are using password as the signature type, set your password here.
-
 EOF
 }
 
