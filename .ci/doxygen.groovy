@@ -1,6 +1,13 @@
 #!groovy
 def call(config) {
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Documentation)', 'Generating...', '${BUILD_URL}flowGraphTable/')
+	// Generate doxygen file for Raspberry Pi configure command
+	sh """#!/bin/bash +x
+				export CONFIGURE_DOX_FILE=configure.dox
+				cd ${config.repository_root}
+				echo -e "/**\n * @defgroup RaspberryPiGateway Raspberry Pi Gateway\n * @ingroup MyConfigGrp\n * @brief Configuration options for the Raspberry Pi Gateway\n@verbatim" > $CONFIGURE_DOX_FILE
+				grep -A999 '<<EOF' configure | grep -B999 EOF | grep -v EOF' >> $CONFIGURE_DOX_FILE
+				echo -e "@endverbatim\n" >> $CONFIGURE_DOX_FILE"""
 	sh """#!/bin/bash +x
 				cd ${config.repository_root}
 				export PROJECTNUMBER=\$(
