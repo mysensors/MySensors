@@ -19,40 +19,194 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+
+/*
+ * This is the implementation of the Enhanced Shockburst (ESB) protocol.
+ * Most activity is driven by Shortcuts and PPI.
+ * This code is not compatible with SoftDevices because of sharing resources
+ * like Timer0 and PPI.
+ *
+ * TX Mode
+ * =======
+ *
+ * TX (noACK)flow:
+ * 1   2    TX    3                                        4
+ * |---|----------|----------------------------------------|
+ *
+ * TX (ACK)flow:
+ * 1   2    TX    3   5 RX 6  (RX) 7      8                4
+ * |---|----------|---|----|-------|------|----------------|
+ *
+ * 1 = Start timer
+ * 2 = TXEN via CC[3] and PPI[+0] (8µS NRF51 / 100µS NRF52 with fast ramp up)
+ * 3 = TX DISABLED Event -> Disable Radio (Shortcurt)
+ *     - ACK NRF51: Start RX via radio shortcut  |5|
+ *     - ACK NRF52: Calculate CC[0]=CC[2]+80µS via PPI[27] and *radioDisabled |5|
+ * 		- ACK+noACK: Caluclate CC[2]+ARD via PPI[27] |4|
+ *     - ACK: Calculate CC[1] to disable RX after NRF5_ESB_ACK_WAIT of listening (*radioReady) |7|
+ * 4 = CC[2] Event at Auto Retry Delay (ARD)-> Clear Timer at CC[2] (Shortcut)
+ * 5 = RXEN (NRF52) via CC[0] and PPI[21]; NRF51: DISABLED->RXEN Shortcut (NRF51)
+ * 6 = ADDRESS Event -> Caluclate CC[1] via PPI[27] |8|
+ * 7 = CC[1] without ADDRESS event -> disable radio
+ * 8 = CC[1] with ADDRESS event -> disable radio
+ *
+ * Timer Events
+ * - CC[0]: Enable RX (ACK + noACK) |5|
+ * - CC[1]: Disable radio (noACK) |7,8|
+ * - CC[2]: Clear timer. Restart TX process. (ACK + noACK)
+ * - CC[3]: Enable TX (ACK + noACK)
+ * - CC[4]: NRF52 Disable radio (reset, when tx is hanging)
+ *
+ * RX Mode
+ * =======
+ *
+ * RX (noACK)flow:
+ * 1 2  3  RX 4    5
+ * |-|--|-----|----|
+ *
+ * RX (ACK)flow:
+ * 1 2  3  RX 4 6 7 TX 8
+ * |-|--|-----|-|-|----|
+ *
+ * 1 = Start RX
+ * 2 = Ready event
+ *     - Configure DMA Memory (rx/ack buffer)
+ *     - Configure Shortcuts
+ * 3 = ADDRESS EVENT (RX)
+ *     - NRF52: Calculate CC[1]
+ * 		 - NRF52: Start Timer via PPI (PAN#102)
+ * 4 = END Event
+ *     - Prepare shortcut for next radio mode (RX/TX)
+ *     - ACK: prepare ACK Payload
+ *     - ACK NRF52: Calculate CC[0]=CC[2]+80µS via PPI[27] to start TX |6|
+ *     - NoACK NRF52: Stop Timer
+ * 5 = Restart radio via CC[1], PPI[21]; CC[1]->Timer Clear+Stop; (PAN#102)
+ * 6 = CC[0] -> TX -> Start TX; CC[0]->Timer Clear+Stop;
+ * 7 = TX Ready:
+ *     - Configure Shortcut END -> DISABLE -> RX
+ * 8 = END event; Switch back to RX via Shortcut
+ *
+ * Timer Events
+ * - CC[0]: Enable TX (ACK) |6|
+ * - CC[1]: Disable radio (ACK, PAN#102) |5|
+ */
+
 #include "Radio.h"
 #include "Radio_ESB.h"
 #include "hal/architecture/NRF5/MyHwNRF5.h"
 #include "drivers/CircularBuffer/CircularBuffer.h"
 #include <stdio.h>
 
+/*
+ *  State Machine
+ */
+
+// PRIVATE state machine functions
+void stEnter(esbState_t* state);
+void stNull(void);
+
+void stTxPPI(void);
+void stTxEnd(void);
+void stTxDisabled(void);
+
+void stTXAckPPI(void);
+void stTxAckReady(void);
+void stTxAckAddress(void);
+void stTxAckEnd(void);
+void stTxAckDisabled(void);
+
+void stRxPPI(void);
+
+void stRxReady(void);
+void stRxAddress(void);
+void stRxEnd(void);
+void stRxDisabled(void);
+
+void stNoPPI(void);
+
+// States:
+
+// Radio disabled
+static esbState_t stDisabled = {0, 0, (1 << NRF5_ESB_NODE_ADDR) | (1 << NRF5_ESB_BC_ADDR), 0, stNull, stNull, stNull, stNull, 0,  stNoPPI};
+
+// Radio in RX mode listening on node and BC address
+static esbState_t stRx       = {
+#if defined(NRF52) or defined(NRF5_ESB_ENABLE_DEBUG_LEDS)
+	// Address is required for timer control (PAN#102)
+	(RADIO_INTENSET_READY_Msk | RADIO_INTENSET_ADDRESS_Msk | RADIO_INTENSET_END_Msk), // Radio events
+#else
+	(RADIO_INTENSET_READY_Msk | RADIO_INTENSET_END_Msk), // Radio events
+#endif
+	(RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_ADDRESS_RSSISTART_Msk | RADIO_SHORTS_DISABLED_RSSISTOP_Msk), // Common radio shortcuts for RX and RX+ACK
+	((1 << NRF5_ESB_NODE_ADDR) | (1 << NRF5_ESB_BC_ADDR)), // Listen on node address + broadcast address
+	NRF5_ESB_NODE_ADDR, // TX address
+	stRxReady,
+	stRxAddress,
+	stRxEnd,
+#ifdef NRF52
+	stRxDisabled,
+#else
+	stNull,
+#endif
+	((TIMER_SHORTS_COMPARE0_CLEAR_Enabled << TIMER_SHORTS_COMPARE0_CLEAR_Pos) | (TIMER_SHORTS_COMPARE0_STOP_Enabled << TIMER_SHORTS_COMPARE0_STOP_Pos) | (TIMER_SHORTS_COMPARE1_CLEAR_Enabled << TIMER_SHORTS_COMPARE1_CLEAR_Pos) | (TIMER_SHORTS_COMPARE1_STOP_Enabled << TIMER_SHORTS_COMPARE1_STOP_Pos)),
+	stRxPPI 		// setup PPI
+};
+
+// Radio in TX mode
+static esbState_t stTx = {
+#ifdef NRF5_ESB_DO_CAPTURE
+	(RADIO_INTENSET_END_Msk | RADIO_INTENSET_DISABLED_Msk), // Radio events
+#else
+	(RADIO_INTENSET_DISABLED_Msk), // Radio events
+#endif
+	(RADIO_SHORTS_READY_START_Enabled << RADIO_SHORTS_READY_START_Pos | RADIO_SHORTS_END_DISABLE_Enabled << RADIO_SHORTS_END_DISABLE_Pos), // Radio shortcuts
+	0, // No listening
+	NRF5_ESB_TX_ADDR, // TX address
+	stNull,
+	stNull,
+	stTxEnd,
+	stTxDisabled,
+	((TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos)),
+	stTxPPI 		// setup PPI
+};
+// Radio in TX mode switching to receive ACK messages after TX
+static esbState_t stTxAck = {
+	(RADIO_INTENSET_READY_Msk | RADIO_INTENSET_ADDRESS_Msk | RADIO_INTENSET_END_Msk | RADIO_INTENSET_DISABLED_Msk), // Radio events
+	(RADIO_SHORTS_READY_START_Enabled << RADIO_SHORTS_READY_START_Pos | RADIO_SHORTS_END_DISABLE_Enabled << RADIO_SHORTS_END_DISABLE_Pos), // Radio shortcuts
+	(1 << NRF5_ESB_TX_ADDR),	// Only listen on TX Address for ACK receive
+	NRF5_ESB_TX_ADDR, // TX address
+	stTxAckReady, // READY event
+	stTxAckAddress, // ADDRESS event
+	stTxAckEnd, // END event
+	stTxAckDisabled, // DISABLED event
+	((TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos)),
+	stTXAckPPI 		// setup PPI
+};
+//static esbState_t stTxAck    = {0, 0, (1 << NRF5_ESB_TX_ADDR), stNull, stNull, stNull, stNull, stNull, 0, 0, stNull, stTxTimer, stNoPPI};
+// Predefine a state
+static esbState_t* currentState = &stDisabled;
+
 // internal functions
+void _disableRadio();
+inline void _stopTimer();
+void _microDelay(uint32_t us);
 static uint8_t reverse_byte(uint8_t address);
 
 // RX Buffer
 static NRF5_ESB_Packet rx_circular_buffer_buffer[MY_NRF5_ESB_RX_BUFFER_SIZE];
-// Poiter to rx circular buffer
-static NRF5_ESB_Packet *rx_buffer;
 // Circular buffer
-static CircularBuffer<NRF5_ESB_Packet>
-rx_circular_buffer(rx_circular_buffer_buffer, MY_NRF5_ESB_RX_BUFFER_SIZE);
+static CircularBuffer<NRF5_ESB_Packet> rx_circular_buffer(rx_circular_buffer_buffer,
+        MY_NRF5_ESB_RX_BUFFER_SIZE);
 // Dedect duplicate packages for every pipe available
-static volatile uint32_t package_ids[8];
-
-// ACK Buffer
-static NRF5_ESB_Packet ack_buffer;
-
-// TX Buffer
-static NRF5_ESB_Packet tx_buffer;
+static volatile uint32_t last_package_id;
+// Buffer for radio unit
+static NRF5_ESB_Packet radio_buffer;
 // remaining TX retries
 static volatile int8_t tx_retries;
-// PID number for ACK
-static volatile int8_t ack_pid;
 // Flag for ack received
 static volatile bool ack_received;
 // Flag for end TX event
 static volatile bool events_end_tx;
-// Flag if radio is disabled
-static volatile bool radio_disabled;
 // Last RSSI sample provided by NRF5_ESB_readMessage
 static volatile int16_t rssi_rx;
 // Last RSSI sample by last package
@@ -61,6 +215,10 @@ static volatile int16_t rssi_tx;
 static uint8_t node_address = 0;
 // TX power level
 static int8_t tx_power_level = (MY_NRF5_ESB_PA_LEVEL << RADIO_TXPOWER_TXPOWER_Pos);
+// PID for outgoing packages
+static uint8_t tx_pid;
+// Buffer state
+static uint8_t radio_buffer_state;
 
 // Initialize radio unit
 static bool NRF5_ESB_initialize()
@@ -82,26 +240,9 @@ static bool NRF5_ESB_initialize()
 	NVIC_EnableIRQ(RADIO_IRQn);
 
 	// Enable timer interrupt
-	NVIC_SetPriority(NRF5_RADIO_TIMER_IRQN, 2);
+	NVIC_SetPriority(NRF5_RADIO_TIMER_IRQN, 1);
 	NVIC_ClearPendingIRQ(NRF5_RADIO_TIMER_IRQN);
-	NVIC_EnableIRQ(NRF5_RADIO_TIMER_IRQN);
-
-	// Clear all events
-	NRF_RADIO->EVENTS_ADDRESS = 0;
-	NRF_RADIO->EVENTS_BCMATCH = 0;
-	NRF_RADIO->EVENTS_DEVMATCH = 0;
-	NRF_RADIO->EVENTS_DEVMISS = 0;
-	NRF_RADIO->EVENTS_DISABLED = 0;
-	NRF_RADIO->EVENTS_END = 0;
-	NRF_RADIO->EVENTS_PAYLOAD = 0;
-	NRF_RADIO->EVENTS_READY = 0;
-	NRF_RADIO->EVENTS_RSSIEND = 0;
-
-	// Disable all interrupts
-	NRF_RADIO->INTENCLR = (uint32_t)~0;
-
-	// Select interrupt events
-	NRF_RADIO->INTENSET = RADIO_INTENSET_END_Msk | RADIO_INTENSET_BCMATCH_Msk;
+	NVIC_DisableIRQ(NRF5_RADIO_TIMER_IRQN);
 
 	// Configure radio parameters: tx power
 	NRF_RADIO->TXPOWER = tx_power_level;
@@ -123,16 +264,11 @@ static bool NRF5_ESB_initialize()
 	// Configure addresses
 	NRF_RADIO->PREFIX0 = (NRF5_ESB_NODE_ADDR_MSK | reverse_byte(node_address) <<
 	                      (NRF5_ESB_NODE_ADDR << 5));
+	NRF_RADIO->PREFIX1 = NRF5_ESB_TX_ADDR_MSK; // Broadcast and send address
 	NRF_RADIO->BASE0 = reverse_byte(address[1]) << 24 |
 	                   reverse_byte(address[2]) << 16 |
 	                   reverse_byte(address[3]) << 8 | reverse_byte(address[4]);
-	NRF_RADIO->BASE1 = reverse_byte(address[1]) << 24 |
-	                   reverse_byte(address[2]) << 16 |
-	                   reverse_byte(address[3]) << 8 | reverse_byte(address[4]);
-	NRF_RADIO->PREFIX1 = NRF5_ESB_TX_ADDR_MSK; // Broadcast and send address
-
-	// Enable listening on Node and BC address
-	NRF_RADIO->RXADDRESSES = (1 << NRF5_ESB_NODE_ADDR) | (1 << NRF5_ESB_BC_ADDR);
+	NRF_RADIO->BASE1 = NRF_RADIO->BASE0;
 
 	// Packet configuration for NRF24 compatibility
 	NRF_RADIO->PCNF0 = (6 << RADIO_PCNF0_LFLEN_Pos) | // 6 Bits length field
@@ -150,58 +286,46 @@ static bool NRF5_ESB_initialize()
 	    (RADIO_PCNF1_ENDIAN_Big << RADIO_PCNF1_ENDIAN_Pos) | // Big endian
 	    (RADIO_PCNF1_WHITEEN_Disabled << RADIO_PCNF1_WHITEEN_Pos); // Disable whitening
 
-	// HINT: Fast ramp up can enabled here. Needs more code on other lines
-	// Fast ramp up isn't supported by NRF24 and NRF51 series.
+	// Enable fast ramp up for controllers supporting this feature >NRF51
+#ifdef NRF5_ESB_FAST_RU
+	NRF_RADIO->MODECNF0 = ( RADIO_MODECNF0_RU_Fast << RADIO_MODECNF0_RU_Pos);
+#endif
+#ifdef RADIO_MODECNF0_DTX_B1
+	NRF_RADIO->MODECNF0 |= (RADIO_MODECNF0_DTX_B1 << RADIO_MODECNF0_DTX_Pos);
+#endif
 
-	// Set bitcounter to trigger interrupt after ACK bit
-	NRF_RADIO->BCC = NRF5_ESB_BITCOUNTER;
+	// Radio buffer storing packages
+	NRF_RADIO->PACKETPTR = (uint32_t)&radio_buffer;
 
 #ifdef NRF51
 	// Enable timer
 	NRF5_RADIO_TIMER->POWER = 1;
 #endif
 	// Stop timer, if running
-	NRF5_RADIO_TIMER->TASKS_STOP = 1;
+	_stopTimer();
 	// Prepare timer running at 1 MHz/1us
 	NRF5_RADIO_TIMER->PRESCALER = 4;
 	// Timer mode
 	NRF5_RADIO_TIMER->MODE = TIMER_MODE_MODE_Timer;
 	// in 16 Bit mode
-	NRF5_RADIO_TIMER->BITMODE = TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
-	// Stop timer when CC0 reached
-	NRF5_RADIO_TIMER->SHORTS =
-	    TIMER_SHORTS_COMPARE1_CLEAR_Msk | TIMER_SHORTS_COMPARE1_STOP_Msk;
-	// Reset timer
-	NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
+	NRF5_RADIO_TIMER->BITMODE = TIMER_BITMODE_BITMODE_32Bit << TIMER_BITMODE_BITMODE_Pos;
+	// Disable shorts
+	NRF5_RADIO_TIMER->SHORTS = 0;
 
-	// Reset compare events
-#ifdef NRF51
-	for (uint8_t i=0; i<4; i++) {
-#else
-	for (uint8_t i=0; i<6; i++) {
-#endif
-		NRF5_RADIO_TIMER->EVENTS_COMPARE[i] = 0;
-	}
+	// Enter disabled state
+	stEnter(&stDisabled);
 
-	// Enable interrupt
-	NRF5_RADIO_TIMER->INTENSET = TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos;
-	NRF5_RADIO_TIMER->INTENSET = TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos;
+	// Initialize PID for TX packages to a random value
+	hwGetentropy(&tx_pid, 1);
 
-	/** Configure PPI (Programmable peripheral interconnect) */
-	// Start timer on END event
-	NRF_PPI->CH[NRF5_ESB_PPI_TIMER_START].EEP = (uint32_t)&NRF_RADIO->EVENTS_END;
-	NRF_PPI->CH[NRF5_ESB_PPI_TIMER_START].TEP = (uint32_t)&NRF5_RADIO_TIMER->TASKS_START;
-	// Disable Radio after CC[0]
-	NRF_PPI->CH[NRF5_ESB_PPI_TIMER_RADIO_DISABLE].EEP = (uint32_t)&NRF5_RADIO_TIMER->EVENTS_COMPARE[0];
-	NRF_PPI->CH[NRF5_ESB_PPI_TIMER_RADIO_DISABLE].TEP = (uint32_t)&NRF_RADIO->TASKS_DISABLE;
-
-	// Set internal variables
-	radio_disabled = true;
-
-#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-	intcntr_bcmatch=0;
-	intcntr_ready=0;
-	intcntr_end=0;
+#ifdef	NRF5_ESB_ENABLE_DEBUG_LEDS
+	hwPinMode(PIN_LED2, OUTPUT_H0H1);
+	hwPinMode(PIN_LED3, OUTPUT_H0H1);
+	hwPinMode(PIN_LED4, OUTPUT_H0H1);
+	hwPinMode(PIN_LED5, OUTPUT_H0H1);
+	hwPinMode(PIN_LED6, OUTPUT_H0H1);
+	hwPinMode(PIN_LED7, OUTPUT_H0H1);
+	hwPinMode(PIN_LED8, OUTPUT_H0H1);
 #endif
 
 	return true;
@@ -211,12 +335,12 @@ static void NRF5_ESB_powerDown()
 {
 	NRF5_RADIO_DEBUG(PSTR("NRF5:PD\n"));
 
+	// Enter disabled state
+	stEnter(&stDisabled);
+
 	// Disable inerrupt
 	NVIC_DisableIRQ(RADIO_IRQn);
 	NVIC_DisableIRQ(NRF5_RADIO_TIMER_IRQN);
-
-	// Clear PPI
-	NRF_PPI->CHENCLR = NRF5_ESB_PPI_BITS;
 
 	// Save power level
 	tx_power_level = NRF_RADIO->TXPOWER;
@@ -224,8 +348,8 @@ static void NRF5_ESB_powerDown()
 	// Power off readio unit
 	NRF_RADIO->POWER = 0;
 
-	// Shutdown timer
-	NRF5_RADIO_TIMER->TASKS_SHUTDOWN = 1;
+	// Stop timer
+	_stopTimer();
 #ifdef NRF51
 	// Power off timer
 	NRF5_RADIO_TIMER->POWER = 0;
@@ -240,6 +364,9 @@ static void NRF5_ESB_powerUp()
 static void NRF5_ESB_sleep()
 {
 	NRF5_RADIO_DEBUG(PSTR("NRF5:SLP\n"));
+
+	// Enter disabled state
+	stEnter(&stDisabled);
 
 	// Disable shorts
 	NRF_RADIO->SHORTS = 0;
@@ -269,7 +396,7 @@ static void NRF5_ESB_setNodeAddress(const uint8_t address)
 
 static uint8_t NRF5_ESB_getNodeID()
 {
-	return reverse_byte((NRF_RADIO->PREFIX0 & NRF5_ESB_NODE_ADDR_MSK) >> (NRF5_ESB_NODE_ADDR << 5));
+	return node_address;
 }
 
 static void NRF5_ESB_startListening()
@@ -281,11 +408,14 @@ static void NRF5_ESB_startListening()
 		NRF5_ESB_initialize();
 	}
 
-	// Enable Ready interrupt
-	NRF_RADIO->INTENSET = RADIO_INTENSET_READY_Msk;
+	// Mark buffer
+	radio_buffer_state = NRF5_ESB_BUFFER_STATE_DISABLED;
 
-	// Enable RX when ready, Enable RX after disabling task
-	NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_RX;
+	// Enter RX state
+	stEnter(&stRx);
+
+	// Reset last received package id
+	last_package_id = 0;
 
 	// Switch to RX
 	if (NRF_RADIO->STATE == RADIO_STATE_STATE_Disabled) {
@@ -293,8 +423,6 @@ static void NRF5_ESB_startListening()
 	} else {
 		NRF_RADIO->TASKS_DISABLE = 1;
 	}
-
-	radio_disabled = false;
 }
 
 static bool NRF5_ESB_isDataAvailable()
@@ -317,9 +445,8 @@ static uint8_t NRF5_ESB_readMessage(void *data)
 
 		// Debug message
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-		NRF5_RADIO_DEBUG(PSTR("NRF5:RX:LEN=%" PRIu8 ",NOACK=%" PRIu8 ",PID=%" PRIu8 ",RSSI=%" PRIi16 ",RX=%"
-		                      PRIu32 "\n"),
-		                 buffer->len, buffer->noack, buffer->pid, rssi_rx, buffer->rxmatch);
+		NRF5_RADIO_DEBUG(PSTR("NRF5:RX:LEN=%" PRIu8 ",NOACK=%" PRIu8 ",PID=%" PRIu8 ",RSSI=%" PRIi16 "\n"),
+		                 buffer->len, buffer->noack, buffer->pid, rssi_rx);
 #endif
 
 		// release buffer
@@ -327,10 +454,7 @@ static uint8_t NRF5_ESB_readMessage(void *data)
 	}
 
 	// Check if radio was disabled by buffer end
-	if (radio_disabled == true) {
-		// Wait until disabling radio is finised
-		while (NRF_RADIO->EVENTS_DISABLED == 0)
-			;
+	if (currentState != &stRx) {
 		// Enable radio
 		NRF5_ESB_startListening();
 	}
@@ -338,82 +462,8 @@ static uint8_t NRF5_ESB_readMessage(void *data)
 	return ret;
 }
 
-void NRF5_ESB_endtx();
-void NRF5_ESB_starttx()
-{
-	if (tx_retries > 0) {
-		// Prevent radio to write into TX memory while receiving
-		if (NRF_RADIO->PACKETPTR != (uint32_t)&tx_buffer) {
-			// Disable shorts
-			NRF_RADIO->SHORTS = 0;
-			// Disable radio
-			NRF_RADIO->TASKS_DISABLE = 1;
-		}
-
-		// Mark TX as unfinised
-		events_end_tx = false;
-
-		// Configure TX address to address at index NRF5_ESB_TX_ADDR
-		NRF_RADIO->TXADDRESS = NRF5_ESB_TX_ADDR;
-
-		// Enable TX when ready, Enable TX after disabling task
-		NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_TX;
-
-		// reset timer
-		NRF_RESET_EVENT(NRF5_RADIO_TIMER->EVENTS_COMPARE[0]);
-		NRF_RESET_EVENT(NRF5_RADIO_TIMER->EVENTS_COMPARE[1]);
-		NRF5_RADIO_TIMER->TASKS_STOP = 1;
-		NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
-		// Set retransmit time
-		NRF5_RADIO_TIMER->CC[1] = NRF5_ESB_ARD - NRF5_ESB_RAMP_UP_TIME;
-		// Set radio disable time to ACK_WAIT time
-		NRF5_RADIO_TIMER->CC[0] = NRF5_ESB_ACK_WAIT;
-
-		// Set PPI
-		NRF_PPI->CHENSET = NRF5_ESB_PPI_BITS;
-
-		// Disable Ready interrupt
-		NRF_RADIO->INTENCLR = RADIO_INTENSET_READY_Msk;
-
-		// Set buffer
-		NRF_RADIO->PACKETPTR = (uint32_t)&tx_buffer;
-
-		// Switch to TX
-		if (NRF_RADIO->STATE == RADIO_STATE_STATE_Disabled) {
-			NRF_RADIO->TASKS_TXEN = 1;
-		} else {
-			NRF_RADIO->TASKS_DISABLE = 1;
-		}
-	} else {
-		// finised TX
-		NRF5_ESB_endtx();
-	}
-	tx_retries--;
-}
-
-void NRF5_ESB_endtx()
-{
-	// Clear PPI
-	NRF_PPI->CHENCLR = NRF5_ESB_PPI_BITS;
-	// Enable Ready interrupt
-	NRF_RADIO->INTENSET = RADIO_INTENSET_READY_Msk;
-	// Stop Timer
-	NRF5_RADIO_TIMER->TASKS_STOP = 1;
-	// Shutdown timer
-	NRF5_RADIO_TIMER->TASKS_SHUTDOWN = 1;
-	// Mark TX as end
-	events_end_tx = true;
-	// Debug output
-#ifdef NRF5_ESB_DEBUG_INT_TX_END
-	NRF5_RADIO_DEBUG(PSTR("NRF5:INT:ENDTX\n"));
-#endif
-}
-
 static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len, const bool noACK)
 {
-	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:TO=%" PRIu8 ",LEN=%" PRIu8 ",PID=%" PRIu8 ",NOACK=%" PRIu8 "\n"),
-	                 recipient, len, tx_buffer.pid,
-	                 tx_buffer.noack); // send message
 	// Check if radio is initialized
 	if (NRF_RADIO->POWER == 0) {
 		NRF5_ESB_initialize();
@@ -424,18 +474,18 @@ static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len
 		len = MAX_MESSAGE_LENGTH;
 	}
 
-	// copy data to tx_buffer
-	memcpy(&tx_buffer.data[0], buf, len);
+	// copy data to radio_buffer
+	memcpy(&radio_buffer.data[0], buf, len);
 
 	// build metadata
-	tx_buffer.len = len;
-#ifndef MY_NRF5_ESB_REVERSE_ACK_TX
-	tx_buffer.noack = noACK || recipient==BROADCAST_ADDRESS;
-#else
-	// reverse the noack bit
-	tx_buffer.noack = !(noACK || recipient==BROADCAST_ADDRESS);
-#endif
-	tx_buffer.pid++;
+	radio_buffer.len = len;
+	radio_buffer.noack = noACK || recipient==BROADCAST_ADDRESS;
+	tx_pid++;
+	radio_buffer.pid=tx_pid;
+
+	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:TO=%" PRIu8 ",LEN=%" PRIu8 ",PID=%" PRIu8 ",NOACK=%" PRIu8 "\n"),
+	                 recipient, len, radio_buffer.pid,
+	                 radio_buffer.noack); // send message
 
 	// Calculate number of retries
 	if (recipient == BROADCAST_ADDRESS) {
@@ -444,33 +494,109 @@ static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len
 		tx_retries = ((noACK == false)?(NRF5_ESB_ARC_ACK):(NRF5_ESB_ARC_NOACK));
 	}
 	int8_t tx_retries_start = tx_retries;
+
+	// Mark ACK as missing
 	ack_received = false;
+
+	// Mark TX as unfinised
+	events_end_tx = false;
 
 	// configure TX address
 	NRF_RADIO->PREFIX1 = (NRF_RADIO->PREFIX1 & NRF5_ESB_TX_ADDR_MSK) |
 	                     (reverse_byte(recipient) << (NRF5_ESB_TX_ADDR - 4));
-
-	// Enable listening on Node, BC and TX address
-	NRF_RADIO->RXADDRESSES = (1 << NRF5_ESB_NODE_ADDR) | (1 << NRF5_ESB_BC_ADDR) |
-	                         (1 << NRF5_ESB_TX_ADDR);
-
 	// Set RSSI to invalid
 	rssi_tx = INVALID_RSSI;
 
-	NRF5_ESB_starttx();
+	// Confiure TX state
+	if (noACK) {
+		stEnter(&stTx);
+	} else {
+		stEnter(&stTxAck);
+	}
 
-	// Wait for end of transmission
+	// Configure buffer
+	radio_buffer_state = NRF5_ESB_BUFFER_STATE_TX;
+
+	// Configure timer
+#ifdef NRF5_ESB_FAST_RU
+	// Enable TX on CC[3] event
+	NRF5_RADIO_TIMER->CC[3] = NRF5_ESB_PRE_TX_TIME_FAST_RAMPUP;
+#else
+	// Enable TX on CC[3] event
+	NRF5_RADIO_TIMER->CC[3] = NRF5_ESB_PRE_TX_TIME_SLOW_RAMPUP;
+#endif
+	// Reset timer after ARD. Time is calculated at Disabled event.
+	// This isn't requred but if the DISABLED the timer is cleared.
+	NRF5_RADIO_TIMER->CC[2]=NRF5_ESB_ARD<<1;
+
+#ifdef NRF5_ESB_TX_BUG_WORKAROUND
+	// Reset RTC trigger flag
+	nrf5_rtc_event_triggered = false;
+
+	// Configure RTC
+#ifdef NRF51
+	MY_HW_RTC->POWER = 1;
+#endif
+	// Reset RTC
+	MY_HW_RTC->TASKS_CLEAR = 1;
+
+	// prescaler 0, 30.517 μs resolution -> max 512 s sleep
+	MY_HW_RTC->PRESCALER =  0;
+	// Set CC[0] ~ tx_retries*2*ARD
+	MY_HW_RTC->CC[0] = (tx_retries * NRF5_ESB_ARD *2)/30;
+
+	// Enable timer interrupt
+	MY_HW_RTC->INTENSET = RTC_INTENSET_COMPARE0_Msk;
+	MY_HW_RTC->EVTENSET = RTC_EVTENSET_COMPARE0_Msk;
+	MY_HW_RTC->EVENTS_COMPARE[0] = 0;
+	MY_HW_RTC->TASKS_START = 1;
+	NVIC_SetPriority(MY_HW_RTC_IRQN, 15);
+	NVIC_ClearPendingIRQ(MY_HW_RTC_IRQN);
+	NVIC_EnableIRQ(MY_HW_RTC_IRQN);
+#endif
+
+	// Start timer
+	NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
+	NRF5_RADIO_TIMER->TASKS_START = 1;
+
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
 	uint32_t wakeups = 0;
 #endif
+	// Wait for end of transmission
 	while (events_end_tx == false) {
+#ifdef NRF5_ESB_TX_BUG_WORKAROUND
 		// Power off CPU until next interrupt
 		hwSleep();
+
+		// Check if TX/RX is hanging
+		if (nrf5_rtc_event_triggered) {
+			// No ready event after timeout
+			events_end_tx = true;
+#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
+			NRF5_RADIO_DEBUG(PSTR("NRF5:SND:TIMEOUT:\n"));
+#endif
+		}
+#else
+		// Power off CPU until next interrupt
+		hwSleep();
+#endif
 		// hwWaitForInterrupt();
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
 		wakeups++;
 #endif
 	}
+	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:T=%d\n"),nrf5_rtc_event_triggered);
+
+#ifdef NRF5_ESB_TX_BUG_WORKAROUND
+	// Stop RTC
+	MY_HW_RTC->INTENCLR = RTC_INTENSET_COMPARE0_Msk;
+	MY_HW_RTC->EVTENCLR = RTC_EVTENSET_COMPARE0_Msk;
+	MY_HW_RTC->TASKS_STOP = 1;
+	NVIC_DisableIRQ(MY_HW_RTC_IRQN);
+#ifdef NRF51
+	MY_HW_RTC->POWER = 0;
+#endif
+#endif
 
 	// Calculate RSSI
 	if (rssi_tx == INVALID_RSSI) {
@@ -480,15 +606,25 @@ static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len
 		rssi_tx = (-29 - (8 * (tx_retries_start - tx_retries)));
 	}
 
-	// Enable listening on Node and BC address
-	NRF_RADIO->RXADDRESSES = (1 << NRF5_ESB_NODE_ADDR) | (1 << NRF5_ESB_BC_ADDR);
-
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:END=%" PRIu8 ",ACK=%" PRIu8 ",RTRY=%" PRIi8 ",RSSI=%" PRIi16
+	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:END=%" PRIu8 ",ACK=%" PRIu8 ",ACKLEN=%" PRIu8 ",PID=%" PRIu8
+	                      ",RTRY=%" PRIi8 ",RSSI=%" PRIi16
 	                      ",WAKE=%" PRIu32 "\n"),
-	                 events_end_tx, ack_received, tx_retries_start - tx_retries, rssi_tx, wakeups);
+	                 events_end_tx, ack_received, radio_buffer.len, radio_buffer.pid, tx_retries_start - tx_retries,
+	                 rssi_tx, wakeups);
 #endif
 
+#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
+	NRF5_RADIO_DEBUG(PSTR("NRF5:SND:TIMER:CC[0]=%" PRIu32 ",CC[1]=%" PRIu32 ",CC[2]=%" PRIu32 ",CC[3]=%"
+	                      PRIu32 "\n"),
+	                 NRF5_RADIO_TIMER->CC[0],NRF5_RADIO_TIMER->CC[1],NRF5_RADIO_TIMER->CC[2],NRF5_RADIO_TIMER->CC[3]);
+#endif
+
+	// Force to disable the radio
+	NRF_RADIO->TASKS_DISABLE = 1;
+
+	// Switch into listening mode
+	NRF5_ESB_startListening();
 
 	return ack_received;
 };
@@ -504,8 +640,394 @@ static int16_t NRF5_ESB_getReceivingRSSI()
 }
 
 /*
+ * Internal State Machine functions
+ */
+void stEnter(esbState_t* state)
+{
+	currentState = state;
+
+	// Reset radio unit
+	_disableRadio();
+
+	// Configure radio interrupts
+	NRF_RADIO->INTENCLR = (uint32_t)~0;
+	NRF_RADIO->INTENSET = state->radioEvents;
+
+	// Configure Shorts
+	NRF_RADIO->SHORTS = state->radioShorts;
+
+	// Configure listen address(es)
+	NRF_RADIO->RXADDRESSES = state->rxAddresses;
+
+	// Configure TX address to address at index NRF5_ESB_TX_ADDR
+	NRF_RADIO->TXADDRESS = state->txAddress;
+
+	// Clear all radio events
+	NRF_RADIO->EVENTS_ADDRESS = 0;
+	NRF_RADIO->EVENTS_DEVMATCH = 0;
+	NRF_RADIO->EVENTS_DEVMISS = 0;
+	NRF_RADIO->EVENTS_DISABLED = 0;
+	NRF_RADIO->EVENTS_END = 0;
+	NRF_RADIO->EVENTS_PAYLOAD = 0;
+	NRF_RADIO->EVENTS_READY = 0;
+	NRF_RADIO->EVENTS_RSSIEND = 0;
+
+	// Configure Shorts
+	NRF5_RADIO_TIMER->SHORTS = state->timerShorts;
+
+	// Reset compare registers
+#ifdef NRF51
+	for (uint8_t i=0; i<4; i++) {
+#else
+	for (uint8_t i=0; i<6; i++) {
+#endif
+		NRF5_RADIO_TIMER->CC[i] = 0;
+	}
+
+	// Initialize PPI
+	state->ppiInit();
+}
+
+void stNull(void)
+{
+}
+
+void stTxEnd(void)
+{
+#ifdef NRF5_ESB_DO_CAPTURE
+	// Capture without PPI
+	NRF5_RADIO_TIMER->TASKS_CAPTURE[2]=1;
+#endif
+}
+
+void stTxDisabled(void)
+{
+	tx_retries--;
+
+	if (tx_retries<=0) {
+		// Stop timer
+		_stopTimer();
+
+		// Mark TX as finished
+		events_end_tx = true;
+	} else {
+		// Reset timer after ARD. CC[2] is filled with the END time via PPI27
+		NRF5_RADIO_TIMER->CC[2]+=NRF5_ESB_ARD;
+	}
+}
+
+void stTxAckReady(void)
+{
+	if ((NRF_RADIO->STATE == RADIO_STATE_STATE_Rx)||(NRF_RADIO->STATE == RADIO_STATE_STATE_RxIdle)) {
+		// Ongoing RX
+		// Configure buffer
+		radio_buffer_state = NRF5_ESB_BUFFER_STATE_TX_ACK;
+#ifndef NRF5_ESB_FAST_RU
+		// Restore shorts: Disable radio after RX
+		NRF_RADIO->SHORTS = stTxAck.radioShorts;
+#endif
+		NRF5_ESB_DEBUG_LED(PIN_LED7, HIGH);
+	} else {
+		// Ongoing TX
+		// Configure buffer
+		radio_buffer_state = NRF5_ESB_BUFFER_STATE_TX;
+#ifndef NRF5_ESB_FAST_RU
+		// Switch to RX after TX by radio event
+		NRF_RADIO->SHORTS = (stTxAck.radioShorts | RADIO_SHORTS_DISABLED_RXEN_Enabled <<
+		                     RADIO_SHORTS_DISABLED_RXEN_Pos);
+#endif
+		NRF5_ESB_DEBUG_LED(PIN_LED8, HIGH);
+	}
+	NRF5_ESB_DEBUG_LED(PIN_LED6, HIGH);
+}
+
+void stTxAckAddress(void)
+{
+	// Configure radio to stop 20µs before ARD event occures (Fix for NRF52 PAN#102)
+	NRF5_RADIO_TIMER->CC[1] = (NRF5_RADIO_TIMER->CC[2]-20);
+}
+
+void stTxAckEnd(void)
+{
+	// Configure ARD after TX END
+	if (radio_buffer_state == NRF5_ESB_BUFFER_STATE_TX) {
+		// Capture without PPI
+		NRF5_RADIO_TIMER->TASKS_CAPTURE[2]=1;
+#ifdef NRF5_ESB_FAST_RU
+		// Enable RX via PPI21 for fast ramp up mode
+		NRF5_RADIO_TIMER->CC[0]=NRF5_RADIO_TIMER->CC[2]+NRF5_ESB_PRE_RX_TIME_FAST_RAMPUP;
+#endif
+		// Disable radio when no ADDRESS event is generated
+		NRF5_RADIO_TIMER->CC[1]=NRF5_RADIO_TIMER->CC[2]+NRF5_ESB_ACK_WAIT;
+		// Reset timer after ARD. CC[2] is filled with the END time via PPI27
+		NRF5_RADIO_TIMER->CC[2]+=NRF5_ESB_ARD;
+	} else {
+		// End event of RX and valid ACK packet?
+		// Accept only ACK packages with 0 or 1 bytes payload.
+		if ((radio_buffer_state == NRF5_ESB_BUFFER_STATE_TX_ACK) && (NRF_RADIO->CRCSTATUS != 0) &&
+		        (radio_buffer.len<2)) {
+			// Stop timer
+			_stopTimer();
+			// Mark TX as finished
+			events_end_tx = true;
+			// Mark ACK as received
+			ack_received = true;
+			// rssi value in ACK included?
+			if (radio_buffer.len == 1) {
+				rssi_tx = 0-radio_buffer.data[0];
+			}
+		}
+	}
+}
+
+void stTxAckDisabled(void)
+{
+	// Handle retry counter after ACK RX
+	if (radio_buffer_state == NRF5_ESB_BUFFER_STATE_TX_ACK) {
+		// After RX
+		tx_retries--;
+
+		if (tx_retries<=0) {
+			// Stop timer
+			_stopTimer();
+
+			// Mark TX as finished
+			events_end_tx = true;
+		}
+	} else {
+		// After TX
+	}
+	NRF5_ESB_DEBUG_LED(PIN_LED6, LOW);
+	NRF5_ESB_DEBUG_LED(PIN_LED7, LOW);
+	NRF5_ESB_DEBUG_LED(PIN_LED8, LOW);
+}
+
+// Configure PPI (Programmable peripheral interconnect) for TX mode
+void stTxPPI()
+{
+	// Shared PPI with Ack mode
+	stTXAckPPI();
+
+	// Predefined PPI 27: RADIO->EVENTS_END ->	TIMER0->TASKS_CAPTURE[2]
+	NRF_PPI->CHENSET = (PPI_CHENSET_CH27_Enabled << PPI_CHENSET_CH27_Pos);
+}
+
+void stTXAckPPI()
+{
+	// Rest PPI
+	stNoPPI();
+
+	// Start TX on CC[3] event
+	NRF_PPI->CH[NRF5_ESB_PPI_CHANNEL_START].EEP = (uint32_t)&NRF5_RADIO_TIMER->EVENTS_COMPARE[3];
+	NRF_PPI->CH[NRF5_ESB_PPI_CHANNEL_START].TEP = (uint32_t)&NRF_RADIO->TASKS_TXEN;
+#if __CORTEX_M >= (0x01U)
+	NRF_PPI->FORK[NRF5_ESB_PPI_CHANNEL_START].TEP = 0;
+#endif
+	NRF_PPI->CHENSET = (1 << NRF5_ESB_PPI_CHANNEL_START);
+
+#ifdef NRF5_ESB_FAST_RU
+	// Only required for fast ramp up mode
+	// Predefined PPI 21: TIMER0->EVENTS_COMPARE[0] -> RADIO->TASKS_RXEN
+	NRF_PPI->CHENSET = (PPI_CHENSET_CH21_Enabled << PPI_CHENSET_CH21_Pos);
+#endif
+
+	// Predefined PPI 22: TIMER0->EVENTS_COMPARE[1] -> RADIO->TASKS_DISABLE
+	NRF_PPI->CHENSET = (PPI_CHENSET_CH22_Enabled << PPI_CHENSET_CH22_Pos);
+}
+
+// Configure PPI (Programmable peripheral interconnect) for RX mode
+void stRxPPI()
+{
+	// Rest PPI
+	stNoPPI();
+
+#ifdef NRF52
+	// Start Timer on ADDRESS event (PAN#102)
+	NRF_PPI->CH[NRF5_ESB_PPI_CHANNEL_START].EEP = (uint32_t)&NRF_RADIO->EVENTS_ADDRESS;
+#else
+	// Start Timer on END event
+	NRF_PPI->CH[NRF5_ESB_PPI_CHANNEL_START].EEP = (uint32_t)&NRF_RADIO->EVENTS_END;
+#endif
+	NRF_PPI->CH[NRF5_ESB_PPI_CHANNEL_START].TEP = (uint32_t)&NRF5_RADIO_TIMER->TASKS_START;
+#if __CORTEX_M >= (0x01U)
+	NRF_PPI->FORK[NRF5_ESB_PPI_CHANNEL_START].TEP = 0;
+#endif
+	NRF_PPI->CHENSET = (1 << NRF5_ESB_PPI_CHANNEL_START);
+
+#ifdef NRF5_ESB_FAST_RU
+	// Only required for fast ramp up mode
+	// Predefined PPI 20: TIMER0->EVENTS_COMPARE[0] -> RADIO->TASKS_TXEN
+	NRF_PPI->CHENSET = (PPI_CHENSET_CH20_Enabled << PPI_CHENSET_CH20_Pos);
+#endif
+
+#ifdef NRF52
+	// PAN#102
+	// Predefined PPI 22: TIMER0->EVENTS_COMPARE[1] -> RADIO->TASKS_DISABLE
+	NRF_PPI->CHENSET = (PPI_CHENSET_CH22_Enabled << PPI_CHENSET_CH22_Pos);
+#endif
+
+	// Predefined PPI 27: RADIO->EVENTS_END ->	TIMER0->TASKS_CAPTURE[2]
+	NRF_PPI->CHENSET = (PPI_CHENSET_CH27_Enabled << PPI_CHENSET_CH27_Pos);
+}
+
+void stRxReady(void)
+{
+	if ((NRF_RADIO->STATE == RADIO_STATE_STATE_Rx)||(NRF_RADIO->STATE == RADIO_STATE_STATE_RxIdle)) {
+		// Ongoing RX
+		// Configure buffer
+		radio_buffer_state = NRF5_ESB_BUFFER_STATE_RX;
+		// Configure default RX shorts without ACK; back to RX after END event
+		NRF_RADIO->SHORTS = (stRx.radioShorts | RADIO_SHORTS_END_START_Msk |
+		                     RADIO_SHORTS_ADDRESS_RSSISTART_Msk);
+	} else {
+		// Ongoing ACK
+		// Configure TX shortcut. Enable RX after TX
+		NRF_RADIO->SHORTS = ( stRx.radioShorts | RADIO_SHORTS_END_DISABLE_Msk |
+		                      RADIO_SHORTS_DISABLED_RXEN_Msk);
+	}
+	// Reset timer
+	_stopTimer();
+	NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
+}
+
+void stRxAddress(void)
+{
+#ifdef NRF52
+	if (NRF_RADIO->STATE == RADIO_STATE_STATE_Rx) {
+		// Calculate timeout for PAN#102
+		NRF5_RADIO_TIMER->CC[1] = NRF5_ESB_RX_TIMEOUT;
+	}
+#endif
+	NRF5_ESB_DEBUG_LED(PIN_LED6, HIGH);
+}
+
+void stRxEnd(void)
+{
+#ifdef NRF5_ESB_DO_CAPTURE
+	// Capture timer for fast ramp up
+	NRF5_RADIO_TIMER->TASKS_CAPTURE[2]=1;
+#endif
+	if (radio_buffer_state == NRF5_ESB_BUFFER_STATE_RX) {
+		// RX End
+		// Ignore packages without valid CRC or when rx_buffer is full
+		if ((NRF_RADIO->CRCSTATUS != 0) && (!rx_circular_buffer.full())) {
+			// Send ACK, when addressed to node id (No ACK for BC for reversed NRF24)
+#ifdef MY_NRF5_ESB_STRICT_ACK
+			if ((!radio_buffer.noack) && (NRF_RADIO->RXMATCH==NRF5_ESB_NODE_ADDR))
+#else
+			if (NRF_RADIO->RXMATCH==NRF5_ESB_NODE_ADDR)
+#endif
+			{
+				// Configure buffer, avoid _disableRadio() to stop in this state
+				radio_buffer_state = NRF5_ESB_BUFFER_STATE_RX_ACK;
+				// Prepare TX
+#ifdef NRF5_ESB_FAST_RU
+				// Caluclate timer
+				NRF5_RADIO_TIMER->CC[0]=NRF5_RADIO_TIMER->CC[2]+NRF5_ESB_POST_RX_TIME_FAST_RAMPUP;
+#else
+				// Switch to TX after DISABLED event
+				NRF_RADIO->SHORTS = (stRx.radioShorts | RADIO_SHORTS_DISABLED_TXEN_Msk );
+#endif
+				// Disable radio
+				NRF_RADIO->TASKS_DISABLE = 1;
+			}
+
+			// Calculate package id
+			uint32_t new_package_id = (radio_buffer.pid << 16 | NRF_RADIO->RXCRC);
+
+			// New package?
+			if (last_package_id!=new_package_id) {
+				radio_buffer.rssi = NRF_RADIO->RSSISAMPLE;
+				rx_circular_buffer.pushFront(&radio_buffer);
+				last_package_id = new_package_id;
+			}
+
+			// Prepare ACK packet for that case it's required
+			radio_buffer.data[0] = NRF_RADIO->RSSISAMPLE; // Send back RSSI
+			radio_buffer.len=1; // data[0] is set some lines before
+#ifndef MY_NRF5_ESB_REVERSE_ACK_TX
+			radio_buffer.noack = 1; // Set ACK attribute
+#else
+			radio_buffer.noack = 0; // Set ACK attribute
+#endif
+
+		}
+#ifdef NRF52
+		// Reset RX timeout for PAN#102
+		NRF5_RADIO_TIMER->CC[1] = 0;
+#endif
+	} else {
+		// TX END
+		// Reset buffer state
+		radio_buffer_state = NRF5_ESB_BUFFER_STATE_RX;
+	}
+	NRF5_ESB_DEBUG_LED(PIN_LED6, LOW);
+}
+
+void stRxDisabled(void)
+{
+	// Restart Radio (PAN#102)
+	if (radio_buffer_state == NRF5_ESB_BUFFER_STATE_RX) {
+		NRF_RADIO->TASKS_RXEN = 1;
+	}
+}
+
+
+void stNoPPI()
+{
+	// Clear PPI
+	NRF_PPI->CHENCLR = NRF5_ESB_PPI_BITMASK;
+}
+
+/*
  * Internal helper functions
  */
+// Bring radio in disabled state
+void _disableRadio()
+{
+	// Wait, when RX ACK packages are handled
+	for (uint32_t i=0; (radio_buffer_state == NRF5_ESB_BUFFER_STATE_RX_ACK), i<NRF5_ESB_RX_TIMEOUT>>4;
+	        i++) {
+		_microDelay(16);
+	}
+	// Disable timer interrupts
+	NRF5_RADIO_TIMER->INTENCLR = (uint32_t)~0;
+	// Stop shorts working
+	NRF_RADIO->SHORTS = 0;
+	// Stop timer shorts
+	NRF5_RADIO_TIMER->SHORTS=0;
+	// Stop timer
+	_stopTimer();
+	// Clear timer
+	NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
+	// Disable radio, if not in disbaled state
+	if (NRF_RADIO->STATE != RADIO_STATE_STATE_Disabled) {
+		// Disable radio to stop Tx
+		NRF_RADIO->TASKS_DISABLE = 1;
+		// Wait until disabling radio is finised
+		while (NRF_RADIO->STATE != RADIO_STATE_STATE_Disabled)
+			;
+	}
+	// Configure buffer
+	radio_buffer_state = NRF5_ESB_BUFFER_STATE_DISABLED;
+}
+
+inline void _stopTimer()
+{
+	// Stop timer
+	NRF5_RADIO_TIMER->TASKS_STOP = 1;
+	// NRF52 PAN#78
+	NRF5_RADIO_TIMER->TASKS_SHUTDOWN = 1;
+}
+
+void _microDelay(uint32_t us)
+{
+	uint32_t start = micros() ;
+
+	do {
+		yield() ;
+	} while ( micros() - start < us ) ;
+}
 
 // Reverse a byte for address
 static uint8_t reverse_byte(uint8_t address)
@@ -518,203 +1040,33 @@ static uint8_t reverse_byte(uint8_t address)
 	return address;
 }
 
-// Calculate time to transmit an byte in µs as bit shift -> 2^X
-static inline uint8_t NRF5_ESB_byte_time()
-{
-	if ((MY_NRF5_ESB_MODE == NRF5_1MBPS) or
-	        (MY_NRF5_ESB_MODE == NRF5_BLE_1MBPS)) {
-		return (3);
-	} else if (MY_NRF5_ESB_MODE == NRF5_2MBPS) {
-		return (2);
-	} else if (MY_NRF5_ESB_MODE == NRF5_250KBPS) {
-		return (5);
-	}
-}
-
 extern "C" {
 	/** Radio Interrupt handler */
 	void RADIO_IRQHandler()
 	{
-		/** Bitcounter event is used to switch between RX/TX
-		 * In RX mode, when an ACK required packet is received, switch to TX,
-		 * elsewhere start RX again.
-		 * In TX mode switch always to RX.
-		 */
-		if (NRF_RADIO->EVENTS_BCMATCH == 1) {
-			NRF_RESET_EVENT(NRF_RADIO->EVENTS_BCMATCH);
-#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-			intcntr_bcmatch++;
-#endif
-			// Disable bitcounter
-			NRF_RADIO->TASKS_BCSTOP = 1;
-
-			// In RX mode -> prepare ACK or RX
-			if (NRF_RADIO->STATE == RADIO_STATE_STATE_Rx) {
-				// ACK only for node address and unset noack bit
-#ifndef MY_NRF5_ESB_REVERSE_ACK_RX
-				if ((NRF_RADIO->RXMATCH != NRF5_ESB_NODE_ADDR) || (rx_buffer->noack)) {
-#else
-				if ((NRF_RADIO->RXMATCH != NRF5_ESB_NODE_ADDR) || (!rx_buffer->noack)) {
-#endif
-					// Handle incoming ACK packet
-					if (NRF_RADIO->RXMATCH == NRF5_ESB_TX_ADDR) {
-						/** Calculate time to switch radio off
-						 * This is an ACK packet, the radio is disabled by Timer
-						 * event after CC[0], calculate the time switching of the
-						 * radio.
-						 */
-						// Read current timer value
-						NRF5_RADIO_TIMER->TASKS_CAPTURE[0] = 1;
-
-						// Set Timer compare register 0 to end of packet (len+CRC)
-						NRF5_RADIO_TIMER->CC[0] += ((rx_buffer->len + 3) << NRF5_ESB_byte_time());
-#if __CORTEX_M == 0x04
-						// read back to clear cache
-						(void)NRF5_RADIO_TIMER->CC[0];
-#endif
-					}
-					// No ACK -> Start RX after END
-					NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_RX;
-				} else {
-					// Send ACK after END, an empty packet is provided in READY event
-					NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_RX_TX;
-					// HINT: Fast ramp must be disabled for every device with unknown
-					// support (payload). Needs more code on other lines
-				}
-			} else {
-				// Current mode is TX:
-				// After TX the Radio has to be always in RX mode to
-				// receive ACK or start implicit listen mode after send.
-				NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_TX_RX;
-				// HINT: Fast ramp up can enabled here. Needs more code on other lines
-			}
-		}
-
-		/** Ready event is generated before RX starts
-		 * An free rx buffer is allocated or radio is disabled on failures
-		 */
 		if (NRF_RADIO->EVENTS_READY == 1) {
+			NRF5_ESB_DEBUG_LED(PIN_LED2, HIGH);
+			currentState->radioReady();
 			NRF_RESET_EVENT(NRF_RADIO->EVENTS_READY);
-#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-			intcntr_ready++;
-#endif
-			// Fetch a new buffer
-			rx_buffer = rx_circular_buffer.getFront();
-
-			// Is buffer valid?
-			if (rx_buffer == NULL) {
-				// No buffer -> disable listening
-				radio_disabled = true;
-				NRF_RADIO->SHORTS = 0;
-				NRF_RADIO->EVENTS_DISABLED = 0;
-				NRF_RADIO->TASKS_DISABLE = 1;
-				return;
-			}
-
-			// Configure DMA target address
-			NRF_RADIO->PACKETPTR = (uint32_t)rx_buffer;
-
-			/* Don't care about if next packet RX or ACK,
-			 * prepare current rx_buffer to send an ACK */
-
-			// Set outgoing address to node address for ACK packages
-			NRF_RADIO->TXADDRESS = NRF5_ESB_NODE_ADDR;
-
-			// HINT: Fast ramp up: Add a fast ramp up signaling payload here. Needs more
-			// code on other lines
+			NRF5_ESB_DEBUG_LED(PIN_LED2, LOW);
 		}
-
-		/** This event is generated after TX or RX finised
-		 */
+		if (NRF_RADIO->EVENTS_ADDRESS == 1) {
+			NRF5_ESB_DEBUG_LED(PIN_LED3, HIGH);
+			currentState->radioAddress();
+			NRF_RESET_EVENT(NRF_RADIO->EVENTS_ADDRESS);
+			NRF5_ESB_DEBUG_LED(PIN_LED3, LOW);
+		}
 		if (NRF_RADIO->EVENTS_END == 1) {
+			NRF5_ESB_DEBUG_LED(PIN_LED4, HIGH);
+			currentState->radioEnd();
 			NRF_RESET_EVENT(NRF_RADIO->EVENTS_END);
-#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-			intcntr_end++;
-#endif
-
-			// Enable ACK bitcounter for next packet
-			NRF_RADIO->BCC = NRF5_ESB_BITCOUNTER;
-
-			// End of RX packet
-			if ((NRF_RADIO->STATE == RADIO_STATE_STATE_Rx) or
-			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxIdle) or
-			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxDisable) or
-			        (NRF_RADIO->STATE == RADIO_STATE_STATE_TxRu)) {
-				if (NRF_RADIO->CRCSTATUS) {
-					// Ensure no ACK package is recieved
-					if (NRF_RADIO->RXMATCH != NRF5_ESB_TX_ADDR) {
-						// calculate a package id
-						uint32_t pkgid = rx_buffer->pid << 16 | NRF_RADIO->RXCRC;
-						if (pkgid != package_ids[NRF_RADIO->RXMATCH]) {
-							// correct package -> store id to dedect duplicates
-							package_ids[NRF_RADIO->RXMATCH] = pkgid;
-							rx_buffer->rssi = ack_buffer.data[0] = NRF_RADIO->RSSISAMPLE;
-#ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-							// Store debug data
-							rx_buffer->rxmatch = NRF_RADIO->RXMATCH;
-#endif
-							// Push data to buffer
-							rx_circular_buffer.pushFront(rx_buffer);
-
-							// Prepare ACK package
-							ack_buffer.pid++;
-							ack_buffer.len=1; // data[0] is set some lines before
-#ifndef MY_NRF5_ESB_REVERSE_ACK_TX
-							ack_buffer.noack = 1;
-#else
-							ack_buffer.noack = 0;
-#endif
-
-							// Set pointer to ACK packet
-							NRF_RADIO->PACKETPTR = (uint32_t)&ack_buffer;
-						}
-					} else {
-						// ACK package received, ducplicates are accepted
-
-						// rssi value in ACK included?
-						if (rx_buffer->len == 1) {
-							rssi_tx = 0-rx_buffer->data[0];
-						}
-						// notify TX process
-						ack_received = true;
-						// End TX
-						NRF5_ESB_endtx();
-					}
-				} else {
-					/** Invalid CRC -> Switch back to RX, Stop sending ACK */
-
-					// Enable RX when ready, Enable RX after disabling task
-					NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_RX;
-
-					// Start disabling radio -> switch to rx by shorts
-					NRF_RADIO->TASKS_DISABLE = 1;
-				}
-			} else {
-				// TX end
-			}
+			NRF5_ESB_DEBUG_LED(PIN_LED4, LOW);
 		}
-	}
-
-	/** Timer Interrupt Handler
-	 *  This timer is used to handle TX retransmit timing
-	 *
-	 */
-	void NRF5_RADIO_TIMER_IRQ_HANDLER()
-	{
-		if (NRF5_RADIO_TIMER->EVENTS_COMPARE[0] == 1) {
-			NRF_RESET_EVENT(NRF5_RADIO_TIMER->EVENTS_COMPARE[0]);
-		}
-
-		if (NRF5_RADIO_TIMER->EVENTS_COMPARE[1] == 1) {
-			NRF5_RADIO_TIMER->TASKS_STOP = 1;
-			NRF_RESET_EVENT(NRF5_RADIO_TIMER->EVENTS_COMPARE[1]);
-			if (ack_received == false) {
-				// missing ACK, start TX again
-				NRF5_ESB_starttx();
-			} else {
-				// finised TX
-				NRF5_ESB_endtx();
-			}
+		if (NRF_RADIO->EVENTS_DISABLED == 1) {
+			NRF5_ESB_DEBUG_LED(PIN_LED5, HIGH);
+			currentState->radioDisabled();
+			NRF_RESET_EVENT(NRF_RADIO->EVENTS_DISABLED);
+			NRF5_ESB_DEBUG_LED(PIN_LED5, LOW);
 		}
 	}
 } // extern "C"

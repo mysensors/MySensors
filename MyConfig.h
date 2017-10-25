@@ -467,9 +467,10 @@
  * @def MY_NRF5_ESB_MODE
  * @brief nRF5 mode.
  *
- * - NRF5_250KBPS for 250kbs
+ * - NRF5_250KBPS for 250kbs (Deprecated. Only available for nRF51, nRF52822)
  * - NRF5_1MBPS for 1Mbps
- * - NRF5_2MBPS for 2Mbps.
+ * - NRF5_2MBPS for 2Mbps
+ * - NRF5_BLE_1MBPS for 1Mbps BLE modulation
  */
 #ifndef MY_NRF5_ESB_MODE
 #define MY_NRF5_ESB_MODE (NRF5_250KBPS)
@@ -503,16 +504,10 @@
 #endif
 
 /**
- * @def MY_NRF5_ESB_REVERSE_ACK_TX
- * @brief Switch to SI24R1 or faked nRF24L01+ compatible ACK mode. ACK bit is reversed on TX side.
+ * @def MY_NRF5_ESB_STRICT_ACK
+ * @brief Switch to original nRF24L01+ compatible ACK mode instead of answering all packages with ACK
  */
-//#define MY_NRF5_ESB_REVERSE_ACK_TX
-
-/**
- * @def MY_NRF5_ESB_REVERSE_ACK_RX
- * @brief Switch to SI24R1 or faked nRF24L01+ compatible ACK mode. ACK bit is reversed on RX side.
- */
-//#define MY_NRF5_ESB_REVERSE_ACK_RX
+//#define MY_NRF5_ESB_STRICT_ACK
 /** @}*/ // End of NRF5SettingGrpPub group
 
 /**
@@ -1871,8 +1866,7 @@
 // NRF5_ESB
 #define MY_NRF5_ESB_ENABLE_ENCRYPTION
 #define MY_DEBUG_VERBOSE_NRF5_ESB
-#define MY_NRF5_ESB_REVERSE_ACK_RX
-#define MY_NRF5_ESB_REVERSE_ACK_TX
+#define MY_NRF5_ESB_STRICT_ACK
 // RFM69
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER

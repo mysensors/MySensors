@@ -32,11 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// Timer to use
-#define NRF5_RADIO_TIMER NRF_TIMER2
-#define NRF5_RADIO_TIMER_IRQ_HANDLER TIMER2_IRQHandler
-#define NRF5_RADIO_TIMER_IRQN TIMER2_IRQn
-
 // debug
 #if defined(MY_DEBUG_VERBOSE_NRF5_ESB)
 #define NRF5_RADIO_DEBUG(x, ...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< DEBUG
@@ -66,8 +61,22 @@ typedef enum {
 typedef enum {
 	NRF5_1MBPS = RADIO_MODE_MODE_Nrf_1Mbit,
 	NRF5_2MBPS = RADIO_MODE_MODE_Nrf_2Mbit,
+#ifdef RADIO_MODE_MODE_Nrf_250Kbit
 	NRF5_250KBPS = RADIO_MODE_MODE_Nrf_250Kbit, // Deprecated!!!
+#endif
 	NRF5_BLE_1MBPS = RADIO_MODE_MODE_Ble_1Mbit,
+#ifdef RADIO_MODE_MODE_Ble_2Mbit
+	NRF5_BLE_2MBPS = RADIO_MODE_MODE_Ble_2Mbit,
+#endif
+#ifdef RADIO_MODE_MODE_Ble_LR125Kbit
+	NRF5_BLE_LR125KBPS = RADIO_MODE_MODE_Ble_LR125Kbit,
+#endif
+#ifdef RADIO_MODE_MODE_Ble_LR500Kbit
+	NRF5_BLE_LR500KBPS = RADIO_MODE_MODE_Ble_LR500Kbit,
+#endif
+#ifdef RADIO_MODE_MODE_Ieee802154_250Kbit
+	NRF5_BIEEE802154_250KBPS = RADIO_MODE_MODE_Ieee802154_250Kbit,
+#endif
 } nrf5_mode_e;
 
 int16_t NRF5_getTxPowerPercent(void);

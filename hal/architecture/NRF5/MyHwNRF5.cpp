@@ -66,6 +66,11 @@ void hwWriteConfig(int adr, uint8_t value)
 
 bool hwInit()
 {
+#ifdef SOFTDEVICE_PRESENT
+	// Disable the SoftDevice; requires NRF5 SDK available
+	sd_softdevice_disable();
+#endif
+
 	// Clock is manged by sleep modes. Radio depends on HFCLK.
 	// Force to start HFCLK
 	NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
@@ -285,13 +290,13 @@ void hwSleepEnd(uint32_t ms)
 
 	if (ms > 0) {
 		// Stop RTC
-#ifdef NRF51
-		MY_HW_RTC->POWER = 0;
-#endif
 		MY_HW_RTC->INTENCLR = RTC_INTENSET_COMPARE0_Msk;
 		MY_HW_RTC->EVTENCLR = RTC_EVTENSET_COMPARE0_Msk;
 		MY_HW_RTC->TASKS_STOP = 1;
 		NVIC_DisableIRQ(MY_HW_RTC_IRQN);
+#ifdef NRF51
+		MY_HW_RTC->POWER = 0;
+#endif
 	} else {
 		// Start Arduino RTC for millis()
 		NRF_RTC1->TASKS_START = 1;
