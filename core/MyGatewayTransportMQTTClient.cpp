@@ -154,7 +154,10 @@ bool gatewayTransportInit(void)
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
+#ifndef MY_ESP8266_BSSID
+#define MY_ESP8266_BSSID NULL
+#endif
+	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
 #endif /* End of MY_GATEWAY_ESP8266 */
 
 	gatewayTransportConnect();

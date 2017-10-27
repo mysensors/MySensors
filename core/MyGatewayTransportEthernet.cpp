@@ -122,7 +122,10 @@ bool gatewayTransportInit(void)
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
+#ifndef MY_ESP8266_BSSID
+#define MY_ESP8266_BSSID NULL
+#endif
+	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
 	while (WiFi.status() != WL_CONNECTED) {
 		wait(500);
 		MY_SERIALDEVICE.print(F("."));
