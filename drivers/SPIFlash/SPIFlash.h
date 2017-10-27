@@ -75,29 +75,74 @@
 
 #include <SPI.h>
 
+#ifndef SPIFLASH_WRITEENABLE
 #define SPIFLASH_WRITEENABLE      0x06        //!< write enable
+#endif
+
+#ifndef SPIFLASH_WRITEDISABLE
 #define SPIFLASH_WRITEDISABLE     0x04        //!< write disable
+#endif
 
+#ifndef SPIFLASH_BLOCKERASE_4K
 #define SPIFLASH_BLOCKERASE_4K    0x20        //!< erase one 4K block of flash memory
-#define SPIFLASH_BLOCKERASE_32K   0x52        //!< erase one 32K block of flash memory
-#define SPIFLASH_BLOCKERASE_64K   0xD8        //!< erase one 64K block of flash memory
-#define SPIFLASH_CHIPERASE        0x60        //!< @brief chip erase (may take several seconds depending on size)
-//!< Chip is erased but not actually waited for completion (instead need to check the status register BUSY bit)
-#define SPIFLASH_STATUSREAD       0x05        //!< read status register
-#define SPIFLASH_STATUSWRITE      0x01        //!< write status register
-#define SPIFLASH_ARRAYREAD        0x0B        //!< read array (fast, need to add 1 dummy byte after 3 address bytes)
-#define SPIFLASH_ARRAYREADLOWFREQ 0x03        //!< read array (low frequency)
+#endif
 
+#ifndef SPIFLASH_BLOCKERASE_32K
+#define SPIFLASH_BLOCKERASE_32K   0x52        //!< erase one 32K block of flash memory
+#endif
+
+#ifndef SPIFLASH_BLOCKERASE_64K
+#define SPIFLASH_BLOCKERASE_64K   0xD8        //!< erase one 64K block of flash memory
+#endif
+
+#ifndef SPIFLASH_CHIPERASE
+#define SPIFLASH_CHIPERASE        0x60        //!< @brief chip erase (may take several seconds depending on size)
+#endif
+//!< Chip is erased but not actually waited for completion (instead need to check the status register BUSY bit)
+
+#ifndef SPIFLASH_STATUSREAD
+#define SPIFLASH_STATUSREAD       0x05        //!< read status register
+#endif
+
+#ifndef SPIFLASH_STATUSWRITE
+#define SPIFLASH_STATUSWRITE      0x01        //!< write status register
+#endif
+
+#ifndef SPIFLASH_ARRAYREAD
+#define SPIFLASH_ARRAYREAD        0x0B        //!< read array (fast, need to add 1 dummy byte after 3 address bytes)
+#endif
+
+#ifndef SPIFLASH_ARRAYREADLOWFREQ
+#define SPIFLASH_ARRAYREADLOWFREQ 0x03        //!< read array (low frequency)
+#endif
+
+#ifndef SPIFLASH_SLEEP
 #define SPIFLASH_SLEEP            0xB9        //!< deep power down
+#endif
+
+#ifndef SPIFLASH_WAKE
 #define SPIFLASH_WAKE             0xAB        //!< deep power wake up
+#endif
+
+#ifndef SPIFLASH_BYTEPAGEPROGRAM
 #define SPIFLASH_BYTEPAGEPROGRAM  0x02        //!< write (1 to 256bytes). Writing more than one Byte is not supported on all devices (e.g. SST25 Series)
+#endif
+
+#ifndef SPIFLASH_AAIWORDPROGRAM
 #define SPIFLASH_AAIWORDPROGRAM   0xAD        //!< @brief Auto Address Increment Programming on Microchip SST Family Devices which do not support page program. <BR>
+#endif
 //!< Use define #MY_SPIFLASH_SST25TYPE to use AAI prog instead of Bytepageprogram which does not work on SST Family Chips
 //!< tested with SST25PF020B80 http://ww1.microchip.com/downloads/en/DeviceDoc/20005135B.pdf
+
+#ifndef SPIFLASH_IDREAD
 #define SPIFLASH_IDREAD           0x9F        //!< @brief read JEDEC manufacturer and device ID (2 bytes, specific bytes for each manufacturer and device)
+#endif
 //!< Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
 //!< Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
+
+#ifndef SPIFLASH_MACREAD
 #define SPIFLASH_MACREAD          0x4B        //!< read unique ID number (MAC)
+#endif
 
 ///
 /// @def MY_SPIFLASH_SST25TYPE
@@ -117,8 +162,8 @@ class SPIFlash
 public:
 	static uint8_t UNIQUEID[8]; //!< Storage for unique identifier
 	SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0); //!< Constructor
-	boolean initialize(); //!< setup SPI, read device ID etc...
-	void command(uint8_t cmd, boolean isWrite=
+	bool initialize(); //!< setup SPI, read device ID etc...
+	void command(uint8_t cmd, bool isWrite=
 	                 false); //!< Send a command to the flash chip, pass TRUE for isWrite when its a write command
 	uint8_t readStatus(); //!< return the STATUS register
 	uint8_t readByte(uint32_t addr); //!< read 1 byte from flash memory
@@ -126,7 +171,7 @@ public:
 	void writeByte(uint32_t addr, uint8_t byt); //!< Write 1 byte to flash memory
 	void writeBytes(uint32_t addr, const void* buf,
 	                uint16_t len); //!< write multiple bytes to flash memory (up to 64K), if define SPIFLASH_SST25TYPE is set AAI Word Programming will be used
-	boolean busy(); //!< check if the chip is busy erasing/writing
+	bool busy(); //!< check if the chip is busy erasing/writing
 	void chipErase(); //!< erase entire flash memory array
 	void blockErase4K(uint32_t address); //!< erase a 4Kbyte block
 	void blockErase32K(uint32_t address); //!< erase a 32Kbyte block

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -22,6 +22,7 @@
  *
  * @brief API and type declarations for MySensors messages
  * @defgroup MyMessagegrp MyMessage
+ * @ingroup publics
  * @{
  *
  * @brief Here you can find all message types used by the MySensors protocol as well as macros for
@@ -55,7 +56,7 @@ typedef enum {
 	S_MOTION				= 1,	//!< Motion sensor, V_TRIPPED, V_ARMED
 	S_SMOKE					= 2,	//!< Smoke sensor, V_TRIPPED, V_ARMED
 	S_BINARY				= 3,	//!< Binary light or relay, V_STATUS, V_WATT
-	S_LIGHT					= 3,	//!< \deprecated Same as S_BINARY, **** DEPRECATED, DO NOT USE ****
+	S_LIGHT					= 3,	//!< \deprecated Same as S_BINARY
 	S_DIMMER				= 4,	//!< Dimmable light or fan device, V_STATUS (on/off), V_PERCENTAGE (dimmer level 0-100), V_WATT
 	S_COVER					= 5,	//!< Blinds or window cover, V_UP, V_DOWN, V_STOP, V_PERCENTAGE (open/close to a percentage)
 	S_TEMP					= 6,	//!< Temperature sensor, V_TEMP
@@ -99,9 +100,9 @@ typedef enum {
 	V_TEMP					= 0,	//!< S_TEMP. Temperature S_TEMP, S_HEATER, S_HVAC
 	V_HUM					= 1,	//!< S_HUM. Humidity
 	V_STATUS				= 2,	//!< S_BINARY, S_DIMMER, S_SPRINKLER, S_HVAC, S_HEATER. Used for setting/reporting binary (on/off) status. 1=on, 0=off
-	V_LIGHT					= 2,	//!< \deprecated Same as V_STATUS, **** DEPRECATED, DO NOT USE ****
+	V_LIGHT					= 2,	//!< \deprecated Same as V_STATUS
 	V_PERCENTAGE			= 3,	//!< S_DIMMER. Used for sending a percentage value 0-100 (%).
-	V_DIMMER				= 3,	//!< \deprecated Same as V_PERCENTAGE, **** DEPRECATED, DO NOT USE ****
+	V_DIMMER				= 3,	//!< \deprecated Same as V_PERCENTAGE
 	V_PRESSURE				= 4,	//!< S_BARO. Atmospheric Pressure
 	V_FORECAST				= 5,	//!< S_BARO. Whether forecast. string of "stable", "sunny", "cloudy", "unstable", "thunderstorm" or "unknown"
 	V_RAIN					= 6,	//!< S_RAIN. Amount of rain
@@ -120,7 +121,7 @@ typedef enum {
 	V_SCENE_ON				= 19,	//!< S_SCENE_CONTROLLER. Turn on a scene
 	V_SCENE_OFF				= 20,	//!< S_SCENE_CONTROLLER. Turn of a scene
 	V_HVAC_FLOW_STATE		= 21,	//!< S_HEATER, S_HVAC. HVAC flow state ("Off", "HeatOn", "CoolOn", or "AutoChangeOver")
-	V_HEATER				= 21,	//!< \deprecated Same as V_HVAC_FLOW_STATE, **** DEPRECATED, DO NOT USE ****
+	V_HEATER				= 21,	//!< \deprecated Same as V_HVAC_FLOW_STATE
 	V_HVAC_SPEED			= 22,	//!< S_HVAC, S_HEATER. HVAC/Heater fan speed ("Min", "Normal", "Max", "Auto")
 	V_LIGHT_LEVEL			= 23,	//!< S_LIGHT_LEVEL. Uncalibrated light level. 0-100%. Use V_LEVEL for light level in lux
 	V_VAR1					= 24,	//!< VAR1
@@ -161,35 +162,40 @@ typedef enum {
 
 /// @brief Type of internal messages (for internal messages)
 typedef enum {
-	I_BATTERY_LEVEL			= 0,	//!< Battery level
-	I_TIME					= 1,	//!< Time (request/response)
-	I_VERSION				= 2,	//!< Version
-	I_ID_REQUEST			= 3,	//!< ID request
-	I_ID_RESPONSE			= 4,	//!< ID response
-	I_INCLUSION_MODE		= 5,	//!< Inclusion mode
-	I_CONFIG				= 6,	//!< Config (request/response)
-	I_FIND_PARENT_REQUEST	= 7,	//!< Find parent
-	I_FIND_PARENT_RESPONSE	= 8,	//!< Find parent response
-	I_LOG_MESSAGE			= 9,	//!< Log message
-	I_CHILDREN				= 10,	//!< Children
-	I_SKETCH_NAME			= 11,	//!< Sketch name
-	I_SKETCH_VERSION		= 12,	//!< Sketch version
-	I_REBOOT				= 13,	//!< Reboot request
-	I_GATEWAY_READY			= 14,	//!< Gateway ready
-	I_SIGNING_PRESENTATION	= 15,	//!< Provides signing related preferences (first byte is preference version)
-	I_NONCE_REQUEST			= 16,	//!< Request for a nonce
-	I_NONCE_RESPONSE		= 17,	//!< Payload is nonce data
-	I_HEARTBEAT_REQUEST		= 18,	//!< Heartbeat request
-	I_PRESENTATION			= 19,	//!< Presentation message
-	I_DISCOVER_REQUEST		= 20,	//!< Discover request
-	I_DISCOVER_RESPONSE		= 21,	//!< Discover response
-	I_HEARTBEAT_RESPONSE	= 22,	//!< Heartbeat response
-	I_LOCKED				= 23,	//!< Node is locked (reason in string-payload)
-	I_PING					= 24,	//!< Ping sent to node, payload incremental hop counter
-	I_PONG					= 25,	//!< In return to ping, sent back to sender, payload incremental hop counter
-	I_REGISTRATION_REQUEST	= 26,	//!< Register request to GW
-	I_REGISTRATION_RESPONSE	= 27,	//!< Register response from GW
-	I_DEBUG					= 28	//!< Debug message
+	I_BATTERY_LEVEL				= 0,	//!< Battery level
+	I_TIME						= 1,	//!< Time (request/response)
+	I_VERSION					= 2,	//!< Version
+	I_ID_REQUEST				= 3,	//!< ID request
+	I_ID_RESPONSE				= 4,	//!< ID response
+	I_INCLUSION_MODE			= 5,	//!< Inclusion mode
+	I_CONFIG					= 6,	//!< Config (request/response)
+	I_FIND_PARENT_REQUEST		= 7,	//!< Find parent
+	I_FIND_PARENT_RESPONSE		= 8,	//!< Find parent response
+	I_LOG_MESSAGE				= 9,	//!< Log message
+	I_CHILDREN					= 10,	//!< Children
+	I_SKETCH_NAME				= 11,	//!< Sketch name
+	I_SKETCH_VERSION			= 12,	//!< Sketch version
+	I_REBOOT					= 13,	//!< Reboot request
+	I_GATEWAY_READY				= 14,	//!< Gateway ready
+	I_SIGNING_PRESENTATION		= 15,	//!< Provides signing related preferences (first byte is preference version)
+	I_NONCE_REQUEST				= 16,	//!< Request for a nonce
+	I_NONCE_RESPONSE			= 17,	//!< Payload is nonce data
+	I_HEARTBEAT_REQUEST			= 18,	//!< Heartbeat request
+	I_PRESENTATION				= 19,	//!< Presentation message
+	I_DISCOVER_REQUEST			= 20,	//!< Discover request
+	I_DISCOVER_RESPONSE			= 21,	//!< Discover response
+	I_HEARTBEAT_RESPONSE		= 22,	//!< Heartbeat response
+	I_LOCKED					= 23,	//!< Node is locked (reason in string-payload)
+	I_PING						= 24,	//!< Ping sent to node, payload incremental hop counter
+	I_PONG						= 25,	//!< In return to ping, sent back to sender, payload incremental hop counter
+	I_REGISTRATION_REQUEST		= 26,	//!< Register request to GW
+	I_REGISTRATION_RESPONSE		= 27,	//!< Register response from GW
+	I_DEBUG						= 28,	//!< Debug message
+	I_SIGNAL_REPORT_REQUEST		= 29,	//!< Device signal strength request
+	I_SIGNAL_REPORT_REVERSE		= 30,	//!< Internal
+	I_SIGNAL_REPORT_RESPONSE	= 31,	//!< Device signal strength response (RSSI)
+	I_PRE_SLEEP_NOTIFICATION	= 32,	//!< Message sent before node is going to sleep
+	I_POST_SLEEP_NOTIFICATION	= 33	//!< Message sent after node woke up (if enabled)
 } mysensor_internal;
 
 
@@ -320,6 +326,9 @@ public:
 	// Setters for payload
 	MyMessage& set(void* payload, uint8_t length);
 	MyMessage& set(const char* value);
+#if !defined(__linux__)
+	MyMessage& set(const __FlashStringHelper* value);
+#endif
 	MyMessage& set(float value, uint8_t decimals);
 	MyMessage& set(bool value);
 	MyMessage& set(uint8_t value);

@@ -47,7 +47,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24 //!< NRF24L01 radio driver
+//#define MY_RADIO_NRF5_ESB //!< nRF5 radio driver (NRF24 compatible)
 //#define MY_RADIO_RFM69 //!< RFM69 radio driver
+//#define MY_RADIO_RFM95 //!< RFM95 radio driver
 
 // Select soft/hardware signing method
 #define MY_SIGNING_SOFT //!< Software signing
@@ -63,7 +65,9 @@
 #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7 //!< Unconnected analog pin for random seed
 
 // SETTINGS FOR MY_SIGNING_ATSHA204
+#ifndef MY_SIGNING_ATSHA204_PIN
 #define MY_SIGNING_ATSHA204_PIN 17 //!< A3 - pin where ATSHA204 is attached
+#endif
 
 #include <MySensors.h>
 

@@ -26,28 +26,12 @@ GATEWAY_OBJECTS=$(patsubst %.c,$(BUILDDIR)/%.o,$(GATEWAY_C_SOURCES)) $(patsubst 
 
 INCLUDES=-I. -I./core -I./drivers/Linux
 
-ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836))
-RPI_C_SOURCES=$(wildcard drivers/RPi/*.c)
-RPI_CPP_SOURCES=$(wildcard drivers/RPi/*.cpp)
-GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(RPI_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(RPI_CPP_SOURCES))
-
-INCLUDES+=-I./drivers/RPi
-endif
-
-ifeq ($(SPI_DRIVER), BCM)
-SPI_DRIVER_C_SOURCES=$(wildcard drivers/BCM/*.c)
-SPI_DRIVER_CPP_SOURCES=$(wildcard drivers/BCM/*.cpp)
-GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(SPI_DRIVER_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SPI_DRIVER_CPP_SOURCES))
+ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836 BCM2837))
+BCM_C_SOURCES=$(wildcard drivers/BCM/*.c)
+BCM_CPP_SOURCES=$(wildcard drivers/BCM/*.cpp)
+GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(BCM_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(BCM_CPP_SOURCES))
 
 INCLUDES+=-I./drivers/BCM
-endif
-
-ifeq ($(SPI_DRIVER), SPIDEV)
-SPI_DRIVER_C_SOURCES=$(wildcard drivers/SPIDEV/*.c)
-SPI_DRIVER_CPP_SOURCES=$(wildcard drivers/SPIDEV/*.cpp)
-GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(SPI_DRIVER_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SPI_DRIVER_CPP_SOURCES))
-
-INCLUDES+=-I./drivers/SPIDEV
 endif
 
 # Gets include flags for library

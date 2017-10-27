@@ -95,7 +95,7 @@ void SPIFlash::unselect()
 }
 
 /// setup SPI, read device ID etc...
-boolean SPIFlash::initialize()
+bool SPIFlash::initialize()
 {
 #if defined(SPCR) && defined(SPSR)
 	_SPCR = SPCR;
@@ -180,7 +180,7 @@ void SPIFlash::readBytes(uint32_t addr, void* buf, uint16_t len)
 }
 
 /// Send a command to the flash chip, pass TRUE for isWrite when its a write command
-void SPIFlash::command(uint8_t cmd, boolean isWrite)
+void SPIFlash::command(uint8_t cmd, bool isWrite)
 {
 #if defined(__AVR_ATmega32U4__) // Arduino Leonardo, MoteinoLeo
 	DDRB |= B00000001;            // Make sure the SS pin (PB0 - used by RFM12B on MoteinoLeo R1) is set as output HIGH!
@@ -201,7 +201,7 @@ void SPIFlash::command(uint8_t cmd, boolean isWrite)
 }
 
 /// check if the chip is busy erasing/writing
-boolean SPIFlash::busy()
+bool SPIFlash::busy()
 {
 	/*
 	select();
@@ -290,11 +290,10 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len)
 	command(SPIFLASH_WRITEDISABLE); //end AAI programming
 	unselect();
 #else
-	uint16_t n;
 	uint16_t maxBytes = 256-(addr%256);  // force the first set of bytes to stay within the first page
 	uint16_t offset = 0;
 	while (len>0) {
-		n = (len<=maxBytes) ? len : maxBytes;
+		uint16_t n = (len<=maxBytes) ? len : maxBytes;
 		command(SPIFLASH_BYTEPAGEPROGRAM, true);  // Byte/Page Program
 		SPI.transfer(addr >> 16);
 		SPI.transfer(addr >> 8);

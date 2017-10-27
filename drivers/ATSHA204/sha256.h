@@ -21,9 +21,7 @@ class Sha256Class
 public:
 	Sha256Class(); // Constructor
 	void init(void);
-	void initHmac(const uint8_t* secret, int secretLength);
 	uint8_t* result(void);
-	uint8_t* resultHmac(void);
 	void write(uint8_t);
 private:
 	void pad();
@@ -34,6 +32,15 @@ private:
 	uint8_t bufferOffset;
 	_state state;
 	uint32_t byteCount;
+};
+
+class HmacClass : public Sha256Class
+{
+public:
+	HmacClass(); // Constructor
+	void initHmac(const uint8_t* secret, int secretLength);
+	uint8_t* resultHmac(void);
+private:
 	uint8_t keyBuffer[BLOCK_LENGTH];
 	uint8_t innerHash[HASH_LENGTH];
 };
