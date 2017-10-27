@@ -92,7 +92,7 @@ void *interruptHandler(void *args)
 
 	// Setup poll structure
 	polls.fd     = fd;
-	polls.events = POLLPRI;
+	polls.events = POLLPRI | POLLERR;
 
 	while (1) {
 		// Wait for it ...
@@ -103,12 +103,11 @@ void *interruptHandler(void *args)
 		}
 		// Do a dummy read to clear the interrupt
 		//	A one character read appars to be enough.
-		//	Followed by a seek to reset it.
-		if (read (fd, &c, 1) < 0) {
+		if (lseek (fd, 0, SEEK_SET) < 0) {
 			logError("Interrupt handler error: %s\n", strerror(errno));
 			break;
 		}
-		if (lseek (fd, 0, SEEK_SET) < 0) {
+		if (read (fd, &c, 1) < 0) {
 			logError("Interrupt handler error: %s\n", strerror(errno));
 			break;
 		}

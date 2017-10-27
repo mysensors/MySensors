@@ -65,7 +65,6 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
-
 // Enable debug prints to serial monitor
 #define MY_DEBUG
 
@@ -75,6 +74,7 @@
 // Enables and select radio type (if attached)
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #define MY_GATEWAY_ESP8266
 
@@ -82,18 +82,18 @@
 #define MY_ESP8266_PASSWORD "MyVerySecretPassword"
 
 // Enable UDP communication
-//#define MY_USE_UDP
+//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
 
 // Set the hostname for the WiFi Client. This is the hostname
 // it will pass to the DHCP server if not static.
-// #define MY_ESP8266_HOSTNAME "sensor-gateway"
+//#define MY_ESP8266_HOSTNAME "sensor-gateway"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 //#define MY_IP_ADDRESS 192,168,178,87
 
-// If using static ip you need to define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
-#define MY_IP_SUBNET_ADDRESS 255,255,255,0
+// If using static ip you can define Gateway and Subnet address as well
+//#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 // The port to keep open on node server mode
 #define MY_PORT 5003
@@ -106,35 +106,34 @@
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
 
 // Enable inclusion mode
-#define MY_INCLUSION_MODE_FEATURE
+//#define MY_INCLUSION_MODE_FEATURE
 
 // Enable Inclusion mode button on gateway
-// #define MY_INCLUSION_BUTTON_FEATURE
+//#define MY_INCLUSION_BUTTON_FEATURE
 // Set inclusion mode duration (in seconds)
-#define MY_INCLUSION_MODE_DURATION 60
+//#define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
-#define MY_INCLUSION_MODE_BUTTON_PIN  3
-
+//#define MY_INCLUSION_MODE_BUTTON_PIN  3
 
 // Set blinking period
-// #define MY_DEFAULT_LED_BLINK_PERIOD 300
+//#define MY_DEFAULT_LED_BLINK_PERIOD 300
 
 // Flash leds on rx/tx/err
 // Led pins used if blinking feature is enabled above
-#define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
-#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
-#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
+//#define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
+//#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
+//#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
 
 #if defined(MY_USE_UDP)
 #include <WiFiUdp.h>
 #endif
 
 #include <ESP8266WiFi.h>
-
 #include <MySensors.h>
 
 void setup()
 {
+	// Setup locally attached sensors
 }
 
 void presentation()
@@ -142,8 +141,8 @@ void presentation()
 	// Present locally attached sensors here
 }
 
-
 void loop()
 {
 	// Send locally attached sensors data here
 }
+

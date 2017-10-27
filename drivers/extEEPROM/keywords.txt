@@ -1,0 +1,6 @@
+extEEPROM	KEYWORD1
+begin	KEYWORD2
+write	KEYWORD2
+read	KEYWORD2
+update	KEYWORD2
+length	KEYWORD2

@@ -11,7 +11,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #define MY_NODE_ID 254
 
@@ -84,7 +86,7 @@
 
 
 // Global Vars
-unsigned long SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 900000; // Sleep time between reads (in milliseconds)
 bool metric = true;
 long randNumber;
 
@@ -719,7 +721,7 @@ void loop()
 }
 
 // This is called when a new time value was received
-void receiveTime(unsigned long controllerTime)
+void receiveTime(uint32_t controllerTime)
 {
 
 	Serial.print("Time value received: ");

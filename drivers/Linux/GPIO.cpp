@@ -27,9 +27,9 @@
 #include "log.h"
 
 // Declare a single default instance
-GPIO gpio = GPIO();
+GPIOClass GPIO = GPIOClass();
 
-GPIO::GPIO()
+GPIOClass::GPIOClass()
 {
 	FILE *f;
 	DIR* dp;
@@ -83,7 +83,7 @@ GPIO::GPIO()
 	}
 }
 
-GPIO::GPIO(const GPIO& other)
+GPIOClass::GPIOClass(const GPIOClass& other)
 {
 	lastPinNum = other.lastPinNum;
 
@@ -93,7 +93,7 @@ GPIO::GPIO(const GPIO& other)
 	}
 }
 
-GPIO::~GPIO()
+GPIOClass::~GPIOClass()
 {
 	FILE *f;
 
@@ -108,7 +108,7 @@ GPIO::~GPIO()
 	delete [] exportedPins;
 }
 
-void GPIO::pinMode(uint8_t pin, uint8_t mode)
+void GPIOClass::pinMode(uint8_t pin, uint8_t mode)
 {
 	FILE *f;
 
@@ -144,7 +144,7 @@ void GPIO::pinMode(uint8_t pin, uint8_t mode)
 	fclose(f);
 }
 
-void GPIO::digitalWrite(uint8_t pin, uint8_t value)
+void GPIOClass::digitalWrite(uint8_t pin, uint8_t value)
 {
 	FILE *f;
 	char file[128];
@@ -168,7 +168,7 @@ void GPIO::digitalWrite(uint8_t pin, uint8_t value)
 	fclose(f);
 }
 
-uint8_t GPIO::digitalRead(uint8_t pin)
+uint8_t GPIOClass::digitalRead(uint8_t pin)
 {
 	FILE *f;
 	char file[128];
@@ -192,12 +192,12 @@ uint8_t GPIO::digitalRead(uint8_t pin)
 	return i;
 }
 
-uint8_t GPIO::digitalPinToInterrupt(uint8_t pin)
+uint8_t GPIOClass::digitalPinToInterrupt(uint8_t pin)
 {
 	return pin;
 }
 
-GPIO& GPIO::operator=(const GPIO& other)
+GPIOClass& GPIOClass::operator=(const GPIOClass& other)
 {
 	if (this != &other) {
 		lastPinNum = other.lastPinNum;
