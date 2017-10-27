@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -32,25 +32,26 @@
 #define MyEepromAddresses_h
 
 // EEPROM variable sizes, in bytes
-#define SIZE_NODE_ID						(1)		//!< Size node ID
-#define SIZE_PARENT_NODE_ID					(1)		//!< Size parent node ID
-#define SIZE_DISTANCE						(1)		//!< Size GW distance
-#define SIZE_ROUTES							(256)	//!< Size routing table
-#define SIZE_CONTROLLER_CONFIG				(24)	//!< Size controller config
-#define SIZE_FIRMWARE_TYPE					(2)		//!< Size firmware type
-#define SIZE_FIRMWARE_VERSION				(2)		//!< Size firmware version
-#define SIZE_FIRMWARE_BLOCKS				(2)		//!< Size firmware blocks
-#define SIZE_FIRMWARE_CRC					(2)		//!< Size firmware CRC
-#define SIZE_SIGNING_REQUIREMENT_TABLE		(32)	//!< Size signing requirement table
-#define SIZE_WHITELIST_REQUIREMENT_TABLE	(32)	//!< Size whitelist requirement table
-#define SIZE_SIGNING_SOFT_HMAC_KEY			(32)	//!< Size soft signing HMAC key
-#define SIZE_SIGNING_SOFT_SERIAL			(9)		//!< Size soft signing serial
-#define SIZE_RF_ENCRYPTION_AES_KEY			(16)	//!< Size RF AES encryption key
-#define SIZE_NODE_LOCK_COUNTER				(1)		//!< Size node lock counter
+#define SIZE_NODE_ID						(1u)		//!< Size node ID
+#define SIZE_PARENT_NODE_ID					(1u)		//!< Size parent node ID
+#define SIZE_DISTANCE						(1u)		//!< Size GW distance
+#define SIZE_ROUTES							(256u)	//!< Size routing table
+#define SIZE_CONTROLLER_CONFIG				(23u)	//!< Size controller config
+#define SIZE_PERSONALIZATION_CHECKSUM	(1u)  //!< Size personalization checksum
+#define SIZE_FIRMWARE_TYPE					(2u)		//!< Size firmware type
+#define SIZE_FIRMWARE_VERSION				(2u)		//!< Size firmware version
+#define SIZE_FIRMWARE_BLOCKS				(2u)		//!< Size firmware blocks
+#define SIZE_FIRMWARE_CRC					(2u)		//!< Size firmware CRC
+#define SIZE_SIGNING_REQUIREMENT_TABLE		(32u)	//!< Size signing requirement table
+#define SIZE_WHITELIST_REQUIREMENT_TABLE	(32u)	//!< Size whitelist requirement table
+#define SIZE_SIGNING_SOFT_HMAC_KEY			(32u)	//!< Size soft signing HMAC key
+#define SIZE_SIGNING_SOFT_SERIAL			(9u)		//!< Size soft signing serial
+#define SIZE_RF_ENCRYPTION_AES_KEY			(16u)	//!< Size RF AES encryption key
+#define SIZE_NODE_LOCK_COUNTER				(1u)		//!< Size node lock counter
 
 
 /** @brief EEPROM start address */
-#define EEPROM_START 0
+#define EEPROM_START (0u)
 /** @brief Address node ID */
 #define EEPROM_NODE_ID_ADDRESS EEPROM_START
 /** @brief Address parent node ID */
@@ -61,8 +62,10 @@
 #define EEPROM_ROUTES_ADDRESS (EEPROM_DISTANCE_ADDRESS + SIZE_DISTANCE)
 /** @brief Address configuration bytes sent by controller */
 #define EEPROM_CONTROLLER_CONFIG_ADDRESS (EEPROM_ROUTES_ADDRESS + SIZE_ROUTES)
+/** @brief Personalization checksum (set by SecurityPersonalizer.ino) */
+#define EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS (EEPROM_CONTROLLER_CONFIG_ADDRESS + SIZE_CONTROLLER_CONFIG)
 /** @brief Address firmware type */
-#define EEPROM_FIRMWARE_TYPE_ADDRESS (EEPROM_CONTROLLER_CONFIG_ADDRESS + SIZE_CONTROLLER_CONFIG)
+#define EEPROM_FIRMWARE_TYPE_ADDRESS (EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS + SIZE_PERSONALIZATION_CHECKSUM)
 /** @brief Address firmware version */
 #define EEPROM_FIRMWARE_VERSION_ADDRESS (EEPROM_FIRMWARE_TYPE_ADDRESS + SIZE_FIRMWARE_TYPE)
 /** @brief Address firmware blocks */

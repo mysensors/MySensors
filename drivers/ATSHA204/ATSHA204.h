@@ -1,7 +1,7 @@
 #ifndef ATSHA204_H
 #define ATSHA204_H
 #if !DOXYGEN
-#include "Arduino.h"
+#include <Arduino.h>
 
 /* This is a scaled down variant of the ATSHA204 library, tweaked to meet the specific needs of the MySensors library. */
 
@@ -247,6 +247,7 @@ uint8_t atsha204_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
                          uint8_t datalen1, uint8_t *data1, uint8_t tx_size,
                          uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);
 uint8_t atsha204_getSerialNumber(uint8_t *response);
+uint8_t atsha204_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t address);
 
 #endif
 #endif

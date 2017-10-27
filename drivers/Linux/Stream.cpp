@@ -152,7 +152,7 @@ long Stream::parseInt()
 // this allows format characters (typically commas) in values to be ignored
 long Stream::parseInt(char skipChar)
 {
-	boolean isNegative = false;
+	bool isNegative = false;
 	long value = 0;
 	int c;
 
@@ -190,8 +190,8 @@ float Stream::parseFloat()
 // this allows format characters (typically commas) in values to be ignored
 float Stream::parseFloat(char skipChar)
 {
-	boolean isNegative = false;
-	boolean isFraction = false;
+	bool isNegative = false;
+	bool isFraction = false;
 	long value = 0;
 	int c;
 	float fraction = 1.0;

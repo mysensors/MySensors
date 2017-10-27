@@ -39,7 +39,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
@@ -53,7 +55,7 @@
 
 #define CHILD_ID 1                              // Id of the sensor child
 
-unsigned long SEND_FREQUENCY =
+uint32_t SEND_FREQUENCY =
     30000;           // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 
 MyMessage flowMsg(CHILD_ID,V_FLOW);
@@ -62,17 +64,17 @@ MyMessage lastCounterMsg(CHILD_ID,V_VAR1);
 
 double ppl = ((double)PULSE_FACTOR)/1000;        // Pulses per liter
 
-volatile unsigned long pulseCount = 0;
-volatile unsigned long lastBlink = 0;
+volatile uint32_t pulseCount = 0;
+volatile uint32_t lastBlink = 0;
 volatile double flow = 0;
 bool pcReceived = false;
-unsigned long oldPulseCount = 0;
-unsigned long newBlink = 0;
+uint32_t oldPulseCount = 0;
+uint32_t newBlink = 0;
 double oldflow = 0;
 double volume =0;
 double oldvolume =0;
-unsigned long lastSend =0;
-unsigned long lastPulse =0;
+uint32_t lastSend =0;
+uint32_t lastPulse =0;
 
 void setup()
 {
@@ -100,7 +102,7 @@ void presentation()
 
 void loop()
 {
-	unsigned long currentTime = millis();
+	uint32_t currentTime = millis();
 
 	// Only send values at a maximum frequency or woken up from sleep
 	if (SLEEP_MODE || (currentTime - lastSend > SEND_FREQUENCY)) {
@@ -120,7 +122,7 @@ void loop()
 
 			// Check that we dont get unresonable large flow value.
 			// could hapen when long wraps or false interrupt triggered
-			if (flow<((unsigned long)MAX_FLOW)) {
+			if (flow<((uint32_t)MAX_FLOW)) {
 				send(flowMsg.set(flow, 2));                   // Send flow value to gw
 			}
 		}
@@ -158,7 +160,7 @@ void loop()
 void receive(const MyMessage &message)
 {
 	if (message.type==V_VAR1) {
-		unsigned long gwPulseCount=message.getULong();
+		uint32_t gwPulseCount=message.getULong();
 		pulseCount += gwPulseCount;
 		flow=oldflow=0;
 		Serial.print("Received last pulse count from gw:");
@@ -170,8 +172,8 @@ void receive(const MyMessage &message)
 void onPulse()
 {
 	if (!SLEEP_MODE) {
-		unsigned long newBlink = micros();
-		unsigned long interval = newBlink-lastBlink;
+		uint32_t newBlink = micros();
+		uint32_t interval = newBlink-lastBlink;
 
 		if (interval!=0) {
 			lastPulse = millis();

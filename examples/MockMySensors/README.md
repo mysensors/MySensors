@@ -1,7 +1,7 @@
 # MockMySensors
 Arduino sketch to fake sensor for the MySensors Library
 
-This skecth is intended to crate fake sensors which register and respond to the controller
+This sketch is intended to create fake sensors which register and respond to the controller
 
 Barduino, GizMoCuz 2015
 -----------------

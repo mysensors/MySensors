@@ -19,9 +19,11 @@
  * Based on Arduino ethernet library, Copyright (c) 2010 Arduino LLC. All right reserved.
  */
 
+#include "EthernetClient.h"
 #include <cstdio>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <linux/sockios.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <cstring>
@@ -30,7 +32,6 @@
 #include <netinet/tcp.h>
 #include <errno.h>
 #include "log.h"
-#include "EthernetClient.h"
 
 EthernetClient::EthernetClient() : _sock(-1)
 {
@@ -42,11 +43,13 @@ EthernetClient::EthernetClient(int sock) : _sock(sock)
 
 int EthernetClient::connect(const char* host, uint16_t port)
 {
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo, *localinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 	char port_str[6];
+	bool use_bind = (_srcip != 0);
+
+	close();
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -57,17 +60,31 @@ int EthernetClient::connect(const char* host, uint16_t port)
 		logError("getaddrinfo: %s\n", gai_strerror(rv));
 		return -1;
 	}
+	if (use_bind) {
+		if ((rv = getaddrinfo(_srcip.toString().c_str(), port_str, &hints, &localinfo)) != 0) {
+			logError("getaddrinfo: %s\n", gai_strerror(rv));
+			return -1;
+		}
+	}
 
 	// loop through all the results and connect to the first we can
 	for (p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-		                     p->ai_protocol)) == -1) {
+		if ((_sock = socket(p->ai_family, p->ai_socktype,
+		                    p->ai_protocol)) == -1) {
 			logError("socket: %s\n", strerror(errno));
 			continue;
 		}
 
-		if (::connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-			close(sockfd);
+		if (use_bind) {
+			if (::bind(_sock, localinfo->ai_addr, localinfo->ai_addrlen) == -1) {
+				close();
+				logError("bind: %s\n", strerror(errno));
+				return -1;
+			}
+		}
+
+		if (::connect(_sock, p->ai_addr, p->ai_addrlen) == -1) {
+			close();
 			logError("connect: %s\n", strerror(errno));
 			continue;
 		}
@@ -80,13 +97,14 @@ int EthernetClient::connect(const char* host, uint16_t port)
 		return -1;
 	}
 
-	_sock = sockfd;
-
 	void *addr = &(((struct sockaddr_in*)p->ai_addr)->sin_addr);
 	inet_ntop(p->ai_family, addr, s, sizeof s);
 	logDebug("connected to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
+	if (use_bind) {
+		freeaddrinfo(localinfo); // all done with this structure
+	}
 
 	return 1;
 }
@@ -113,8 +131,7 @@ size_t EthernetClient::write(const uint8_t *buf, size_t size)
 		int rc = send(_sock, buf + bytes, size, MSG_NOSIGNAL | MSG_DONTWAIT);
 		if (rc == -1) {
 			logError("send: %s\n", strerror(errno));
-			close(_sock);
-			_sock = -1;
+			close();
 			break;
 		}
 		bytes += rc;
@@ -141,16 +158,16 @@ int EthernetClient::available()
 	int count = 0;
 
 	if (_sock != -1) {
-		ioctl(_sock, FIONREAD, &count);
-		return count;
+		ioctl(_sock, SIOCINQ, &count);
 	}
-	return 0;
+
+	return count;
 }
 
 int EthernetClient::read()
 {
 	uint8_t b;
-	if ( recv(_sock, &b, 1, 0) > 0 ) {
+	if ( recv(_sock, &b, 1, MSG_DONTWAIT) > 0 ) {
 		// recv worked
 		return b;
 	} else {
@@ -159,22 +176,35 @@ int EthernetClient::read()
 	}
 }
 
-int EthernetClient::read(uint8_t *buf, size_t size)
+int EthernetClient::read(uint8_t *buf, size_t bytes)
 {
-	return recv(_sock, buf, size, 0);
+	return recv(_sock, buf, bytes, MSG_DONTWAIT);
 }
 
 int EthernetClient::peek()
 {
 	uint8_t b;
 
-	return recv(_sock, &b, 1, MSG_PEEK | MSG_DONTWAIT);
+	if (recv(_sock, &b, 1, MSG_PEEK | MSG_DONTWAIT) > 0) {
+		return b;
+	} else {
+		return -1;
+	}
 }
 
 void EthernetClient::flush()
 {
-	// There isn't much we can do here
-	return;
+	int count = 0;
+
+	if (_sock != -1) {
+		while (true) {
+			ioctl(_sock, SIOCOUTQ, &count);
+			if (count == 0) {
+				return;
+			}
+			usleep(1000);
+		}
+	}
 }
 
 void EthernetClient::stop()
@@ -203,7 +233,7 @@ void EthernetClient::stop()
 
 	// if it hasn't closed, close it forcefully
 	if (s != ETHERNETCLIENT_W5100_CLOSED) {
-		close(_sock);
+		::close(_sock);
 	}
 	_sock = -1;
 }
@@ -249,17 +279,20 @@ uint8_t EthernetClient::status()
 
 uint8_t EthernetClient::connected()
 {
-	if (_sock == -1) {
-		return 0;
-	}
+	return status() == ETHERNETCLIENT_W5100_ESTABLISHED || available();
+}
 
-	if (peek() < 0) {
-		if (errno == EAGAIN) {
-			return 1;
-		}
-		return 0;
+void EthernetClient::close()
+{
+	if (_sock != -1) {
+		::close(_sock);
+		_sock = -1;
 	}
-	return 1;
+}
+
+void EthernetClient::bind(IPAddress ip)
+{
+	_srcip = ip;
 }
 
 int EthernetClient::getSocketNumber()

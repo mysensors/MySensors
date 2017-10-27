@@ -19,6 +19,7 @@
  * Based on Arduino ethernet library, Copyright (c) 2010 Arduino LLC. All right reserved.
  */
 
+#include "EthernetServer.h"
 #include <cstdio>
 #include <sys/socket.h>
 #include <cstring>
@@ -30,7 +31,6 @@
 #include <fcntl.h>
 #include "log.h"
 #include "EthernetClient.h"
-#include "EthernetServer.h"
 
 EthernetServer::EthernetServer(uint16_t port, uint16_t max_clients) : port(port),
 	max_clients(max_clients), sockfd(-1)
@@ -50,6 +50,11 @@ void EthernetServer::begin(IPAddress address)
 	int rv;
 	char ipstr[INET_ADDRSTRLEN];
 	char portstr[6];
+
+	if (sockfd != -1) {
+		close(sockfd);
+		sockfd = -1;
+	}
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -108,6 +113,24 @@ void EthernetServer::begin(IPAddress address)
 
 bool EthernetServer::hasClient()
 {
+	// Check if any client has disconnected
+	for (size_t i = 0; i < clients.size(); ++i) {
+		EthernetClient client(clients[i]);
+		if (!client.connected()) {
+			// Checks if this disconnected client is also on the new clients list
+			for (std::list<int>::iterator it = new_clients.begin(); it != new_clients.end(); ++it) {
+				if (*it == clients[i]) {
+					new_clients.erase(it);
+					break;
+				}
+			}
+			client.stop();
+			clients[i] = clients.back();
+			clients.pop_back();
+			logDebug("Ethernet client disconnected.\n");
+		}
+	}
+
 	_accept();
 
 	return !new_clients.empty();
@@ -136,14 +159,9 @@ size_t EthernetServer::write(const uint8_t *buffer, size_t size)
 
 	while (i < clients.size()) {
 		EthernetClient client(clients[i]);
-		if (client.connected()) {
+		if (client.status() == ETHERNETCLIENT_W5100_ESTABLISHED) {
 			n += client.write(buffer, size);
 			i++;
-		} else if (!client.available()) {
-			client.stop();
-			clients[i] = clients.back();
-			clients.pop_back();
-			logDebug("Client disconnected.\n");
 		}
 	}
 
@@ -170,42 +188,19 @@ void EthernetServer::_accept()
 	struct sockaddr_storage client_addr;
 	char ipstr[INET_ADDRSTRLEN];
 
-	if (new_clients.size() + clients.size() == max_clients) {
-		// no free slots, search for a dead client
-		bool no_free_slots = true;
-		for (size_t i = 0; i < clients.size();) {
-			EthernetClient client(clients[i]);
-			if (client.connected() || client.available()) {
-				i++;
-			} else {
-				clients[i] = clients.back();
-				clients.pop_back();
-				no_free_slots = false;
-				break;
-			}
-		}
-		if (no_free_slots) {
-			for (std::list<int>::iterator it = new_clients.begin(); it != new_clients.end(); ++it) {
-				EthernetClient client(*it);
-				if (!client.connected() && !client.available()) {
-					new_clients.erase(it);
-					no_free_slots = false;
-					break;
-				}
-			}
-		}
-		if (no_free_slots) {
-			logDebug("Max number of ethernet clients reached.\n");
-			return;
-		}
-	}
-
 	sin_size = sizeof client_addr;
 	new_fd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
 	if (new_fd == -1) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK) {
 			logError("accept: %s\n", strerror(errno));
 		}
+		return;
+	}
+
+	if (clients.size() == max_clients) {
+		// no free slots, search for a dead client
+		close(new_fd);
+		logDebug("Max number of ethernet clients reached.\n");
 		return;
 	}
 
