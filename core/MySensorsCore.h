@@ -37,26 +37,26 @@
 *
 * MySensorsCore debug log messages:
 *
-* |E| SYS	| SUB	| Message										| Comment
-* |-|-------|-------|-----------------------------------------------|----------------------------------------------------------------------------
-* |!| MCO	| BGN	| HW ERR										| Error HW initialization (e.g. ext. EEPROM)
-* | | MCO	| BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
-* | | MCO	| BGN	| BFR											| Callback before()
-* | | MCO	| BGN	| STP											| Callback setup()
-* | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
-* | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
-* |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
-* | | MCO	| REG	| REQ											| Registration request
-* | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
-* |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
-* | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
-* | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
-* | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
-* |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
-* |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
-* |!| MCO	| SLP	| TNR											| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
-* | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
-* | | MCO	| NLK	| TSL											| Set transport to sleep
+* |E| SYS | SUB | Message																			| Comment
+* |-|-----|-----|---------------------------------------------|----------------------------------------------------------------------------
+* |!| MCO | BGN | HW ERR																			| Error HW initialization (e.g. ext. EEPROM)
+* | | MCO | BGN | INIT %%s,CP=%%s,LIB=%%s											| Core initialization, capabilities (CP), library version (LIB)
+* | | MCO | BGN | BFR																					| Callback before()
+* | | MCO | BGN | STP																					| Callback setup()
+* | | MCO | BGN | INIT OK,TSP=%%d															| Core initialised, transport status (TSP): 0=not initialised, 1=initialised, NA=not available
+* | | MCO | BGN | NODE UNLOCKED																| Node successfully unlocked (see signing chapter)
+* |!| MCO | BGN | TSP FAIL																		| Transport initialization failed
+* | | MCO | REG | REQ																					| Registration request
+* | | MCO | REG | NOT NEEDED																	| No registration needed (i.e. GW)
+* |!| MCO | SND | NODE NOT REG																| Node is not registered, cannot send message
+* | | MCO | PIM | NODE REG=%%d																| Registration response received, registration status (REG)
+* | | MCO | SLP | MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
+* | | MCO | SLP | WUP=%%d																			| Node woke-up, reason/IRQ (WUP)
+* |!| MCO | SLP | FWUPD																				| Sleeping not possible, FW update ongoing
+* |!| MCO | SLP | REP																					| Sleeping not possible, repeater feature enabled
+* |!| MCO | SLP | TNR																					| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
+* | | MCO | NLK | NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
+* | | MCO | NLK | TSL																					| Set transport to sleep
 *
 *
 * @brief API declaration for MySensorsCore
@@ -73,17 +73,17 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#define GATEWAY_ADDRESS			((uint8_t)0)			//!< Node ID for GW sketch
-#define NODE_SENSOR_ID			((uint8_t)255)			//!< Node child is always created/presented when a node is started
-#define MY_CORE_VERSION			((uint8_t)2)			//!< core version
-#define MY_CORE_MIN_VERSION		((uint8_t)2)			//!< min core version required for compatibility
+#define GATEWAY_ADDRESS					((uint8_t)0)		//!< Node ID for GW sketch
+#define NODE_SENSOR_ID					((uint8_t)255)	//!< Node child is always created/presented when a node is started
+#define MY_CORE_VERSION					((uint8_t)2)		//!< core version
+#define MY_CORE_MIN_VERSION			((uint8_t)2)		//!< min core version required for compatibility
 
-#define MY_WAKE_UP_BY_TIMER		((int8_t)-1)			//!< Sleeping wake up by timer
-#define MY_SLEEP_NOT_POSSIBLE	((int8_t)-2)			//!< Sleeping not possible
-#define INTERRUPT_NOT_DEFINED	((uint8_t)255)			//!< _sleep() param: no interrupt defined
-#define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
-#define VALUE_NOT_DEFINED		((uint8_t)255)			//!< Value not defined
-#define FUNCTION_NOT_SUPPORTED ((uint16_t)0)			//!< Function not supported
+#define MY_WAKE_UP_BY_TIMER			((int8_t)-1)		//!< Sleeping wake up by timer
+#define MY_SLEEP_NOT_POSSIBLE		((int8_t)-2)		//!< Sleeping not possible
+#define INTERRUPT_NOT_DEFINED		((uint8_t)255)	//!< _sleep() param: no interrupt defined
+#define MODE_NOT_DEFINED				((uint8_t)255)	//!< _sleep() param: no mode defined
+#define VALUE_NOT_DEFINED				((uint8_t)255)	//!< Value not defined
+#define FUNCTION_NOT_SUPPORTED	((uint16_t)0)		//!< Function not supported
 
 /**
  * @brief Controller configuration

@@ -34,19 +34,19 @@
 *
 * MyOTAFirmwareUpdate debug log messages:
 *
-* |E| SYS	| SUB	| Message									| Comment
-* |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
-* | | OTA  | FWP	| UPDATE									| FW update initiated
-* |!| OTA  | FWP	| FLASH INIT FAIL							| Failed to initialise flash
-* | | OTA  | FWP	| UPDATE SKIPPED							| FW update skipped, no newer version available
-* | | OTA  | FWP	| RECV B=%04X								| Received FW block (B)
-* |!| OTA  | FWP	| WRONG FWB									| Wrong FW block received
-* | | OTA  | FWP	| FW END									| FW received, proceed to CRC verification
-* | | OTA  | FWP	| CRC OK									| FW CRC verification OK
-* |!| OTA  | FWP	| CRC FAIL									| FW CRC verification failed
-* | | OTA  | FRQ	| FW REQ,T=%04X,V=%04X,B=%04X				| Request FW update, FW type (T), version (V), block (B)
-* |!| OTA  | FRQ	| FW UPD FAIL								| FW update failed
-* | | OTA  | CRC	| B=%04X,C=%04X,F=%04X						| FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
+* |E| SYS | SUB | Message											| Comment
+* |-|-----|-----|-----------------------------|----------------------------------------------------------------------------
+* | | OTA | FWP | UPDATE											| FW update initiated
+* |!| OTA | FWP | FLASH INIT FAIL							| Failed to initialise flash
+* | | OTA | FWP | UPDATE SKIPPED							| FW update skipped, no newer version available
+* | | OTA | FWP | RECV B=%04X									| Received FW block (B)
+* |!| OTA | FWP | WRONG FWB										| Wrong FW block received
+* | | OTA | FWP | FW END											| FW received, proceed to CRC verification
+* | | OTA | FWP | CRC OK											| FW CRC verification OK
+* |!| OTA | FWP | CRC FAIL										| FW CRC verification failed
+* | | OTA | FRQ | FW REQ,T=%04X,V=%04X,B=%04X	| Request FW update, FW type (T), version (V), block (B)
+* |!| OTA | FRQ | FW UPD FAIL									| FW update failed
+* | | OTA | CRC | B=%04X,C=%04X,F=%04X				| FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
 *
 *
 * @brief API declaration for MyOTAFirmwareUpdate
