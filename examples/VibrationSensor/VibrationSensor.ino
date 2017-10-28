@@ -37,7 +37,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 #include <Wire.h>
@@ -46,7 +48,7 @@
 #define VIBRATION_SENSOR_DIGITAL_PIN 3
 #define SensorLED     13
 
-unsigned long SLEEP_TIME = 10*1000; // Sleep time between reads (in seconds)
+uint32_t SLEEP_TIME = 10*1000; // Sleep time between reads (in seconds)
 
 //VARIABLES
 int val = 0;           // variable to store the value coming from the sensor

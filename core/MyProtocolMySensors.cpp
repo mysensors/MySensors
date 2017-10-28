@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -82,7 +82,6 @@ bool protocolParse(MyMessage &message, char *inputString)
 		}
 		i++;
 	}
-	//debug(PSTR("Received %d"), i);
 	// Check for invalid input
 	if (i < 5) {
 		return false;
@@ -100,7 +99,8 @@ bool protocolParse(MyMessage &message, char *inputString)
 
 char * protocolFormat(MyMessage &message)
 {
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%d;%d;%d;%d;%d;%s\n"), message.sender,
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
+	           PSTR("%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%s\n"), message.sender,
 	           message.sensor, (uint8_t)mGetCommand(message), (uint8_t)mGetAck(message), message.type,
 	           message.getString(_convBuffer));
 	return _fmtBuffer;
@@ -108,7 +108,8 @@ char * protocolFormat(MyMessage &message)
 
 char * protocolFormatMQTTTopic(const char* prefix, MyMessage &message)
 {
-	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH, PSTR("%s/%d/%d/%d/%d/%d"), prefix,
+	snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
+	           PSTR("%s/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 ""), prefix,
 	           message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
 	return _fmtBuffer;
 }

@@ -35,7 +35,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
@@ -44,18 +46,18 @@
 #define DUST_SENSOR_DIGITAL_PIN_PM10  6
 #define DUST_SENSOR_DIGITAL_PIN_PM25  3
 
-unsigned long SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
 //VARIABLES
 int val = 0;           // variable to store the value coming from the sensor
 float valDUSTPM25 =0.0;
 float lastDUSTPM25 =0.0;
 float valDUSTPM10 =0.0;
 float lastDUSTPM10 =0.0;
-unsigned long duration;
-unsigned long starttime;
-unsigned long endtime;
-unsigned long sampletime_ms = 30000;
-unsigned long lowpulseoccupancy = 0;
+uint32_t duration;
+uint32_t starttime;
+uint32_t endtime;
+uint32_t sampletime_ms = 30000;
+uint32_t lowpulseoccupancy = 0;
 float ratio = 0;
 long concentrationPM25 = 0;
 long concentrationPM10 = 0;
@@ -86,7 +88,7 @@ void presentation()
 void loop()
 {
 
-	//get PM 2.5 density of particles over 2.5 μm.
+	//get PM 2.5 density of particles over 2.5 µm.
 	concentrationPM25=(long)getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
 	Serial.print("PM25: ");
 	Serial.println(concentrationPM25);
@@ -97,7 +99,7 @@ void loop()
 		lastDUSTPM25 = ceil(concentrationPM25);
 	}
 
-	//get PM 1.0 - density of particles over 1 μm.
+	//get PM 1.0 - density of particles over 1 µm.
 	concentrationPM10=getPM(DUST_SENSOR_DIGITAL_PIN_PM10);
 	Serial.print("PM10: ");
 	Serial.println(concentrationPM10);

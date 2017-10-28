@@ -1,0 +1,8 @@
+-IC:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino
+-IC:\Program Files (x86)\Arduino\hardware\tools\avr\avr\include
+-Idrivers\Linux
+-Idrivers\ATSHA204
+-Icore
+-DMY_SIGNING_ATSHA204
+-DMY_SIGNING_SOFT
+-DARDUINO_ARCH_AVR

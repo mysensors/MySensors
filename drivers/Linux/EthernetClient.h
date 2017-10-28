@@ -57,7 +57,7 @@ public:
 	/**
 	 * @brief Initiate a connection with host:port.
 	 *
-	 * @param host host name to resolve or a stringified dotted IP address.
+	 * @param host name to resolve or a stringified dotted IP address.
 	 * @param port to connect to.
 	 * @return 1 if SUCCESS or -1 if FAILURE.
 	 */
@@ -101,7 +101,7 @@ public:
 	 */
 	size_t write(const char *buffer, size_t size);
 	/**
-	 * @brief Checks if new data is available.
+	 * @brief Returns the number of bytes available for reading.
 	 *
 	 * @return number of bytes available.
 	 */
@@ -109,27 +109,25 @@ public:
 	/**
 	 * @brief Read a byte.
 	 *
-	 * @return 0 if FAILURE or 1 if SUCCESS.
-	 * @note This function will block (until data becomes available or timeout is reached).
+	 * @return -1 if no data, else the first byte available.
 	 */
 	virtual int read();
 	/**
 	 * @brief Read a number of bytes and store in a buffer.
 	 *
-	 * @return -1 if FAILURE or number of read bytes.
-	 * @note This function will block (until data becomes available or timeout is reached).
+	 * @param buf buffer to write to.
+	 * @param bytes number of bytes to read.
+	 * @return -1 if no data or number of read bytes.
 	 */
-	virtual int read(uint8_t *buf, size_t size);
+	virtual int read(uint8_t *buf, size_t bytes);
 	/**
-	 * @brief Check if new data are available.
+	 * @brief Returns the next byte of the read queue without removing it from the queue.
 	 *
-	 * @return 0 if no data, else number of bytes available.
+	 * @return -1 if no data, else the first byte of incoming data available.
 	 */
 	virtual int peek();
 	/**
-	 * @brief Flushes the network buffers.
-	 *
-	 * Empty function due to the way TCP works.
+	 * @brief Waits until all outgoing bytes in buffer have been sent.
 	 */
 	virtual void flush();
 	/**
@@ -145,11 +143,22 @@ public:
 	 */
 	uint8_t status();
 	/**
-	 * @brief Checks whether the socket is alive.
+	 * @brief Whether or not the client is connected.
 	 *
-	 * @return 0 if disconnected or 1 if connected.
+	 * Note that a client is considered connected if the connection has been closed but
+	 * there is still unread data.
+	 *
+	 * @return 1 if the client is connected, 0 if not.
 	 */
 	virtual uint8_t connected();
+	/**
+	 * @brief Close the connection.
+	 */
+	void close();
+	/**
+	 * @brief Bind the conection to the specified local ip.
+	 */
+	void bind(IPAddress ip);
 	/**
 	 * @brief Get the internal socket file descriptor.
 	 *
@@ -195,7 +204,8 @@ public:
 	friend class EthernetServer;
 
 private:
-	int _sock; //!< @brief Network socket.
+	int _sock; //!< @brief Network socket file descriptor.
+	IPAddress _srcip; //!< @brief Local ip to bind to.
 };
 
 #endif
