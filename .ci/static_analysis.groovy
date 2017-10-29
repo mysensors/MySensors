@@ -5,7 +5,7 @@ def cppCheck(config) {
 	sh """#!/bin/bash +x
 				cd ${config.repository_root}
 				echo "Doing cppcheck for AVR..."
-				git diff --name-only origin/${env.CHANGE_TARGET}..${config.git_sha} | sed '/.ci\\/gitler.sh/d' | sed '/README.md/d' | cppcheck -j 4 --file-list=- --enable=style,information --platform=.mystools/cppcheck/config/avr.xml --suppressions-list=.mystools/cppcheck/config/suppressions.cfg --includes-file=.mystools/cppcheck/config/includes.cfg --language=c++ --xml --xml-version=2 2> cppcheck-avr.xml
+				find . -type f \\( -iname \\*.c -o -iname \\*.cpp -o -iname \\*.ino \\) | cppcheck -j 4 --file-list=- --enable=style,information --platform=.mystools/cppcheck/config/avr.xml --suppressions-list=.mystools/cppcheck/config/suppressions.cfg --includes-file=.mystools/cppcheck/config/includes.cfg --language=c++ --xml --xml-version=2 2> cppcheck-avr.xml
 				cppcheck-htmlreport --file="cppcheck-avr.xml" --title="cppcheck-avr" --report-dir=cppcheck-avr_cppcheck_reports --source-dir=."""
 	
 	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true,
