@@ -2,15 +2,21 @@
 def call(config) {
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Gitler)', 'Checking...', '${BUILD_URL}flowGraphTable/')
 	if (env.CHANGE_TARGET == 'master' &&
-		(env.CHANGE_AUTHOR != 'bblacey'     || env.CHANGE_AUTHOR != 'd00616'       ||
-		 env.CHANGE_AUTHOR != 'fallberg'    || env.CHANGE_AUTHOR != 'henrikekblad' ||
-		 env.CHANGE_AUTHOR != 'marceloaqno' || env.CHANGE_AUTHOR != 'mfalkvidd'    ||
-		 env.CHANGE_AUTHOR != 'scalz'       || env.CHANGE_AUTHOR != 'tbowmo'       ||
-		 env.CHANGE_AUTHOR != 'tekka007'    || env.CHANGE_AUTHOR != 'user2684'     ||
+		(env.CHANGE_AUTHOR != 'bblacey'     && env.CHANGE_AUTHOR != 'd00616'       &&
+		 env.CHANGE_AUTHOR != 'fallberg'    && env.CHANGE_AUTHOR != 'henrikekblad' &&
+		 env.CHANGE_AUTHOR != 'marceloaqno' && env.CHANGE_AUTHOR != 'mfalkvidd'    &&
+		 env.CHANGE_AUTHOR != 'scalz'       && env.CHANGE_AUTHOR != 'tbowmo'       &&
+		 env.CHANGE_AUTHOR != 'tekka007'    && env.CHANGE_AUTHOR != 'user2684'     &&
 		 env.CHANGE_AUTHOR != 'Yveaux'))
 	{
-		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Gitler)', 'This pull request targets master. That is not permitted!', '')
+		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Gitler)', 'This pull request targets master. That is not permitted for '+env.CHANGE_AUTHOR, '')
 		error "This pull request targets master. That is not permitted!"
+	}
+	else if (env.CHANGE_TARGET == 'master')
+	{
+		echo env.CHANGE_AUTHOR + ' is a valid author for targeting master branch, skipping further validation'
+		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Gitler)', 'Pass', '')
+		return
 	}
 
 	dir(config.repository_root) {
