@@ -584,8 +584,12 @@ LOCAL void RFM95_ATCmode(const bool OnOff, const int16_t targetRSSI)
 
 LOCAL bool RFM95_sanityCheck(void)
 {
-	// not implemented yet
-	return true;
+	bool result = true;
+	result &= RFM95_readReg(RFM95_REG_0F_FIFO_RX_BASE_ADDR) == RFM95_RX_FIFO_ADDR;
+	result &= RFM95_readReg(RFM95_REG_0E_FIFO_TX_BASE_ADDR) == RFM95_TX_FIFO_ADDR;
+	result &= RFM95_readReg(RFM95_REG_23_MAX_PAYLOAD_LENGTH) == RFM95_MAX_PACKET_LEN;
+
+	return result;
 }
 
 
