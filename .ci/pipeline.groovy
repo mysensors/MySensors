@@ -121,9 +121,6 @@ def call(Closure body) {
 					stage('ArduinoMega (tests)') {
 						arduino.buildArduinoMega(config, config.tests, 'Tests')
 					}
-				}
-			}, ArduinoExampleBuilds: {
-				lock(quantity: 1, resource: 'arduinoExampleEnv') {
 					stage('MySensorsMicro (examples)') {
 						arduino.buildMySensorsMicro(config, config.examples, 'Examples')
 					}
