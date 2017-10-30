@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -40,19 +40,19 @@
 * RFM95 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS	| SUB	| Message							| Comment
-* |-|-------|-------|-----------------------------------|-----------------------------------------------------------------------------------
-* | | RFM95 | INIT	|									| Initialise RFM95 radio
-* | | RFM95 | INIT	| PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d]	| Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
-* |!| RFM95 | INIT	| SANCHK FAIL						| Sanity check failed, check wiring or replace module
-* | | RFM95 | RCV	| SEND ACK							| ACK request received, sending ACK back
-* | | RFM95 | PTC	| LEVEL=%d							| Set TX power level
-* | | RFM95 | SAC	| SEND ACK,TO=%d,RSSI=%d,SNR=%d		| Send ACK to node (TO), RSSI of received message (RSSI), SNR of message (SNR)
-* | | RFM95 | ATC	| ADJ TXL,cR=%d,tR=%d,TXL=%d		| Adjust TX level, current RSSI (cR), target RSSI (tR), TX level (TXL)
-* | | RFM95 | SWR	| SEND,TO=%d,RETRY=%d				| Send message to (TO), NACK retry counter (RETRY)
-* | | RFM95 | SWR	| ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d	| ACK received from node (FROM), seq ID (SEQ), (RSSI), (SNR)
-* |!| RFM95 | SWR	| NACK								| No ACK received
-* | | RFM95 | SPP	| PCT=%d,TX LEVEL=%d				| Set TX level, input TX percent (PCT)
+* |E| SYS   | SUB  | Message                            | Comment
+* |-|-------|------|------------------------------------|-----------------------------------------------------------------------------------
+* | | RFM95 | INIT |                                    | Initialise RFM95 radio
+* | | RFM95 | INIT | PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d]   | Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
+* |!| RFM95 | INIT | SANCHK FAIL                        | Sanity check failed, check wiring or replace module
+* | | RFM95 | RCV  | SEND ACK                           | ACK request received, sending ACK back
+* | | RFM95 | PTC  | LEVEL=%d                           | Set TX power level
+* | | RFM95 | SAC  | SEND ACK,TO=%d,RSSI=%d,SNR=%d      | Send ACK to node (TO), RSSI of received message (RSSI), SNR of message (SNR)
+* | | RFM95 | ATC  | ADJ TXL,cR=%d,tR=%d,TXL=%d         | Adjust TX level, current RSSI (cR), target RSSI (tR), TX level (TXL)
+* | | RFM95 | SWR  | SEND,TO=%d,RETRY=%d                | Send message to (TO), NACK retry counter (RETRY)
+* | | RFM95 | SWR  | ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d  | ACK received from node (FROM), seq ID (SEQ), (RSSI), (SNR)
+* |!| RFM95 | SWR  | NACK                               | No ACK received
+* | | RFM95 | SPP  | PCT=%d,TX LEVEL=%d                 | Set TX level percent (PCT), TX level (LEVEL)
 *
 * RFM95 modem configuration
 *
@@ -60,12 +60,12 @@
 * CR = Error correction code
 * SF = Spreading factor, chips / symbol
 *
-* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment					| air-time (15 bytes)
-* |------------------|--------|--------|--------|-------|-----|------|------------------------------------------------
-* | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range	| 50ms
-* | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range		| 15ms
-* | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range			| 900ms
-* | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range			| 1500ms
+* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment               | air-time (15 bytes)
+* |------------------|--------|--------|--------|-------|-----|------|-----------------------|------------------------
+* | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range | 50ms
+* | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range     | 15ms
+* | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range      | 900ms
+* | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range      | 1500ms
 *
 * See here for air-time calculation: https://docs.google.com/spreadsheets/d/1voGAtQAjC1qBmaVuP1ApNKs1ekgUjavHuVQIXyYSvNc
 *

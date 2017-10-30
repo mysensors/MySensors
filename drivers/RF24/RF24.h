@@ -1,4 +1,4 @@
-﻿/*
+/*
 * The MySensors Arduino library handles the wireless radio link and protocol
 * between your home built sensors/actuators and HA controller of choice.
 * The sensors forms a self healing radio network with optional repeaters. Each
@@ -34,26 +34,26 @@
 * RF24 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS	| SUB	| Message							| Comment
-* |-|-------|-------|-----------------------------------|---------------------------------------------------------------------
-* | | RF24	| INIT	|									| Initialise RF24 radio
-* | | RF24	| INIT	| PIN,CE=%d,CS=%d					| Pin configuration: chip enable (CE), chip select (CS)
-* |!| RF24	| INIT	| SANCHK FAIL						| Sanity check failed, check wiring or replace module
-* | | RF24	| SPP	| PCT=%d,TX LEVEL=%d				| Set TX level, input TX percent (PCT)
-* | | RF24	| RBR	| REG=%d,VAL=%d						| Read register (REG), value=(VAL)
-* | | RF24	| WBR	| REG=%d,VAL=%d						| Write register (REG), value=(VAL)
-* | | RF24	| FRX	| 									| Flush RX buffer
-* | | RF24	| FTX	| 									| Flush TX buffer
-* | | RF24	| OWP	| RCPT=%d							| Open writing pipe, recipient=(RCPT)
-* | | RF24	| STL	| 									| Start listening
-* | | RF24	| SPL	| 									| Stop listening
-* | | RF24	| SLP	| 									| Set radio to sleep
-* | | RF24	| SBY	| 									| Set radio to standby
-* | | RF24	| TXM	| TO=%d,LEN=%d						| Transmit message to=(TO), length=(LEN)
-* |!| RF24	| TXM	| MAX_RT							| Max TX retries, no ACK received
-* |!| RF24	| GDP	| PYL INV							| Invalid payload size
-* | | RF24	| RXM	| LEN=%d							| Read message, length=(LEN)
-* | | RF24	| STX	| LEVEL=%d							| Set TX level, level=(LEVEL)
+* |E| SYS  | SUB  | Message            | Comment
+* |-|------|------|--------------------|---------------------------------------------------------------------
+* | | RF24 | INIT |                    | Initialise RF24 radio
+* | | RF24 | INIT | PIN,CE=%d,CS=%d    | Pin configuration: chip enable (CE), chip select (CS)
+* |!| RF24 | INIT | SANCHK FAIL        | Sanity check failed, check wiring or replace module
+* | | RF24 | SPP  | PCT=%d,TX LEVEL=%d | Set TX level, input TX percent (PCT)
+* | | RF24 | RBR  | REG=%d,VAL=%d      | Read register (REG), value=(VAL)
+* | | RF24 | WBR  | REG=%d,VAL=%d      | Write register (REG), value=(VAL)
+* | | RF24 | FRX  |                    | Flush RX buffer
+* | | RF24 | FTX  |                    | Flush TX buffer
+* | | RF24 | OWP  | RCPT=%d            | Open writing pipe, recipient=(RCPT)
+* | | RF24 | STL  |                    | Start listening
+* | | RF24 | SPL  |                    | Stop listening
+* | | RF24 | SLP  |                    | Set radio to sleep
+* | | RF24 | SBY  |                    | Set radio to standby
+* | | RF24 | TXM  | TO=%d,LEN=%d       | Transmit message to=(TO), length=(LEN)
+* |!| RF24 | TXM  | MAX_RT             | Max TX retries, no ACK received
+* |!| RF24 | GDP  | PYL INV            | Invalid payload size
+* | | RF24 | RXM  | LEN=%d             | Read message, length=(LEN)
+* | | RF24 | STX  | LEVEL=%d           | Set TX level, level=(LEVEL)
 *
 */
 

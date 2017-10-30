@@ -42,20 +42,20 @@
 * RFM69 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS	 | SUB  | Message							| Comment
-* |-|-------|-------|-----------------------------------|-----------------------------------------------------------------------------------
-* | | RFM69 | INIT  |									| Initialise RFM69 radio
-* | | RFM69 | INIT  | PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d]	| Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
-* |!| RFM69 | INIT  | SANCHK FAIL						| Sanity check failed, check wiring or replace module
-* | | RFM69 | PTX   | NO ADJ							| TX power level, no adjustment
-* | | RFM69 | PTX   | LEVEL=%d dbM						| TX power level, set to (LEVEL) dBm
-* | | RFM69 | SLEEP |									| Radio in sleep mode
-* | | RFM69 | SAC   | SEND ACK,TO=%d,RSSI=%d			| ACK sent to (TO), RSSI of incoming message (RSSI)
-* | | RFM69 | ATC   | ADJ TXL,cR=%d,tR=%d,TXL=%d		| Adjust TX power level (TXL) to match set RSSI (sR), current RSSI (cR)
-* | | RFM69 | SWR   | SEND,TO=%d,RETRY=%d				| Send to (TO), retry if no ACK received (RETRY)
-* | | RFM69 | SWR   | ACK,FROM=%d,SEQ=%d,RSSI=%d		| ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
-* |!| RFM69 | SWR   | NACK								| Message sent, no ACK received
-* | | RFM69 | SPP	| PCT=%d,TX LEVEL=%d				| Set TX level, input TX percent (PCT)
+* |E| SYS   | SUB   | Message                          | Comment
+* |-|-------|-------|----------------------------------|-----------------------------------------------------------------------------------
+* | | RFM69 | INIT  |                                  | Initialise RFM69 radio
+* | | RFM69 | INIT  | PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d] | Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
+* |!| RFM69 | INIT  | SANCHK FAIL                      | Sanity check failed, check wiring or replace module
+* | | RFM69 | PTX   | NO ADJ                           | TX power level, no adjustment
+* | | RFM69 | PTX   | LEVEL=%d dbM                     | TX power level, set to (LEVEL) dBm
+* | | RFM69 | SLEEP |                                  | Radio in sleep mode
+* | | RFM69 | SAC   | SEND ACK,TO=%d,RSSI=%d           | ACK sent to (TO), RSSI of incoming message (RSSI)
+* | | RFM69 | ATC   | ADJ TXL,cR=%d,tR=%d,TXL=%d       | Adjust TX power level (TXL) to match set RSSI (sR), current RSSI (cR)
+* | | RFM69 | SWR   | SEND,TO=%d,RETRY=%d              | Send to (TO), retry if no ACK received (RETRY)
+* | | RFM69 | SWR   | ACK,FROM=%d,SEQ=%d,RSSI=%d       | ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
+* |!| RFM69 | SWR   | NACK                             | Message sent, no ACK received
+* | | RFM69 | SPP   | PCT=%d,TX LEVEL=%d               | Set TX level, input TX percent (PCT)
 *
 * @brief API declaration for RFM69
 *
@@ -211,19 +211,6 @@ extern HardwareSPI SPI;		//!< SPI
 #define RFM69_868MHZ            (868000000ul)	//!< RFM69_868MHZ
 #define RFM69_915MHZ            (915000000ul)	//!< RFM69_915MHZ
 
-/*
-#if !defined(RFM69_FREQ_MSB)
-#define RFM69_FREQ_MSB (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFMSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFMSB_433_92 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFMSB_868 : RFM69_FRFMSB_915)))	//!< FREQ_MSB
-#endif
-
-#if !defined(RFM69_FREQ_MID)
-#define RFM69_FREQ_MID (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFMID_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFMID_433_92 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFMID_868 : RFM69_FRFMID_915)))	//!< FREQ_MID
-#endif
-
-#if !defined(RFM69_FREQ_LSB)
-#define RFM69_FREQ_LSB (uint8_t)(MY_RFM69_FREQUENCY == RFM69_315MHZ ? RFM69_FRFLSB_315 : (MY_RFM69_FREQUENCY == RFM69_433MHZ ? RFM69_FRFLSB_433_92 : (MY_RFM69_FREQUENCY == RFM69_868MHZ ? RFM69_FRFLSB_868 : RFM69_FRFLSB_915)))	//!< FREQ_LSB
-#endif
-*/
 #define RFM69_COURSE_TEMP_COEF		(-90)			//!< puts the temperature reading in the ballpark, user can fine tune the returned value
 #define RFM69_FXOSC				(32*1000000ul)	//!< OSC freq, 32MHz
 #define RFM69_FSTEP				(RFM69_FXOSC / 524288.0f)	//!< FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
@@ -232,7 +219,6 @@ extern HardwareSPI SPI;		//!< SPI
 #define  RFM69_LISTEN_RX_US		MY_RFM69_DEFAULT_LISTEN_RX_US		//!<  RFM69_LISTEN_RX_US
 #define  RFM69_LISTEN_IDLE_US	MY_RFM69_DEFAULT_LISTEN_IDLE_US		//!<  RFM69_LISTEN_IDLE_US
 #endif
-
 
 /**
 * @brief Radio modes
