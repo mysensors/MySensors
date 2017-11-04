@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -59,7 +59,7 @@ inline void hwWriteConfig(int addr, uint8_t value);
 inline void hwRandomNumberInit();
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
-inline unsigned long hwMillis();
+inline uint32_t hwMillis();
 
 #ifdef MY_RF24_IRQ_PIN
 static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

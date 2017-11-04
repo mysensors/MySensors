@@ -60,14 +60,14 @@ void hwReboot(void)
 	while (true);
 }
 
-int8_t hwSleep(unsigned long ms)
+int8_t hwSleep(uint32_t ms)
 {
 	// TODO: Not supported!
 	(void)ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
 {
 	// TODO: Not supported!
 	(void)interrupt;
@@ -77,7 +77,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
-               unsigned long ms)
+               uint32_t ms)
 {
 	// TODO: Not supported!
 	(void)interrupt1;

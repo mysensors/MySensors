@@ -119,7 +119,7 @@ void hwPowerDown(const uint8_t wdto)
 	ADCSRA |= (1 << ADEN);
 }
 
-void hwInternalSleep(unsigned long ms)
+void hwInternalSleep(uint32_t ms)
 {
 	// Sleeping with watchdog only supports multiples of 16ms.
 	// Round up to next multiple of 16ms, to assure we sleep at least the
@@ -138,19 +138,19 @@ void hwInternalSleep(unsigned long ms)
 	}
 }
 
-int8_t hwSleep(unsigned long ms)
+int8_t hwSleep(uint32_t ms)
 {
 	hwInternalSleep(ms);
 	return MY_WAKE_UP_BY_TIMER;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
 {
 	return hwSleep(interrupt,mode,INVALID_INTERRUPT_NUM,0u,ms);
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
-               unsigned long ms)
+               uint32_t ms)
 {
 	// ATMega328P supports following modes to wake from sleep: LOW, CHANGE, RISING, FALLING
 	// Datasheet states only LOW can be used with INT0/1 to wake from sleep, which is incorrect.
@@ -208,9 +208,9 @@ inline void hwRandomNumberInit()
 	// This function initializes the random number generator with a seed
 	// of 32 bits.  This method is good enough to earn FIPS 140-2 conform
 	// random data. This should reach to generate 32 Bit for randomSeed().
-	unsigned long seed = 0;
-	unsigned long start = millis();
-	unsigned long timeout = start + 20;
+	uint32_t seed = 0;
+	uint32_t start = millis();
+	uint32_t timeout = start + 20;
 
 	// Trigger floating effect of an unconnected pin
 	pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
