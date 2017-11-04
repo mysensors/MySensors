@@ -103,7 +103,7 @@ private:
 	int _state;
 public:
 	PubSubClient(); //!< PubSubClient
-	PubSubClient(Client& client); //!< PubSubClient
+	explicit PubSubClient(Client& client); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, Client& client); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, Client& client, Stream&); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient

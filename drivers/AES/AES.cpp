@@ -407,11 +407,11 @@ byte AES::cbc_encrypt (byte * plain, byte * cipher, int n_block)
 
 /******************************************************************************/
 
-byte AES::decrypt (byte plain [N_BLOCK], byte cipher [N_BLOCK])
+byte AES::decrypt (byte cipher [N_BLOCK], byte plain [N_BLOCK])
 {
 	if (round) {
 		byte s1 [N_BLOCK] ;
-		copy_and_key (s1, plain, (byte*) (key_sched + round * N_BLOCK)) ;
+		copy_and_key (s1, cipher, (byte*) (key_sched + round * N_BLOCK)) ;
 		inv_shift_sub_rows (s1) ;
 
 		for (byte r = round ; --r ; ) {
@@ -419,7 +419,7 @@ byte AES::decrypt (byte plain [N_BLOCK], byte cipher [N_BLOCK])
 			copy_and_key (s2, s1, (byte*) (key_sched + r * N_BLOCK)) ;
 			inv_mix_sub_columns (s1, s2) ;
 		}
-		copy_and_key (cipher, s1, (byte*) (key_sched)) ;
+		copy_and_key (plain, s1, (byte*) (key_sched)) ;
 	} else {
 		return AES_FAILURE ;
 	}

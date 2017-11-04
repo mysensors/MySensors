@@ -47,6 +47,9 @@ uint8_t SPIFlash::UNIQUEID[8];
 /// get this from the datasheet of your flash chip
 /// Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
 /// Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
+// Suppress uninitialized member variable in constructor because some memory can be saved with
+// on-demand initialization of these members
+// cppcheck-suppress uninitMemberVar
 SPIFlash::SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID)
 {
 	_slaveSelectPin = slaveSelectPin;
@@ -248,7 +251,6 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len)
 	//SST25 Type of Flash does not support Page Programming but AAI Word Programming
 	uint16_t i=0;
 	uint8_t oddAdr=0;
-	char s[5];
 
 	command(SPIFLASH_AAIWORDPROGRAM, true);  // Byte/Page Program
 	SPI.transfer(addr >> 16);

@@ -113,11 +113,11 @@ unsigned int bcm2835_version(void)
  */
 uint32_t bcm2835_peri_read(volatile uint32_t* paddr)
 {
-	uint32_t ret;
 	if (debug) {
 		printf("bcm2835_peri_read  paddr %08X\n", (unsigned) paddr);
 		return 0;
 	} else {
+		uint32_t ret;
 		__sync_synchronize();
 		ret = *paddr;
 		__sync_synchronize();
@@ -438,7 +438,7 @@ void bcm2835_delayMicroseconds(uint64_t micros)
 
 	if (debug) {
 		/* Cant access sytem timers in debug mode */
-		printf("bcm2835_delayMicroseconds %lld\n", micros);
+		printf("bcm2835_delayMicroseconds %" PRIu64 "\n", micros);
 		return;
 	}
 
