@@ -411,7 +411,7 @@ void receive(const MyMessage &message)  __attribute__((weak));
 /**
 * @brief Callback for incoming time messages
 */
-void receiveTime(unsigned long)  __attribute__((weak));
+void receiveTime(uint32_t)  __attribute__((weak));
 /**
 * @brief Node presenation
 */

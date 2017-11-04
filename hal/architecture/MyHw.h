@@ -65,7 +65,7 @@ typedef uint8_t unique_id_t[16];
  * @param ms         Time to sleep, in [ms].
  * @return MY_WAKE_UP_BY_TIMER.
  */
-int8_t hwSleep(unsigned long ms);
+int8_t hwSleep(uint32_t ms);
 
 /**
  * Sleep for a defined time, using minimum power, or until woken by interrupt.
@@ -74,7 +74,7 @@ int8_t hwSleep(unsigned long ms);
  * @param ms         Time to sleep, in [ms].
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms);
 
 /**
  * Sleep for a defined time, using minimum power, or until woken by one of the interrupts.
@@ -86,7 +86,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms);
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
-               unsigned long ms);
+               uint32_t ms);
 
 /**
 * Retrieve unique hardware ID

@@ -68,7 +68,7 @@ void hwWriteConfig(int addr, uint8_t value)
 
 void hwRandomNumberInit()
 {
-	unsigned long seed=0;
+	uint32_t seed=0;
 
 	if (randomFp != NULL) {
 		fclose(randomFp);
@@ -87,7 +87,7 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 	return(fread(__buffer, 1, __length, randomFp));
 }
 
-unsigned long hwMillis()
+uint32_t hwMillis()
 {
 	return millis();
 }
@@ -100,7 +100,7 @@ bool hwUniqueID(unique_id_t *uniqueID)
 }
 
 // Not supported!
-int8_t hwSleep(unsigned long ms)
+int8_t hwSleep(uint32_t ms)
 {
 	(void)ms;
 
@@ -108,7 +108,7 @@ int8_t hwSleep(unsigned long ms)
 }
 
 // Not supported!
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
 {
 	(void)interrupt;
 	(void)mode;
@@ -119,7 +119,7 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
 
 // Not supported!
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
-               unsigned long ms)
+               uint32_t ms)
 {
 	(void)interrupt1;
 	(void)mode1;

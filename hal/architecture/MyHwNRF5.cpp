@@ -210,7 +210,7 @@ void hwReboot()
 static volatile bool nrf5_rtc_event_triggered;
 static volatile bool nrf5_pwr_hfclk;
 
-void hwSleepPrepare(unsigned long ms)
+void hwSleepPrepare(uint32_t ms)
 {
 	// Enable low power sleep mode
 	NRF_POWER->TASKS_LOWPWR = 1;
@@ -271,7 +271,7 @@ void hwSleepPrepare(unsigned long ms)
 	}
 }
 
-void hwSleepEnd(unsigned long ms)
+void hwSleepEnd(uint32_t ms)
 {
 	// Start HFCLK
 	if (nrf5_pwr_hfclk) {
@@ -319,7 +319,7 @@ inline void hwSleep()
 	__WFE();
 }
 
-int8_t hwSleep(unsigned long ms)
+int8_t hwSleep(uint32_t ms)
 {
 	hwSleepPrepare(ms);
 	while (nrf5_rtc_event_triggered == false) {
@@ -329,13 +329,13 @@ int8_t hwSleep(unsigned long ms)
 	return MY_WAKE_UP_BY_TIMER;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, unsigned long ms)
+int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
 {
 	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
 }
 
 int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
-               uint8_t mode2, unsigned long ms)
+               uint8_t mode2, uint32_t ms)
 {
 	// Disable interrupts until going to sleep, otherwise interrupts occurring
 	// between attachInterrupt()
