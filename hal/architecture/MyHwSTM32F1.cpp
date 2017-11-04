@@ -126,7 +126,8 @@ void hwRandomNumberInit(void)
 	regs->SMPR1 |= ADC_SMPR1_SMP16;
 
 	uint32_t seed = 0;
-	uint16_t currentValue, newValue = 0;
+	uint16_t currentValue = 0;
+	uint16_t newValue = 0;
 
 	for (uint8_t i = 0; i<32; i++) {
 		const uint32_t timeout = hwMillis() + 20;

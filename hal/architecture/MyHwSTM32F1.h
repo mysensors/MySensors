@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -38,12 +38,8 @@
 #define snprintf_P snprintf
 #define vsnprintf_P vsnprintf
 #define strncpy_P strncpy
+#define printf_P printf
 #define yield()				  // not defined
-
-// emulated EEPROM (experimental)
-#define EEPROM_PAGE_SIZE		(uint16_t)1024
-#define EEPROM_SIZE				(uint16_t)2048
-#define EEPROM_START_ADDRESS	((uint32_t)(0x8000000 + 128 * EEPROM_PAGE_SIZE - 2 * EEPROM_PAGE_SIZE))
 
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
