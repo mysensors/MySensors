@@ -17,8 +17,6 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-extern "C" void __libc_init_array(void);
-
 // Force init to be called *first*, i.e. before static object allocation.
 // Otherwise, statically allocated objects that need libmaple may fail.
 __attribute__(( constructor (101))) void premain()
