@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -18,8 +18,6 @@
  */
 #ifndef MyHwESP8266_h
 #define MyHwESP8266_h
-
-#include "MyHw.h"
 
 #ifdef __cplusplus
 #include <Arduino.h>

@@ -20,8 +20,6 @@
 #ifndef MyHwSTM32F1_h
 #define MyHwSTM32F1_h
 
-#include "MyHw.h"
-
 #include <libmaple/iwdg.h>
 #include <itoa.h>
 #include <EEPROM.h>

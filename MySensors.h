@@ -41,34 +41,40 @@
 #include <Arduino.h>
 #endif
 
+// general macros
+#if !defined(_BV)
+#define _BV(x) (1<<(x))	//!< _BV
+#endif
+
 #include "MyConfig.h"
 #include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
 
-// OTA Debug, have to defined before HAL
+// OTA Debug, has to be defined before HAL
 #if defined(MY_OTA_LOG_SENDER_FEATURE) || defined(MY_OTA_LOG_RECEIVER_FEATURE)
 #include "core/MyOTALogging.h"
 #endif
 
 // HARDWARE
+#include "hal/architecture/MyHw.h"
 #if defined(ARDUINO_ARCH_ESP8266)
-#include "hal/architecture/MyHwESP8266.cpp"
+#include "hal/architecture/ESP8266/MyHwESP8266.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
-#include "hal/architecture/MyHwAVR.cpp"
+#include "hal/architecture/AVR/MyHwAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
-#include "hal/architecture/MyHwSAMD.cpp"
+#include "hal/architecture/SAMD/MyHwSAMD.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
-#include "hal/architecture/MyHwSTM32F1.cpp"
+#include "hal/architecture/STM32F1/MyHwSTM32F1.cpp"
 #elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
 #include "drivers/NVM/VirtualPage.cpp"
 #include "drivers/NVM/NVRAM.cpp"
-#include "hal/architecture/MyHwNRF5.cpp"
+#include "hal/architecture/NRF5/MyHwNRF5.cpp"
 #elif defined(__arm__) && defined(TEENSYDUINO)
-#include "hal/architecture/MyHwTeensy3.cpp"
+#include "hal/architecture/Teensy3/MyHwTeensy3.cpp"
 #elif defined(__linux__)
-#include "hal/architecture/MyHwLinuxGeneric.cpp"
+#include "hal/architecture/Linux/MyHwLinuxGeneric.cpp"
 #endif
 
 // OTA Debug second part, depends on HAL
@@ -130,7 +136,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // GATEWAY - TRANSPORT
 #if defined(MY_CONTROLLER_IP_ADDRESS) || defined(MY_CONTROLLER_URL_ADDRESS)
-#define MY_GATEWAY_CLIENT_MODE
+#define MY_GATEWAY_CLIENT_MODE	//!< gateway client mode
 #endif
 
 #if defined(MY_USE_UDP) && !defined(MY_GATEWAY_CLIENT_MODE)
@@ -248,7 +254,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // SANITY CHECK
 #if defined(MY_REPEATER_FEATURE) || defined(MY_GATEWAY_FEATURE)
-#define MY_TRANSPORT_SANITY_CHECK
+#define MY_TRANSPORT_SANITY_CHECK		//!< enable regular transport sanity checks
 #endif
 
 // TRANSPORT INCLUDES
@@ -268,7 +274,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // RAM ROUTING TABLE
 #if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(__linux__)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR)
 #if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__)
@@ -306,7 +312,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "drivers/RF24/RF24.cpp"
 #include "hal/transport/MyTransportRF24.cpp"
 #elif defined(MY_RADIO_NRF5_ESB)
-#if  !defined(ARDUINO_ARCH_NRF5)
+#if !defined(ARDUINO_ARCH_NRF5)
 #error No support for nRF5 radio on this platform
 #endif
 #if defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
@@ -382,16 +388,20 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // HW mains
 #if !defined(MY_CORE_ONLY)
-#if defined(ARDUINO_ARCH_ESP8266)
-#include "hal/architecture/MyMainESP8266.cpp"
+#if defined(ARDUINO_ARCH_AVR)
+#include "hal/architecture/AVR/MyMainAVR.cpp"
+#elif defined(ARDUINO_ARCH_SAMD)
+#include "hal/architecture/SAMD/MyMainSAMD.cpp"
+#elif defined(ARDUINO_ARCH_ESP8266)
+#include "hal/architecture/ESP8266/MyMainESP8266.cpp"
+#elif defined(ARDUINO_ARCH_NRF5)
+#include "hal/architecture/NRF5/MyMainNRF5.cpp"
 #elif defined(__linux__)
-#include "hal/architecture/MyMainLinux.cpp"
+#include "hal/architecture/Linux/MyMainLinux.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
-#include "hal/architecture/MyMainSTM32F1.cpp"
+#include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
 #elif defined(TEENSYDUINO)
-#include "hal/architecture/MyMainTeensy3.cpp"
-#else
-#include "hal/architecture/MyMainDefault.cpp"
+#include "hal/architecture/Teensy3/MyMainTeensy3.cpp"
 #endif
 #endif
 
