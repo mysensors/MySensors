@@ -109,6 +109,9 @@ def call(Closure body) {
 					stage('ESP8266 (tests)') {
 						arduino.buildEsp8266(config, config.tests, 'Tests')
 					}
+					stage('STM32F1 (tests)') {
+						arduino.buildSTM32F1(config, config.tests, 'Tests')
+					}
 					stage('ArduinoUno (tests)') {
 						arduino.buildArduinoUno(config, config.tests, 'Tests')
 					}
@@ -139,6 +142,12 @@ def call(Closure body) {
 					stage('ESP8266 (examples)') {
 						arduino.buildEsp8266(config, config.examples, 'Examples')
 					}
+					// No point in building examples for STM32F1 yet
+					/*
+					stage('STM32F1 (Examples)') {
+						arduino.buildSTM32F1(config, config.tests, 'Examples')
+					}
+					*/
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
 					}
