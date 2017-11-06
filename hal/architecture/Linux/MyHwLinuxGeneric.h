@@ -22,7 +22,6 @@
 
 #include <cstdlib>
 #include <pthread.h>
-#include "MyHw.h"
 #include "SerialPort.h"
 #include "SerialSimulator.h"
 

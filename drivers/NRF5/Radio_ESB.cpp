@@ -21,7 +21,7 @@
 
 #include "Radio.h"
 #include "Radio_ESB.h"
-#include "hal/architecture/MyHwNRF5.h"
+#include "hal/architecture/NRF5/MyHwNRF5.h"
 #include "drivers/CircularBuffer/CircularBuffer.h"
 #include <stdio.h>
 
