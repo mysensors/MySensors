@@ -103,10 +103,8 @@ bool signerAtsha204SoftInit(void)
 		_signing_node_serial_info[8] = getNodeId();
 	}
 #else
-	if (init_ok) {
-		hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-		hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-	}
+	hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+	hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
 #endif
 	if (!memcmp(_signing_node_serial_info, reset_serial, 9)) {
 		unique_id_t uniqueID;

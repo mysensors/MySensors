@@ -41,6 +41,10 @@ class PinIO
 {
 public:
 	/** Create a PinIO object with no assigned pin. */
+	// Suppress warning about uninitialized variables because initializing them in an init function
+	// allows the compiler to optimize away the variables in case the class is only instantiated but
+	// never used.
+	// cppcheck-suppress uninitMemberVar
 	PinIO() : bit_(0), mask_(0XFF) {}
 	/** Constructor
 	 * @param[in] pin Pin assigned to this object.

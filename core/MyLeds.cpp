@@ -58,7 +58,9 @@ void ledsProcess()
 	}
 	prevTime = hwMillis();
 
+#if defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	uint8_t state;
+#endif
 
 	// For an On/Off ratio of 4, the pattern repeated will be [on, on, on, off]
 	// until the counter becomes 0.

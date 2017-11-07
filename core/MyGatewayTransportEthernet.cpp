@@ -49,7 +49,11 @@ MyMessage _ethernetMsg;
 #define ARRAY_SIZE(x)  (sizeof(x)/sizeof(x[0]))
 
 typedef struct {
+	// Suppress the warning about unused members in this struct because it is used through a complex
+	// set of preprocessor directives
+	// cppcheck-suppress unusedStructMember
 	char string[MY_GATEWAY_MAX_RECEIVE_LENGTH];
+	// cppcheck-suppress unusedStructMember
 	uint8_t idx;
 } inputBuffer;
 

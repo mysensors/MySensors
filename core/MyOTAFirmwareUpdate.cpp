@@ -128,7 +128,6 @@ bool firmwareOTAUpdateProcess(void)
 					MY_SERIALDEVICE.print(prbuf);
 				}
 				OTA_DEBUG(PSTR("\n"));
-				8
 			}
 #endif
 			_firmwareBlock--;

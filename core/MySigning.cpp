@@ -111,6 +111,8 @@ void signerInit(void)
 #endif
 #if (defined (MY_ENCRYPTION_FEATURE) || defined (MY_SIGNING_FEATURE)) &&\
     !defined (MY_SIGNING_SIMPLE_PASSWD)
+	// Suppress this warning since it is only fixed on Linux builds and this keeps the code more tidy
+	// cppcheck-suppress knownConditionTrueFalse
 	if (!signerInternalValidatePersonalization()) {
 		SIGN_DEBUG(PSTR("!SGN:PER:TAMPERED\n"));
 #if defined(MY_SIGNING_FEATURE)

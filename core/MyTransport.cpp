@@ -940,6 +940,8 @@ void transportProcessMessage(void)
 
 void transportInvokeSanityCheck(void)
 {
+	// Suppress this because the function may return a variable value in some configurations
+	// cppcheck-suppress knownConditionTrueFalse
 	if (!transportSanityCheck()) {
 		TRANSPORT_DEBUG(PSTR("!TSF:SAN:FAIL\n"));	// sanity check fail
 		transportSwitchSM(stFailure);

@@ -59,7 +59,6 @@ bool protocolParse(MyMessage &message, char *inputString)
 			break;
 		case 5: // Variable value
 			if (command == C_STREAM) {
-				blen = 0;
 				while (*str) {
 					uint8_t val;
 					val = protocolH2i(*str++) << 4;
@@ -125,8 +124,6 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 {
 	char *str, *p;
 	uint8_t i = 0;
-	uint8_t bvalue[MAX_PAYLOAD];
-	uint8_t blen = 0;
 	uint8_t command = 0;
 	if (topic != strstr(topic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)) {
 		// Prefix doesn't match incoming topic
@@ -175,9 +172,10 @@ bool protocolMQTTParse(MyMessage &message, char* topic, uint8_t* payload, unsign
 
 	// Add payload
 	if (command == C_STREAM) {
-		blen = 0;
-		uint8_t val;
+		uint8_t bvalue[MAX_PAYLOAD];
+		uint8_t blen = 0;
 		while (*payload) {
+			uint8_t val;
 			val = protocolH2i(*payload++) << 4;
 			val += protocolH2i(*payload++);
 			bvalue[blen] = val;
