@@ -5,7 +5,7 @@ def cppCheck(config) {
 	sh """#!/bin/bash +x
 				cd ${config.repository_root}
 				echo "Doing cppcheck for AVR..."
-				find . -type f \\( -iname \\*.c -o -iname \\*.cpp -o -iname \\*.ino \\) | cppcheck -j 4 --file-list=- --enable=style,information --platform=.mystools/cppcheck/config/avr.xml --suppressions-list=.mystools/cppcheck/config/suppressions.cfg --includes-file=.mystools/cppcheck/config/includes.cfg --language=c++ --xml --xml-version=2 2> cppcheck-avr.xml
+				find . -type f \\( -iname \\*.c -o -iname \\*.cpp -o -iname \\*.ino \\) | cppcheck -j 4 --force --file-list=- --enable=style,information --platform=.mystools/cppcheck/config/avr.xml --suppressions-list=.mystools/cppcheck/config/suppressions.cfg --includes-file=.mystools/cppcheck/config/includes.cfg --language=c++ --inline-suppr --xml --xml-version=2 2> cppcheck-avr.xml
 				cppcheck-htmlreport --file="cppcheck-avr.xml" --title="cppcheck-avr" --report-dir=cppcheck-avr_cppcheck_reports --source-dir=."""
 	
 	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true,
@@ -29,9 +29,8 @@ def cppCheck(config) {
 				"grep -q \"<td>0</td><td>total</td>\" cppcheck-avr_cppcheck_reports/index.html || exit_code=\$?\n"+
 				"exit \$((exit_code == 0 ? 0 : 1))")
 	if (ret == 1) {
-		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Code analysis - Cppcheck)', 'Issues found (but are not considered critical)', '${BUILD_URL}CppCheck_AVR/index.html')
-		//currentBuild.result = 'UNSTABLE'
-		//error 'Terminating due to Cppcheck error'
+		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Code analysis - Cppcheck)', 'Issues found', '${BUILD_URL}CppCheck_AVR/index.html')
+		error 'Terminating due to Cppcheck error'
 	} else {
 		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Code analysis - Cppcheck)', 'Pass', '')
 	}

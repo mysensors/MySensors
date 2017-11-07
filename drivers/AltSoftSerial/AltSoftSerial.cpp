@@ -131,13 +131,14 @@ void AltSoftSerial::writeByte(uint8_t b)
 
 ISR(COMPARE_A_INTERRUPT)
 {
-	uint8_t state, byte, bit, head, tail;
+	uint8_t state, byte, head, tail;
 	uint16_t target;
 
 	state = tx_state;
 	byte = tx_byte;
 	target = GET_COMPARE_A();
 	while (state < 9) {
+		uint8_t bit;
 		target += ticks_per_bit;
 		bit = byte & 1;
 		byte >>= 1;
@@ -195,9 +196,8 @@ void AltSoftSerial::flushOutput(void)
 
 ISR(CAPTURE_INTERRUPT)
 {
-	uint8_t state, bit, head;
-	uint16_t capture, target;
-	int16_t offset;
+	uint8_t state, bit;
+	uint16_t capture;
 
 	capture = GET_INPUT_CAPTURE();
 	bit = rx_bit;
@@ -217,8 +217,10 @@ ISR(CAPTURE_INTERRUPT)
 			rx_state = 1;
 		}
 	} else {
+		uint16_t target;
 		target = rx_target;
 		while (1) {
+			int16_t offset;
 			offset = capture - target;
 			if (offset < 0) {
 				break;
@@ -227,6 +229,7 @@ ISR(CAPTURE_INTERRUPT)
 			target += ticks_per_bit;
 			state++;
 			if (state >= 9) {
+				uint8_t head;
 				DISABLE_INT_COMPARE_B();
 				head = rx_buffer_head + 1;
 				if (head >= RX_BUFFER_SIZE) {

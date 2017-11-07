@@ -7,6 +7,9 @@
 #include "PubSubClient.h"
 #include "Arduino.h"
 
+// Suppress uninitialized member variable in all constructors because some memory can be saved with
+// on-demand initialization of these members
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient()
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -15,6 +18,7 @@ PubSubClient::PubSubClient()
 	setCallback(NULL);
 }
 
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(Client& client)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -22,6 +26,7 @@ PubSubClient::PubSubClient(Client& client)
 	this->stream = NULL;
 }
 
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -29,6 +34,7 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client)
 	setClient(client);
 	this->stream = NULL;
 }
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client, Stream& stream)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -36,6 +42,8 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client, Stream
 	setClient(client);
 	setStream(stream);
 }
+// cppcheck-suppress uninitMemberVar
+// cppcheck-suppress passedByValue
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -44,6 +52,8 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATUR
 	setClient(client);
 	this->stream = NULL;
 }
+// cppcheck-suppress uninitMemberVar
+// cppcheck-suppress passedByValue
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client,
                            Stream& stream)
 {
@@ -54,6 +64,7 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATUR
 	setStream(stream);
 }
 
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -61,6 +72,7 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client)
 	setClient(client);
 	this->stream = NULL;
 }
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client, Stream& stream)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -68,6 +80,8 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client, Stream& s
 	setClient(client);
 	setStream(stream);
 }
+// cppcheck-suppress uninitMemberVar
+// cppcheck-suppress passedByValue
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -76,6 +90,8 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, 
 	setClient(client);
 	this->stream = NULL;
 }
+// cppcheck-suppress uninitMemberVar
+// cppcheck-suppress passedByValue
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client,
                            Stream& stream)
 {
@@ -86,6 +102,7 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, 
 	setStream(stream);
 }
 
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -93,6 +110,7 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client)
 	setClient(client);
 	this->stream = NULL;
 }
+// cppcheck-suppress uninitMemberVar
 PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client, Stream& stream)
 {
 	this->_state = MQTT_DISCONNECTED;
@@ -100,6 +118,8 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client, St
 	setClient(client);
 	setStream(stream);
 }
+// cppcheck-suppress uninitMemberVar
+// cppcheck-suppress passedByValue
 PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGNATURE,
                            Client& client)
 {
@@ -109,6 +129,8 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
 	setClient(client);
 	this->stream = NULL;
 }
+// cppcheck-suppress uninitMemberVar
+// cppcheck-suppress passedByValue
 PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGNATURE,
                            Client& client, Stream& stream)
 {
@@ -337,14 +359,13 @@ bool PubSubClient::loop()
 		if (_client->available()) {
 			uint8_t llen;
 			uint16_t len = readPacket(&llen);
-			uint16_t msgId = 0;
-			uint8_t *payload;
 			if (len > 0) {
 				lastInActivity = t;
 				uint8_t type = buffer[0]&0xF0;
 				if (type == MQTTPUBLISH) {
 					if (callback) {
 						uint16_t tl = (buffer[llen+1]<<8)+buffer[llen+2];
+						uint8_t *payload;
 						char topic[tl+1];
 						for (uint16_t i=0; i<tl; i++) {
 							topic[i] = buffer[llen+3+i];
@@ -352,7 +373,7 @@ bool PubSubClient::loop()
 						topic[tl] = 0;
 						// msgId only present for QOS>0
 						if ((buffer[0]&0x06) == MQTTQOS1) {
-							msgId = (buffer[llen+3+tl]<<8)+buffer[llen+3+tl+1];
+							uint16_t msgId = (buffer[llen+3+tl]<<8)+buffer[llen+3+tl+1];
 							payload = buffer+llen+3+tl+2;
 							callback(topic,payload,len-llen-3-tl-2);
 
@@ -424,8 +445,6 @@ bool PubSubClient::publish(const char* topic, const uint8_t* payload, unsigned i
 bool PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsigned int plength,
                              bool retained)
 {
-	uint8_t llen = 0;
-	uint8_t digit;
 	unsigned int rc = 0;
 	uint16_t tlen;
 	unsigned int pos = 0;
@@ -446,13 +465,13 @@ bool PubSubClient::publish_P(const char* topic, const uint8_t* payload, unsigned
 	buffer[pos++] = header;
 	len = plength + 2 + tlen;
 	do {
+		uint8_t digit;
 		digit = len % 128;
 		len = len / 128;
 		if (len > 0) {
 			digit |= 0x80;
 		}
 		buffer[pos++] = digit;
-		llen++;
 	} while(len>0);
 
 	pos = writeString(topic,buffer,pos);
@@ -472,11 +491,11 @@ bool PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length)
 {
 	uint8_t lenBuf[4];
 	uint8_t llen = 0;
-	uint8_t digit;
 	uint8_t pos = 0;
 	uint16_t rc;
 	uint16_t len = length;
 	do {
+		uint8_t digit;
 		digit = len % 128;
 		len = len / 128;
 		if (len > 0) {
@@ -626,6 +645,7 @@ PubSubClient& PubSubClient::setServer(const char * domain, uint16_t port)
 	return *this;
 }
 
+// cppcheck-suppress passedByValue
 PubSubClient& PubSubClient::setCallback(MQTT_CALLBACK_SIGNATURE)
 {
 	this->callback = callback;

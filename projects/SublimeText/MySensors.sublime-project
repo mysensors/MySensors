@@ -57,8 +57,9 @@
 				"args": ["--force", "--library=avr",
 				         "--suppressions-list=$project_path/../../.mystools/cppcheck/config/suppressions.cfg",
 				         "-I$project_path/../../", "-I$project_path/../../core",
-				         "-DMY_SIGNING_NODE_WHITELISTING",
-				         "-DMY_SIGNING_SIMPLE_PASSWD"],
+				         // Arduino IDE hardware location might differ on your system...
+				         "-I$project_path/../../../../../Apps/arduino/hardware/tools/avr/avr/include",
+				         "-DCPPCHECK", "--language=c++", "--inline-suppr"],
 				"enable": "style,information",
 				"excludes": [],
 				"std": []
