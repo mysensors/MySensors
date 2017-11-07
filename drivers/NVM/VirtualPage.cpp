@@ -300,7 +300,7 @@ void VirtualPageClass::format()
 
 uint32_t *VirtualPageClass::get_page_address(uint16_t page)
 {
-	return (uint32_t *)((Flash.page_count() << Flash.page_size_bits()) -
+	return (uint32_t *)(Flash.top_app_page_address() -
 	                    ((page + VNM_VIRTUAL_PAGE_SKIP_FROM_TOP)
 	                     << VNM_VIRTUAL_PAGE_SIZE_BITS));
 }
@@ -336,7 +336,6 @@ void VirtualPageClass::build_page(uint32_t *address, uint32_t magic)
 uint32_t VirtualPageClass::get_page_erase_cycles(uint32_t *address)
 {
 	// Return number of cycles
-	return ((uint32_t)address[OFFSET_ERASE_COUNTER] &
-	        (uint32_t)MASK_ERASE_COUNTER) +
-	       1;
+	return ((((uint32_t)address[OFFSET_ERASE_COUNTER])+1) &
+	        (uint32_t)MASK_ERASE_COUNTER);
 }
