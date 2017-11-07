@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "drivers/NVM/Flash.h"
+#include <nrf.h>
 
 FlashClass Flash;
 
@@ -47,6 +48,19 @@ uint32_t FlashClass::specified_erase_cycles() const
 uint32_t *FlashClass::page_address(size_t page)
 {
 	return (uint32_t *)(page << page_size_bits());
+}
+
+uint32_t *FlashClass::top_app_page_address()
+{
+	// Bootcode at the top of the flash memory?
+	// https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v12.0.0%2Flib_bootloader.html
+	if (NRF_UICR->NRFFW[0]<0xFFFFFFFF) {
+		// Return pointer calculated by SoftDevice/bootloader
+		return (uint32_t *)NRF_UICR->NRFFW[0];
+	}
+
+	// Return flash length
+	return (uint32_t *)(Flash.page_count() << Flash.page_size_bits());
 }
 
 void FlashClass::erase(uint32_t *address, size_t size)
