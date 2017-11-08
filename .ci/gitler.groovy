@@ -15,6 +15,98 @@ def call(config) {
 	else if (env.CHANGE_TARGET == 'master')
 	{
 		echo env.CHANGE_AUTHOR + ' is a valid author for targeting master branch, skipping further validation'
+		step([$class: 'GitChangelogRecorder', config: [configFile: 'git-changelog-settings.json',
+			createFileTemplateContent: '''
+# Changelog
+
+Changelog from Git.
+
+{{#tags}}
+## {{name}}
+ {{#issues}}
+  {{#hasIssue}}
+   {{#hasLink}}
+### {{name}} <a href="{{link}}">{{issue}}</a> {{title}}
+   {{/hasLink}}
+   {{^hasLink}}
+### {{name}} {{issue}} {{title}}
+   {{/hasLink}}
+  {{/hasIssue}}
+  {{^hasIssue}}
+### {{name}}
+  {{/hasIssue}}
+
+   {{#commits}}
+[{{hash}}](https://github.com/mysensors/MySensors/commit/{{hash}}){{authorName}} *{{commitTime}}*
+
+{{{message}}}
+
+  {{/commits}}
+
+ {{/issues}}
+{{/tags}}
+''',
+			createFileTemplateFile: '', createFileUseTemplateContent: true,
+			createFileUseTemplateFile: false, customIssues: [[link: '', name: '', pattern: '', title: ''],
+			[link: '', name: '', pattern: '', title: '']], dateFormat: 'YYYY-MM-dd HH:mm:ss',
+			file: 'ReleaseNotes.md', fromReference: env.CHANGE_TARGET, fromType: 'ref', gitHubApi: '',
+			gitHubApiTokenCredentialsId: '', gitHubIssuePattern: '#([0-9]+)', gitHubToken: '',
+			gitLabApiTokenCredentialsId: '', gitLabProjectName: '', gitLabServer: '', gitLabToken: '',
+			ignoreCommitsIfMessageMatches: '^Merge.*',
+			ignoreCommitsWithoutIssue: false, ignoreTagsIfNameMatches: '',
+			jiraIssuePattern: '\\b[a-zA-Z]([a-zA-Z]+)-([0-9]+)\\b', jiraPassword: '', jiraServer: '',
+			jiraUsername: '', jiraUsernamePasswordCredentialsId: '', mediaWikiPassword: '',
+			mediaWikiTemplateContent: '',	mediaWikiTemplateFile: '', mediaWikiTitle: '', mediaWikiUrl: '',
+			mediaWikiUseTemplateContent: false, mediaWikiUseTemplateFile: false, mediaWikiUsername: '',
+			noIssueName: 'No issue', readableTagName: '/([^/]+?)$', showSummary: true,
+			showSummaryTemplateContent: '''
+<h1> Changelog </h1>
+
+<p>
+Changelog from Git.
+</p>
+
+{{#tags}}
+<h2> {{name}} </h2>
+ {{#issues}}
+  {{#hasIssue}}
+   {{#hasLink}}
+<h2> {{name}} <a href="{{link}}">{{issue}}</a> {{title}} </h2>
+   {{/hasLink}}
+   {{^hasLink}}
+<h2> {{name}} {{issue}} {{title}} </h2>
+   {{/hasLink}}
+  {{/hasIssue}}
+  {{^hasIssue}}
+<h2> {{name}} </h2>
+  {{/hasIssue}}
+
+
+   {{#commits}}
+<a href="https://github.com/mysensors/MySensors/commit/{{hash}}">{{hash}}</a> {{authorName}} <i>{{commitTime}}</i>
+<p>
+<h3>{{{messageTitle}}}</h3>
+
+{{#messageBodyItems}}
+ <li> {{.}}</li> 
+{{/messageBodyItems}}
+</p>
+
+
+  {{/commits}}
+
+ {{/issues}}
+{{/tags}}
+''',
+         showSummaryTemplateFile: '', showSummaryUseTemplateContent: true,
+			showSummaryUseTemplateFile: false, subDirectory: '', timeZone: 'UTC',
+			toReference: config.git_sha, toType: 'commit', untaggedName: 'Unreleased',
+			useConfigFile: false, useFile: true, useGitHub: true, useGitHubApiTokenCredentials: false,
+			useGitLab: false, useGitLabApiTokenCredentials: false, useIgnoreTagsIfNameMatches: false,
+			useJira: false, useJiraUsernamePasswordCredentialsId: false, useMediaWiki: false,
+			useReadableTagName: false, useSubDirectory: false]
+		])
+
 		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Gitler)', 'Pass', '')
 		return
 	}
