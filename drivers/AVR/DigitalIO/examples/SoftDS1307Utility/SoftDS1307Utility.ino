@@ -179,7 +179,6 @@ void dumpAll(void)
 //------------------------------------------------------------------------------
 void fillNvRam(void)
 {
-	uint8_t buf[8];
 	PgmPrint("Enter HEX value for all NV RAM locations (00-FF): ");
 	uint16_t v;
 	if (!hexRead(&v)) {

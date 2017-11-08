@@ -57,7 +57,6 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
-
 // Enable debug prints to serial monitor
 #define MY_DEBUG
 
@@ -67,6 +66,7 @@
 // Enables and select radio type (if attached)
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #define MY_GATEWAY_MQTT_CLIENT
 #define MY_GATEWAY_ESP8266
@@ -91,12 +91,11 @@
 // #define MY_ESP8266_HOSTNAME "mqtt-sensor-gateway"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
-#define MY_IP_ADDRESS 192,168,178,87
+//#define MY_IP_ADDRESS 192,168,178,87
 
-// If using static ip you need to define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
-#define MY_IP_SUBNET_ADDRESS 255,255,255,0
-
+// If using static ip you can define Gateway and Subnet address as well
+//#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 // MQTT broker ip address.
 #define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
@@ -104,30 +103,29 @@
 // The MQTT broker port to to open
 #define MY_PORT 1883
 
-/*
 // Enable inclusion mode
-#define MY_INCLUSION_MODE_FEATURE
+//#define MY_INCLUSION_MODE_FEATURE
 // Enable Inclusion mode button on gateway
-#define MY_INCLUSION_BUTTON_FEATURE
+//#define MY_INCLUSION_BUTTON_FEATURE
 // Set inclusion mode duration (in seconds)
-#define MY_INCLUSION_MODE_DURATION 60
+//#define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
-#define MY_INCLUSION_MODE_BUTTON_PIN  3
+//#define MY_INCLUSION_MODE_BUTTON_PIN  3
 
 // Set blinking period
-#define MY_DEFAULT_LED_BLINK_PERIOD 300
+//#define MY_DEFAULT_LED_BLINK_PERIOD 300
 
 // Flash leds on rx/tx/err
-#define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
-#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
-#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
-*/
+//#define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
+//#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
+//#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
 
 #include <ESP8266WiFi.h>
 #include <MySensors.h>
 
 void setup()
 {
+	// Setup locally attached sensors
 }
 
 void presentation()
@@ -135,8 +133,8 @@ void presentation()
 	// Present locally attached sensors here
 }
 
-
 void loop()
 {
 	// Send locally attech sensors data here
 }
+

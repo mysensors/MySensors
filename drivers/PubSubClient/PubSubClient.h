@@ -92,9 +92,9 @@ private:
 	bool pingOutstanding;
 	MQTT_CALLBACK_SIGNATURE;
 	uint16_t readPacket(uint8_t*);
-	boolean readByte(uint8_t * result);
-	boolean readByte(uint8_t * result, uint16_t * index);
-	boolean write(uint8_t header, uint8_t* buf, uint16_t length);
+	bool readByte(uint8_t * result);
+	bool readByte(uint8_t * result, uint16_t * index);
+	bool write(uint8_t header, uint8_t* buf, uint16_t length);
 	uint16_t writeString(const char* string, uint8_t* buf, uint16_t pos);
 	IPAddress ip;
 	const char* domain;
@@ -103,7 +103,7 @@ private:
 	int _state;
 public:
 	PubSubClient(); //!< PubSubClient
-	PubSubClient(Client& client); //!< PubSubClient
+	explicit PubSubClient(Client& client); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, Client& client); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, Client& client, Stream&); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
@@ -127,25 +127,25 @@ public:
 	PubSubClient& setClient(Client& client); //!< setClient
 	PubSubClient& setStream(Stream& stream); //!< setStream
 
-	boolean connect(const char* id); //!< connect
-	boolean connect(const char* id, const char* user, const char* pass); //!< connect
-	boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain,
-	                const char* willMessage); //!< connect
-	boolean connect(const char* id, const char* user, const char* pass, const char* willTopic,
-	                uint8_t willQos, boolean willRetain, const char* willMessage); //!< connect
+	bool connect(const char* id); //!< connect
+	bool connect(const char* id, const char* user, const char* pass); //!< connect
+	bool connect(const char* id, const char* willTopic, uint8_t willQos, bool willRetain,
+	             const char* willMessage); //!< connect
+	bool connect(const char* id, const char* user, const char* pass, const char* willTopic,
+	             uint8_t willQos, bool willRetain, const char* willMessage); //!< connect
 	void disconnect(); //!< disconnect
-	boolean publish(const char* topic, const char* payload); //!< publish
-	boolean publish(const char* topic, const char* payload, boolean retained); //!< publish
-	boolean publish(const char* topic, const uint8_t * payload, unsigned int plength); //!< publish
-	boolean publish(const char* topic, const uint8_t * payload, unsigned int plength,
-	                boolean retained); //!< publish
-	boolean publish_P(const char* topic, const uint8_t * payload, unsigned int plength,
-	                  boolean retained); //!< publish_P
-	boolean subscribe(const char* topic); //!< subscribe
-	boolean subscribe(const char* topic, uint8_t qos); //!< subscribe
-	boolean unsubscribe(const char* topic); //!< unsubscribe
-	boolean loop(); //!< loop
-	boolean connected(); //!< connected
+	bool publish(const char* topic, const char* payload); //!< publish
+	bool publish(const char* topic, const char* payload, bool retained); //!< publish
+	bool publish(const char* topic, const uint8_t * payload, unsigned int plength); //!< publish
+	bool publish(const char* topic, const uint8_t * payload, unsigned int plength,
+	             bool retained); //!< publish
+	bool publish_P(const char* topic, const uint8_t * payload, unsigned int plength,
+	               bool retained); //!< publish_P
+	bool subscribe(const char* topic); //!< subscribe
+	bool subscribe(const char* topic, uint8_t qos); //!< subscribe
+	bool unsubscribe(const char* topic); //!< unsubscribe
+	bool loop(); //!< loop
+	bool connected(); //!< connected
 	int state(); //!< state
 };
 

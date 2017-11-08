@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,7 +18,7 @@
  *
  * Based on Mike McCauley's RFM95 library, Copyright (C) 2014 Mike McCauley <mikem@airspayce.com>
  * Radiohead http://www.airspayce.com/mikem/arduino/RadioHead/index.html
- * RFM95 driver refactored and optimized for MySensors, Copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
+ * RFM95 driver refactored and optimized for MySensors, Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
  *
  * Changelog:
  * - ACK with sequenceNumber
@@ -40,17 +40,19 @@
 * RFM95 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS	| SUB	| Message							| Comment
-* |-|-------|-------|-----------------------------------|---------------------------------------------------------------------
-* | | RFM95 | INIT	|									| Initialise RFM95 radio
-* |!| RFM95 | INIT	| SANCHK FAIL						| Sanity check failed, check wiring or replace module
-* | | RFM95 | RCV	| SEND ACK							| ACK request received, sending ACK back
-* | | RFM95 | PTC	| LEVEL=%d							| Set TX power level
-* | | RFM95 | SAC	| SEND ACK TO=%d,RSSI=%d			| Send ACK to node (TO), RSSI of received message (RSSI)
-* | | RFM95 | ATC	| ADJ TXL,cR=%d,tR=%d,TXL=%d		| Adjust TX level, current RSSI (cR), target RSSI (tR), TX level (TXL)
-* | | RFM95 | SWR	| SEND TO=%d,RETRY=%d				| Send message to (TO), NACK retry counter (RETRY)
-* | | RFM95 | SWR	| ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d	| ACK received from node (FROM), seq ID (SEQ), (RSSI), (SNR)
-* |!| RFM95 | SWR	| NACK								| No ACK received
+* |E| SYS   | SUB  | Message                            | Comment
+* |-|-------|------|------------------------------------|-----------------------------------------------------------------------------------
+* | | RFM95 | INIT |                                    | Initialise RFM95 radio
+* | | RFM95 | INIT | PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d]   | Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
+* |!| RFM95 | INIT | SANCHK FAIL                        | Sanity check failed, check wiring or replace module
+* | | RFM95 | RCV  | SEND ACK                           | ACK request received, sending ACK back
+* | | RFM95 | PTC  | LEVEL=%d                           | Set TX power level
+* | | RFM95 | SAC  | SEND ACK,TO=%d,RSSI=%d,SNR=%d      | Send ACK to node (TO), RSSI of received message (RSSI), SNR of message (SNR)
+* | | RFM95 | ATC  | ADJ TXL,cR=%d,tR=%d,TXL=%d         | Adjust TX level, current RSSI (cR), target RSSI (tR), TX level (TXL)
+* | | RFM95 | SWR  | SEND,TO=%d,RETRY=%d                | Send message to (TO), NACK retry counter (RETRY)
+* | | RFM95 | SWR  | ACK FROM=%d,SEQ=%d,RSSI=%d,SNR=%d  | ACK received from node (FROM), seq ID (SEQ), (RSSI), (SNR)
+* |!| RFM95 | SWR  | NACK                               | No ACK received
+* | | RFM95 | SPP  | PCT=%d,TX LEVEL=%d                 | Set TX level percent (PCT), TX level (LEVEL)
 *
 * RFM95 modem configuration
 *
@@ -58,12 +60,14 @@
 * CR = Error correction code
 * SF = Spreading factor, chips / symbol
 *
-* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment
-* |------------------|--------|--------|--------|-------|-----|------|-----------------------------
-* | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range
-* | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range
-* | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range
-* | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range
+* | CONFIG           | REG_1D | REG_1E | REG_26 | BW    | CR  | SF   | Comment               | air-time (15 bytes)
+* |------------------|--------|--------|--------|-------|-----|------|-----------------------|------------------------
+* | BW125CR45SF128   | 0x72   | 0x74   | 0x04   | 125   | 4/5 | 128  | Default, medium range | 50ms
+* | BW500CR45SF128   | 0x92   | 0x74   | 0x04   | 500   | 4/5 | 128  | Fast, short range     | 15ms
+* | BW31_25CR48SF512 | 0x48   | 0x94   | 0x04   | 31.25 | 4/8 | 512  | Slow, long range      | 900ms
+* | BW125CR48SF4096  | 0x78   | 0xC4   | 0x0C   | 125   | 4/8 | 4096 | Slow, long range      | 1500ms
+*
+* See here for air-time calculation: https://docs.google.com/spreadsheets/d/1voGAtQAjC1qBmaVuP1ApNKs1ekgUjavHuVQIXyYSvNc
 *
 * @brief API declaration for RFM95
 *
@@ -75,31 +79,40 @@
 #include "RFM95registers.h"
 
 // default PIN assignments, can be overridden
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
-#define RFM95_IRQ_PIN		(2)		//!< RFM95_IRQ_PIN
-#define RFM95_RST_PIN		(9)		//!< RFM95_RST_PIN
-#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-#define RFM95_IRQ_PIN		(2)
-#define RFM95_RST_PIN		(9)		//!< RFM95_RST_PIN
-#elif defined(__AVR_ATmega32U4__)
-#define RFM95_IRQ_PIN		(3)		//!< RFM95_IRQ_PIN
-#define RFM95_RST_PIN		(9)		//!< RFM95_RST_PIN
-#elif defined(__arm__)
-#define RFM95_IRQ_PIN		(10)	//!< RFM95_IRQ_PIN
-#define RFM95_RST_PIN		(27)	//!< RFM95_RST_PIN
+#if defined(ARDUINO_ARCH_AVR)
+#if defined(__AVR_ATmega32U4__)
+#define DEFAULT_RFM95_IRQ_PIN			(3)													//!< DEFAULT_RFM95_IRQ_PIN
 #else
-#define RFM95_IRQ_PIN		(2)		//!< RFM95_IRQ_PIN
-#define RFM95_RST_PIN		(9)		//!< RFM95_RST_PIN
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
 #endif
-#define RFM95_SPI_CS		(SS)	//!< RFM95_SPI_CS
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(ARDUINO_ARCH_ESP8266)
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(ARDUINO_ARCH_ESP32)
+#warning not implemented yet
+#elif defined(ARDUINO_ARCH_SAMD)
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(LINUX_ARCH_RASPBERRYPI)
+#define DEFAULT_RFM95_IRQ_PIN			(22)												//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define DEFAULT_RFM95_IRQ_PIN			(PA3)												//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
+#elif defined(TEENSYDUINO)
+#define DEFAULT_RFM95_IRQ_PIN			(8)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
+#else
+#define DEFAULT_RFM95_IRQ_PIN			(2)													//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			DEFAULT_RFM95_IRQ_PIN								//!< DEFAULT_RFM95_IRQ_NUM
+#endif
+
+#define DEFAULT_RFM95_CS_PIN			(SS)												//!< DEFAULT_RFM95_CS_PIN
 
 // SPI settings
-#if !defined(MY_RFM95_SPI_MAX_SPEED)
-#define MY_RFM95_SPI_MAX_SPEED		(4*1000000ul)	//!< Max SPI speed, 4Mhz
-#endif
 #define MY_RFM95_SPI_DATA_ORDER		MSBFIRST		//!< SPI data order
 #define MY_RFM95_SPI_DATA_MODE		SPI_MODE0		//!< SPI mode
-
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
 #include <SPI.h>
@@ -110,7 +123,7 @@ _SPI;
 #define _SPI SPI					//!< SPI
 #endif
 #else
-#if defined(__arm__)
+#if defined(__arm__) || defined(__linux__)
 #include <SPI.h>
 #else
 extern HardwareSPI SPI;				//!< SPI
@@ -121,21 +134,36 @@ extern HardwareSPI SPI;				//!< SPI
 #endif
 #endif
 
-// debug
-#if defined(MY_DEBUG_VERBOSE_RFM95)
-#define RFM95_DEBUG(x,...) debug(x, ##__VA_ARGS__)	//!< Debug print
-#else
-#define RFM95_DEBUG(x,...)							//!< Debug null
+// RFM95 radio configurations: reg_1d, reg_1e, reg_26 (see datasheet)
+#define RFM95_BW125CR45SF128 RFM95_BW_125KHZ | RFM95_CODING_RATE_4_5, RFM95_SPREADING_FACTOR_128CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x72,0x74,0x04
+#define RFM95_BW500CR45SF128 RFM95_BW_500KHZ | RFM95_CODING_RATE_4_5, RFM95_SPREADING_FACTOR_128CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x92,0x74,0x04
+#define RFM95_BW31_25CR48SF512 RFM95_BW_31_25KHZ | RFM95_CODING_RATE_4_8, RFM95_SPREADING_FACTOR_512CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x48,0x94,0x04
+#define RFM95_BW125CR48SF4096	RFM95_BW_125KHZ | RFM95_CODING_RATE_4_8, RFM95_SPREADING_FACTOR_4096CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON | RFM95_LOW_DATA_RATE_OPTIMIZE	//!< 0x78,0xc4,0x0C
+
+#if !defined(RFM95_RETRY_TIMEOUT_MS)
+// air-time approximation for timeout, 1 hop ~15 bytes payload - adjust if needed
+// BW125/SF128: 50ms
+// BW500/SF128: 15ms
+// BW31.25/SF512: 900ms
+// BW125/SF4096: 1500ms
+#define RFM95_RETRY_TIMEOUT_MS			(500ul)			//!< Timeout for ACK, adjustments needed if modem configuration changed (air time different)
 #endif
 
+// Frequency definitions
+#define RFM95_169MHZ					(169000000ul)	//!< 169 Mhz
+#define RFM95_315MHZ					(315000000ul)	//!< 315 Mhz
+#define RFM95_434MHZ					(433920000ul)	//!< 433.92 Mhz
+#define RFM95_868MHZ					(868100000ul)	//!< 868.1 Mhz
+#define RFM95_915MHZ					(915000000ul)	//!< 915 Mhz
+
+#define RFM95_RETRIES					(5u)			//!< Retries in case of failed transmission
 #define RFM95_FIFO_SIZE					(0xFFu)			//!< Max number of bytes the LORA Rx/Tx FIFO can hold
 #define RFM95_RX_FIFO_ADDR				(0x00u)			//!< RX FIFO addr pointer
 #define RFM95_TX_FIFO_ADDR				(0x80u)			//!< TX FIFO addr pointer
 #define RFM95_MAX_PACKET_LEN			(0x40u)			//!< This is the maximum number of bytes that can be carried by the LORA
 #define RFM95_PREAMBLE_LENGTH			(8u)			//!< Preamble length, default=8
-#define RFM95_RETRIES					(2u)			//!< Retries in case of failed transmission
-#define RFM95_RETRY_TIMEOUT_MS			(500ul)			//!< Timeout for ACK, adjustments needed if modem configuration changed (air time different)
 #define RFM95_CAD_TIMEOUT_MS			(2*1000ul)		//!< channel activity detection timeout
+#define RFM95_POWERUP_DELAY_MS			(100u)			//!< Power up delay, allow VCC to settle, transport to become fully operational
 
 #define RFM95_PACKET_HEADER_VERSION		(1u)			//!< RFM95 packet header version
 #define RFM95_MIN_PACKET_HEADER_VERSION (1u)			//!< Minimal RFM95 packet header version
@@ -147,12 +175,10 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_ATC_TARGET_RANGE_PERCENT	(5u)			//!< ATC target range +/-%
 #define RFM95_RSSI_OFFSET				(137u)			//!< RSSI offset
 #define RFM95_TARGET_RSSI				(-60)			//!< RSSI target
-#define RFM95_RSSI_INVALID				(127)			//!< RSSI invalid
-#define RFM95_SNR_INVALID				(127)			//!< SNR invalid
 #define RFM95_PROMISCUOUS				(false)			//!< RFM95 promiscuous mode
 
 #define RFM95_FXOSC						(32*1000000ul)				//!< The crystal oscillator frequency of the module
-#define RFM95_FSTEP						(RFM95_FXOSC / 524288ul)	//!< The Frequency Synthesizer step = RFM95_FXOSC / 
+#define RFM95_FSTEP						(RFM95_FXOSC / 524288.0f)	//!< The Frequency Synthesizer step = RFM95_FXOSC / 
 
 // helper macros
 #define RFM95_getACKRequested(__value) ((bool)bitRead(__value, RFM95_BIT_ACK_REQUESTED))				//!< getACKRequested
@@ -165,16 +191,12 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_RSSItoInternal(__value)	((uint8_t)(__value + RFM95_RSSI_OFFSET))	//!< Convert RSSI to internal RSSI
 #define RFM95_internalToSNR(__value)	((int8_t)(__value / 4))						//!< Convert internal SNR to SNR
 
-
-// RFM95 radio configurations: reg_1d, reg_1e, reg_26 (see datasheet)
-#define RFM95_BW125CR45SF128 RFM95_BW_125KHZ | RFM95_CODING_RATE_4_5, RFM95_SPREADING_FACTOR_128CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x72,0x74,0x04
-#define RFM95_BW500CR45SF128 RFM95_BW_500KHZ | RFM95_CODING_RATE_4_5, RFM95_SPREADING_FACTOR_128CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x92,0x74,0x04
-#define RFM95_BW31_25CR48SF512 RFM95_BW_31_25KHZ | RFM95_CODING_RATE_4_8, RFM95_SPREADING_FACTOR_512CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x48,0x94,0x04
-#define RFM95_BW125CR48SF4096	RFM95_BW_125KHZ | RFM95_CODING_RATE_4_8, RFM95_SPREADING_FACTOR_4096CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON | RFM95_LOW_DATA_RATE_OPTIMIZE	//!< 0x78,0xc4,0x0C
-
-#define RFM95_MIN_POWER_LEVEL_DBM		(5u)	//!< min. power level
-#define RFM95_MAX_POWER_LEVEL_DBM		(23u)	//!< max. power level
-
+#define RFM95_MIN_POWER_LEVEL_DBM		((rfm95_powerLevel_t)5u)	//!< min. power level
+#if defined(MY_RFM95_MAX_POWER_LEVEL_DBM)
+#define RFM95_MAX_POWER_LEVEL_DBM		MY_RFM95_MAX_POWER_LEVEL_DBM	//!< MY_RFM95_MAX_POWER_LEVEL_DBM
+#else
+#define RFM95_MAX_POWER_LEVEL_DBM		((rfm95_powerLevel_t)23u)	//!< max. power level
+#endif
 /**
 * @brief Radio modes
 */
@@ -210,7 +232,11 @@ typedef int8_t rfm95_SNR_t;
 /**
 * @brief Control flag data type
 */
-typedef uint8_t rfm95_flag_t;
+typedef uint8_t rfm95_controlFlags_t;
+/**
+* @brief Power level in dBm
+*/
+typedef int8_t rfm95_powerLevel_t;
 /**
 * @brief RFM95 LoRa header
 */
@@ -218,7 +244,7 @@ typedef struct {
 	uint8_t version;								//!< Header version
 	uint8_t recipient;								//!< Payload recipient
 	uint8_t sender;									//!< Payload sender
-	rfm95_flag_t controlFlags;						//!< Control flags, used for ACK
+	rfm95_controlFlags_t controlFlags;				//!< Control flags, used for ACK
 	rfm95_sequenceNumber_t sequenceNumber;			//!< Packet sequence number, used for ACK
 } __attribute__((packed)) rfm95_header_t;
 
@@ -262,24 +288,25 @@ typedef struct {
 	uint8_t address;							//!< Node address
 	rfm95_packet_t currentPacket;				//!< Buffer for current packet
 	rfm95_sequenceNumber_t txSequenceNumber;	//!< RFM95_txSequenceNumber
-	uint8_t powerLevel;							//!< TX power level dBm
-	uint8_t ATCtargetRSSI;						//!< ATC: target RSSI
+	rfm95_powerLevel_t powerLevel;				//!< TX power level dBm
+	rfm95_RSSI_t ATCtargetRSSI;					//!< ATC: target RSSI
 	// 8 bit
 	rfm95_radioMode_t radioMode : 3;			//!< current transceiver state
 	bool cad : 1;								//!< RFM95_cad
-	bool rxBufferValid : 1;						//!< RX buffer valid
 	bool ATCenabled : 1;						//!< ATC enabled
-	uint8_t reserved : 2;						//!< reserved
+	bool ackReceived : 1;						//!< ACK received
+	bool dataReceived : 1;						//!< AData received
+	uint8_t reserved : 1;						//!< reserved
 } rfm95_internal_t;
 
 #define LOCAL static		//!< static
 
 /**
 * @brief Initialise the driver transport hardware and software
-* @param frequency
+* @param frequencyHz Transmitter frequency in Hz
 * @return True if initialisation succeeded
 */
-LOCAL bool RFM95_initialise(const float frequency);
+LOCAL bool RFM95_initialise(const uint32_t frequencyHz);
 /**
 * @brief Set the driver/node address
 * @param addr
@@ -304,25 +331,28 @@ LOCAL bool RFM95_available(void);
 /**
 * @brief If a valid message is received, copy it to buf and return length. 0 byte messages are permitted.
 * @param buf Location to copy the received message
+* @param maxBufSize Max buffer size
 * @return Number of bytes
 */
-LOCAL uint8_t RFM95_recv(uint8_t* buf);
+LOCAL uint8_t RFM95_recv(uint8_t* buf, const uint8_t maxBufSize);
 /**
 * @brief RFM95_send
-* @param packet
-* @return True if packet sent
-*/
-LOCAL bool RFM95_send(rfm95_packet_t &packet);
-/**
-* @brief RFM95_sendFrame
 * @param recipient
 * @param data
 * @param len
 * @param flags
+* @param increaseSequenceCounter
+* @return True if packet sent
+*/
+LOCAL bool RFM95_send(const uint8_t recipient, uint8_t* data, const uint8_t len,
+                      const rfm95_controlFlags_t flags, const bool increaseSequenceCounter = true);
+/**
+* @brief RFM95_sendFrame
+* @param packet
+* @param increaseSequenceCounter
 * @return True if frame sent
 */
-LOCAL bool RFM95_sendFrame(const uint8_t recipient, uint8_t* data, const uint8_t len,
-                           const rfm95_flag_t flags);
+LOCAL bool RFM95_sendFrame(rfm95_packet_t &packet, const bool increaseSequenceCounter = true);
 /**
 * @brief RFM95_setPreambleLength
 * @param preambleLength
@@ -330,29 +360,62 @@ LOCAL bool RFM95_sendFrame(const uint8_t recipient, uint8_t* data, const uint8_t
 LOCAL void RFM95_setPreambleLength(const uint16_t preambleLength);
 /**
 * @brief Sets the transmitter and receiver centre frequency
-* @param centre Frequency in MHz (137.0 to 1020.0)
+* @param frequencyHz Frequency in Hz
 */
-LOCAL void RFM95_setFrequency(const float centre);
+LOCAL void RFM95_setFrequency(const uint32_t frequencyHz);
 /**
 * @brief Sets the transmitter power output level, and configures the transmitter pin
-* @param powerLevel Transmitter power level in dBm (+5 to +23)
+* @param newPowerLevel Transmitter power level in dBm (+5 to +23)
 * @return True power level adjusted
 */
-LOCAL bool RFM95_setTxPower(uint8_t powerLevel);
+LOCAL bool RFM95_setTxPowerLevel(rfm95_powerLevel_t newPowerLevel);
+
+/**
+* @brief Sets the transmitter power output percent.
+* @param newPowerPercent Transmitter power level in percent
+* @return True power level adjusted
+*/
+LOCAL bool RFM95_setTxPowerPercent(const uint8_t newPowerPercent);
+
+#if defined(MY_RFM95_TCXO)
+/**
+* @brief Enable TCXO mode
+* Call this immediately after init(), to force your radio to use an external
+* frequency source, such as a Temperature Compensated Crystal Oscillator (TCXO).
+* See the comments in the main documentation about the sensitivity of this radio to
+* clock frequency especially when using narrow bandwidths.
+* Leaves the module in sleep mode.
+*/
+LOCAL void RFM95_enableTCXO(void);
+#endif
+
 /**
 * @brief Sets the radio into low-power sleep mode
 * @return true if sleep mode was successfully entered
 */
 LOCAL bool RFM95_sleep(void);
 /**
+* @brief Sets the radio into standby mode
+* @return true if standby mode was successfully entered
+*/
+LOCAL bool RFM95_standBy(void);
+/**
+* @brief Powerdown radio, if RFM95_POWER_PIN defined
+*/
+LOCAL void RFM95_powerDown(void);
+/**
+* @brief Powerup radio, if RFM95_POWER_PIN defined
+*/
+LOCAL void RFM95_powerUp(void);
+/**
 * @brief RFM95_sendACK
 * @param recipient
 * @param sequenceNumber
 * @param RSSI (rfm95_RSSI_t)
-* @param SNR (rfm95_RSSI_t)
+* @param SNR (rfm95_SNR_t)
 */
 LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t sequenceNumber,
-                         const rfm95_RSSI_t RSSI, const rfm95_RSSI_t SNR);
+                         const rfm95_RSSI_t RSSI, const rfm95_SNR_t SNR);
 /**
 * @brief RFM95_sendWithRetry
 * @param recipient
@@ -386,20 +449,35 @@ LOCAL bool RFM95_setRadioMode(const rfm95_radioMode_t newRadioMode);
 */
 LOCAL void RFM95_interruptHandler(void);
 /**
-* @brief RFM95_clearRxBuffer
-*/
-LOCAL void RFM95_clearRxBuffer(void);
-/**
 * @brief RFM95_getSendingRSSI
 * @return RSSI Signal strength of last packet received
 */
 LOCAL int16_t RFM95_getReceivingRSSI(void);
-
 /**
 * @brief RFM95_getSendingRSSI
 * @return RSSI Signal strength of last packet sent (if ACK and ATC enabled)
 */
 LOCAL int16_t RFM95_getSendingRSSI(void);
+/**
+* @brief RFM95_getReceivingSNR
+* @return SNR
+*/
+LOCAL int16_t RFM95_getReceivingSNR(void);
+/**
+* @brief RFM95_getSendingSNR
+* @return SNR of last packet sent (if ACK and ATC enabled)
+*/
+LOCAL int16_t RFM95_getSendingSNR(void);
+/**
+* @brief Get transmitter power level
+* @return Transmitter power level in percents
+*/
+LOCAL uint8_t RFM95_getTxPowerPercent(void);
+/**
+* @brief Get transmitter power level
+* @return Transmitter power level in dBm
+*/
+LOCAL uint8_t RFM95_getTxPowerLevel(void);
 /**
 * @brief RFM_executeATC
 * @param currentRSSI

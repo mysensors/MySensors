@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -33,31 +33,30 @@
 *  - MCO:<b>REG</b>	from @ref _registerNode()
 *  - MCO:<b>SND</b>	from @ref send()
 *  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
-*  - MCO:<b>NLK</b>	from nodeLock()
+*  - MCO:<b>NLK</b>	from @ref _nodeLock()
 *
 * MySensorsCore debug log messages:
 *
-* |E| SYS	| SUB	| Message										| Comment
-* |-|------|-------|-----------------------------------------------|----------------------------------------------------------------------------
-* | | MCO  | BGN	| INIT %%s,CP=%%s,LIB=%%s						| Core initialization, capabilities (CP), library version (VER)
-* | | MCO  | BGN	| BFR											| Callback before()
-* | | MCO  | BGN	| MTR											| MY_TRANSPORT_RELAXED enabled
-* | | MCO  | BGN	| STP											| Callback setup()
-* | | MCO	| BGN	| INIT OK,TSP=%%d								| Core initialised, transport status (TSP), 1=initialised, 0=not initialised, NA=not available
-* | | MCO	| BGN	| NODE UNLOCKED									| Node successfully unlocked (see signing chapter)
-* |!| MCO	| BGN	| TSP FAIL										| Transport initialization failed
-* | | MCO	| REG	| REQ											| Registration request
-* | | MCO	| REG	| NOT NEEDED									| No registration needed (i.e. GW)
-* |!| MCO	| SND	| NODE NOT REG									| Node is not registered, cannot send message
-* | | MCO	| PIM	| NODE REG=%%d									| Registration response received, registration status (REG)
-* | | MCO	| PIM	| ROUTE N=%%d,R=%%d								| Routing table, messages to node (N) are routed via node (R)
-* | | MCO	| SLP	| MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
-* | | MCO	| SLP	| TPD											| Sleep node, powerdown transport
-* | | MCO	| SLP	| WUP=%%d										| Node woke-up, reason/IRQ (WUP)
-* |!| MCO	| SLP	| FWUPD											| Sleeping not possible, FW update ongoing
-* |!| MCO	| SLP	| REP											| Sleeping not possible, repeater feature enabled
-* | | MCO	| NLK	| NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
-* | | MCO	| NLK	| TPD											| Powerdown transport
+* |E| SYS | SUB | Message																			| Comment
+* |-|-----|-----|---------------------------------------------|----------------------------------------------------------------------------
+* |!| MCO | BGN | HW ERR																			| Error HW initialization (e.g. ext. EEPROM)
+* | | MCO | BGN | INIT %%s,CP=%%s,VER=%%s											| Core initialization, capabilities (CP), library version (VER)
+* | | MCO | BGN | BFR																					| Callback before()
+* | | MCO | BGN | STP																					| Callback setup()
+* | | MCO | BGN | INIT OK,TSP=%%d															| Core initialised, transport status (TSP): 0=not initialised, 1=initialised, NA=not available
+* | | MCO | BGN | NODE UNLOCKED																| Node successfully unlocked (see signing chapter)
+* |!| MCO | BGN | TSP FAIL																		| Transport initialization failed
+* | | MCO | REG | REQ																					| Registration request
+* | | MCO | REG | NOT NEEDED																	| No registration needed (i.e. GW)
+* |!| MCO | SND | NODE NOT REG																| Node is not registered, cannot send message
+* | | MCO | PIM | NODE REG=%%d																| Registration response received, registration status (REG)
+* | | MCO | SLP | MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
+* | | MCO | SLP | WUP=%%d																			| Node woke-up, reason/IRQ (WUP)
+* |!| MCO | SLP | FWUPD																				| Sleeping not possible, FW update ongoing
+* |!| MCO | SLP | REP																					| Sleeping not possible, repeater feature enabled
+* |!| MCO | SLP | TNR																					| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
+* | | MCO | NLK | NODE LOCKED. UNLOCK: GND PIN %%d AND RESET	| Node locked during booting, see signing chapter for additional information
+* | | MCO | NLK | TSL																					| Set transport to sleep
 *
 *
 * @brief API declaration for MySensorsCore
@@ -74,26 +73,17 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#define GATEWAY_ADDRESS			((uint8_t)0)			//!< Node ID for GW sketch
-#define NODE_SENSOR_ID			((uint8_t)255)			//!< Node child is always created/presented when a node is started
-#define MY_CORE_VERSION			((uint8_t)2)			//!< core version
-#define MY_CORE_MIN_VERSION		((uint8_t)2)			//!< min core version required for compatibility
+#define GATEWAY_ADDRESS					((uint8_t)0)		//!< Node ID for GW sketch
+#define NODE_SENSOR_ID					((uint8_t)255)	//!< Node child is always created/presented when a node is started
+#define MY_CORE_VERSION					((uint8_t)2)		//!< core version
+#define MY_CORE_MIN_VERSION			((uint8_t)2)		//!< min core version required for compatibility
 
-#define MY_WAKE_UP_BY_TIMER		((int8_t)-1)			//!< Sleeping wake up by timer
-#define MY_SLEEP_NOT_POSSIBLE	((int8_t)-2)			//!< Sleeping not possible
-#define INTERRUPT_NOT_DEFINED	((uint8_t)255)			//!< _sleep() param: no interrupt defined
-#define MODE_NOT_DEFINED		((uint8_t)255)			//!< _sleep() param: no mode defined
-#define VALUE_NOT_DEFINED		((uint8_t)255)			//!< Value not defined
-
-
-#ifdef MY_DEBUG
-#define debug(x,...) hwDebugPrint(x, ##__VA_ARGS__)			//!< debug, to be removed (follow-up PR)
-#define CORE_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
-#else
-#define debug(x,...)										//!< debug NULL, to be removed (follow-up PR)
-#define CORE_DEBUG(x,...)									//!< debug NULL
-#endif
-
+#define MY_WAKE_UP_BY_TIMER			((int8_t)-1)		//!< Sleeping wake up by timer
+#define MY_SLEEP_NOT_POSSIBLE		((int8_t)-2)		//!< Sleeping not possible
+#define INTERRUPT_NOT_DEFINED		((uint8_t)255)	//!< _sleep() param: no interrupt defined
+#define MODE_NOT_DEFINED				((uint8_t)255)	//!< _sleep() param: no mode defined
+#define VALUE_NOT_DEFINED				((uint8_t)255)	//!< Value not defined
+#define FUNCTION_NOT_SUPPORTED	((uint16_t)0)		//!< Function not supported
 
 /**
  * @brief Controller configuration
@@ -155,6 +145,10 @@ bool present(const uint8_t sensorId, const uint8_t sensorType, const char *descr
  * @return true Returns true if message reached the first stop on its way to destination.
  */
 bool sendSketchInfo(const char *name, const char *version, const bool ack = false);
+#if !defined(__linux__)
+bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version,
+                    const bool ack = false);
+#endif
 
 /**
 * Sends a message to gateway or one of the other nodes in the radio network
@@ -164,7 +158,6 @@ bool sendSketchInfo(const char *name, const char *version, const bool ack = fals
 * @return true Returns true if message reached the first stop on its way to destination.
 */
 bool send(MyMessage &msg, const bool ack = false);
-
 
 /**
  * Send this nodes battery level to gateway.
@@ -181,6 +174,22 @@ bool sendBatteryLevel(const uint8_t level, const bool ack = false);
  * @return true Returns true if message reached the first stop on its way to destination.
  */
 bool sendHeartbeat(const bool ack = false);
+
+/**
+* Send this nodes signal strength to gateway.
+* @param level Signal strength can be rssi if the radio provide it, or another kind of calculation
+* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+* @return true Returns true if message reached the first stop on its way to destination.
+*/
+bool sendSignalStrength(const int16_t level, const bool ack = false);
+
+/**
+* Send this nodes TX power level to gateway.
+* @param level For instance, can be TX power level in dbm
+* @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
+* @return true Returns true if message reached the first stop on its way to destination.
+*/
+bool sendTXPowerLevel(const uint8_t level, const bool ack = false);
 
 /**
 * Requests a value from gateway or some other sensor in the radio network.
@@ -341,8 +350,15 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false,
               const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
 
 
+// **** private functions ********
+
 /**
- * @ingroup MyLockgrp
+ * @defgroup MyLockgrp MyNodeLock
+ * @ingroup internals
+ * @brief API declaration for MyNodeLock
+ * @{
+ */
+/**
  * @brief Lock a node and transmit provided message with 30m intervals
  *
  * This function is called if suspicious activity has exceeded the threshold (see
@@ -357,8 +373,7 @@ void _nodeLock(const char* str);
  * @brief Check node lock status and prevent node execution if locked.
  */
 void _checkNodeLock(void);
-
-// **** private functions ********
+/** @}*/ // Node lock group
 
 /**
 * @brief Node initialisation
@@ -396,7 +411,7 @@ void receive(const MyMessage &message)  __attribute__((weak));
 /**
 * @brief Callback for incoming time messages
 */
-void receiveTime(unsigned long)  __attribute__((weak));
+void receiveTime(uint32_t)  __attribute__((weak));
 /**
 * @brief Node presenation
 */

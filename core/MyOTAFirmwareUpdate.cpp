@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -24,7 +24,11 @@ extern MyMessage _msg;
 extern MyMessage _msgTmp;
 
 // local variables
+#ifdef MY_OTA_USE_I2C_EEPROM
+I2CEeprom _flash(MY_OTA_I2C_ADDR);
+#else
 SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
+#endif
 nodeFirmwareConfig_t _nodeFirmwareConfig;
 bool _firmwareUpdateOngoing;
 uint32_t _firmwareLastRequest;
@@ -55,7 +59,8 @@ void firmwareOTAUpdateRequest(void)
 		firmwareRequest.type = _nodeFirmwareConfig.type;
 		firmwareRequest.version = _nodeFirmwareConfig.version;
 		firmwareRequest.block = (_firmwareBlock - 1);
-		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04X,V=%04X,B=%04X\n"), _nodeFirmwareConfig.type,
+		OTA_DEBUG(PSTR("OTA:FRQ:FW REQ,T=%04" PRIX16 ",V=%04" PRIX16 ",B=%04" PRIX16 "\n"),
+		          _nodeFirmwareConfig.type,
 		          _nodeFirmwareConfig.version, _firmwareBlock - 1); // request FW update block
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM, ST_FIRMWARE_REQUEST,
 		                       false).set(&firmwareRequest, sizeof(requestFirmwareBlock_t)));
@@ -96,7 +101,7 @@ bool firmwareOTAUpdateProcess(void)
 			// extract FW block
 			replyFirmwareBlock_t *firmwareResponse = (replyFirmwareBlock_t *)_msg.data;
 
-			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04X\n"), firmwareResponse->block);	// received FW block
+			OTA_DEBUG(PSTR("OTA:FWP:RECV B=%04" PRIX16 "\n"), firmwareResponse->block);	// received FW block
 			if (firmwareResponse->block != _firmwareBlock - 1) {
 				OTA_DEBUG(PSTR("!OTA:FWP:WRONG FWB\n"));	// received FW block
 				// wrong firmware block received
@@ -110,6 +115,21 @@ bool firmwareOTAUpdateProcess(void)
 			                   firmwareResponse->data, FIRMWARE_BLOCK_SIZE);
 			// wait until flash written
 			while (_flash.busy()) {}
+#ifdef OTA_EXTRA_FLASH_DEBUG
+			{
+				char prbuf[8];
+				uint32_t addr = ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET;
+				OTA_DEBUG(PSTR("OTA:FWP:FL DUMP "));
+				sprintf_P(prbuf,PSTR("%04" PRIX16 ":"), (uint16_t)addr);
+				MY_SERIALDEVICE.print(prbuf);
+				for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
+					uint8_t data = _flash.readByte(addr + i);
+					sprintf_P(prbuf,PSTR("%02" PRIX8 ""), (uint8_t)data);
+					MY_SERIALDEVICE.print(prbuf);
+				}
+				OTA_DEBUG(PSTR("\n"));
+			}
+#endif
 			_firmwareBlock--;
 			if (!_firmwareBlock) {
 				// We're done! Do a checksum and reboot.
@@ -176,7 +196,8 @@ bool transportIsValidFirmware(void)
 			}
 		}
 	}
-	OTA_DEBUG(PSTR("OTA:CRC:B=%04X,C=%04X,F=%04X\n"), _nodeFirmwareConfig.blocks,crc,
+	OTA_DEBUG(PSTR("OTA:CRC:B=%04" PRIX16 ",C=%04" PRIX16 ",F=%04" PRIX16 "\n"),
+	          _nodeFirmwareConfig.blocks,crc,
 	          _nodeFirmwareConfig.crc);
 	return crc == _nodeFirmwareConfig.crc;
 }
