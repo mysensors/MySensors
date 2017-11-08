@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2016 Sensnology AB
+* Copyright (C) 2013-2017 Sensnology AB
 * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -26,21 +26,29 @@
 IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 #endif
 
+#if defined(MY_IP_ADDRESS)
+IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
+#if defined(MY_IP_GATEWAY_ADDRESS)
+IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+#elif defined(MY_GATEWAY_ESP8266) /* Elif part of MY_IP_GATEWAY_ADDRESS */
+// Assume the gateway will be the machine on the same network as the local IP
+// but with last octet being '1'
+IPAddress _gatewayIp(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1);
+#endif /* End of MY_IP_GATEWAY_ADDRESS */
+#if defined(MY_IP_SUBNET_ADDRESS)
+IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+#elif defined(MY_GATEWAY_ESP8266) /* Elif part of MY_IP_SUBNET_ADDRESS */
+IPAddress _subnetIp(255, 255, 255, 0);
+#endif /* End of MY_IP_SUBNET_ADDRESS */
+#endif /* End of MY_IP_ADDRESS */
+
 #if defined(MY_GATEWAY_ESP8266)
 #define EthernetClient WiFiClient
-#if defined(MY_IP_ADDRESS)
-IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
-IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
-#endif
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
 #else
 uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
-#endif
-
-#if defined(MY_IP_ADDRESS)
-IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
-#endif
+#endif /* End of MY_GATEWAY_ESP8266 */
 
 static EthernetClient _MQTT_ethClient;
 static PubSubClient _MQTT_client(_MQTT_ethClient);
@@ -56,7 +64,13 @@ bool gatewayTransportSend(MyMessage &message)
 	setIndication(INDICATION_GW_TX);
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	debug(PSTR("Sending message on topic: %s\n"), topic);
-	return _MQTT_client.publish(topic, message.getString(_convBuffer));
+#if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
+	bool retain = mGetCommand(message) == C_SET ||
+	              (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
+#else
+	bool retain = false;
+#endif /* End of MY_MQTT_CLIENT_PUBLISH_RETAIN */
+	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
 
 void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
@@ -97,26 +111,26 @@ bool gatewayTransportConnect(void)
 	}
 	MY_SERIALDEVICE.print(F("IP: "));
 	MY_SERIALDEVICE.println(WiFi.localIP());
-#elif defined(MY_GATEWAY_LINUX)
+#elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
 #if defined(MY_IP_ADDRESS)
-	//TODO
-#endif
-#else
-#ifdef MY_IP_ADDRESS
+	_MQTT_ethClient.bind(_MQTT_clientIp);
+#endif /* End of MY_IP_ADDRESS */
+#else /* Else part of MY_GATEWAY_ESP8266 */
+#if defined(MY_IP_ADDRESS)
 	Ethernet.begin(_MQTT_clientMAC, _MQTT_clientIp);
-#else
+#else /* Else part of MY_IP_ADDRESS */
 	// Get IP address from DHCP
 	if (!Ethernet.begin(_MQTT_clientMAC)) {
 		MY_SERIALDEVICE.print(F("DHCP FAILURE..."));
 		_MQTT_connecting = false;
 		return false;
 	}
-#endif
+#endif /* End of MY_IP_ADDRESS */
 	MY_SERIALDEVICE.print(F("IP: "));
 	MY_SERIALDEVICE.println(Ethernet.localIP());
 	// give the Ethernet interface a second to initialize
 	delay(1000);
-#endif
+#endif /* End of MY_GATEWAY_ESP8266 */
 	return true;
 }
 
@@ -127,7 +141,7 @@ bool gatewayTransportInit(void)
 	_MQTT_client.setServer(_brokerIp, MY_PORT);
 #else
 	_MQTT_client.setServer(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
-#endif
+#endif /* End of MY_CONTROLLER_IP_ADDRESS */
 
 	_MQTT_client.setCallback(incomingMQTT);
 
@@ -136,12 +150,15 @@ bool gatewayTransportInit(void)
 	WiFi.mode(WIFI_STA);
 #if defined(MY_ESP8266_HOSTNAME)
 	WiFi.hostname(MY_ESP8266_HOSTNAME);
-#endif
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
-#ifdef MY_IP_ADDRESS
+#endif /* End of MY_ESP8266_HOSTNAME */
+#if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
+#endif /* End of MY_IP_ADDRESS */
+#ifndef MY_ESP8266_BSSID
+#define MY_ESP8266_BSSID NULL
 #endif
-#endif
+	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
+#endif /* End of MY_GATEWAY_ESP8266 */
 
 	gatewayTransportConnect();
 

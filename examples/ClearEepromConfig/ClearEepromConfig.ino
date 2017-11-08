@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -32,10 +32,10 @@ void setup()
 {
 	Serial.begin(MY_BAUD_RATE);
 	Serial.println("Started clearing. Please wait...");
-	for (int i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
+	for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) {
 		hwWriteConfig(i,0xFF);
 	}
-	Serial.println("Clearing done. You're ready to go!");
+	Serial.println("Clearing done.");
 }
 
 void loop()

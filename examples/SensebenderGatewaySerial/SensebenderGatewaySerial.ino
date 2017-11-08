@@ -42,7 +42,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.
@@ -250,16 +252,15 @@ bool testEEProm()
 {
 	uint8_t eeprom_d1, eeprom_d2;
 	SerialUSB.print(" -> EEPROM ");
-	Wire.begin();
-	eeprom_d1 = i2c_eeprom_read_byte(EEPROM_VERIFICATION_ADDRESS);
+	eeprom_d1 = hwReadConfig(EEPROM_VERIFICATION_ADDRESS);
 	delay(500);
 	eeprom_d1 = ~eeprom_d1; // invert the bits
-	i2c_eeprom_write_byte(EEPROM_VERIFICATION_ADDRESS, eeprom_d1);
+	hwWriteConfig(EEPROM_VERIFICATION_ADDRESS, eeprom_d1);
 	delay(500);
-	eeprom_d2 = i2c_eeprom_read_byte(EEPROM_VERIFICATION_ADDRESS);
+	eeprom_d2 = hwReadConfig(EEPROM_VERIFICATION_ADDRESS);
 	if (eeprom_d1 == eeprom_d2) {
 		SerialUSB.println("PASSED");
-		i2c_eeprom_write_byte(EEPROM_VERIFICATION_ADDRESS, ~eeprom_d1);
+		hwWriteConfig(EEPROM_VERIFICATION_ADDRESS, ~eeprom_d1);
 		return true;
 	}
 	SerialUSB.println("FAILED!");

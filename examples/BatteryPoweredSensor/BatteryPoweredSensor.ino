@@ -33,13 +33,15 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
 int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
 
-unsigned long SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
+uint32_t SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
 
 void setup()

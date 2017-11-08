@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -248,6 +248,23 @@ MyMessage& MyMessage::set(const char* value)
 	data[length] = 0;
 	return *this;
 }
+
+#if !defined(__linux__)
+MyMessage& MyMessage::set(const __FlashStringHelper* value)
+{
+	uint8_t length = value == NULL ? 0
+	                 : min(strlen_P(reinterpret_cast<const char *>(value)), (size_t)MAX_PAYLOAD);
+	miSetLength(length);
+	miSetPayloadType(P_STRING);
+	if (length) {
+		strncpy_P(data, reinterpret_cast<const char *>(value), length);
+	}
+	// null terminate string
+	data[length] = 0;
+	return *this;
+}
+#endif
+
 
 MyMessage& MyMessage::set(bool value)
 {

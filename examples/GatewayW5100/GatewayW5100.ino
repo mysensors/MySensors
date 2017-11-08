@@ -46,7 +46,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 // Enable gateway ethernet module type
 #define MY_GATEWAY_W5100
@@ -72,12 +74,19 @@
 #define MY_RF24_CS_PIN 6
 #endif
 
-// Enable to UDP
-//#define MY_USE_UDP
+// Enable UDP communication
+//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
 
-#define MY_IP_ADDRESS 192,168,178,66   // If this is disabled, DHCP is used to retrieve address
+// Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
+#define MY_IP_ADDRESS 192,168,178,66
+
+// If using static ip you can define Gateway and Subnet address as well
+//#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
+
 // Renewal period if using DHCP
 //#define MY_IP_RENEWAL_INTERVAL 60000
+
 // The port to keep open on node server mode / or port to contact in client mode
 #define MY_PORT 5003
 
@@ -108,18 +117,24 @@
 //#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
 //#define MY_DEFAULT_TX_LED_PIN  9  // Transmit led pin
 
-
 #if defined(MY_USE_UDP)
 #include <EthernetUdp.h>
 #endif
 #include <Ethernet.h>
 #include <MySensors.h>
 
-
 void setup()
 {
+	// Setup locally attached sensors
+}
+
+void presentation()
+{
+	// Present locally attached sensors here
 }
 
 void loop()
 {
+	// Send locally attached sensors data here
 }
+

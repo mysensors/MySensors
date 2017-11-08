@@ -47,6 +47,9 @@ uint8_t SPIFlash::UNIQUEID[8];
 /// get this from the datasheet of your flash chip
 /// Example for Atmel-Adesto 4Mbit AT25DF041A: 0x1F44 (page 27: http://www.adestotech.com/sites/default/files/datasheets/doc3668.pdf)
 /// Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
+// Suppress uninitialized member variable in constructor because some memory can be saved with
+// on-demand initialization of these members
+// cppcheck-suppress uninitMemberVar
 SPIFlash::SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID)
 {
 	_slaveSelectPin = slaveSelectPin;
@@ -95,7 +98,7 @@ void SPIFlash::unselect()
 }
 
 /// setup SPI, read device ID etc...
-boolean SPIFlash::initialize()
+bool SPIFlash::initialize()
 {
 #if defined(SPCR) && defined(SPSR)
 	_SPCR = SPCR;
@@ -180,7 +183,7 @@ void SPIFlash::readBytes(uint32_t addr, void* buf, uint16_t len)
 }
 
 /// Send a command to the flash chip, pass TRUE for isWrite when its a write command
-void SPIFlash::command(uint8_t cmd, boolean isWrite)
+void SPIFlash::command(uint8_t cmd, bool isWrite)
 {
 #if defined(__AVR_ATmega32U4__) // Arduino Leonardo, MoteinoLeo
 	DDRB |= B00000001;            // Make sure the SS pin (PB0 - used by RFM12B on MoteinoLeo R1) is set as output HIGH!
@@ -201,7 +204,7 @@ void SPIFlash::command(uint8_t cmd, boolean isWrite)
 }
 
 /// check if the chip is busy erasing/writing
-boolean SPIFlash::busy()
+bool SPIFlash::busy()
 {
 	/*
 	select();
@@ -248,7 +251,6 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len)
 	//SST25 Type of Flash does not support Page Programming but AAI Word Programming
 	uint16_t i=0;
 	uint8_t oddAdr=0;
-	char s[5];
 
 	command(SPIFLASH_AAIWORDPROGRAM, true);  // Byte/Page Program
 	SPI.transfer(addr >> 16);
@@ -290,11 +292,10 @@ void SPIFlash::writeBytes(uint32_t addr, const void* buf, uint16_t len)
 	command(SPIFLASH_WRITEDISABLE); //end AAI programming
 	unselect();
 #else
-	uint16_t n;
 	uint16_t maxBytes = 256-(addr%256);  // force the first set of bytes to stay within the first page
 	uint16_t offset = 0;
 	while (len>0) {
-		n = (len<=maxBytes) ? len : maxBytes;
+		uint16_t n = (len<=maxBytes) ? len : maxBytes;
 		command(SPIFLASH_BYTEPAGEPROGRAM, true);  // Byte/Page Program
 		SPI.transfer(addr >> 16);
 		SPI.transfer(addr >> 8);

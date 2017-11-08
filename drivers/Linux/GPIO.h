@@ -31,22 +31,22 @@
 /**
  * @brief GPIO class
  */
-class GPIO
+class GPIOClass
 {
 
 public:
 	/**
-	 * @brief GPIO constructor.
+	 * @brief GPIOClass constructor.
 	 */
-	GPIO();
+	GPIOClass();
 	/**
-	 * @brief GPIO copy constructor.
+	 * @brief GPIOClass copy constructor.
 	 */
-	GPIO(const GPIO& other);
+	GPIOClass(const GPIOClass& other);
 	/**
-	 * @brief GPIO destructor.
+	 * @brief GPIOClass destructor.
 	 */
-	~GPIO();
+	~GPIOClass();
 	/**
 	 * @brief Configures the specified pin to behave either as an input or an output.
 	 *
@@ -79,13 +79,13 @@ public:
 	 * @brief Overloaded assign operator.
 	 *
 	 */
-	GPIO& operator=(const GPIO& other);
+	GPIOClass& operator=(const GPIOClass& other);
 
 private:
 	int lastPinNum; //!< @brief Highest pin number supported.
 	uint8_t *exportedPins; //!< @brief Array with information of which pins were exported.
 };
 
-extern GPIO gpio;
+extern GPIOClass GPIO;
 
 #endif

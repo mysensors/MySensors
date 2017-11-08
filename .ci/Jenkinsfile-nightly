@@ -1,0 +1,18 @@
+#!groovy
+node {
+	deleteDir() // Purge workspace
+	// Checkout the repo to get the necessary groovy scripts (and place it in the required subdirectory)
+	dir('MySensors') {
+		checkout scm
+	}
+	def pipeline = load('MySensors/.ci/pipeline.groovy')
+
+	// Invoke the main pipeline
+	pipeline {
+		library_root = 'MySensors/'       // Location of the MySensors library
+		repository_root = 'MySensors/'    // Location of the repository root
+		github_organization = 'mysensors' // Name of the GitHub Organization
+		repository_name = 'MySensors'     // Name of the repository on GitHub
+		nightly_arduino_ide = true        // Pick Arduino IDE variant to use
+	}
+}

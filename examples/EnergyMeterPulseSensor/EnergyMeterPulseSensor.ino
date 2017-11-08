@@ -39,7 +39,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
@@ -49,17 +51,17 @@
 #define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
 #define CHILD_ID 1              // Id of the sensor child
 
-unsigned long SEND_FREQUENCY =
+uint32_t SEND_FREQUENCY =
     20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
 bool pcReceived = false;
-volatile unsigned long pulseCount = 0;
-volatile unsigned long lastBlink = 0;
-volatile unsigned long watt = 0;
-unsigned long oldPulseCount = 0;
-unsigned long oldWatt = 0;
+volatile uint32_t pulseCount = 0;
+volatile uint32_t lastBlink = 0;
+volatile uint32_t watt = 0;
+uint32_t oldPulseCount = 0;
+uint32_t oldWatt = 0;
 double oldKwh;
-unsigned long lastSend;
+uint32_t lastSend;
 MyMessage wattMsg(CHILD_ID,V_WATT);
 MyMessage kwhMsg(CHILD_ID,V_KWH);
 MyMessage pcMsg(CHILD_ID,V_VAR1);
@@ -89,7 +91,7 @@ void presentation()
 
 void loop()
 {
-	unsigned long now = millis();
+	uint32_t now = millis();
 	// Only send values at a maximum frequency or woken up from sleep
 	bool sendTime = now - lastSend > SEND_FREQUENCY;
 	if (pcReceived && (SLEEP_MODE || sendTime)) {
@@ -97,7 +99,7 @@ void loop()
 		if (!SLEEP_MODE && watt != oldWatt) {
 			// Check that we dont get unresonable large watt value.
 			// could hapen when long wraps or false interrupt triggered
-			if (watt<((unsigned long)MAX_WATT)) {
+			if (watt<((uint32_t)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
 			}
 			Serial.print("Watt:");
@@ -140,8 +142,8 @@ void receive(const MyMessage &message)
 void onPulse()
 {
 	if (!SLEEP_MODE) {
-		unsigned long newBlink = micros();
-		unsigned long interval = newBlink-lastBlink;
+		uint32_t newBlink = micros();
+		uint32_t interval = newBlink-lastBlink;
 		if (interval<10000L) { // Sometimes we get interrupt on RISING
 			return;
 		}
@@ -150,6 +152,3 @@ void onPulse()
 	}
 	pulseCount++;
 }
-
-
-

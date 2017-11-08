@@ -1,4 +1,4 @@
-/*
+﻿/*
   CircularBuffer - An Arduino circular buffering library for arbitrary types.
 
   Created by Ivo Pullens, Emmission, 2014-2016 -- www.emmission.nl
@@ -88,9 +88,11 @@ public:
 	 */
 	inline uint8_t available(void) const
 	{
+		uint8_t ret_value;
 		MY_CRITICAL_SECTION {
-			return m_fill;
+			ret_value = m_fill;
 		}
+		return ret_value;
 	}
 
 	/**
