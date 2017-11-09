@@ -166,7 +166,7 @@ def call(Closure body) {
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate', 'Failed', '${BUILD_URL}flowGraphTable/')
 			if (config.is_pull_request) {
 				slackSend color: 'danger',
-					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>' failed with result ${currentBuild.result}."
+					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>' failed."
 				emailext (
 					subject: "Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' failed",
 					body: """Job '${env.JOB_NAME} <a href="${env.BUILD_URL}">#${env.BUILD_NUMBER}</a> (<a href="${env.CHANGE_URL}">PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}</a>)' ended with result ${currentBuild.result}.
@@ -175,7 +175,7 @@ def call(Closure body) {
 				)
 			} else {
 				slackSend color: 'danger',
-					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> ${env.BRANCH_NAME}]' failed with result ${currentBuild.result}."
+					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> ${env.BRANCH_NAME}]' failed."
 				emailext (
 					subject: "Job '${env.JOB_NAME} #${env.BUILD_NUMBER} ${env.BRANCH_NAME}' failed",
 					body: """Job '${env.JOB_NAME} <a href="${env.BUILD_URL}">#${env.BUILD_NUMBER}</a> (${env.BRANCH_NAME})' ended with result ${currentBuild.result}.
