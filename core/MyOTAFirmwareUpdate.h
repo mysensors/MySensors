@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2017 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -34,19 +34,19 @@
 *
 * MyOTAFirmwareUpdate debug log messages:
 *
-* |E| SYS	| SUB	| Message									| Comment
-* |-|------|-------|-------------------------------------------|----------------------------------------------------------------------------
-* | | OTA  | FWP	| UPDATE									| FW update initiated
-* |!| OTA  | FWP	| FLASH INIT FAIL							| Failed to initialise flash
-* | | OTA  | FWP	| UPDATE SKIPPED							| FW update skipped, no newer version available
-* | | OTA  | FWP	| RECV B=%04X								| Received FW block (B)
-* |!| OTA  | FWP	| WRONG FWB									| Wrong FW block received
-* | | OTA  | FWP	| FW END									| FW received, proceed to CRC verification
-* | | OTA  | FWP	| CRC OK									| FW CRC verification OK
-* |!| OTA  | FWP	| CRC FAIL									| FW CRC verification failed
-* | | OTA  | FRQ	| FW REQ,T=%04X,V=%04X,B=%04X				| Request FW update, FW type (T), version (V), block (B)
-* |!| OTA  | FRQ	| FW UPD FAIL								| FW update failed
-* | | OTA  | CRC	| B=%04X,C=%04X,F=%04X						| FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
+* |E| SYS | SUB | Message											| Comment
+* |-|-----|-----|-----------------------------|----------------------------------------------------------------------------
+* | | OTA | FWP | UPDATE											| FW update initiated
+* |!| OTA | FWP | FLASH INIT FAIL							| Failed to initialise flash
+* | | OTA | FWP | UPDATE SKIPPED							| FW update skipped, no newer version available
+* | | OTA | FWP | RECV B=%04X									| Received FW block (B)
+* |!| OTA | FWP | WRONG FWB										| Wrong FW block received
+* | | OTA | FWP | FW END											| FW received, proceed to CRC verification
+* | | OTA | FWP | CRC OK											| FW CRC verification OK
+* |!| OTA | FWP | CRC FAIL										| FW CRC verification failed
+* | | OTA | FRQ | FW REQ,T=%04X,V=%04X,B=%04X	| Request FW update, FW type (T), version (V), block (B)
+* |!| OTA | FRQ | FW UPD FAIL									| FW update failed
+* | | OTA | CRC | B=%04X,C=%04X,F=%04X				| FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
 *
 *
 * @brief API declaration for MyOTAFirmwareUpdate
@@ -68,8 +68,9 @@
 #define MY_OTA_BOOTLOADER_MINOR_VERSION (0u)		//!< Bootloader version minor
 #define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)	//!< Bootloader version
 
-#if defined(MY_DEBUG)
+#if defined(MY_DEBUG_VERBOSE_OTA_UPDATE)
 #define OTA_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+//#define OTA_EXTRA_FLASH_DEBUG	//!< Dumps flash after each FW block
 #else
 #define OTA_DEBUG(x,...)	//!< debug NULL
 #endif

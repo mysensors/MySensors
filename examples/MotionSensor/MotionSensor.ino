@@ -32,11 +32,13 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
-unsigned long SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
+uint32_t SLEEP_TIME = 120000; // Sleep time between reports (in milliseconds)
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)
 #define CHILD_ID 1   // Id of the sensor child
 

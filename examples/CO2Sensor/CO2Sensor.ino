@@ -1,4 +1,4 @@
-/*
+/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -43,14 +43,16 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
 #define CHILD_ID_AIQ 0
 #define AIQ_SENSOR_ANALOG_PIN 6
 
-unsigned long SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 30*1000; // Sleep time between reads (in milliseconds)
 
 float valAIQ =0.0;
 float lastAIQ =0.0;
@@ -76,12 +78,12 @@ void presentation()
 void loop()
 {
 
-	//unsigned long duration = pulseIn(AIQ_SENSOR_ANALOG_PIN, HIGH);
+	//uint32_t duration = pulseIn(AIQ_SENSOR_ANALOG_PIN, HIGH);
 	while(digitalRead(AIQ_SENSOR_ANALOG_PIN) == HIGH) {
 		;
 	}
 	//wait for the pin to go HIGH and measure HIGH time
-	unsigned long duration = pulseIn(AIQ_SENSOR_ANALOG_PIN, HIGH);
+	uint32_t duration = pulseIn(AIQ_SENSOR_ANALOG_PIN, HIGH);
 
 	//Serial.print(duration/1000); Serial.println(" ms ");
 	//from datasheet

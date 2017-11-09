@@ -24,9 +24,6 @@
 
 #include <stddef.h>                 // data type definitions
 
-/** \todo Use same values for same meanings for SHA204 and AES132.
- * */
-
 #define SHA204_SUCCESS              ((uint8_t)  0x00) //!< Function succeeded.
 #define SHA204_PARSE_ERROR          ((uint8_t)  0xD2) //!< response status byte indicates parsing error
 #define SHA204_CMD_FAIL             ((uint8_t)  0xD3) //!< response status byte indicates command execution error

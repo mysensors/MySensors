@@ -39,7 +39,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
@@ -61,7 +63,7 @@
 #define         GAS_CO                       (1)
 #define         GAS_SMOKE                    (2)
 /*****************************Globals***********************************************/
-unsigned long SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
+uint32_t SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 //VARIABLES
 float Ro = 10000.0;    // this has to be tuned 10K Ohm
 int val = 0;           // variable to store the value coming from the sensor
