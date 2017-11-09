@@ -138,10 +138,10 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	RFM95_powerUp();
 #if defined(MY_RFM95_RST_PIN)
 	hwPinMode(MY_RFM95_RST_PIN, OUTPUT);
-	hwDigitalWrite(MY_RFM95_RST_PIN, HIGH);
+	hwDigitalWrite(MY_RFM95_RST_PIN, LOW);
 	// 100uS
 	delayMicroseconds(100);
-	hwDigitalWrite(MY_RFM95_RST_PIN, LOW);
+	hwDigitalWrite(MY_RFM95_RST_PIN, HIGH);
 	// wait until chip ready
 	delay(5);
 	RFM95_DEBUG(PSTR("RFM95:INIT:PIN,CS=%" PRIu8 ",IQP=%" PRIu8 ",IQN=%" PRIu8 ",RST=%" PRIu8 "\n"),
