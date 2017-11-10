@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <inttypes.h> // For PRIu64
 #include "log.h"
 
 #define BCK2835_LIBRARY_BUILD
