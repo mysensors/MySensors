@@ -66,7 +66,8 @@ LOCAL void RFM69_csn(const bool level)
 LOCAL void RFM69_prepareSPITransaction(void)
 {
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.beginTransaction(SPISettings(MY_RFM69_SPI_SPEED, RFM69_SPI_DATA_ORDER, RFM69_SPI_DATA_MODE));
+	RFM69_SPI.beginTransaction(SPISettings(MY_RFM69_SPI_SPEED, RFM69_SPI_DATA_ORDER,
+	                                       RFM69_SPI_DATA_MODE));
 #else
 #if defined(SREG)
 	_SREG = SREG;
@@ -80,9 +81,9 @@ LOCAL void RFM69_prepareSPITransaction(void)
 
 	// set RFM69 SPI settings
 #if !defined(MY_SOFTSPI)
-	_SPI.setDataMode(RFM69_SPI_DATA_MODE);
-	_SPI.setBitOrder(RFM69_SPI_DATA_ORDER);
-	_SPI.setClockDivider(RFM69_CLOCK_DIV);
+	RFM69_SPI.setDataMode(RFM69_SPI_DATA_MODE);
+	RFM69_SPI.setBitOrder(RFM69_SPI_DATA_ORDER);
+	RFM69_SPI.setClockDivider(RFM69_CLOCK_DIV);
 #endif
 
 #endif
@@ -91,7 +92,7 @@ LOCAL void RFM69_prepareSPITransaction(void)
 LOCAL void RFM69_concludeSPITransaction(void)
 {
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.endTransaction();
+	RFM69_SPI.endTransaction();
 #else
 	// restore SPI settings to what they were before talking to RFM69
 #if defined(SPCR) && defined(SPSR)
@@ -128,7 +129,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 			*ptx++ = *current++;
 		}
 	}
-	_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
+	RFM69_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
 	if (aReadMode) {
 		if (size == 2) {
 			status = *++prx;   // result is 2nd byte of receive buffer
@@ -143,15 +144,15 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 		status = *prx; // status is 1st byte of receive buffer
 	}
 #else
-	status = _SPI.transfer(cmd);
+	status = RFM69_SPI.transfer(cmd);
 	while (len--) {
 		if (aReadMode) {
-			status = _SPI.transfer((uint8_t)RFM69_NOP);
+			status = RFM69_SPI.transfer((uint8_t)RFM69_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
 		} else {
-			status = _SPI.transfer(*current++);
+			status = RFM69_SPI.transfer(*current++);
 		}
 	}
 #endif
@@ -223,7 +224,7 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	// SPI init
 	hwDigitalWrite(MY_RFM69_CS_PIN, HIGH);
 	hwPinMode(MY_RFM69_CS_PIN, OUTPUT);
-	_SPI.begin();
+	RFM69_SPI.begin();
 
 	RFM69_setConfiguration();
 	RFM69_setFrequency(frequencyHz);
@@ -236,7 +237,7 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	// IRQ
 	hwPinMode(MY_RFM69_IRQ_PIN, INPUT);
 #if defined (SPI_HAS_TRANSACTION) && !defined (ESP8266) && !defined (MY_SOFTSPI)
-	_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM69_IRQ_PIN));
+	RFM69_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM69_IRQ_PIN));
 #endif
 
 #ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
@@ -302,14 +303,14 @@ LOCAL void RFM69_interruptHandler(void)
 				RFM69.dataReceived = !RFM69.ackReceived;
 			}
 #else
-			_SPI.transfer(RFM69_REG_FIFO & RFM69_READ_REGISTER);
+			RFM69_SPI.transfer(RFM69_REG_FIFO & RFM69_READ_REGISTER);
 			// set reading pointer
 			uint8_t* current = (uint8_t*)&RFM69.currentPacket;
 			bool headerRead = false;
 			// first read header
 			uint8_t readingLength = RFM69_HEADER_LEN;
 			while (readingLength--) {
-				*current++ = _SPI.transfer((uint8_t)0x00);
+				*current++ = RFM69_SPI.transfer((uint8_t)0x00);
 				if (!readingLength && !headerRead) {
 					// header read
 					headerRead = true;
