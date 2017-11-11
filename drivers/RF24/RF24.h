@@ -92,13 +92,13 @@
 
 #define RF24_BROADCAST_ADDRESS	(255u)	//!< RF24_BROADCAST_ADDRESS
 
-#if defined(ARDUINO) && !defined(__arm__) && !defined(_SPI)
+#if defined(ARDUINO) && !defined(__arm__) && !defined(RF24_SPI)
 #include <SPI.h>
 #if defined(MY_SOFTSPI)
 SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RF24_SPI_DATA_MODE>
-_SPI;
+RF24_SPI;
 #else
-#define _SPI SPI			//!< SPI
+#define RF24_SPI SPI			//!< SPI
 #endif
 #else
 #include <stdint.h>
@@ -111,8 +111,8 @@ _SPI;
 extern HardwareSPI SPI;		//!<  SPI
 #endif
 
-#if !defined(_SPI)
-#define _SPI SPI			//!<  SPI
+#if !defined(RF24_SPI)
+#define RF24_SPI SPI			//!<  SPI
 #endif
 #endif
 
