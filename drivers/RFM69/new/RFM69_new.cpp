@@ -279,7 +279,7 @@ LOCAL void RFM69_interruptHandler(void)
 #ifdef LINUX_SPI_BCM
 			char data[RFM69_MAX_PACKET_LEN + 1];   // max packet len + 1 byte for the command
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
-			SPI.transfern(data, 3);
+			RFM69_SPI.transfern(data, 3);
 
 			RFM69.currentPacket.header.packetLen = data[1];
 			RFM69.currentPacket.header.recipient = data[2];
@@ -290,7 +290,7 @@ LOCAL void RFM69_interruptHandler(void)
 
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
 			//SPI.transfern(data, RFM69.currentPacket.header.packetLen - 1); //TODO: Wrong packetLen?
-			SPI.transfern(data, RFM69.currentPacket.header.packetLen);
+			RFM69_SPI.transfern(data, RFM69.currentPacket.header.packetLen);
 
 			//(void)memcpy((void*)&RFM69.currentPacket.data[2], (void*)&data[1], RFM69.currentPacket.header.packetLen - 2);   //TODO: Wrong packetLen?
 			(void)memcpy((void*)&RFM69.currentPacket.data[2], (void*)&data[1],
@@ -1107,18 +1107,18 @@ LOCAL void RFM69_listenModeSendBurst(const uint8_t recipient, uint8_t* data, con
 		// write to FIFO  TODO refactorize with func, check if send/sendframe could be used, and prepare packet struct
 		RFM69_prepareSPITransaction();
 		RFM69_csn(LOW);
-		SPI.transfer(RFM69_REG_FIFO | 0x80);
-		SPI.transfer(len +
-		             4);      // two bytes for target and sender node, two bytes for the burst time remaining
-		SPI.transfer(recipient);
-		SPI.transfer(_address);
+		RFM69_SPI.transfer(RFM69_REG_FIFO | 0x80);
+		RFM69_SPI(len +
+		          4);      // two bytes for target and sender node, two bytes for the burst time remaining
+		RFM69_SPI.transfer(recipient);
+		RFM69_SPI.transfer(_address);
 
 		// We send the burst time remaining with the packet so the receiver knows how long to wait before trying to reply
-		SPI.transfer(timeRemaining.b[0]);
-		SPI.transfer(timeRemaining.b[1]);
+		RFM69_SPI.transfer(timeRemaining.b[0]);
+		RFM69_SPI.transfer(timeRemaining.b[1]);
 
 		for (uint8_t i = 0; i < len; i++) {
-			SPI.transfer(((uint8_t*)data)[i]);
+			RFM69_SPI.transfer(((uint8_t*)data)[i]);
 		}
 
 		RFM69_csn(HIGH);
