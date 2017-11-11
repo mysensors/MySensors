@@ -409,6 +409,14 @@
  */
 
 /**
+ * @def MY_RADIO_NRF5_ESB
+ * @brief Define this to use nRF5 based radios for sensor network communication.
+ *
+ * @see ARDUINO_ARCH_NRF5
+ */
+//#define MY_RADIO_NRF5_ESB
+
+/**
  * @def MY_NRF5_ESB_ENABLE_ENCRYPTION
  * @brief Define this to enable software based (RF24 compatible) %AES encryption.
  *
@@ -526,6 +534,12 @@
  * If using the HW variant of the %RFM69 module, define @ref MY_IS_RFM69HW.
  * @{
  */
+
+/**
+ * @def MY_RADIO_RFM69
+ * @brief Define this to use RFM69 based radios for sensor network communication.
+ */
+//#define MY_RADIO_RFM69
 
 /**
  * @def MY_DEBUG_VERBOSE_RFM69
@@ -749,6 +763,12 @@
  * - Semtech sx1276
  * @{
  */
+
+/**
+ * @def MY_RADIO_RFM95
+ * @brief Define this to use RFM95 based radios for sensor network communication.
+ */
+//#define MY_RADIO_RFM95
 
 /**
  * @def MY_DEBUG_VERBOSE_RFM95
@@ -1802,6 +1822,42 @@
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN
+/**
+ * @def ARDUINO_ARCH_SAMD
+ * @brief Automatically set when building for SAMD targets
+ */
+#define ARDUINO_ARCH_SAMD
+
+/**
+ * @def ARDUINO_ARCH_NRF5
+ * @brief Automatically set when building for nRF5 targets
+ */
+#define ARDUINO_ARCH_NRF5
+
+/**
+ * @def ARDUINO_ARCH_ESP8266
+ * @brief Automatically set when building for ESP8266 targets
+ */
+#define ARDUINO_ARCH_ESP8266
+
+/**
+ * @def ARDUINO_ARCH_AVR
+ * @brief Automatically set when building for AVR targets
+ */
+#define ARDUINO_ARCH_AVR
+
+/**
+ * @def ARDUINO_ARCH_STM32F1
+ * @brief Automatically set when building for STM32F1 targets
+ */
+#define ARDUINO_ARCH_STM32F1
+
+/**
+ * @def TEENSYDUINO
+ * @brief Automatically set when building for Teensy targets
+ */
+#define TEENSYDUINO
+
 // debug
 #define MY_DEBUG
 #define MY_DEBUG_OTA
@@ -1859,6 +1915,7 @@
 #define MY_SIGNING_FEATURE
 #define MY_ENCRYPTION_FEATURE
 // RS485
+#define MY_RS485
 #define MY_RS485_HWSERIAL (Serial1)
 // RF24
 #define MY_RADIO_RF24
@@ -1869,11 +1926,13 @@
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
 // NRF5_ESB
+#define MY_RADIO_NRF5_ESB
 #define MY_NRF5_ESB_ENABLE_ENCRYPTION
 #define MY_DEBUG_VERBOSE_NRF5_ESB
 #define MY_NRF5_ESB_REVERSE_ACK_RX
 #define MY_NRF5_ESB_REVERSE_ACK_TX
 // RFM69
+#define MY_RADIO_RFM69
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER
 #define MY_RFM69_POWER_PIN
@@ -1885,6 +1944,7 @@
 #define MY_DEBUG_VERBOSE_RFM69_REGISTERS
 #define MY_RFM69_ENABLE_LISTENMODE
 // RFM95
+#define MY_RADIO_RFM95
 #define MY_DEBUG_VERBOSE_RFM95
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
