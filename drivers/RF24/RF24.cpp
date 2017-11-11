@@ -57,8 +57,8 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 	uint8_t status;
 	uint8_t* current = buf;
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.beginTransaction(SPISettings(MY_RF24_SPI_SPEED, RF24_SPI_DATA_ORDER,
-	                                  RF24_SPI_DATA_MODE));
+	RF24_SPI.beginTransaction(SPISettings(MY_RF24_SPI_SPEED, RF24_SPI_DATA_ORDER,
+	                                      RF24_SPI_DATA_MODE));
 #endif
 	RF24_csn(LOW);
 	// timing
@@ -76,7 +76,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 			*ptx++ = *current++;
 		}
 	}
-	_SPI.transfernb( (char *) spi_txbuff, (char *) spi_rxbuff, size);
+	RF24_SPI.transfernb( (char *) spi_txbuff, (char *) spi_rxbuff, size);
 	if (readMode) {
 		if (size == 2) {
 			status = *++prx;   // result is 2nd byte of receive buffer
@@ -91,21 +91,21 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t
 		status = *prx; // status is 1st byte of receive buffer
 	}
 #else
-	status = _SPI.transfer(cmd);
+	status = RF24_SPI.transfer(cmd);
 	while ( len-- ) {
 		if (readMode) {
-			status = _SPI.transfer(RF24_CMD_NOP);
+			status = RF24_SPI.transfer(RF24_CMD_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
 		} else {
-			status = _SPI.transfer(*current++);
+			status = RF24_SPI.transfer(*current++);
 		}
 	}
 #endif
 	RF24_csn(HIGH);
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.endTransaction();
+	RF24_SPI.endTransaction();
 #endif
 	// timing
 	delayMicroseconds(10);
@@ -462,12 +462,12 @@ LOCAL bool RF24_initialize(void)
 	RF24_csn(HIGH);
 
 	// Initialize SPI
-	_SPI.begin();
+	RF24_SPI.begin();
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	// assure SPI can be used from interrupt context
 	// Note: ESP8266 & SoftSPI currently do not support interrupt usage for SPI,
 	// therefore it is unsafe to use MY_RF24_IRQ_PIN with ESP8266/SoftSPI!
-	_SPI.usingInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
+	RF24_SPI.usingInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
 	// attach interrupt
 	attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
 #endif

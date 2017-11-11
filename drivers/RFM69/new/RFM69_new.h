@@ -120,12 +120,13 @@
 #define RFM69_CLOCK_DIV SPI_CLOCK_DIV256		//!< SPI clock divider 256
 #endif
 
-#if defined (ARDUINO) && !defined (__arm__) && !defined (_SPI)
+#if defined (ARDUINO) && !defined (__arm__) && !defined (RFM69_SPI)
 #include <SPI.h>
 #if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE> _SPI;
+SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE>
+RFM69_SPI;
 #else
-#define _SPI SPI
+#define RFM69_SPI SPI
 #endif
 #else
 #if defined(__arm__) || defined(__linux__)
@@ -134,8 +135,8 @@ SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_S
 extern HardwareSPI SPI;		//!< SPI
 #endif
 
-#if !defined(_SPI)
-#define _SPI SPI			//!< SPI
+#if !defined(RFM69_SPI)
+#define RFM69_SPI SPI			//!< SPI
 #endif
 #endif
 
