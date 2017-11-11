@@ -71,7 +71,7 @@
 * | | TSM | ID    |														| <b>Transition to stID state</b>
 * | | TSM | ID    | OK,ID=%%d									| Node ID is valid
 * | | TSM | ID    | REQ												| Request node ID from controller
-* |!| TSM | ID    | FAIL,ID=%%d								| ID verification failed, ID invalid
+* |!| TSM | ID    | FAIL,ID=%%d								| ID verification failed, ID invalid, no ID received from controller
 * | | TSM | UPL   |														| <b>Transition to stUplink state</b>
 * | | TSM | UPL   | OK												| Uplink OK, GW returned ping
 * | | TSF | UPL   | DGWC,O=%%d,N=%%d					| Uplink check revealed changed network topology, old distance (O), new distance (N)
