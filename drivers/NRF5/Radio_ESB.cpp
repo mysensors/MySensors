@@ -909,8 +909,8 @@ void stRxEnd(void)
 #endif
 	if (radio_buffer_state == NRF5_ESB_BUFFER_STATE_RX) {
 		// RX End
-		// Ignore packages without valid CRC or when rx_buffer is full
-		if ((NRF_RADIO->CRCSTATUS != 0) && (!rx_circular_buffer.full())) {
+		// Ignore packages without valid CRC or ACK packages or when rx_buffer is full
+		if ((NRF_RADIO->CRCSTATUS != 0) && (radio_buffer.len>1) && (!rx_circular_buffer.full())) {
 			// Send ACK, when addressed to node id (No ACK for BC for reversed NRF24)
 #ifdef MY_NRF5_ESB_STRICT_ACK
 			if ((!radio_buffer.noack) && (NRF_RADIO->RXMATCH==NRF5_ESB_NODE_ADDR))
@@ -952,15 +952,15 @@ void stRxEnd(void)
 #endif
 
 		}
-#ifdef NRF52
-		// Reset RX timeout for PAN#102
-		NRF5_RADIO_TIMER->CC[1] = 0;
-#endif
 	} else {
 		// TX END
 		// Reset buffer state
 		radio_buffer_state = NRF5_ESB_BUFFER_STATE_RX;
 	}
+#ifdef NRF52
+	// Reset RX timeout for PAN#102
+	NRF5_RADIO_TIMER->CC[1] = ~0;
+#endif
 	NRF5_ESB_DEBUG_LED(PIN_LED6, LOW);
 }
 
@@ -968,6 +968,8 @@ void stRxDisabled(void)
 {
 	// Restart Radio (PAN#102)
 	if (radio_buffer_state == NRF5_ESB_BUFFER_STATE_RX) {
+		NRF_RADIO->SHORTS = stRx.radioShorts;
+		radio_buffer_state = NRF5_ESB_BUFFER_STATE_RX;
 		NRF_RADIO->TASKS_RXEN = 1;
 	}
 }
