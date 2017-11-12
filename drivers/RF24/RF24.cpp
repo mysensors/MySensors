@@ -366,7 +366,7 @@ LOCAL uint8_t RF24_getNodeID(void)
 LOCAL bool RF24_sanityCheck(void)
 {
 	// detect HW defect, configuration errors or interrupted SPI line, CE disconnect cannot be detected
-	return (RF24_readByteRegister(RF24_REG_RF_SETUP) == RF24_RF_SETUP) & (RF24_readByteRegister(
+	return (RF24_readByteRegister(RF24_REG_RF_SETUP) == RF24_RF_SETUP) && (RF24_readByteRegister(
 	            RF24_REG_RF_CH) == MY_RF24_CHANNEL);
 }
 LOCAL int16_t RF24_getTxPowerLevel(void)
