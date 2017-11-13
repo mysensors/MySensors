@@ -286,6 +286,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif // __avr_atmega1280__, __avr_atmega1284__, __avr_atmega2560__
 #endif // ARDUINO_ARCH_AVR
 #endif
+#ifdef DOXYGEN
+/**
+ * @def MY_RAM_ROUTING_TABLE_ENABLED
+ * @brief Automatically set if RAM routing table is enabled
+ *
+ * @see MY_RAM_ROUTING_TABLE_FEATURE
+ */
+#define MY_RAM_ROUTING_TABLE_ENABLED
+#endif
 
 // SOFTSPI
 #ifdef MY_SOFTSPI

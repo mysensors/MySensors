@@ -394,7 +394,7 @@
  * That is enough to enable protection from both Eve and Mallory in your network
  * although if you do not also enable encryption, Eve can eavesdrop, but not do anything about,
  * your messages (except possibly preventing them from arriving). @ref MY_SIGNING_SIMPLE_PASSWD also
- * enable encryption autmatically.
+ * enable encryption automatically.
  *
  * How are the messages actually affected by the signing?<br>
  * The following illustration shows what part of the message is signed, and where the signature is
