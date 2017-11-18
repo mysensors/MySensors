@@ -475,9 +475,10 @@
  * @def MY_NRF5_ESB_MODE
  * @brief nRF5 mode.
  *
- * - NRF5_250KBPS for 250kbs
+ * - NRF5_250KBPS for 250kbs (Deprecated)
  * - NRF5_1MBPS for 1Mbps
  * - NRF5_2MBPS for 2Mbps.
+ * - NRF5_BLE_1MBPS for 1Mbps BLE modulation
  */
 #ifndef MY_NRF5_ESB_MODE
 #define MY_NRF5_ESB_MODE (NRF5_250KBPS)
