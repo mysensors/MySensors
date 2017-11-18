@@ -25,11 +25,6 @@
 #include "Radio.h"
 #include <Arduino.h>
 
-// Check SoftDevice presence
-#if defined(SOFTDEVICE_PRESENT) && !defined(FORCE_RADIO_ESB_WITH_SD)
-#error "NRF5 SoftDevice cannot be used with NRF5 Radio."
-#endif
-
 // Check maximum messae length
 #if MAX_MESSAGE_LENGTH > (32)
 #error "Unsupported message length. (MAX_MESSAGE_LENGTH)"
@@ -58,10 +53,10 @@
 #define NRF5_ESB_ARC_ACK (15)
 
 // auto retry count with noACK is true
-#define NRF5_ESB_ARC_NOACK (15)
+#define NRF5_ESB_ARC_NOACK (3)
 
 // How often broadcast messages are send
-#define NRF5_ESB_BC_ARC (15)
+#define NRF5_ESB_BC_ARC (3)
 
 // Node address index
 #define NRF5_ESB_NODE_ADDR (0)
@@ -97,9 +92,17 @@
 	 RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_ADDRESS_BCSTART_Msk |           \
 	 RADIO_SHORTS_ADDRESS_RSSISTART_Msk | RADIO_SHORTS_DISABLED_RSSISTOP_Msk)
 
-// PPI Channels
+// PPI Channels for TX
+#if (NRF5_RADIO_TIMER_IRQN != TIMER0_IRQn)
+// Use two regular PPI channels
 #define NRF5_ESB_PPI_TIMER_START 14
 #define NRF5_ESB_PPI_TIMER_RADIO_DISABLE 15
+#else
+// Use one regular PPI channel and one predefined PPI channel
+#define NRF5_ESB_USE_PREDEFINED_PPI
+#define NRF5_ESB_PPI_TIMER_START 15
+#define NRF5_ESB_PPI_TIMER_RADIO_DISABLE 22
+#endif
 #define NRF5_ESB_PPI_BITS                                                    \
 	((1 << NRF5_ESB_PPI_TIMER_START) |                                         \
 	 (1 << NRF5_ESB_PPI_TIMER_RADIO_DISABLE))
@@ -112,7 +115,7 @@
 /** ramp up time
  * Time to activate radio TX or RX mode
  */
-#define NRF5_ESB_RAMP_UP_TIME (130)
+#define NRF5_ESB_RAMP_UP_TIME (140)
 
 
 static bool NRF5_ESB_initialize();
