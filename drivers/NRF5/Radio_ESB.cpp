@@ -1,7 +1,7 @@
 /**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
- * The sensors forms a self healing radio network with optional repeaters. Each
+ * The sensors formrs a self healing radio network with optional repeaters. Each
  * repeater and gateway builds a routing tables in EEPROM which keeps track of
  * the
  * network topology allowing messages to be routed to nodes.
@@ -636,10 +636,6 @@ extern "C" {
 			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxIdle) or
 			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxDisable) or
 			        (NRF_RADIO->STATE == RADIO_STATE_STATE_TxRu)) {
-#ifdef NRF52
-				// RX end, stop timer (PAN102)
-				_stopTimer();
-#endif
 				if (NRF_RADIO->CRCSTATUS) {
 					// Ensure no ACK package is recieved
 					if (NRF_RADIO->RXMATCH != NRF5_ESB_TX_ADDR) {
@@ -664,8 +660,11 @@ extern "C" {
 								rx_buffer.noack = 0;
 #endif
 							} else {
+								// Buffer is full
 								// Stop ACK
 								_stopACK();
+								// Increment pkgid allowing receive the package again
+								package_ids[NRF_RADIO->RXMATCH]++;
 							}
 						}
 					} else {
