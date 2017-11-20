@@ -273,7 +273,7 @@ def buildnRF52832(config, sketches, String key) {
 	def fqbn = '-fqbn=MySensors:nRF5:MyBoard_nRF52832:bootcode=none,lfclk=lfxo,reset=notenable -prefs build.f_cpu=16000000 -prefs build.mcu=cortex-m4'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
-		buildArduino(config, fqbn, 'hardware/MySensors/nRF5/libraries/MyNRF5Board/examples/MyNRF5Board/MyNRF5Board.ino', key+'_nRF52832')
+		buildArduino(config, fqbn, 'hardware/MySensors/nRF5/libraries/MyBoardNRF5/examples/MyBoardNRF5/MyBoardNRF5.ino', key+'_nRF52832')
 	} catch (ex) {
 		echo "Build failed with: "+ ex.toString()
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (nRF52832 - '+key+')', 'Build error', '${BUILD_URL}')
@@ -297,7 +297,7 @@ def buildnRF51822(config, sketches, String key) {
 	def fqbn = '-fqbn=MySensors:nRF5:MyBoard_nRF51822:chip=xxaa,bootcode=none,lfclk=lfxo -prefs build.f_cpu=16000000 -prefs build.mcu=cortex-m0'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
-		buildArduino(config, fqbn, 'hardware/MySensors/nRF5/libraries/MyNRF5Board/examples/MyNRF5Board/MyNRF5Board.ino', key+'_nRF51822')
+		buildArduino(config, fqbn, 'hardware/MySensors/nRF5/libraries/MyBoardNRF5/examples/MyBoardNRF5/MyBoardNRF5.ino', key+'_nRF51822')
 	} catch (ex) {
 		echo "Build failed with: "+ ex.toString()
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (nRF51822 - '+key+')', 'Build error', '${BUILD_URL}')
