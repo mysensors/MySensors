@@ -24,12 +24,19 @@ GATEWAY_C_SOURCES=$(wildcard drivers/Linux/*.c)
 GATEWAY_CPP_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysgw.cpp
 GATEWAY_OBJECTS=$(patsubst %.c,$(BUILDDIR)/%.o,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(GATEWAY_CPP_SOURCES))
 
+GATEWAY_EXT_BIN=mysgw-ext
+GATEWAY_EXT=$(BINDIR)/$(GATEWAY_EXT_BIN)
+GATEWAY_EXT_C_SOURCES=$(wildcard drivers/Linux/*.c)
+GATEWAY_EXT_CPP_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysgw-ext.cpp
+GATEWAY_EXT_OBJECTS=$(patsubst %.c,$(BUILDDIR)/%.o,$(GATEWAY_EXT_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(GATEWAY_EXT_CPP_SOURCES))
+
 INCLUDES=-I. -I./core -I./drivers/Linux
 
 ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836 BCM2837))
 BCM_C_SOURCES=$(wildcard drivers/BCM/*.c)
 BCM_CPP_SOURCES=$(wildcard drivers/BCM/*.cpp)
 GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(BCM_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(BCM_CPP_SOURCES))
+GATEWAY_EXT_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(BCM_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(BCM_CPP_SOURCES))
 
 INCLUDES+=-I./drivers/BCM
 endif
@@ -62,10 +69,11 @@ DEPS+=$(ARDUINO_LIB_OBJS:.o=.d)
 endif
 
 DEPS+=$(GATEWAY_OBJECTS:.o=.d)
+DEPS+=$(GATEWAY_EXT_OBJECTS:.o=.d)
 
 .PHONY: all createdir cleanconfig clean install uninstall
 
-all: createdir $(ARDUINO) $(GATEWAY)
+all: createdir $(ARDUINO) $(GATEWAY) $(GATEWAY_EXT)
 
 createdir:
 	@mkdir -p $(BUILDDIR) $(BINDIR)
@@ -78,6 +86,10 @@ $(ARDUINO): $(ARDUINO_LIB_OBJS)
 # Gateway Build
 $(GATEWAY): $(GATEWAY_OBJECTS) $(ARDUINO_LIB_OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(GATEWAY_OBJECTS) $(ARDUINO_LIB_OBJS)
+
+# Gateway extended Build
+$(GATEWAY_EXT): $(GATEWAY_EXT_OBJECTS) $(ARDUINO_LIB_OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $(GATEWAY_EXT_OBJECTS) $(ARDUINO_LIB_OBJS)
 
 # Include all .d files
 -include $(DEPS)
@@ -116,11 +128,15 @@ $(CONFIG_FILE):
 	@echo "[Running configure]"
 	@./configure --no-clean
 
-install: all install-gateway install-initscripts
+install: all install-gateway install-gateway-ext install-initscripts
 
 install-gateway: 
 	@echo "Installing $(GATEWAY) to ${DESTDIR}$(GATEWAY_DIR)"
 	@install -m 0755 $(GATEWAY) ${DESTDIR}$(GATEWAY_DIR)
+
+install-gateway-ext: 
+	@echo "Installing $(GATEWAY_EXT) to ${DESTDIR}$(GATEWAY_DIR)"
+	@install -m 0755 $(GATEWAY_EXT) ${DESTDIR}$(GATEWAY_DIR)
 
 install-initscripts:
 ifeq ($(INIT_SYSTEM), systemd)
@@ -145,10 +161,10 @@ ifeq ($(INIT_SYSTEM), systemd)
 	@echo "Stopping daemon mysgw (ignore errors)"
 	-@systemctl stop mysgw.service
 	@echo "removing files"
-	rm /etc/systemd/system/mysgw.service $(GATEWAY_DIR)/$(GATEWAY_BIN)
+	rm /etc/systemd/system/mysgw.service $(GATEWAY_DIR)/$(GATEWAY_BIN) $(GATEWAY_DIR)/$(GATEWAY_EXT_BIN)
 else ifeq ($(INIT_SYSTEM), sysvinit)
 	@echo "Stopping daemon mysgw (ignore errors)"
 	-@service mysgw stop
 	@echo "removing files"
-	rm /etc/init.d/mysgw $(GATEWAY_DIR)/$(GATEWAY_BIN)
+	rm /etc/init.d/mysgw $(GATEWAY_DIR)/$(GATEWAY_BIN) $(GATEWAY_DIR)/$(GATEWAY_EXT_BIN)
 endif
