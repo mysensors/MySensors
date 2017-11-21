@@ -19,11 +19,15 @@
  * Author of this file:
  *   til 9b630f7d46945e2de4171568428d4347dcae912e: above
  * until 9b630f7d46945e2de4171568428d4347dcae912e: Pasal Gollor <pascal@pgollor.de>
+ *
+ *
+ * This script supports requestTime for the nodes.
  */
 
 #include <iostream>
 #include <cstdio>
 #include <unistd.h>
+#include <ctime> // std c time library
 
 // For more options run ./configure --help
 
@@ -41,6 +45,20 @@
 
 void receive(const MyMessage &message)
 {
+	if (mGetCommand(message) == C_INTERNAL && message.destination == GATEWAY_ADDRESS && message.type == I_TIME)
+	{
+		std::time_t t = time(0);
+		MyMessage timeMessage;
+
+		// prepare message
+		timeMessage.setDestination(message.sender);
+		timeMessage.setType(I_TIME);
+		mSetCommand(timeMessage, C_INTERNAL);
+		timeMessage.set(static_cast<uint32_t>(t));
+
+		DEBUG_OUTPUT("Reqeust time from node: %i - seconds since 1970: %d", message.sender, static_cast<uint32_t>(t));
+		send(timeMessage);
+	}
 }
 
 void setup()
