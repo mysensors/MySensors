@@ -51,10 +51,10 @@ void receive(const MyMessage &message)
 		MyMessage timeMessage;
 
 		// prepare message
+		timeMessage.set(static_cast<uint32_t>(t));
 		timeMessage.setDestination(message.sender);
 		timeMessage.setType(I_TIME);
-		mSetCommand(timeMessage, C_INTERNAL);
-		timeMessage.set(static_cast<uint32_t>(t));
+		mSetCommand(timeMessage, C_INTERNAL); // after set(.)
 
 		DEBUG_OUTPUT("Reqeust time from node: %i - seconds since 1970: %d", message.sender, static_cast<uint32_t>(t));
 		send(timeMessage);
