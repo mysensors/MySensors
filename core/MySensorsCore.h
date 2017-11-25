@@ -52,6 +52,7 @@
 * | | MCO | PIM | NODE REG=%%d																| Registration response received, registration status (REG)
 * | | MCO | SLP | MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
 * | | MCO | SLP | WUP=%%d																			| Node woke-up, reason/IRQ (WUP)
+* |!| MCO | SLP | NTL																					| Sleeping not possible, no time left
 * |!| MCO | SLP | FWUPD																				| Sleeping not possible, FW update ongoing
 * |!| MCO | SLP | REP																					| Sleeping not possible, repeater feature enabled
 * |!| MCO | SLP | TNR																					| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
