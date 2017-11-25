@@ -49,8 +49,8 @@
 #define MYSENSORS_LIBRARY_VERSION_MAJOR							2							//!< Major release version
 #define MYSENSORS_LIBRARY_VERSION_MINOR							2							//!< Minor release version
 #define MYSENSORS_LIBRARY_VERSION_PATCH							0							//!< Patch version
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE				"rc.1"				//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER	0x01					//!< incremental counter, starting at 0x00. 0xFF for final release
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE				"rc.2"				//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER	0x02					//!< incremental counter, starting at 0x00. 0xFF for final release
 
 
 #if (MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER != 0xFF)
