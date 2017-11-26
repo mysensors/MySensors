@@ -63,7 +63,7 @@ bool gatewayTransportSend(MyMessage &message)
 	}
 	setIndication(INDICATION_GW_TX);
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
-	debug(PSTR("Sending message on topic: %s\n"), topic);
+	GATEWAY_DEBUG(PSTR("Sending message on topic: %s\n"), topic);
 #if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
 	bool retain = mGetCommand(message) == C_SET ||
 	              (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
@@ -75,20 +75,20 @@ bool gatewayTransportSend(MyMessage &message)
 
 void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
 {
-	debug(PSTR("Message arrived on topic: %s\n"), topic);
+	GATEWAY_DEBUG(PSTR("Message arrived on topic: %s\n"), topic);
 	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
 }
 
 bool reconnectMQTT(void)
 {
-	debug(PSTR("Attempting MQTT connection...\n"));
+	GATEWAY_DEBUG(PSTR("Attempting MQTT connection...\n"));
 	// Attempt to connect
 	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID
 #if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
 	                         , MY_MQTT_USER, MY_MQTT_PASSWORD
 #endif
 	                        )) {
-		debug(PSTR("MQTT connected\n"));
+		GATEWAY_DEBUG(PSTR("MQTT connected\n"));
 
 		// Send presentation of locally attached sensors (and node if applicable)
 		presentNode();
@@ -107,10 +107,9 @@ bool gatewayTransportConnect(void)
 #if defined(MY_GATEWAY_ESP8266)
 	while (WiFi.status() != WL_CONNECTED) {
 		wait(500);
-		MY_SERIALDEVICE.print(F("."));
+		GATEWAY_DEBUG(PSTR("."));
 	}
-	MY_SERIALDEVICE.print(F("IP: "));
-	MY_SERIALDEVICE.println(WiFi.localIP());
+	GATEWAY_DEBUG(PSTR("IP: %s\n"),WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
@@ -121,13 +120,13 @@ bool gatewayTransportConnect(void)
 #else /* Else part of MY_IP_ADDRESS */
 	// Get IP address from DHCP
 	if (!Ethernet.begin(_MQTT_clientMAC)) {
-		MY_SERIALDEVICE.print(F("DHCP FAILURE..."));
+		GATEWAY_DEBUG(PSTR("DHCP FAILURE..."));
 		_MQTT_connecting = false;
 		return false;
 	}
 #endif /* End of MY_IP_ADDRESS */
-	MY_SERIALDEVICE.print(F("IP: "));
-	MY_SERIALDEVICE.println(Ethernet.localIP());
+	GATEWAY_DEBUG(PSTR("IP: %" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8 "\n"), Ethernet.localIP()[0],
+	              Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
 	// give the Ethernet interface a second to initialize
 	delay(1000);
 #endif /* End of MY_GATEWAY_ESP8266 */

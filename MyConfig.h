@@ -152,16 +152,18 @@
 /** @}*/ // End of SerialDebugGrpPub group
 
 /**
- * @defgroup RadioSettingGrpPub Radio selection
- * @ingroup MyConfigGrp
- * @brief These options control what radio type to use and various radio specific customisations.
- * @{
+ * @def MY_DEBUG_VERBOSE_OTA_UPDATE
+ * @brief Define this for verbose debug prints related to FOTA updates.
  */
+//#define MY_DEBUG_VERBOSE_OTA_UPDATE
 
-// Define or uncomment MY_OTA_USE_I2C_EEPROM below if you want I2C EEPROM instead
-// of a SPI flash. Used EEPROM needs to be large enough, an 24(L)C256 will do as minimum.
-// HW I2C assumed. This will exclude the SPI flash code.
-// Note that you also need an updated DualOptiboot supporting I2C EEPROM!
+/**
+ * @def MY_OTA_USE_I2C_EEPROM
+ * @brief Define this if you want I2C EEPROM instead
+ * of a SPI flash. Used EEPROM needs to be large enough, an 24(L)C256 will do as minimum.
+ * HW I2C assumed. This will exclude the SPI flash code.
+ * Note that you also need an updated DualOptiboot supporting I2C EEPROM!
+ */
 //#define MY_OTA_USE_I2C_EEPROM
 
 #ifdef MY_OTA_USE_I2C_EEPROM
@@ -170,6 +172,15 @@
 #define MY_OTA_I2C_ADDR		0x50
 #endif
 #endif
+
+
+/**
+ * @defgroup RadioSettingGrpPub Radio selection
+ * @ingroup MyConfigGrp
+ * @brief These options control what radio type to use and various radio specific customisations.
+ * @{
+ */
+
 
 /**
  * @defgroup RS485SettingGrpPub RS485
@@ -1312,6 +1323,13 @@
 //#define MY_GATEWAY_ESP8266
 //#define MY_GATEWAY_LINUX
 
+
+/**
+* @def MY_DEBUG_VERBOSE_GATEWAY
+* @brief Define this for verbose debug prints related to the gateway transport.
+*/
+//#define MY_DEBUG_VERBOSE_GATEWAY
+
 /**
  * @def MY_PORT
  * @brief The Ethernet TCP/UDP port to open on controller or gateway.
@@ -1763,10 +1781,11 @@
 // standard debug output
 #define MY_DEBUG_VERBOSE_CORE	//!< MY_DEBUG_VERBOSE_CORE
 #define MY_DEBUG_VERBOSE_TRANSPORT	//!< MY_DEBUG_VERBOSE_TRANSPORT
-#define MY_DEBUG_VERBOSE_OTA_UPDATE	//!< MY_DEBUG_VERBOSE_OTA_UPDATE
+#define MY_DEBUG_VERBOSE_GATEWAY //!< MY_DEBUG_VERBOSE_GATEWAY
+#define MY_DEBUG_VERBOSE_OTA_UPDATE //!< MY_DEBUG_VERBOSE_OTA_UPDATE
 #endif
 
-#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
+#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_GATEWAY) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
 #define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
 #ifndef MY_DEBUG_OTA
 #define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
@@ -1789,9 +1808,6 @@
 #else
 #define DEBUG_OUTPUT(x,...)								//!< debug NULL
 #endif
-
-// transport layer files
-#define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 
 // temp. workaround for nRF5 verifier: redirect RF24 to NRF_ESB
 #if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF24) )
@@ -1893,6 +1909,7 @@
 // core
 #define MY_CORE_ONLY
 // GW
+#define MY_DEBUG_VERBOSE_GATEWAY
 #define MY_INCLUSION_BUTTON_EXTERNAL_PULLUP
 #define MY_GATEWAY_W5100
 #define MY_GATEWAY_ENC28J60
@@ -1915,6 +1932,9 @@
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_SIGNING_FEATURE
 #define MY_ENCRYPTION_FEATURE
+// FOTA update
+#define MY_DEBUG_VERBOSE_OTA_UPDATE
+#define MY_OTA_USE_I2C_EEPROM
 // RS485
 #define MY_RS485
 #define MY_RS485_HWSERIAL (Serial1)
