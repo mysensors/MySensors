@@ -181,18 +181,21 @@ uint16_t hwFreeMem()
 
 void hwDebugPrint(const char *fmt, ... )
 {
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
 #ifndef MY_DISABLED_SERIAL
-	if (MY_SERIALDEVICE) {
+	if (MY_DEBUGDEVICE) {
 		char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
 		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
 		snprintf(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
 		         C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-		MY_SERIALDEVICE.print(fmtBuffer);
+		MY_DEBUGDEVICE.print(fmtBuffer);
 #else
 		// prepend timestamp
-		MY_SERIALDEVICE.print(hwMillis());
-		MY_SERIALDEVICE.print(" ");
+		MY_DEBUGDEVICE.print(hwMillis());
+		MY_DEBUGDEVICE.print(" ");
 #endif
 		va_list args;
 		va_start (args, fmt );
@@ -203,7 +206,7 @@ void hwDebugPrint(const char *fmt, ... )
 		fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
 #endif
 		va_end (args);
-		MY_SERIALDEVICE.print(fmtBuffer);
+		MY_DEBUGDEVICE.print(fmtBuffer);
 		//	MY_SERIALDEVICE.flush();
 	}
 #else
