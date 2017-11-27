@@ -1876,6 +1876,7 @@
 
 // debug
 #define MY_DEBUG
+#define MY_DEBUGDEVICE
 #define MY_DEBUG_OTA
 #define MY_DEBUG_OTA_DISABLE_ACK
 #define MY_SPECIAL_DEBUG
