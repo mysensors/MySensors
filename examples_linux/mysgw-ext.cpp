@@ -54,10 +54,24 @@ void receive(const MyMessage &message)
 		timeMessage.set(static_cast<uint32_t>(t));
 		timeMessage.setDestination(message.sender);
 		timeMessage.setType(I_TIME);
-		mSetCommand(timeMessage, C_INTERNAL); // after set(.)
+		timeMessage.sender = getNodeId();
+		mSetRequestAck(timeMessage, false);
+		mSetCommand(timeMessage, C_INTERNAL);
 
 		DEBUG_OUTPUT("Reqeust time from node: %i - seconds since 1970: %d", message.sender, static_cast<uint32_t>(t));
-		send(timeMessage);
+
+#if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
+		if (_coreConfig.nodeRegistered)
+		{
+#endif
+			_sendRoute(timeMessage);
+#if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
+		}
+		else
+		{
+			CORE_DEBUG(PSTR("!MCO:SND:NODE NOT REG\n"));	// node not registered
+		}
+#endif
 	}
 }
 
