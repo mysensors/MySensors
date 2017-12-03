@@ -46,7 +46,21 @@
  * the flag in your sketch.
  */
 //#define MY_DEBUG
-
+/**
+ * @def MY_DEBUGDEVICE
+ * @brief Define MY_DEBUGDEVICE to redirect debug prints.
+ *
+ * If defined, MY_DEBUGDEVICE replaces MY_SERIALDEVICE for the purpose
+ * of printing debug messages.  This only applies to debugging.
+ *
+ * The intent is to provide the ability to send debugging messages
+ * out a different serial port than what is being used for
+ * communication between nodes or from gateway to controller when
+ * this communication uses a serial interface.  This assumes that
+ * the MY_DEBUGDEVICE serial interface already exists. It can be a
+ * hardware serial device or a software serial device.
+ */
+//#define MY_DEBUGDEVICE
 /**
  * @def MY_DEBUG_OTA
  * @brief Define MY_DEBUG_OTA to redirect debug prints to given node ID
@@ -1861,6 +1875,7 @@
 
 // debug
 #define MY_DEBUG
+#define MY_DEBUGDEVICE
 #define MY_DEBUG_OTA
 #define MY_DEBUG_OTA_DISABLE_ACK
 #define MY_SPECIAL_DEBUG
