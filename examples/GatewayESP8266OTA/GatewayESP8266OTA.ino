@@ -66,8 +66,6 @@
  * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
 
-#include <ArduinoOTA.h>
-
 // Enable debug prints to serial monitor
 #define MY_DEBUG
 
@@ -133,32 +131,33 @@
 #include <ESP8266WiFi.h>
 #endif
 
+#include <ArduinoOTA.h>
 #include <MySensors.h>
 
 void setup()
 {
 	// Setup locally attached sensors
 	ArduinoOTA.onStart([]() {
-		debug("ArduinoOTA start\n");
+		Serial.println("ArduinoOTA start");
 	});
 	ArduinoOTA.onEnd([]() {
-		debug("\nArduinoOTA end\n");
+		Serial.println("\nArduinoOTA end");
 	});
 	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-		debug("OTA Progress: %u%%\r", (progress / (total / 100)));
+		Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100)));
 	});
 	ArduinoOTA.onError([](ota_error_t error) {
-		debug("Error[%u]: ", error);
+		Serial.printf("Error[%u]: ", error);
 		if (error == OTA_AUTH_ERROR) {
-			debug("Auth Failed\n");
+			Serial.println("Auth Failed");
 		} else if (error == OTA_BEGIN_ERROR) {
-			debug("Begin Failed\n");
+			Serial.println("Begin Failed");
 		} else if (error == OTA_CONNECT_ERROR) {
-			debug("Connect Failed\n");
+			Serial.println("Connect Failed");
 		} else if (error == OTA_RECEIVE_ERROR) {
-			debug("Receive Failed\n");
+			Serial.println("Receive Failed");
 		} else if (error == OTA_END_ERROR) {
-			debug("End Failed\n");
+			Serial.println("End Failed");
 		}
 	});
 	ArduinoOTA.begin();

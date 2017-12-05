@@ -25,6 +25,13 @@
 
 #define MSG_GW_STARTUP_COMPLETE "Gateway startup complete."
 
+// debug output
+#if defined(MY_DEBUG_VERBOSE_GATEWAY)
+#define GATEWAY_DEBUG(x,...)	DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
+#else
+#define GATEWAY_DEBUG(x,...)									//!< debug NULL
+#endif
+
 // Common gateway functions
 
 void gatewayTransportProcess(void);
