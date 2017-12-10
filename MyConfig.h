@@ -1617,6 +1617,23 @@
 #endif
 
 /**
+ * @def MY_LOCK_DEVICE
+ * @brief Enable read back protection
+ *
+ * Enable read back protection feature. Currently only supported by NRF51+NRF52.
+ * Use this flag to protect signing and encryption keys stored in the MCU.
+ *
+ * Set this flag, when you use softsigning in MySensors. Don't set this
+ * in SecurityPersonalizer.
+ *
+ * @warning YOU CAN BRICK YOUR DEVICE!!!
+ *          Don't set this flag without having an boot loader, OTA firmware update and
+ *          an Gateway connection. To reset an device, you can try >>
+ *          openocd -f interface/cmsis-dap.cfg -f target/nrf52.cfg -c "program dap apreg 1 0x04 0x01"
+ */
+//#define MY_LOCK_DEVICE
+
+/**
  * @def MY_SIGNING_FEATURE
  * @ingroup internals
  * @brief Helper flag to indicate that some signing feature is enabled
@@ -1931,6 +1948,7 @@
 #define MY_INDICATION_HANDLER
 #define MY_DISABLE_REMOTE_RESET
 #define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
+#define MY_LOCK_DEVICE
 // core
 #define MY_CORE_ONLY
 // GW
