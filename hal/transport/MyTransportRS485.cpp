@@ -71,10 +71,6 @@
 // We only use SYS_PACK in this application
 #define	ICSC_SYS_PACK	0x58
 
-#if !defined(MY_RS485_SOH_COUNT)
-  #define MY_RS485_SOH_COUNT 1
-#endif
-
 // Receiving header information
 char _header[6];
 
