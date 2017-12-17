@@ -71,6 +71,10 @@
 // We only use SYS_PACK in this application
 #define	ICSC_SYS_PACK	0x58
 
+#if !defined(MY_RS485_SOH_COUNT)
+  #define MY_RS485_SOH_COUNT 1
+#endif
+
 // Receiving header information
 char _header[6];
 
@@ -266,7 +270,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 #endif
 
 	// Start of header by writing multiple SOH
-	for(byte w=0; w<1; w++) {
+	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
 		_dev.write(SOH);
 	}
 	_dev.write(to);  // Destination address
