@@ -52,7 +52,6 @@
 
 // Serial Transport
 
-
 #include "MyTransportHAL.h"
 
 #ifdef __linux__
