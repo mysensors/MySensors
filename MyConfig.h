@@ -226,6 +226,15 @@
 #endif
 
 /**
+ * @def MY_RS485_SOH_COUNT
+ * @brief Define this in case you suffer from collisions on the bus. 3 might be a good starting point.
+ */
+
+#ifndef MY_RS485_SOH_COUNT 
+#define MY_RS485_SOH_COUNT (1)
+#endif
+
+/**
  * @def MY_RS485_DE_PIN
  * @brief RS485 driver enable pin.
  */
