@@ -518,6 +518,12 @@ LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger = false);
 */
 LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARGET_RSSI_DBM);
 
+#ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
+/**
+* @brief RFM69_readAllRegs Read and display RFM69 register contents
+*/
+LOCAL void RFM69_readAllRegs(void);
+#endif
 // ************************  LISTENMODE SECTION   ************************
 
 #if defined(MY_RFM69_ENABLE_LISTENMODE)
