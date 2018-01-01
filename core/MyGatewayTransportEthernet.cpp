@@ -263,7 +263,7 @@ bool _readFromClient(uint8_t i)
 			if (inChar == '\n' || inChar == '\r') {
 				// Add string terminator and prepare for the next message
 				inputString[i].string[inputString[i].idx] = 0;
-				GATEWAY_DEBUG(PSTR("GWT:RFC:C%" PRIu8 ",MSG=%s\n"), i, inputString[i].string);
+				GATEWAY_DEBUG(PSTR("GWT:RFC:C=%" PRIu8 ",MSG=%s\n"), i, inputString[i].string);
 				inputString[i].idx = 0;
 				if (protocolParse(_ethernetMsg, inputString[i].string)) {
 					return true;
@@ -275,7 +275,7 @@ bool _readFromClient(uint8_t i)
 			}
 		} else {
 			// Incoming message too long. Throw away
-			GATEWAY_DEBUG(PSTR("!GWT:RFC:C%" PRIu8 ",MSG TOO LONG\n"), i);
+			GATEWAY_DEBUG(PSTR("!GWT:RFC:C=%" PRIu8 ",MSG TOO LONG\n"), i);
 			inputString[i].idx = 0;
 			// Finished with this client's message. Next loop() we'll see if there's more to read.
 			break;
@@ -373,14 +373,14 @@ bool gatewayTransportAvailable(void)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (!clients[i].connected()) {
 			if (clientsConnected[i]) {
-				GATEWAY_DEBUG(PSTR("GWT:TSA:C%" PRIu8 ",DISCONNECTED\n"), i);
+				GATEWAY_DEBUG(PSTR("GWT:TSA:C=%" PRIu8 ",DISCONNECTED\n"), i);
 				clients[i].stop();
 			}
 			//check if there are any new clients
 			if (_ethernetServer.hasClient()) {
 				clients[i] = _ethernetServer.available();
 				inputString[i].idx = 0;
-				GATEWAY_DEBUG(PSTR("GWT:TSA:C%" PRIu8 ",CONNECTED\n"), i);
+				GATEWAY_DEBUG(PSTR("GWT:TSA:C=%" PRIu8 ",CONNECTED\n"), i);
 				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 				// Send presentation of locally attached sensors (and node if applicable)
 				presentNode();
