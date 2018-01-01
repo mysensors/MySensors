@@ -24,36 +24,45 @@
 * @ingroup internals
 * @{
 *
-*
 * Gateway transport-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
-* -[!] Exclamation mark is prepended in case of error
-* -SYSTEM:
-*  -<b>GWT</b>: messages emitted by MyGatewayTransport
-* -SUB SYSTEMS:
-*   -GWT:<b>TIN</b>		from @ref gatewayTransportInit()
-*   -GWT:<b>TPS</b>		from @ref gatewayTransportSend()
-*   -GWT:<b>RFC</b>		from _readFromClient()
-*   -GWT:<b>TSA</b>		from @ref gatewayTransportAvailable()
-*   -GWT:<b>TRC</b>		from @ref gatewayTransportReceive()
+* - [!] Exclamation mark is prepended in case of error
+* - SYSTEM:
+*  - <b>GWT</b>: messages emitted by MyGatewayTransport
+* - SUB SYSTEMS:
+*  - GWT:<b>TIN</b>		from @ref gatewayTransportInit()
+*  - GWT:<b>TPS</b>		from @ref gatewayTransportSend()
+*  - GWT:<b>IMQ</b>		from incomingMQTT()
+*  - GWT:<b>RMQ</b>		from reconnectMQTT()
+*  - GWT:<b>TPC</b>		from gatewayTransportConnect()
+*  - GWT:<b>RFC</b>		from _readFromClient()
+*  - GWT:<b>TSA</b>		from @ref gatewayTransportAvailable()
+*  - GWT:<b>TRC</b>		from @ref gatewayTransportReceive()
 *
 * Gateway transport debug log messages :
 *
 * |E| SYS | SUB   | Message                   | Comment
 * |-|-----|-------|---------------------------|---------------------------------------------------------------------
 * | | GWT | TIN   | CONNECTING...             | Connecting to router
-* | | GWT | TIN   | IP=%s                     | IP address obtained
+* | | GWT | TIN   | IP=%%s                    | IP address [%%s] obtained
 * |!| GWT | TIN   | DHCP FAIL                 | DHCP request failed
 * | | GWT | TIN   | ETH OK                    | Connected to network
 * |!| GWT | TIN   | ETH FAIL                  | Connection failed
+* | | GWT | TPS   | TOPIC=%%s,MSG SENT        | MQTT message sent on topic [%%s]
 * | | GWT | TPS   | ETH OK                    | Connected to network
 * |!| GWT | TPS   | ETH FAIL                  | Connection failed
-* | | GWT | RFC   | C%d,MSG=%s                | Received message [%s] from client [%d]
-* |!| GWT | RFC   | C%d,MSG TOO LONG          | Received message from client [%d] too long
-* | | GWT | TSA   | UDP MSG=%s                | Received UDP message [%s]
+* | | GWT | IMQ   | TOPIC=%%s,MSG RECEIVE     | MQTT message received on topic [%%s]
+* | | GWT | RMQ   | MQTT RECONNECT            | Reconnecting to MQTT broker
+* | | GWT | RMQ   | MQTT CONNECTED            | Connected to MQTT broker
+* | | GWT | TPC   | CONNECTING...             | Connecting to MQTT broker
+* | | GWT | TPC   | IP=%%s                    | IP address [%%s] obtained
+* |!| GWT | TPC   | DHCP FAIL                 | DHCP request failed
+* | | GWT | RFC   | C=%%d,MSG=%%s             | Received message [%%s] from client [%%d]
+* |!| GWT | RFC   | C=%%d,MSG TOO LONG        | Received message from client [%%d] too long
+* | | GWT | TSA   | UDP MSG=%%s               | Received UDP message [%%s]
 * | | GWT | TSA   | ETH OK                    | Connected to network
 * |!| GWT | TSA   | ETH FAIL                  | Connection failed
-* | | GWT | TSA   | C%d,DISCONNECTED          | Client [%d] disconnected
-* | | GWT | TSA   | C%d,CONNECTED             | Client [%d] connected
+* | | GWT | TSA   | C=%d,DISCONNECTED         | Client [%%d] disconnected
+* | | GWT | TSA   | C=%d,CONNECTED            | Client [%%d] connected
 * |!| GWT | TSA   | NO FREE SLOT              | No free slot for client
 * |!| GWT | TRC   | IP RENEW FAIL             | IP renewal failed
 *

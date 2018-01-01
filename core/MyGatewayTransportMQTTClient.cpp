@@ -63,7 +63,7 @@ bool gatewayTransportSend(MyMessage &message)
 	}
 	setIndication(INDICATION_GW_TX);
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
-	GATEWAY_DEBUG(PSTR("GWT:TPS:Sending message on topic: %s\n"), topic);
+	GATEWAY_DEBUG(PSTR("GWT:TPS:TOPIC=%s,MSG SENT\n"), topic);
 #if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
 	bool retain = mGetCommand(message) == C_SET ||
 	              (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
@@ -75,20 +75,20 @@ bool gatewayTransportSend(MyMessage &message)
 
 void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
 {
-	GATEWAY_DEBUG(PSTR("GWT:TPS:Message arrived on topic: %s\n"), topic);
+	GATEWAY_DEBUG(PSTR("GWT:IMQ:TOPIC=%s, MSG RECEIVED\n"), topic);
 	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
 }
 
 bool reconnectMQTT(void)
 {
-	GATEWAY_DEBUG(PSTR("GWT:TPS:Attempting MQTT connection...\n"));
+	GATEWAY_DEBUG(PSTR("GWT:RMQ:MQTT RECONNECT\n"));
 	// Attempt to connect
 	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID
 #if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
 	                         , MY_MQTT_USER, MY_MQTT_PASSWORD
 #endif
 	                        )) {
-		GATEWAY_DEBUG(PSTR("GWT:TPS:MQTT connected\n"));
+		GATEWAY_DEBUG(PSTR("GWT:RMQ:MQTT CONNECTED\n"));
 
 		// Send presentation of locally attached sensors (and node if applicable)
 		presentNode();
