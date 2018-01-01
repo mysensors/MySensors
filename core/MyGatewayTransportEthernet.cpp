@@ -132,9 +132,9 @@ bool gatewayTransportInit(void)
 	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
 	while (WiFi.status() != WL_CONNECTED) {
 		wait(500);
-		GATEWAY_DEBUG(PSTR("."));
+		GATEWAY_DEBUG(PSTR("GWT:TIN:CONNECTING...\n"));
 	}
-	GATEWAY_DEBUG(PSTR("IP: %s\n"), WiFi.localIP().toString().c_str());
+	GATEWAY_DEBUG(PSTR("GWT:TIN:IP=%s\n"), WiFi.localIP().toString().c_str());
 #endif /* End of MY_ESP8266_SSID */
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
 	// Nothing to do here
@@ -147,12 +147,13 @@ bool gatewayTransportInit(void)
 #else /* Else part of MY_IP_GATEWAY_ADDRESS && MY_IP_SUBNET_ADDRESS */
 	// Get IP address from DHCP
 	if (!Ethernet.begin(_ethernetGatewayMAC)) {
-		GATEWAY_DEBUG(PSTR("DHCP FAILURE..."));
+		GATEWAY_DEBUG(PSTR("!GWT:TIN:DHCP FAIL\n"));
 		_w5100_spi_en(false);
 		return false;
 	}
 #endif /* End of MY_IP_GATEWAY_ADDRESS && MY_IP_SUBNET_ADDRESS */
-	GATEWAY_DEBUG(PSTR("IP: %" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8 "\n"), Ethernet.localIP()[0],
+	GATEWAY_DEBUG(PSTR("GWT:TIN:IP=%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8 "\n"),
+	              Ethernet.localIP()[0],
 	              Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
 	// give the Ethernet interface a second to initialize
 	delay(1000);
@@ -170,14 +171,14 @@ bool gatewayTransportInit(void)
 #else
 	if (client.connect(_ethernetControllerIP, MY_PORT)) {
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-		GATEWAY_DEBUG(PSTR("Eth: connect\n"));
+		GATEWAY_DEBUG(PSTR("GWT:TIN:ETH OK\n"));
 		_w5100_spi_en(false);
 		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 		_w5100_spi_en(true);
 		presentNode();
 	} else {
 		client.stop();
-		GATEWAY_DEBUG(PSTR("Eth: Failed to connect\n"));
+		GATEWAY_DEBUG(PSTR("!GWT:TIN:ETH FAIL\n"));
 	}
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
@@ -219,14 +220,14 @@ bool gatewayTransportSend(MyMessage &message)
 #else
 		if (client.connect(_ethernetControllerIP, MY_PORT)) {
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-			GATEWAY_DEBUG(PSTR("Eth: connect\n"));
+			GATEWAY_DEBUG(PSTR("GWT:TPS:ETH OK\n"));
 			_w5100_spi_en(false);
 			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
 			// connecting to the server failed!
-			GATEWAY_DEBUG(PSTR("Eth: Failed to connect\n"));
+			GATEWAY_DEBUG(PSTR("!GWT:TPS:ETH FAIL\n"));
 			_w5100_spi_en(false);
 			return false;
 		}
@@ -262,7 +263,7 @@ bool _readFromClient(uint8_t i)
 			if (inChar == '\n' || inChar == '\r') {
 				// Add string terminator and prepare for the next message
 				inputString[i].string[inputString[i].idx] = 0;
-				GATEWAY_DEBUG(PSTR("Client %" PRIu8 ": %s\n"), i, inputString[i].string);
+				GATEWAY_DEBUG(PSTR("GWT:RFC:C%" PRIu8 ",MSG=%s\n"), i, inputString[i].string);
 				inputString[i].idx = 0;
 				if (protocolParse(_ethernetMsg, inputString[i].string)) {
 					return true;
@@ -274,7 +275,7 @@ bool _readFromClient(uint8_t i)
 			}
 		} else {
 			// Incoming message too long. Throw away
-			GATEWAY_DEBUG(PSTR("Client %" PRIu8 ": Message too long\n"), i);
+			GATEWAY_DEBUG(PSTR("!GWT:RFC:C%" PRIu8 ",MSG TOO LONG\n"), i);
 			inputString[i].idx = 0;
 			// Finished with this client's message. Next loop() we'll see if there's more to read.
 			break;
@@ -292,7 +293,7 @@ bool _readFromClient(void)
 			if (inChar == '\n' || inChar == '\r') {
 				// Add string terminator and prepare for the next message
 				inputString.string[inputString.idx] = 0;
-				GATEWAY_DEBUG(PSTR("Eth: %s\n"), inputString.string);
+				GATEWAY_DEBUG(PSTR("GWT:RFC:MSG=%s\n"), inputString.string);
 				inputString.idx = 0;
 				if (protocolParse(_ethernetMsg, inputString.string)) {
 					return true;
@@ -304,7 +305,7 @@ bool _readFromClient(void)
 			}
 		} else {
 			// Incoming message too long. Throw away
-			GATEWAY_DEBUG(PSTR("Eth: Message too long\n"));
+			GATEWAY_DEBUG(PSTR("!GWT:RFC:MSG TOO LONG\n"));
 			inputString.idx = 0;
 			// Finished with this client's message. Next loop() we'll see if there's more to read.
 			break;
@@ -331,7 +332,7 @@ bool gatewayTransportAvailable(void)
 		//GATEWAY_DEBUG(PSTR("UDP packet available. Size:%" PRIu8 "\n"), packet_size);
 		_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 		inputString.string[packet_size] = 0;
-		GATEWAY_DEBUG(PSTR("UDP packet received: %s\n"), inputString.string);
+		GATEWAY_DEBUG(PSTR("GWT:TSA:UDP MSG=%s\n"), inputString.string);
 		_w5100_spi_en(false);
 		const bool ok = protocolParse(_ethernetMsg, inputString.string);
 		if (ok) {
@@ -347,13 +348,13 @@ bool gatewayTransportAvailable(void)
 #else
 		if (client.connect(_ethernetControllerIP, MY_PORT)) {
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-			GATEWAY_DEBUG(PSTR("Eth: connect\n"));
+			GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
 			_w5100_spi_en(false);
 			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
-			GATEWAY_DEBUG(PSTR("Eth: Failed to connect\n"));
+			GATEWAY_DEBUG(PSTR("!GWT:TSA:ETH FAIL\n"));
 			_w5100_spi_en(false);
 			return false;
 		}
@@ -372,14 +373,14 @@ bool gatewayTransportAvailable(void)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (!clients[i].connected()) {
 			if (clientsConnected[i]) {
-				GATEWAY_DEBUG(PSTR("Client %" PRIu8 " disconnected\n"), i);
+				GATEWAY_DEBUG(PSTR("GWT:TSA:C%" PRIu8 ",DISCONNECTED\n"), i);
 				clients[i].stop();
 			}
 			//check if there are any new clients
 			if (_ethernetServer.hasClient()) {
 				clients[i] = _ethernetServer.available();
 				inputString[i].idx = 0;
-				GATEWAY_DEBUG(PSTR("Client %" PRIu8 " connected\n"), i);
+				GATEWAY_DEBUG(PSTR("GWT:TSA:C%" PRIu8 ",CONNECTED\n"), i);
 				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 				// Send presentation of locally attached sensors (and node if applicable)
 				presentNode();
@@ -391,7 +392,7 @@ bool gatewayTransportAvailable(void)
 	}
 	if (allSlotsOccupied && _ethernetServer.hasClient()) {
 		//no free/disconnected spot so reject
-		GATEWAY_DEBUG(PSTR("No free slot available\n"));
+		GATEWAY_DEBUG(PSTR("!GWT:TSA:NO FREE SLOT\n"));
 		EthernetClient c = _ethernetServer.available();
 		c.stop();
 	}
@@ -411,7 +412,7 @@ bool gatewayTransportAvailable(void)
 		if (client != newclient) {
 			client.stop();
 			client = newclient;
-			GATEWAY_DEBUG(PSTR("Eth: connect\n"));
+			GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
 			_w5100_spi_en(false);
 			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
@@ -420,7 +421,7 @@ bool gatewayTransportAvailable(void)
 	}
 	if (client) {
 		if (!client.connected()) {
-			GATEWAY_DEBUG(PSTR("Eth: disconnect\n"));
+			GATEWAY_DEBUG(PSTR("!GWT:TSA:ETH FAIL\n"));
 			client.stop();
 		} else {
 			if (_readFromClient()) {
@@ -460,7 +461,7 @@ void gatewayTransportRenewIP(void)
 		return;
 	}
 	if (Ethernet.maintain() & ~(0x06)) {
-		GATEWAY_DEBUG(PSTR("IP was not renewed correctly\n"));
+		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
 		/* Error occured -> IP was not renewed */
 		return;
 	}
