@@ -584,7 +584,7 @@ LOCAL bool RFM69_setRadioMode(const rfm69_radio_mode_t newRadioMode)
 	RFM69_writeReg(RFM69_REG_OPMODE, regMode);
 
 	// Waking from sleep mode may take longer
-	if (RFM69.radioMode == RFM69_RADIO_MODE_SLEEP) {
+	if (newRadioMode == RFM69_RADIO_MODE_SLEEP) {
 		// wait for ModeReady
 		if (!RFM69_isModeReady()) {
 			return false;
