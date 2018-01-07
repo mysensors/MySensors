@@ -136,7 +136,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 		} else {
 			status = *prx++; // status is 1st byte of receive buffer
 			// decrement before to skip status byte
-			while (--size) {
+			while (--size && (buf != NULL)) {
 				*buf++ = *prx++;
 			}
 		}
