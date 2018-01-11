@@ -1102,20 +1102,12 @@
 #endif
 
 /**
- * @def MY_DISABLE_SIGNAL_REPORT
- * @ingroup memorysavings
- * @brief If defined, signal report functionality will be unavailable.
- * @see MY_SIGNAL_REPORT_ENABLED
- */
-/**
- * @def MY_SIGNAL_REPORT_ENABLED
- * @brief Enables signal report functionality.
- * @note Enabled by default. This feature adds ~1kB code to the sketch.
- * @see MY_DISABLE_SIGNAL_REPORT
- */
-#ifndef MY_DISABLE_SIGNAL_REPORT
-#define MY_SIGNAL_REPORT_ENABLED
-#endif
+* @def MY_SIGNAL_REPORT_ENABLED
+* @brief Enables signal report functionality.
+* @note This feature adds ~1kB code to the sketch.
+*/
+//#define MY_SIGNAL_REPORT_ENABLED
+
 /** @}*/ // End of RoutingNodeSettingGrpPub group
 
 /**
@@ -1924,7 +1916,7 @@
 #define MY_REPEATER_FEATURE
 #define MY_PASSIVE_NODE
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
-#define MY_DISABLE_SIGNAL_REPORT
+#define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
 #define MY_INDICATION_HANDLER
