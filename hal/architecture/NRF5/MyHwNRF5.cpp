@@ -92,7 +92,7 @@ bool hwInit()
 	NRF_UART0->POWER = 0;
 #endif
 #else
-	// Confiure UART
+	// Configure UART
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {
@@ -230,7 +230,7 @@ void hwSleepPrepare(uint32_t ms)
 		if (ms<512000) {
 			// prescaler 0, 30.517 μs resolution -> max 512 s sleep
 			MY_HW_RTC->PRESCALER =  0;
-			// Set compare register to 1/30.517 µs to garantee event triggering
+			// Set compare register to 1/30.517 µs to guarantee event triggering
 			// A minimum of 2 ticks must be guaranteed
 			// (1000/32768)<<12 == 125
 			MY_HW_RTC->CC[0] = max(((ms << 12) / 125), 2);
@@ -355,7 +355,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
 			attachInterrupt(interrupt2, wakeUp2, mode2);
 		}
 
-		// Reset attrubute
+		// Reset attribute
 		_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
 	}
 
@@ -421,7 +421,7 @@ uint16_t hwCPUVoltage()
 	// Sampling is done with lowest resolution to minimize the time
 	// 20uS@260uA
 
-	// Concurrent ressource: disable
+	// Concurrent resource: disable
 	uint32_t lpcomp_enabled = NRF_LPCOMP->ENABLE;
 	NRF_LPCOMP->ENABLE = 0;
 

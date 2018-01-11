@@ -450,7 +450,7 @@ void gatewayTransportRenewIP(void)
 	 0 - nothing happened
 	 1 - renew failed
 	 2 - renew success
-	 3 - rebinf failed
+	 3 - rebind failed
 	 4 - rebind success
 	 */
 	static unsigned long next_time = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
@@ -462,7 +462,7 @@ void gatewayTransportRenewIP(void)
 	}
 	if (Ethernet.maintain() & ~(0x06)) {
 		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
-		/* Error occured -> IP was not renewed */
+		/* Error occurred -> IP was not renewed */
 		return;
 	}
 	_w5100_spi_en(false);

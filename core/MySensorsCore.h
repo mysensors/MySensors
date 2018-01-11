@@ -178,7 +178,7 @@ bool sendHeartbeat(const bool ack = false);
 
 /**
 * Send this nodes signal strength to gateway.
-* @param level Signal strength can be rssi if the radio provide it, or another kind of calculation
+* @param level Signal strength can be RSSI if the radio provide it, or another kind of calculation
 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 * @return true Returns true if message reached the first stop on its way to destination.
 */
@@ -414,7 +414,7 @@ void receive(const MyMessage &message)  __attribute__((weak));
 */
 void receiveTime(uint32_t)  __attribute__((weak));
 /**
-* @brief Node presenation
+* @brief Node presentation
 */
 void presentation(void)  __attribute__((weak));
 /**

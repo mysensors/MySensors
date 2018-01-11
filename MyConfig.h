@@ -158,7 +158,7 @@
  * @def MY_SERIAL_OUTPUT_SIZE
  * @brief Maximum characters for serial output.
  *
- * If you are running extreamely low on memory, reducing this size might just save your day.
+ * If you are running extremely low on memory, reducing this size might just save your day.
  */
 #ifndef MY_SERIAL_OUTPUT_SIZE
 #define MY_SERIAL_OUTPUT_SIZE (120u)
@@ -394,7 +394,7 @@
 
 /**
  * @def MY_RF24_DATARATE
- * @brief RF24 datarate.
+ * @brief RF24 data rate.
  *
  * - RF24_250KBPS for 250kbs
  * - RF24_1MBPS for 1Mbps
@@ -633,7 +633,7 @@
 
 /**
  * @def MY_RFM69_TX_POWER_DBM
- * @brief Set TX power level, default 5dBm (overriden if ATC mode enabled).
+ * @brief Set TX power level, default 5dBm (overridden if ATC mode enabled).
  */
 #ifndef MY_RFM69_TX_POWER_DBM
 #define MY_RFM69_TX_POWER_DBM (5)
@@ -895,7 +895,7 @@
 
 /**
  * @def MY_RFM95_TX_POWER_DBM
- * @brief Set TX power level, default 13dBm (overriden if ATC mode enabled)
+ * @brief Set TX power level, default 13dBm (overridden if ATC mode enabled)
  *
  * See here https://en.wikipedia.org/wiki/Short_Range_Devices
  */
@@ -1506,7 +1506,7 @@
  * with the regular software and ATSHA204A based modes.
  *
  * If the provided password is shorter than the size of the HMAC or %AES key, it will be null-padded
- * to accomodate the key size in question. A 32 character password is the maximum length. Any
+ * to accommodate the key size in question. A 32 character password is the maximum length. Any
  * password longer than that will be truncated.
  */
 //#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
@@ -1546,7 +1546,7 @@
  *        requirements.
  *
  * Use this for evaluating security. It allows for gradual introduction of signing requirements in
- * a network. Nodes that present themselves as not requiering signing or whitelisting will be
+ * a network. Nodes that present themselves as not requiring signing or whitelisting will be
  * cleared of this requirement at the receiving end. A gateway which require signatures will only do
  * so from nodes that in turn require signatures.
  *
@@ -1626,7 +1626,7 @@
 /** @}*/ // End of SigningSettingGrpPub group
 
 /**
- * @defgroup MyLockgrppub Node locknig
+ * @defgroup MyLockgrppub Node locking
  * @ingroup MyConfig
  * @brief These options control node lock related configurations.
  *
@@ -1639,7 +1639,7 @@
  * message to the gateway/controller with 30 minute intervals. Payload is a string with a reason for
  * the locking.
  *
- * The string is abbreviated to accomodate a signature. The following abbreviations exist at the
+ * The string is abbreviated to accommodate a signature. The following abbreviations exist at the
  * moment:
  * - LDB (Locked During Boot)
  * - TMNR (Too Many Nonce Requests)
@@ -1668,7 +1668,7 @@
 
 /**
  * @def MY_NODE_UNLOCK_PIN
- * @brief By grounding this pin durig reset of a locked node, the node will unlock.
+ * @brief By grounding this pin during reset of a locked node, the node will unlock.
  *
  * If using a secure bootloader, grounding the pin is the only option to reactivate the node.
  * If using stock Android bootloader or a DualOptiBoot it is also possible to download a sketch
@@ -1680,9 +1680,9 @@
 
 /**
  * @def MY_NODE_LOCK_COUNTER_MAX
- * @brief Maximum accepted occurances of suspected malicious activity in a node.
+ * @brief Maximum accepted occurrences of suspected malicious activity in a node.
  *
- * Counter decrements on reoccuring incidents but resets if legitimate behaviour is identified.
+ * Counter decrements on reoccurring incidents but resets if legitimate behaviour is identified.
  */
 #ifndef MY_NODE_LOCK_COUNTER_MAX
 #define MY_NODE_LOCK_COUNTER_MAX (5)
@@ -1782,7 +1782,7 @@
 #define MY_NODE_TYPE "REPEATER"
 #elif defined(DOXYGEN)
 #define MY_IS_GATEWAY //!< true when configuration indicate a gateway device, @todo Mark these internals
-#define MY_NODE_TYPE  //!< "GW" for wateways, REPEATER" for repeaters, "NODE" for nodes, @todo Mark these internals
+#define MY_NODE_TYPE  //!< "GW" for gateways, REPEATER" for repeaters, "NODE" for nodes, @todo Mark these internals
 #else
 #define MY_IS_GATEWAY (false)
 #define MY_NODE_TYPE "NODE"

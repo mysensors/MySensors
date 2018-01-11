@@ -238,7 +238,7 @@ typedef enum {
 #define mGetVersion(_message) ((uint8_t)BF_GET(_message.version_length, 0, 2)) //!< Get version field
 
 #define mSetSigned(_message,_signed) BF_SET(_message.version_length, _signed, 2, 1) //!< Set signed field
-#define mGetSigned(_message) ((bool)BF_GET(_message.version_length, 2, 1)) //!< Get versignedsion field
+#define mGetSigned(_message) ((bool)BF_GET(_message.version_length, 2, 1)) //!< Get signed field
 
 #define mSetLength(_message,_length) BF_SET(_message.version_length, _length, 3, 5) //!< Set length field
 #define mGetLength(_message) ((uint8_t)BF_GET(_message.version_length, 3, 5)) //!< Get length field
@@ -352,7 +352,7 @@ typedef union {
 	// 5 bit - Length of payload
 	uint8_t command_ack_payload; // 3 bit - Command type
 	// 1 bit - Request an ack - Indicator that receiver should send an ack back.
-	// 1 bit - Is ack messsage - Indicator that this is the actual ack message.
+	// 1 bit - Is ack message - Indicator that this is the actual ack message.
 	// 3 bit - Payload data type
 	uint8_t type;            	 // 8 bit - Type varies depending on command
 	uint8_t sensor;          	 // 8 bit - Id of sensor that this message concerns.
