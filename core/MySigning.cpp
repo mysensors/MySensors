@@ -412,7 +412,7 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 	msg.data[1] = 0;
 }
 
-// Helper to process presentation mesages
+// Helper to process presentation messages
 static bool signerInternalProcessPresentation(MyMessage &msg)
 {
 	const uint8_t sender = msg.sender;
@@ -526,7 +526,7 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 	return true; // No need to further process I_SIGNING_PRESENTATION
 }
 
-// Helper to process nonce request mesages
+// Helper to process nonce request messages
 static bool signerInternalProcessNonceRequest(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)
@@ -555,7 +555,7 @@ static bool signerInternalProcessNonceRequest(MyMessage &msg)
 	return true; // No need to further process I_NONCE_REQUEST
 }
 
-// Helper to process nonce response mesages
+// Helper to process nonce response messages
 static bool signerInternalProcessNonceResponse(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)

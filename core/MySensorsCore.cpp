@@ -465,7 +465,7 @@ bool _processInternalMessages(void)
 		// sender is a node
 		if (type == I_REGISTRATION_REQUEST) {
 #if defined(MY_GATEWAY_FEATURE)
-			// registeration requests are exclusively handled by GW/Controller
+			// registration requests are exclusively handled by GW/Controller
 #if !defined(MY_REGISTRATION_CONTROLLER)
 			bool approveRegistration;
 
@@ -730,7 +730,7 @@ void _checkNodeLock(void)
 			_nodeLock("LDB"); //Locked during boot
 		}
 	} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
-		// Reset walue
+		// Reset value
 		hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
 	}
 #endif

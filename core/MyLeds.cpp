@@ -46,7 +46,7 @@ inline void ledsInit()
 	hwPinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
 #endif
 	prevTime = hwMillis() -
-	           LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
+	           LED_PROCESS_INTERVAL_MS;     // Subtract some, to make sure leds gets updated on first run.
 	ledsProcess();
 }
 

@@ -276,7 +276,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 		// Overwrite the first byte in the signature with the signing identifier
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
-		// Compare the caluclated signature with the provided signature
+		// Compare the calculated signature with the provided signature
 		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
 		                 MIN(MAX_PAYLOAD-mGetLength(msg), 32))) {
 			return false;

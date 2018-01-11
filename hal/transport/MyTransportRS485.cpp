@@ -416,7 +416,7 @@ int16_t transportGetTxPowerLevel(void)
 
 bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
-	// not possbile
+	// not possible
 	(void)powerPercent;
 	return false;
 }
