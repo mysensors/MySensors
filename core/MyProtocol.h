@@ -28,7 +28,7 @@
 // returns true if successfully parsed the input string
 bool protocolParse(MyMessage &message, char *inputString);
 
-// Format MyMessage to the protocol represenataion
+// Format MyMessage to the protocol representation
 char *protocolFormat(MyMessage &message);
 
 #endif

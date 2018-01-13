@@ -1,22 +1,9 @@
 #!groovy
 def call(config) {
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Documentation)', 'Generating...', '${BUILD_URL}flowGraphTable/')
-	// Generate doxygen file for Raspberry Pi configure command
-	sh """#!/bin/bash +x
+	sh """#!/bin/bash
 				cd ${config.repository_root}
-				echo -e "/**\n * @defgroup RaspberryPiGateway Raspberry Pi Gateway\n * @ingroup MyConfigGrp\n * @brief Configuration options for the Raspberry Pi Gateway\n@{\n@verbatim" > configure.h
-				grep -A999 '<<EOF' configure | grep -B999 EOF | grep -v 'EOF' >> configure.h
-				echo -e "@endverbatim\n@}*/\n" >> configure.h"""
-	sh """#!/bin/bash +x
-				cd ${config.repository_root}
-				export PROJECTNUMBER=\$(
-					if [[ \$(git rev-parse --abbrev-ref HEAD) == "master" ]]; then
-						git describe --tags ;
-					else
-						git rev-parse --short HEAD ;
-					fi
-				)
-				echo 'WARN_LOGFILE=doxygen.log' >> Doxyfile && doxygen"""
+				Documentation/doxygen.sh"""
 	warnings canComputeNew: false, canResolveRelativePaths: false,
 		defaultEncoding: '',
 		excludePattern: '''.*/sha204_library\\.h,.*/drivers/Linux/.*,.*/cores/esp8266/.*,hardware/.*''',

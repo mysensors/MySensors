@@ -43,7 +43,7 @@
  * and not enabled by default.
  *
  * If you do want the additional security layer signing provides, you pick the backend of your
- * choise in your sketch. Currently, two compatible backends are supported; @ref MY_SIGNING_ATSHA204
+ * choice in your sketch. Currently, two compatible backends are supported; @ref MY_SIGNING_ATSHA204
  * (hardware backed) and @ref MY_SIGNING_SOFT (software backed). There also exist a simplified
  * variant (@ref MY_SIGNING_SIMPLE_PASSWD) of the software backend which only require one setting
  * to activate.
@@ -54,7 +54,7 @@
  * @note If you change the default pin (A3) make sure you use a pin that supports input/output
  *       (ex. A6 & A7 on a Pro Mini are input only pins).
  *
- * To use signng, you need to perform three major steps which are described below.
+ * To use signing, you need to perform three major steps which are described below.
  *
  * <b>Firstly</b>, you need to make sure to pick a backend to use.
  * @code{.cpp}
@@ -182,7 +182,7 @@
  * * If a node does require signing, any unsigned message sent to the node will be rejected.
  * This also applies to the gateway.
  * * Your radio communication quality is expected to work fine (if any NACK happen on a signing
- * related message, it will fail, and enabeling signing will put maximum strain on your RF link as
+ * related message, it will fail, and enabling signing will put maximum strain on your RF link as
  * maximum sized packets are transmitted in the network). See @ref MySigningTroubleshootinggrp.
  * * All nodes and gateways in a network maintain a table where the signing preferences of all nodes
  * are stored. This is also stored in EEPROM so if a node or gateway reboots, the other nodes does
@@ -309,7 +309,7 @@
  * You have a securely located gateway and a lock somewhere inside your "trusted environment" (e.g.
  * inside your house door, the door to your dungeon or similar).<br>
  * You need to make your node require signed messages but you do not necessarily need to make your
- * gateway require signed messsages (unless you are concerned that someone might spoof the lock
+ * gateway require signed messages (unless you are concerned that someone might spoof the lock
  * status of your lock).<br>
  * Configuration example for the secure lock node:<br>
  * @code{.cpp}
@@ -394,7 +394,7 @@
  * That is enough to enable protection from both Eve and Mallory in your network
  * although if you do not also enable encryption, Eve can eavesdrop, but not do anything about,
  * your messages (except possibly preventing them from arriving). @ref MY_SIGNING_SIMPLE_PASSWD also
- * enable encryption autmatically.
+ * enable encryption automatically.
  *
  * How are the messages actually affected by the signing?<br>
  * The following illustration shows what part of the message is signed, and where the signature is
@@ -433,7 +433,7 @@
  * @section MySigninggrpbackground Background and concepts
  *
  * Suppose two participants, Alice and Bob, wants to exchange a message. Alice sends a message to
- * Bob. In MySensors “language” Alice could be a gateway and Bob an actuator (light swich,
+ * Bob. In MySensors “language” Alice could be a gateway and Bob an actuator (light switch,
  * electronic lock, etc). But to be generic, we will substitute the term “gateway” with Alice and a
  * “node” with Bob (although the reverse relationship is also supported).
  *
@@ -608,7 +608,7 @@ typedef struct {
  *
  * This function makes sure that the internal states of the signing infrastructure
  * is set to a known initial state.
- * \n@b Usage: This fuction should be called before any signing related operations take place.
+ * \n@b Usage: This function should be called before any signing related operations take place.
  */
 void signerInit(void);
 
@@ -617,10 +617,10 @@ void signerInit(void);
  *
  * This function makes sure any signing related presentation info is shared with the other part.
  * The presentation of the gateways signing preferences is done in @ref signerProcessInternal().
- * \n@b Usage: This function should be called by the presentation routine of the mysensors library.
+ * \n@b Usage: This function should be called by the presentation routine of the MySensors library.
  * You only need to call this directly from a sketch to set up a node to node signed message exchange.
  * If you do call this directly from a sketch, and you at some point change your sketch to go from
- * requireing signing to not requireing signatures, you need to present this change to the node at least
+ * requiring signing to not requiring signatures, you need to present this change to the node at least
  * once, so it can update its requirements tables accordingly. Or it will keep believing that this node
  * require signatures and attempt to send signed messages to it.
  *
@@ -632,7 +632,7 @@ void signerPresentation(MyMessage &msg, uint8_t destination);
 /**
  * @brief Manages internal signing message handshaking.
  *
- * This function takes care of signing related message handshaknig such as nonce exchange.
+ * This function takes care of signing related message handshaking such as nonce exchange.
  * \n@b Usage: This function should be called by the incoming message handler before any further message
  * processing is performed on internal messages. This function should only be called for @ref C_INTERNAL class
  * messages.
@@ -720,7 +720,7 @@ void signerSha256Init(void);
 void signerSha256Update(const uint8_t* data, size_t sz);
 
 /**
- * @brief Finalize an ongong hash calculation session and return the hash.
+ * @brief Finalize an ongoing hash calculation session and return the hash.
  *
  * The returned hash size is always 32 bytes. Buffer can be assumed to be valid
  * until @ref signerSha256Init() is called again.
@@ -816,7 +816,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * |!| SGN | NCE | GEN											| Failed to generate nonce
  * | | SGN | NCE | NSUP (DROPPED)						| Ignored nonce/request for nonce (signing not supported)
  * | | SGN | NCE | FROM='node'							| Received nonce from 'node'
- * | | SGN | NCE | 'sender'!='dst' (DROPPED)| Ignoring nonce as it did not come from the desgination of the message to sign
+ * | | SGN | NCE | 'sender'!='dst' (DROPPED)| Ignoring nonce as it did not come from the designation of the message to sign
  * |!| SGN | BND | INIT FAIL								| Failed to initialize signing backend
  * |!| SGN | BND | PWD<8										| Signing password too short
  * |!| SGN | BND | PER											| Backend not personalized
@@ -851,9 +851,9 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  *
  * @subsection MySigningTroubleshootingSymptomStFail Signing fails and logs show st=fail on transmissions
  *
- * This is actually not a signing problem, although ofthen st=fail becomes st=ok when signing is disabled.
+ * This is actually not a signing problem, although often st=fail becomes st=ok when signing is disabled.
  * This is by far the most commonly reported problem with signing, but the problems is not with signing,
- * it is with radio performence.<br>
+ * it is with radio performance.<br>
  * This is a typical log which might look like a signing related issue but isn't:
  * @code{.unparsed}
  * 0;255;3;0;9;Skipping security for command 3 type 16
@@ -870,7 +870,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * The reason for this is that when signing is used, the messages transmitted become relatively large.<br>
  * Because of this, the message is more sensitive to noise, and the chance for a message to get scrambled
  * increase with the message size. Please refer to the troubleshooting section at the MySensors forum for
- * information on how to improve radio performence.<br>
+ * information on how to improve radio performance.<br>
  * This is a good place to start: https://forum.mysensors.org/topic/666/debug-faq-and-how-ask-for-help
  *
  * @subsection MySigningTroubleshootingSymptomNonce Failed to generate nonce

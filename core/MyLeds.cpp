@@ -46,7 +46,7 @@ inline void ledsInit()
 	hwPinMode(MY_DEFAULT_ERR_LED_PIN, OUTPUT);
 #endif
 	prevTime = hwMillis() -
-	           LED_PROCESS_INTERVAL_MS;     // Substract some, to make sure leds gets updated on first run.
+	           LED_PROCESS_INTERVAL_MS;     // Subtract some, to make sure leds gets updated on first run.
 	ledsProcess();
 }
 
@@ -58,7 +58,9 @@ void ledsProcess()
 	}
 	prevTime = hwMillis();
 
+#if defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	uint8_t state;
+#endif
 
 	// For an On/Off ratio of 4, the pattern repeated will be [on, on, on, off]
 	// until the counter becomes 0.

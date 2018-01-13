@@ -18,7 +18,7 @@
  *
  * Based on Mike McCauley's RFM95 library, Copyright (C) 2014 Mike McCauley <mikem@airspayce.com>
  * Radiohead http://www.airspayce.com/mikem/arduino/RadioHead/index.html
- * RFM95 driver refactored and optimized for MySensors, Copyright (C) 2016 Olivier Mauti <olivier@mysensors.org>
+ * RFM95 driver refactored and optimized for MySensors, Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
  *
  */
 
@@ -59,8 +59,8 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	uint8_t status;
 	uint8_t* current = buf;
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.beginTransaction(SPISettings(MY_RFM95_SPI_SPEED, MY_RFM95_SPI_DATA_ORDER,
-	                                  MY_RFM95_SPI_DATA_MODE));
+	RFM95_SPI.beginTransaction(SPISettings(MY_RFM95_SPI_SPEED, MY_RFM95_SPI_DATA_ORDER,
+	                                       MY_RFM95_SPI_DATA_MODE));
 #endif
 	RFM95_csn(LOW);
 #if defined(LINUX_SPI_BCM)
@@ -76,14 +76,14 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 			*ptx++ = *current++;
 		}
 	}
-	_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
+	RFM95_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
 	if (aReadMode) {
 		if (size == 2) {
 			status = *++prx;   // result is 2nd byte of receive buffer
 		} else {
 			status = *prx++; // status is 1st byte of receive buffer
 			// decrement before to skip status byte
-			while (--size) {
+			while (--size && (buf != NULL)) {
 				*buf++ = *prx++;
 			}
 		}
@@ -91,21 +91,21 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 		status = *prx; // status is 1st byte of receive buffer
 	}
 #else
-	status = _SPI.transfer(cmd);
+	status = RFM95_SPI.transfer(cmd);
 	while (len--) {
 		if (aReadMode) {
-			status = _SPI.transfer((uint8_t)RFM95_NOP);
+			status = RFM95_SPI.transfer((uint8_t)RFM95_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
 		} else {
-			status = _SPI.transfer(*current++);
+			status = RFM95_SPI.transfer(*current++);
 		}
 	}
 #endif
 	RFM95_csn(HIGH);
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.endTransaction();
+	RFM95_SPI.endTransaction();
 #endif
 	return status;
 }
@@ -138,10 +138,10 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	RFM95_powerUp();
 #if defined(MY_RFM95_RST_PIN)
 	hwPinMode(MY_RFM95_RST_PIN, OUTPUT);
-	hwDigitalWrite(MY_RFM95_RST_PIN, HIGH);
+	hwDigitalWrite(MY_RFM95_RST_PIN, LOW);
 	// 100uS
 	delayMicroseconds(100);
-	hwDigitalWrite(MY_RFM95_RST_PIN, LOW);
+	hwDigitalWrite(MY_RFM95_RST_PIN, HIGH);
 	// wait until chip ready
 	delay(5);
 	RFM95_DEBUG(PSTR("RFM95:INIT:PIN,CS=%" PRIu8 ",IQP=%" PRIu8 ",IQN=%" PRIu8 ",RST=%" PRIu8 "\n"),
@@ -165,7 +165,7 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	// SPI init
 	hwDigitalWrite(MY_RFM95_CS_PIN, HIGH);
 	hwPinMode(MY_RFM95_CS_PIN, OUTPUT);
-	_SPI.begin();
+	RFM95_SPI.begin();
 
 	// Set LoRa mode (during sleep mode)
 	RFM95_writeReg(RFM95_REG_01_OP_MODE, RFM95_MODE_SLEEP | RFM95_LONG_RANGE_MODE);
@@ -188,7 +188,7 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	// IRQ
 	hwPinMode(MY_RFM95_IRQ_PIN, INPUT);
 #if defined(SPI_HAS_TRANSACTION) && !defined(ESP8266) && !defined(MY_SOFTSPI)
-	_SPI.usingInterrupt(MY_RFM95_IRQ_NUM);
+	RFM95_SPI.usingInterrupt(MY_RFM95_IRQ_NUM);
 #endif
 
 	if (!RFM95_sanityCheck()) {

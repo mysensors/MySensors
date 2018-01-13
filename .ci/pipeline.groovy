@@ -109,21 +109,15 @@ def call(Closure body) {
 					stage('ESP8266 (tests)') {
 						arduino.buildEsp8266(config, config.tests, 'Tests')
 					}
-					stage('ArduinoNano (tests)') {
-						arduino.buildArduinoNano(config, config.tests, 'Tests')
+					stage('STM32F1 (tests)') {
+						arduino.buildSTM32F1(config, config.tests, 'Tests')
 					}
 					stage('ArduinoUno (tests)') {
 						arduino.buildArduinoUno(config, config.tests, 'Tests')
 					}
-					stage('ArduinoProMini (tests)') {
-						arduino.buildArduinoPro(config, config.tests, 'Tests')
-					}
 					stage('ArduinoMega (tests)') {
 						arduino.buildArduinoMega(config, config.tests, 'Tests')
 					}
-				}
-			}, ArduinoExampleBuilds: {
-				lock(quantity: 1, resource: 'arduinoExampleEnv') {
 					stage('MySensorsMicro (examples)') {
 						arduino.buildMySensorsMicro(config, config.examples, 'Examples')
 					}
@@ -148,14 +142,14 @@ def call(Closure body) {
 					stage('ESP8266 (examples)') {
 						arduino.buildEsp8266(config, config.examples, 'Examples')
 					}
-					stage('ArduinoNano (examples)') {
-						arduino.buildArduinoNano(config, config.examples, 'Examples')
+					// No point in building examples for STM32F1 yet
+					/*
+					stage('STM32F1 (Examples)') {
+						arduino.buildSTM32F1(config, config.tests, 'Examples')
 					}
+					*/
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
-					}
-					stage('ArduinoProMini (examples)') {
-						arduino.buildArduinoPro(config, config.examples, 'Examples')
 					}
 					stage('ArduinoMega (examples)') {
 						arduino.buildArduinoMega(config, config.examples, 'Examples')

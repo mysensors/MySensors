@@ -31,27 +31,27 @@
 *  - <b>TSF</b>: messages emitted by transport support functions
 * - SUB SYSTEMS:
 *  - Transport state machine (<b>TSM</b>)
-*   - TSM:INIT					from <b>stInit</b> Initialize transport and radio
-*   - TSM:FPAR					from <b>stParent</b> Find parent
-*   - TSM:ID						from <b>stID</b> Check/request node ID, if dynamic node ID set
-*   - TSM:UPL						from <b>stUplink</b> Verify uplink connection by pinging GW
-*   - TSM:READY					from <b>stReady</b> Transport is ready and fully operational
-*   - TSM:FAIL					from <b>stFailure</b> Failure in transport link or transport HW
+*   - TSM:<b>INIT</b>		from <b>stInit</b> Initialize transport and radio
+*   - TSM:<b>FPAR</b>		from <b>stParent</b> Find parent
+*   - TSM:<b>ID</b>			from <b>stID</b> Check/request node ID, if dynamic node ID set
+*   - TSM:<b>UPL</b>		from <b>stUplink</b> Verify uplink connection by pinging GW
+*   - TSM:<b>READY</b>	from <b>stReady</b> Transport is ready and fully operational
+*   - TSM:<b>FAIL</b>		from <b>stFailure</b> Failure in transport link or transport HW
 *  - Transport support function (<b>TSF</b>)
-*   - TSF:CKU						from @ref transportCheckUplink(), checks connection to GW
-*   - TSF:SID						from @ref transportAssignNodeID(), assigns node ID
-*   - TSF:PNG						from @ref transportPingNode(), pings a node
-*   - TSF:WUR						from @ref transportWaitUntilReady(), waits until transport is ready
-*   - TSF:CRT						from @ref transportClearRoutingTable(), clears routing table stored in EEPROM
-*   - TSF:LRT						from @ref transportLoadRoutingTable(), loads RAM routing table from EEPROM (only GW/repeaters)
-*   - TSF:SRT						from @ref transportSaveRoutingTable(), saves RAM routing table to EEPROM (only GW/repeaters)
-*   - TSF:MSG						from @ref transportProcessMessage(), processes incoming message
-*   - TSF:SAN						from @ref transportInvokeSanityCheck(), calls transport-specific sanity check
-*   - TSF:RTE						from @ref transportRouteMessage(), sends message
-*   - TSF:SND						from @ref transportSendRoute(), sends message if transport is ready (exposed)
-*   - TSF:TDI						from @ref transportDisable()
-*   - TSF:TRI						from @ref transportReInitialise()
-*   - TSF:SIR						from @ref transportSignalReport()
+*   - TSF:<b>CKU</b>		from @ref transportCheckUplink(), checks connection to GW
+*   - TSF:<b>SID</b>		from @ref transportAssignNodeID(), assigns node ID
+*   - TSF:<b>PNG</b>		from @ref transportPingNode(), pings a node
+*   - TSF:<b>WUR</b>		from @ref transportWaitUntilReady(), waits until transport is ready
+*   - TSF:<b>CRT</b>		from @ref transportClearRoutingTable(), clears routing table stored in EEPROM
+*   - TSF:<b>LRT</b>		from @ref transportLoadRoutingTable(), loads RAM routing table from EEPROM (only GW/repeaters)
+*   - TSF:<b>SRT</b>		from @ref transportSaveRoutingTable(), saves RAM routing table to EEPROM (only GW/repeaters)
+*   - TSF:<b>MSG</b>		from @ref transportProcessMessage(), processes incoming message
+*   - TSF:<b>SAN</b>		from @ref transportInvokeSanityCheck(), calls transport-specific sanity check
+*   - TSF:<b>RTE</b>		from @ref transportRouteMessage(), sends message
+*   - TSF:<b>SND</b>		from @ref transportSendRoute(), sends message if transport is ready (exposed)
+*   - TSF:<b>TDI</b>		from @ref transportDisable()
+*   - TSF:<b>TRI</b>		from @ref transportReInitialise()
+*   - TSF:<b>SIR</b>		from @ref transportSignalReport()
 *
 * Transport debug log messages:
 *
@@ -71,7 +71,7 @@
 * | | TSM | ID    |														| <b>Transition to stID state</b>
 * | | TSM | ID    | OK,ID=%%d									| Node ID is valid
 * | | TSM | ID    | REQ												| Request node ID from controller
-* |!| TSM | ID    | FAIL,ID=%%d								| ID verification failed, ID invalid
+* |!| TSM | ID    | FAIL,ID=%%d								| ID verification failed, ID invalid, no ID received from controller
 * | | TSM | UPL   |														| <b>Transition to stUplink state</b>
 * | | TSM | UPL   | OK												| Uplink OK, GW returned ping
 * | | TSF | UPL   | DGWC,O=%%d,N=%%d					| Uplink check revealed changed network topology, old distance (O), new distance (N)
@@ -130,7 +130,7 @@
 *
 * Incoming / outgoing messages:
 *
-* See <a href="https://www.mysensors.org/download/serial_api_20">here</a> for more detail on the format and definitons.
+* See <a href="https://www.mysensors.org/download/serial_api_20">here</a> for more detail on the format and definitions.
 *
 * Receiving a message
 * - TSF:MSG:READ,sender-last-destination,s=%%d,c=%%d,t=%%d,pt=%%d,l=%%d,sg=%%d:%%s
@@ -192,9 +192,9 @@
 #define AUTO						(255u)			//!< ID 255 is reserved
 #define BROADCAST_ADDRESS			(255u)			//!< broadcasts are addressed to ID 255
 #define DISTANCE_INVALID			(255u)			//!< invalid distance when searching for parent
-#define MAX_HOPS					(254u)			//!< maximal mumber of hops for ping/pong
+#define MAX_HOPS					(254u)			//!< maximal number of hops for ping/pong
 #define INVALID_HOPS				(255u)			//!< invalid hops
-#define MAX_SUBSEQ_MSGS				(5u)			//!< Maximum number of subsequentially processed messages in FIFO (to prevent transport deadlock if HW issue)
+#define MAX_SUBSEQ_MSGS				(5u)			//!< Maximum number of subsequently processed messages in FIFO (to prevent transport deadlock if HW issue)
 #define UPLINK_QUALITY_WEIGHT		(0.05f)			//!< UPLINK_QUALITY_WEIGHT
 
 

@@ -127,13 +127,13 @@ void _serialReset()
 // function.
 bool _serialProcess()
 {
-	char inch;
 	unsigned char i;
 	if (!_dev.available()) {
 		return false;
 	}
 
 	while(_dev.available()) {
+		char inch;
 		inch = _dev.read();
 
 		switch(_recPhase) {
@@ -239,7 +239,6 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	const char *datap = static_cast<char const *>(data);
 	unsigned char i;
 	unsigned char cs = 0;
-	unsigned char del;
 
 	// This is how many times to try and transmit before failing.
 	unsigned char timeout = 10;
@@ -248,6 +247,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	// the last millisecond, then wait for a random time and check again.
 
 	while (_serialProcess()) {
+		unsigned char del;
 		del = rand() % 20;
 		for (i = 0; i < del; i++) {
 			delay(1);
@@ -266,7 +266,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 #endif
 
 	// Start of header by writing multiple SOH
-	for(byte w=0; w<1; w++) {
+	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
 		_dev.write(SOH);
 	}
 	_dev.write(to);  // Destination address
@@ -416,7 +416,7 @@ int16_t transportGetTxPowerLevel(void)
 
 bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
-	// not possbile
+	// not possible
 	(void)powerPercent;
 	return false;
 }

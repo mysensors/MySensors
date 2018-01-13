@@ -92,7 +92,7 @@ bool transportAvailable(void);
 bool transportSanityCheck(void);
 /**
 * @brief Receive message from FIFO
-* @return length of recevied message (header + payload)
+* @return length of received message (header + payload)
 */
 uint8_t transportReceive(void* data);
 /**

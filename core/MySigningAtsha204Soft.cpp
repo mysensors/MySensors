@@ -35,7 +35,7 @@
 #define SIGNING_IDENTIFIER (1) //HMAC-SHA256
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
-#define SIGN_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+#define SIGN_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)
 static char printStr[65];
 static char i2h(uint8_t i)
 {
@@ -103,10 +103,8 @@ bool signerAtsha204SoftInit(void)
 		_signing_node_serial_info[8] = getNodeId();
 	}
 #else
-	if (init_ok) {
-		hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-		hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-	}
+	hwReadConfigBlock((void*)_signing_hmac_key, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
+	hwReadConfigBlock((void*)_signing_node_serial_info, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
 #endif
 	if (!memcmp(_signing_node_serial_info, reset_serial, 9)) {
 		unique_id_t uniqueID;
@@ -278,7 +276,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 		// Overwrite the first byte in the signature with the signing identifier
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
-		// Compare the caluclated signature with the provided signature
+		// Compare the calculated signature with the provided signature
 		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
 		                 MIN(MAX_PAYLOAD-mGetLength(msg), 32))) {
 			return false;

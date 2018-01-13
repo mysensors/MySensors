@@ -465,7 +465,7 @@ bool _processInternalMessages(void)
 		// sender is a node
 		if (type == I_REGISTRATION_REQUEST) {
 #if defined(MY_GATEWAY_FEATURE)
-			// registeration requests are exclusively handled by GW/Controller
+			// registration requests are exclusively handled by GW/Controller
 #if !defined(MY_REGISTRATION_CONTROLLER)
 			bool approveRegistration;
 
@@ -542,14 +542,6 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 	CORE_DEBUG(PSTR("MCO:SLP:MS=%" PRIu32 ",SMS=%" PRIu8 ",I1=%" PRIu8 ",M1=%" PRIu8 ",I2=%" PRIu8
 	                ",M2=%" PRIu8 "\n"), sleepingMS, smartSleep,
 	           interrupt1, mode1, interrupt2, mode2);
-	// OTA FW feature: do not sleep if FW update ongoing
-#if defined(MY_OTA_FIRMWARE_FEATURE)
-	if (isFirmwareUpdateOngoing()) {
-		CORE_DEBUG(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
-		wait(sleepingMS);
-		return MY_SLEEP_NOT_POSSIBLE;
-	}
-#endif
 	// repeater feature: sleeping not possible
 #if defined(MY_REPEATER_FEATURE)
 	(void)smartSleep;
@@ -583,15 +575,36 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 			return MY_SLEEP_NOT_POSSIBLE;
 		}
 	}
+	// OTA FW feature: do not sleep if FW update ongoing
+#if defined(MY_OTA_FIRMWARE_FEATURE)
+	while (isFirmwareUpdateOngoing() && sleepingTimeMS) {
+		CORE_DEBUG(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
+		wait(1000ul);
+		sleepingTimeMS = sleepingTimeMS >= 1000ul ? sleepingTimeMS - 1000ul : 1000ul;
+	}
+#endif // MY_OTA_FIRMWARE_FEATURE
 	if (smartSleep) {
+		// sleeping time left?
+		if (sleepingTimeMS < ((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS)) {
+			wait(sleepingMS);
+			CORE_DEBUG(PSTR("!MCO:SLP:NTL\n"));	// sleeping not possible, no time left
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
 		// notify controller about going to sleep, payload indicates smartsleep waiting time in MS
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
 		                       I_PRE_SLEEP_NOTIFICATION).set((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS));
 		wait(MY_SMART_SLEEP_WAIT_DURATION_MS);		// listen for incoming messages
+#if defined(MY_OTA_FIRMWARE_FEATURE)
+		// check if during smart sleep waiting period a FOTA request was received
+		if (isFirmwareUpdateOngoing()) {
+			CORE_DEBUG(PSTR("!MCO:SLP:FWUPD\n"));	// sleeping not possible, FW update ongoing
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
+#endif // MY_OTA_FIRMWARE_FEATURE
 	}
 #else
 	(void)smartSleep;
-#endif
+#endif // MY_SENSOR_NETWORK
 
 #if defined(MY_SENSOR_NETWORK)
 	transportDisable();
@@ -686,7 +699,7 @@ void _nodeLock(const char* str)
 		CORE_DEBUG(PSTR("MCO:NLK:TSL\n"));	// sleep transport
 #endif
 		setIndication(INDICATION_SLEEP);
-		(void)hwSleep((unsigned long)1000*60*30); // Sleep for 30 min before resending LOCKED message
+		(void)hwSleep((uint32_t)1000*60*30); // Sleep for 30 min before resending LOCKED message
 		setIndication(INDICATION_WAKEUP);
 	}
 #else
@@ -702,7 +715,7 @@ void _checkNodeLock(void)
 		// Node is locked, check if unlock pin is asserted, else hang the node
 		hwPinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
 		// Make a short delay so we are sure any large external nets are fully pulled
-		unsigned long enter = hwMillis();
+		uint32_t enter = hwMillis();
 		while (hwMillis() - enter < 2) {}
 		if (hwDigitalRead(MY_NODE_UNLOCK_PIN) == 0) {
 			// Pin is grounded, reset lock counter
@@ -717,7 +730,7 @@ void _checkNodeLock(void)
 			_nodeLock("LDB"); //Locked during boot
 		}
 	} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
-		// Reset walue
+		// Reset value
 		hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
 	}
 #endif

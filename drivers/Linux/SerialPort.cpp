@@ -42,6 +42,7 @@ void SerialPort::begin(int bauds)
 		logError("Failed to open serial port.\n");
 		exit(1);
 	}
+	logDebug("Serial port %s (%d baud) created\n", serialPort.c_str(), bauds);
 }
 
 bool SerialPort::open(int bauds)

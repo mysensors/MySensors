@@ -25,7 +25,7 @@
 #define SIGNING_PRESENTATION_REQUIRE_WHITELISTING (1 << 1)
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
-#define SIGN_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+#define SIGN_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)
 #else
 #define SIGN_DEBUG(x,...)
 #endif
@@ -111,6 +111,8 @@ void signerInit(void)
 #endif
 #if (defined (MY_ENCRYPTION_FEATURE) || defined (MY_SIGNING_FEATURE)) &&\
     !defined (MY_SIGNING_SIMPLE_PASSWD)
+	// Suppress this warning since it is only fixed on Linux builds and this keeps the code more tidy
+	// cppcheck-suppress knownConditionTrueFalse
 	if (!signerInternalValidatePersonalization()) {
 		SIGN_DEBUG(PSTR("!SGN:PER:TAMPERED\n"));
 #if defined(MY_SIGNING_FEATURE)
@@ -410,7 +412,7 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 	msg.data[1] = 0;
 }
 
-// Helper to process presentation mesages
+// Helper to process presentation messages
 static bool signerInternalProcessPresentation(MyMessage &msg)
 {
 	const uint8_t sender = msg.sender;
@@ -524,7 +526,7 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 	return true; // No need to further process I_SIGNING_PRESENTATION
 }
 
-// Helper to process nonce request mesages
+// Helper to process nonce request messages
 static bool signerInternalProcessNonceRequest(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)
@@ -553,7 +555,7 @@ static bool signerInternalProcessNonceRequest(MyMessage &msg)
 	return true; // No need to further process I_NONCE_REQUEST
 }
 
-// Helper to process nonce response mesages
+// Helper to process nonce response messages
 static bool signerInternalProcessNonceResponse(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)

@@ -30,12 +30,6 @@
 #include <Arduino.h>
 #include <stdio.h> // for size_t
 
-#ifdef __RFduino__
-#include <chip.h>
-#else
-#include <nrf.h>
-#endif
-
 /*
  * Define characteristics of Flash
  *
@@ -133,6 +127,10 @@ public:
 	 * @return address of given page
 	 */
 	uint32_t *page_address(size_t page);
+	/** Get top of available flash for application data
+	 * @return Last available address + 1
+	 */
+	uint32_t *top_app_page_address();
 	//----------------------------------------------------------------------------
 	/*
 	 * Accessing flash memory

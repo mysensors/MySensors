@@ -29,19 +29,20 @@ I2CEeprom _flash(MY_OTA_I2C_ADDR);
 #else
 SPIFlash _flash(MY_OTA_FLASH_SS, MY_OTA_FLASH_JDECID);
 #endif
-nodeFirmwareConfig_t _nodeFirmwareConfig;
-bool _firmwareUpdateOngoing;
-uint32_t _firmwareLastRequest;
-uint16_t _firmwareBlock;
-uint8_t _firmwareRetry;
 
-void readFirmwareSettings(void)
+LOCAL nodeFirmwareConfig_t _nodeFirmwareConfig;
+LOCAL bool _firmwareUpdateOngoing = false;
+LOCAL uint32_t _firmwareLastRequest;
+LOCAL uint16_t _firmwareBlock;
+LOCAL uint8_t _firmwareRetry;
+
+LOCAL void readFirmwareSettings(void)
 {
 	hwReadConfigBlock((void*)&_nodeFirmwareConfig, (void*)EEPROM_FIRMWARE_TYPE_ADDRESS,
 	                  sizeof(nodeFirmwareConfig_t));
 }
 
-void firmwareOTAUpdateRequest(void)
+LOCAL void firmwareOTAUpdateRequest(void)
 {
 	const uint32_t enterMS = hwMillis();
 	if (_firmwareUpdateOngoing && (enterMS - _firmwareLastRequest > MY_OTA_RETRY_DELAY)) {
@@ -67,9 +68,13 @@ void firmwareOTAUpdateRequest(void)
 	}
 }
 
-bool firmwareOTAUpdateProcess(void)
+LOCAL bool firmwareOTAUpdateProcess(void)
 {
 	if (_msg.type == ST_FIRMWARE_CONFIG_RESPONSE) {
+		if(_firmwareUpdateOngoing) {
+			OTA_DEBUG(PSTR("!OTA:FWP:UPDO\n"));	// FW config response received, FW update already ongoing
+			return true;
+		}
 		nodeFirmwareConfig_t *firmwareConfigResponse = (nodeFirmwareConfig_t *)_msg.data;
 		// compare with current node configuration, if they differ, start FW fetch process
 		if (memcmp(&_nodeFirmwareConfig, firmwareConfigResponse, sizeof(nodeFirmwareConfig_t))) {
@@ -128,7 +133,6 @@ bool firmwareOTAUpdateProcess(void)
 					MY_SERIALDEVICE.print(prbuf);
 				}
 				OTA_DEBUG(PSTR("\n"));
-				8
 			}
 #endif
 			_firmwareBlock--;
@@ -164,7 +168,7 @@ bool firmwareOTAUpdateProcess(void)
 	return false;
 }
 
-void presentBootloaderInformation(void)
+LOCAL void presentBootloaderInformation(void)
 {
 	requestFirmwareConfig_t *requestFirmwareConfig = (requestFirmwareConfig_t *)_msgTmp.data;
 	mSetLength(_msgTmp, sizeof(requestFirmwareConfig_t));
@@ -178,12 +182,13 @@ void presentBootloaderInformation(void)
 	(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_STREAM,
 	                       ST_FIRMWARE_CONFIG_REQUEST, false));
 }
-bool isFirmwareUpdateOngoing(void)
+
+LOCAL bool isFirmwareUpdateOngoing(void)
 {
 	return _firmwareUpdateOngoing;
 }
 // do a crc16 on the whole received firmware
-bool transportIsValidFirmware(void)
+LOCAL bool transportIsValidFirmware(void)
 {
 	// init crc
 	uint16_t crc = ~0;

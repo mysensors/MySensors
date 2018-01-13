@@ -82,7 +82,7 @@
 #define EEPROM_SIGNING_SOFT_SERIAL_ADDRESS (EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS + SIZE_SIGNING_SOFT_HMAC_KEY)
 /** @brief Address RF AES encryption key. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS (EEPROM_SIGNING_SOFT_SERIAL_ADDRESS + SIZE_SIGNING_SOFT_SERIAL)
-/** @brief Address node lock couner. This is set with @ref SecurityPersonalizer.ino */
+/** @brief Address node lock counter. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_NODE_LOCK_COUNTER (EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS + SIZE_RF_ENCRYPTION_AES_KEY)
 /** @brief First free address for sketch static configuration */
 #define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_NODE_LOCK_COUNTER + SIZE_NODE_LOCK_COUNTER)

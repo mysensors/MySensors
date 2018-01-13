@@ -66,7 +66,8 @@ LOCAL void RFM69_csn(const bool level)
 LOCAL void RFM69_prepareSPITransaction(void)
 {
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.beginTransaction(SPISettings(MY_RFM69_SPI_SPEED, RFM69_SPI_DATA_ORDER, RFM69_SPI_DATA_MODE));
+	RFM69_SPI.beginTransaction(SPISettings(MY_RFM69_SPI_SPEED, RFM69_SPI_DATA_ORDER,
+	                                       RFM69_SPI_DATA_MODE));
 #else
 #if defined(SREG)
 	_SREG = SREG;
@@ -80,9 +81,9 @@ LOCAL void RFM69_prepareSPITransaction(void)
 
 	// set RFM69 SPI settings
 #if !defined(MY_SOFTSPI)
-	_SPI.setDataMode(RFM69_SPI_DATA_MODE);
-	_SPI.setBitOrder(RFM69_SPI_DATA_ORDER);
-	_SPI.setClockDivider(RFM69_CLOCK_DIV);
+	RFM69_SPI.setDataMode(RFM69_SPI_DATA_MODE);
+	RFM69_SPI.setBitOrder(RFM69_SPI_DATA_ORDER);
+	RFM69_SPI.setClockDivider(RFM69_CLOCK_DIV);
 #endif
 
 #endif
@@ -91,7 +92,7 @@ LOCAL void RFM69_prepareSPITransaction(void)
 LOCAL void RFM69_concludeSPITransaction(void)
 {
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	_SPI.endTransaction();
+	RFM69_SPI.endTransaction();
 #else
 	// restore SPI settings to what they were before talking to RFM69
 #if defined(SPCR) && defined(SPSR)
@@ -128,14 +129,14 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 			*ptx++ = *current++;
 		}
 	}
-	_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
+	RFM69_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
 	if (aReadMode) {
 		if (size == 2) {
 			status = *++prx;   // result is 2nd byte of receive buffer
 		} else {
 			status = *prx++; // status is 1st byte of receive buffer
 			// decrement before to skip status byte
-			while (--size) {
+			while (--size && (buf != NULL)) {
 				*buf++ = *prx++;
 			}
 		}
@@ -143,15 +144,15 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 		status = *prx; // status is 1st byte of receive buffer
 	}
 #else
-	status = _SPI.transfer(cmd);
+	status = RFM69_SPI.transfer(cmd);
 	while (len--) {
 		if (aReadMode) {
-			status = _SPI.transfer((uint8_t)RFM69_NOP);
+			status = RFM69_SPI.transfer((uint8_t)RFM69_NOP);
 			if (buf != NULL) {
 				*current++ = status;
 			}
 		} else {
-			status = _SPI.transfer(*current++);
+			status = RFM69_SPI.transfer(*current++);
 		}
 	}
 #endif
@@ -223,7 +224,7 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	// SPI init
 	hwDigitalWrite(MY_RFM69_CS_PIN, HIGH);
 	hwPinMode(MY_RFM69_CS_PIN, OUTPUT);
-	_SPI.begin();
+	RFM69_SPI.begin();
 
 	RFM69_setConfiguration();
 	RFM69_setFrequency(frequencyHz);
@@ -236,7 +237,7 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	// IRQ
 	hwPinMode(MY_RFM69_IRQ_PIN, INPUT);
 #if defined (SPI_HAS_TRANSACTION) && !defined (ESP8266) && !defined (MY_SOFTSPI)
-	_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM69_IRQ_PIN));
+	RFM69_SPI.usingInterrupt(digitalPinToInterrupt(MY_RFM69_IRQ_PIN));
 #endif
 
 #ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
@@ -278,7 +279,7 @@ LOCAL void RFM69_interruptHandler(void)
 #ifdef LINUX_SPI_BCM
 			char data[RFM69_MAX_PACKET_LEN + 1];   // max packet len + 1 byte for the command
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
-			SPI.transfern(data, 3);
+			RFM69_SPI.transfern(data, 3);
 
 			RFM69.currentPacket.header.packetLen = data[1];
 			RFM69.currentPacket.header.recipient = data[2];
@@ -289,7 +290,7 @@ LOCAL void RFM69_interruptHandler(void)
 
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
 			//SPI.transfern(data, RFM69.currentPacket.header.packetLen - 1); //TODO: Wrong packetLen?
-			SPI.transfern(data, RFM69.currentPacket.header.packetLen);
+			RFM69_SPI.transfern(data, RFM69.currentPacket.header.packetLen);
 
 			//(void)memcpy((void*)&RFM69.currentPacket.data[2], (void*)&data[1], RFM69.currentPacket.header.packetLen - 2);   //TODO: Wrong packetLen?
 			(void)memcpy((void*)&RFM69.currentPacket.data[2], (void*)&data[1],
@@ -302,14 +303,14 @@ LOCAL void RFM69_interruptHandler(void)
 				RFM69.dataReceived = !RFM69.ackReceived;
 			}
 #else
-			_SPI.transfer(RFM69_REG_FIFO & RFM69_READ_REGISTER);
+			RFM69_SPI.transfer(RFM69_REG_FIFO & RFM69_READ_REGISTER);
 			// set reading pointer
 			uint8_t* current = (uint8_t*)&RFM69.currentPacket;
 			bool headerRead = false;
 			// first read header
 			uint8_t readingLength = RFM69_HEADER_LEN;
 			while (readingLength--) {
-				*current++ = _SPI.transfer((uint8_t)0x00);
+				*current++ = RFM69_SPI.transfer((uint8_t)0x00);
 				if (!readingLength && !headerRead) {
 					// header read
 					headerRead = true;
@@ -1106,18 +1107,18 @@ LOCAL void RFM69_listenModeSendBurst(const uint8_t recipient, uint8_t* data, con
 		// write to FIFO  TODO refactorize with func, check if send/sendframe could be used, and prepare packet struct
 		RFM69_prepareSPITransaction();
 		RFM69_csn(LOW);
-		SPI.transfer(RFM69_REG_FIFO | 0x80);
-		SPI.transfer(len +
-		             4);      // two bytes for target and sender node, two bytes for the burst time remaining
-		SPI.transfer(recipient);
-		SPI.transfer(_address);
+		RFM69_SPI.transfer(RFM69_REG_FIFO | 0x80);
+		RFM69_SPI(len +
+		          4);      // two bytes for target and sender node, two bytes for the burst time remaining
+		RFM69_SPI.transfer(recipient);
+		RFM69_SPI.transfer(_address);
 
 		// We send the burst time remaining with the packet so the receiver knows how long to wait before trying to reply
-		SPI.transfer(timeRemaining.b[0]);
-		SPI.transfer(timeRemaining.b[1]);
+		RFM69_SPI.transfer(timeRemaining.b[0]);
+		RFM69_SPI.transfer(timeRemaining.b[1]);
 
 		for (uint8_t i = 0; i < len; i++) {
-			SPI.transfer(((uint8_t*)data)[i]);
+			RFM69_SPI.transfer(((uint8_t*)data)[i]);
 		}
 
 		RFM69_csn(HIGH);
@@ -1258,13 +1259,13 @@ LOCAL void RFM69_readAllRegs(void)
 			capVal = (regVal >> 2) & 0x7;
 			if (capVal == 0b000) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 000 -> Sleep mode (SLEEP)\n"));
-			} else if (capVal = 0b001) {
+			} else if (capVal == 0b001) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 001 -> Standby mode (STDBY)\n"));
-			} else if (capVal = 0b010) {
+			} else if (capVal == 0b010) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 010 -> Frequency Synthesizer mode (FS)\n"));
-			} else if (capVal = 0b011) {
+			} else if (capVal == 0b011) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 011 -> Transmitter mode (TX)\n"));
-			} else if (capVal = 0b100) {
+			} else if (capVal == 0b100) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 100 -> Receiver Mode (RX)\n"));
 			} else {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : %d capVal \n"), capVal);

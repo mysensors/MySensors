@@ -102,6 +102,7 @@ def call(config) {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Gitler)', 'Commit(s) does not meet coding standards', '${BUILD_URL}Gitler_report/gitler.html')
 		currentBuild.currentResult == 'FAILURE'
 		echo "Termiated due to Gitler assert" // For BFA
+		echo "You can read the detailed error report here: "+env.BUILD_URL+"Gitler_report/"
 		error 'Termiated due to Gitler assert'
 	} else {
 		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Gitler)', 'Pass', '')

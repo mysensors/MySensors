@@ -46,7 +46,7 @@
  * You will see the hwMillis() of the receiving node. After each \n character, a
  * new debug message line starts. Incomplete messages are ending with '...'
  *
- * @param logNode    Testination node ID
+ * @param logNode    Destination node ID
  * @param enableAck  Enable or disable ACK flag
  * @param fmt        printf format string
  * @param ...        arguments

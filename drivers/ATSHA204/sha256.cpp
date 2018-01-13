@@ -30,6 +30,10 @@ const uint8_t sha256InitState[] PROGMEM = {
 	0x19,0xcd,0xe0,0x5b  // H7
 };
 
+// Suppress warning about uninitialized variables because initializing them in an init function
+// allows the compiler to optimize away the variables in case the class is only instantiated but
+// never used.
+// cppcheck-suppress uninitMemberVar
 Sha256Class::Sha256Class()
 {
 	/*
@@ -165,6 +169,10 @@ uint8_t* Sha256Class::result(void)
 #define HMAC_IPAD 0x36
 #define HMAC_OPAD 0x5c
 
+// Suppress warning about uninitialized variables because initializing them in an init function
+// allows the compiler to optimize away the variables in case the class is only instantiated but
+// never used.
+// cppcheck-suppress uninitMemberVar
 HmacClass::HmacClass()
 {
 }
