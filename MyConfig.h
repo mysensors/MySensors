@@ -1283,6 +1283,15 @@
 #endif
 
 /**
+ * @def MY_INCLUSION_LED_PIN
+ * @brief Enables an inclusion mode LED indicator on the gateway device.
+ *
+ * With this defined, inclusion mode status (on or off) is indicated by the LED.
+ * This feature obeys @ref MY_WITH_LEDS_BLINKING_INVERSE
+ */
+//#define MY_INCLUSION_LED_PIN (7)
+
+/**
  * @def MY_INCLUSION_MODE_BUTTON_PIN
  * @brief The default input pin used for the inclusion mode button.
  */
@@ -1927,6 +1936,7 @@
 // GW
 #define MY_DEBUG_VERBOSE_GATEWAY
 #define MY_INCLUSION_BUTTON_EXTERNAL_PULLUP
+#define MY_INCLUSION_LED_PIN
 #define MY_GATEWAY_W5100
 #define MY_GATEWAY_ENC28J60
 #define MY_GATEWAY_ESP8266
