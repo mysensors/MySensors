@@ -9,9 +9,9 @@ echo "No subjects with leading lower case characters<br>" > leading_lowercases.t
 echo "No subjects with trailing periods<br>" > trailing_periods.txt
 echo "No body lines are too wide<br>" > too_long_body_lines.txt
 
-too_long_subjects=`awk 'length > 50' subjects.txt`
+too_long_subjects=`awk 'length > 72' subjects.txt`
 if [ -n "$too_long_subjects" ]; then
-  echo "<b>Commit subjects that are too wide (&gt;50 characters):</b>" > too_long_subjects.txt
+  echo "<b>Commit subjects that are too wide (&gt;72 characters):</b>" > too_long_subjects.txt
   echo "$too_long_subjects" >> too_long_subjects.txt
   sed -i -e 's/$/<br>/' too_long_subjects.txt
   result=1
