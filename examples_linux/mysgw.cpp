@@ -31,11 +31,10 @@
 
 // Serial config
 // Enable this if you are using an Arduino connected to the USB
-//#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+//#define MY_LINUX_SERIAL_PORT "/dev/ttyUSB0"
 // Enable this if you need to connect to a controller running on the same device
-//#define MY_LINUX_IS_SERIAL_PTY
-// Choose a symlink name for the PTY device
-//#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+// You also need to define MY_LINUX_SERIAL_PORT above with the symlink name for the PTY device
+//#define MY_LINUX_SERIAL_IS_PTY
 // Grant access to the specified system group for the serial device
 //#define MY_LINUX_SERIAL_GROUPNAME "tty"
 
