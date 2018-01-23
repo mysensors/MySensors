@@ -302,8 +302,7 @@ bool validateKnock()
 	    less of a pain to use if you're tempo is a little slow or fast.
 	*/
 	int totaltimeDifferences = 0;
-	int timeDiff = 0;
-	for (i=0; i < maximumKnocks; i++) {   // Normalize the times
+	for (int timeDiff = 0, i=0; i < maximumKnocks; i++) {   // Normalize the times
 		knockReadings[i]= map(knockReadings[i], 0, maxKnockInterval, 0, 100);
 		timeDiff = abs(knockReadings[i] - secretCode[i]);
 		if (timeDiff >
