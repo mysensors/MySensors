@@ -46,11 +46,11 @@
 #define STR_HELPER(x) #x			//!< Helper macro, STR_HELPER()
 #define STR(x) STR_HELPER(x)	//!< Helper macro, STR()
 
-#define MYSENSORS_LIBRARY_VERSION_MAJOR							2							//!< Major release version
-#define MYSENSORS_LIBRARY_VERSION_MINOR							2							//!< Minor release version
+#define MYSENSORS_LIBRARY_VERSION_MAJOR							3							//!< Major release version
+#define MYSENSORS_LIBRARY_VERSION_MINOR							0							//!< Minor release version
 #define MYSENSORS_LIBRARY_VERSION_PATCH							0							//!< Patch version
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE				""				//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER	0xFF					//!< incremental counter, starting at 0x00. 0xFF for final release
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE				"alfa"				//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER	0x00					//!< incremental counter, starting at 0x00. 0xFF for final release
 
 
 #if (MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER != 0xFF)
