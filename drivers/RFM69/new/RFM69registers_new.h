@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -775,12 +775,12 @@
 #define RFM69_DIOMAPPING2_DIO5_10            0x20
 #define RFM69_DIOMAPPING2_DIO5_11            0x30
 
-#define RFM69_DIOMAPPING2_CLKOUT_32          0x00
-#define RFM69_DIOMAPPING2_CLKOUT_16          0x01
-#define RFM69_DIOMAPPING2_CLKOUT_8           0x02
-#define RFM69_DIOMAPPING2_CLKOUT_4           0x03
-#define RFM69_DIOMAPPING2_CLKOUT_2           0x04
-#define RFM69_DIOMAPPING2_CLKOUT_1           0x05  // Reset value
+#define RFM69_DIOMAPPING2_CLKOUT_32MHZ       0x00
+#define RFM69_DIOMAPPING2_CLKOUT_16MHZ       0x01
+#define RFM69_DIOMAPPING2_CLKOUT_8MHZ        0x02
+#define RFM69_DIOMAPPING2_CLKOUT_4MHZ        0x03
+#define RFM69_DIOMAPPING2_CLKOUT_2MHZ        0x04
+#define RFM69_DIOMAPPING2_CLKOUT_1MHZ        0x05  // Reset value
 #define RFM69_DIOMAPPING2_CLKOUT_RC          0x06
 #define RFM69_DIOMAPPING2_CLKOUT_OFF         0x07  // Recommended default
 
