@@ -124,8 +124,8 @@ void preHwInit()
 	for (int i=0; i< num_of_leds; i++) {
 		pinMode(leds[i], OUTPUT);
 	}
-	uint8_t led_state = 0;
 	if (digitalRead(MY_SWC1)) {
+		uint8_t led_state = 0;
 		while (!Serial) {
 			digitalWrite(LED_BLUE, led_state);
 			led_state ^= 0x01;

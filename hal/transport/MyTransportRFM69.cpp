@@ -26,8 +26,10 @@
 bool transportInit(void)
 {
 	const bool result = RFM69_initialise(MY_RFM69_FREQUENCY);
-#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
-	// only enable ATC mode nodes
+#if defined(MY_GATEWAY_FEATURE) || defined(MY_RFM69_ATC_MODE_DISABLED)
+	// ATC mode disabled on GW
+	RFM69_ATCmode(false);
+#else
 	RFM69_ATCmode(true, MY_RFM69_ATC_TARGET_RSSI_DBM);
 #endif
 
