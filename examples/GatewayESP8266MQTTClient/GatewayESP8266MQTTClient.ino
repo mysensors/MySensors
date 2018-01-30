@@ -100,6 +100,9 @@
 // MQTT broker ip address.
 #define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
 
+//MQTT broker if using URL instead of ip address.
+// #define MY_CONTROLLER_URL_ADDRESS "test.mosquitto.org"
+
 // The MQTT broker port to to open
 #define MY_PORT 1883
 
