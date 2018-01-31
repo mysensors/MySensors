@@ -774,16 +774,16 @@
  *
  * | Configuration           | Modulation (xxx) | Bit rate | FD     | RXBW     | Additional settings
  * |-------------------------|------------------|----------|--------|----------|---------------------------
- * | RFM69_xxx_BR2_FD5       | FSK/GFSK/OOK     | 2000     | 5000   | 111_24_4 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR2_4_FD4_8   | FSK/GFSK/OOK     | 2400     | 4800   | 111_24_4 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR4_8_FD9_6   | FSK/GFSK/OOK     | 4800     | 9600   | 111_24_4 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR9_6_FD19_2  | FSK/GFSK/OOK     | 9600     | 19200  | 111_24_4 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR19_2_FD38_4 | FSK/GFSK/OOK     | 19200    | 38400  | 111_24_3 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR38_4_FD76_8 | FSK/GFSK/OOK     | 38400    | 76800  | 111_24_2 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR55_5_FD50   | FSK/GFSK/OOK     | 55555    | 50000  | 111_16_2 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR57_6_FD120  | FSK/GFSK/OOK     | 57600    | 120000 | 111_16_1 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR125_FD125   | FSK/GFSK/OOK     | 125000   | 125000 | 010_16_2 | Whitening, Addr filter, BC
- * | RFM69_xxx_BR250_FD250   | FSK/GFSK/OOK     | 250000   | 250000 | 111_16_0 | Whitening, Addr filter, BC
+ * | RFM69_xxx_BR2_FD5       | FSK/GFSK/OOK     | 2000     | 5000   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR2_4_FD4_8   | FSK/GFSK/OOK     | 2400     | 4800   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR4_8_FD9_6   | FSK/GFSK/OOK     | 4800     | 9600   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR9_6_FD19_2  | FSK/GFSK/OOK     | 9600     | 19200  | 111_24_4 | Whitening
+ * | RFM69_xxx_BR19_2_FD38_4 | FSK/GFSK/OOK     | 19200    | 38400  | 111_24_3 | Whitening
+ * | RFM69_xxx_BR38_4_FD76_8 | FSK/GFSK/OOK     | 38400    | 76800  | 111_24_2 | Whitening
+ * | RFM69_xxx_BR55_5_FD50   | FSK/GFSK/OOK     | 55555    | 50000  | 111_16_2 | Whitening
+ * | RFM69_xxx_BR57_6_FD120  | FSK/GFSK/OOK     | 57600    | 120000 | 111_16_1 | Whitening
+ * | RFM69_xxx_BR125_FD125   | FSK/GFSK/OOK     | 125000   | 125000 | 010_16_2 | Whitening
+ * | RFM69_xxx_BR250_FD250   | FSK/GFSK/OOK     | 250000   | 250000 | 111_16_0 | Whitening
  *
  * https://www.semtech.com/uploads/documents/sx1231.pdf
  *

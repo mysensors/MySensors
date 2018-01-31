@@ -41,6 +41,8 @@ bool transportInit(void)
 #endif
 	RFM69_encrypt((const char*)RFM69_psk);
 	(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
+#else
+	(void)RFM69_encrypt;
 #endif
 	return result;
 }
