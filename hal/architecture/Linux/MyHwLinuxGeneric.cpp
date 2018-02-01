@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -27,8 +27,9 @@
 #include <unistd.h>
 #include "SoftEeprom.h"
 #include "log.h"
+#include "config.h"
 
-static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
+static SoftEeprom eeprom;
 static FILE *randomFp = NULL;
 
 bool hwInit(void)
@@ -42,6 +43,10 @@ bool hwInit(void)
 	}
 #endif
 #endif
+
+	if (eeprom.init(conf.eeprom_file, conf.eeprom_size) != 0) {
+		exit(1);
+	}
 
 	return true;
 }
