@@ -177,6 +177,16 @@
  * personalization has finished, you just program the sketch you plan to use (with the appropriate
  * signing flags set).
  *
+ * If you are using a Raspberry PI-based gateway, personalizaion is done slightly differently:
+ * 1. Generate keys, execute @c mysgw with arguments
+ *    * To generate HMAC key @verbatim --gen-soft-hmac-key @endverbatim
+ *    * To generate %AES key @verbatim --gen-aes-key @endverbatim
+ *    * To generate a soft serial number @verbatim --gen-soft-serial @endverbatim
+ * 2. Store keys/values to the gateway, execute @c mysgw with arguments
+ *    * To store HMAC key @verbatim --set-soft-hmac-key=<DATA> @endverbatim
+ *    * To store %AES key @verbatim --set-aes-key=<DATA> @endverbatim
+ *    * To store soft serial number @verbatim --set-soft-serial-key=<DATA> @endverbatim
+ *
  * You are now set and ready to use message signing in your network.
  * As of now, the following restrictions will be applied to your nodes:
  * * If a node does require signing, any unsigned message sent to the node will be rejected.
@@ -393,8 +403,7 @@
  * is to set your preferences in your sketch and personalize accordingly.
  * That is enough to enable protection from both Eve and Mallory in your network
  * although if you do not also enable encryption, Eve can eavesdrop, but not do anything about,
- * your messages (except possibly preventing them from arriving). @ref MY_SIGNING_SIMPLE_PASSWD also
- * enable encryption automatically.
+ * your messages (except possibly preventing them from arriving).
  *
  * How are the messages actually affected by the signing?<br>
  * The following illustration shows what part of the message is signed, and where the signature is

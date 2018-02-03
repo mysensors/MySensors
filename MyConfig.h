@@ -1476,12 +1476,44 @@
  * @ingroup MyConfigGrp
  * @brief These options control security related configurations.
  *
- * Note that some encryption configurations are on a per-radio basis as these are specific to each
- * radio.
+ * Overview over all security related settings and how/where to apply them:
+ * | Setting                  | Description | Arduino | Raspberry PI @c configure argument
+ * |--------------------------|-------------|---------|-------------
+ * | @ref MY_SECURITY_SIMPLE_PASSWD | Enables security (signing and encryption) without the need for @ref personalization | "#define" in the top of your sketch | Not supported (use the other two "simple" options)
+ * | @ref MY_SIGNING_SIMPLE_PASSWD | Enables signing without the need for @ref personalization | "#define" in the top of your sketch | @verbatim --my-signing=password --my-security-password=<PASSWORD> @endverbatim
+ * | @ref MY_ENCRYPTION_SIMPLE_PASSWD | Enables encryption without the need for @ref personalization | "#define" in the top of your sketch | @verbatim --my-security-password=<PASSWORD> @endverbatim and encryption enabled on the chosen transport
+ * | @ref MY_DEBUG_VERBOSE_SIGNING | Enables verbose signing debugging | "#define" in the top of your sketch | @verbatim --my-signing-debug @endverbatim
+ * | @ref MY_SIGNING_ATSHA204 | Enables support to sign messages backed by ATSHA204A hardware | "#define" in the top of your sketch | Not supported
+ * | @ref MY_SIGNING_SOFT | Enables support to sign messages backed by software | "#define" in the top of your sketch | @verbatim --my-signing=software @endverbatim
+ * | @ref MY_SIGNING_REQUEST_SIGNATURES | Enables node/gw to require signed messages | "#define" in the top of your sketch | @verbatim --my-signing-request-signatures @endverbatim
+ * | @ref MY_SIGNING_WEAK_SECURITY | Weakens signing security, useful for testing before deploying signing "globally" | "#define" in the top of your sketch | @verbatim --my-signing-weak_security @endverbatim
+ * | @ref MY_VERIFICATION_TIMEOUT_MS | Change default signing timeout | "#define" in the top of your sketch | @verbatim --my-signing-verification-timeout-ms=<TIMEOUT> @endverbatim
+ * | @ref MY_SIGNING_NODE_WHITELISTING | Defines a whitelist of trusted nodes | "#define" in the top of your sketch | @verbatim --my-signing-whitelist="<WHITELIST>" @endverbatim
+ * | @ref MY_SIGNING_ATSHA204_PIN | Change default ATSHA204A communication pin | "#define" in the top of your sketch | Not supported
+ * | @ref MY_SIGNING_SOFT_RANDOMSEED_PIN | Change default software RNG seed pin | "#define" in the top of your sketch | Not supported
+ * | @ref MY_RF24_ENABLE_ENCRYPTION | Enables encryption on RF24 radios | "#define" in the top of your sketch | @verbatim --my-rf24-encryption-enabled @endverbatim
+ * | @ref MY_RFM69_ENABLE_ENCRYPTION | Enables encryption on %RFM69 radios | "#define" in the top of your sketch | @verbatim --my-rfm69-encryption-enabled @endverbatim
+ * | @ref MY_NRF5_ESB_ENABLE_ENCRYPTION | Enables encryption on nRF5 radios | "#define" in the top of your sketch | Not supported
+ * | @ref MY_NODE_LOCK_FEATURE | Enables the node locking feature | "#define" in the top of your sketch | Not supported
+ * | @ref MY_NODE_UNLOCK_PIN | Change default unlock pin | "#define" in the top of your sketch | Not supported
+ * | @ref MY_NODE_LOCK_COUNTER_MAX | Change default "malicious activity" counter max value | "#define" in the top of your sketch | Not supported
  *
- * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION
  * @{
  */
+/**
+ * @def MY_SECURITY_SIMPLE_PASSWD
+ * @brief Enables SW backed signing functionality and encryption functionality in library and uses
+ *        provided password as key.
+ *
+ * For details on the effects, see the references.
+ * @see MY_SIGNING_SIMPLE_PASSWD, MY_ENCRYPTION_SIMPLE_PASSWD
+ */
+//#define MY_SECURITY_SIMPLE_PASSWD "MyInsecurePassword"
+#if defined(MY_SECURITY_SIMPLE_PASSWD)
+#define MY_SIGNING_SIMPLE_PASSWD MY_SECURITY_SIMPLE_PASSWD
+#define MY_ENCRYPTION_SIMPLE_PASSWD MY_SECURITY_SIMPLE_PASSWD
+#endif
+
 /**
  * @defgroup SigningSettingGrpPub Signing
  * @ingroup SecuritySettingGrpPub
@@ -1500,8 +1532,10 @@
  * @def MY_SIGNING_SIMPLE_PASSWD
  * @brief Enables SW backed signing functionality in library and uses provided password as key.
  *
- * This flag will enable signing, signature requests and encryption. It has to be identical on ALL
- * nodes in the network.
+ * This flag is automatically set if @ref MY_SECURITY_SIMPLE_PASSWD is used.
+ *
+ * This flag will enable signing and signature requests. It has to be identical on ALL nodes in the
+ * network.
  *
  * Whitelisting is supported and serial will be the first 8 characters of the password, the ninth
  * character will be the node ID (to make each node have a unique serial).
@@ -1509,22 +1543,22 @@
  * As with the regular signing modes, whitelisting is only activated if a whitelist is specified in
  * the sketch.
  *
- * No personalization is required for this mode.
+ * No @ref personalization is required for this mode.
  *
  * It is allowed to set @ref MY_SIGNING_WEAK_SECURITY for deployment purposes in this mode as it is
  * with the regular software and ATSHA204A based modes.
  *
- * If the provided password is shorter than the size of the HMAC or %AES key, it will be null-padded
+ * If the provided password is shorter than the size of the HMAC key, it will be null-padded
  * to accommodate the key size in question. A 32 character password is the maximum length. Any
  * password longer than that will be truncated.
+ *
+ * @see MY_SECURITY_SIMPLE_PASSWD
+ *
  */
 //#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
 #if defined(MY_SIGNING_SIMPLE_PASSWD)
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
-#define MY_RF24_ENABLE_ENCRYPTION
-#define MY_RFM69_ENABLE_ENCRYPTION
-#define MY_NRF5_ESB_ENABLE_ENCRYPTION
 #endif
 
 /**
@@ -1624,6 +1658,47 @@
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
 #define MY_SIGNING_FEATURE
 #endif
+/** @}*/ // End of SigningSettingGrpPub group
+
+/**
+ * @defgroup EncryptionSettingGrpPub Encryption
+ * @ingroup SecuritySettingGrpPub
+ * @brief These options control encryption related configurations.
+ *
+ * Note that encryption is toggled on a per-radio basis.
+ * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION
+ * @{
+ */
+
+/**
+ * @def MY_ENCRYPTION_SIMPLE_PASSWD
+ * @brief Enables encryption on all radio transports that supports it and uses provided password as key.
+ *
+ * This flag is automatically set if @ref MY_SECURITY_SIMPLE_PASSWD is used.
+ *
+ * This flag will enable encryption. It has to be identical on ALL nodes in the network.
+ *
+ * No @ref personalization is required for this mode.
+ *
+ * If the provided password is shorter than the size of the %AES key, it will be null-padded
+ * to accommodate the key size in question. A 16 character password is the maximum length. Any
+ * password longer than that will be truncated.
+ *
+ * @see MY_SECURITY_SIMPLE_PASSWD
+ */
+//#define MY_ENCRYPTION_SIMPLE_PASSWD "MyInsecurePassword"
+#if defined(MY_ENCRYPTION_SIMPLE_PASSWD)
+#ifndef MY_RF24_ENABLE_ENCRYPTION
+#define MY_RF24_ENABLE_ENCRYPTION
+#endif
+#ifndef MY_RFM69_ENABLE_ENCRYPTION
+#define MY_RFM69_ENABLE_ENCRYPTION
+#endif
+#ifndef MY_NRF5_ESB_ENABLE_ENCRYPTION
+#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+#endif
+#endif
+
 /**
  * @def MY_ENCRYPTION_FEATURE
  * @ingroup internals
@@ -1632,7 +1707,7 @@
 #if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
 #define MY_ENCRYPTION_FEATURE
 #endif
-/** @}*/ // End of SigningSettingGrpPub group
+/** @}*/ // End of EncryptionSettingGrpPub group
 
 /**
  * @defgroup MyLockgrppub Node locking
@@ -1949,7 +2024,9 @@
 #define MY_DEFAULT_TX_LED_PIN
 #define MY_DEFAULT_RX_LED_PIN
 // signing
+#define MY_SECURITY_SIMPLE_PASSWD "MyInsecurePassword"
 #define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
+#define MY_ENCRYPTION_SIMPLE_PASSWD "MyInsecurePassword"
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
