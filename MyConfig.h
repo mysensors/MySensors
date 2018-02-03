@@ -818,6 +818,18 @@
 //#define MY_DEBUG_VERBOSE_RFM95
 
 /**
+ * @def MY_RFM95_ENABLE_ENCRYPTION
+ * @brief Define this to enable software based %AES encryption.
+ *
+ * All nodes and gateway must have this enabled, and all must be personalized with the same %AES
+ * key.
+ * @see @ref personalization
+ *
+ * @warning This driver always sets the initialization vector to 0 so encryption is weak.
+ */
+//#define MY_RFM95_ENABLE_ENCRYPTION
+
+/**
  * @def MY_RFM95_FREQUENCY
  * @brief The frequency to use.
  *
@@ -1799,7 +1811,7 @@
 /**
  * @def MY_SIGNING_FEATURE
  * @ingroup internals
- * @brief Helper flag to indicate that some signing feature is enabled
+ * @brief Helper flag to indicate that some signing feature is enabled, set automatically
  */
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
 #define MY_SIGNING_FEATURE
@@ -1812,7 +1824,7 @@
  * @brief These options control encryption related configurations.
  *
  * Note that encryption is toggled on a per-radio basis.
- * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION
+ * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION, MY_RFM95_ENABLE_ENCRYPTION
  * @{
  */
 
@@ -1845,14 +1857,18 @@
 #ifndef MY_NRF5_ESB_ENABLE_ENCRYPTION
 #define MY_NRF5_ESB_ENABLE_ENCRYPTION
 #endif
+#ifndef MY_RFM95_ENABLE_ENCRYPTION
+#define MY_RFM95_ENABLE_ENCRYPTION
+#endif
 #endif
 
 /**
  * @def MY_ENCRYPTION_FEATURE
  * @ingroup internals
- * @brief Helper flag to indicate that some encryption feature is enabled
+ * @brief Helper flag to indicate that some encryption feature is enabled, set automatically
+ * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION, MY_RFM95_ENABLE_ENCRYPTION
  */
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
 #define MY_ENCRYPTION_FEATURE
 #endif
 /** @}*/ // End of EncryptionSettingGrpPub group
@@ -2303,6 +2319,7 @@
 // RFM95
 #define MY_RADIO_RFM95
 #define MY_DEBUG_VERBOSE_RFM95
+#define MY_RFM95_ENABLE_ENCRYPTION
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
 #define MY_RFM95_MODEM_CONFIGRUATION
