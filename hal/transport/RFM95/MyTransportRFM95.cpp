@@ -57,6 +57,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 
 bool transportAvailable(void)
 {
+	RFM95_handler();
 	return RFM95_available();
 }
 
@@ -67,7 +68,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	const uint8_t len = RFM95_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	const uint8_t len = RFM95_receive((uint8_t*)data, MAX_MESSAGE_LENGTH);
 	return len;
 }
 
