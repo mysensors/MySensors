@@ -585,7 +585,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 #endif // MY_OTA_FIRMWARE_FEATURE
 	if (smartSleep) {
 		// sleeping time left?
-		if (sleepingTimeMS < ((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS)) {
+		if (sleepingTimeMS > 0 && sleepingTimeMS < ((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS)) {
 			wait(sleepingMS);
 			CORE_DEBUG(PSTR("!MCO:SLP:NTL\n"));	// sleeping not possible, no time left
 			return MY_SLEEP_NOT_POSSIBLE;
