@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -15,11 +15,13 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
- *
  */
 
-#include "MyTransportHAL.h"
 #include "drivers/RFM95/RFM95.h"
+
+#if defined(MY_RFM95_ENABLE_ENCRYPTION)
+#include "drivers/AES/AES.cpp"
+#endif
 
 bool transportInit(void)
 {

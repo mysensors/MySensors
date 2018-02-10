@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -147,8 +147,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(MY_SENSOR_NETWORK)
 // We assume that a gateway having a radio also should act as repeater
 #define MY_REPEATER_FEATURE
-
 #endif
+
 // GATEWAY - COMMON FUNCTIONS
 // We support MQTT Client using W5100, ESP8266 and Linux
 #if !defined(MY_GATEWAY_CLIENT_MODE)
@@ -188,6 +188,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // We assume that a gateway having a radio also should act as repeater
 #define MY_REPEATER_FEATURE
 #endif
+
 #if !defined(MY_PORT)
 #error You must define MY_PORT (controller or gatway port to open)
 #endif
@@ -268,7 +269,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 #if defined(MY_TRANSPORT_DONT_CARE_MODE)
-#error This directive is deprecated, set MY_TRANSPORT_WAIT_READY_MS instead!
+#error MY_TRANSPORT_DONT_CARE_MODE is deprecated, set MY_TRANSPORT_WAIT_READY_MS instead!
 #endif
 
 // RAM ROUTING TABLE
@@ -315,21 +316,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // Transport drivers
 #if defined(MY_RADIO_RF24)
-#if defined(MY_RF24_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 #include "drivers/RF24/RF24.cpp"
-#include "hal/transport/MyTransportRF24.cpp"
+#include "hal/transport/RF24/MyTransportRF24.cpp"
 #elif defined(MY_RADIO_NRF5_ESB)
 #if !defined(ARDUINO_ARCH_NRF5)
 #error No support for nRF5 radio on this platform
 #endif
-#if defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 #include "drivers/NRF5/Radio.cpp"
 #include "drivers/NRF5/Radio_ESB.cpp"
-#include "hal/transport/MyTransportNRF5_ESB.cpp"
+#include "hal/transport/NRF5_ESB/MyTransportNRF5_ESB.cpp"
 #elif defined(MY_RS485)
 #if !defined(MY_RS485_HWSERIAL)
 #if defined(__linux__)
@@ -337,20 +332,17 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 #include "drivers/AltSoftSerial/AltSoftSerial.cpp"
 #endif
-#include "hal/transport/MyTransportRS485.cpp"
+#include "hal/transport/RS485/MyTransportRS485.cpp"
 #elif defined(MY_RADIO_RFM69)
 #if defined(MY_RFM69_NEW_DRIVER)
 #include "drivers/RFM69/new/RFM69_new.cpp"
 #else
 #include "drivers/RFM69/old/RFM69_old.cpp"
 #endif
-#include "hal/transport/MyTransportRFM69.cpp"
+#include "hal/transport/RFM69/MyTransportRFM69.cpp"
 #elif defined(MY_RADIO_RFM95)
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 #include "drivers/RFM95/RFM95.cpp"
-#include "hal/transport/MyTransportRFM95.cpp"
+#include "hal/transport/RFM95/MyTransportRFM95.cpp"
 #endif
 
 // PASSIVE MODE
@@ -406,7 +398,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #elif defined(ARDUINO_ARCH_NRF5)
 #include "hal/architecture/NRF5/MyMainNRF5.cpp"
 #elif defined(__linux__)
-#include "hal/architecture/Linux/MyMainLinux.cpp"
+#include "hal/architecture/Linux/MyMainLinuxGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
 #elif defined(TEENSYDUINO)
