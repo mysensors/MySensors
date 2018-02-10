@@ -7,13 +7,7 @@ echo -e "/**\n * @defgroup RaspberryPiGateway Raspberry Pi Gateway\n * @ingroup 
 				echo -e "@endverbatim\n@}*/\n" >> configure.h
 
 # Generate version information
-export PROJECTNUMBER=$(
-	if [[ $(git rev-parse --abbrev-ref HEAD) == "master" ]]; then
-		git describe --tags ;
-	else
-		git rev-parse --short HEAD ;
-	fi
-)
+export PROJECTNUMBER=$(git fetch --tags; git describe --tags;)
 
 # Generate any UML diagrams in the code tree that has the proper tags
 export PLANTUML_JAR_PATH=Documentation/plantuml.jar

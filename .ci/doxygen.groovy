@@ -19,7 +19,7 @@ def call(config) {
 		// Publish docs to API server
 		if (env.BRANCH_NAME == 'master') {
 			sh """#!/bin/bash
-						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io"""
+						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:"""
 		} else if (env.BRANCH_NAME == 'development') {
 			sh """#!/bin/bash
 						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:beta"""
