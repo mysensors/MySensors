@@ -20,6 +20,7 @@
 #include "MyHwAVR.h"
 #include "avr/boot.h"
 
+
 bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)

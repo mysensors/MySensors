@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -51,9 +51,6 @@
 // transport(Serial,0,-1); // serial port, node, dePin (-1 disabled)
 
 // Serial Transport
-
-
-#include "MyTransportHAL.h"
 
 #ifdef __linux__
 #include "SerialPort.h"
@@ -367,15 +364,17 @@ void transportPowerDown(void)
 
 void transportPowerUp(void)
 {
-
+	// not implemented
 }
+
 void transportSleep(void)
 {
-
+	// not implemented
 }
+
 void transportStandBy(void)
 {
-
+	// not implemented
 }
 
 int16_t transportGetSendingRSSI(void)
