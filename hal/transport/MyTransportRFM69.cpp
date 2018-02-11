@@ -35,9 +35,9 @@ bool transportInit(void)
 
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
 	uint8_t _psk[16];
-#ifdef MY_SIGNING_SIMPLE_PASSWD
+#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
 	memset(_psk, 0, 16);
-	memcpy(_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+	memcpy(_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
 	hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
@@ -170,9 +170,9 @@ bool transportInit(void)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
 		uint8_t _psk[16];
-#ifdef MY_SIGNING_SIMPLE_PASSWD
+#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
 		memset(_psk, 0, 16);
-		memcpy(_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+		memcpy(_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
 		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif

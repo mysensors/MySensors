@@ -72,7 +72,7 @@ MySensors options:
     --my-rf24-encryption-enabled
                                 Enables RF24 encryption.
                                 All nodes and gateway must have this enabled, and all must be
-                                personalized with the same AES key
+                                personalized with the same AES key.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
     --my-rfm69-frequency=[315|433|868|915]
@@ -80,6 +80,10 @@ MySensors options:
     --my-is-rfm69hw             Enable high-powered rfm69hw.
     --my-rfm69-irq-pin=<PIN>    Pin number connected to RFM69 IRQ pin.
     --my-rfm69-cs-pin=<PIN>     Pin number to use for RFM69 Chip-Select.
+    --my-rfm69-encryption-enabled
+                                Enables RFM69 encryption.
+                                All nodes and gateway must have this enabled, and all must be
+                                personalized with the same AES key.
     --my-rs485-serial-port=<PORT>
                                 RS485 serial port. You must provide a port.
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
@@ -98,8 +102,13 @@ MySensors options:
                                 gateway signature.
     --my-signing-weak_security  Enable this to permit downgrade of security preferences and
                                 relaxed gateway signing requirements.
-    --my-signing-password=<PASSWORD>
-                                If you are using password as the signature type, set your password here.
+    --my-signing-whitelist=<WHITELIST>
+                                If you want to use a whitelist, provide it here, make sure to avoid
+                                spaces in the <whitelist> expression.
+    --my-signing-verification-timeout-ms=<TIMEOUT>
+                                Signing timeout. [5000]
+    --my-security-password=<PASSWORD>
+                                If you are using password for signing/encryption, set your password here.
 EOF
 }
 
@@ -258,6 +267,7 @@ gateway_type=ethernet
 transport_type=nrf24
 signing=none
 signing_request_signatures=false
+encryption=false
 
 params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER"
 
@@ -398,6 +408,7 @@ for opt do
         CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-rf24-encryption-enabled*)
+        encryption=true
         CPPFLAGS="-DMY_RF24_ENABLE_ENCRYPTION $CPPFLAGS"
         ;;
     --my-rx-message-buffer-size=*)
@@ -424,6 +435,10 @@ for opt do
         ;;
     --my-rfm69-cs-pin=*)
         CPPFLAGS="-DMY_RFM69_CS_PIN=${optarg} $CPPFLAGS"
+        ;;
+    --my-rfm69-encryption-enabled*)
+        encryption=true
+        CPPFLAGS="-DMY_RFM69_ENABLE_ENCRYPTION $CPPFLAGS"
         ;;
     --my-rs485-serial-port=*)
         CPPFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CPPFLAGS"
@@ -461,8 +476,14 @@ for opt do
     --my-signing-weak_security*)
         CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
         ;;
-    --my-signing-password=*)
-        signing_password=${optarg}
+    --my-signing-whitelist*)
+        CPPFLAGS="-DMY_SIGNING_NODE_WHITELISTING=${optarg} $CPPFLAGS"
+        ;;
+    --my-signing-verification-timeout-ms*)
+        CPPFLAGS="-DMY_VERIFICATION_TIMEOUT_MS=${optarg} $CPPFLAGS"
+        ;;
+    --my-security-password=*)
+        security_password=${optarg}
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
@@ -573,13 +594,23 @@ elif [[ ${signing} == "software" ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
 elif [[ ${signing} == "password" ]]; then
-    if [ -z "${signing_password}" ]; then
-        die "You need to set the password for signing with --my-signing-password= option" 6
+    if [ -z "${security_password}" ]; then
+        die "You need to set the password for signing with --my-security-password= option" 6
     fi
     echo "Simplified signing using password"
-    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing_password}\\\" $CPPFLAGS"
+    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${security_password}\\\" $CPPFLAGS"
 else
     die "Invalid signing type." 7
+fi
+
+if [[ ${encryption} == true ]]; then
+    # Encryption enabled on some transport
+    if [ -z "${security_password}" ]; then
+        echo "Encryption key from configuration"
+    else
+        echo "Simplified encryption using password"
+        CPPFLAGS="-DMY_ENCRYPTION_SIMPLE_PASSWD=\\\"${security_password}\\\" $CPPFLAGS"
+    fi
 fi
 
 LDFLAGS="-pthread $LDFLAGS"

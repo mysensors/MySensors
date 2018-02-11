@@ -134,7 +134,7 @@ void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
 	printf("\n\n");
 
 	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
-	printf("#define MY_SOFT_HMAC_KEY ");
+	printf("#define MY_HMAC_KEY ");
 	for (int i=0; i<32; i++) {
 		printf("%#02X", key_ptr[i]);
 		if (i < 31) {
@@ -265,9 +265,9 @@ void print_aes_key(uint8_t *key_ptr = NULL)
 	uint8_t key[16];
 
 	if (key_ptr == NULL) {
-#ifdef MY_SIGNING_SIMPLE_PASSWD
+#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
 		memset(key, 0, 16);
-		memcpy(key, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+		memcpy(key, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
 		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
