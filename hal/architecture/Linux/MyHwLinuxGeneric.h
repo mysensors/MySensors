@@ -23,16 +23,16 @@
 #include <cstdlib>
 #include <pthread.h>
 #include "SerialPort.h"
-#include "SerialSimulator.h"
+#include "StdInOutStream.h"
 
-#ifdef MY_GATEWAY_SERIAL
-#ifdef MY_LINUX_IS_SERIAL_PTY
-SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PTY, true);
+#ifdef MY_LINUX_SERIAL_PORT
+#ifdef MY_LINUX_SERIAL_IS_PTY
+SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT, true);
 #else
-SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT);
+SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT, false);
 #endif
 #else
-SerialSimulator Serial = SerialSimulator();
+StdInOutStream Serial = StdInOutStream();
 #endif
 
 #ifndef MY_SERIALDEVICE

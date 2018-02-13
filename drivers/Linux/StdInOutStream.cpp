@@ -18,39 +18,39 @@
  */
 
 #include <stdio.h>
-#include "SerialSimulator.h"
+#include "StdInOutStream.h"
 
-void SerialSimulator::begin(int baud)
+void StdInOutStream::begin(int baud)
 {
 	(void)baud;
 }
 
-int SerialSimulator::available()
+int StdInOutStream::available()
 {
 	return 1;
 }
 
-int SerialSimulator::read()
+int StdInOutStream::read()
 {
 	return getchar();
 }
 
-size_t SerialSimulator::write(uint8_t b)
+size_t StdInOutStream::write(uint8_t b)
 {
 	return (size_t)::printf("%c", b);
 }
 
-int SerialSimulator::peek()
+int StdInOutStream::peek()
 {
 	return -1;
 }
 
-void SerialSimulator::flush()
+void StdInOutStream::flush()
 {
 	fflush(stdout);
 }
 
-void SerialSimulator::end()
+void StdInOutStream::end()
 {
 	flush();
 }

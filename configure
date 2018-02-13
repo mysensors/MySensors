@@ -47,11 +47,12 @@ MySensors options:
                                 Controller or MQTT broker ip.
     --my-port=<PORT>            The port to keep open on gateway mode.
                                 If gateway is set to mqtt, it sets the broker port.
-    --my-serial-port=<PORT>     Serial port. [/dev/ttyACM0]
+    --my-serial-port=<PORT>     Serial port.
     --my-serial-baudrate=<BAUD> Serial baud rate. [115200]
     --my-serial-is-pty          Set the serial port to be a pseudo terminal. Use this if you want
                                 to connect to a controller running on the same device.
-    --my-serial-pty=<NAME>      Symlink name for the PTY device. [/dev/ttyMySensorsGateway]
+                                You also need to set the symlink name for the PTY device with
+                                the --my-serial-port option.
     --my-serial-groupname=<GROUP>
                                 Grant access to the specified system group for the serial device.
     --my-mqtt-client-id=<ID>    MQTT client id.
@@ -348,10 +349,6 @@ for opt do
     --my-transport=*)
         transport_type=${optarg}
         ;;
-    --my-radio=*)
-        echo "Warning: --my-radio is deprecated, please use --my-transport"
-        transport_type=${optarg}
-        ;;
     --my-serial-port=*)
         CPPFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
@@ -359,10 +356,11 @@ for opt do
         CPPFLAGS="-DMY_BAUD_RATE=${optarg} $CPPFLAGS"
         ;;
     --my-serial-is-pty*)
-        CPPFLAGS="-DMY_LINUX_IS_SERIAL_PTY $CPPFLAGS"
+        CPPFLAGS="-DMY_LINUX_SERIAL_IS_PTY $CPPFLAGS"
         ;;
     --my-serial-pty=*)
-        CPPFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CPPFLAGS"
+        echo "Warning: --my-serial-pty is deprecated, please use --my-serial-port"
+        CPPFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-serial-groupname=*)
         CPPFLAGS="-DMY_LINUX_SERIAL_GROUPNAME=\\\"${optarg}\\\" $CPPFLAGS"

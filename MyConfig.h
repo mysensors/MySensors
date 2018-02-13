@@ -1805,29 +1805,39 @@
  * @brief These options control Linux specific configurations.
  * @{
  */
+
 /**
  * @def MY_LINUX_SERIAL_PORT
  * @brief Serial device port
  */
-#ifndef MY_LINUX_SERIAL_PORT
-#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+//#define MY_LINUX_SERIAL_PORT "/dev/ttyUSB0"
+
+/**
+ * @def MY_LINUX_SERIAL_PTY
+ * @brief deprecated option
+ */
+#ifdef MY_LINUX_SERIAL_PTY
+#warning MY_LINUX_SERIAL_PTY is deprecated, please use MY_LINUX_SERIAL_PORT
+#define MY_LINUX_SERIAL_PORT MY_LINUX_SERIAL_PTY
 #endif
 
 /**
  * @def MY_LINUX_IS_SERIAL_PTY
+ * @brief deprecated option
+ */
+#ifdef MY_LINUX_IS_SERIAL_PTY
+#warning MY_LINUX_IS_SERIAL_PTY is deprecated, please use MY_LINUX_SERIAL_IS_PTY
+#define MY_LINUX_SERIAL_IS_PTY
+#endif
+
+/**
+ * @def MY_LINUX_SERIAL_IS_PTY
  * @brief Set serial as a pseudo terminal.
  *
  * Enable this if you need to connect to a controller running on the same device.
+ * You also need to define MY_LINUX_SERIAL_PORT with the symlink name for the PTY device.
  */
-//#define MY_LINUX_IS_SERIAL_PTY
-
-/**
- * @def MY_LINUX_SERIAL_PTY
- * @brief Symlink name for the PTY device.
- */
-#ifndef MY_LINUX_SERIAL_PTY
-#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
-#endif
+//#define MY_LINUX_SERIAL_IS_PTY
 
 /**
  * @def MY_LINUX_SERIAL_GROUPNAME
@@ -1983,7 +1993,10 @@
 #define MY_DISABLED_SERIAL
 #define MY_SPLASH_SCREEN_DISABLED
 // linux
+#define MY_LINUX_SERIAL_PORT
+#define MY_LINUX_SERIAL_IS_PTY
 #define MY_LINUX_SERIAL_GROUPNAME
+#define MY_LINUX_SERIAL_PTY
 #define MY_LINUX_IS_SERIAL_PTY
 // inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
