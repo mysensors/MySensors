@@ -58,7 +58,7 @@
  * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
  *
   * Inclusion mode button:
- * - Connect GPIO5 via switch to GND ('inclusion switch')
+ * - Connect GPIO5 (=D1) via switch to GND ('inclusion switch')
  *
  * Hardware SHA204 signing is currently not supported!
  *
@@ -113,7 +113,7 @@
 // Set inclusion mode duration (in seconds)
 //#define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
-//#define MY_INCLUSION_MODE_BUTTON_PIN  3
+//#define MY_INCLUSION_MODE_BUTTON_PIN D1
 
 // Set blinking period
 //#define MY_DEFAULT_LED_BLINK_PERIOD 300
