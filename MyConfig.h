@@ -572,7 +572,7 @@
 
 /**
  * @def MY_RADIO_RFM69
- * @brief Define this to use RFM69 based radios for sensor network communication.
+ * @brief Define this to use %RFM69 based radios for sensor network communication.
  */
 //#define MY_RADIO_RFM69
 
@@ -641,7 +641,7 @@
 
 /**
  * @def MY_RFM69_ATC_TARGET_RSSI_DBM
- * @brief Target RSSI level (in dBm) for RFM69 ATC mode.
+ * @brief Target RSSI level (in dBm) for %RFM69 ATC mode.
  */
 #ifndef MY_RFM69_ATC_TARGET_RSSI_DBM
 #define MY_RFM69_ATC_TARGET_RSSI_DBM (-80)
@@ -649,7 +649,7 @@
 
 /**
  * @def MY_RFM69_ATC_MODE_DISABLED
- * @brief Define to disable ATC mode of RFM69 driver.
+ * @brief Define to disable ATC mode of %RFM69 driver.
  */
 //#define MY_RFM69_ATC_MODE_DISABLED
 
@@ -668,7 +668,7 @@
 
 /**
  * @def MY_RFM69_NETWORKID
- * @brief RFM69 Network ID. Use the same for all nodes that will talk to each other.
+ * @brief %RFM69 Network ID. Use the same for all nodes that will talk to each other.
  */
 #ifndef MY_RFM69_NETWORKID
 #define MY_RFM69_NETWORKID (100)
@@ -682,6 +682,7 @@
 
 #ifdef MY_RF69_RESET
 // legacy, older board files
+// not enabled now: #warning MY_RF69_RESET is depreciated, please use MY_RFM69_RST_PIN instead.
 #define MY_RFM69_RST_PIN MY_RF69_RESET
 #endif
 
@@ -693,11 +694,12 @@
 
 /**
  * @def MY_RFM69_IRQ_PIN
- * @brief Define this to use the %RFM69 IRQ pin (optional).
+ * @brief Define this to override the default %RFM69 IRQ pin assignment.
  */
 #ifndef MY_RFM69_IRQ_PIN
 #ifdef MY_RF69_IRQ_PIN
 // legacy, older board files
+// not enabled now: #warning MY_RF69_IRQ_PIN is depreciated, please use MY_RFM69_IRQ_PIN instead.
 #define MY_RFM69_IRQ_PIN MY_RF69_IRQ_PIN
 #else
 #define MY_RFM69_IRQ_PIN DEFAULT_RFM69_IRQ_PIN
@@ -711,19 +713,21 @@
 #ifndef MY_RFM69_IRQ_NUM
 #ifdef MY_RF69_IRQ_NUM
 // legacy, older board files
+// not enabled now: #warning MY_RF69_IRQ_NUM is depreciated, please use MY_RFM69_IRQ_NUM instead.
 #define MY_RFM69_IRQ_NUM MY_RF69_IRQ_NUM
 #else
-#define MY_RFM69_IRQ_NUM DEFAULT_RFM69_IRQ_NUM
+#define MY_RFM69_IRQ_NUM digitalPinToInterrupt(MY_RFM69_IRQ_PIN)
 #endif
 #endif
 
 /**
  * @def MY_RFM69_CS_PIN
- * @brief RFM69 SPI chip select pin.
+ * @brief %RFM69 SPI chip select pin.
  */
 #ifndef MY_RFM69_CS_PIN
 #ifdef MY_RF69_SPI_CS
 // legacy, older board files
+// not enabled now: #warning MY_RF69_SPI_CS is depreciated, please use MY_RFM69_CS_PIN instead.
 #define MY_RFM69_CS_PIN MY_RF69_SPI_CS
 #else
 #define MY_RFM69_CS_PIN DEFAULT_RFM69_CS_PIN
@@ -764,29 +768,29 @@
 #define  MY_RFM69_DEFAULT_LISTEN_IDLE_US (1*1000000ul)
 #endif
 
-#if !defined(MY_RFM69_BITRATE_MSB) && !defined(MY_RFM69_BITRATE_LSB)
 /**
- * @def MY_RFM69_BITRATE_MSB
- * @brief %RFM69 bit rate (most significant bits)
+ * @def MY_RFM69_MODEM_CONFIGURATION
+ * @brief %RFM69 modem configuration, default is %RFM69_FSK_BR55_5_FD50
  *
- * Bitrate between the transmitter and the receiver must be better than 6.5.
- * Refer to RFM69registers_old.h (L.153) or RFM69registers_new.h (L.154) for settings or
- * http://www.semtech.com/apps/filedown/down.php?file=sx1231.pdf
- * @note RFM69_FOSC(Hz)/MSB_LSBVALUE = Bitrate in kbits
+ * | Configuration           | Modulation (xxx) | Bit rate | FD     | RXBW     | Additional settings
+ * |-------------------------|------------------|----------|--------|----------|---------------------------
+ * | RFM69_xxx_BR2_FD5       | FSK/GFSK/OOK     | 2000     | 5000   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR2_4_FD4_8   | FSK/GFSK/OOK     | 2400     | 4800   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR4_8_FD9_6   | FSK/GFSK/OOK     | 4800     | 9600   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR9_6_FD19_2  | FSK/GFSK/OOK     | 9600     | 19200  | 111_24_4 | Whitening
+ * | RFM69_xxx_BR19_2_FD38_4 | FSK/GFSK/OOK     | 19200    | 38400  | 111_24_3 | Whitening
+ * | RFM69_xxx_BR38_4_FD76_8 | FSK/GFSK/OOK     | 38400    | 76800  | 111_24_2 | Whitening
+ * | RFM69_xxx_BR55_5_FD50   | FSK/GFSK/OOK     | 55555    | 50000  | 111_16_2 | Whitening
+ * | RFM69_xxx_BR57_6_FD120  | FSK/GFSK/OOK     | 57600    | 120000 | 111_16_1 | Whitening
+ * | RFM69_xxx_BR125_FD125   | FSK/GFSK/OOK     | 125000   | 125000 | 010_16_2 | Whitening
+ * | RFM69_xxx_BR250_FD250   | FSK/GFSK/OOK     | 250000   | 250000 | 111_16_0 | Whitening
+ *
+ * https://www.semtech.com/uploads/documents/sx1231.pdf
  *
  */
-#define MY_RFM69_BITRATE_MSB (RFM69_BITRATEMSB_55555)
-/**
- * @def MY_RFM69_BITRATE_LSB
- * @brief %RFM69 bit rate (least significant bits)
- *
- * Bitrate between the transmitter and the receiver must be better than 6.5.
- * Refer to RFM69registers_old.h (L.153) or RFM69registers_new.h (L.154) for settings or
- * http://www.semtech.com/apps/filedown/down.php?file=sx1231.pdf
- * @note RFM69_FOSC(Hz)/MSB_LSBVALUE = Bitrate in kbits
- */
-#define MY_RFM69_BITRATE_LSB (RFM69_BITRATELSB_55555)
-#endif
+//#define MY_RFM69_MODEM_CONFIGURATION (RFM69_FSK_BR55_5_FD50)
+
+
 /** @}*/ // End of RFM69SettingGrpPub group
 
 /**
@@ -2073,6 +2077,7 @@
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER
 #define MY_RFM69_POWER_PIN
+#define MY_RFM69_MODEM_CONFIGURATION
 #define MY_RFM69_ENABLE_ENCRYPTION
 #define MY_RFM69_ATC_MODE_DISABLED
 #define MY_RFM69_MAX_POWER_LEVEL_DBM

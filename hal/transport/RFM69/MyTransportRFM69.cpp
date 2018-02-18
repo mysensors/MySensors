@@ -25,8 +25,8 @@ bool transportInit(void)
 {
 	const bool result = RFM69_initialise(MY_RFM69_FREQUENCY);
 #if defined(MY_GATEWAY_FEATURE) || defined(MY_RFM69_ATC_MODE_DISABLED)
-	// ATC mode disabled on GW
-	RFM69_ATCmode(false);
+	// ATC mode function not used
+	(void)RFM69_ATCmode;
 #else
 	RFM69_ATCmode(true, MY_RFM69_ATC_TARGET_RSSI_DBM);
 #endif
@@ -41,6 +41,8 @@ bool transportInit(void)
 #endif
 	RFM69_encrypt((const char*)RFM69_psk);
 	(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
+#else
+	(void)RFM69_encrypt;
 #endif
 	return result;
 }
@@ -66,6 +68,7 @@ bool transportSend(const uint8_t to, const void* data, uint8_t len, const bool n
 
 bool transportAvailable(void)
 {
+	RFM69_handler();
 	return RFM69_available();
 }
 
@@ -76,7 +79,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	return RFM69_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	return RFM69_receive((uint8_t*)data, MAX_MESSAGE_LENGTH);
 }
 
 void transportSleep(void)
