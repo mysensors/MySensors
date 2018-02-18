@@ -863,7 +863,7 @@
 
 /**
  * @def MY_RFM95_IRQ_PIN
- * @brief Define this to use the RFM95 IRQ pin (optional).
+ * @brief Define this to use the RFM95 IRQ pin.
  */
 #ifndef MY_RFM95_IRQ_PIN
 #define MY_RFM95_IRQ_PIN DEFAULT_RFM95_IRQ_PIN
@@ -874,7 +874,7 @@
  * @brief RFM95 IRQ number.
  */
 #ifndef MY_RFM95_IRQ_NUM
-#define MY_RFM95_IRQ_NUM DEFAULT_RFM95_IRQ_NUM
+#define MY_RFM95_IRQ_NUM digitalPinToInterrupt(MY_RFM95_IRQ_PIN)
 #endif
 
 /**
@@ -914,7 +914,7 @@
  * @brief Target RSSI level (in dBm) for RFM95 ATC mode
  */
 #ifndef MY_RFM95_ATC_TARGET_RSSI
-#define MY_RFM95_ATC_TARGET_RSSI (-60)
+#define MY_RFM95_ATC_TARGET_RSSI (-70)
 #endif
 
 /**
