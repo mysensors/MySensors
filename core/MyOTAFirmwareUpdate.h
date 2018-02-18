@@ -34,19 +34,20 @@
 *
 * MyOTAFirmwareUpdate debug log messages:
 *
-* |E| SYS | SUB | Message											| Comment
+* |E| SYS | SUB | Message                     | Comment
 * |-|-----|-----|-----------------------------|----------------------------------------------------------------------------
-* | | OTA | FWP | UPDATE											| FW update initiated
-* |!| OTA | FWP | FLASH INIT FAIL							| Failed to initialise flash
-* | | OTA | FWP | UPDATE SKIPPED							| FW update skipped, no newer version available
-* | | OTA | FWP | RECV B=%04X									| Received FW block (B)
-* |!| OTA | FWP | WRONG FWB										| Wrong FW block received
-* | | OTA | FWP | FW END											| FW received, proceed to CRC verification
-* | | OTA | FWP | CRC OK											| FW CRC verification OK
-* |!| OTA | FWP | CRC FAIL										| FW CRC verification failed
-* | | OTA | FRQ | FW REQ,T=%04X,V=%04X,B=%04X	| Request FW update, FW type (T), version (V), block (B)
-* |!| OTA | FRQ | FW UPD FAIL									| FW update failed
-* | | OTA | CRC | B=%04X,C=%04X,F=%04X				| FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
+* | | OTA | FWP | UPDATE                      | FW update initiated
+* |!| OTA | FWP | UPDO                        | FW config response received, FW update already ongoing
+* |!| OTA | FWP | FLASH INIT FAIL             | Failed to initialise flash
+* | | OTA | FWP | UPDATE SKIPPED              | FW update skipped, no newer version available
+* | | OTA | FWP | RECV B=%04X                 | Received FW block (B)
+* |!| OTA | FWP | WRONG FWB                   | Wrong FW block received
+* | | OTA | FWP | FW END                      | FW received, proceed to CRC verification
+* | | OTA | FWP | CRC OK                      | FW CRC verification OK
+* |!| OTA | FWP | CRC FAIL                    | FW CRC verification failed
+* | | OTA | FRQ | FW REQ,T=%04X,V=%04X,B=%04X | Request FW update, FW type (T), version (V), block (B)
+* |!| OTA | FRQ | FW UPD FAIL                 | FW update failed
+* | | OTA | CRC | B=%04X,C=%04X,F=%04X        | FW CRC verification. FW blocks (B), calculated CRC (C), FW CRC (F)
 *
 *
 * @brief API declaration for MyOTAFirmwareUpdate
@@ -57,6 +58,8 @@
 #define MyOTAFirmwareUpdate_h
 
 #include "MySensorsCore.h"
+
+#define LOCAL static //!< static
 
 #define FIRMWARE_BLOCK_SIZE		(16u)				//!< Size of each firmware block
 #define FIRMWARE_MAX_REQUESTS	(5u)				//!< Number of times a firmware block should be requested before giving up
@@ -69,7 +72,7 @@
 #define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)	//!< Bootloader version
 
 #if defined(MY_DEBUG_VERBOSE_OTA_UPDATE)
-#define OTA_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
+#define OTA_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 //#define OTA_EXTRA_FLASH_DEBUG	//!< Dumps flash after each FW block
 #else
 #define OTA_DEBUG(x,...)	//!< debug NULL
@@ -120,27 +123,27 @@ typedef struct {
  *
  * Current firmware settings (type, version, crc, blocks) are read into _fc
  */
-void readFirmwareSettings(void);
+LOCAL void readFirmwareSettings(void);
 /**
  * @brief Handle OTA FW update requests
  */
-void firmwareOTAUpdateRequest(void);
+LOCAL void firmwareOTAUpdateRequest(void);
 /**
  * @brief Handle OTA FW update responses
  *
  * This function handles incoming OTA FW packets and stores them to external flash (Sensebender)
  */
-bool firmwareOTAUpdateProcess(void);
+LOCAL bool firmwareOTAUpdateProcess(void);
 /**
  * @brief Validate uploaded FW CRC
  *
  * This function verifies if uploaded FW CRC is valid
  */
-bool transportIsValidFirmware(void);
+LOCAL bool transportIsValidFirmware(void);
 /**
  * @brief Present bootloader/FW information upon startup
  */
-void presentBootloaderInformation(void);
+LOCAL void presentBootloaderInformation(void);
 
 #endif
 

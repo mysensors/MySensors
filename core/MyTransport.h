@@ -130,7 +130,7 @@
 *
 * Incoming / outgoing messages:
 *
-* See <a href="https://www.mysensors.org/download/serial_api_20">here</a> for more detail on the format and definitons.
+* See <a href="https://www.mysensors.org/download/serial_api_20">here</a> for more detail on the format and definitions.
 *
 * Receiving a message
 * - TSF:MSG:READ,sender-last-destination,s=%%d,c=%%d,t=%%d,pt=%%d,l=%%d,sg=%%d:%%s
@@ -192,9 +192,9 @@
 #define AUTO						(255u)			//!< ID 255 is reserved
 #define BROADCAST_ADDRESS			(255u)			//!< broadcasts are addressed to ID 255
 #define DISTANCE_INVALID			(255u)			//!< invalid distance when searching for parent
-#define MAX_HOPS					(254u)			//!< maximal mumber of hops for ping/pong
+#define MAX_HOPS					(254u)			//!< maximal number of hops for ping/pong
 #define INVALID_HOPS				(255u)			//!< invalid hops
-#define MAX_SUBSEQ_MSGS				(5u)			//!< Maximum number of subsequentially processed messages in FIFO (to prevent transport deadlock if HW issue)
+#define MAX_SUBSEQ_MSGS				(5u)			//!< Maximum number of subsequently processed messages in FIFO (to prevent transport deadlock if HW issue)
 #define UPLINK_QUALITY_WEIGHT		(0.05f)			//!< UPLINK_QUALITY_WEIGHT
 
 

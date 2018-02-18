@@ -33,6 +33,11 @@ inline void inclusionInit()
 	hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
 	hwDigitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
 #endif
+#if defined (MY_INCLUSION_LED_PIN)
+	// Setup LED pin that indicates inclusion mode
+	hwPinMode(MY_INCLUSION_LED_PIN, OUTPUT);
+	hwDigitalWrite(MY_INCLUSION_LED_PIN, LED_OFF);
+#endif
 
 }
 
@@ -47,6 +52,9 @@ void inclusionModeSet(bool newMode)
 			_inclusionStartTime = hwMillis();
 		}
 	}
+#if defined (MY_INCLUSION_LED_PIN)
+	hwDigitalWrite(MY_INCLUSION_LED_PIN, _inclusionMode ? LED_ON : LED_OFF);
+#endif
 }
 
 inline void inclusionProcess()

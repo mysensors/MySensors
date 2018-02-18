@@ -41,10 +41,10 @@ bool protocolParse(MyMessage &message, char *inputString)
 	        str = strtok_r(NULL, ";", &p) // get subsequent tokens
 	    ) {
 		switch (i) {
-		case 0: // Radioid (destination)
+		case 0: // Radio id (destination)
 			message.destination = atoi(str);
 			break;
-		case 1: // Childid
+		case 1: // Child id
 			message.sensor = atoi(str);
 			break;
 		case 2: // Message type

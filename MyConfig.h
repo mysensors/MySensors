@@ -46,7 +46,21 @@
  * the flag in your sketch.
  */
 //#define MY_DEBUG
-
+/**
+ * @def MY_DEBUGDEVICE
+ * @brief Define MY_DEBUGDEVICE to redirect debug prints.
+ *
+ * If defined, MY_DEBUGDEVICE replaces MY_SERIALDEVICE for the purpose
+ * of printing debug messages.  This only applies to debugging.
+ *
+ * The intent is to provide the ability to send debugging messages
+ * out a different serial port than what is being used for
+ * communication between nodes or from gateway to controller when
+ * this communication uses a serial interface.  This assumes that
+ * the MY_DEBUGDEVICE serial interface already exists. It can be a
+ * hardware serial device or a software serial device.
+ */
+//#define MY_DEBUGDEVICE
 /**
  * @def MY_DEBUG_OTA
  * @brief Define MY_DEBUG_OTA to redirect debug prints to given node ID
@@ -144,7 +158,7 @@
  * @def MY_SERIAL_OUTPUT_SIZE
  * @brief Maximum characters for serial output.
  *
- * If you are running extreamely low on memory, reducing this size might just save your day.
+ * If you are running extremely low on memory, reducing this size might just save your day.
  */
 #ifndef MY_SERIAL_OUTPUT_SIZE
 #define MY_SERIAL_OUTPUT_SIZE (120u)
@@ -152,16 +166,18 @@
 /** @}*/ // End of SerialDebugGrpPub group
 
 /**
- * @defgroup RadioSettingGrpPub Radio selection
- * @ingroup MyConfigGrp
- * @brief These options control what radio type to use and various radio specific customisations.
- * @{
+ * @def MY_DEBUG_VERBOSE_OTA_UPDATE
+ * @brief Define this for verbose debug prints related to FOTA updates.
  */
+//#define MY_DEBUG_VERBOSE_OTA_UPDATE
 
-// Define or uncomment MY_OTA_USE_I2C_EEPROM below if you want I2C EEPROM instead
-// of a SPI flash. Used EEPROM needs to be large enough, an 24(L)C256 will do as minimum.
-// HW I2C assumed. This will exclude the SPI flash code.
-// Note that you also need an updated DualOptiboot supporting I2C EEPROM!
+/**
+ * @def MY_OTA_USE_I2C_EEPROM
+ * @brief Define this if you want I2C EEPROM instead
+ * of a SPI flash. Used EEPROM needs to be large enough, an 24(L)C256 will do as minimum.
+ * HW I2C assumed. This will exclude the SPI flash code.
+ * Note that you also need an updated DualOptiboot supporting I2C EEPROM!
+ */
 //#define MY_OTA_USE_I2C_EEPROM
 
 #ifdef MY_OTA_USE_I2C_EEPROM
@@ -170,6 +186,15 @@
 #define MY_OTA_I2C_ADDR		0x50
 #endif
 #endif
+
+
+/**
+ * @defgroup RadioSettingGrpPub Radio selection
+ * @ingroup MyConfigGrp
+ * @brief These options control what radio type to use and various radio specific customisations.
+ * @{
+ */
+
 
 /**
  * @defgroup RS485SettingGrpPub RS485
@@ -199,6 +224,15 @@
 #ifndef MY_RS485_MAX_MESSAGE_LENGTH
 #define MY_RS485_MAX_MESSAGE_LENGTH (40)
 #endif
+
+/**
+ * @def MY_RS485_SOH_COUNT
+ * @brief Use this in case of collisions on the bus. 3 might be a good setting.
+ */
+#ifndef MY_RS485_SOH_COUNT
+#define MY_RS485_SOH_COUNT (1)
+#endif
+
 
 /**
  * @def MY_RS485_DE_PIN
@@ -360,7 +394,7 @@
 
 /**
  * @def MY_RF24_DATARATE
- * @brief RF24 datarate.
+ * @brief RF24 data rate.
  *
  * - RF24_250KBPS for 250kbs
  * - RF24_1MBPS for 1Mbps
@@ -599,7 +633,7 @@
 
 /**
  * @def MY_RFM69_TX_POWER_DBM
- * @brief Set TX power level, default 5dBm (overriden if ATC mode enabled).
+ * @brief Set TX power level, default 5dBm (overridden if ATC mode enabled).
  */
 #ifndef MY_RFM69_TX_POWER_DBM
 #define MY_RFM69_TX_POWER_DBM (5)
@@ -861,7 +895,7 @@
 
 /**
  * @def MY_RFM95_TX_POWER_DBM
- * @brief Set TX power level, default 13dBm (overriden if ATC mode enabled)
+ * @brief Set TX power level, default 13dBm (overridden if ATC mode enabled)
  *
  * See here https://en.wikipedia.org/wiki/Short_Range_Devices
  */
@@ -1068,20 +1102,12 @@
 #endif
 
 /**
- * @def MY_DISABLE_SIGNAL_REPORT
- * @ingroup memorysavings
- * @brief If defined, signal report functionality will be unavailable.
- * @see MY_SIGNAL_REPORT_ENABLED
- */
-/**
- * @def MY_SIGNAL_REPORT_ENABLED
- * @brief Enables signal report functionality.
- * @note Enabled by default. This feature adds ~1kB code to the sketch.
- * @see MY_DISABLE_SIGNAL_REPORT
- */
-#ifndef MY_DISABLE_SIGNAL_REPORT
-#define MY_SIGNAL_REPORT_ENABLED
-#endif
+* @def MY_SIGNAL_REPORT_ENABLED
+* @brief Enables signal report functionality.
+* @note This feature adds ~1kB code to the sketch.
+*/
+//#define MY_SIGNAL_REPORT_ENABLED
+
 /** @}*/ // End of RoutingNodeSettingGrpPub group
 
 /**
@@ -1257,6 +1283,15 @@
 #endif
 
 /**
+ * @def MY_INCLUSION_LED_PIN
+ * @brief Enables an inclusion mode LED indicator on the gateway device.
+ *
+ * With this defined, inclusion mode status (on or off) is indicated by the LED.
+ * This feature obeys @ref MY_WITH_LEDS_BLINKING_INVERSE
+ */
+//#define MY_INCLUSION_LED_PIN (7)
+
+/**
  * @def MY_INCLUSION_MODE_BUTTON_PIN
  * @brief The default input pin used for the inclusion mode button.
  */
@@ -1311,6 +1346,13 @@
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
 //#define MY_GATEWAY_LINUX
+
+
+/**
+* @def MY_DEBUG_VERBOSE_GATEWAY
+* @brief Define this for verbose debug prints related to the gateway transport.
+*/
+//#define MY_DEBUG_VERBOSE_GATEWAY
 
 /**
  * @def MY_PORT
@@ -1473,7 +1515,7 @@
  * with the regular software and ATSHA204A based modes.
  *
  * If the provided password is shorter than the size of the HMAC or %AES key, it will be null-padded
- * to accomodate the key size in question. A 32 character password is the maximum length. Any
+ * to accommodate the key size in question. A 32 character password is the maximum length. Any
  * password longer than that will be truncated.
  */
 //#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
@@ -1513,7 +1555,7 @@
  *        requirements.
  *
  * Use this for evaluating security. It allows for gradual introduction of signing requirements in
- * a network. Nodes that present themselves as not requiering signing or whitelisting will be
+ * a network. Nodes that present themselves as not requiring signing or whitelisting will be
  * cleared of this requirement at the receiving end. A gateway which require signatures will only do
  * so from nodes that in turn require signatures.
  *
@@ -1593,7 +1635,7 @@
 /** @}*/ // End of SigningSettingGrpPub group
 
 /**
- * @defgroup MyLockgrppub Node locknig
+ * @defgroup MyLockgrppub Node locking
  * @ingroup MyConfig
  * @brief These options control node lock related configurations.
  *
@@ -1606,7 +1648,7 @@
  * message to the gateway/controller with 30 minute intervals. Payload is a string with a reason for
  * the locking.
  *
- * The string is abbreviated to accomodate a signature. The following abbreviations exist at the
+ * The string is abbreviated to accommodate a signature. The following abbreviations exist at the
  * moment:
  * - LDB (Locked During Boot)
  * - TMNR (Too Many Nonce Requests)
@@ -1635,7 +1677,7 @@
 
 /**
  * @def MY_NODE_UNLOCK_PIN
- * @brief By grounding this pin durig reset of a locked node, the node will unlock.
+ * @brief By grounding this pin during reset of a locked node, the node will unlock.
  *
  * If using a secure bootloader, grounding the pin is the only option to reactivate the node.
  * If using stock Android bootloader or a DualOptiBoot it is also possible to download a sketch
@@ -1647,9 +1689,9 @@
 
 /**
  * @def MY_NODE_LOCK_COUNTER_MAX
- * @brief Maximum accepted occurances of suspected malicious activity in a node.
+ * @brief Maximum accepted occurrences of suspected malicious activity in a node.
  *
- * Counter decrements on reoccuring incidents but resets if legitimate behaviour is identified.
+ * Counter decrements on reoccurring incidents but resets if legitimate behaviour is identified.
  */
 #ifndef MY_NODE_LOCK_COUNTER_MAX
 #define MY_NODE_LOCK_COUNTER_MAX (5)
@@ -1749,7 +1791,7 @@
 #define MY_NODE_TYPE "REPEATER"
 #elif defined(DOXYGEN)
 #define MY_IS_GATEWAY //!< true when configuration indicate a gateway device, @todo Mark these internals
-#define MY_NODE_TYPE  //!< "GW" for wateways, REPEATER" for repeaters, "NODE" for nodes, @todo Mark these internals
+#define MY_NODE_TYPE  //!< "GW" for gateways, REPEATER" for repeaters, "NODE" for nodes, @todo Mark these internals
 #else
 #define MY_IS_GATEWAY (false)
 #define MY_NODE_TYPE "NODE"
@@ -1763,10 +1805,11 @@
 // standard debug output
 #define MY_DEBUG_VERBOSE_CORE	//!< MY_DEBUG_VERBOSE_CORE
 #define MY_DEBUG_VERBOSE_TRANSPORT	//!< MY_DEBUG_VERBOSE_TRANSPORT
-#define MY_DEBUG_VERBOSE_OTA_UPDATE	//!< MY_DEBUG_VERBOSE_OTA_UPDATE
+#define MY_DEBUG_VERBOSE_GATEWAY //!< MY_DEBUG_VERBOSE_GATEWAY
+#define MY_DEBUG_VERBOSE_OTA_UPDATE //!< MY_DEBUG_VERBOSE_OTA_UPDATE
 #endif
 
-#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
+#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_GATEWAY) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95)
 #define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
 #ifndef MY_DEBUG_OTA
 #define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
@@ -1789,9 +1832,6 @@
 #else
 #define DEBUG_OUTPUT(x,...)								//!< debug NULL
 #endif
-
-// transport layer files
-#define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 
 // temp. workaround for nRF5 verifier: redirect RF24 to NRF_ESB
 #if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF24) )
@@ -1861,6 +1901,7 @@
 
 // debug
 #define MY_DEBUG
+#define MY_DEBUGDEVICE
 #define MY_DEBUG_OTA
 #define MY_DEBUG_OTA_DISABLE_ACK
 #define MY_SPECIAL_DEBUG
@@ -1884,7 +1925,7 @@
 #define MY_REPEATER_FEATURE
 #define MY_PASSIVE_NODE
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
-#define MY_DISABLE_SIGNAL_REPORT
+#define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
 #define MY_INDICATION_HANDLER
@@ -1893,7 +1934,9 @@
 // core
 #define MY_CORE_ONLY
 // GW
+#define MY_DEBUG_VERBOSE_GATEWAY
 #define MY_INCLUSION_BUTTON_EXTERNAL_PULLUP
+#define MY_INCLUSION_LED_PIN
 #define MY_GATEWAY_W5100
 #define MY_GATEWAY_ENC28J60
 #define MY_GATEWAY_ESP8266
@@ -1915,6 +1958,9 @@
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_SIGNING_FEATURE
 #define MY_ENCRYPTION_FEATURE
+// FOTA update
+#define MY_DEBUG_VERBOSE_OTA_UPDATE
+#define MY_OTA_USE_I2C_EEPROM
 // RS485
 #define MY_RS485
 #define MY_RS485_HWSERIAL (Serial1)

@@ -136,7 +136,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 		} else {
 			status = *prx++; // status is 1st byte of receive buffer
 			// decrement before to skip status byte
-			while (--size) {
+			while (--size && (buf != NULL)) {
 				*buf++ = *prx++;
 			}
 		}
@@ -1259,13 +1259,13 @@ LOCAL void RFM69_readAllRegs(void)
 			capVal = (regVal >> 2) & 0x7;
 			if (capVal == 0b000) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 000 -> Sleep mode (SLEEP)\n"));
-			} else if (capVal = 0b001) {
+			} else if (capVal == 0b001) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 001 -> Standby mode (STDBY)\n"));
-			} else if (capVal = 0b010) {
+			} else if (capVal == 0b010) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 010 -> Frequency Synthesizer mode (FS)\n"));
-			} else if (capVal = 0b011) {
+			} else if (capVal == 0b011) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 011 -> Transmitter mode (TX)\n"));
-			} else if (capVal = 0b100) {
+			} else if (capVal == 0b100) {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : 100 -> Receiver Mode (RX)\n"));
 			} else {
 				RFM69_DEBUG(PSTR("RFM69:DUMP:Mode : %d capVal \n"), capVal);

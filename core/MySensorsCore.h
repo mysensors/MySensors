@@ -52,6 +52,7 @@
 * | | MCO | PIM | NODE REG=%%d																| Registration response received, registration status (REG)
 * | | MCO | SLP | MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
 * | | MCO | SLP | WUP=%%d																			| Node woke-up, reason/IRQ (WUP)
+* |!| MCO | SLP | NTL																					| Sleeping not possible, no time left
 * |!| MCO | SLP | FWUPD																				| Sleeping not possible, FW update ongoing
 * |!| MCO | SLP | REP																					| Sleeping not possible, repeater feature enabled
 * |!| MCO | SLP | TNR																					| Transport not ready, attempt to reconnect until timeout (MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)
@@ -177,7 +178,7 @@ bool sendHeartbeat(const bool ack = false);
 
 /**
 * Send this nodes signal strength to gateway.
-* @param level Signal strength can be rssi if the radio provide it, or another kind of calculation
+* @param level Signal strength can be RSSI if the radio provide it, or another kind of calculation
 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 * @return true Returns true if message reached the first stop on its way to destination.
 */
@@ -413,7 +414,7 @@ void receive(const MyMessage &message)  __attribute__((weak));
 */
 void receiveTime(uint32_t)  __attribute__((weak));
 /**
-* @brief Node presenation
+* @brief Node presentation
 */
 void presentation(void)  __attribute__((weak));
 /**

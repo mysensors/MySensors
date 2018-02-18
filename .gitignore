@@ -10,3 +10,5 @@ bin
 *.sublime-workspace
 .idea
 doxygen.log
+TAGS
+tags

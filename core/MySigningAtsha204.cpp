@@ -31,7 +31,7 @@
 #define SIGNING_IDENTIFIER (1) //HMAC-SHA256
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
-#define SIGN_DEBUG(x,...) hwDebugPrint(x, ##__VA_ARGS__)
+#define SIGN_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)
 static char printStr[65];
 static char i2h(uint8_t i)
 {
@@ -271,7 +271,7 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		// Overwrite the first byte in the signature with the signing identifier
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
-		// Compare the caluclated signature with the provided signature
+		// Compare the calculated signature with the provided signature
 		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
 		                 min(MAX_PAYLOAD-mGetLength(msg), 32))) {
 			return false;

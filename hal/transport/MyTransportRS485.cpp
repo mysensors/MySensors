@@ -266,7 +266,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 #endif
 
 	// Start of header by writing multiple SOH
-	for(byte w=0; w<1; w++) {
+	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
 		_dev.write(SOH);
 	}
 	_dev.write(to);  // Destination address
@@ -416,7 +416,7 @@ int16_t transportGetTxPowerLevel(void)
 
 bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
-	// not possbile
+	// not possible
 	(void)powerPercent;
 	return false;
 }

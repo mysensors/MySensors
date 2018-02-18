@@ -415,7 +415,7 @@ void transportInitialise(void)
 {
 	_transportSM.failureCounter = 0u;	// reset failure counter
 	transportLoadRoutingTable();		// load routing table to RAM (if feature enabled)
-	// intial state
+	// initial state
 	_transportSM.currentState = NULL;
 	transportSwitchSM(stInit);
 }
