@@ -200,7 +200,6 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	RFM69.powerLevel = MY_RFM69_TX_POWER_DBM + 1;	// will be overwritten when set
 	RFM69.radioMode = RFM69_RADIO_MODE_SLEEP;
 	RFM69.ATCenabled = false;
-	RFM69.listenModeEnabled = false;
 	RFM69.ATCtargetRSSI = RFM69_RSSItoInternal(MY_RFM69_ATC_TARGET_RSSI_DBM);
 
 	// SPI init
@@ -354,7 +353,7 @@ LOCAL uint8_t RFM69_receive(uint8_t *buf, const uint8_t maxBufSize)
 	// clear data flag
 	RFM69.dataReceived = false;
 	if (RFM69_getACKRequested(controlFlags) && !RFM69_getACKReceived(controlFlags)) {
-#if defined(MY_GATEWAY_FEATURE) && (F_CPU>16000000)
+#if defined(MY_GATEWAY_FEATURE) && (F_CPU>16*1000000ul)
 		// delay for fast GW and slow nodes
 		delay(50);
 #endif
@@ -425,9 +424,9 @@ LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
 LOCAL void RFM69_setFrequency(const uint32_t frequencyHz)
 {
 	const uint32_t freqHz = (uint32_t)(frequencyHz / RFM69_FSTEP);
-	RFM69_writeReg(RFM69_REG_FRFMSB, (freqHz >> 16) & 0xFF);
-	RFM69_writeReg(RFM69_REG_FRFMID, (freqHz >> 8) & 0xFF);
-	RFM69_writeReg(RFM69_REG_FRFLSB, freqHz & 0xFF);
+	RFM69_writeReg(RFM69_REG_FRFMSB, (uint8_t)((freqHz >> 16) & 0xFF));
+	RFM69_writeReg(RFM69_REG_FRFMID, (uint8_t)((freqHz >> 8) & 0xFF));
+	RFM69_writeReg(RFM69_REG_FRFLSB, (uint8_t)(freqHz & 0xFF));
 }
 
 LOCAL void RFM69_setHighPowerRegs(const bool onOff)
@@ -773,60 +772,6 @@ LOCAL rfm69_RSSI_t RFM69_readRSSI(const bool forceTrigger)
 	(void)forceTrigger;
 	return (rfm69_RSSI_t)RFM69_readReg(RFM69_REG_RSSIVALUE);
 }
-
-/* UNUSED
-
-LOCAL uint8_t RFM69_getVersion(void)
-{
-	return RFM69_readReg(RFM69_REG_VERSION);
-}
-
-LOCAL uint8_t RFM69_readTemperature(const uint8_t calFactor)
-{
-	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
-	RFM69_writeReg(RFM69_REG_TEMP1, RFM69_TEMP1_MEAS_START);
-	const uint32_t enterMS = hwMillis();
-	while ((RFM69_readReg(RFM69_REG_TEMP1) & RFM69_TEMP1_MEAS_RUNNING) && hwMillis() - enterMS < 500);
-	return ~RFM69_readReg(RFM69_REG_TEMP2) + RFM69_COURSE_TEMP_COEF +
-	       calFactor; // 'complement' corrects the slope, rising temp = rising val
-}
-
-LOCAL uint8_t RFM69_setLNA(const uint8_t newReg)
-{
-	const uint8_t oldReg = RFM69_readReg(RFM69_REG_LNA);
-	RFM69_writeReg(RFM69_REG_LNA, ((newReg & 7) | (oldReg &
-	                               ~7)));   // just control the LNA Gain bits for now
-	return oldReg;  // return the original value in case we need to restore it
-}
-
-LOCAL bool RFM69_waitCAD(void)
-{
-	const uint32_t enterMS = hwMillis();
-	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
-	while (RFM69.radioMode == RFM69_RADIO_MODE_RX && !RFM69.dataReceived &&
-		RFM69_RSSItoInternal(RFM69_readRSSI()) > RFM69_RSSItoInternal(RFM69_CSMA_LIMIT_DBM)) {
-		if (hwMillis() - enterMS > RFM69_CSMA_TIMEOUT_MS) {
-			return false;
-		}
-	}
-	return true;
-}
-
-LOCAL void RFM69_rcCalibration(void)
-{
-	// RC oscillator calibration
-	// On the SX1231 V2a, RC calibration at power-up needs to be performed
-	// This is not required in the version V2b any more, where the calibration is fully automatic
-	// see SX1231 datasheet, chapter 9 (Chip Revision)
-	RFM69_writeReg(0x57, 0x80);
-	RFM69_writeReg(RFM69_REG_OSC1, RFM69_OSC1_RCCAL_START);
-	while (!(RFM69_readReg(RFM69_REG_OSC1) & RFM69_OSC1_RCCAL_DONE)) {};
-	RFM69_writeReg(RFM69_REG_OSC1, RFM69_OSC1_RCCAL_START);
-	while (!(RFM69_readReg(RFM69_REG_OSC1) & RFM69_OSC1_RCCAL_DONE)) {};
-	RFM69_writeReg(0x57, 0x00);
-}
-
-*/
 
 LOCAL void RFM69_readAllRegs(void)
 {

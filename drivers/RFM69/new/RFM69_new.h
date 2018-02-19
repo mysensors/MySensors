@@ -326,7 +326,6 @@ typedef struct {
 	rfm69_RSSI_t RSSI;									//!< RSSI of current packet, RSSI = value - 137
 } __attribute__((packed)) rfm69_packet_t;
 
-
 /**
 * @brief RFM69 internal variables
 */
@@ -341,8 +340,7 @@ typedef struct {
 	bool dataReceived : 1;                     //!< data received
 	bool ackReceived : 1;                      //!< ACK received
 	bool ATCenabled : 1;                       //!< ATC enabled
-	bool listenModeEnabled : 1;                //!< Listen mode enabled
-	bool reserved : 1;                         //!< Reserved
+	uint8_t reserved : 2;                      //!< Reserved
 } rfm69_internal_t;
 
 #define LOCAL static		//!< static

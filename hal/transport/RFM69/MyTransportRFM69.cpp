@@ -37,9 +37,9 @@ bool transportInit(void)
 	(void)memset(RFM69_psk, 0, 16);
 	(void)memcpy(RFM69_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
-	hwReadConfigBlock((void*)RFM69_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+	hwReadConfigBlock((void *)RFM69_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
-	RFM69_encrypt((const char*)RFM69_psk);
+	RFM69_encrypt((const char *)RFM69_psk);
 	(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
 #else
 	(void)RFM69_encrypt;
@@ -57,7 +57,7 @@ uint8_t transportGetAddress(void)
 	return RFM69_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void* data, uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool noACK)
 {
 	if (noACK) {
 		(void)RFM69_sendWithRetry(to, data, len, 0, 0);
@@ -77,9 +77,9 @@ bool transportSanityCheck(void)
 	return RFM69_sanityCheck();
 }
 
-uint8_t transportReceive(void* data)
+uint8_t transportReceive(void *data)
 {
-	return RFM69_receive((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	return RFM69_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
 }
 
 void transportSleep(void)
@@ -108,7 +108,7 @@ bool transportSetTxPowerLevel(const uint8_t powerLevel)
 	return RFM69_setTxPowerLevel(powerLevel);
 }
 
-void transportSetTargetRSSI(int16_t targetSignalStrength)
+void transportSetTargetRSSI(const int16_t targetSignalStrength)
 {
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
 	RFM69_ATCmode(true, targetSignalStrength);
@@ -175,9 +175,9 @@ bool transportInit(void)
 		(void)memset(RFM69_psk, 0, 16);
 		(void)memcpy(RFM69_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
-		hwReadConfigBlock((void*)RFM69_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+		hwReadConfigBlock((void *)RFM69_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
-		_radio.encrypt((const char*)RFM69_psk);
+		_radio.encrypt((const char *)RFM69_psk);
 		(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
 #endif
 		return true;
@@ -196,7 +196,7 @@ uint8_t transportGetAddress(void)
 	return _address;
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
 	if (noACK) {
 		(void)_radio.sendWithRetry(to, data, len, 0, 0);
@@ -215,11 +215,11 @@ bool transportSanityCheck(void)
 	return _radio.sanityCheck();
 }
 
-uint8_t transportReceive(void* data)
+uint8_t transportReceive(void *data)
 {
 	// save payload length
 	const uint8_t dataLen = _radio.DATALEN < MAX_MESSAGE_LENGTH? _radio.DATALEN : MAX_MESSAGE_LENGTH;
-	(void)memcpy((void*)data, (void*)_radio.DATA, dataLen);
+	(void)memcpy((void *)data, (void *)_radio.DATA, dataLen);
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.ACKRequested()) {
 		_radio.sendACK();
