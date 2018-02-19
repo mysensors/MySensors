@@ -35,14 +35,14 @@
 #define RFM95_DEBUG(x,...)	//!< DEBUG null
 #endif
 
+rfm95_internal_t RFM95;	//!< internal variables
+volatile uint8_t RFM95_irq; //<! rfm95 irq flag
+
 #if defined(LINUX_SPI_BCM)
 // SPI RX and TX buffers (max packet len + 1 byte for the command)
-uint8_t spi_rxbuff[RFM95_MAX_PACKET_LEN + 1];
-uint8_t spi_txbuff[RFM95_MAX_PACKET_LEN + 1];
+uint8_t RFM95_spi_rxbuff[RFM95_MAX_PACKET_LEN + 1];
+uint8_t RFM95_spi_txbuff[RFM95_MAX_PACKET_LEN + 1];
 #endif
-
-rfm95_internal_t RFM95;	//!< internal variables
-volatile uint8_t rfm95_irq; //<! rfm95 irq flag
 
 LOCAL void RFM95_csn(const bool level)
 {
@@ -55,13 +55,14 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_
 	uint8_t status;
 	uint8_t *current = buf;
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
-	RFM95_SPI.beginTransaction(SPISettings(MY_RFM95_SPI_SPEED, MY_RFM95_SPI_DATA_ORDER,
-	                                       MY_RFM95_SPI_DATA_MODE));
+	RFM95_SPI.beginTransaction(SPISettings(MY_RFM95_SPI_SPEED, RFM95_SPI_DATA_ORDER,
+	                                       RFM95_SPI_DATA_MODE));
 #endif
+
 	RFM95_csn(LOW);
 #if defined(LINUX_SPI_BCM)
-	uint8_t *prx = spi_rxbuff;
-	uint8_t *ptx = spi_txbuff;
+	uint8_t *prx = RFM95_spi_rxbuff;
+	uint8_t *ptx = RFM95_spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
 
 	*ptx++ = cmd;
@@ -72,7 +73,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_
 			*ptx++ = *current++;
 		}
 	}
-	RFM95_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
+	RFM95_SPI.transfernb((char *)RFM95_spi_txbuff, (char *)RFM95_spi_rxbuff, size);
 	if (aReadMode) {
 		if (size == 2) {
 			status = *++prx;   // result is 2nd byte of receive buffer
@@ -100,6 +101,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_
 	}
 #endif
 	RFM95_csn(HIGH);
+
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
 	RFM95_SPI.endTransaction();
 #endif
@@ -220,7 +222,7 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	}
 
 	// IRQ
-	rfm95_irq = false;
+	RFM95_irq = false;
 	hwPinMode(MY_RFM95_IRQ_PIN, INPUT);
 	attachInterrupt(MY_RFM95_IRQ_NUM, RFM95_interruptHandler, RISING);
 	return true;
@@ -229,7 +231,7 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 LOCAL void RFM95_interruptHandler(void)
 {
 	// set flag
-	rfm95_irq = true;
+	RFM95_irq = true;
 }
 
 // RxDone, TxDone, CADDone is mapped to DI0
@@ -278,8 +280,8 @@ LOCAL void RFM95_interruptHandling(void)
 
 LOCAL void RFM95_handler(void)
 {
-	if (rfm95_irq) {
-		rfm95_irq = false;
+	if (RFM95_irq) {
+		RFM95_irq = false;
 		RFM95_interruptHandling();
 	}
 }
@@ -345,12 +347,12 @@ LOCAL bool RFM95_sendFrame(rfm95_packet_t *packet, const bool increaseSequenceCo
 	(void)RFM95_setRadioMode(RFM95_RADIO_MODE_TX);
 	// wait until IRQ fires or timeout
 	const uint32_t startTX_MS = hwMillis();
-	while (!rfm95_irq &&
+	while (!RFM95_irq &&
 	        (hwMillis() - startTX_MS <
 	         MY_RFM95_TX_TIMEOUT_MS) ) {		// make this payload length + bit rate dependend
 		doYield();
 	}
-	return rfm95_irq;
+	return RFM95_irq;
 }
 
 LOCAL bool RFM95_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
@@ -468,7 +470,7 @@ LOCAL bool RFM95_setRadioMode(const rfm95_radioMode_t newRadioMode)
 LOCAL void RFM95_powerUp(void)
 {
 #if defined(MY_RFM95_POWER_PIN)
-	RFM69_DEBUG(PSTR("RFM95:PWU\n"));	// power up radio
+	RFM95_DEBUG(PSTR("RFM95:PWU\n"));	// power up radio
 	hwDigitalWrite(MY_RFM95_POWER_PIN, HIGH);
 	delay(RFM95_POWERUP_DELAY_MS);
 #endif
@@ -476,7 +478,7 @@ LOCAL void RFM95_powerUp(void)
 LOCAL void RFM95_powerDown(void)
 {
 #if defined(MY_RFM95_POWER_PIN)
-	RFM69_DEBUG(PSTR("RFM95:PWD\n"));	// power down radio
+	RFM95_DEBUG(PSTR("RFM95:PWD\n"));	// power down radio
 	hwDigitalWrite(MY_RFM95_POWER_PIN, LOW);
 #endif
 }

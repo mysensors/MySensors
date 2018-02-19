@@ -42,12 +42,12 @@
 #endif
 
 rfm69_internal_t RFM69;	//!< internal variables
-volatile uint8_t rfm69_irq; //!< rfm69 irq flag
+volatile uint8_t RFM69_irq; //!< rfm69 irq flag
 
 #if defined(LINUX_SPI_BCM)
 // SPI RX and TX buffers (max packet len + 1 byte for the command)
-uint8_t spi_rxbuff[RFM69_MAX_PACKET_LEN + 1];
-uint8_t spi_txbuff[RFM69_MAX_PACKET_LEN + 1];
+uint8_t RFM69_spi_rxbuff[RFM69_MAX_PACKET_LEN + 1];
+uint8_t RFM69_spi_txbuff[RFM69_MAX_PACKET_LEN + 1];
 #endif
 
 LOCAL void RFM69_csn(const bool level)
@@ -60,24 +60,6 @@ LOCAL void RFM69_prepareSPITransaction(void)
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
 	RFM69_SPI.beginTransaction(SPISettings(MY_RFM69_SPI_SPEED, RFM69_SPI_DATA_ORDER,
 	                                       RFM69_SPI_DATA_MODE));
-#else
-#if defined(SREG)
-	_SREG = SREG;
-#endif
-	noInterrupts();
-#if defined(SPCR) && defined(SPSR)
-	// save current SPI settings
-	_SPCR = SPCR;
-	_SPSR = SPSR;
-#endif
-
-	// set RFM69 SPI settings
-#if !defined(MY_SOFTSPI)
-	RFM69_SPI.setDataMode(RFM69_SPI_DATA_MODE);
-	RFM69_SPI.setBitOrder(RFM69_SPI_DATA_ORDER);
-	RFM69_SPI.setClockDivider(RFM69_CLOCK_DIV);
-#endif
-
 #endif
 }
 
@@ -85,17 +67,6 @@ LOCAL void RFM69_concludeSPITransaction(void)
 {
 #if !defined(MY_SOFTSPI) && defined(SPI_HAS_TRANSACTION)
 	RFM69_SPI.endTransaction();
-#else
-	// restore SPI settings to what they were before talking to RFM69
-#if defined(SPCR) && defined(SPSR)
-	SPCR = _SPCR;
-	SPSR = _SPSR;
-#endif
-	// restore the prior interrupt state
-#if defined(SREG)
-	SREG = _SREG;
-#endif
-	interrupts();
 #endif
 }
 
@@ -109,8 +80,8 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	RFM69_csn(LOW);
 
 #if defined(LINUX_SPI_BCM)
-	uint8_t *prx = spi_rxbuff;
-	uint8_t *ptx = spi_txbuff;
+	uint8_t *prx = RFM69_spi_rxbuff;
+	uint8_t *ptx = RFM69_spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
 
 	*ptx++ = cmd;
@@ -121,7 +92,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 			*ptx++ = *current++;
 		}
 	}
-	RFM69_SPI.transfernb((char *)spi_txbuff, (char *)spi_rxbuff, size);
+	RFM69_SPI.transfernb((char *)RFM69_spi_txbuff, (char *)RFM69_spi_rxbuff, size);
 	if (aReadMode) {
 		if (size == 2) {
 			status = *++prx;   // result is 2nd byte of receive buffer
@@ -257,7 +228,7 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	// clear FIFO and flags
 	RFM69_clearFIFO();
 	// IRQ
-	rfm69_irq = false;
+	RFM69_irq = false;
 	hwPinMode(MY_RFM69_IRQ_PIN, INPUT);
 	attachInterrupt(MY_RFM69_IRQ_NUM, RFM69_interruptHandler, RISING);
 	return true;
@@ -271,7 +242,7 @@ LOCAL void RFM69_clearFIFO(void)
 LOCAL void RFM69_interruptHandler(void)
 {
 	// set flag
-	rfm69_irq = true;
+	RFM69_irq = true;
 }
 
 LOCAL void RFM69_interruptHandling(void)
@@ -346,10 +317,10 @@ LOCAL void RFM69_interruptHandling(void)
 
 LOCAL void RFM69_handler(void)
 {
-	if (rfm69_irq) {
+	if (RFM69_irq) {
 		// radio is in STDBY
 		// clear flag, 8bit - no need for critical section
-		rfm69_irq = false;
+		RFM69_irq = false;
 		RFM69_interruptHandling();
 	}
 }
@@ -429,10 +400,10 @@ LOCAL bool RFM69_sendFrame(rfm69_packet_t *packet, const bool increaseSequenceCo
 	// send message
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_TX); // irq upon txsent
 	const uint32_t txStartMS = hwMillis();
-	while (!rfm69_irq && (hwMillis() - txStartMS < MY_RFM69_TX_TIMEOUT_MS)) {
+	while (!RFM69_irq && (hwMillis() - txStartMS < MY_RFM69_TX_TIMEOUT_MS)) {
 		doYield();
 	};
-	return rfm69_irq;
+	return RFM69_irq;
 }
 
 LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,

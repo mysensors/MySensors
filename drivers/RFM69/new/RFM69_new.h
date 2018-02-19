@@ -99,30 +99,10 @@
 #define RFM69_SPI_DATA_ORDER			MSBFIRST		//!< SPI data order
 #define RFM69_SPI_DATA_MODE				SPI_MODE0		//!< SPI mode
 
-// SPI clock divier for non-transaction implementations
-#if (MY_RFM69_SPI_SPEED >= F_CPU / 2)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV2			//!< SPI clock divider 2
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 4)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV4			//!< SPI clock divider 4
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 8)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV8			//!< SPI clock divider 8
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 16)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV16			//!< SPI clock divider 16
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 32)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV32			//!< SPI clock divider 32
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 64)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV64			//!< SPI clock divider 64
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 128)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV128		//!< SPI clock divider 128
-#else
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV256		//!< SPI clock divider 256
-#endif
-
 #if defined(ARDUINO) && !defined(__arm__) && !defined(RFM69_SPI)
 #include <SPI.h>
 #if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE>
-RFM69_SPI;
+SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE>RFM69_SPI;
 #else
 #define RFM69_SPI SPI
 #endif
