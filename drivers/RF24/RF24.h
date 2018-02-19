@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2017 Sensnology AB
+* Copyright (C) 2013-2018 Sensnology AB
 * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -34,26 +34,26 @@
 * RF24 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS  | SUB  | Message            | Comment
-* |-|------|------|--------------------|---------------------------------------------------------------------
-* | | RF24 | INIT |                    | Initialise RF24 radio
-* | | RF24 | INIT | PIN,CE=%d,CS=%d    | Pin configuration: chip enable (CE), chip select (CS)
-* |!| RF24 | INIT | SANCHK FAIL        | Sanity check failed, check wiring or replace module
-* | | RF24 | SPP  | PCT=%d,TX LEVEL=%d | Set TX level, input TX percent (PCT)
-* | | RF24 | RBR  | REG=%d,VAL=%d      | Read register (REG), value=(VAL)
-* | | RF24 | WBR  | REG=%d,VAL=%d      | Write register (REG), value=(VAL)
-* | | RF24 | FRX  |                    | Flush RX buffer
-* | | RF24 | FTX  |                    | Flush TX buffer
-* | | RF24 | OWP  | RCPT=%d            | Open writing pipe, recipient=(RCPT)
-* | | RF24 | STL  |                    | Start listening
-* | | RF24 | SPL  |                    | Stop listening
-* | | RF24 | SLP  |                    | Set radio to sleep
-* | | RF24 | SBY  |                    | Set radio to standby
-* | | RF24 | TXM  | TO=%d,LEN=%d       | Transmit message to=(TO), length=(LEN)
-* |!| RF24 | TXM  | MAX_RT             | Max TX retries, no ACK received
-* |!| RF24 | GDP  | PYL INV            | Invalid payload size
-* | | RF24 | RXM  | LEN=%d             | Read message, length=(LEN)
-* | | RF24 | STX  | LEVEL=%d           | Set TX level, level=(LEVEL)
+* |E| SYS  | SUB  | Message              | Comment
+* |-|------|------|----------------------|---------------------------------------------------------------------
+* | | RF24 | INIT |                      | Initialise RF24 radio
+* | | RF24 | INIT | PIN,CE=%%d,CS=%%d    | Pin configuration: chip enable (CE), chip select (CS)
+* |!| RF24 | INIT | SANCHK FAIL          | Sanity check failed, check wiring or replace module
+* | | RF24 | SPP  | PCT=%%d,TX LEVEL=%%d | Set TX level, input TX percent (PCT)
+* | | RF24 | RBR  | REG=%%d,VAL=%%d      | Read register (REG), value=(VAL)
+* | | RF24 | WBR  | REG=%%d,VAL=%%d      | Write register (REG), value=(VAL)
+* | | RF24 | FRX  |                      | Flush RX buffer
+* | | RF24 | FTX  |                      | Flush TX buffer
+* | | RF24 | OWP  | RCPT=%%d             | Open writing pipe, recipient=(RCPT)
+* | | RF24 | STL  |                      | Start listening
+* | | RF24 | SPL  |                      | Stop listening
+* | | RF24 | SLP  |                      | Set radio to sleep
+* | | RF24 | SBY  |                      | Set radio to standby
+* | | RF24 | TXM  | TO=%%d,LEN=%%d       | Transmit message to=(TO), length=(LEN)
+* |!| RF24 | TXM  | MAX_RT               | Max TX retries, no ACK received
+* |!| RF24 | GDP  | PYL INV              | Invalid payload size
+* | | RF24 | RXM  | LEN=%%d              | Read message, length=(LEN)
+* | | RF24 | STX  | LEVEL=%%d            | Set TX level, level=(LEVEL)
 *
 */
 
@@ -174,7 +174,7 @@ LOCAL void RF24_ce(const bool level);
 * @param readMode
 * @return
 */
-LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, const uint8_t len,
+LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, const uint8_t len,
                                         const bool readMode);
 /**
 * @brief RF24_spiByteTransfer
@@ -199,7 +199,7 @@ LOCAL uint8_t RF24_RAW_writeByteRegister(const uint8_t cmd, const uint8_t value)
 // helper macros
 #define RF24_readByteRegister(__reg) RF24_RAW_readByteRegister(RF24_CMD_READ_REGISTER | (RF24_REGISTER_MASK & (__reg)))		//!< RF24_readByteRegister
 #define RF24_writeByteRegister(__reg,__value) RF24_RAW_writeByteRegister(RF24_CMD_WRITE_REGISTER | (RF24_REGISTER_MASK & (__reg)), __value)	//!< RF24_writeByteRegister
-#define RF24_writeMultiByteRegister(__reg,__buf,__len) RF24_spiMultiByteTransfer(RF24_CMD_WRITE_REGISTER | (RF24_REGISTER_MASK & (__reg)),(uint8_t*)__buf, __len,false)	//!< RF24_writeMultiByteRegister
+#define RF24_writeMultiByteRegister(__reg,__buf,__len) RF24_spiMultiByteTransfer(RF24_CMD_WRITE_REGISTER | (RF24_REGISTER_MASK & (__reg)),(uint8_t *)__buf, __len,false)	//!< RF24_writeMultiByteRegister
 
 /**
 * @brief RF24_flushRX
@@ -256,7 +256,7 @@ LOCAL void RF24_powerUp(void);
 * @param noACK set True if no ACK is required
 * @return
 */
-LOCAL bool RF24_sendMessage(const uint8_t recipient, const void* buf, const uint8_t len,
+LOCAL bool RF24_sendMessage(const uint8_t recipient, const void *buf, const uint8_t len,
                             const bool noACK = false);
 /**
 * @brief RF24_getDynamicPayloadSize
@@ -272,7 +272,7 @@ LOCAL bool RF24_isDataAvailable(void);
 * @brief RF24_readMessage
 * @return
 */
-LOCAL uint8_t RF24_readMessage(void* buf);
+LOCAL uint8_t RF24_readMessage(void *buf);
 /**
 * @brief RF24_setNodeAddress
 * @param address
@@ -345,7 +345,7 @@ LOCAL void RF24_setRFConfiguration(const uint8_t configuration);
 * @param address
 * @param addressWidth
 */
-LOCAL void RF24_setPipeAddress(const uint8_t pipe, uint8_t* address, const uint8_t addressWidth);
+LOCAL void RF24_setPipeAddress(const uint8_t pipe, uint8_t *address, const uint8_t addressWidth);
 /**
 * @brief RF24_setPipeLSB
 * @param pipe

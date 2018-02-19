@@ -107,14 +107,13 @@
 #define DEFAULT_RFM95_CS_PIN			(SS)			//!< DEFAULT_RFM95_CS_PIN
 
 // SPI settings
-#define MY_RFM95_SPI_DATA_ORDER		MSBFIRST		//!< SPI data order
-#define MY_RFM95_SPI_DATA_MODE		SPI_MODE0		//!< SPI mode
+#define RFM95_SPI_DATA_ORDER		MSBFIRST		//!< SPI data order
+#define RFM95_SPI_DATA_MODE			SPI_MODE0		//!< SPI mode
 
 #if defined (ARDUINO) && !defined (__arm__) && !defined (RFM95_SPI)
 #include <SPI.h>
 #if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, MY_RF24_SPI_DATA_MODE>
-RFM95_SPI;
+SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM95_SPI_DATA_MODE>RFM95_SPI;
 #else
 #define RFM95_SPI SPI					//!< SPI
 #endif
