@@ -68,7 +68,7 @@ bool transportInit(void)
 	(void)memset(RF24_psk, 0, 16);
 	(void)memcpy(RF24_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
-	hwReadConfigBlock((void*)RF24_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+	hwReadConfigBlock((void *)RF24_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
 	//set up AES-key
 	RF24_aes.set_key(RF24_psk, 16);
@@ -93,7 +93,7 @@ uint8_t transportGetAddress(void)
 	return RF24_getNodeID();
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 	// copy input data because it is read-only
@@ -124,7 +124,7 @@ bool transportSanityCheck(void)
 	return RF24_sanityCheck();
 }
 
-uint8_t transportReceive(void* data)
+uint8_t transportReceive(void *data)
 {
 	uint8_t len = 0;
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -141,7 +141,7 @@ uint8_t transportReceive(void* data)
 	// has to be adjusted, WIP!
 	RF24_aes.set_IV(0);
 	// decrypt data
-	if (RF24_aes.cbc_decrypt((uint8_t*)(data), (uint8_t*)(data), len > 16 ? 2 : 1) != AES_SUCCESS) {
+	if (RF24_aes.cbc_decrypt((uint8_t *)data, (uint8_t *)data, len > 16 ? 2 : 1) != AES_SUCCESS) {
 		len = 0;
 	}
 #endif

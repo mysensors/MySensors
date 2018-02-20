@@ -347,9 +347,8 @@ LOCAL bool RFM95_sendFrame(rfm95_packet_t *packet, const bool increaseSequenceCo
 	(void)RFM95_setRadioMode(RFM95_RADIO_MODE_TX);
 	// wait until IRQ fires or timeout
 	const uint32_t startTX_MS = hwMillis();
-	while (!RFM95_irq &&
-	        (hwMillis() - startTX_MS <
-	         MY_RFM95_TX_TIMEOUT_MS) ) {		// make this payload length + bit rate dependend
+	// todo: make this payload length + bit rate dependend
+	while (!RFM95_irq && (hwMillis() - startTX_MS < MY_RFM95_TX_TIMEOUT_MS) ) {
 		doYield();
 	}
 	return RFM95_irq;
@@ -371,9 +370,9 @@ LOCAL bool RFM95_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
 LOCAL void RFM95_setFrequency(const uint32_t frequencyHz)
 {
 	const uint32_t freqReg = (uint32_t)(frequencyHz / RFM95_FSTEP);
-	(void)RFM95_writeReg(RFM95_REG_06_FRF_MSB, (freqReg >> 16) & 0xff);
-	(void)RFM95_writeReg(RFM95_REG_07_FRF_MID, (freqReg >> 8) & 0xff);
-	(void)RFM95_writeReg(RFM95_REG_08_FRF_LSB, freqReg & 0xff);
+	(void)RFM95_writeReg(RFM95_REG_06_FRF_MSB, (uint8_t)((freqReg >> 16) & 0xff));
+	(void)RFM95_writeReg(RFM95_REG_07_FRF_MID, (uint8_t)((freqReg >> 8) & 0xff));
+	(void)RFM95_writeReg(RFM95_REG_08_FRF_LSB, (uint8_t)(freqReg & 0xff));
 }
 
 LOCAL bool RFM95_setTxPowerLevel(rfm95_powerLevel_t newPowerLevel)
@@ -420,8 +419,8 @@ LOCAL void RFM95_setModemRegisters(const rfm95_modemConfig_t *config)
 
 LOCAL void RFM95_setPreambleLength(const uint16_t preambleLength)
 {
-	(void)RFM95_writeReg(RFM95_REG_20_PREAMBLE_MSB, (preambleLength >> 8) & 0xff);
-	(void)RFM95_writeReg(RFM95_REG_21_PREAMBLE_LSB, preambleLength & 0xff);
+	(void)RFM95_writeReg(RFM95_REG_20_PREAMBLE_MSB, (uint8_t)((preambleLength >> 8) & 0xff));
+	(void)RFM95_writeReg(RFM95_REG_21_PREAMBLE_LSB, (uint8_t)(preambleLength & 0xff));
 }
 
 LOCAL void RFM95_setAddress(const uint8_t addr)

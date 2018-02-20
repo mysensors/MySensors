@@ -46,7 +46,7 @@ uint8_t transportGetAddress(void)
 	return RFM95_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
 	if (noACK) {
 		(void)RFM95_sendWithRetry(to, data, len, 0, 0);
@@ -66,9 +66,9 @@ bool transportSanityCheck(void)
 	return RFM95_sanityCheck();
 }
 
-uint8_t transportReceive(void* data)
+uint8_t transportReceive(void *data)
 {
-	const uint8_t len = RFM95_receive((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	const uint8_t len = RFM95_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
 	return len;
 }
 

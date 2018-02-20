@@ -186,8 +186,6 @@ extern HardwareSPI SPI;				//!< SPI
 #define RFM95_setACKReceived(__value, __flag) bitWrite(__value, RFM95_BIT_ACK_RECEIVED,__flag)			//!< setACKReceived
 #define RFM95_setACKRSSIReport(__value, __flag) bitWrite(__value, RFM95_BIT_ACK_RSSI_REPORT,__flag)		//!< setACKRSSIReport
 #define RFM95_getACKRSSIReport(__value) ((bool)bitRead(__value, RFM95_BIT_ACK_RSSI_REPORT))				//!< getACKRSSIReport
-//#define RFM95_internalToRSSI(__value)	((int16_t)(__value - RFM95_RSSI_OFFSET))	//!< Convert internal RSSI to RSSI
-//#define RFM95_RSSItoInternal(__value)	((uint8_t)(__value + RFM95_RSSI_OFFSET))	//!< Convert RSSI to internal RSSI
 #define RFM95_internalToSNR(__value)	((int8_t)(__value / 4))						//!< Convert internal SNR to SNR
 
 #define RFM95_MIN_POWER_LEVEL_DBM		((rfm95_powerLevel_t)5u)	//!< min. power level
