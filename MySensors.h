@@ -388,7 +388,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "core/MySensorsCore.cpp"
 
 // HW mains
-#if !defined(MY_CORE_ONLY)
 #if defined(ARDUINO_ARCH_AVR)
 #include "hal/architecture/AVR/MyMainAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
@@ -403,7 +402,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
 #elif defined(TEENSYDUINO)
 #include "hal/architecture/Teensy3/MyMainTeensy3.cpp"
-#endif
 #endif
 
 #endif

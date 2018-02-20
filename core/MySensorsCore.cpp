@@ -88,6 +88,14 @@ void _infiniteLoop(void)
 
 void _begin(void)
 {
+#if defined(MY_CORE_ONLY)
+	// initialize HW and run setup if present
+	(void)hwInit();
+	if (setup) {
+		setup();
+	}
+	return;
+#endif
 	// reset wdt
 	hwWatchdogReset();
 

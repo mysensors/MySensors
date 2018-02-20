@@ -439,9 +439,7 @@ void setup()
 	hwRandomNumberInit();
 #endif
 
-	Serial.begin(MY_BAUD_RATE);
 	while(!Serial); // For USB enabled devices, wait for USB enumeration before continuing
-	hwInit();
 
 	print_greeting();
 
