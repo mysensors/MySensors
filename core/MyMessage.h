@@ -208,7 +208,9 @@ typedef enum {
 	ST_FIRMWARE_REQUEST			= 2,	//!< Request FW block
 	ST_FIRMWARE_RESPONSE		= 3,	//!< Response FW block
 	ST_SOUND					= 4,	//!< Sound
-	ST_IMAGE					= 5		//!< Image
+	ST_IMAGE					= 5,	//!< Image
+	ST_FIRMWARE_CONFIRM	= 6, //!< Mark running firmware as valid (MyOTAFirmwareUpdateNVM + mcuboot)
+	ST_FIRMWARE_RESPONSE_RLE = 7,	//!< Response FW block with run length encoded data
 } mysensor_stream;
 
 /// @brief Type of payload

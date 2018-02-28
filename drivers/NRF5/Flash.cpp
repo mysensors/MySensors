@@ -52,12 +52,14 @@ uint32_t *FlashClass::page_address(size_t page)
 
 uint32_t *FlashClass::top_app_page_address()
 {
+#if !defined(MCUBOOT_PRESENT)
 	// Bootcode at the top of the flash memory?
 	// https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v12.0.0%2Flib_bootloader.html
 	if (NRF_UICR->NRFFW[0]<0xFFFFFFFF) {
 		// Return pointer calculated by SoftDevice/bootloader
 		return (uint32_t *)NRF_UICR->NRFFW[0];
 	}
+#endif
 
 	// Return flash length
 	return (uint32_t *)(Flash.page_count() << Flash.page_size_bits());
