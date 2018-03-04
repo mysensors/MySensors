@@ -43,7 +43,7 @@
 #endif
 #define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(MY_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP8266)
-#define DEFAULT_RFM69_IRQ_PIN			(2)													//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_PIN			(5)													//!< DEFAULT_RFM69_IRQ_PIN
 #define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(MY_RFM69_IRQ_PIN)		//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP32)
 #warning not implemented yet

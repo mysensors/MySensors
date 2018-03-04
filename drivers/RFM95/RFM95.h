@@ -89,7 +89,7 @@
 #define DEFAULT_RFM95_IRQ_PIN			(2)				//!< DEFAULT_RFM95_IRQ_PIN
 #endif
 #elif defined(ARDUINO_ARCH_ESP8266)
-#define DEFAULT_RFM95_IRQ_PIN			(2)				//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_PIN			(5)				//!< DEFAULT_RFM95_IRQ_PIN
 #elif defined(ARDUINO_ARCH_ESP32)
 #warning not implemented yet
 #elif defined(ARDUINO_ARCH_SAMD)
