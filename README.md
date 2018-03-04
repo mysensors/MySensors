@@ -1,4 +1,4 @@
-MySensors Library v2.2.1-alpha
+MySensors Library v2.3.0-alpha
 
 Please visit www.mysensors.org for more information
 
