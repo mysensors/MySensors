@@ -14,6 +14,7 @@ def cppCheck(config) {
 
 	step([$class: 'ViolationsToGitHubRecorder', 
 		config: [
+			credentialsId: '0387a51d-dd09-4d10-ad07-b053cb639806',
 			repositoryName: config.repository_name, 
 			pullRequestId: env.CHANGE_ID, 
 			createCommentWithAllSingleFileComments: true, 
