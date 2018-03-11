@@ -3,8 +3,8 @@
 
 # Generate doxygen file for Raspberry Pi configure command
 echo -e "/**\n * @defgroup RaspberryPiGateway Raspberry Pi Gateway\n * @ingroup MyConfigGrp\n * @brief Configuration options for the Raspberry Pi Gateway\n@{\n@verbatim" > configure.h
-				grep -A999 '<<EOF' configure | grep -B999 EOF | grep -v 'EOF' >> configure.h
-				echo -e "@endverbatim\n@}*/\n" >> configure.h
+./configure --help >> configure.h
+echo -e "@endverbatim\n@}*/\n" >> configure.h
 
 # Generate version information
 export PROJECTNUMBER=$(git fetch --tags; git describe --tags;)
