@@ -152,9 +152,14 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 // GATEWAY - COMMON FUNCTIONS
-// We support MQTT Client using W5100, ESP8266 and Linux
-#if !defined(MY_GATEWAY_CLIENT_MODE)
+// We support MQTT Client using W5100, ESP8266, GSM modems supported by TinyGSM library and Linux
+#if !defined(MY_GATEWAY_CLIENT_MODE) && !defined(MY_GATEWAY_TINYGSM)
 #error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS
+#endif
+
+#if defined(MY_GATEWAY_TINYGSM) && !defined(MY_GATEWAY_MQTT_CLIENT)
+// TinyGSM currently only supports MQTTClient mode.
+#error MY_GATEWAY_TINYGSM only works with MY_GATEWAY_MQTT_CLIENT
 #endif
 
 #if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
@@ -171,6 +176,10 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 #include "core/MyGatewayTransport.cpp"
 #include "core/MyProtocolMySensors.cpp"
+
+#if defined(MY_GATEWAY_TINYGSM)
+#include "drivers/TinyGSM/TinyGsmClient.h"
+#endif
 
 #if defined(MY_GATEWAY_LINUX)
 #include "drivers/Linux/EthernetClient.h"
@@ -192,7 +201,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 #if !defined(MY_PORT)
-#error You must define MY_PORT (controller or gatway port to open)
+#error You must define MY_PORT (controller or gateway port to open)
 #endif
 #if defined(MY_GATEWAY_ESP8266)
 // GATEWAY - ESP8266
@@ -305,6 +314,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error Soft SPI is not available on ESP8266
 #endif
 #include "drivers/AVR/DigitalIO/DigitalIO.h"
+#endif
+
+// SOFTSERIAL
+#if defined(MY_GSM_TX) != defined(MY_GSM_RX)
+#error Both, MY_GSM_TX and MY_GSM_RX need to be defined when using SoftSerial
+#endif
+
+#if defined(MY_GATEWAY_TINYGSM) && !defined(SerialAT) && (!defined(MY_GSM_TX) || !defined(MY_GSM_RX))
+#error You need to define either SerialAT or MY_GSM_RX and MY_GSM_TX pins
 #endif
 
 // POWER PIN

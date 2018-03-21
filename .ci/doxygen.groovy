@@ -6,7 +6,7 @@ def call(config) {
 				Documentation/doxygen.sh"""
 	warnings canComputeNew: false, canResolveRelativePaths: false,
 		defaultEncoding: '',
-		excludePattern: '''.*/sha204_library\\.h,.*/drivers/Linux/.*,.*/cores/esp8266/.*,hardware/.*''',
+		excludePattern: '''.*/sha204_library\\.h,.*/drivers/Linux/.*,.*/drivers/TinyGSM/.*,.*/cores/esp8266/.*,hardware/.*''',
 		failedTotalAll: '', healthy: '', includePattern: '', messagesPattern: '',
 		parserConfigurations: [[parserName: 'Doxygen', pattern: config.repository_root+'doxygen.log']],
 		unHealthy: '', unstableTotalAll: '0'
