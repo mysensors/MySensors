@@ -8,6 +8,7 @@ echo "No subjects are of invalid size<br>" > too_long_subjects.txt
 echo "No subjects with leading lower case characters<br>" > leading_lowercases.txt
 echo "No subjects with trailing periods<br>" > trailing_periods.txt
 echo "No body lines are too wide<br>" > too_long_body_lines.txt
+echo "No keywords are missing in keywords.txt<br>" > missing_keywords.txt
 
 too_long_subjects=`awk 'length > 72' subjects.txt`
 if [ -n "$too_long_subjects" ]; then
@@ -39,8 +40,17 @@ if [ -n "$too_long_body_lines" ]; then
   result=1
 fi
 
+missing_keywords=$(for keyword in $(grep -A999 '#if DOXYGEN' MyConfig.h | grep -B999 '#endif' | grep '#define' | awk '{ print $2 '} | grep -e '^MY_'); do grep -q $keyword keywords.txt || echo $keyword; done)
+if [ -n "$missing_keywords" ]; then
+  echo "<b>Keywords that are missing from keywords.txt:</b>" > missing_keywords.txt
+  echo "$missing_keywords" >> missing_keywords.txt
+  sed -i -e 's/$/<br>/' missing_keywords.txt
+  result=1
+fi
+
+
 printf "%s" "<html>" > gitler.html
-awk 'FNR==1{print "<br>"}1' too_long_subjects.txt leading_lowercases.txt trailing_periods.txt too_long_body_lines.txt >> gitler.html
+awk 'FNR==1{print "<br>"}1' too_long_subjects.txt leading_lowercases.txt trailing_periods.txt too_long_body_lines.txt missing_keywords.txt >> gitler.html
 echo "<br>" >> gitler.html
 if [ $result -ne 0 ]; then
 	echo "You should follow <a href="http://chris.beams.io/posts/git-commit">this guide</a> when writing your commit messages.<br>" >> gitler.html
