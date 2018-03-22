@@ -313,4 +313,5 @@ MY_ESP8266_SSID	LITERAL1
 
 # Blacklist - descriptional only
 # MY_XYZ_POWER_PIN
+# MY_MQTT_TOPIC_PREFIX
 
