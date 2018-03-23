@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include "log.h"
+#include "config.h"
 #include "MySensorsCore.h"
 
 void handle_sigint(int sig)
@@ -48,7 +49,7 @@ void handle_sigint(int sig)
 	MY_SERIALDEVICE.end();
 #endif
 
-	closelog();
+	logClose();
 
 	exit(EXIT_SUCCESS);
 }
@@ -104,17 +105,18 @@ void print_usage()
 {
 	printf("Usage: mysgw [options]\n\n" \
 	       "Options:\n" \
+	       "  -c, --config-file          Config file. [" MY_LINUX_CONFIG_FILE "]\n" \
 	       "  -h, --help                 Display a short summary of all program options.\n" \
-	       "  -d, --debug                Enable debug.\n" \
-	       "  -b, --background           Run as a background process.\n"
-	       "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n"
-	       "  --gen-soft-serial-key      Generate and print a soft serial key.\n"
-	       "  --gen-aes-key              Generate and print an aes encryption key.\n"
-	       "  --print-soft-hmac-key      Print the soft hmac key from the config file.\n"
-	       "  --print-soft-serial-key    Print the soft serial key from the config file.\n"
-	       "  --print-aes-key            Print the aes encryption key from the config file.\n"
-	       "  --set-soft-hmac-key        Write a soft hmac key to the config file.\n"
-	       "  --set-soft-serial-key      Write a soft serial key to the config file.\n"
+	       "  -q, --quiet                Quiet mode, disable log messages written to the terminal.\n" \
+	       "  --daemon                   Run as a daemon.\n" \
+	       "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n" \
+	       "  --gen-soft-serial-key      Generate and print a soft serial key.\n" \
+	       "  --gen-aes-key              Generate and print an aes encryption key.\n" \
+	       "  --print-soft-hmac-key      Print the soft hmac key from the config file.\n" \
+	       "  --print-soft-serial-key    Print the soft serial key from the config file.\n" \
+	       "  --print-aes-key            Print the aes encryption key from the config file.\n" \
+	       "  --set-soft-hmac-key        Write a soft hmac key to the config file.\n" \
+	       "  --set-soft-serial-key      Write a soft serial key to the config file.\n" \
 	       "  --set-aes-key              Write an aes encryption key to the config file.\n");
 }
 
@@ -338,19 +340,21 @@ void set_aes_key(char *key_str)
 
 int main(int argc, char *argv[])
 {
-	int opt, log_opts, debug = 0, foreground = 1;
-	char *key = NULL;
+	int opt, daemon = 0, quiet = 0;
+	char *key = NULL, *config_file = NULL;
 
 	/* register the signal handler */
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+	signal(SIGPIPE, handle_sigint);
 
 	hwRandomNumberInit();
 
 	static struct option long_options[] = {
+		{"config-file",				required_argument,	0,	'c'},
+		{"daemon",					no_argument,		0,	'J'},
 		{"help",					no_argument,		0,	'h'},
-		{"debug",					no_argument,		0,	'd'},
-		{"background",				no_argument,		0,	'b'},
+		{"quiet",					no_argument,		0,	'q'},
 		{"gen-soft-hmac-key",		no_argument,		0,	'A'},
 		{"gen-soft-serial-key",		no_argument,		0,	'B'},
 		{"gen-aes-key",				no_argument,		0,	'C'},
@@ -364,16 +368,16 @@ int main(int argc, char *argv[])
 	};
 
 	int long_index = 0;
-	while ((opt = getopt_long(argc, argv,"hdbABCDEFGHI", long_options, &long_index )) != -1) {
+	while ((opt = getopt_long(argc, argv,"chqABCDEFGHIJ", long_options, &long_index )) != -1) {
 		switch (opt) {
+		case 'c':
+			config_file = strdup(optarg);
+			break;
 		case 'h':
 			print_usage();
 			exit(EXIT_SUCCESS);
-		case 'd':
-			debug = 1;
-			break;
-		case 'b':
-			foreground = 0;
+		case 'q':
+			quiet = 1;
 			break;
 		case 'A':
 			generate_soft_sign_hmac_key();
@@ -405,27 +409,46 @@ int main(int argc, char *argv[])
 			key = strdup(optarg);
 			set_aes_key(key);
 			exit(EXIT_SUCCESS);
+		case 'J':
+			daemon = 1;
+			break;
 		default:
 			print_usage();
 			exit(EXIT_SUCCESS);
 		}
 	}
 
-	log_opts = LOG_CONS;
-	if (foreground && isatty(STDIN_FILENO)) {
-		// Also print syslog to stderror
-		log_opts |= LOG_PERROR;
-	}
-	if (!debug) {
-		// Ignore debug type messages
-		setlogmask(LOG_UPTO (LOG_INFO));
-	}
-	logOpen(log_opts, LOG_USER);
-
-	if (!foreground && !debug) {
+	if (daemon) {
 		if (daemonize() != 0) {
 			exit(EXIT_FAILURE);
 		}
+		quiet = 1;
+	}
+
+	if (config_parse(config_file?config_file:MY_LINUX_CONFIG_FILE) != 0) {
+		exit(EXIT_FAILURE);
+	}
+	if (config_file) {
+		free(config_file);
+	}
+
+	logSetQuiet(quiet);
+	logSetLevel(conf.verbose);
+
+	if (conf.log_file) {
+		if (logSetFile(conf.log_filepath) != 0) {
+			logError("Failed to open log file.\n");
+		}
+	}
+
+	if (conf.log_pipe) {
+		if (logSetPipe(conf.log_pipe_file) != 0) {
+			logError("Failed to open log pipe.\n");
+		}
+	}
+
+	if (conf.syslog) {
+		logSetSyslog(LOG_CONS, LOG_USER);
 	}
 
 	logInfo("Starting gateway...\n");

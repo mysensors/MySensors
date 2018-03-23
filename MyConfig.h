@@ -1873,7 +1873,7 @@
  * @note For now the configuration file is only used to store the emulated eeprom state.
  */
 #ifndef MY_LINUX_CONFIG_FILE
-#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+#define MY_LINUX_CONFIG_FILE "/etc/mysensors.conf"
 #endif
 /** @}*/ // End of LinuxSettingGrpPub group
 /** @}*/ // End of PlatformSettingGrpPub group

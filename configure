@@ -37,7 +37,7 @@ Installation options:
 
 MySensors options:
     --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
-    --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
+    --my-config-file=<FILE>     Config file path. [/etc/mysensors.conf]
     --my-gateway=[none|ethernet|serial|mqtt]
                                 Set the protocol used to communicate with the controller. [ethernet]
     --my-node-id=<ID>           Disable gateway feature and run as a node with the specified id.
