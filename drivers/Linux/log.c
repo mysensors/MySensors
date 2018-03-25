@@ -134,29 +134,24 @@ void vlog(int level, const char *fmt, va_list args)
 		time_t t = time(NULL);
 		struct tm *lt = localtime(&t);
 
-		char buf[16];
-		buf[strftime(buf, sizeof(buf), "%b %d %H:%M:%S", lt)] = '\0';
+		char date[16];
+		date[strftime(date, sizeof(date), "%b %d %H:%M:%S", lt)] = '\0';
 
+		if (_log_file_fp != NULL) {
+			fprintf(_log_file_fp, "%s %-5s ", date, _log_level_names[level]);
+			vfprintf(_log_file_fp, fmt, args);
+		}
+
+		if (!_log_quiet) {
 #ifdef LOG_DISABLE_COLOR
-		(void)_log_level_colors;
-		if (!_log_quiet) {
-			fprintf(stderr, "%s %-5s ", buf, _log_level_names[level]);
+			(void)_log_level_colors;
+			fprintf(stderr, "%s %-5s ", date, _log_level_names[level]);
 			vfprintf(stderr, fmt, args);
-		}
-		if (_log_file_fp != NULL) {
-			vfprintf(_log_file_fp, "%s %-5s ", buf, _log_level_names[level]);
-			vfprintf(_log_file_fp, fmt, args);
-		}
 #else
-		if (!_log_quiet) {
-			fprintf(stderr, "%s %s%-5s\x1b[0m ", buf, _log_level_colors[level], _log_level_names[level]);
+			fprintf(stderr, "%s %s%-5s\x1b[0m ", date, _log_level_colors[level], _log_level_names[level]);
 			vfprintf(stderr, fmt, args);
-		}
-		if (_log_file_fp != NULL) {
-			fprintf(_log_file_fp, "%s %s%-5s\x1b[0m ", buf, _log_level_colors[level], _log_level_names[level]);
-			vfprintf(_log_file_fp, fmt, args);
-		}
 #endif
+		}
 	}
 
 	if (_log_syslog) {
