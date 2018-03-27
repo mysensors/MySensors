@@ -410,11 +410,11 @@ LOCAL int16_t RF24_getSendingRSSI(void)
 LOCAL void RF24_irqHandler(void)
 {
 	if (RF24_receiveCallback) {
+#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
 		// Will stay for a while (several 100us) in this interrupt handler. Any interrupts from serial
 		// rx coming in during our stay will not be handled and will cause characters to be lost.
 		// As a workaround we re-enable interrupts to allow nested processing of other interrupts.
 		// Our own handler is disconnected to prevent recursive calling of this handler.
-#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
 		detachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
 		interrupts();
 #endif
@@ -423,13 +423,28 @@ LOCAL void RF24_irqHandler(void)
 		// 1.Read payload, 2.Clear RX_DR IRQ, 3.Read FIFO_status, 4.Repeat when more data available.
 		// Datasheet (ch. 8.5) states, that the nRF de-asserts IRQ after reading STATUS.
 
+#if defined(__linux__)
+		// Start checking if RX-FIFO is not empty, as we might end up here from an interrupt
+		// for a message we've already read.
+		if (RF24_isDataAvailable()) {
+			do {
+				RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
+			} while (RF24_isDataAvailable());
+		} else {
+			// Occasionally interrupt is triggered but no data is available - clear RX interrupt only
+			RF24_setStatus(_BV(RF24_RX_DR));
+			logNotice("RF24: Recovered from a bad interrupt trigger.\n");
+		}
+#else
 		// Start checking if RX-FIFO is not empty, as we might end up here from an interrupt
 		// for a message we've already read.
 		while (RF24_isDataAvailable()) {
 			RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
 		}
-		// Restore our interrupt handler.
+#endif
+
 #if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
+		// Restore our interrupt handler.
 		noInterrupts();
 		attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
 #endif
