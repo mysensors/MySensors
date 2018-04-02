@@ -46,13 +46,13 @@
 #include <MySensors.h>
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
-#define PULSE_FACTOR 1000       // Nummber of blinks per KWH of your meeter
+#define PULSE_FACTOR 1000       // Number of blinks per KWH of your meeter
 #define SLEEP_MODE false        // Watt-value can only be reported when sleep mode is false.
-#define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
+#define MAX_WATT 10000          // Max watt value to report. This filters outliers.
 #define CHILD_ID 1              // Id of the sensor child
 
 uint32_t SEND_FREQUENCY =
-    20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
+    20000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
 bool pcReceived = false;
 volatile uint32_t pulseCount = 0;
@@ -97,8 +97,8 @@ void loop()
 	if (pcReceived && (SLEEP_MODE || sendTime)) {
 		// New watt value has been calculated
 		if (!SLEEP_MODE && watt != oldWatt) {
-			// Check that we dont get unresonable large watt value.
-			// could hapen when long wraps or false interrupt triggered
+			// Check that we don't get unreasonable large watt value.
+			// could happen when long wraps or false interrupt triggered
 			if (watt<((uint32_t)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
 			}

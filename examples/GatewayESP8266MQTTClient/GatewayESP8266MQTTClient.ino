@@ -27,7 +27,7 @@
  *
  * LED purposes:
  * - To use the feature, uncomment any of the MY_DEFAULT_xx_LED_PINs in your sketch
- * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation received
+ * - RX (green) - blink fast on radio message received. In inclusion mode will blink fast only on presentation received
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or receive crc error
  *

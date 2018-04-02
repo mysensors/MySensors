@@ -33,9 +33,9 @@
  *
  * LED purposes:
  * - To use the feature, uncomment MY_DEFAULT_xxx_LED_PIN in the sketch below
- * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
+ * - RX (green) - blink fast on radio message received. In inclusion mode will blink fast only on presentation received
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
- * - ERR (red) - fast blink on error during transmission error or recieve crc error
+ * - ERR (red) - fast blink on error during transmission error or receive crc error
  *
  * See http://www.mysensors.org/build/ethernet_gateway for wiring instructions.
  *
@@ -96,7 +96,7 @@
 
 // The MAC address can be anything you want but should be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
-// Note that most of the Ardunio examples use  "DEAD BEEF FEED" for the MAC address.
+// Note that most of the Arduino examples use  "DEAD BEEF FEED" for the MAC address.
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 
 // Enable inclusion mode

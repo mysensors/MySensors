@@ -22,7 +22,7 @@
  * Version 1.0 - Henrik Ekblad
  *
  * DESCRIPTION
- * Example sketch showing how to create a node thay repeates messages
+ * Example sketch showing how to create a node that repeats messages
  * from nodes far from gateway back to gateway.
  * It is important that nodes that has enabled repeater mode calls
  * process() frequently. Repeaters should never sleep.
