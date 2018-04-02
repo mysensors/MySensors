@@ -27,29 +27,16 @@
  *
  * LED purposes:
  * - To use the feature, uncomment any of the MY_DEFAULT_xx_LED_PINs in your sketch
- * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
+ * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation received
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
- * - ERR (red) - fast blink on error during transmission error or recieve crc error
+ * - ERR (red) - fast blink on error during transmission error or receive crc error
  *
- * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
- * nRF24L01+  ESP8266
- * VCC        VCC
- * CE         GPIO4
- * CSN/CS     GPIO15
- * SCK        GPIO14
- * MISO       GPIO12
- * MOSI       GPIO13
+ * See https://www.mysensors.org/build/connect_radio for wiring instructions.
  *
- * Not all ESP8266 modules have all pins available on their external interface.
- * This code has been tested on an ESP-12 module.
- * The ESP8266 requires a certain pin configuration to download code, and another one to run code:
- * - Connect REST (reset) via 10K pullup resistor to VCC, and via switch to GND ('reset switch')
- * - Connect GPIO15 via 10K pulldown resistor to GND
- * - Connect CH_PD via 10K resistor to VCC
- * - Connect GPIO2 via 10K resistor to VCC
- * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
+ * If you are using a "barebone" ESP8266, see
+ * https://www.mysensors.org/build/esp8266_gateway#wiring-for-barebone-esp8266
  *
-  * Inclusion mode button:
+ * Inclusion mode button:
  * - Connect GPIO5 (=D1) via switch to GND ('inclusion switch')
  *
  * Hardware SHA204 signing is currently not supported!
@@ -78,7 +65,7 @@
 // Set MQTT client id
 #define MY_MQTT_CLIENT_ID "mysensors-1"
 
-// Enable these if your MQTT broker requires usenrame/password
+// Enable these if your MQTT broker requires username/password
 //#define MY_MQTT_USER "username"
 //#define MY_MQTT_PASSWORD "password"
 
@@ -138,6 +125,6 @@ void presentation()
 
 void loop()
 {
-	// Send locally attech sensors data here
+	// Send locally attached sensors data here
 }
 
