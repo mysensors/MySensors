@@ -49,12 +49,15 @@ int config_parse(const char *config_file)
 		return -1;
 	}
 
-	conf.verbose = 4;
+	conf.verbose = 7;
 	conf.log_pipe = 0;
 	conf.log_pipe_file = NULL;
 	conf.syslog = 0;
 	conf.eeprom_file = NULL;
-	conf.eeprom_size = 1024;
+	conf.eeprom_size = 0;
+	conf.soft_hmac_key = NULL;
+	conf.soft_serial_key = NULL;
+	conf.aes_key = NULL;
 
 	while (fgets(buf, 1024, fptr)) {
 		if (buf[0] != '#' && buf[0] != 10 && buf[0] != 13) {
@@ -145,6 +148,21 @@ int config_parse(const char *config_file)
 						return -1;
 					}
 				}
+			} else if (!strncmp(buf, "soft_hmac_key=", 14)) {
+				if (_config_parse_string(&(buf[14]), "soft_hmac_key", &conf.soft_hmac_key)) {
+					fclose(fptr);
+					return -1;
+				}
+			} else if (!strncmp(buf, "soft_serial_key=", 16)) {
+				if (_config_parse_string(&(buf[16]), "soft_serial_key", &conf.soft_serial_key)) {
+					fclose(fptr);
+					return -1;
+				}
+			} else if (!strncmp(buf, "aes_key=", 8)) {
+				if (_config_parse_string(&(buf[8]), "aes_key", &conf.aes_key)) {
+					fclose(fptr);
+					return -1;
+				}
 			} else {
 				logWarning("Unknown config option \"%s\".\n", buf);
 			}
@@ -172,11 +190,23 @@ int config_parse(const char *config_file)
 
 void config_cleanup(void)
 {
-	if (conf.eeprom_file) {
-		free(conf.eeprom_file);
+	if (conf.log_filepath) {
+		free(conf.log_filepath);
 	}
 	if (conf.log_pipe_file) {
 		free(conf.log_pipe_file);
+	}
+	if (conf.eeprom_file) {
+		free(conf.eeprom_file);
+	}
+	if (conf.soft_hmac_key) {
+		free(conf.soft_hmac_key);
+	}
+	if (conf.soft_serial_key) {
+		free(conf.soft_serial_key);
+	}
+	if (conf.aes_key) {
+		free(conf.aes_key);
 	}
 }
 
@@ -185,12 +215,15 @@ int _config_create(const char *config_file)
 	FILE *myFile;
 	int ret;
 
-	const char default_conf[] = "# Logging verbosity: debug,info,notice,warn,err\n" \
+	const char default_conf[] = "# Logging\n" \
+	                            "# Verbosity: debug,info,notice,warn,err\n" \
 	                            "verbose=debug\n" \
+	                            "\n" \
 	                            "# Enable logging to a file.\n" \
 	                            "log_file=0\n" \
 	                            "# Log file path.\n" \
 	                            "log_filepath=/tmp/mysgw.log\n" \
+	                            "\n" \
 	                            "# Enable logging to a named pipe.\n" \
 	                            "# Use this option to view your gateway's log messages\n" \
 	                            "# from the log_pipe_file defined bellow.\n" \
@@ -198,10 +231,32 @@ int _config_create(const char *config_file)
 	                            "#   cat \"log_pipe_file\"\n" \
 	                            "log_pipe=0\n" \
 	                            "log_pipe_file=/tmp/mysgw.pipe\n" \
+	                            "\n" \
 	                            "# Enable logging to syslog.\n" \
 	                            "syslog=0\n" \
+	                            "\n" \
+	                            "# EEPROM settings\n" \
 	                            "eeprom_file=/etc/mysensors.eeprom\n" \
-	                            "eeprom_size=1024\n";
+	                            "eeprom_size=1024\n" \
+	                            "\n" \
+	                            "# Software signing settings\n" \
+	                            "# Note: The gateway must have been built with signing\n" \
+	                            "#       support to use the options below.\n" \
+	                            "#\n" \
+	                            "# To generate a HMAC key run mysgw with: --gen-soft-hmac-key\n" \
+	                            "# copy the new key in the line below and uncomment it.\n" \
+	                            "#soft_hmac_key=\n" \
+	                            "# To generate a serial key run mysgw with: --gen-soft-serial-key\n" \
+	                            "# copy the new key in the line below and uncomment it.\n" \
+	                            "#soft_serial_key=\n" \
+	                            "\n" \
+	                            "# Encryption settings\n" \
+	                            "# Note: The gateway must have been built with encryption\n" \
+	                            "#       support to use the options below.\n" \
+	                            "#\n" \
+	                            "# To generate a AES key run mysgw with: --gen-aes-key\n" \
+	                            "# copy the new key in the line below and uncomment it.\n" \
+	                            "#aes_key=\n";
 
 	myFile = fopen(config_file, "w");
 	if (!myFile) {

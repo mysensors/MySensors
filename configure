@@ -113,8 +113,20 @@ MySensors options:
 EOF
 }
 
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+LIGHT_BLUE='\033[1;34m'
+NO_COLOR='\033[0m'
+
+OK="${GREEN}[OK]${NO_COLOR}"
+ERROR="${RED}[ERROR]${NO_COLOR}"
+FAILED="${YELLOW}[FAILED]${NO_COLOR}"
+SECTION="${LIGHT_BLUE}[SECTION]${NO_COLOR}"
+
 function die {
-    echo "[ERROR] $1"
+    printf "${ERROR} $1 \n"
     exit $2
 }
 
@@ -497,12 +509,12 @@ CC=${CC:-gcc}
 CXX=${CXX:-g++}
 
 if [ -z "${SOC}" ]; then
-    echo "[SECTION] Detecting target machine."
+    printf "${SECTION} Detecting target machine.\n"
     info=($(detect_machine))
     SOC=${info[0]}
     TYPE=${info[1]}
     CPU=${info[2]}
-    echo "  [OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}."
+    printf "  ${OK} machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}.\n"
 fi
 
 if [ -z "${CPUFLAGS}" ]; then
@@ -512,23 +524,23 @@ fi
 if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
     CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
 else
-    echo "[SECTION] Checking GPIO Sysfs."
+    printf "${SECTION} Checking GPIO Sysfs.\n"
     if [[ $(eval 'ls /sys/class/gpio/export 2>/dev/null') ]]; then
-        echo "  [OK] /sys/class/gpio/export found"
+        printf "  ${OK} /sys/class/gpio/export found.\n"
     else
         echo "  [WARNING] /sys/class/gpio/export not found."
     fi
 fi
 
 if [ -z "${SPI_DRIVER}" ]; then
-    echo "[SECTION] Detecting SPI driver."
+    printf "${SECTION} Detecting SPI driver.\n"
     if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
         SPI_DRIVER=BCM
     elif [[ $(eval 'ls /dev/spidev* 2>/dev/null') ]]; then
         SPI_DRIVER=SPIDEV
     fi
     if [ -n "${SPI_DRIVER}" ]; then
-        echo "  [OK] SPI driver detected:${SPI_DRIVER}."
+        printf "  ${OK} SPI driver detected:${SPI_DRIVER}.\n"
     else
         echo "  [WARNING] No supported SPI driver detected. Using SPIDEV."
         SPI_DRIVER=SPIDEV
@@ -551,6 +563,8 @@ if [ -n "${SPI_DRIVER}" ]; then
     esac
 fi
 
+printf "${SECTION} Gateway configuration.\n"
+
 if [[ ${debug} == "enable" ]]; then
     CPPFLAGS="-DMY_DEBUG $CPPFLAGS"
 fi
@@ -567,6 +581,7 @@ elif [[ ${gateway_type} == "mqtt" ]]; then
 else
     die "Invalid gateway type." 2
 fi
+printf "  ${OK} Type: ${gateway_type}.\n"
 
 if [[ ${transport_type} == "none" ]]; then
     # Transport disabled
@@ -582,20 +597,22 @@ elif [[ ${transport_type} == "rfm95" ]]; then
 else
     die "Invalid transport type." 3
 fi
+printf "  ${OK} Transport: ${transport_type}.\n"
 
 if [[ ${signing} == "none" ]]; then
     # Signing disabled
-    :
+    printf "  ${OK} Signing: Disabled.\n"
 elif [[ ${signing} == "software" ]]; then
     CPPFLAGS="-DMY_SIGNING_SOFT $CPPFLAGS"
     if [[ ${signing_request_signatures} == true ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
+    printf "  ${OK} Signing: Enabled - Using key from config file.\n"
 elif [[ ${signing} == "password" ]]; then
     if [ -z "${security_password}" ]; then
-        die "You need to set the password for signing with --my-security-password= option" 6
+        die "You need to set the password for signing with --my-security-password option" 6
     fi
-    echo "Simplified signing using password"
+    printf "  ${OK} Signing: Enabled - Simplified signing using password.\n"
     CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${security_password}\\\" $CPPFLAGS"
 else
     die "Invalid signing type." 7
@@ -604,41 +621,44 @@ fi
 if [[ ${encryption} == true ]]; then
     # Encryption enabled on some transport
     if [ -z "${security_password}" ]; then
-        echo "Encryption key from configuration"
+        printf "  ${OK} Encryption: Enabled - Using key from config file.\n"
     else
-        echo "Simplified encryption using password"
+        printf "  ${OK} Encryption: Enabled - Simplified encryption using password.\n"
         CPPFLAGS="-DMY_ENCRYPTION_SIMPLE_PASSWD=\\\"${security_password}\\\" $CPPFLAGS"
     fi
+else
+    printf "  ${OK} Encryption: Disabled.\n"
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
-echo "[SECTION] Detecting init system."
+printf "${SECTION} Detecting init system.\n"
 if [ "${NO_INIT}" ];  then
-    echo "  [OK] no init system chosen."
+    printf "  ${OK} No init system chosen.\n"
 elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
-    echo "  [OK] init system detected: systemd."
+    printf "  ${OK} Init system detected: systemd.\n"
 elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
     INIT_SYSTEM=sysvinit
-    echo "  [OK] init system detected: sysvinit."
+    printf "  ${OK} Init system detected: sysvinit.\n"
 else
-    echo "  [FAILED] unknown init system."
+    printf "  ${FAILED} Unknown init system."
 fi
 
-echo "[SECTION] Saving configuration."
+printf "${SECTION} Saving configuration.\n"
 echo -n "" > Makefile.inc
 for param in ${params}; do
     if [[ ${!param} ]]; then
         echo "${param}=${!param}" >> Makefile.inc
     fi
 done
+printf "  ${OK} Saved.\n"
 
 if [ -z "${NO_CLEAN}" ]; then
-    echo "[SECTION] Cleaning previous builds."
+    printf "${SECTION} Cleaning previous builds.\n"
     make clean >/dev/null
 fi
 
 
-echo "[OK] Finished."
+printf "  ${OK} Finished.\n"

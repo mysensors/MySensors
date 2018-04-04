@@ -33,6 +33,9 @@ struct config {
 	int syslog;
 	char *eeprom_file;
 	int eeprom_size;
+	char *soft_hmac_key;
+	char *soft_serial_key;
+	char *aes_key;
 } conf;
 
 int config_parse(const char *config_file);

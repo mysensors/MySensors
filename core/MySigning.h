@@ -182,10 +182,10 @@
  *    * To generate HMAC key @verbatim --gen-soft-hmac-key @endverbatim
  *    * To generate %AES key @verbatim --gen-aes-key @endverbatim
  *    * To generate a soft serial number @verbatim --gen-soft-serial @endverbatim
- * 2. Store keys/values to the gateway, execute @c mysgw with arguments
- *    * To store HMAC key @verbatim --set-soft-hmac-key=<DATA> @endverbatim
- *    * To store %AES key @verbatim --set-aes-key=<DATA> @endverbatim
- *    * To store soft serial number @verbatim --set-soft-serial-key=<DATA> @endverbatim
+ * 2. Update the gateway config file with the generated keys/valeus
+ *    * For HMAC key @verbatim soft_hmac_key=<DATA> @endverbatim
+ *    * For %AES key @verbatim aes_key=<DATA> @endverbatim
+ *    * For soft serial number @verbatim soft_serial_key=<DATA> @endverbatim
  *
  * You are now set and ready to use message signing in your network.
  * As of now, the following restrictions will be applied to your nodes:
