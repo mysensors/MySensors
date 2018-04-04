@@ -50,8 +50,24 @@ IPAddress _subnetIp(255, 255, 255, 0);
 uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
 #endif /* End of MY_GATEWAY_ESP8266 */
 
+#if defined(MY_GATEWAY_TINYGSM)
+#if defined(MY_GSM_RX) && defined(MY_GSM_TX)
+SoftwareSerial SerialAT(MY_GSM_RX, MY_GSM_TX);
+#endif
+static TinyGsm modem(SerialAT);
+static TinyGsmClient _MQTT_gsmClient(modem);
+static PubSubClient _MQTT_client(_MQTT_gsmClient);
+#if defined(MY_GSM_BAUDRATE)
+uint32_t rate = MY_GSM_BAUDRATE;
+#else /* Else part of MY_GSM_BAUDRATE */
+uint32_t rate = 0;
+#endif /* End of MY_GSM_BAUDRATE */
+#else /* Else part of MY_GATEWAY_TINYGSM */
 static EthernetClient _MQTT_ethClient;
 static PubSubClient _MQTT_client(_MQTT_ethClient);
+#endif /* End of MY_GATEWAY_TINYGSM */
+
+
 static bool _MQTT_connecting = true;
 static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
@@ -114,6 +130,8 @@ bool gatewayTransportConnect(void)
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
 #endif /* End of MY_IP_ADDRESS */
+#elif defined(MY_GATEWAY_TINYGSM) /* Elif part of MY_GATEWAY_ESP8266 */
+	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"), modem.getLocalIP().c_str());
 #else /* Else part of MY_GATEWAY_ESP8266 */
 #if defined(MY_IP_ADDRESS)
 	Ethernet.begin(_MQTT_clientMAC, _MQTT_clientIp);
@@ -137,6 +155,46 @@ bool gatewayTransportConnect(void)
 bool gatewayTransportInit(void)
 {
 	_MQTT_connecting = true;
+
+#if defined(MY_GATEWAY_TINYGSM)
+
+#if !defined(MY_GSM_BAUDRATE)
+	rate = TinyGsmAutoBaud(SerialAT);
+#endif /* End of MY_GSM_BAUDRATE */
+
+	SerialAT.begin(rate);
+	delay(3000);
+
+	modem.restart();
+
+#if defined(MY_GSM_PIN) && !defined(TINY_GSM_MODEM_ESP8266)
+	modem.simUnlock(MY_GSM_PIN);
+#endif /* End of MY_GSM_PIN */
+
+#ifndef TINY_GSM_MODEM_ESP8266
+	if (!modem.waitForNetwork()) {
+		GATEWAY_DEBUG(PSTR("!GWT:TIN:ETH FAIL\n"));
+		while (true);
+	}
+	GATEWAY_DEBUG(PSTR("GWT:TIN:ETH OK\n"));
+
+	if (!modem.gprsConnect(MY_GSM_APN, MY_GSM_USR, MY_GSM_PSW)) {
+		GATEWAY_DEBUG(PSTR("!GWT:TIN:ETH FAIL\n"));
+		while (true);
+	}
+	GATEWAY_DEBUG(PSTR("GWT:TIN:ETH OK\n"));
+	delay(1000);
+#else /* Else part of TINY_GSM_MODEM_ESP8266 */
+	if (!modem.networkConnect(MY_GSM_SSID, MY_GSM_PSW)) {
+		GATEWAY_DEBUG(PSTR("!GWT:TIN:ETH FAIL\n"));
+		while (true);
+	}
+	GATEWAY_DEBUG(PSTR("GWT:TIN:ETH OK\n"));
+	delay(1000);
+#endif /* End of TINY_GSM_MODEM_ESP8266 */
+
+#endif /* End of MY_GATEWAY_TINYGSM */
+
 #if defined(MY_CONTROLLER_IP_ADDRESS)
 	_MQTT_client.setServer(_brokerIp, MY_PORT);
 #else

@@ -1344,12 +1344,15 @@
  * @brief Define this for Ethernet GW based on the ESP8266.
  * @def MY_GATEWAY_LINUX
  * @brief Define this for Ethernet GW based on Linux.
+ * @def MY_GATEWAY_TINYGSM
+ * @brief Define this for Ethernet GW based on GSM modems supported by TinyGSM library.
  */
 // The gateway options available
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
 //#define MY_GATEWAY_LINUX
+//#define MY_GATEWAY_TINYGSM
 
 
 /**
@@ -1888,7 +1891,7 @@
  * MY_IS_GATEWAY is true when @ref MY_GATEWAY_FEATURE is set.
  * MY_NODE_TYPE contain a string describing the class of sketch/node (gateway/repeater/node).
  */
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT) || defined(MY_GATEWAY_TINYGSM)
 #define MY_GATEWAY_FEATURE
 #define MY_IS_GATEWAY (true)
 #define MY_NODE_TYPE "GW"
@@ -2051,9 +2054,51 @@
 #define MY_GATEWAY_ENC28J60
 #define MY_GATEWAY_ESP8266
 #define MY_GATEWAY_LINUX
+#define MY_GATEWAY_TINYGSM
 #define MY_IP_ADDRESS 192,168,178,66
 #define MY_USE_UDP
 #define MY_CONTROLLER_IP_ADDRESS 192,168,178,254
+// TinyGSM
+/**
+ * @def MY_GSM_APN
+ * @brief APN from your cell carrier / mobile provider. Example: 4g.tele2.se
+ */
+#define MY_GSM_APN
+/**
+ * @def MY_GSM_BAUDRATE
+ * @brief Baudrate for your GSM modem. If left undefined, TinyGSM will try to auto detect the correct rate
+ */
+#define MY_GSM_BAUDRATE
+/**
+ * @def MY_GSM_PIN
+ * @brief PIN code for your SIM card, if PIN lock is active.
+ */
+#define MY_GSM_PIN
+/**
+ * @def MY_GSM_PSW
+ * @brief If using a GSM modem, this is the password supplied by your cell carrier / mobile provider. If using ESP8266 as a WiFi modem, this is your WiFi network password
+ */
+#define MY_GSM_PSW
+/**
+ * @def MY_GSM_RX
+ * @brief If defined, uses softSerial using defined pins (must also define MY_GSM_TX)
+ */
+#define MY_GSM_RX
+/**
+ * @def MY_GSM_SSID
+ * @brief If using ESP8266 as WiFi modem, this is your network SSID
+ */
+#define MY_GSM_SSID
+/**
+ * @def MY_GSM_TX
+ * @brief If defined, uses softSerial using defined pins (must also define MY_GSM_RX)
+ */
+#define MY_GSM_TX
+/**
+ * @def MY_GSM_USR
+ * @brief Supplied by your cell carrier / mobile operator. If not required, leave undefined.
+ */
+#define MY_GSM_USR
 // LED
 #define MY_DEFAULT_ERR_LED_PIN
 #define MY_DEFAULT_TX_LED_PIN
