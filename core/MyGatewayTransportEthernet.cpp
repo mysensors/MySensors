@@ -123,9 +123,6 @@ bool gatewayTransportInit(void)
 #if defined(MY_ESP8266_HOSTNAME)
 	WiFi.hostname(MY_ESP8266_HOSTNAME);
 #endif /* End of MY_ESP8266_HOSTNAME */
-#if defined(MY_IP_ADDRESS)
-	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
-#endif /* End of MY_IP_ADDRESS */
 #ifndef MY_ESP8266_BSSID
 #define MY_ESP8266_BSSID NULL
 #endif
@@ -136,6 +133,9 @@ bool gatewayTransportInit(void)
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP=%s\n"), WiFi.localIP().toString().c_str());
 #endif /* End of MY_ESP8266_SSID */
+#if defined(MY_IP_ADDRESS)
+	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
+#endif /* End of MY_IP_ADDRESS */
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
 	// Nothing to do here
 #else /* Else part of MY_GATEWAY_ESP8266 */

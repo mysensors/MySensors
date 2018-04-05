@@ -128,6 +128,7 @@ bool gatewayTransportConnect(void)
 	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"),WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
 #if defined(MY_IP_ADDRESS)
+	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 	_MQTT_ethClient.bind(_MQTT_clientIp);
 #endif /* End of MY_IP_ADDRESS */
 #elif defined(MY_GATEWAY_TINYGSM) /* Elif part of MY_GATEWAY_ESP8266 */
@@ -209,9 +210,6 @@ bool gatewayTransportInit(void)
 #if defined(MY_ESP8266_HOSTNAME)
 	WiFi.hostname(MY_ESP8266_HOSTNAME);
 #endif /* End of MY_ESP8266_HOSTNAME */
-#if defined(MY_IP_ADDRESS)
-	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
-#endif /* End of MY_IP_ADDRESS */
 #ifndef MY_ESP8266_BSSID
 #define MY_ESP8266_BSSID NULL
 #endif
