@@ -59,6 +59,8 @@
 #include "hal/architecture/MyHw.h"
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/ESP8266/MyHwESP8266.cpp"
+#elif defined(ARDUINO_ARCH_ESP32)
+#include "hal/architecture/ESP32/MyHwESP32.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
@@ -203,8 +205,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if !defined(MY_PORT)
 #error You must define MY_PORT (controller or gateway port to open)
 #endif
-#if defined(MY_GATEWAY_ESP8266)
-// GATEWAY - ESP8266
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+// GATEWAY - ESP8266 / ESP32
 #include "core/MyGatewayTransportEthernet.cpp"
 #elif defined(MY_GATEWAY_LINUX)
 // GATEWAY - Generic Linux
@@ -286,7 +288,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // RAM ROUTING TABLE
 #if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR)
 #if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__)
@@ -416,6 +418,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/ESP8266/MyMainESP8266.cpp"
 #elif defined(ARDUINO_ARCH_NRF5)
 #include "hal/architecture/NRF5/MyMainNRF5.cpp"
+#elif defined(ARDUINO_ARCH_ESP32)
+#include "hal/architecture/ESP32/MyMainESP32.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/Linux/MyMainLinuxGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)

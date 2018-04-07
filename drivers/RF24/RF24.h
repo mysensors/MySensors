@@ -67,7 +67,7 @@
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define DEFAULT_RF24_CE_PIN				(4)		//!< DEFAULT_RF24_CE_PIN
 #elif defined(ARDUINO_ARCH_ESP32)
-#warning not implemented yet
+#define DEFAULT_RF24_CE_PIN				(17)	//!< DEFAULT_RF24_CE_PIN
 #elif defined(ARDUINO_ARCH_SAMD)
 #define DEFAULT_RF24_CE_PIN				(27)	//!< DEFAULT_RF24_CE_PIN
 #elif defined(LINUX_ARCH_RASPBERRYPI)

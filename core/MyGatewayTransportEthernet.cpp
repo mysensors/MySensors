@@ -30,14 +30,14 @@ IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
 IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
 #if defined(MY_IP_GATEWAY_ADDRESS)
 IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
-#elif defined(MY_GATEWAY_ESP8266) /* Elif part of MY_IP_GATEWAY_ADDRESS */
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
 IPAddress _gatewayIp(_ethernetGatewayIP[0], _ethernetGatewayIP[1], _ethernetGatewayIP[2], 1);
 #endif /* End of MY_IP_GATEWAY_ADDRESS */
 #if defined(MY_IP_SUBNET_ADDRESS)
 IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
-#elif defined(MY_GATEWAY_ESP8266) /* Elif part of MY_IP_SUBNET_ADDRESS */
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 IPAddress _subnetIp(255, 255, 255, 0);
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
@@ -57,12 +57,12 @@ typedef struct {
 	uint8_t idx;
 } inputBuffer;
 
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Some re-defines to make code more readable below
 #define EthernetServer WiFiServer
 #define EthernetClient WiFiClient
 #define EthernetUDP WiFiUDP
-#endif /* End of MY_GATEWAY_ESP8266 */
+#endif
 
 #if defined(MY_GATEWAY_CLIENT_MODE)
 #if defined(MY_USE_UDP)
@@ -81,7 +81,7 @@ static inputBuffer inputString;
 #else
 static EthernetClient client = EthernetClient();
 #endif /* End of MY_USE_UDP */
-#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_CLIENT_MODE */
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX)
 static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
@@ -136,9 +136,29 @@ bool gatewayTransportInit(void)
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP=%s\n"), WiFi.localIP().toString().c_str());
 #endif /* End of MY_ESP8266_SSID */
-#elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
+#elif defined(MY_GATEWAY_ESP32)
+#if defined(MY_ESP32_SSID)
+	// Turn off access point
+	WiFi.mode(WIFI_STA);
+#if defined(MY_ESP32_HOSTNAME)
+	WiFi.setHostname(MY_ESP32_HOSTNAME);
+#endif
+#ifdef MY_IP_ADDRESS
+	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
+#endif
+#ifndef MY_ESP32_BSSID
+#define MY_ESP32_BSSID NULL
+#endif
+	(void)WiFi.begin(MY_ESP32_SSID, MY_ESP32_PASSWORD, 0, MY_ESP32_BSSID);
+	while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+		wait(500);
+		GATEWAY_DEBUG(PSTR("."));
+	}
+	GATEWAY_DEBUG(PSTR("IP: %s\n"), WiFi.localIP().toString().c_str());
+#endif
+#elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
-#else /* Else part of MY_GATEWAY_ESP8266 */
+#else
 #if defined(MY_IP_GATEWAY_ADDRESS) && defined(MY_IP_SUBNET_ADDRESS)
 	// DNS server set to gateway ip
 	Ethernet.begin(_ethernetGatewayMAC, _ethernetGatewayIP, _gatewayIp, _gatewayIp, _subnetIp);
@@ -157,7 +177,7 @@ bool gatewayTransportInit(void)
 	              Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
 	// give the Ethernet interface a second to initialize
 	delay(1000);
-#endif /* End of MY_GATEWAY_ESP8266 */
+#endif /* MY_GATEWAY_ESP8266 / MY_GATEWAY_ESP32 */
 
 #if defined(MY_GATEWAY_CLIENT_MODE)
 #if defined(MY_USE_UDP)
@@ -236,7 +256,7 @@ bool gatewayTransportSend(MyMessage &message)
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 	// Send message to connected clients
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
 			nbytes += clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
@@ -253,7 +273,7 @@ bool gatewayTransportSend(MyMessage &message)
 #if defined(MY_USE_UDP)
 // Nothing to do here
 #else
-#if (defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX)) && !defined(MY_GATEWAY_CLIENT_MODE)
+#if (defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX)) && !defined(MY_GATEWAY_CLIENT_MODE)
 bool _readFromClient(uint8_t i)
 {
 	while (clients[i].connected() && clients[i].available()) {
@@ -366,7 +386,7 @@ bool gatewayTransportAvailable(void)
 	}
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX)
 	// ESP8266: Go over list of clients and stop any that are no longer connected.
 	// If the server has a new client connection it will be assigned to a free slot.
 	bool allSlotsOccupied = true;
@@ -443,7 +463,7 @@ MyMessage& gatewayTransportReceive(void)
 	return _ethernetMsg;
 }
 
-#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_LINUX)
+#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_ESP32) && !defined(MY_GATEWAY_LINUX)
 void gatewayTransportRenewIP(void)
 {
 	/* renew/rebind IP address

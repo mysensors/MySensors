@@ -91,7 +91,8 @@
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define DEFAULT_RFM95_IRQ_PIN			(5)				//!< DEFAULT_RFM95_IRQ_PIN
 #elif defined(ARDUINO_ARCH_ESP32)
-#warning not implemented yet
+#define DEFAULT_RFM95_IRQ_PIN			(16)												//!< DEFAULT_RFM95_IRQ_PIN
+#define DEFAULT_RFM95_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM95_IRQ_PIN)		//!< DEFAULT_RFM95_IRQ_NUM
 #elif defined(ARDUINO_ARCH_SAMD)
 #define DEFAULT_RFM95_IRQ_PIN			(2)				//!< DEFAULT_RFM95_IRQ_PIN
 #elif defined(LINUX_ARCH_RASPBERRYPI)

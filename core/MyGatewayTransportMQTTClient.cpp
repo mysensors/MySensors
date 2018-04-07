@@ -30,19 +30,20 @@ IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
 #if defined(MY_IP_GATEWAY_ADDRESS)
 IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
-#elif defined(MY_GATEWAY_ESP8266) /* Elif part of MY_IP_GATEWAY_ADDRESS */
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
 IPAddress _gatewayIp(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1);
 #endif /* End of MY_IP_GATEWAY_ADDRESS */
+
 #if defined(MY_IP_SUBNET_ADDRESS)
 IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
-#elif defined(MY_GATEWAY_ESP8266) /* Elif part of MY_IP_SUBNET_ADDRESS */
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 IPAddress _subnetIp(255, 255, 255, 0);
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266)  || defined(MY_GATEWAY_ESP32)
 #define EthernetClient WiFiClient
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
@@ -120,7 +121,7 @@ bool reconnectMQTT(void)
 
 bool gatewayTransportConnect(void)
 {
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	while (WiFi.status() != WL_CONNECTED) {
 		wait(500);
 		GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING...\n"));
@@ -216,7 +217,20 @@ bool gatewayTransportInit(void)
 #define MY_ESP8266_BSSID NULL
 #endif
 	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
-#endif /* End of MY_GATEWAY_ESP8266 */
+#elif defined(MY_GATEWAY_ESP32)
+	// Turn off access point
+	WiFi.mode(WIFI_STA);
+#if defined(MY_ESP32_HOSTNAME)
+	WiFi.setHostname(MY_ESP32_HOSTNAME);
+#endif /* End of MY_ESP32_HOSTNAME */
+#if defined(MY_IP_ADDRESS)
+	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
+#endif /* End of MY_IP_ADDRESS */
+#ifndef MY_ESP32_BSSID
+#define MY_ESP32_BSSID NULL
+#endif
+	(void)WiFi.begin(MY_ESP32_SSID, MY_ESP32_PASSWORD, 0, MY_ESP32_BSSID);
+#endif
 
 	gatewayTransportConnect();
 

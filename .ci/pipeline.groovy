@@ -97,6 +97,9 @@ def call(Closure body) {
 					stage('MySensorsGW (tests)') {
 						arduino.buildMySensorsGw(config, config.tests, 'Tests')
 					}
+					stage('ESP32 (tests)') {
+						arduino.buildEsp32(config, config.tests, 'Tests')
+					}
 					stage('nRF52832 (tests)') {
 						arduino.buildnRF52832(config, config.tests, 'Tests')
 					}
@@ -142,11 +145,16 @@ def call(Closure body) {
 					stage('ESP8266 (examples)') {
 						arduino.buildEsp8266(config, config.examples, 'Examples')
 					}
+					// No point in building examples for ESP32 yet
+					/*
+					stage('ESP32 (examples)') {
+						arduino.buildEsp32(config, config.examples, 'Examples')
+					}
+					*/
 					// No point in building examples for STM32F1 yet
 					/*
 					stage('STM32F1 (Examples)') {
 						arduino.buildSTM32F1(config, config.tests, 'Examples')
-					}
 					*/
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
