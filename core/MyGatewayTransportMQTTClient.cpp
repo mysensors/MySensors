@@ -22,6 +22,35 @@
 
 #include "MyGatewayTransport.h"
 
+// housekeeping, remove for 3.0.0
+#ifdef MY_ESP8266_SSID
+#warning MY_ESP8266_SSID is deprecated, use MY_WIFI_SSID instead!
+#define MY_WIFI_SSID MY_ESP8266_SSID
+#undef MY_ESP8266_SSID // cleanup
+#endif
+
+#ifdef MY_ESP8266_PASSWORD
+#warning MY_ESP8266_PASSWORD is deprecated, use MY_WIFI_PASSWORD instead!
+#define MY_WIFI_PASSWORD MY_ESP8266_PASSWORD
+#undef MY_ESP8266_PASSWORD // cleanup
+#endif
+
+#ifdef MY_ESP8266_BSSID
+#warning MY_ESP8266_BSSID is deprecated, use MY_WIFI_BSSID instead!
+#define MY_WIFI_BSSID MY_ESP8266_BSSID
+#undef MY_ESP8266_BSSID // cleanup
+#endif
+
+#ifdef MY_ESP8266_HOSTNAME
+#warning MY_ESP8266_HOSTNAME is deprecated, use MY_HOSTNAME instead!
+#define MY_HOSTNAME MY_ESP8266_HOSTNAME
+#undef MY_ESP8266_HOSTNAME // cleanup
+#endif
+
+#ifndef MY_WIFI_BSSID
+#define MY_WIFI_BSSID NULL
+#endif
+
 #if defined MY_CONTROLLER_IP_ADDRESS
 IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
 #endif
@@ -127,13 +156,13 @@ bool gatewayTransportConnect(void)
 		GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING...\n"));
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"),WiFi.localIP().toString().c_str());
-#elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_ESP8266 */
+#elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
 #endif /* End of MY_IP_ADDRESS */
-#elif defined(MY_GATEWAY_TINYGSM) /* Elif part of MY_GATEWAY_ESP8266 */
+#elif defined(MY_GATEWAY_TINYGSM)
 	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"), modem.getLocalIP().c_str());
-#else /* Else part of MY_GATEWAY_ESP8266 */
+#else
 #if defined(MY_IP_ADDRESS)
 	Ethernet.begin(_MQTT_clientMAC, _MQTT_clientIp);
 #else /* Else part of MY_IP_ADDRESS */
@@ -149,7 +178,7 @@ bool gatewayTransportConnect(void)
 	              Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
 	// give the Ethernet interface a second to initialize
 	delay(1000);
-#endif /* End of MY_GATEWAY_ESP8266 */
+#endif
 	return true;
 }
 
@@ -207,29 +236,29 @@ bool gatewayTransportInit(void)
 #if defined(MY_GATEWAY_ESP8266)
 	// Turn off access point
 	WiFi.mode(WIFI_STA);
-#if defined(MY_ESP8266_HOSTNAME)
-	WiFi.hostname(MY_ESP8266_HOSTNAME);
+#if defined(MY_HOSTNAME)
+	WiFi.hostname(MY_HOSTNAME);
 #endif /* End of MY_ESP8266_HOSTNAME */
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
-#ifndef MY_ESP8266_BSSID
-#define MY_ESP8266_BSSID NULL
+#ifndef MY_WIFI_BSSID
+#define MY_WIFI_BSSID NULL
 #endif
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
+	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #elif defined(MY_GATEWAY_ESP32)
 	// Turn off access point
 	WiFi.mode(WIFI_STA);
-#if defined(MY_ESP32_HOSTNAME)
-	WiFi.setHostname(MY_ESP32_HOSTNAME);
-#endif /* End of MY_ESP32_HOSTNAME */
+#if defined(MY_HOSTNAME)
+	WiFi.setHostname(MY_HOSTNAME);
+#endif /* End of MY_HOSTNAME */
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
-#ifndef MY_ESP32_BSSID
-#define MY_ESP32_BSSID NULL
+#ifndef MY_WIFI_BSSID
+#define MY_WIFI_BSSID NULL
 #endif
-	(void)WiFi.begin(MY_ESP32_SSID, MY_ESP32_PASSWORD, 0, MY_ESP32_BSSID);
+	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #endif
 
 	gatewayTransportConnect();

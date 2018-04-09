@@ -64,15 +64,15 @@
 
 #define MY_GATEWAY_ESP8266
 
-#define MY_ESP8266_SSID "MySSID"
-#define MY_ESP8266_PASSWORD "MyVerySecretPassword"
+#define MY_WIFI_SSID "MySSID"
+#define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Enable UDP communication
 //#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
 
 // Set the hostname for the WiFi Client. This is the hostname
 // it will pass to the DHCP server if not static.
-//#define MY_ESP8266_HOSTNAME "sensor-gateway"
+//#define MY_HOSTNAME "sensor-gateway"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 //#define MY_IP_ADDRESS 192,168,178,87
