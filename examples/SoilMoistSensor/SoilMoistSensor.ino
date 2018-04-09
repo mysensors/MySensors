@@ -36,8 +36,8 @@
  *			100-200 Soil is becoming dangerously dry for maximum production. Proceed with caution.
  *
  * Connection:
- *  D6, D7: alternative powering to avoid sensor degradation
- * A0, A1: alternative resistance mesuring
+ * D6, D7: alternative powering to avoid sensor degradation
+ * A0, A1: alternative resistance measuring
  *
  *  Based on:
  *  "Vinduino" portable soil moisture sensor code V3.00

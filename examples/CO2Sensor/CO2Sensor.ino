@@ -28,7 +28,7 @@
  *   Pad 6: PWM output ==> pin 6
  *
  *	From: http://davidegironi.blogspot.fr/2014/01/co2-meter-using-ndir-infrared-mh-z14.html
- * 	  MH-Z14 has a PWM output, with a sensitivity range of 0ppm to 2000ppm CO2, an accurancy of ±200ppm.
+ * 	  MH-Z14 has a PWM output, with a sensitivity range of 0ppm to 2000ppm CO2, an accuracy of ±200ppm.
  * 	  The cycle is 1004ms±5%, given the duty cicle Th (pulse high), Tl is 1004-Th, we can convert it to CO2 value using the formula:
  *	  CO2ppm = 2000 * (Th - 2ms) /(Th + Tl - 4ms)
  * 	From: http://airqualityegg.wikispaces.com/Sensor+Tests

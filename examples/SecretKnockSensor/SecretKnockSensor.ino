@@ -139,7 +139,7 @@ void loop()
 				digitalWrite(ledPin, HIGH);        // Turn on the red light too so the user knows we're programming.
 				chirp(500, 1500);                  // And play a tone in case the user can't see the LED.
 				chirp(500, 1000);
-			} else {                             // If we are in programing mode, turn it off.
+			} else {                             // If we are in programming mode, turn it off.
 				programModeActive = false;
 				digitalWrite(ledPin, LOW);
 				chirp(500, 1000);                  // Turn off the programming LED and play a sad note.
