@@ -243,6 +243,8 @@
 /**
  * @def MY_RS485_HWSERIAL
  * @brief Define this if RS485 is connected to a hardware serial port.
+ *
+ * Example: @code #define MY_RS485_HWSERIAL Serial1 @endcode
  */
 //#define MY_RS485_HWSERIAL (Serial1)
 /** @}*/ // End of RS485SettingGrpPub group
@@ -1404,7 +1406,9 @@
 
 /**
  * @def MY_IP_ADDRESS
- * @brief Static ip address of gateway (if this is not defined, DHCP will be used).
+ * @brief Static ip address of gateway. If not defined, DHCP will be used.
+ *
+ * Example: @code #define MY_IP_ADDRESS 192,168,178,66 @endcode
  */
 //#define MY_IP_ADDRESS 192,168,178,66
 
@@ -1436,6 +1440,8 @@
  * @def MY_CONTROLLER_IP_ADDRESS
  * @brief If this is defined, gateway will act as a client trying to contact controller on
  *        @ref MY_PORT using this IP address.
+ *
+ * Example: @code #define MY_CONTROLLER_IP_ADDRESS 192,168,178,254 @endcode
  *
  * If left un-defined, gateway acts as server allowing incoming connections.
  */
@@ -1535,6 +1541,8 @@
  * @brief Enables SW backed signing functionality and encryption functionality in library and uses
  *        provided password as key.
  *
+ * Example: @code #define MY_SECURITY_SIMPLE_PASSWD "MyInsecurePassword" @endcode
+ *
  * For details on the effects, see the references.
  * @see MY_SIGNING_SIMPLE_PASSWD, MY_ENCRYPTION_SIMPLE_PASSWD
  */
@@ -1581,6 +1589,8 @@
  * If the provided password is shorter than the size of the HMAC key, it will be null-padded
  * to accommodate the key size in question. A 32 character password is the maximum length. Any
  * password longer than that will be truncated.
+ *
+ * Example: @code #define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword" @endcode
  *
  * @see MY_SECURITY_SIMPLE_PASSWD
  *
@@ -1659,6 +1669,8 @@
  * the signed message.
  *
  * It is legal to only have one node with a whitelist for this reason but it is not required.
+ *
+ * Example: @code #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}} @endcode
  */
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 
@@ -1730,6 +1742,8 @@
  * If the provided password is shorter than the size of the %AES key, it will be null-padded
  * to accommodate the key size in question. A 16 character password is the maximum length. Any
  * password longer than that will be truncated.
+ *
+ * Example: @code #define MY_ENCRYPTION_SIMPLE_PASSWD "MyInsecurePassword" @endcode
  *
  * @see MY_SECURITY_SIMPLE_PASSWD
  */
@@ -2094,9 +2108,9 @@
 #define MY_GATEWAY_ESP32
 #define MY_GATEWAY_LINUX
 #define MY_GATEWAY_TINYGSM
-#define MY_IP_ADDRESS 192,168,178,66
+#define MY_IP_ADDRESS
 #define MY_USE_UDP
-#define MY_CONTROLLER_IP_ADDRESS 192,168,178,254
+#define MY_CONTROLLER_IP_ADDRESS
 // TinyGSM
 /**
  * @def MY_GSM_APN
@@ -2143,14 +2157,14 @@
 #define MY_DEFAULT_TX_LED_PIN
 #define MY_DEFAULT_RX_LED_PIN
 // signing
-#define MY_SECURITY_SIMPLE_PASSWD "MyInsecurePassword"
-#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
-#define MY_ENCRYPTION_SIMPLE_PASSWD "MyInsecurePassword"
+#define MY_SECURITY_SIMPLE_PASSWD
+#define MY_SIGNING_SIMPLE_PASSWD
+#define MY_ENCRYPTION_SIMPLE_PASSWD
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_WEAK_SECURITY
-#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_SIGNING_NODE_WHITELISTING
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_SIGNING_FEATURE
 #define MY_ENCRYPTION_FEATURE
@@ -2159,7 +2173,7 @@
 #define MY_OTA_USE_I2C_EEPROM
 // RS485
 #define MY_RS485
-#define MY_RS485_HWSERIAL (Serial1)
+#define MY_RS485_HWSERIAL
 // RF24
 #define MY_RADIO_RF24
 #define MY_DEBUG_VERBOSE_RF24
