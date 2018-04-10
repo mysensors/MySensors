@@ -1350,6 +1350,10 @@
  * @brief Define this for Ethernet GW based on Linux.
  * @def MY_GATEWAY_TINYGSM
  * @brief Define this for Ethernet GW based on GSM modems supported by TinyGSM library.
+ * @def MY_GATEWAY_MQTT_CLIENT
+ * @brief Define this for MQTT client GW.
+ * @def MY_GATEWAY_SERIAL
+ * @brief Define this for Serial GW.
  */
 // The gateway options available
 //#define MY_GATEWAY_W5100
@@ -1358,6 +1362,8 @@
 //#define MY_GATEWAY_ESP32
 //#define MY_GATEWAY_LINUX
 //#define MY_GATEWAY_TINYGSM
+//#define MY_GATEWAY_MQTT_CLIENT
+//#define MY_GATEWAY_SERIAL
 
 
 /**
@@ -1405,12 +1411,55 @@
 //#define MY_MQTT_USER "username"
 
 /**
+ * @def MY_MQTT_CLIENT_ID
+ * @brief Set client ID for MQTT connections
+ *
+ * This define is mandatory for all MQTT client gateways.
+ * Example: @code #define MY_MQTT_CLIENT_ID "mysensors-1" @endcode
+ */
+//#define MY_MQTT_CLIENT_ID "mysensors-1"
+
+/**
+ * @def MY_MQTT_PUBLISH_TOPIC_PREFIX
+ * @brief Set prefix for MQTT topic to publish to.
+ *
+ * This define is mandatory for all MQTT client gateways.
+ * Example: @code #define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out" @endcode
+ */
+//#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
+
+/**
+ * @def MY_MQTT_SUBSCRIBE_TOPIC_PREFIX
+ * @brief Set prefix for MQTT topic to subscribe to.
+ *
+ * This define is mandatory for all MQTT client gateways.
+ * Example: @code #define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in" @endcode
+ */
+//#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
+
+/**
  * @def MY_IP_ADDRESS
  * @brief Static ip address of gateway. If not defined, DHCP will be used.
  *
  * Example: @code #define MY_IP_ADDRESS 192,168,178,66 @endcode
  */
 //#define MY_IP_ADDRESS 192,168,178,66
+
+/**
+ * @def MY_IP_GATEWAY_ADDRESS
+ * @brief IP address of your broadband router/gateway, if not using DHCP.
+ *
+ * Example: @code #define MY_IP_GATEWAY_ADDRESS 192,168,1,1 @endcode
+ */
+//#define MY_IP_GATEWAY_ADDRESS 192,168,1,1
+
+/**
+ * @def MY_IP_SUBNET_ADDRESS
+ * @brief Subnet address of your local network, if not using DHCP.
+ *
+ * Example: @code #define MY_IP_SUBNET_ADDRESS 255,255,255,0 @endcode
+ */
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 /**
  * @def MY_USE_UDP
@@ -1444,8 +1493,22 @@
  * Example: @code #define MY_CONTROLLER_IP_ADDRESS 192,168,178,254 @endcode
  *
  * If left un-defined, gateway acts as server allowing incoming connections.
+ * @see MY_CONTROLLER_URL_ADDRESS
  */
 //#define MY_CONTROLLER_IP_ADDRESS 192,168,178,254
+
+/**
+ * @def MY_CONTROLLER_URL_ADDRESS
+ * @brief If this is defined, gateway will act as a client (ethernet or MQTT) trying to
+ *        contact controller on the given URL.
+ *
+ * If left un-defined, gateway acts as server allowing incoming connections.
+ * Example: @code #define MY_CONTROLLER_URL_ADDRESS "test.mosquitto.org" @endcode
+ * @see MY_CONTROLLER_IP_ADDRESS
+ * @see MY_GATEWAY_MQTT_CLIENT
+ */
+//#define MY_CONTROLLER_URL_ADDRESS "test.mosquitto.org"
+
 /** @}*/ // End of GatewaySettingGrpPub group
 
 /**
@@ -2089,6 +2152,9 @@
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
 #define MY_MQTT_PASSWORD
 #define MY_MQTT_USER
+#define MY_MQTT_CLIENT_ID
+#define MY_MQTT_PUBLISH_TOPIC_PREFIX
+#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX
 #define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
@@ -2108,9 +2174,14 @@
 #define MY_GATEWAY_ESP32
 #define MY_GATEWAY_LINUX
 #define MY_GATEWAY_TINYGSM
+#define MY_GATEWAY_MQTT_CLIENT
+#define MY_GATEWAY_SERIAL
 #define MY_IP_ADDRESS
+#define MY_IP_GATEWAY_ADDRESS
+#define MY_IP_SUBNET_ADDRESS
 #define MY_USE_UDP
 #define MY_CONTROLLER_IP_ADDRESS
+#define MY_CONTROLLER_URL_ADDRESS
 // TinyGSM
 /**
  * @def MY_GSM_APN
