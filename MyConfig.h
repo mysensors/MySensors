@@ -1383,6 +1383,26 @@
 //#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 
 /**
+ * @def MY_MQTT_PASSWORD
+ * @brief Used for authenticated MQTT connections.
+ *
+ * Set if your MQTT broker requires username/password.
+ * Example: @code #define MY_MQTT_PASSWORD "secretpassword" @endcode
+ * @see MY_MQTT_USER
+ */
+//#define MY_MQTT_PASSWORD "secretpassword"
+
+/**
+ * @def MY_MQTT_USER
+ * @brief Used for authenticated MQTT connections.
+ *
+ * Set if your MQTT broker requires username/password.
+ * Example: @code #define MY_MQTT_USER "username" @endcode
+ * @see MY_MQTT_PASSWORD
+ */
+//#define MY_MQTT_USER "username"
+
+/**
  * @def MY_IP_ADDRESS
  * @brief Static ip address of gateway (if this is not defined, DHCP will be used).
  */
@@ -2053,6 +2073,8 @@
 #define MY_REPEATER_FEATURE
 #define MY_PASSIVE_NODE
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
+#define MY_MQTT_PASSWORD
+#define MY_MQTT_USER
 #define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
