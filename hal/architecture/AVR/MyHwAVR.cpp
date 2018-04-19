@@ -141,8 +141,23 @@ void hwInternalSleep(uint32_t ms)
 
 int8_t hwSleep(uint32_t ms)
 {
-	hwInternalSleep(ms);
-	return MY_WAKE_UP_BY_TIMER;
+	// Return what woke the mcu.
+	// Default: no interrupt triggered, timer wake up
+	int8_t ret = MY_WAKE_UP_BY_TIMER;
+	if (ms > 0u) {
+		// sleep for defined time
+		hwInternalSleep(ms);
+	} else {
+		// sleep until ext interrupt triggered
+		hwPowerDown(WDTO_SLEEP_FOREVER);
+	}
+	if (interruptWakeUp()) {
+		ret = static_cast<int8_t>(_wokeUpByInterrupt);
+	}
+	// Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
+	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+
+	return ret;
 }
 
 int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
