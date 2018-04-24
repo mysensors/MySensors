@@ -46,8 +46,7 @@
 #include <MySensors.h>
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
-#define PULSE_FACTOR 1000       // Number of blinks per 
-of your meter
+#define PULSE_FACTOR 1000       // Number of blinks per of your meter
 #define SLEEP_MODE false        // Watt value can only be reported when sleep mode is false.
 #define MAX_WATT 10000          // Max watt value to report. This filters outliers.
 #define CHILD_ID 1              // Id of the sensor child
