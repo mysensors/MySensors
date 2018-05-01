@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -1373,6 +1373,30 @@
 //#define MY_DEBUG_VERBOSE_GATEWAY
 
 /**
+* @def MY_WIFI_SSID
+* @brief SSID of your WiFi network
+*/
+//#define MY_WIFI_SSID "MySSID"
+
+/**
+* @def MY_WIFI_BSSID
+* @brief BSSID of your WiFi network
+*/
+//#define MY_WIFI_BSSID "MyBSSID"
+
+/**
+* @def MY_WIFI_PASSWORD
+* @brief Password of your WiFi network
+*/
+//#define MY_WIFI_PASSWORD "MyVerySecretPassword"
+
+/**
+* @def MY_HOSTNAME
+* @brief Hostname of your device
+*/
+//#define MY_HOSTNAME "MyHostname"
+
+/**
  * @def MY_PORT
  * @brief The Ethernet TCP/UDP port to open on controller or gateway.
  */
@@ -2172,6 +2196,10 @@
 #define MY_GATEWAY_ENC28J60
 #define MY_GATEWAY_ESP8266
 #define MY_GATEWAY_ESP32
+#define MY_WIFI_SSID
+#define MY_WIFI_BSSID
+#define MY_WIFI_PASSWORD
+#define MY_HOSTNAME
 #define MY_GATEWAY_LINUX
 #define MY_GATEWAY_TINYGSM
 #define MY_GATEWAY_MQTT_CLIENT

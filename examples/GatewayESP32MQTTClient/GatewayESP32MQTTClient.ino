@@ -32,7 +32,7 @@
 #define MY_DEBUG
 
 // Enables and select radio type (if attached)
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 //#define MY_RADIO_RFM95
 
@@ -51,12 +51,12 @@
 //#define MY_MQTT_PASSWORD "password"
 
 // Set WIFI SSID and password
-#define MY_ESP32_SSID "MySSID"
-#define MY_ESP32_PASSWORD "MyVerySecretPassword"
+#define MY_WIFI_SSID "MySSID"
+#define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Set the hostname for the WiFi Client. This is the hostname
 // it will pass to the DHCP server if not static.
-#define MY_ESP32_HOSTNAME "ESP32_MQTT_GW"
+#define MY_HOSTNAME "ESP32_MQTT_GW"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 //#define MY_IP_ADDRESS 192,168,178,87

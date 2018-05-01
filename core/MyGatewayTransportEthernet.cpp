@@ -22,6 +22,35 @@
 // global variables
 extern MyMessage _msgTmp;
 
+// housekeeping, remove for 3.0.0
+#ifdef MY_ESP8266_SSID
+#warning MY_ESP8266_SSID is deprecated, use MY_WIFI_SSID instead!
+#define MY_WIFI_SSID MY_ESP8266_SSID
+#undef MY_ESP8266_SSID // cleanup
+#endif
+
+#ifdef MY_ESP8266_PASSWORD
+#warning MY_ESP8266_PASSWORD is deprecated, use MY_WIFI_PASSWORD instead!
+#define MY_WIFI_PASSWORD MY_ESP8266_PASSWORD
+#undef MY_ESP8266_PASSWORD // cleanup
+#endif
+
+#ifdef MY_ESP8266_BSSID
+#warning MY_ESP8266_BSSID is deprecated, use MY_WIFI_BSSID instead!
+#define MY_WIFI_BSSID MY_ESP8266_BSSID
+#undef MY_ESP8266_BSSID // cleanup
+#endif
+
+#ifdef MY_ESP8266_HOSTNAME
+#warning MY_ESP8266_HOSTNAME is deprecated, use MY_HOSTNAME instead!
+#define MY_HOSTNAME MY_ESP8266_HOSTNAME
+#undef MY_ESP8266_HOSTNAME // cleanup
+#endif
+
+#ifndef MY_WIFI_BSSID
+#define MY_WIFI_BSSID NULL
+#endif
+
 #if defined(MY_CONTROLLER_IP_ADDRESS)
 IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
 #endif
@@ -116,45 +145,27 @@ void _w5100_spi_en(bool enable)
 bool gatewayTransportInit(void)
 {
 	_w5100_spi_en(true);
+
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_WIFI_SSID)
+	// Turn off access point
+	WiFi.mode(WIFI_STA);
+#if defined(MY_HOSTNAME)
 #if defined(MY_GATEWAY_ESP8266)
-#if defined(MY_ESP8266_SSID)
-	// Turn off access point
-	WiFi.mode(WIFI_STA);
-#if defined(MY_ESP8266_HOSTNAME)
-	WiFi.hostname(MY_ESP8266_HOSTNAME);
-#endif /* End of MY_ESP8266_HOSTNAME */
-#if defined(MY_IP_ADDRESS)
-	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
-#endif /* End of MY_IP_ADDRESS */
-#ifndef MY_ESP8266_BSSID
-#define MY_ESP8266_BSSID NULL
-#endif
-	(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD, 0, MY_ESP8266_BSSID);
-	while (WiFi.status() != WL_CONNECTED) {
-		wait(500);
-		GATEWAY_DEBUG(PSTR("GWT:TIN:CONNECTING...\n"));
-	}
-	GATEWAY_DEBUG(PSTR("GWT:TIN:IP=%s\n"), WiFi.localIP().toString().c_str());
-#endif /* End of MY_ESP8266_SSID */
+	WiFi.hostname(MY_HOSTNAME)
 #elif defined(MY_GATEWAY_ESP32)
-#if defined(MY_ESP32_SSID)
-	// Turn off access point
-	WiFi.mode(WIFI_STA);
-#if defined(MY_ESP32_HOSTNAME)
-	WiFi.setHostname(MY_ESP32_HOSTNAME);
+	WiFi.setHostname(MY_HOSTNAME)
+#endif
 #endif
 #ifdef MY_IP_ADDRESS
 	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 #endif
-#ifndef MY_ESP32_BSSID
-#define MY_ESP32_BSSID NULL
-#endif
-	(void)WiFi.begin(MY_ESP32_SSID, MY_ESP32_PASSWORD, 0, MY_ESP32_BSSID);
-	while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
+	while (WiFi.status() != WL_CONNECTED) {
 		wait(500);
-		GATEWAY_DEBUG(PSTR("."));
+		GATEWAY_DEBUG(PSTR("GWT:TIN:CONNECTING...\n"));
 	}
-	GATEWAY_DEBUG(PSTR("IP: %s\n"), WiFi.localIP().toString().c_str());
+	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
 #endif
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
