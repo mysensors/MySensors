@@ -12,7 +12,7 @@ def call(Closure body) {
 
 	if (env.CHANGE_ID) {
 		config.is_pull_request = true
-		echo "Building pull request: #"+env.CHANGE_ID+"\nTarget branch: "+env.CHANGE_TARGET
+		echo "Building pull request: #"+env.CHANGE_ID+"\nTarget branch: "+env.CHANGE_TARGET+"\nAuthor: "+env.CHANGE_AUTHOR+" ("+env.CHANGE_AUTHOR_EMAIL+")"
 		config.git_sha = sh(returnStdout: true,
 			script: """#!/bin/bash
 								 cd ${config.repository_root}
@@ -30,9 +30,9 @@ def call(Closure body) {
 	try {
 		ansiColor('xterm') {
 			if (config.is_pull_request) {
-				def gitler = load(config.repository_root+'.ci/gitler.groovy')
-				stage('Gitler') {
-					gitler(config)
+				def butler = load(config.repository_root+'.ci/butler.groovy')
+				stage('Butler') {
+					butler(config)
 				}
 			}
 
@@ -174,20 +174,37 @@ def call(Closure body) {
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate', 'Failed', '${BUILD_URL}flowGraphTable/')
 			if (config.is_pull_request) {
 				slackSend color: 'danger',
-					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>' failed with result ${currentBuild.result}."
+					message: "Failed to build <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>. Job <${env.BUILD_URL}|${env.JOB_NAME} #${env.BUILD_NUMBER}> ended with ${currentBuild.result}."
 				emailext (
-					subject: "Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' failed",
-					body: """Job '${env.JOB_NAME} <a href="${env.BUILD_URL}">#${env.BUILD_NUMBER}</a> (<a href="${env.CHANGE_URL}">PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}</a>)' ended with result ${currentBuild.result}.
-					<br>Check attached console output or <a href="${env.BUILD_URL}">here</a> for a hint on what the problem might be.""",
+					subject: "PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE} failed to build",
+					body: '''Greetings Sir!<p>
+					I am The Butler. My task is to help you create a pull request that fit the MySensors organizations coding style and builds for all supported platforms.<p>
+					I am afraid I failed to validate your pull request. Result was '''+currentBuild.result+'''.
+					<br>Please check the attached build log or <a href="${BUILD_URL}">here</a> for a hint on what the problem might be.<p>
+					If you have difficulties determining the cause for the failure, feel free to ask questions <a href="${CHANGE_URL}">here</a>.<p>
+					Changes:<br>
+					${CHANGES}<p>
+					Notable build log lines:<br>
+					${BUILD_LOG_REGEX, regex="^.*?Terminated.*?$", linesBefore=0, linesAfter=0, maxMatches=5, showTruncatedLines=false, escapeHtml=true}<p>
+					My personal evaluation of your pull request is available <a href="${BUILD_URL}The_20Butler_20report/butler.html">here</a>.<p>
+					--<br>
+					Yours sincerely, The Butler, serving the MySensors community''',
 					mimeType: 'text/html', to: env.CHANGE_AUTHOR_EMAIL, attachLog: true, compressLog: false
 				)
 			} else {
 				slackSend color: 'danger',
-					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> ${env.BRANCH_NAME}]' failed with result ${currentBuild.result}."
+					message: "Failed to build branch ${env.BRANCH_NAME}. Job <${env.BUILD_URL}|${env.JOB_NAME} #${env.BUILD_NUMBER}> ended with ${currentBuild.result}."
 				emailext (
-					subject: "Job '${env.JOB_NAME} #${env.BUILD_NUMBER} ${env.BRANCH_NAME}' failed",
-					body: """Job '${env.JOB_NAME} <a href="${env.BUILD_URL}">#${env.BUILD_NUMBER}</a> (${env.BRANCH_NAME})' ended with result ${currentBuild.result}.
-					<br>Check attached console output or <a href="${env.BUILD_URL}">here</a> for a hint on what the problem might be.""",
+					subject: "MySensors branch ${env.BRANCH_NAME} failed to build",
+					body: '''Sir, I am afraid I failed to build branch ${BRANCH_NAME}. Result was '''+currentBuild.result+'''.
+					<br>Please check the attached build log or <a href="${BUILD_URL}">here</a> for a hint on what the problem might be.<p>
+					Changes:<br>
+					${CHANGES}<p>
+					Notable build log lines:<br>
+					${BUILD_LOG_REGEX, regex="^.*?Terminated.*?$", linesBefore=0, linesAfter=0, maxMatches=5, showTruncatedLines=false, escapeHtml=true}<p>
+					My personal evaluation of your pull request is available <a href="${BUILD_URL}The_20Butler_20report/butler.html">here</a>.<p>
+					--<br>
+					Yours sincerely, The Butler, serving the MySensors community''',
 					mimeType: 'text/html', to: 'builds@mysensors.org', attachLog: true, compressLog: false
 				)
 			}

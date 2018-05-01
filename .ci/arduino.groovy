@@ -65,7 +65,7 @@ def buildMySensorsMicro(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (MySensorsMicro - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (MySensorsMicro - '+key+')', 'Build error', '${BUILD_URL}')
@@ -101,7 +101,7 @@ def buildMySensorsGw(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (MySensorsGW - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (MySensorsGW - '+key+')', 'Build error', '${BUILD_URL}')
@@ -134,7 +134,7 @@ def buildArduinoUno(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Arduino Uno - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Arduino Uno - '+key+')', 'Build error', '${BUILD_URL}')
@@ -167,7 +167,7 @@ def buildArduinoMega(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, config, 'ERROR', 'Toll gate (Arduino Mega - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Arduino Mega - '+key+')', 'Build error', '${BUILD_URL}')
@@ -200,7 +200,7 @@ def buildSTM32F1(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (STM32F1 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (STM32F1 - '+key+')', 'Build error', '${BUILD_URL}')
@@ -239,7 +239,7 @@ def buildEsp8266(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (ESP8266 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (ESP8266 - '+key+')', 'Build error', '${BUILD_URL}')
@@ -287,7 +287,7 @@ def buildEsp32(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (ESP32 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (ESP32 - '+key+')', 'Build error', '${BUILD_URL}')
@@ -328,7 +328,7 @@ def buildnRF5(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (nRF5 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (nRF5 - '+key+')', 'Build error', '${BUILD_URL}')
@@ -352,7 +352,7 @@ def buildnRF52832(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (nRF52832 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (nRF52832 - '+key+')', 'Build error', '${BUILD_URL}')
@@ -376,7 +376,7 @@ def buildnRF51822(config, sketches, String key) {
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (nRF51822 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
 		if (config.is_pull_request) {
-			error 'Termiated due to warnings found'
+			error 'Terminated due to warnings found'
 		}
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (nRF51822 - '+key+')', 'Build error', '${BUILD_URL}')
