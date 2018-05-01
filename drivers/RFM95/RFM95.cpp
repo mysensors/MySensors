@@ -550,7 +550,7 @@ LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void *buffer,
 			return true;
 		}
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < retryWaitTime) {
+		while (hwMillis() - enterMS < retryWaitTime && !RFM95.dataReceived) {
 			RFM95_handler();
 			if (RFM95.ackReceived) {
 				const uint8_t sender = RFM95.currentPacket.header.sender;

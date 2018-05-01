@@ -224,8 +224,6 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 		RFM69_DEBUG(PSTR("!RFM69:INIT:SANCHK FAIL\n"));
 		return false;
 	}
-	// clear FIFO and flags
-	RFM69_clearFIFO();
 	// IRQ
 	RFM69_irq = false;
 	hwPinMode(MY_RFM69_IRQ_PIN, INPUT);
@@ -235,7 +233,7 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 
 LOCAL void RFM69_clearFIFO(void)
 {
-	(void)RFM69_writeReg(RFM69_REG_IRQFLAGS2, 0x10u);
+	(void)RFM69_writeReg(RFM69_REG_IRQFLAGS2, RFM69_IRQFLAGS2_FIFOOVERRUN);
 }
 // IRQ handler: PayloadReady (RX) & PacketSent (TX) mapped to DI0
 LOCAL void RFM69_interruptHandler(void)
@@ -621,7 +619,7 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
 		}
 		// radio is in RX
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < retryWaitTimeMS) {
+		while (hwMillis() - enterMS < retryWaitTimeMS && !RFM69.dataReceived) {
 			RFM69_handler();
 			if (RFM69.ackReceived) {
 				// radio is in stdby
@@ -719,7 +717,7 @@ LOCAL void RFM69_setConfiguration(void)
 		{ RFM69_REG_AFCBW, rfm69_modem_config[5] }, // same as rxbw, experimental, based on datasheet
 		//{ RFM69_REG_DIOMAPPING1, RFM69_DIOMAPPING1_DIO0_01 },
 		{ RFM69_REG_DIOMAPPING2, RFM69_DIOMAPPING2_CLKOUT_OFF },
-		{ RFM69_REG_IRQFLAGS2, RFM69_IRQFLAGS2_FIFOOVERRUN },
+		{ RFM69_REG_IRQFLAGS2, RFM69_IRQFLAGS2_FIFOOVERRUN },		// clear FIFO and flags
 		{ RFM69_REG_RSSITHRESH, RFM69_RSSITHRESH_VALUE },
 		{ RFM69_REG_PREAMBLEMSB, RFM69_PREAMBLESIZE_MSB_VALUE },
 		{ RFM69_REG_PREAMBLELSB, RFM69_PREAMBLESIZE_LSB_VALUE },
