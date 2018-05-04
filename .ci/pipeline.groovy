@@ -58,7 +58,7 @@ def call(Closure body) {
 
 				config.tests    = findFiles(glob: config.library_root+'tests/**/*.ino')
 				config.examples = findFiles(glob: config.library_root+'examples/**/*.ino')
-				
+
 			}
 
 			parallel Doxygen: {
@@ -177,7 +177,7 @@ def call(Closure body) {
 					message: "Failed to build <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>. Job <${env.BUILD_URL}|${env.JOB_NAME} #${env.BUILD_NUMBER}> ended with ${currentBuild.result}."
 				emailext (
 					subject: "PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE} failed to build",
-					body: '''Greetings Sir!<p>
+					body: '''Greetings!<p>
 					I am The Butler. My task is to help you create a pull request that fit the MySensors organizations coding style and builds for all supported platforms.<p>
 					I am afraid I failed to validate your pull request. Result was '''+currentBuild.result+'''.
 					<br>Please check the attached build log or <a href="${BUILD_URL}">here</a> for a hint on what the problem might be.<p>
@@ -196,7 +196,7 @@ def call(Closure body) {
 					message: "Failed to build branch ${env.BRANCH_NAME}. Job <${env.BUILD_URL}|${env.JOB_NAME} #${env.BUILD_NUMBER}> ended with ${currentBuild.result}."
 				emailext (
 					subject: "MySensors branch ${env.BRANCH_NAME} failed to build",
-					body: '''Sir, I am afraid I failed to build branch ${BRANCH_NAME}. Result was '''+currentBuild.result+'''.
+					body: '''I am afraid I failed to build branch ${BRANCH_NAME}. Result was '''+currentBuild.result+'''.
 					<br>Please check the attached build log or <a href="${BUILD_URL}">here</a> for a hint on what the problem might be.<p>
 					Changes:<br>
 					${CHANGES}<p>

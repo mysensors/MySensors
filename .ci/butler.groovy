@@ -9,7 +9,7 @@ def call(config) {
 		 env.CHANGE_AUTHOR != 'tekka007'    && env.CHANGE_AUTHOR != 'user2684'     &&
 		 env.CHANGE_AUTHOR != 'Yveaux'))
 	{
-		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Butler)', 'Sir, This pull request targets master. I am afraid that is not permitted for '+env.CHANGE_AUTHOR, '')
+		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Butler)', 'This pull request targets master. I am afraid that is not permitted for '+env.CHANGE_AUTHOR, '')
 		error "This pull request targets master. That is not permitted!"
 	}
 	else if (env.CHANGE_TARGET == 'master')
@@ -48,7 +48,7 @@ def call(config) {
 			])
 		}
 
-		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Butler)', 'Pass - Well done Master!', '')
+		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Butler)', 'Pass - Well done!', '')
 		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Release changelog)', '', '${BUILD_URL}execution/node/3/ws/MySensors/ReleaseNotes.md/*view*/')
 		return
 	}
@@ -85,7 +85,7 @@ def call(config) {
 			createFileTemplateContent: '''
 {{#commits}}
 {{#messageBodyItems}}
-{{.}} 
+{{.}}
 {{/messageBodyItems}}
 {{/commits}}
 ''',
@@ -120,7 +120,7 @@ def call(config) {
 	if (fileExists(config.repository_root+'restyling.patch')) {
 		emailext (
 			subject: "PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE} has unfortunate code styling",
-			body: """<p>Greetings Sir!<p>
+			body: """<p>Greetings!<p>
 			I am afraid your pull request does not follow the MySensors standards with respect to coding style.</p>
 			That is ok, you are perhaps a first time committer to this repository. Please read the <a href="https://www.mysensors.org/download/contributing">code contribution guidelines</a> for help on how to format your code.<p>
 			To assist you, I have prepared a patch for you that will reformat the code according to the coding style required.<br>
@@ -143,7 +143,7 @@ def call(config) {
 		echo "You can read the detailed error report here: "+env.BUILD_URL+"The_20Butler_20report/"
 		error 'Terminated due to Butler assert'
 	} else {
-		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Butler)', 'Pass - Well done Sir!', '${BUILD_URL}The_20Butler_20report/butler.html')
+		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Butler)', 'Pass - Well done!', '${BUILD_URL}The_20Butler_20report/butler.html')
 	}
 }
 
