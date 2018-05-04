@@ -56,7 +56,7 @@ if git grep -q boolean -- `git ls-files | grep -v butler.sh`; then
 fi
 
 printf "%s" "<html>" > butler.html
-echo "Greetings Sir! Here is my evaluation of your pull request:<br>" >> butler.html
+echo "Greetings! Here is my evaluation of your pull request:<br>" >> butler.html
 awk 'FNR==1{print "<br>"}1' too_long_subjects.txt leading_lowercases.txt trailing_periods.txt too_long_body_lines.txt missing_keywords.txt booleans.txt >> butler.html
 echo "<br>" >> butler.html
 if [ $result -ne 0 ]; then
@@ -87,7 +87,7 @@ if [ -s restyling.patch ]; then
 	echo "<br>" >> butler.html
 	result=1
 else
-	echo "This commit is meeting the coding standards, well done Sir!<br>" >> butler.html
+	echo "This commit is meeting the coding standards, well done!<br>" >> butler.html
 	echo "<br>" >> butler.html
 	rm restyling.patch
 fi
