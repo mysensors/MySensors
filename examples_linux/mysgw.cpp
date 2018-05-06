@@ -45,7 +45,7 @@
 //#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
 //#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
 
-// Enable these if your MQTT broker requires usenrame/password
+// Enable these if your MQTT broker requires username/password
 //#define MY_MQTT_USER "username"
 //#define MY_MQTT_PASSWORD "password"
 
