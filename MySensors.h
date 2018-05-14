@@ -77,6 +77,8 @@
 #include "hal/architecture/Teensy3/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/Linux/MyHwLinuxGeneric.cpp"
+#else
+#error Hardware abstraction not defined (unsupported platform)
 #endif
 
 // OTA Debug second part, depends on HAL
