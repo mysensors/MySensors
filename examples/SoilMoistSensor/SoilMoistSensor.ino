@@ -138,7 +138,7 @@ void loop()
 	Serial.println ();
 
 	//send back the values
-	send(msg.set((long int)ceil(sensor1)));
+	send(msg.set((int32_t)ceil(sensor1)));
 	// delay until next measurement (msec)
 	sleep(SLEEP_TIME);
 }
