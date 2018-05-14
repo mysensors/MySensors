@@ -95,7 +95,7 @@ void loop()
 	Serial.print("\n");
 
 	if ((concentrationPM25 != lastDUSTPM25)&&(concentrationPM25>0)) {
-		send(dustMsgPM25.set((long)ceil(concentrationPM25)));
+		send(dustMsgPM25.set((int32_t)ceil(concentrationPM25)));
 		lastDUSTPM25 = ceil(concentrationPM25);
 	}
 
@@ -110,7 +110,7 @@ void loop()
 	long ppmv=(concentrationPM10*0.0283168/100/1000) *  (0.08205*temp)/0.01;
 
 	if ((ceil(concentrationPM10) != lastDUSTPM10)&&((long)concentrationPM10>0)) {
-		send(dustMsgPM10.set((long)ppmv));
+		send(dustMsgPM10.set((int32_t)ppmv));
 		lastDUSTPM10 = ceil(concentrationPM10);
 	}
 

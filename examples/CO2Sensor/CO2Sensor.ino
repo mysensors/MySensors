@@ -95,7 +95,7 @@ void loop()
 	long co2ppm = 2 * ((duration/1000) - 2);
 	//Serial.print(co2ppm);
 	if ((co2ppm != lastAIQ)&&(abs(co2ppm-lastAIQ)>=10)) {
-		send(msg.set((long)ceil(co2ppm)));
+		send(msg.set((int32_t)ceil(co2ppm)));
 		lastAIQ = ceil(co2ppm);
 	}
 
