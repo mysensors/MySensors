@@ -152,9 +152,9 @@ bool gatewayTransportInit(void)
 	WiFi.mode(WIFI_STA);
 #if defined(MY_HOSTNAME)
 #if defined(MY_GATEWAY_ESP8266)
-	WiFi.hostname(MY_HOSTNAME)
+	WiFi.hostname(MY_HOSTNAME);
 #elif defined(MY_GATEWAY_ESP32)
-	WiFi.setHostname(MY_HOSTNAME)
+	WiFi.setHostname(MY_HOSTNAME);
 #endif
 #endif
 #ifdef MY_IP_ADDRESS
