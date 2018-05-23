@@ -85,7 +85,11 @@ MySensors options:
                                 Enables RFM69 encryption.
                                 All nodes and gateway must have this enabled, and all must be
                                 personalized with the same AES key.
-     --my-rfm95-encryption-enabled
+    --my-rfm95-frequency=[169|315|434|868|915]
+                                RFM95 Module Frequency. [868]
+    --my-rfm95-irq-pin=<PIN>    Pin number connected to RFM95 IRQ pin.
+    --my-rfm95-cs-pin=<PIN>     Pin number to use for RFM95 Chip-Select.
+    --my-rfm95-encryption-enabled
                                 Enables RFM95 encryption.
                                 All nodes and gateway must have this enabled, and all must be
                                 personalized with the same AES key.
@@ -453,6 +457,27 @@ for opt do
     --my-rfm69-encryption-enabled*)
         encryption=true
         CPPFLAGS="-DMY_RFM69_ENABLE_ENCRYPTION $CPPFLAGS"
+        ;;
+    --my-rfm95-frequency=*)
+        if [[ ${optarg} == "169" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_169MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "315" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_315MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "434" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_434MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "868" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_868MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "915" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_915MHZ $CPPFLAGS"
+        else
+            echo "[WARNING] Illegal value for --my-rfm95-frequency=${optarg}, ignored"
+        fi
+        ;;
+    --my-rfm95-irq-pin=*)
+        CPPFLAGS="-DMY_RFM95_IRQ_NUM=${optarg} $CPPFLAGS"
+        ;;
+    --my-rfm95-cs-pin=*)
+        CPPFLAGS="-DMY_RFM95_CS_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-rfm95-encryption-enabled*)
         encryption=true

@@ -602,6 +602,7 @@
  * @def MY_RFM69_FREQUENCY
  * @brief The frequency to use.
  *
+ * - RFM69_315MHZ
  * - RFM69_433MHZ
  * - RFM69_868MHZ
  * - RFM69_915MHZ
