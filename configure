@@ -85,6 +85,10 @@ MySensors options:
                                 Enables RFM69 encryption.
                                 All nodes and gateway must have this enabled, and all must be
                                 personalized with the same AES key.
+     --my-rfm95-encryption-enabled
+                                Enables RFM95 encryption.
+                                All nodes and gateway must have this enabled, and all must be
+                                personalized with the same AES key.
     --my-rs485-serial-port=<PORT>
                                 RS485 serial port. You must provide a port.
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
@@ -449,6 +453,10 @@ for opt do
     --my-rfm69-encryption-enabled*)
         encryption=true
         CPPFLAGS="-DMY_RFM69_ENABLE_ENCRYPTION $CPPFLAGS"
+        ;;
+    --my-rfm95-encryption-enabled*)
+        encryption=true
+        CPPFLAGS="-DMY_RFM95_ENABLE_ENCRYPTION $CPPFLAGS"
         ;;
     --my-rs485-serial-port=*)
         CPPFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CPPFLAGS"
