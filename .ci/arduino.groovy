@@ -1,16 +1,16 @@
 #!groovy
 def buildArduino(config, String buildFlags, String sketch, String key) {
-	def root              = '/opt/arduino-1.8.2/'
+	def root              = '/opt/arduino-1.8.5/'
 	if (config.nightly_arduino_ide)
 	{
 		root = '/opt/arduino-nightly/'
 	}
-	def esp8266_tools     = '/opt/arduino-nightly/hardware/esp8266com/esp8266/tools'
+	//def esp8266_tools     = '/opt/arduino-nightly/hardware/esp8266com/esp8266/tools'
 	def jenkins_root      = '/var/lib/jenkins/'
 	def builder           = root+'arduino-builder'
-	def standard_args     = ' -warnings="all"' //-verbose=true
+	def standard_args     = ' -warnings=all' //-verbose=true
 	def builder_specifics = ' -hardware '+root+'hardware -tools '+root+'hardware/tools/avr -tools '+
-		root+'tools-builder -tools '+esp8266_tools+' -built-in-libraries '+root+'libraries'
+		root+'tools-builder -built-in-libraries '+root+'libraries'
 	def jenkins_packages  = jenkins_root+'.arduino15/packages'
 	def site_specifics    = ' -hardware '+jenkins_packages+' -tools '+jenkins_packages
 	def repo_specifics    = ' -hardware hardware -libraries . '
@@ -41,7 +41,7 @@ def parseWarnings(String key) {
 }
 
 def buildMySensorsMicro(config, sketches, String key) {
-	def fqbn = '-fqbn MySensors:avr:MysensorsMicro -prefs build.f_cpu=1000000 -prefs build.mcu=atmega328p'
+	def fqbn = '-fqbn=MySensors:avr:MysensorsMicro:cpu=1Mhz'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -75,7 +75,7 @@ def buildMySensorsMicro(config, sketches, String key) {
 }
 
 def buildMySensorsGw(config, sketches, String key) {
-	def fqbn = '-fqbn MySensors:samd:mysensors_gw_native -prefs build.f_cpu=48000000 -prefs build.mcu=cortex-m0plus'
+	def fqbn = '-fqbn MySensors:samd:mysensors_gw_native'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -88,7 +88,7 @@ def buildMySensorsGw(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewaySerialRS485/GatewaySerialRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino') {
-				buildArduino(config, fqbn, sketches[sketch].path, key+'_MySensorsGw')
+				buildArduino(config, fqbn, sketches[sketch].path, key+'_MySensorsGW')
 			}
 		}
 	} catch (ex) {
@@ -96,7 +96,7 @@ def buildMySensorsGw(config, sketches, String key) {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (MySensorsGW - '+key+')', 'Build error', '${BUILD_URL}')
 		throw ex
 	} finally {
-		parseWarnings(key+'_MySensorsGw')
+		parseWarnings(key+'_MySensorsGW')
 	}
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (MySensorsGW - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
@@ -111,7 +111,7 @@ def buildMySensorsGw(config, sketches, String key) {
 }
 
 def buildArduinoUno(config, sketches, String key) {
-	def fqbn = '-fqbn arduino:avr:uno -prefs build.f_cpu=16000000 -prefs build.mcu=atmega328p'
+	def fqbn = '-fqbn arduino:avr:uno'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -144,7 +144,7 @@ def buildArduinoUno(config, sketches, String key) {
 }
 
 def buildArduinoMega(config, sketches, String key) {
-	def fqbn = '-fqbn arduino:avr:mega -prefs build.f_cpu=16000000 -prefs build.mcu=atmega2560'
+	def fqbn = '-fqbn arduino:avr:mega:cpu=atmega2560'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -209,7 +209,7 @@ def buildSTM32F1(config, sketches, String key) {
 	}
 }
 
-def buildEsp8266(config, sketches, String key) {
+def buildESP8266(config, sketches, String key) {
 	def fqbn = '-fqbn=esp8266:esp8266:generic:CpuFrequency=80,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=qio,FlashSize=512K0,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
@@ -226,7 +226,7 @@ def buildEsp8266(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SoilMoistSensor/SoilMoistSensor.ino') {
-				buildArduino(config, fqbn, sketches[sketch].path, key+'_Esp8266')
+				buildArduino(config, fqbn, sketches[sketch].path, key+'_ESP8266')
 			}
 		}
 	} catch (ex) {
@@ -234,7 +234,7 @@ def buildEsp8266(config, sketches, String key) {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (ESP8266 - '+key+')', 'Build error', '${BUILD_URL}')
 		throw ex
 	} finally {
-		parseWarnings(key+'_Esp8266')
+		parseWarnings(key+'_ESP8266')
 	}
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (ESP8266 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
@@ -248,8 +248,8 @@ def buildEsp8266(config, sketches, String key) {
 	}
 }
 
-def buildEsp32(config, sketches, String key) {
-	def fqbn = '-fqbn espressif:esp32:node32s -warnings=default -prefs build.f_cpu=80000000 -prefs build.mcu=esp32'
+def buildESP32(config, sketches, String key) {
+	def fqbn = '-fqbn espressif:esp32:esp32:PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none -warnings=default'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -274,7 +274,7 @@ def buildEsp32(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino' &&
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SoilMoistSensor/SoilMoistSensor.ino') {
-				buildArduino(config, '-prefs build.flash_freq=80m -prefs build.flash_size=4MB '+fqbn, sketches[sketch].path, key+'_Esp32')
+				buildArduino(config, fqbn, sketches[sketch].path, key+'_ESP32')
 			}
 		}
 	} catch (ex) {
@@ -282,7 +282,7 @@ def buildEsp32(config, sketches, String key) {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (ESP32 - '+key+')', 'Build error', '${BUILD_URL}')
 		throw ex
 	} finally {
-		parseWarnings(key+'_Esp32')
+		parseWarnings(key+'_ESP32')
 	}
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (ESP32 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
@@ -297,7 +297,7 @@ def buildEsp32(config, sketches, String key) {
 } 
 
 def buildnRF5(config, sketches, String key) {
-	def fqbn = '-fqbn sandeepmistry:nRF5:Generic_nRF52832 -prefs build.f_cpu=16000000 -prefs build.mcu=cortex-m4'
+	def fqbn = '-fqbn sandeepmistry:nRF5:Generic_nRF52832:softdevice=none,lfclk=lfxo'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -338,7 +338,7 @@ def buildnRF5(config, sketches, String key) {
 }
 
 def buildnRF52832(config, sketches, String key) {
-	def fqbn = '-fqbn=MySensors:nRF5:MyBoard_nRF52832:bootcode=none,lfclk=lfxo,reset=notenable -prefs build.f_cpu=16000000 -prefs build.mcu=cortex-m4'
+	def fqbn = '-fqbn=MySensors:nRF5:MyBoard_nRF52832:bootcode=none,lfclk=lfxo,reset=notenable'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		buildArduino(config, fqbn, 'hardware/MySensors/nRF5/libraries/MyBoardNRF5/examples/MyBoardNRF5/MyBoardNRF5.ino', key+'_nRF52832')
@@ -362,7 +362,7 @@ def buildnRF52832(config, sketches, String key) {
 }
 
 def buildnRF51822(config, sketches, String key) {
-	def fqbn = '-fqbn=MySensors:nRF5:MyBoard_nRF51822:chip=xxaa,bootcode=none,lfclk=lfxo -prefs build.f_cpu=16000000 -prefs build.mcu=cortex-m0'
+	def fqbn = '-fqbn=MySensors:nRF5:MyBoard_nRF51822:chip=xxaa,bootcode=none,lfclk=lfxo'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		buildArduino(config, fqbn, 'hardware/MySensors/nRF5/libraries/MyBoardNRF5/examples/MyBoardNRF5/MyBoardNRF5.ino', key+'_nRF51822')
