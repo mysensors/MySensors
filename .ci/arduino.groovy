@@ -210,7 +210,7 @@ def buildSTM32F1(config, sketches, String key) {
 }
 
 def buildEsp8266(config, sketches, String key) {
-	def fqbn = '-fqbn esp8266:esp8266:generic -prefs build.f_cpu=80000000 -prefs build.mcu=esp8266'
+	def fqbn = '-fqbn=esp8266:esp8266:generic:CpuFrequency=80,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=qio,FlashSize=512K0,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -226,7 +226,7 @@ def buildEsp8266(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SoilMoistSensor/SoilMoistSensor.ino') {
-				buildArduino(config, '-prefs build.flash_ld=eagle.flash.512k0.ld -prefs build.flash_freq=40 -prefs build.flash_size=512K '+fqbn, sketches[sketch].path, key+'_Esp8266')
+				buildArduino(config, fqbn, sketches[sketch].path, key+'_Esp8266')
 			}
 		}
 	} catch (ex) {
