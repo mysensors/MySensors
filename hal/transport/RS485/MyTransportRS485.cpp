@@ -156,7 +156,7 @@ bool _serialProcess()
 				_recPos = 0;
 				
 				//Avoid _data[] overflow 
-				if (_recLen >= MY_RS485_MAX_MESSAGE_LENGTH){
+				if (_recLen >= MY_RS485_MAX_MESSAGE_LENGTH) {
 					_serialReset();
 					break;
 				}
