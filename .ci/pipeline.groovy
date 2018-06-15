@@ -98,7 +98,7 @@ def call(Closure body) {
 						arduino.buildMySensorsGw(config, config.tests, 'Tests')
 					}
 					stage('ESP32 (tests)') {
-						arduino.buildEsp32(config, config.tests, 'Tests')
+						arduino.buildESP32(config, config.tests, 'Tests')
 					}
 					stage('nRF52832 (tests)') {
 						arduino.buildnRF52832(config, config.tests, 'Tests')
@@ -110,7 +110,7 @@ def call(Closure body) {
 						arduino.buildnRF5(config, config.tests, 'Tests')
 					}
 					stage('ESP8266 (tests)') {
-						arduino.buildEsp8266(config, config.tests, 'Tests')
+						arduino.buildESP8266(config, config.tests, 'Tests')
 					}
 					stage('STM32F1 (tests)') {
 						arduino.buildSTM32F1(config, config.tests, 'Tests')
@@ -143,12 +143,12 @@ def call(Closure body) {
 						arduino.buildnRF5(config, config.examples, 'Examples')
 					}
 					stage('ESP8266 (examples)') {
-						arduino.buildEsp8266(config, config.examples, 'Examples')
+						arduino.buildESP8266(config, config.examples, 'Examples')
 					}
 					// No point in building examples for ESP32 yet
 					/*
 					stage('ESP32 (examples)') {
-						arduino.buildEsp32(config, config.examples, 'Examples')
+						arduino.buildESP32(config, config.examples, 'Examples')
 					}
 					*/
 					// No point in building examples for STM32F1 yet
