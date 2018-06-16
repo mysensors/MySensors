@@ -17,6 +17,38 @@ def call(Closure body) {
 			script: """#!/bin/bash
 								 cd ${config.repository_root}
 								 git log -n 1 --pretty=format:'%H' refs/remotes/origin/PR-${env.CHANGE_ID}""").trim()
+		// Pre-register all build statues so github shows what is going to happen
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate', 'Validating...', '${BUILD_URL}flowGraphTable/')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Butler)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Code analysis - Cppcheck)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Documentation)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Linux builds - Serial GW)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Linux builds - Ethernet GW)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Linux builds - MQTT GW)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - Examples)', 'Not run yet...', '')
+/*
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - Examples)', 'Not run yet...', '')
+*/
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Examples)', 'Not run yet...', '')
+/*
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
+*/
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Examples)', 'Not run yet...', '')
 	} else {
 		config.is_pull_request = false
 		echo "Building branch: "+env.BRANCH_NAME
@@ -24,7 +56,6 @@ def call(Closure body) {
 			script: """#!/bin/bash
 								 cd ${config.repository_root}
 								 git log -n 1 --pretty=format:'%H' refs/remotes/origin/${env.BRANCH_NAME}""").trim()
-		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate', 'Validating...', '${BUILD_URL}flowGraphTable/')
 	}
 
 	try {
