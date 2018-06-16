@@ -637,7 +637,7 @@ extern "C" {
 			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxDisable) or
 			        (NRF_RADIO->STATE == RADIO_STATE_STATE_TxRu)) {
 				if (NRF_RADIO->CRCSTATUS) {
-					// Ensure no ACK package is recieved
+					// Ensure no ACK package is received
 					if (NRF_RADIO->RXMATCH != NRF5_ESB_TX_ADDR) {
 						// calculate a package id
 						uint32_t pkgid = rx_buffer.pid << 16 | NRF_RADIO->RXCRC;

@@ -22,7 +22,7 @@
  * Version 1.0 - Henrik EKblad
  *
  * DESCRIPTION
- * Example sketch showing how to measue light level using a LM393 photo-resistor
+ * Example sketch showing how to measure light level using a LM393 photo-resistor
  * http://www.mysensors.org/build/light
  */
 

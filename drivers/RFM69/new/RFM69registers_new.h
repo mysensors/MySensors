@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -16,20 +16,20 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  *
- * RFM69 driver refactored for Mysensors
+ * RFM69 driver refactored for MySensors
  *
  * Based on :
  * - LowPowerLab RFM69 Lib Copyright Felix Rusu (2014), felix@lowpowerlab.com
  * - Automatic Transmit Power Control class derived from RFM69 library.
  *	  Discussion and details in this forum post: https://lowpowerlab.com/forum/index.php/topic,688.0.html
  *	  Copyright Thomas Studwell (2014,2015)
- * - Mysensors generic radio driver implementation, Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
+ * - MySensors generic radio driver implementation Copyright (C) 2017, 2018 Olivier Mauti <olivier@mysensors.org>
  *
  * Changes by : @tekka, @scalz, @marceloagno
  *
  * Definitions for Semtech SX1231/H radios:
- * http://www.semtech.com/images/datasheet/sx1231.pdf
- * http://www.semtech.com/images/datasheet/sx1231h.pdf
+ * https://www.semtech.com/uploads/documents/sx1231.pdf
+ * https://www.semtech.com/uploads/documents/sx1231h.pdf
  */
 
 #define RFM69_REG_FIFO          0x00
@@ -150,71 +150,69 @@
 #define RFM69_DATAMODUL_MODULATIONSHAPING_10       0x02
 #define RFM69_DATAMODUL_MODULATIONSHAPING_11       0x03
 
-
 // RegBitRate (bits/sec) example bit rates
 #define RFM69_BITRATEMSB_1200            0x68
 #define RFM69_BITRATELSB_1200            0x2B
+#define RFM69_BITRATEMSB_2000            0x3e
+#define RFM69_BITRATELSB_2000            0x80
 #define RFM69_BITRATEMSB_2400            0x34
 #define RFM69_BITRATELSB_2400            0x15
 #define RFM69_BITRATEMSB_4800            0x1A  // Default
 #define RFM69_BITRATELSB_4800            0x0B  // Default
 #define RFM69_BITRATEMSB_9600            0x0D
 #define RFM69_BITRATELSB_9600            0x05
-#define RFM69_BITRATEMSB_19200           0x06
-#define RFM69_BITRATELSB_19200           0x83
-#define RFM69_BITRATEMSB_38400           0x03
-#define RFM69_BITRATELSB_38400           0x41
-
-#define RFM69_BITRATEMSB_38323           0x03
-#define RFM69_BITRATELSB_38323           0x43
-
-#define RFM69_BITRATEMSB_34482           0x03
-#define RFM69_BITRATELSB_34482           0xA0
-
-#define RFM69_BITRATEMSB_76800           0x01
-#define RFM69_BITRATELSB_76800           0xA1
-#define RFM69_BITRATEMSB_153600          0x00
-#define RFM69_BITRATELSB_153600          0xD0
-#define RFM69_BITRATEMSB_57600           0x02
-#define RFM69_BITRATELSB_57600           0x2C
-#define RFM69_BITRATEMSB_115200          0x01
-#define RFM69_BITRATELSB_115200          0x16
 #define RFM69_BITRATEMSB_12500           0x0A
 #define RFM69_BITRATELSB_12500           0x00
+#define RFM69_BITRATEMSB_19200           0x06
+#define RFM69_BITRATELSB_19200           0x83
 #define RFM69_BITRATEMSB_25000           0x05
 #define RFM69_BITRATELSB_25000           0x00
+#define RFM69_BITRATEMSB_32768           0x03
+#define RFM69_BITRATELSB_32768           0xD1
+#define RFM69_BITRATEMSB_38400           0x03
+#define RFM69_BITRATELSB_38400           0x41
 #define RFM69_BITRATEMSB_50000           0x02
 #define RFM69_BITRATELSB_50000           0x80
+#define RFM69_BITRATEMSB_55555           0x02
+#define RFM69_BITRATELSB_55555           0x40
+#define RFM69_BITRATEMSB_57600           0x02
+#define RFM69_BITRATELSB_57600           0x2C
+#define RFM69_BITRATEMSB_76800           0x01
+#define RFM69_BITRATELSB_76800           0xA1
 #define RFM69_BITRATEMSB_100000          0x01
 #define RFM69_BITRATELSB_100000          0x40
+#define RFM69_BITRATEMSB_115200          0x01
+#define RFM69_BITRATELSB_115200          0x16
+#define RFM69_BITRATEMSB_125000          0x01
+#define RFM69_BITRATELSB_125000          0x00
 #define RFM69_BITRATEMSB_150000          0x00
 #define RFM69_BITRATELSB_150000          0xD5
+#define RFM69_BITRATEMSB_153600          0x00
+#define RFM69_BITRATELSB_153600          0xD0
 #define RFM69_BITRATEMSB_200000          0x00
 #define RFM69_BITRATELSB_200000          0xA0
 #define RFM69_BITRATEMSB_250000          0x00
 #define RFM69_BITRATELSB_250000          0x80
 #define RFM69_BITRATEMSB_300000          0x00
 #define RFM69_BITRATELSB_300000          0x6B
-#define RFM69_BITRATEMSB_32768           0x03
-#define RFM69_BITRATELSB_32768           0xD1
-// custom bit rates
-#define RFM69_BITRATEMSB_55555           0x02
-#define RFM69_BITRATELSB_55555           0x40
-#define RFM69_BITRATEMSB_200KBPS         0x00
-#define RFM69_BITRATELSB_200KBPS         0xa0
-
 
 // RegFdev - frequency deviation (Hz)
 #define RFM69_FDEVMSB_2000             0x00
 #define RFM69_FDEVLSB_2000             0x21
+#define RFM69_FDEVMSB_4800             0x00
+#define RFM69_FDEVLSB_4800             0x4f
 #define RFM69_FDEVMSB_5000             0x00  // Default
 #define RFM69_FDEVLSB_5000             0x52  // Default
 #define RFM69_FDEVMSB_7500             0x00
 #define RFM69_FDEVLSB_7500             0x7B
+#define RFM69_FDEVMSB_9600             0x00
+#define RFM69_FDEVLSB_9600             0x9d
 #define RFM69_FDEVMSB_10000            0x00
 #define RFM69_FDEVLSB_10000            0xA4
 #define RFM69_FDEVMSB_15000            0x00
 #define RFM69_FDEVLSB_15000            0xF6
+#define RFM69_FDEVMSB_19200            0x01
+#define RFM69_FDEVLSB_19200            0x3b
 #define RFM69_FDEVMSB_20000            0x01
 #define RFM69_FDEVLSB_20000            0x48
 #define RFM69_FDEVMSB_25000            0x01
@@ -223,6 +221,8 @@
 #define RFM69_FDEVLSB_30000            0xEC
 #define RFM69_FDEVMSB_35000            0x02
 #define RFM69_FDEVLSB_35000            0x3D
+#define RFM69_FDEVMSB_38400            0x02
+#define RFM69_FDEVLSB_38400            0x75
 #define RFM69_FDEVMSB_40000            0x02
 #define RFM69_FDEVLSB_40000            0x8F
 #define RFM69_FDEVMSB_45000            0x02
@@ -239,6 +239,8 @@
 #define RFM69_FDEVLSB_70000            0x7B
 #define RFM69_FDEVMSB_75000            0x04
 #define RFM69_FDEVLSB_75000            0xCD
+#define RFM69_FDEVMSB_76800            0x04
+#define RFM69_FDEVLSB_76800            0xea
 #define RFM69_FDEVMSB_80000            0x05
 #define RFM69_FDEVLSB_80000            0x1F
 #define RFM69_FDEVMSB_85000            0x05
@@ -253,6 +255,8 @@
 #define RFM69_FDEVLSB_110000           0x0A
 #define RFM69_FDEVMSB_120000           0x07
 #define RFM69_FDEVLSB_120000           0xAE
+#define RFM69_FDEVMSB_125000           0x08
+#define RFM69_FDEVLSB_125000           0x00
 #define RFM69_FDEVMSB_130000           0x08
 #define RFM69_FDEVLSB_130000           0x52
 #define RFM69_FDEVMSB_140000           0x08
@@ -290,7 +294,7 @@
 #define RFM69_FDEVMSB_300000           0x13
 #define RFM69_FDEVLSB_300000           0x33
 
-#define RFM69_NOP					 0x00
+#define RFM69_NOP                      0x00
 
 // RegOsc1
 #define RFM69_OSC1_RCCAL_START       0x80

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include "log.h"
+#include "config.h"
 #include "MySensorsCore.h"
 
 void handle_sigint(int sig)
@@ -48,7 +49,7 @@ void handle_sigint(int sig)
 	MY_SERIALDEVICE.end();
 #endif
 
-	closelog();
+	logClose();
 
 	exit(EXIT_SUCCESS);
 }
@@ -104,18 +105,13 @@ void print_usage()
 {
 	printf("Usage: mysgw [options]\n\n" \
 	       "Options:\n" \
+	       "  -c, --config-file          Config file. [" MY_LINUX_CONFIG_FILE "]\n" \
 	       "  -h, --help                 Display a short summary of all program options.\n" \
-	       "  -d, --debug                Enable debug.\n" \
-	       "  -b, --background           Run as a background process.\n"
-	       "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n"
-	       "  --gen-soft-serial-key      Generate and print a soft serial key.\n"
-	       "  --gen-aes-key              Generate and print an aes encryption key.\n"
-	       "  --print-soft-hmac-key      Print the soft hmac key from the config file.\n"
-	       "  --print-soft-serial-key    Print the soft serial key from the config file.\n"
-	       "  --print-aes-key            Print the aes encryption key from the config file.\n"
-	       "  --set-soft-hmac-key        Write a soft hmac key to the config file.\n"
-	       "  --set-soft-serial-key      Write a soft serial key to the config file.\n"
-	       "  --set-aes-key              Write an aes encryption key to the config file.\n");
+	       "  -q, --quiet                Quiet mode, disable log messages written to the terminal.\n" \
+	       "  --daemon                   Run as a daemon.\n" \
+	       "  --gen-soft-hmac-key        Generate and print a soft hmac key.\n" \
+	       "  --gen-soft-serial-key      Generate and print a soft serial key.\n" \
+	       "  --gen-aes-key              Generate and print an aes encryption key.\n");
 }
 
 void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
@@ -127,14 +123,14 @@ void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
 		key_ptr = key;
 	}
 
-	printf("SOFT_HMAC_KEY | ");
+	printf("soft_hmac_key=");
 	for (int i = 0; i < 32; i++) {
 		printf("%02X", key_ptr[i]);
 	}
 	printf("\n\n");
 
 	printf("The next line is intended to be used in SecurityPersonalizer.ino:\n");
-	printf("#define MY_SOFT_HMAC_KEY ");
+	printf("#define MY_HMAC_KEY ");
 	for (int i=0; i<32; i++) {
 		printf("%#02X", key_ptr[i]);
 		if (i < 31) {
@@ -144,20 +140,26 @@ void print_soft_sign_hmac_key(uint8_t *key_ptr = NULL)
 	printf("\n\n");
 }
 
-void generate_soft_sign_hmac_key()
+void generate_soft_sign_hmac_key(char *config_file = NULL)
 {
 	uint8_t key[32];
 
+	printf("Generating key...");
 	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
+	printf(" done.\n");
 
+	printf("To use the new key, update the value in %s witn:\n",
+	       config_file?config_file:MY_LINUX_CONFIG_FILE);
 	print_soft_sign_hmac_key(key);
 
-	printf("To use this key, run mysgw with:\n"
-	       " --set-soft-hmac-key=");
-	for (int i = 0; i < 32; i++) {
-		printf("%02X", key[i]);
-	}
-	printf("\n");
+#if defined(MY_SIGNING_SIMPLE_PASSWD)
+	printf("Note: The gateway was built with simplified signing using the password: %s\n" \
+	       "      Any key set with soft_hmac_key option in the config file is ignored.\n\n",
+	       MY_SIGNING_SIMPLE_PASSWD);
+#elif !defined(MY_SIGNING_FEATURE)
+	printf("Note: The gateway was not built with signing support.\n" \
+	       "      Any key set with soft_hmac_key option in the config file is ignored.\n\n");
+#endif
 }
 
 void set_soft_sign_hmac_key(char *key_str)
@@ -165,7 +167,7 @@ void set_soft_sign_hmac_key(char *key_str)
 	uint8_t key[32];
 
 	if (strlen(key_str) != 64) {
-		printf("invalid key!\n");
+		logWarning("Invalid HMAC key!\n");
 	} else {
 		for (int i = 0; i < 64; ++i) {
 			int n;
@@ -185,7 +187,6 @@ void set_soft_sign_hmac_key(char *key_str)
 			}
 		}
 		hwWriteConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-		print_soft_sign_hmac_key();
 	}
 }
 
@@ -198,7 +199,7 @@ void print_soft_sign_serial_key(uint8_t *key_ptr = NULL)
 		key_ptr = key;
 	}
 
-	printf("SOFT_SERIAL   | ");
+	printf("soft_serial_key=");
 	for (int i = 0; i < 9; i++) {
 		printf("%02X", key_ptr[i]);
 	}
@@ -215,20 +216,26 @@ void print_soft_sign_serial_key(uint8_t *key_ptr = NULL)
 	printf("\n\n");
 }
 
-void generate_soft_sign_serial_key()
+void generate_soft_sign_serial_key(char *config_file = NULL)
 {
 	uint8_t key[9];
 
+	printf("Generating key...");
 	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
+	printf(" done.\n");
 
+	printf("To use the new key, update the value in %s witn:\n",
+	       config_file?config_file:MY_LINUX_CONFIG_FILE);
 	print_soft_sign_serial_key(key);
 
-	printf("To use this key, run mysgw with:\n"
-	       " --set-soft-serial-key=");
-	for (int i = 0; i < 9; i++) {
-		printf("%02X", key[i]);
-	}
-	printf("\n");
+#if defined(MY_SIGNING_SIMPLE_PASSWD)
+	printf("Note: The gateway was built with simplified signing using the password: %s\n" \
+	       "      Any key set with soft_serial_key option in the config file is ignored.\n\n",
+	       MY_SIGNING_SIMPLE_PASSWD);
+#elif !defined(MY_SIGNING_FEATURE)
+	printf("Note: The gateway was not built with signing support.\n" \
+	       "      Any key set with soft_serial_key option in the config file is ignored.\n\n");
+#endif
 }
 
 void set_soft_sign_serial_key(char *key_str)
@@ -236,7 +243,7 @@ void set_soft_sign_serial_key(char *key_str)
 	uint8_t key[9];
 
 	if (strlen(key_str) != 18) {
-		printf("invalid key!\n");
+		logWarning("Invalid soft serial key!\n");
 	} else {
 		for (int i = 0; i < 18; ++i) {
 			int n;
@@ -256,7 +263,6 @@ void set_soft_sign_serial_key(char *key_str)
 			}
 		}
 		hwWriteConfigBlock(&key, reinterpret_cast<void*>EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-		print_soft_sign_serial_key();
 	}
 }
 
@@ -265,16 +271,11 @@ void print_aes_key(uint8_t *key_ptr = NULL)
 	uint8_t key[16];
 
 	if (key_ptr == NULL) {
-#ifdef MY_SIGNING_SIMPLE_PASSWD
-		memset(key, 0, 16);
-		memcpy(key, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
-#else
 		hwReadConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-#endif
 		key_ptr = key;
 	}
 
-	printf("AES_KEY       | ");
+	printf("aes_key=");
 	for (int i = 0; i < 16; i++) {
 		printf("%02X", key_ptr[i]);
 	}
@@ -291,20 +292,26 @@ void print_aes_key(uint8_t *key_ptr = NULL)
 	printf("\n\n");
 }
 
-void generate_aes_key()
+void generate_aes_key(char *config_file = NULL)
 {
 	uint8_t key[16];
 
+	printf("Generating key...");
 	while (hwGetentropy(&key, sizeof(key)) != sizeof(key));
+	printf(" done.\n");
 
+	printf("To use the new key, update the value in %s witn:\n",
+	       config_file?config_file:MY_LINUX_CONFIG_FILE);
 	print_aes_key(key);
 
-	printf("To use this key, run mysgw with:\n"
-	       " --set-aes-key=");
-	for (int i = 0; i < 16; i++) {
-		printf("%02X", key[i]);
-	}
-	printf("\n");
+#if defined(MY_ENCRYPTION_SIMPLE_PASSWD)
+	printf("Note: The gateway was built with simplified encryption using the password: %s\n" \
+	       "      Any key set with aes_key option in the config file is ignored.\n\n",
+	       MY_ENCRYPTION_SIMPLE_PASSWD);
+#elif !defined(MY_ENCRYPTION_FEATURE)
+	printf("Note: The gateway was not built with encryption support.\n" \
+	       "      Any key set with aes_key option in the config file is ignored.\n\n");
+#endif
 }
 
 void set_aes_key(char *key_str)
@@ -312,7 +319,7 @@ void set_aes_key(char *key_str)
 	uint8_t key[16];
 
 	if (strlen(key_str) != 32) {
-		printf("invalid key!\n");
+		logWarning("Invalid AES key!\n");
 	} else {
 		for (int i = 0; i < 32; ++i) {
 			int n;
@@ -332,106 +339,144 @@ void set_aes_key(char *key_str)
 			}
 		}
 		hwWriteConfigBlock(&key, reinterpret_cast<void*>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-		print_aes_key();
 	}
 }
 
 int main(int argc, char *argv[])
 {
-	int opt, log_opts, debug = 0, foreground = 1;
-	char *key = NULL;
+	int opt, daemon = 0, quiet = 0;
+	char *config_file = NULL;
+	bool gen_soft_sign_hmac_key = false;
+	bool gen_soft_sign_serial_key = false;
+	bool gen_aes_key = false;
 
 	/* register the signal handler */
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+	signal(SIGPIPE, handle_sigint);
 
 	hwRandomNumberInit();
 
 	static struct option long_options[] = {
+		{"config-file",				required_argument,	0,	'c'},
+		{"daemon",					no_argument,		0,	'J'},
 		{"help",					no_argument,		0,	'h'},
-		{"debug",					no_argument,		0,	'd'},
-		{"background",				no_argument,		0,	'b'},
+		{"quiet",					no_argument,		0,	'q'},
 		{"gen-soft-hmac-key",		no_argument,		0,	'A'},
 		{"gen-soft-serial-key",		no_argument,		0,	'B'},
 		{"gen-aes-key",				no_argument,		0,	'C'},
-		{"print-soft-hmac-key",		no_argument,		0,	'D'},
-		{"print-soft-serial-key",	no_argument,		0,	'E'},
-		{"print-aes-key",			no_argument,		0,	'F'},
-		{"set-soft-hmac-key",		required_argument,	0,	'G'},
-		{"set-soft-serial-key",		required_argument,	0,	'H'},
-		{"set-aes-key",				required_argument,	0,	'I'},
 		{0, 0, 0, 0}
 	};
 
 	int long_index = 0;
-	while ((opt = getopt_long(argc, argv,"hdbABCDEFGHI", long_options, &long_index )) != -1) {
+	while ((opt = getopt_long(argc, argv,"chqABCJ", long_options, &long_index )) != -1) {
 		switch (opt) {
+		case 'c':
+			config_file = strdup(optarg);
+			break;
 		case 'h':
 			print_usage();
 			exit(EXIT_SUCCESS);
-		case 'd':
-			debug = 1;
-			break;
-		case 'b':
-			foreground = 0;
+		case 'q':
+			quiet = 1;
 			break;
 		case 'A':
-			generate_soft_sign_hmac_key();
-			exit(EXIT_SUCCESS);
+			gen_soft_sign_hmac_key = true;
+			break;
 		case 'B':
-			generate_soft_sign_serial_key();
-			exit(EXIT_SUCCESS);
+			gen_soft_sign_serial_key = true;
+			break;
 		case 'C':
-			generate_aes_key();
-			exit(EXIT_SUCCESS);
-		case 'D':
-			print_soft_sign_hmac_key();
-			exit(EXIT_SUCCESS);
-		case 'E':
-			print_soft_sign_serial_key();
-			exit(EXIT_SUCCESS);
-		case 'F':
-			print_aes_key();
-			exit(EXIT_SUCCESS);
-		case 'G':
-			key = strdup(optarg);
-			set_soft_sign_hmac_key(key);
-			exit(EXIT_SUCCESS);
-		case 'H':
-			key = strdup(optarg);
-			set_soft_sign_serial_key(key);
-			exit(EXIT_SUCCESS);
-		case 'I':
-			key = strdup(optarg);
-			set_aes_key(key);
-			exit(EXIT_SUCCESS);
+			gen_aes_key = true;
+			break;
+		case 'J':
+			daemon = 1;
+			break;
 		default:
 			print_usage();
 			exit(EXIT_SUCCESS);
 		}
 	}
 
-	log_opts = LOG_CONS;
-	if (foreground && isatty(STDIN_FILENO)) {
-		// Also print syslog to stderror
-		log_opts |= LOG_PERROR;
+	if (gen_soft_sign_hmac_key || gen_soft_sign_serial_key || gen_aes_key) {
+		if (gen_soft_sign_hmac_key) {
+			generate_soft_sign_hmac_key(config_file);
+		}
+		if (gen_soft_sign_serial_key) {
+			generate_soft_sign_serial_key(config_file);
+		}
+		if (gen_aes_key) {
+			generate_aes_key(config_file);
+		}
+		exit(EXIT_SUCCESS);
 	}
-	if (!debug) {
-		// Ignore debug type messages
-		setlogmask(LOG_UPTO (LOG_INFO));
-	}
-	logOpen(log_opts, LOG_USER);
 
-	if (!foreground && !debug) {
+	if (daemon) {
 		if (daemonize() != 0) {
 			exit(EXIT_FAILURE);
 		}
+		quiet = 1;
+	}
+
+	if (config_parse(config_file?config_file:MY_LINUX_CONFIG_FILE) != 0) {
+		exit(EXIT_FAILURE);
+	}
+
+	logSetQuiet(quiet);
+	logSetLevel(conf.verbose);
+
+	if (conf.log_file) {
+		if (logSetFile(conf.log_filepath) != 0) {
+			logError("Failed to open log file.\n");
+		}
+	}
+
+	if (conf.log_pipe) {
+		if (logSetPipe(conf.log_pipe_file) != 0) {
+			logError("Failed to open log pipe.\n");
+		}
+	}
+
+	if (conf.syslog) {
+		logSetSyslog(LOG_CONS, LOG_USER);
 	}
 
 	logInfo("Starting gateway...\n");
 	logInfo("Protocol version - %s\n", MYSENSORS_LIBRARY_VERSION);
 
 	_begin(); // Startup MySensors library
+
+	// EEPROM is initialized within _begin()
+	// any operation on it must be done hereafter
+
+#if defined(MY_SIGNING_FEATURE) && !defined(MY_SIGNING_SIMPLE_PASSWD)
+	// Check if we need to update the signing keys in EEPROM
+	if (conf.soft_hmac_key) {
+		set_soft_sign_hmac_key(conf.soft_hmac_key);
+	} else {
+		logError("soft_hmac_key was not found in %s\n", config_file?config_file:MY_LINUX_CONFIG_FILE);
+		exit(EXIT_FAILURE);
+	}
+	if (conf.soft_serial_key) {
+		set_soft_sign_serial_key(conf.soft_serial_key);
+	} else {
+		logError("soft_serial_key was not found in %s\n", config_file?config_file:MY_LINUX_CONFIG_FILE);
+		exit(EXIT_FAILURE);
+	}
+#endif
+#if defined(MY_ENCRYPTION_FEATURE) && !defined(MY_ENCRYPTION_SIMPLE_PASSWD)
+	// Check if we need to update the encryption key in EEPROM
+	if (conf.aes_key) {
+		set_aes_key(conf.aes_key);
+	} else {
+		logError("aes_key was not found in %s\n", config_file?config_file:MY_LINUX_CONFIG_FILE);
+		exit(EXIT_FAILURE);
+	}
+#endif
+
+	if (config_file) {
+		free(config_file);
+	}
 
 	for (;;) {
 		_process();  // Process incoming data

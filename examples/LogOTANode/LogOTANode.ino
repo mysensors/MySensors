@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -67,8 +67,8 @@ void loop()
 	c++;
 
 	// A debug message
-	DEBUG_OUTPUT(PSTR("DEBUG\nc=%" PRId16 "\nmillis=" PRId32 "\n"), c, hwMillis());
+	DEBUG_OUTPUT(PSTR("DEBUG\nc=%" PRId16 "\nmillis=%" PRId32 "\n"), c, hwMillis());
 
 	// Send a log message with ACK to a node
-	OTALog(0, true, PSTR("LOG\nc=%" PRId16 "\nmillis=" PRId32 "\n"), c, hwMillis());
+	OTALog(0, true, PSTR("LOG\nc=%" PRId16 "\nmillis=%" PRId32 "\n"), c, hwMillis());
 }

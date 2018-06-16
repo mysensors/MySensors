@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -16,21 +16,22 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  *
- * RFM69 driver refactored for Mysensors
+ * RFM69 driver refactored for MySensors
  *
  * Based on :
  * - LowPowerLab RFM69 Lib Copyright Felix Rusu (2014), felix@lowpowerlab.com
  * - Automatic Transmit Power Control class derived from RFM69 library.
  *	  Discussion and details in this forum post: https://lowpowerlab.com/forum/index.php/topic,688.0.html
  *	  Copyright Thomas Studwell (2014,2015)
- * - Mysensors generic radio driver implementation, Copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
+ * - MySensors generic radio driver implementation Copyright (C) 2017, 2018 Olivier Mauti <olivier@mysensors.org>
  *
  * Changes by : @tekka, @scalz, @marceloagno
  *
  * Definitions for Semtech SX1231/H radios:
- * http://www.semtech.com/images/datasheet/sx1231.pdf
- * http://www.semtech.com/images/datasheet/sx1231h.pdf
+ * https://www.semtech.com/uploads/documents/sx1231.pdf
+ * https://www.semtech.com/uploads/documents/sx1231h.pdf
  */
+
 
 /**
 * @file RFM69_new.h
@@ -42,20 +43,24 @@
 * RFM69 driver-related log messages, format: [!]SYSTEM:[SUB SYSTEM:]MESSAGE
 * - [!] Exclamation mark is prepended in case of error
 *
-* |E| SYS   | SUB   | Message                          | Comment
-* |-|-------|-------|----------------------------------|-----------------------------------------------------------------------------------
-* | | RFM69 | INIT  |                                  | Initialise RFM69 radio
-* | | RFM69 | INIT  | PIN,CS=%d,IQP=%d,IQN=%d[,RST=%d] | Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
-* |!| RFM69 | INIT  | SANCHK FAIL                      | Sanity check failed, check wiring or replace module
-* | | RFM69 | PTX   | NO ADJ                           | TX power level, no adjustment
-* | | RFM69 | PTX   | LEVEL=%d dbM                     | TX power level, set to (LEVEL) dBm
-* | | RFM69 | SLEEP |                                  | Radio in sleep mode
-* | | RFM69 | SAC   | SEND ACK,TO=%d,RSSI=%d           | ACK sent to (TO), RSSI of incoming message (RSSI)
-* | | RFM69 | ATC   | ADJ TXL,cR=%d,tR=%d,TXL=%d       | Adjust TX power level (TXL) to match set RSSI (sR), current RSSI (cR)
-* | | RFM69 | SWR   | SEND,TO=%d,RETRY=%d              | Send to (TO), retry if no ACK received (RETRY)
-* | | RFM69 | SWR   | ACK,FROM=%d,SEQ=%d,RSSI=%d       | ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
-* |!| RFM69 | SWR   | NACK                             | Message sent, no ACK received
-* | | RFM69 | SPP   | PCT=%d,TX LEVEL=%d               | Set TX level, input TX percent (PCT)
+* |E| SYS   | SUB  | Message                              | Comment
+* |-|-------|------|--------------------------------------|-----------------------------------------------------------------------------------
+* | | RFM69 | INIT |                                      | Initialise RFM69 radio
+* | | RFM69 | INIT | PIN,CS=%%d,IQP=%%d,IQN=%%d[,RST=%%d] | Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
+* | | RFM69 | INIT | HWV=%%d                              | HW version, see datasheet chapter 9
+* |!| RFM69 | INIT | SANCHK FAIL                          | Sanity check failed, check wiring or replace module
+* | | RFM69 | PTX  | NO ADJ                               | TX power level, no adjustment
+* | | RFM69 | PTX  | LEVEL=%%d dbM                        | TX power level, set to (LEVEL) dBm
+* | | RFM69 | SAC  | SEND ACK,TO=%%d,RSSI=%%d             | ACK sent to (TO), RSSI of incoming message (RSSI)
+* | | RFM69 | ATC  | ADJ TXL,cR=%%d,tR=%%d..%%d,TXL=%%d   | Adjust TX level, current RSSI (cR), target RSSI range (tR), TX level (TXL)
+* | | RFM69 | SWR  | SEND,TO=%%d,SEQ=%%d,RETRY=%%d        | Send to (TO), sequence number (SWQ), retry if no ACK received (RETRY)
+* | | RFM69 | SWR  | ACK,FROM=%%d,SEQ=%%d,RSSI=%%d        | ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
+* |!| RFM69 | SWR  | NACK                                 | Message sent, no ACK received
+* | | RFM69 | SPP  | PCT=%%d,TX LEVEL=%%d                 | Set TX level, input TX percent (PCT)
+* | | RFM69 | RSL  |                                      | Radio in sleep mode
+* | | RFM69 | RSB  |                                      | Radio in standby mode
+* | | RFM69 | PWD  |                                      | Power down radio
+* | | RFM69 | PWU  |                                      | Power up radio
 *
 * @brief API declaration for RFM69
 *
@@ -72,27 +77,21 @@
 #else
 #define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
 #endif
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_ESP8266)
-#define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
+#define DEFAULT_RFM69_IRQ_PIN			(5)												//!< DEFAULT_RFM69_IRQ_PIN
 #elif defined(ARDUINO_ARCH_ESP32)
-#warning not implemented yet
+#define DEFAULT_RFM69_IRQ_PIN			(16)											//!< DEFAULT_RFM69_IRQ_PIN
+#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_SAMD)
 #define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define DEFAULT_RFM69_IRQ_PIN			(22)											//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN							//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(ARDUINO_ARCH_STM32F1)
 #define DEFAULT_RFM69_IRQ_PIN			(PA3)											//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			DEFAULT_RFM69_IRQ_PIN							//!< DEFAULT_RFM69_IRQ_NUM
 #elif defined(TEENSYDUINO)
 #define DEFAULT_RFM69_IRQ_PIN			(8)												//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			digitalPinToInterrupt(DEFAULT_RFM69_IRQ_PIN)	//!< DEFAULT_RFM69_IRQ_NUM
 #else
 #define DEFAULT_RFM69_IRQ_PIN			(2)												//!< DEFAULT_RFM69_IRQ_PIN
-#define DEFAULT_RFM69_IRQ_NUM			(2)												//!< DEFAULT_RFM69_IRQ_NUM
 #endif
 
 #define DEFAULT_RFM69_CS_PIN			(SS)											//!< DEFAULT_RFM69_CS_PIN
@@ -101,30 +100,10 @@
 #define RFM69_SPI_DATA_ORDER			MSBFIRST		//!< SPI data order
 #define RFM69_SPI_DATA_MODE				SPI_MODE0		//!< SPI mode
 
-// SPI clock divier for non-transaction implementations
-#if (MY_RFM69_SPI_SPEED >= F_CPU / 2)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV2			//!< SPI clock divider 2
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 4)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV4			//!< SPI clock divider 4
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 8)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV8			//!< SPI clock divider 8
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 16)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV16			//!< SPI clock divider 16
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 32)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV32			//!< SPI clock divider 32
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 64)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV64			//!< SPI clock divider 64
-#elif (MY_RFM69_SPI_SPEED >= F_CPU / 128)
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV128		//!< SPI clock divider 128
-#else
-#define RFM69_CLOCK_DIV SPI_CLOCK_DIV256		//!< SPI clock divider 256
-#endif
-
-#if defined (ARDUINO) && !defined (__arm__) && !defined (RFM69_SPI)
+#if defined(ARDUINO) && !defined(__arm__) && !defined(RFM69_SPI)
 #include <SPI.h>
 #if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE>
-RFM69_SPI;
+SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE>RFM69_SPI;
 #else
 #define RFM69_SPI SPI
 #endif
@@ -147,7 +126,7 @@ extern HardwareSPI SPI;		//!< SPI
 #if (MY_RFM69HW==true)
 // RFM69H(C)W
 #define RFM69_VERSION_HW	//!< HW version
-#define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-2)	//!< min. power level, -18dBm
+#define RFM69_MIN_POWER_LEVEL_DBM		((rfm69_powerlevel_t)-2)	//!< min. power level, -2dBm
 #if defined(MY_RFM69_MAX_POWER_LEVEL_DBM)
 #define RFM69_MAX_POWER_LEVEL_DBM		MY_RFM69_MAX_POWER_LEVEL_DBM //!< MY_RFM69_MAX_POWER_LEVEL_DBM
 #else
@@ -163,71 +142,121 @@ extern HardwareSPI SPI;		//!< SPI
 #endif
 #endif
 
-#define RFM69_FIFO_SIZE					(0xFFu)			//!< Max number of bytes the Rx/Tx FIFO can hold
-#define RFM69_MAX_PACKET_LEN			(0x40u)			//!< This is the maximum number of bytes that can be carried 
-#define RFM69_ATC_TARGET_RANGE_PERCENT	(5u)			//!< ATC target range +/-%
-#define RFM69_PACKET_HEADER_VERSION		(1u)			//!< RFM69 packet header version
-#define RFM69_MIN_PACKET_HEADER_VERSION (1u)			//!< Minimal RFM69 packet header version
-#define RFM69_RETRIES					(5u)			//!< Retries in case of failed transmission
-#define RFM69_RETRY_TIMEOUT_MS			(200ul)			//!< Timeout for ACK, adjustments needed if modem configuration changed (air time different)
-#define RFM69_MODE_READY_TIMEOUT_MS		(50ul)			//!< Timeout for mode ready
-#define RFM69_TX_LIMIT_MS				(1*1000ul)		//!< Timeout for packet sent
+#define RFM69_FIFO_SIZE                  (0xFFu)		//!< Max number of bytes the Rx/Tx FIFO can hold
+#define RFM69_MAX_PACKET_LEN             (0x40u)		//!< This is the maximum number of bytes that can be carried 
+#define RFM69_ATC_TARGET_RANGE_DBM       (2u)				//!< ATC target range +/- dBm
+#define RFM69_PACKET_HEADER_VERSION      (1u)				//!< RFM69 packet header version
+#define RFM69_MIN_PACKET_HEADER_VERSION  (1u)				//!< Minimal RFM69 packet header version
 
-#define RFM69_ACK_REQUESTED				(7u)			//!< RFM69 header, controlFlag, bit 7
-#define RFM69_ACK_RECEIVED				(6u)			//!< RFM69 header, controlFlag, bit 6
-#define RFM69_ACK_RSSI_REPORT			(5u)			//!< RFM69 header, controlFlag, bit 5
+#define RFM69_RETRIES                    (5u)				//!< Retries in case of failed transmission
+#define RFM69_RETRY_TIMEOUT_MS           (200ul)		//!< Timeout for ACK, adjustments needed if modem configuration changed (air time different)
+#define RFM69_MODE_READY_TIMEOUT_MS      (50ul)			//!< Timeout for mode ready
 
-#define RFM69_BROADCAST_ADDRESS			(255u)			//!< Broadcasting address 
-#define RFM69_TARGET_RSSI_DBM			(-60)			//!< RSSI target
-#define RFM69_HIGH_POWER_DBM			(18u)			//!< High power threshold, dBm
-#define RFM69_PROMISCUOUS				(false)			//!< RFM69 promiscuous mode
+#define RFM69_ACK_REQUESTED              (7u)				//!< RFM69 header, controlFlag, bit 7
+#define RFM69_ACK_RECEIVED               (6u)				//!< RFM69 header, controlFlag, bit 6
+#define RFM69_ACK_RSSI_REPORT            (5u)				//!< RFM69 header, controlFlag, bit 5
 
-#define RFM69_RSSItoInternal(__value)	((uint8_t)-(__value*2))	//!< RSSI converting macro
-#define RFM69_internalToRSSI(__value)	((int16_t)-(__value/2))	//!< RSSI converting macro
+#define RFM69_BROADCAST_ADDRESS          (255u)			//!< Broadcasting address 
+#define RFM69_TARGET_RSSI_DBM            (-75)			//!< RSSI target
+#define RFM69_HIGH_POWER_DBM             (18u)			//!< High power threshold, dBm
+
+#if !defined(MY_RFM69_TX_TIMEOUT_MS)
+#define MY_RFM69_TX_TIMEOUT_MS           (2*1000ul)	//!< Timeout for packet sent
+#endif
+
+// CSMA settings
+#if !defined(MY_RFM69_CSMA_LIMIT_DBM)
+#define MY_RFM69_CSMA_LIMIT_DBM             (-95)			//!< upper RX signal sensitivity threshold in dBm for carrier sense access
+#endif
+#if !defined(MY_RFM69_CSMA_TIMEOUT_MS)
+#define MY_RFM69_CSMA_TIMEOUT_MS            (500ul)		//!< CSMA timeout
+#endif
+// powerup delay
+#define RFM69_POWERUP_DELAY_MS           (100ul)		//!< Power up delay, allow VCC to settle, transport to become fully operational
+
+// available frequency bands, non trivial values to avoid misconfiguration
+#define RFM69_315MHZ                     (315000000ul)	//!< RFM69_315MHZ
+#define RFM69_433MHZ                     (433920000ul)	//!< RFM69_433MHZ, center frequencz 433.92 MHz
+#define RFM69_868MHZ                     (868000000ul)	//!< RFM69_868MHZ
+#define RFM69_915MHZ                     (915000000ul)	//!< RFM69_915MHZ
+
+#define RFM69_COURSE_TEMP_COEF           (-90)			//!< puts the temperature reading in the ballpark, user can fine tune the returned value
+#define RFM69_FXOSC                      (32*1000000ul)	//!< OSC freq, 32MHz
+#define RFM69_FSTEP                      (RFM69_FXOSC / 524288.0f)	//!< FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
 
 // helper macros
 #define RFM69_getACKRequested(__value) ((bool)bitRead(__value,RFM69_ACK_REQUESTED))						//!< getACKRequested
-#define RFM69_setACKRequested(__value, __flag) bitWrite(__value,RFM69_ACK_REQUESTED,__flag)				//!< setACKRequested
-#define RFM69_getACKReceived(__value) ((bool)bitRead(__value,RFM69_ACK_RECEIVED))						//!< getACKReceived
-#define RFM69_setACKReceived(__value, __flag) bitWrite(__value,RFM69_ACK_RECEIVED,__flag)				//!< setACKReceived
-#define RFM69_setACKRSSIReport(__value, __flag) bitWrite(__value,RFM69_ACK_RSSI_REPORT,__flag)			//!< setACKRSSIReport
-#define RFM69_getACKRSSIReport(__value) ((bool)bitRead(__value,RFM69_ACK_RSSI_REPORT))					//!< getACKRSSIReport
-
+#define RFM69_setACKRequested(__value, __flag) bitWrite(__value,RFM69_ACK_REQUESTED,__flag)		//!< setACKRequested
+#define RFM69_getACKReceived(__value) ((bool)bitRead(__value,RFM69_ACK_RECEIVED))							//!< getACKReceived
+#define RFM69_setACKReceived(__value, __flag) bitWrite(__value,RFM69_ACK_RECEIVED,__flag)			//!< setACKReceived
+#define RFM69_setACKRSSIReport(__value, __flag) bitWrite(__value,RFM69_ACK_RSSI_REPORT,__flag)//!< setACKRSSIReport
+#define RFM69_getACKRSSIReport(__value) ((bool)bitRead(__value,RFM69_ACK_RSSI_REPORT))				//!< getACKRSSIReport
 
 // Register access
 #define RFM69_READ_REGISTER		(0x7Fu)			//!< reading register
 #define RFM69_WRITE_REGISTER	(0x80u)			//!< writing register
 
-// CAD & CSMA
-#define RFM69_CAD_TIMEOUT_MS	(2*1000ul)		//!< Channel activity detection timeout
-#define RFM69_CSMA_LIMIT_DBM	(-90)			//!< upper RX signal sensitivity threshold in dBm for carrier sense access
-#define RFM69_CSMA_TIMEOUT_MS	(1000ul)		//!< CSMA timeout
+// Modem configuration section
+#define RFM69_CONFIG_FSK (RFM69_DATAMODUL_DATAMODE_PACKET | RFM69_DATAMODUL_MODULATIONTYPE_FSK | RFM69_DATAMODUL_MODULATIONSHAPING_00) //!< RFM69_CONFIG_FSK
+#define RFM69_CONFIG_GFSK (RFM69_DATAMODUL_DATAMODE_PACKET | RFM69_DATAMODUL_MODULATIONTYPE_FSK | RFM69_DATAMODUL_MODULATIONSHAPING_10) //!< RFM69_CONFIG_GFSK
+#define RFM69_CONFIG_OOK (RFM69_DATAMODUL_DATAMODE_PACKET | RFM69_DATAMODUL_MODULATIONTYPE_OOK | RFM69_DATAMODUL_MODULATIONSHAPING_00) //!< RFM69_CONFIG_OOK
 
-// powerup delay
-#define RFM69_POWERUP_DELAY_MS	(100u)			//!< Power up delay, allow VCC to settle, transport to become fully operational
+#define RFM69_CONFIG_NOWHITE		(RFM69_PACKET1_FORMAT_VARIABLE | RFM69_PACKET1_DCFREE_OFF | RFM69_PACKET1_CRC_ON | RFM69_PACKET1_CRCAUTOCLEAR_ON | RFM69_PACKET1_ADRSFILTERING_NODEBROADCAST) //!< RFM69_CONFIG_NOWHITE
+#define RFM69_CONFIG_WHITE			(RFM69_PACKET1_FORMAT_VARIABLE | RFM69_PACKET1_DCFREE_WHITENING | RFM69_PACKET1_CRC_ON | RFM69_PACKET1_CRCAUTOCLEAR_ON | RFM69_PACKET1_ADRSFILTERING_NODEBROADCAST) //!< RFM69_CONFIG_WHITE
+#define RFM69_CONFIG_MANCHESTER	(RFM69_PACKET1_FORMAT_VARIABLE | RFM69_PACKET1_DCFREE_MANCHESTER | RFM69_PACKET1_CRC_ON | RFM69_PACKET1_CRCAUTOCLEAR_ON | RFM69_PACKET1_ADRSFILTERING_NODEBROADCAST) //!< RFM69_CONFIG_MANCHESTER
 
-// available frequency bands, non trivial values to avoid misconfiguration
-#define RFM69_315MHZ            (315000000ul)	//!< RFM69_315MHZ
-#define RFM69_433MHZ            (433920000ul)	//!< RFM69_433MHZ, center frequencz 433.92 MHz
-#define RFM69_868MHZ            (868000000ul)	//!< RFM69_868MHZ
-#define RFM69_915MHZ            (915000000ul)	//!< RFM69_915MHZ
+#define RFM69_RXBW_111_24_4 (RFM69_RXBW_DCCFREQ_111 | RFM69_RXBW_MANT_24 | RFM69_RXBW_EXP_4) //!< RFM69_RXBW_111_24_4
+#define RFM69_RXBW_111_24_3 (RFM69_RXBW_DCCFREQ_111 | RFM69_RXBW_MANT_24 | RFM69_RXBW_EXP_3) //!< RFM69_RXBW_111_24_3
+#define RFM69_RXBW_111_24_2 (RFM69_RXBW_DCCFREQ_111 | RFM69_RXBW_MANT_24 | RFM69_RXBW_EXP_2) //!< RFM69_RXBW_111_24_2
+#define RFM69_RXBW_111_16_2 (RFM69_RXBW_DCCFREQ_111 | RFM69_RXBW_MANT_16 | RFM69_RXBW_EXP_2) //!< RFM69_RXBW_111_16_2
+#define RFM69_RXBW_111_16_1 (RFM69_RXBW_DCCFREQ_111 | RFM69_RXBW_MANT_16 | RFM69_RXBW_EXP_1) //!< RFM69_RXBW_111_16_1
+#define RFM69_RXBW_111_16_0 (RFM69_RXBW_DCCFREQ_111 | RFM69_RXBW_MANT_16 | RFM69_RXBW_EXP_0) //!< RFM69_RXBW_111_16_0
+#define RFM69_RXBW_010_16_2 (RFM69_RXBW_DCCFREQ_010 | RFM69_RXBW_MANT_16 | RFM69_RXBW_EXP_2) //!< RFM69_RXBW_010_16_2
 
-#define RFM69_COURSE_TEMP_COEF		(-90)			//!< puts the temperature reading in the ballpark, user can fine tune the returned value
-#define RFM69_FXOSC				(32*1000000ul)	//!< OSC freq, 32MHz
-#define RFM69_FSTEP				(RFM69_FXOSC / 524288.0f)	//!< FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
+#define RFM69_FSK_BR2_FD5				RFM69_CONFIG_FSK, RFM69_BITRATEMSB_2000, RFM69_BITRATELSB_2000, RFM69_FDEVMSB_5000, RFM69_FDEVLSB_5000, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR2_FD5
+#define RFM69_FSK_BR2_4_FD4_8		RFM69_CONFIG_FSK, RFM69_BITRATEMSB_2400, RFM69_BITRATELSB_2400, RFM69_FDEVMSB_4800, RFM69_FDEVLSB_4800, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR2_4_FD4_8
+#define RFM69_FSK_BR4_8_FD9_6		RFM69_CONFIG_FSK, RFM69_BITRATEMSB_4800, RFM69_BITRATELSB_4800, RFM69_FDEVMSB_9600, RFM69_FDEVLSB_9600, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR4_8_FD9_6
+#define RFM69_FSK_BR9_6_FD19_2	RFM69_CONFIG_FSK, RFM69_BITRATEMSB_9600, RFM69_BITRATELSB_9600, RFM69_FDEVMSB_19200, RFM69_FDEVLSB_19200, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR9_6_FD19_2
+#define RFM69_FSK_BR19_2_FD38_4 RFM69_CONFIG_FSK, RFM69_BITRATEMSB_19200, RFM69_BITRATELSB_19200, RFM69_FDEVMSB_38400, RFM69_FDEVLSB_38400, RFM69_RXBW_111_24_3, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR19_2_FD38_4
+#define RFM69_FSK_BR38_4_FD76_8 RFM69_CONFIG_FSK, RFM69_BITRATEMSB_38400, RFM69_BITRATELSB_38400, RFM69_FDEVMSB_76800, RFM69_FDEVLSB_76800, RFM69_RXBW_111_24_2, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR38_4_FD76_8
+#define RFM69_FSK_BR55_5_FD50		RFM69_CONFIG_FSK, RFM69_BITRATEMSB_55555, RFM69_BITRATELSB_55555, RFM69_FDEVMSB_50000, RFM69_FDEVLSB_50000, RFM69_RXBW_111_16_2, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR55_5_FD50
+#define RFM69_FSK_BR57_6_FD120	RFM69_CONFIG_FSK, RFM69_BITRATEMSB_57600, RFM69_BITRATELSB_57600, RFM69_FDEVMSB_120000, RFM69_FDEVLSB_120000, RFM69_RXBW_111_16_1, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR57_6_FD120
+#define RFM69_FSK_BR125_FD125		RFM69_CONFIG_FSK, RFM69_BITRATEMSB_125000, RFM69_BITRATELSB_125000, RFM69_FDEVMSB_125000, RFM69_FDEVLSB_125000, RFM69_RXBW_010_16_2, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR125_FD125
+#define RFM69_FSK_BR250_FD250		RFM69_CONFIG_FSK, RFM69_BITRATEMSB_250000, RFM69_BITRATELSB_250000, RFM69_FDEVMSB_250000, RFM69_FDEVLSB_250000, RFM69_RXBW_111_16_0, RFM69_CONFIG_WHITE //!< RFM69_FSK_BR250_FD250
 
-#if defined(MY_RFM69_ENABLE_LISTENMODE)
-#define  RFM69_LISTEN_RX_US		MY_RFM69_DEFAULT_LISTEN_RX_US		//!<  RFM69_LISTEN_RX_US
-#define  RFM69_LISTEN_IDLE_US	MY_RFM69_DEFAULT_LISTEN_IDLE_US		//!<  RFM69_LISTEN_IDLE_US
+#define RFM69_GFSK_BR2_FD5				RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_2000, RFM69_BITRATELSB_2000, RFM69_FDEVMSB_5000, RFM69_FDEVLSB_5000, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR2_FD5
+#define RFM69_GFSK_BR2_4_FD4_8		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_2400, RFM69_BITRATELSB_2400, RFM69_FDEVMSB_4800, RFM69_FDEVLSB_4800, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR2_4_FD4_8
+#define RFM69_GFSK_BR4_8_FD9_6		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_4800, RFM69_BITRATELSB_4800, RFM69_FDEVMSB_9600, RFM69_FDEVLSB_9600, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR4_8_FD9_6
+#define RFM69_GFSK_BR9_6_FD19_2		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_9600, RFM69_BITRATELSB_9600, RFM69_FDEVMSB_19200, RFM69_FDEVLSB_19200, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR9_6_FD19_2
+#define RFM69_GFSK_BR19_2_FD38_4	RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_19200, RFM69_BITRATELSB_19200, RFM69_FDEVMSB_38400, RFM69_FDEVLSB_38400, RFM69_RXBW_111_24_3, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR19_2_FD38_4
+#define RFM69_GFSK_BR38_4_FD76_8	RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_38400, RFM69_BITRATELSB_38400, RFM69_FDEVMSB_76800, RFM69_FDEVLSB_76800, RFM69_RXBW_111_24_2, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR38_4_FD76_8
+#define RFM69_GFSK_BR55_5_FD50		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_55555, RFM69_BITRATELSB_55555, RFM69_FDEVMSB_50000, RFM69_FDEVLSB_50000, RFM69_RXBW_111_16_2, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR55_5_FD50
+#define RFM69_GFSK_BR57_6_FD120		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_57600, RFM69_BITRATELSB_57600, RFM69_FDEVMSB_120000, RFM69_FDEVLSB_120000, RFM69_RXBW_111_16_1, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR57_6_FD120
+#define RFM69_GFSK_BR125_FD125		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_125000, RFM69_BITRATELSB_125000, RFM69_FDEVMSB_125000, RFM69_FDEVLSB_125000, RFM69_RXBW_010_16_2, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR125_FD125
+#define RFM69_GFSK_BR250_FD250		RFM69_CONFIG_GFSK, RFM69_BITRATEMSB_250000, RFM69_BITRATELSB_250000, RFM69_FDEVMSB_250000, RFM69_FDEVLSB_250000, RFM69_RXBW_111_16_0, RFM69_CONFIG_WHITE //!< RFM69_GFSK_BR250_FD250
+
+#define RFM69_OOK_BR2_FD5				RFM69_CONFIG_OOK, RFM69_BITRATEMSB_2000, RFM69_BITRATELSB_2000, RFM69_FDEVMSB_5000, RFM69_FDEVLSB_5000, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR2_FD5
+#define RFM69_OOK_BR2_4_FD4_8		RFM69_CONFIG_OOK, RFM69_BITRATEMSB_2400, RFM69_BITRATELSB_2400, RFM69_FDEVMSB_4800, RFM69_FDEVLSB_4800, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR2_4_FD4_8
+#define RFM69_OOK_BR4_8_FD9_6		RFM69_CONFIG_OOK, RFM69_BITRATEMSB_4800, RFM69_BITRATELSB_4800, RFM69_FDEVMSB_9600, RFM69_FDEVLSB_9600, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR4_8_FD9_6
+#define RFM69_OOK_BR9_6_FD19_2	RFM69_CONFIG_OOK, RFM69_BITRATEMSB_9600, RFM69_BITRATELSB_9600, RFM69_FDEVMSB_19200, RFM69_FDEVLSB_19200, RFM69_RXBW_111_24_4, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR9_6_FD19_2
+#define RFM69_OOK_BR19_2_FD38_4 RFM69_CONFIG_OOK, RFM69_BITRATEMSB_19200, RFM69_BITRATELSB_19200, RFM69_FDEVMSB_38400, RFM69_FDEVLSB_38400, RFM69_RXBW_111_24_3, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR19_2_FD38_4
+#define RFM69_OOK_BR38_4_FD76_8 RFM69_CONFIG_OOK, RFM69_BITRATEMSB_38400, RFM69_BITRATELSB_38400, RFM69_FDEVMSB_76800, RFM69_FDEVLSB_76800, RFM69_RXBW_111_24_2, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR38_4_FD76_8
+#define RFM69_OOK_BR55_5_FD50		RFM69_CONFIG_OOK, RFM69_BITRATEMSB_55555, RFM69_BITRATELSB_55555, RFM69_FDEVMSB_50000, RFM69_FDEVLSB_50000, RFM69_RXBW_111_16_2, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR55_5_FD50
+#define RFM69_OOK_BR57_6_FD120	RFM69_CONFIG_OOK, RFM69_BITRATEMSB_57600, RFM69_BITRATELSB_57600, RFM69_FDEVMSB_120000, RFM69_FDEVLSB_120000, RFM69_RXBW_111_16_1, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR57_6_FD120
+#define RFM69_OOK_BR125_FD125		RFM69_CONFIG_OOK, RFM69_BITRATEMSB_125000, RFM69_BITRATELSB_125000, RFM69_FDEVMSB_125000, RFM69_FDEVLSB_125000, RFM69_RXBW_010_16_2, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR125_FD125
+#define RFM69_OOK_BR250_FD250		RFM69_CONFIG_OOK, RFM69_BITRATEMSB_250000, RFM69_BITRATELSB_250000, RFM69_FDEVMSB_250000, RFM69_FDEVLSB_250000, RFM69_RXBW_111_16_0, RFM69_CONFIG_WHITE //!< RFM69_OOK_BR250_FD250
+
+#if !defined(MY_RFM69_MODEM_CONFIGURATION)
+#define MY_RFM69_MODEM_CONFIGURATION RFM69_FSK_BR55_5_FD50  //!< default setting, RFM69_FSK_BR55_5_FD50
 #endif
 
 /**
 * @brief Radio modes
 */
 typedef enum {
-	RFM69_RADIO_MODE_RX = 0,					//!< RX mode
-	RFM69_RADIO_MODE_TX = 1,					//!< TX mode
-	RFM69_RADIO_MODE_CAD = 2,					//!< CAD mode
+	RFM69_RADIO_MODE_RX = 0,						//!< RX mode
+	RFM69_RADIO_MODE_TX = 1,						//!< TX mode
+	RFM69_RADIO_MODE_CAD = 2,						//!< CAD mode
 	RFM69_RADIO_MODE_SLEEP = 3,					//!< SLEEP mode
 	RFM69_RADIO_MODE_STDBY = 4,					//!< STDBY mode
 	RFM69_RADIO_MODE_SYNTH = 5,					//!< SYNTH mode
@@ -260,19 +289,20 @@ typedef int8_t rfm69_powerlevel_t;
 * IMPORTANT: Do not change order (see datasheet for packet structure)
 */
 typedef struct {
-	uint8_t packetLen;								//!< Packet length
-	uint8_t recipient;								//!< Payload recipient
-	uint8_t version;								//!< Header version
-	uint8_t sender;									//!< Payload sender
-	rfm69_controlFlags_t controlFlags;				//!< Control flags, used for ACK
-	rfm69_sequenceNumber_t sequenceNumber;			//!< Packet sequence number, used for ACK
+	uint8_t packetLen;                      //!< packet length
+	uint8_t recipient;                      //!< payload recipient
+	uint8_t version;                        //!< header version (20180128tk: >=3.0.0 fused with controlFlags)
+	uint8_t sender;                         //!< payload sender
+	rfm69_controlFlags_t controlFlags;      //!< control flags, used for ACK
+	rfm69_sequenceNumber_t sequenceNumber;  //!< packet sequence number, used for ACK
 } __attribute__((packed)) rfm69_header_t;
+
 /**
 * @brief RFM69  ACK packet structure
 */
 typedef struct {
-	rfm69_sequenceNumber_t sequenceNumber;			//!< sequence number
-	rfm69_RSSI_t RSSI;								//!< RSSI
+	rfm69_sequenceNumber_t sequenceNumber;  //!< sequence number
+	rfm69_RSSI_t RSSI;                      //!< RSSI
 } __attribute__((packed)) rfm69_ack_t;
 
 #define RFM69_HEADER_LEN sizeof(rfm69_header_t)		//!< Size header inside  payload
@@ -280,6 +310,7 @@ typedef struct {
 
 /**
 * @brief Packet structure
+* IMPORTANT: Do not change order
 */
 typedef struct {
 	union {
@@ -296,34 +327,45 @@ typedef struct {
 	rfm69_RSSI_t RSSI;									//!< RSSI of current packet, RSSI = value - 137
 } __attribute__((packed)) rfm69_packet_t;
 
-
 /**
 * @brief RFM69 internal variables
 */
 typedef struct {
-	uint8_t address;							//!< Node address
-	rfm69_packet_t currentPacket;				//!< Buffer for current packet
-	rfm69_sequenceNumber_t txSequenceNumber;	//!< RFM69_txSequenceNumber
-	rfm69_powerlevel_t powerLevel;				//!< TX power level dBm
-	uint8_t ATCtargetRSSI;						//!< ATC: target RSSI
+	uint8_t address;                           //!< Node address
+	rfm69_packet_t currentPacket;              //!< Buffer for current packet
+	rfm69_sequenceNumber_t txSequenceNumber;   //!< RFM69_txSequenceNumber
+	rfm69_powerlevel_t powerLevel;             //!< TX power level dBm
+	uint8_t ATCtargetRSSI;                     //!< ATC: target RSSI
 	// 8 bit
-	rfm69_radio_mode_t radioMode : 3;			//!< current transceiver state
-	bool dataSent : 1;							//!< Data sent
-	bool dataReceived : 1;						//!< data received
-	bool ackReceived : 1;						//!< ack received
-	bool ATCenabled : 1;						//!< ATC enabled
-	bool listenModeEnabled : 1;					//!< Listen Mode enabled
+	rfm69_radio_mode_t radioMode : 3;          //!< current transceiver state
+	bool dataReceived : 1;                     //!< data received
+	bool ackReceived : 1;                      //!< ACK received
+	bool ATCenabled : 1;                       //!< ATC enabled
+	uint8_t reserved : 2;                      //!< Reserved
 } rfm69_internal_t;
 
-#if defined(MY_RFM69_ENABLE_LISTENMODE)
-uint8_t rxListenCoef;
-uint8_t rxListenResolution;
-uint8_t idleListenCoef;
-uint8_t idleListenResolution;
-uint32_t listenCycleDurationUs;
-#endif
-
 #define LOCAL static		//!< static
+
+/**
+* @brief RFM69_handler
+*/
+LOCAL void RFM69_handler(void);
+
+/**
+* @brief Clear flags and FIFO
+*/
+LOCAL void RFM69_clearFIFO(void);
+
+/**
+* @brief Check for channel activity
+* @return True if channel activity under RFM69_CSMA_LIMIT_DBM
+*/
+LOCAL bool RFM69_channelFree(void);
+
+/**
+* @brief RFM69_interruptHandling
+*/
+LOCAL void RFM69_interruptHandling(void);
 
 /**
 * @brief Initialise the driver transport hardware and software
@@ -346,7 +388,7 @@ LOCAL uint8_t RFM69_getAddress(void);
 
 /**
 * @brief Tests whether a new message is available
-* @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM69_recv()
+* @return True if a new, complete, error-free uncollected message is available to be retreived by @ref RFM69_receive()
 */
 LOCAL bool RFM69_available(void);
 
@@ -356,7 +398,7 @@ LOCAL bool RFM69_available(void);
 * @param maxBufSize Max buffer size
 * @return Number of bytes
 */
-LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize);
+LOCAL uint8_t RFM69_receive(uint8_t *buf, const uint8_t maxBufSize);
 
 /**
 * @brief RFM69_sendFrame
@@ -364,7 +406,7 @@ LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize);
 * @param increaseSequenceCounter
 * @return True if packet sent
 */
-LOCAL bool RFM69_sendFrame(rfm69_packet_t &packet, const bool increaseSequenceCounter = true);
+LOCAL bool RFM69_sendFrame(rfm69_packet_t *packet, const bool increaseSequenceCounter = true);
 
 /**
 * @brief RFM69_send
@@ -375,7 +417,7 @@ LOCAL bool RFM69_sendFrame(rfm69_packet_t &packet, const bool increaseSequenceCo
 * @param increaseSequenceCounter
 * @return True if frame sent
 */
-LOCAL bool RFM69_send(const uint8_t recipient, uint8_t* data, const uint8_t len,
+LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
                       const rfm69_controlFlags_t flags, const bool increaseSequenceCounter = true);
 
 /**
@@ -396,25 +438,30 @@ LOCAL bool RFM69_setTxPowerLevel(rfm69_powerlevel_t newPowerLevel);
 * @return power level
 */
 LOCAL rfm69_powerlevel_t RFM69_getTxPowerLevel(void);
+
 /**
 * @brief Reports the transmitter power output level in percents
 * @return power level
 */
 LOCAL uint8_t RFM69_getTxPowerPercent(void);
+
 /**
 * @brief Sets the radio into low-power sleep mode
 * @return true if sleep mode was successfully entered
 */
 LOCAL bool RFM69_sleep(void);
+
 /**
 * @brief Sets the radio to standby mode
 * @return true if standby mode was successfully entered
 */
 LOCAL bool RFM69_standBy(void);
+
 /**
 * @brief Power down radio (HW)
 */
 LOCAL void RFM69_powerDown(void);
+
 /**
 * @brief Power up radio (HW)
 */
@@ -438,7 +485,7 @@ LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t s
 * @param retryWaitTimeMS
 * @return True if packet successfully sent
 */
-LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void* buffer,
+LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
                                const uint8_t bufferSize,
                                const uint8_t retries = RFM69_RETRIES, const uint32_t retryWaitTimeMS = RFM69_RETRY_TIMEOUT_MS);
 
@@ -465,6 +512,7 @@ LOCAL int16_t RFM69_getSendingRSSI(void);
 * @return RSSI Signal strength of last received packet
 */
 LOCAL int16_t RFM69_getReceivingRSSI(void);
+
 /**
 * @brief RFM69_executeATC
 * @param currentRSSI
@@ -491,12 +539,11 @@ LOCAL bool RFM69_isModeReady(void);
 */
 LOCAL bool RFM69_sanityCheck(void);
 
-
 /**
 * @brief RFM69_encrypt Set encryption mode
 * @param key if key is null, encryption is disabled. Key has to be 16 bytes!
 */
-LOCAL void RFM69_encrypt(const char* key);
+LOCAL void RFM69_encrypt(const char *key);
 
 /**
 * @brief RFM69_setHighPowerRegs
@@ -509,7 +556,7 @@ LOCAL void RFM69_setHighPowerRegs(const bool onOff);
 * @param forceTrigger
 * @return RSSI (internal format)
 */
-LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger = false);
+LOCAL rfm69_RSSI_t RFM69_readRSSI(const bool forceTrigger = false);
 
 /**
 * @brief RFM69_ATCmode
@@ -518,96 +565,12 @@ LOCAL rfm69_RSSI_t RFM69_readRSSI(bool forceTrigger = false);
 */
 LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARGET_RSSI_DBM);
 
-#ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
 /**
-* @brief RFM69_readAllRegs Read and display RFM69 register contents
+* @brief RFM69_readAllRegs
+* Read and display all RFM69 register contents.
+* @note define RFM69_REGISTER_DETAIL for register content decoding.
 */
 LOCAL void RFM69_readAllRegs(void);
-#endif
-// ************************  LISTENMODE SECTION   ************************
-
-#if defined(MY_RFM69_ENABLE_LISTENMODE)
-
-/**
-* @brief RFM69_listenModeApplyHighSpeedSettings Set high speed settings
-*/
-LOCAL void RFM69_listenModeApplyHighSpeedSettings(void);
-
-/**
-* @brief RFM69_ListenModeStart Switch radio to listen Mode in prep for sleep until burst
-*/
-LOCAL void RFM69_ListenModeStart(void);
-
-/**
-* @brief RFM69_listenModeEnd Exit listen mode and reinit the radio
-* @return
-*/
-LOCAL bool RFM69_listenModeEnd(void);
-
-/**
-* @brief RFM69_listenModeReset Reset listen mode
-*/
-LOCAL void RFM69_listenModeReset(void);
-
-/**
-* @brief RFM69_reinitRadio Restore previous radio settigns for normal mode
-* @return
-*/
-LOCAL bool RFM69_reinitRadio(void);
-
-/**
-* @brief RFM69_listenModeSendBurst This repeatedly sends the message to the target node for
- *   the duration of an entire listen cycle. The amount of time remaining in the burst is
- *   transmitted to the receiver, and it is expected that the receiver
- *   wait for the burst to end before attempting a reply.
-* @param recipient
-* @param data
-* @param len
-*/
-LOCAL void RFM69_listenModeSendBurst(const uint8_t recipient, uint8_t* data, const uint8_t len);
-
-/**
-* @brief getUsForResolution
-* @param resolution
-* @return
-*/
-LOCAL uint32_t RFM69_getUsForResolution(uint8_t resolution);
-
-/**
-* @brief getCoefForResolution
-* @param resolution
-* @param duration
-* @return
-*/
-LOCAL uint32_t RFM69_getCoefForResolution(uint8_t resolution, uint32_t duration);
-
-/**
-* @brief RFM69_chooseResolutionAndCoef
-* @param resolutions
-* @param duration
-* @param resolOut
-* @param coefOut
-* @return
-*/
-LOCAL bool RFM69_chooseResolutionAndCoef(uint8_t *resolutions, uint32_t duration, uint8_t& resolOut,
-        uint8_t& coefOut);
-
-/**
-* @brief RFM69_listenModeSetDurations
-* @param rxDuration
-* @param idleDuration
-* @return
-*/
-LOCAL bool RFM69_listenModeSetDurations(uint32_t& rxDuration, uint32_t& idleDuration);
-
-/**
-* @brief RFM69_listenModeGetDurations
-* @param rxDuration
-* @param idleDuration
-*/
-LOCAL void RFM69_listenModeGetDurations(uint32_t &rxDuration, uint32_t &idleDuration);
-
-#endif
 
 #endif
 

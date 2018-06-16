@@ -17,7 +17,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin
 DESC="MySensors Gateway"
 NAME=mysgw
 DAEMON=%gateway_dir%/$NAME
-DAEMON_ARGS="-b"
+DAEMON_ARGS="--daemon -q"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 

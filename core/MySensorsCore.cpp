@@ -32,6 +32,7 @@
 #endif
 
 // message buffers
+
 MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 
@@ -88,6 +89,14 @@ void _infiniteLoop(void)
 
 void _begin(void)
 {
+#if defined(MY_CORE_ONLY)
+	// initialize HW and run setup if present
+	(void)hwInit();
+	if (setup) {
+		setup();
+	}
+	return;
+#endif
 	// reset wdt
 	hwWatchdogReset();
 
@@ -168,7 +177,7 @@ void _begin(void)
 		setup();
 	}
 #if defined(MY_SENSOR_NETWORK)
-	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%" PRIu8 "\n"), isTransportReady());
+	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%" PRIu8 "\n"), isTransportReady() && transportSanityCheck());
 #else
 	// no sensor network defined, call presentation & registration
 	_callbackTransportReady();
@@ -585,7 +594,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 #endif // MY_OTA_FIRMWARE_FEATURE
 	if (smartSleep) {
 		// sleeping time left?
-		if (sleepingTimeMS < ((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS)) {
+		if (sleepingTimeMS > 0 && sleepingTimeMS < ((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS)) {
 			wait(sleepingMS);
 			CORE_DEBUG(PSTR("!MCO:SLP:NTL\n"));	// sleeping not possible, no time left
 			return MY_SLEEP_NOT_POSSIBLE;

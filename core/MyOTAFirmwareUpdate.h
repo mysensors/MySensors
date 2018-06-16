@@ -58,17 +58,36 @@
 #define MyOTAFirmwareUpdate_h
 
 #include "MySensorsCore.h"
+#ifdef MCUBOOT_PRESENT
+#include "generated_dts_board.h"
+#define FIRMWARE_PROTOCOL_31
+#endif
 
 #define LOCAL static //!< static
 
+#if MAX_PAYLOAD >= 22
 #define FIRMWARE_BLOCK_SIZE		(16u)				//!< Size of each firmware block
+#else
+#define FIRMWARE_BLOCK_SIZE		(8u)				//!< Size of each firmware block
+#ifndef FIRMWARE_PROTOCOL_31
+#define FIRMWARE_PROTOCOL_31
+#endif
+#endif
 #define FIRMWARE_MAX_REQUESTS	(5u)				//!< Number of times a firmware block should be requested before giving up
 #define MY_OTA_RETRY			(5u)				//!< Number of times to request a fw block before giving up
 #define MY_OTA_RETRY_DELAY		(500u)				//!< Number of milliseconds before re-requesting a FW block
+#ifndef MCUBOOT_PRESENT
 #define FIRMWARE_START_OFFSET	(10u)				//!< Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
+#else
+#define	FIRMWARE_START_OFFSET	(FLASH_AREA_IMAGE_1_OFFSET_0)	//!< Use offset from generated_dts_board.h (mcuboot)
+#endif
 
 #define MY_OTA_BOOTLOADER_MAJOR_VERSION (3u)		//!< Bootloader version major
+#ifdef FIRMWARE_PROTOCOL_31
+#define MY_OTA_BOOTLOADER_MINOR_VERSION (1u)		//!< Bootloader version minor
+#else
 #define MY_OTA_BOOTLOADER_MINOR_VERSION (0u)		//!< Bootloader version minor
+#endif
 #define MY_OTA_BOOTLOADER_VERSION (MY_OTA_BOOTLOADER_MINOR_VERSION * 256 + MY_OTA_BOOTLOADER_MAJOR_VERSION)	//!< Bootloader version
 
 #if defined(MY_DEBUG_VERBOSE_OTA_UPDATE)
@@ -77,6 +96,18 @@
 #else
 #define OTA_DEBUG(x,...)	//!< debug NULL
 #endif
+
+#if defined(DOXYGEN) && !defined(FIRMWARE_PROTOCOL_31)
+/**
+ * @brief Enabled FOTA 3.1 protocol extensions
+ *
+ * Supports smaller FIRMWARE_BLOCK_SIZE, RLE and NVM for nRF5 with mcuboot. The
+ * extension is enabled per default when mcuboot is present or full FIRMWARE_BLOCK_SIZE
+ * exeeds MAX_PAYLOAD.
+ */
+#define FIRMWARE_PROTOCOL_31
+#endif
+
 /**
 * @brief FW config structure, stored in eeprom
 */
@@ -96,6 +127,12 @@ typedef struct {
 	uint16_t blocks;							//!< Number of blocks
 	uint16_t crc;								//!< CRC of block data
 	uint16_t BLVersion;							//!< Bootloader version
+#ifdef FIRMWARE_PROTOCOL_31
+	uint8_t  blockSize;							//!< Blocksize, when protocol version >= 3.1 is reported. Otherwhise the blocksize is 16
+	uint8_t  img_commited;							//!< mcuboot image_ok attribute commited firmware=0x01(mcuboot)|0x02(DualOptiboot), when protocol version >= 3.1 is reported
+	uint16_t img_revision;							//!< mcuboot revision attribute, when protocol version >= 3.1 is reported
+	uint32_t img_build_num;							//!< mcuboot build_num attribute, when protocol version >= 3.1 is reported
+#endif
 } __attribute__((packed)) requestFirmwareConfig_t;
 
 /**
@@ -117,6 +154,16 @@ typedef struct {
 	uint8_t data[FIRMWARE_BLOCK_SIZE];			//!< Block data
 } __attribute__((packed)) replyFirmwareBlock_t;
 
+/**
+* @brief  FW block reply structure (RLE)
+*/
+typedef struct {
+	uint16_t type;								//!< Type of config
+	uint16_t version;							//!< Version of config
+	uint16_t block;								//!< Block index
+	uint16_t number_of_blocks;						//!< Number of blocks to fill with data
+	uint8_t data;								//!< Block data
+} __attribute__((packed)) replyFirmwareBlockRLE_t;
 
 /**
  * @brief Read firmware settings from EEPROM

@@ -27,9 +27,9 @@
  *
  * LED purposes:
  * - To use the feature, uncomment WITH_LEDS_BLINKING in MyConfig.h
- * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
+ * - RX (green) - blink fast on radio message received. In inclusion mode will blink fast only on presentation received
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
- * - ERR (red) - fast blink on error during transmission error or recieve crc error
+ * - ERR (red) - fast blink on error during transmission error or receive crc error
  *
  * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
  * nRF24L01+  ESP8266
@@ -96,7 +96,7 @@
 #define MY_RF24_CS_PIN 6
 #endif
 
-// Enable these if your MQTT broker requires usenrame/password
+// Enable these if your MQTT broker requires username/password
 //#define MY_MQTT_USER "username"
 //#define MY_MQTT_PASSWORD "password"
 

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -24,18 +24,17 @@
 // For more options run ./configure --help
 
 // Config file
-//#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+//#define MY_LINUX_CONFIG_FILE "/etc/mysensors.conf"
 
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 10
 
 // Serial config
 // Enable this if you are using an Arduino connected to the USB
-//#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+//#define MY_LINUX_SERIAL_PORT "/dev/ttyUSB0"
 // Enable this if you need to connect to a controller running on the same device
-//#define MY_LINUX_IS_SERIAL_PTY
-// Choose a symlink name for the PTY device
-//#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+// You also need to define MY_LINUX_SERIAL_PORT above with the symlink name for the PTY device
+//#define MY_LINUX_SERIAL_IS_PTY
 // Grant access to the specified system group for the serial device
 //#define MY_LINUX_SERIAL_GROUPNAME "tty"
 
@@ -46,7 +45,7 @@
 //#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
 //#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
 
-// Enable these if your MQTT broker requires usenrame/password
+// Enable these if your MQTT broker requires username/password
 //#define MY_MQTT_USER "username"
 //#define MY_MQTT_PASSWORD "password"
 

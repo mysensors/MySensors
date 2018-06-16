@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -17,8 +17,6 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyTransportHAL.h"
-
 #if defined(MY_RFM69_NEW_DRIVER)
 
 #include "drivers/RFM69/new/RFM69_new.h"
@@ -26,23 +24,26 @@
 bool transportInit(void)
 {
 	const bool result = RFM69_initialise(MY_RFM69_FREQUENCY);
-#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
-	// only enable ATC mode nodes
+#if defined(MY_GATEWAY_FEATURE) || defined(MY_RFM69_ATC_MODE_DISABLED)
+	// ATC mode function not used
+	(void)RFM69_ATCmode;
+#else
 	RFM69_ATCmode(true, MY_RFM69_ATC_TARGET_RSSI_DBM);
 #endif
 
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
-	uint8_t _psk[16];
-#ifdef MY_SIGNING_SIMPLE_PASSWD
-	memset(_psk, 0, 16);
-	memcpy(_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+	uint8_t RFM69_psk[16];
+#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
+	(void)memset(RFM69_psk, 0, 16);
+	(void)memcpy(RFM69_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
-	hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+	hwReadConfigBlock((void *)RFM69_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
-	RFM69_encrypt((const char*)_psk);
-	(void)memset(_psk, 0, 16); // Make sure it is purged from memory when set
+	RFM69_encrypt((const char *)RFM69_psk);
+	(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
+#else
+	(void)RFM69_encrypt;
 #endif
-
 	return result;
 }
 
@@ -56,7 +57,7 @@ uint8_t transportGetAddress(void)
 	return RFM69_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void* data, uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool noACK)
 {
 	if (noACK) {
 		(void)RFM69_sendWithRetry(to, data, len, 0, 0);
@@ -67,6 +68,7 @@ bool transportSend(const uint8_t to, const void* data, uint8_t len, const bool n
 
 bool transportAvailable(void)
 {
+	RFM69_handler();
 	return RFM69_available();
 }
 
@@ -75,9 +77,9 @@ bool transportSanityCheck(void)
 	return RFM69_sanityCheck();
 }
 
-uint8_t transportReceive(void* data)
+uint8_t transportReceive(void *data)
 {
-	return RFM69_recv((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	return RFM69_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
 }
 
 void transportSleep(void)
@@ -106,7 +108,7 @@ bool transportSetTxPowerLevel(const uint8_t powerLevel)
 	return RFM69_setTxPowerLevel(powerLevel);
 }
 
-void transportSetTargetRSSI(int16_t targetSignalStrength)
+void transportSetTargetRSSI(const int16_t targetSignalStrength)
 {
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
 	RFM69_ATCmode(true, targetSignalStrength);
@@ -144,6 +146,7 @@ int16_t transportGetTxPowerLevel(void)
 {
 	return RFM69_getTxPowerLevel();
 }
+
 bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
 	return RFM69_setTxPowerPercent(powerPercent);
@@ -167,15 +170,15 @@ bool transportInit(void)
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
 #ifdef MY_RFM69_ENABLE_ENCRYPTION
-		uint8_t _psk[16];
-#ifdef MY_SIGNING_SIMPLE_PASSWD
-		memset(_psk, 0, 16);
-		memcpy(_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+		uint8_t RFM69_psk[16];
+#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
+		(void)memset(RFM69_psk, 0, 16);
+		(void)memcpy(RFM69_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
-		hwReadConfigBlock((void*)_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+		hwReadConfigBlock((void *)RFM69_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
-		_radio.encrypt((const char*)_psk);
-		(void)memset(_psk, 0, 16); // Make sure it is purged from memory when set
+		_radio.encrypt((const char *)RFM69_psk);
+		(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
 #endif
 		return true;
 	}
@@ -193,7 +196,7 @@ uint8_t transportGetAddress(void)
 	return _address;
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
 	if (noACK) {
 		(void)_radio.sendWithRetry(to, data, len, 0, 0);
@@ -212,11 +215,11 @@ bool transportSanityCheck(void)
 	return _radio.sanityCheck();
 }
 
-uint8_t transportReceive(void* data)
+uint8_t transportReceive(void *data)
 {
 	// save payload length
 	const uint8_t dataLen = _radio.DATALEN < MAX_MESSAGE_LENGTH? _radio.DATALEN : MAX_MESSAGE_LENGTH;
-	(void)memcpy((void*)data, (void*)_radio.DATA, dataLen);
+	(void)memcpy((void *)data, (void *)_radio.DATA, dataLen);
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.ACKRequested()) {
 		_radio.sendACK();
@@ -233,10 +236,12 @@ void transportStandBy(void)
 {
 	_radio.standBy();
 }
+
 void transportPowerDown(void)
 {
 	_radio.powerDown();
 }
+
 void transportPowerUp(void)
 {
 	_radio.powerUp();
@@ -270,6 +275,13 @@ int16_t transportGetTxPowerPercent(void)
 int16_t transportGetTxPowerLevel(void)
 {
 	return INVALID_LEVEL;
+}
+
+bool transportSetTxPowerLevel(const uint8_t powerLevel)
+{
+	// not implemented
+	(void)powerLevel;
+	return false;
 }
 
 #endif

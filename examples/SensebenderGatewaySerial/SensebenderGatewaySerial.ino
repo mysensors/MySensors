@@ -20,7 +20,7 @@
 *
 * DESCRIPTION
 * The ArduinoGateway prints data received from sensors on the serial link.
-* The gateway accepts input on seral which will be sent out on radio network.
+* The gateway accepts input on serial which will be sent out on radio network.
 *
 * This GW code is designed for Sensebender GateWay / (Arduino Zero variant)
 *
@@ -29,9 +29,9 @@
 *
 * LEDs on board (default assignments):
 * - Orange: USB RX/TX - Blink when receiving / transmitting on USB CDC device
-* - Yellow: RX  - Blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
+* - Yellow: RX  - Blink fast on radio message received. In inclusion mode will blink fast only on presentation received
 * - Green : TX  - Blink fast on radio message transmitted. In inclusion mode will blink slowly
-* - Red   : ERR - Fast blink on error during transmission error or recieve crc error
+* - Red   : ERR - Fast blink on error during transmission error or receive crc error
 * - Blue  : free - (use with LED_BLUE macro)
 *
 */
@@ -53,7 +53,7 @@
 // Enable serial gateway
 #define MY_GATEWAY_SERIAL
 
-// Define a lower baud rate for Arduino's running on 8 MHz (Arduino Pro Mini 3.3V & SenseBender)
+// Define a lower baud rate for Arduinos running on 8 MHz (Arduino Pro Mini 3.3V & Sensebender)
 #if F_CPU == 8000000L
 #define MY_BAUD_RATE 38400
 #endif
@@ -124,8 +124,8 @@ void preHwInit()
 	for (int i=0; i< num_of_leds; i++) {
 		pinMode(leds[i], OUTPUT);
 	}
-	uint8_t led_state = 0;
 	if (digitalRead(MY_SWC1)) {
+		uint8_t led_state = 0;
 		while (!Serial) {
 			digitalWrite(LED_BLUE, led_state);
 			led_state ^= 0x01;
@@ -135,7 +135,7 @@ void preHwInit()
 	digitalWrite(LED_BLUE, LOW);
 	if (Serial) {
 		Serial.println("Sensebender GateWay test routine");
-		Serial.print("Mysensors core version : ");
+		Serial.print("MySensors core version : ");
 		Serial.println(MYSENSORS_LIBRARY_VERSION);
 		Serial.print("GateWay sketch version : ");
 		Serial.println(SKETCH_VERSION);
