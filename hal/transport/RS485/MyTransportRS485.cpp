@@ -155,6 +155,12 @@ bool _serialProcess()
 				_recPhase = 1;
 				_recPos = 0;
 
+				//Avoid _data[] overflow
+				if (_recLen >= MY_RS485_MAX_MESSAGE_LENGTH) {
+					_serialReset();
+					break;
+				}
+
 				//Check if we should process this message
 				//We reject the message if we are the sender
 				//We reject if we are not the receiver and message is not a broadcast
