@@ -55,8 +55,8 @@ bool hwInit(void);
 #define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void*)(__buf), (void*)(__pos), (__length))
 #define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((void*)(__buf), (void*)(__pos), (__length))
 
-inline void hwRandomNumberInit();
-void hwInternalSleep(unsigned long ms);
+inline void hwRandomNumberInit(void);
+void hwInternalSleep(uint32_t ms);
 
 #ifndef DOXYGEN
 #define MY_CRITICAL_SECTION     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)

@@ -234,6 +234,10 @@
 #define GENERATE_SOMETHING
 #endif
 
+#if defined(MY_LOCK_MCU)
+#undefine MY_LOCK_MCU  // The Sketch after SecurityPersonaliter should lock the MCU
+#endif
+
 /********************************** Preprocessor sanitychecks *************************************/
 #if defined(GENERATE_SOFT_SERIAL) && !defined(USE_SOFT_SIGNING)
 #error Cannot generate soft serial using ATSHA204A, use USE_SOFT_SINGING for this
@@ -439,9 +443,7 @@ void setup()
 	hwRandomNumberInit();
 #endif
 
-	Serial.begin(MY_BAUD_RATE);
 	while(!Serial); // For USB enabled devices, wait for USB enumeration before continuing
-	hwInit();
 
 	print_greeting();
 

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -27,8 +27,9 @@
 #include <unistd.h>
 #include "SoftEeprom.h"
 #include "log.h"
+#include "config.h"
 
-static SoftEeprom eeprom = SoftEeprom(MY_LINUX_CONFIG_FILE, 1024);	// ATMega328 has 1024 bytes
+static SoftEeprom eeprom;
 static FILE *randomFp = NULL;
 
 bool hwInit(void)
@@ -42,6 +43,10 @@ bool hwInit(void)
 	}
 #endif
 #endif
+
+	if (eeprom.init(conf.eeprom_file, conf.eeprom_size) != 0) {
+		exit(1);
+	}
 
 	return true;
 }
@@ -165,8 +170,37 @@ void hwPinMode(uint8_t pin, uint8_t mode)
 
 void hwDebugPrint(const char *fmt, ...)
 {
+#ifndef MY_DISABLED_SERIAL
+#ifdef MY_DEBUGDEVICE
+	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
+#ifdef MY_GATEWAY_SERIAL
+	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
+	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
+	           C_INTERNAL, I_LOG_MESSAGE, hwMillis());
+	MY_DEBUGDEVICE.print(fmtBuffer);
+#else
+	// prepend timestamp
+	MY_DEBUGDEVICE.print(hwMillis());
+	MY_DEBUGDEVICE.print(" ");
+#endif
+	va_list args;
+	va_start (args, fmt );
+	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
+#ifdef MY_GATEWAY_SERIAL
+	// Truncate message if this is gateway node
+	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
+	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
+#endif
+	va_end (args);
+	MY_DEBUGDEVICE.print(fmtBuffer);
+	MY_DEBUGDEVICE.flush();
+#else
 	va_list args;
 	va_start(args, fmt);
 	vlogDebug(fmt, args);
 	va_end(args);
+#endif
+#else
+	(void)fmt;
+#endif
 }

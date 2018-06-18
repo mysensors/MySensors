@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -243,6 +243,8 @@
 /**
  * @def MY_RS485_HWSERIAL
  * @brief Define this if RS485 is connected to a hardware serial port.
+ *
+ * Example: @code #define MY_RS485_HWSERIAL Serial1 @endcode
  */
 //#define MY_RS485_HWSERIAL (Serial1)
 /** @}*/ // End of RS485SettingGrpPub group
@@ -572,7 +574,7 @@
 
 /**
  * @def MY_RADIO_RFM69
- * @brief Define this to use RFM69 based radios for sensor network communication.
+ * @brief Define this to use %RFM69 based radios for sensor network communication.
  */
 //#define MY_RADIO_RFM69
 
@@ -600,6 +602,7 @@
  * @def MY_RFM69_FREQUENCY
  * @brief The frequency to use.
  *
+ * - RFM69_315MHZ
  * - RFM69_433MHZ
  * - RFM69_868MHZ
  * - RFM69_915MHZ
@@ -641,7 +644,7 @@
 
 /**
  * @def MY_RFM69_ATC_TARGET_RSSI_DBM
- * @brief Target RSSI level (in dBm) for RFM69 ATC mode.
+ * @brief Target RSSI level (in dBm) for %RFM69 ATC mode.
  */
 #ifndef MY_RFM69_ATC_TARGET_RSSI_DBM
 #define MY_RFM69_ATC_TARGET_RSSI_DBM (-80)
@@ -649,7 +652,7 @@
 
 /**
  * @def MY_RFM69_ATC_MODE_DISABLED
- * @brief Define to disable ATC mode of RFM69 driver.
+ * @brief Define to disable ATC mode of %RFM69 driver.
  */
 //#define MY_RFM69_ATC_MODE_DISABLED
 
@@ -668,7 +671,7 @@
 
 /**
  * @def MY_RFM69_NETWORKID
- * @brief RFM69 Network ID. Use the same for all nodes that will talk to each other.
+ * @brief %RFM69 Network ID. Use the same for all nodes that will talk to each other.
  */
 #ifndef MY_RFM69_NETWORKID
 #define MY_RFM69_NETWORKID (100)
@@ -682,6 +685,7 @@
 
 #ifdef MY_RF69_RESET
 // legacy, older board files
+// not enabled now: #warning MY_RF69_RESET is depreciated, please use MY_RFM69_RST_PIN instead.
 #define MY_RFM69_RST_PIN MY_RF69_RESET
 #endif
 
@@ -693,11 +697,12 @@
 
 /**
  * @def MY_RFM69_IRQ_PIN
- * @brief Define this to use the %RFM69 IRQ pin (optional).
+ * @brief Define this to override the default %RFM69 IRQ pin assignment.
  */
 #ifndef MY_RFM69_IRQ_PIN
 #ifdef MY_RF69_IRQ_PIN
 // legacy, older board files
+// not enabled now: #warning MY_RF69_IRQ_PIN is depreciated, please use MY_RFM69_IRQ_PIN instead.
 #define MY_RFM69_IRQ_PIN MY_RF69_IRQ_PIN
 #else
 #define MY_RFM69_IRQ_PIN DEFAULT_RFM69_IRQ_PIN
@@ -711,19 +716,21 @@
 #ifndef MY_RFM69_IRQ_NUM
 #ifdef MY_RF69_IRQ_NUM
 // legacy, older board files
+// not enabled now: #warning MY_RF69_IRQ_NUM is depreciated, please use MY_RFM69_IRQ_NUM instead.
 #define MY_RFM69_IRQ_NUM MY_RF69_IRQ_NUM
 #else
-#define MY_RFM69_IRQ_NUM DEFAULT_RFM69_IRQ_NUM
+#define MY_RFM69_IRQ_NUM digitalPinToInterrupt(MY_RFM69_IRQ_PIN)
 #endif
 #endif
 
 /**
  * @def MY_RFM69_CS_PIN
- * @brief RFM69 SPI chip select pin.
+ * @brief %RFM69 SPI chip select pin.
  */
 #ifndef MY_RFM69_CS_PIN
 #ifdef MY_RF69_SPI_CS
 // legacy, older board files
+// not enabled now: #warning MY_RF69_SPI_CS is depreciated, please use MY_RFM69_CS_PIN instead.
 #define MY_RFM69_CS_PIN MY_RF69_SPI_CS
 #else
 #define MY_RFM69_CS_PIN DEFAULT_RFM69_CS_PIN
@@ -764,29 +771,29 @@
 #define  MY_RFM69_DEFAULT_LISTEN_IDLE_US (1*1000000ul)
 #endif
 
-#if !defined(MY_RFM69_BITRATE_MSB) && !defined(MY_RFM69_BITRATE_LSB)
 /**
- * @def MY_RFM69_BITRATE_MSB
- * @brief %RFM69 bit rate (most significant bits)
+ * @def MY_RFM69_MODEM_CONFIGURATION
+ * @brief %RFM69 modem configuration, default is %RFM69_FSK_BR55_5_FD50
  *
- * Bitrate between the transmitter and the receiver must be better than 6.5.
- * Refer to RFM69registers_old.h (L.153) or RFM69registers_new.h (L.154) for settings or
- * http://www.semtech.com/apps/filedown/down.php?file=sx1231.pdf
- * @note RFM69_FOSC(Hz)/MSB_LSBVALUE = Bitrate in kbits
+ * | Configuration           | Modulation (xxx) | Bit rate | FD     | RXBW     | Additional settings
+ * |-------------------------|------------------|----------|--------|----------|---------------------------
+ * | RFM69_xxx_BR2_FD5       | FSK/GFSK/OOK     | 2000     | 5000   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR2_4_FD4_8   | FSK/GFSK/OOK     | 2400     | 4800   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR4_8_FD9_6   | FSK/GFSK/OOK     | 4800     | 9600   | 111_24_4 | Whitening
+ * | RFM69_xxx_BR9_6_FD19_2  | FSK/GFSK/OOK     | 9600     | 19200  | 111_24_4 | Whitening
+ * | RFM69_xxx_BR19_2_FD38_4 | FSK/GFSK/OOK     | 19200    | 38400  | 111_24_3 | Whitening
+ * | RFM69_xxx_BR38_4_FD76_8 | FSK/GFSK/OOK     | 38400    | 76800  | 111_24_2 | Whitening
+ * | RFM69_xxx_BR55_5_FD50   | FSK/GFSK/OOK     | 55555    | 50000  | 111_16_2 | Whitening
+ * | RFM69_xxx_BR57_6_FD120  | FSK/GFSK/OOK     | 57600    | 120000 | 111_16_1 | Whitening
+ * | RFM69_xxx_BR125_FD125   | FSK/GFSK/OOK     | 125000   | 125000 | 010_16_2 | Whitening
+ * | RFM69_xxx_BR250_FD250   | FSK/GFSK/OOK     | 250000   | 250000 | 111_16_0 | Whitening
+ *
+ * https://www.semtech.com/uploads/documents/sx1231.pdf
  *
  */
-#define MY_RFM69_BITRATE_MSB (RFM69_BITRATEMSB_55555)
-/**
- * @def MY_RFM69_BITRATE_LSB
- * @brief %RFM69 bit rate (least significant bits)
- *
- * Bitrate between the transmitter and the receiver must be better than 6.5.
- * Refer to RFM69registers_old.h (L.153) or RFM69registers_new.h (L.154) for settings or
- * http://www.semtech.com/apps/filedown/down.php?file=sx1231.pdf
- * @note RFM69_FOSC(Hz)/MSB_LSBVALUE = Bitrate in kbits
- */
-#define MY_RFM69_BITRATE_LSB (RFM69_BITRATELSB_55555)
-#endif
+//#define MY_RFM69_MODEM_CONFIGURATION (RFM69_FSK_BR55_5_FD50)
+
+
 /** @}*/ // End of RFM69SettingGrpPub group
 
 /**
@@ -810,6 +817,18 @@
  * @brief Define this for verbose debug prints related to the RFM95 driver.
  */
 //#define MY_DEBUG_VERBOSE_RFM95
+
+/**
+ * @def MY_RFM95_ENABLE_ENCRYPTION
+ * @brief Define this to enable software based %AES encryption.
+ *
+ * All nodes and gateway must have this enabled, and all must be personalized with the same %AES
+ * key.
+ * @see @ref personalization
+ *
+ * @warning This driver always sets the initialization vector to 0 so encryption is weak.
+ */
+//#define MY_RFM95_ENABLE_ENCRYPTION
 
 /**
  * @def MY_RFM95_FREQUENCY
@@ -863,7 +882,7 @@
 
 /**
  * @def MY_RFM95_IRQ_PIN
- * @brief Define this to use the RFM95 IRQ pin (optional).
+ * @brief Define this to use the RFM95 IRQ pin.
  */
 #ifndef MY_RFM95_IRQ_PIN
 #define MY_RFM95_IRQ_PIN DEFAULT_RFM95_IRQ_PIN
@@ -874,7 +893,7 @@
  * @brief RFM95 IRQ number.
  */
 #ifndef MY_RFM95_IRQ_NUM
-#define MY_RFM95_IRQ_NUM DEFAULT_RFM95_IRQ_NUM
+#define MY_RFM95_IRQ_NUM digitalPinToInterrupt(MY_RFM95_IRQ_PIN)
 #endif
 
 /**
@@ -914,7 +933,7 @@
  * @brief Target RSSI level (in dBm) for RFM95 ATC mode
  */
 #ifndef MY_RFM95_ATC_TARGET_RSSI
-#define MY_RFM95_ATC_TARGET_RSSI (-60)
+#define MY_RFM95_ATC_TARGET_RSSI (-70)
 #endif
 
 /**
@@ -1338,14 +1357,26 @@
  * @brief Define this for Ethernet GW based on the ENC28J60 module.
  * @def MY_GATEWAY_ESP8266
  * @brief Define this for Ethernet GW based on the ESP8266.
+ * @def MY_GATEWAY_ESP32
+ * @brief Define this for Ethernet GW based on the ESP32.
  * @def MY_GATEWAY_LINUX
  * @brief Define this for Ethernet GW based on Linux.
+ * @def MY_GATEWAY_TINYGSM
+ * @brief Define this for Ethernet GW based on GSM modems supported by TinyGSM library.
+ * @def MY_GATEWAY_MQTT_CLIENT
+ * @brief Define this for MQTT client GW.
+ * @def MY_GATEWAY_SERIAL
+ * @brief Define this for Serial GW.
  */
 // The gateway options available
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
+//#define MY_GATEWAY_ESP32
 //#define MY_GATEWAY_LINUX
+//#define MY_GATEWAY_TINYGSM
+//#define MY_GATEWAY_MQTT_CLIENT
+//#define MY_GATEWAY_SERIAL
 
 
 /**
@@ -1353,6 +1384,30 @@
 * @brief Define this for verbose debug prints related to the gateway transport.
 */
 //#define MY_DEBUG_VERBOSE_GATEWAY
+
+/**
+* @def MY_WIFI_SSID
+* @brief SSID of your WiFi network
+*/
+//#define MY_WIFI_SSID "MySSID"
+
+/**
+* @def MY_WIFI_BSSID
+* @brief BSSID of your WiFi network
+*/
+//#define MY_WIFI_BSSID "MyBSSID"
+
+/**
+* @def MY_WIFI_PASSWORD
+* @brief Password of your WiFi network
+*/
+//#define MY_WIFI_PASSWORD "MyVerySecretPassword"
+
+/**
+* @def MY_HOSTNAME
+* @brief Hostname of your device
+*/
+//#define MY_HOSTNAME "MyHostname"
 
 /**
  * @def MY_PORT
@@ -1373,10 +1428,75 @@
 //#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 
 /**
+ * @def MY_MQTT_PASSWORD
+ * @brief Used for authenticated MQTT connections.
+ *
+ * Set if your MQTT broker requires username/password.
+ * Example: @code #define MY_MQTT_PASSWORD "secretpassword" @endcode
+ * @see MY_MQTT_USER
+ */
+//#define MY_MQTT_PASSWORD "secretpassword"
+
+/**
+ * @def MY_MQTT_USER
+ * @brief Used for authenticated MQTT connections.
+ *
+ * Set if your MQTT broker requires username/password.
+ * Example: @code #define MY_MQTT_USER "username" @endcode
+ * @see MY_MQTT_PASSWORD
+ */
+//#define MY_MQTT_USER "username"
+
+/**
+ * @def MY_MQTT_CLIENT_ID
+ * @brief Set client ID for MQTT connections
+ *
+ * This define is mandatory for all MQTT client gateways.
+ * Example: @code #define MY_MQTT_CLIENT_ID "mysensors-1" @endcode
+ */
+//#define MY_MQTT_CLIENT_ID "mysensors-1"
+
+/**
+ * @def MY_MQTT_PUBLISH_TOPIC_PREFIX
+ * @brief Set prefix for MQTT topic to publish to.
+ *
+ * This define is mandatory for all MQTT client gateways.
+ * Example: @code #define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out" @endcode
+ */
+//#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
+
+/**
+ * @def MY_MQTT_SUBSCRIBE_TOPIC_PREFIX
+ * @brief Set prefix for MQTT topic to subscribe to.
+ *
+ * This define is mandatory for all MQTT client gateways.
+ * Example: @code #define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in" @endcode
+ */
+//#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
+
+/**
  * @def MY_IP_ADDRESS
- * @brief Static ip address of gateway (if this is not defined, DHCP will be used).
+ * @brief Static ip address of gateway. If not defined, DHCP will be used.
+ *
+ * Example: @code #define MY_IP_ADDRESS 192,168,178,66 @endcode
  */
 //#define MY_IP_ADDRESS 192,168,178,66
+
+/**
+ * @def MY_IP_GATEWAY_ADDRESS
+ * @brief IP address of your broadband router/gateway, if not using DHCP.
+ *
+ * Example: @code #define MY_IP_GATEWAY_ADDRESS 192,168,1,1 @endcode
+ */
+//#define MY_IP_GATEWAY_ADDRESS 192,168,1,1
+
+/**
+ * @def MY_IP_SUBNET_ADDRESS
+ * @brief Subnet address of your local network, if not using DHCP.
+ *
+ * Example: @code #define MY_IP_SUBNET_ADDRESS 255,255,255,0 @endcode
+ */
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 /**
  * @def MY_USE_UDP
@@ -1407,9 +1527,25 @@
  * @brief If this is defined, gateway will act as a client trying to contact controller on
  *        @ref MY_PORT using this IP address.
  *
+ * Example: @code #define MY_CONTROLLER_IP_ADDRESS 192,168,178,254 @endcode
+ *
  * If left un-defined, gateway acts as server allowing incoming connections.
+ * @see MY_CONTROLLER_URL_ADDRESS
  */
 //#define MY_CONTROLLER_IP_ADDRESS 192,168,178,254
+
+/**
+ * @def MY_CONTROLLER_URL_ADDRESS
+ * @brief If this is defined, gateway will act as a client (ethernet or MQTT) trying to
+ *        contact controller on the given URL.
+ *
+ * If left un-defined, gateway acts as server allowing incoming connections.
+ * Example: @code #define MY_CONTROLLER_URL_ADDRESS "test.mosquitto.org" @endcode
+ * @see MY_CONTROLLER_IP_ADDRESS
+ * @see MY_GATEWAY_MQTT_CLIENT
+ */
+//#define MY_CONTROLLER_URL_ADDRESS "test.mosquitto.org"
+
 /** @}*/ // End of GatewaySettingGrpPub group
 
 /**
@@ -1476,12 +1612,46 @@
  * @ingroup MyConfigGrp
  * @brief These options control security related configurations.
  *
- * Note that some encryption configurations are on a per-radio basis as these are specific to each
- * radio.
+ * Overview over all security related settings and how/where to apply them:
+ * | Setting                  | Description | Arduino | Raspberry PI @c configure argument
+ * |--------------------------|-------------|---------|-------------
+ * | @ref MY_SECURITY_SIMPLE_PASSWD | Enables security (signing and encryption) without the need for @ref personalization | "#define" in the top of your sketch | Not supported (use the other two "simple" options)
+ * | @ref MY_SIGNING_SIMPLE_PASSWD | Enables signing without the need for @ref personalization | "#define" in the top of your sketch | @verbatim --my-signing=password --my-security-password=<PASSWORD> @endverbatim
+ * | @ref MY_ENCRYPTION_SIMPLE_PASSWD | Enables encryption without the need for @ref personalization | "#define" in the top of your sketch | @verbatim --my-security-password=<PASSWORD> @endverbatim and encryption enabled on the chosen transport
+ * | @ref MY_DEBUG_VERBOSE_SIGNING | Enables verbose signing debugging | "#define" in the top of your sketch | @verbatim --my-signing-debug @endverbatim
+ * | @ref MY_SIGNING_ATSHA204 | Enables support to sign messages backed by ATSHA204A hardware | "#define" in the top of your sketch | Not supported
+ * | @ref MY_SIGNING_SOFT | Enables support to sign messages backed by software | "#define" in the top of your sketch | @verbatim --my-signing=software @endverbatim
+ * | @ref MY_SIGNING_REQUEST_SIGNATURES | Enables node/gw to require signed messages | "#define" in the top of your sketch | @verbatim --my-signing-request-signatures @endverbatim
+ * | @ref MY_SIGNING_WEAK_SECURITY | Weakens signing security, useful for testing before deploying signing "globally" | "#define" in the top of your sketch | @verbatim --my-signing-weak_security @endverbatim
+ * | @ref MY_VERIFICATION_TIMEOUT_MS | Change default signing timeout | "#define" in the top of your sketch | @verbatim --my-signing-verification-timeout-ms=<TIMEOUT> @endverbatim
+ * | @ref MY_SIGNING_NODE_WHITELISTING | Defines a whitelist of trusted nodes | "#define" in the top of your sketch | @verbatim --my-signing-whitelist="<WHITELIST>" @endverbatim
+ * | @ref MY_SIGNING_ATSHA204_PIN | Change default ATSHA204A communication pin | "#define" in the top of your sketch | Not supported
+ * | @ref MY_SIGNING_SOFT_RANDOMSEED_PIN | Change default software RNG seed pin | "#define" in the top of your sketch | Not supported
+ * | @ref MY_RF24_ENABLE_ENCRYPTION | Enables encryption on RF24 radios | "#define" in the top of your sketch | @verbatim --my-rf24-encryption-enabled @endverbatim
+ * | @ref MY_RFM69_ENABLE_ENCRYPTION | Enables encryption on %RFM69 radios | "#define" in the top of your sketch | @verbatim --my-rfm69-encryption-enabled @endverbatim
+ * | @ref MY_NRF5_ESB_ENABLE_ENCRYPTION | Enables encryption on nRF5 radios | "#define" in the top of your sketch | Not supported
+ * | @ref MY_NODE_LOCK_FEATURE | Enables the node locking feature | "#define" in the top of your sketch | Not supported
+ * | @ref MY_NODE_UNLOCK_PIN | Change default unlock pin | "#define" in the top of your sketch | Not supported
+ * | @ref MY_NODE_LOCK_COUNTER_MAX | Change default "malicious activity" counter max value | "#define" in the top of your sketch | Not supported
  *
- * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION
  * @{
  */
+/**
+ * @def MY_SECURITY_SIMPLE_PASSWD
+ * @brief Enables SW backed signing functionality and encryption functionality in library and uses
+ *        provided password as key.
+ *
+ * Example: @code #define MY_SECURITY_SIMPLE_PASSWD "MyInsecurePassword" @endcode
+ *
+ * For details on the effects, see the references.
+ * @see MY_SIGNING_SIMPLE_PASSWD, MY_ENCRYPTION_SIMPLE_PASSWD
+ */
+//#define MY_SECURITY_SIMPLE_PASSWD "MyInsecurePassword"
+#if defined(MY_SECURITY_SIMPLE_PASSWD)
+#define MY_SIGNING_SIMPLE_PASSWD MY_SECURITY_SIMPLE_PASSWD
+#define MY_ENCRYPTION_SIMPLE_PASSWD MY_SECURITY_SIMPLE_PASSWD
+#endif
+
 /**
  * @defgroup SigningSettingGrpPub Signing
  * @ingroup SecuritySettingGrpPub
@@ -1500,8 +1670,10 @@
  * @def MY_SIGNING_SIMPLE_PASSWD
  * @brief Enables SW backed signing functionality in library and uses provided password as key.
  *
- * This flag will enable signing, signature requests and encryption. It has to be identical on ALL
- * nodes in the network.
+ * This flag is automatically set if @ref MY_SECURITY_SIMPLE_PASSWD is used.
+ *
+ * This flag will enable signing and signature requests. It has to be identical on ALL nodes in the
+ * network.
  *
  * Whitelisting is supported and serial will be the first 8 characters of the password, the ninth
  * character will be the node ID (to make each node have a unique serial).
@@ -1509,22 +1681,24 @@
  * As with the regular signing modes, whitelisting is only activated if a whitelist is specified in
  * the sketch.
  *
- * No personalization is required for this mode.
+ * No @ref personalization is required for this mode.
  *
  * It is allowed to set @ref MY_SIGNING_WEAK_SECURITY for deployment purposes in this mode as it is
  * with the regular software and ATSHA204A based modes.
  *
- * If the provided password is shorter than the size of the HMAC or %AES key, it will be null-padded
+ * If the provided password is shorter than the size of the HMAC key, it will be null-padded
  * to accommodate the key size in question. A 32 character password is the maximum length. Any
  * password longer than that will be truncated.
+ *
+ * Example: @code #define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword" @endcode
+ *
+ * @see MY_SECURITY_SIMPLE_PASSWD
+ *
  */
 //#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
 #if defined(MY_SIGNING_SIMPLE_PASSWD)
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
-#define MY_RF24_ENABLE_ENCRYPTION
-#define MY_RFM69_ENABLE_ENCRYPTION
-#define MY_NRF5_ESB_ENABLE_ENCRYPTION
 #endif
 
 /**
@@ -1595,6 +1769,8 @@
  * the signed message.
  *
  * It is legal to only have one node with a whitelist for this reason but it is not required.
+ *
+ * Example: @code #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}} @endcode
  */
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 
@@ -1617,22 +1793,86 @@
 #endif
 
 /**
+ * @def MY_LOCK_DEVICE
+ * @brief Enable read back protection
+ *
+ * Enable read back protection feature. Currently only supported by NRF51+NRF52.
+ * Use this flag to protect signing and encryption keys stored in the MCU.
+ *
+ * Set this flag, when you use softsigning in MySensors. Don't set this
+ * in SecurityPersonalizer.
+ *
+ * @warning YOU CAN BRICK YOUR DEVICE!!!
+ *          Don't set this flag without having an boot loader, OTA firmware update and
+ *          an Gateway connection. To reset an device, you can try >>
+ *          openocd -f interface/cmsis-dap.cfg -f target/nrf52.cfg -c "program dap apreg 1 0x04 0x01"
+ */
+//#define MY_LOCK_DEVICE
+
+/**
  * @def MY_SIGNING_FEATURE
  * @ingroup internals
- * @brief Helper flag to indicate that some signing feature is enabled
+ * @brief Helper flag to indicate that some signing feature is enabled, set automatically
  */
 #if defined(MY_SIGNING_ATSHA204) || defined(MY_SIGNING_SOFT)
 #define MY_SIGNING_FEATURE
 #endif
+/** @}*/ // End of SigningSettingGrpPub group
+
+/**
+ * @defgroup EncryptionSettingGrpPub Encryption
+ * @ingroup SecuritySettingGrpPub
+ * @brief These options control encryption related configurations.
+ *
+ * Note that encryption is toggled on a per-radio basis.
+ * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION, MY_RFM95_ENABLE_ENCRYPTION
+ * @{
+ */
+
+/**
+ * @def MY_ENCRYPTION_SIMPLE_PASSWD
+ * @brief Enables encryption on all radio transports that supports it and uses provided password as key.
+ *
+ * This flag is automatically set if @ref MY_SECURITY_SIMPLE_PASSWD is used.
+ *
+ * This flag will enable encryption. It has to be identical on ALL nodes in the network.
+ *
+ * No @ref personalization is required for this mode.
+ *
+ * If the provided password is shorter than the size of the %AES key, it will be null-padded
+ * to accommodate the key size in question. A 16 character password is the maximum length. Any
+ * password longer than that will be truncated.
+ *
+ * Example: @code #define MY_ENCRYPTION_SIMPLE_PASSWD "MyInsecurePassword" @endcode
+ *
+ * @see MY_SECURITY_SIMPLE_PASSWD
+ */
+//#define MY_ENCRYPTION_SIMPLE_PASSWD "MyInsecurePassword"
+#if defined(MY_ENCRYPTION_SIMPLE_PASSWD)
+#ifndef MY_RF24_ENABLE_ENCRYPTION
+#define MY_RF24_ENABLE_ENCRYPTION
+#endif
+#ifndef MY_RFM69_ENABLE_ENCRYPTION
+#define MY_RFM69_ENABLE_ENCRYPTION
+#endif
+#ifndef MY_NRF5_ESB_ENABLE_ENCRYPTION
+#define MY_NRF5_ESB_ENABLE_ENCRYPTION
+#endif
+#ifndef MY_RFM95_ENABLE_ENCRYPTION
+#define MY_RFM95_ENABLE_ENCRYPTION
+#endif
+#endif
+
 /**
  * @def MY_ENCRYPTION_FEATURE
  * @ingroup internals
- * @brief Helper flag to indicate that some encryption feature is enabled
+ * @brief Helper flag to indicate that some encryption feature is enabled, set automatically
+ * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION, MY_RFM95_ENABLE_ENCRYPTION
  */
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
 #define MY_ENCRYPTION_FEATURE
 #endif
-/** @}*/ // End of SigningSettingGrpPub group
+/** @}*/ // End of EncryptionSettingGrpPub group
 
 /**
  * @defgroup MyLockgrppub Node locking
@@ -1725,34 +1965,57 @@
 /** @}*/ // End of ESP8266SettingGrpPub group
 
 /**
+* @defgroup ESP32SettingGrpPub ESP32
+* @ingroup PlatformSettingGrpPub
+* @brief These options control ESP32 specific configurations.
+* @{
+*/
+
+//
+// no ESP32 settings
+//
+
+/** @}*/ // End of ESP32SettingGrpPub group
+
+/**
  * @defgroup LinuxSettingGrpPub Linux
  * @ingroup PlatformSettingGrpPub
  * @brief These options control Linux specific configurations.
  * @{
  */
+
 /**
  * @def MY_LINUX_SERIAL_PORT
  * @brief Serial device port
  */
-#ifndef MY_LINUX_SERIAL_PORT
-#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+//#define MY_LINUX_SERIAL_PORT "/dev/ttyUSB0"
+
+/**
+ * @def MY_LINUX_SERIAL_PTY
+ * @brief deprecated option
+ */
+#ifdef MY_LINUX_SERIAL_PTY
+#warning MY_LINUX_SERIAL_PTY is deprecated, please use MY_LINUX_SERIAL_PORT
+#define MY_LINUX_SERIAL_PORT MY_LINUX_SERIAL_PTY
 #endif
 
 /**
  * @def MY_LINUX_IS_SERIAL_PTY
+ * @brief deprecated option
+ */
+#ifdef MY_LINUX_IS_SERIAL_PTY
+#warning MY_LINUX_IS_SERIAL_PTY is deprecated, please use MY_LINUX_SERIAL_IS_PTY
+#define MY_LINUX_SERIAL_IS_PTY
+#endif
+
+/**
+ * @def MY_LINUX_SERIAL_IS_PTY
  * @brief Set serial as a pseudo terminal.
  *
  * Enable this if you need to connect to a controller running on the same device.
+ * You also need to define MY_LINUX_SERIAL_PORT with the symlink name for the PTY device.
  */
-//#define MY_LINUX_IS_SERIAL_PTY
-
-/**
- * @def MY_LINUX_SERIAL_PTY
- * @brief Symlink name for the PTY device.
- */
-#ifndef MY_LINUX_SERIAL_PTY
-#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
-#endif
+//#define MY_LINUX_SERIAL_IS_PTY
 
 /**
  * @def MY_LINUX_SERIAL_GROUPNAME
@@ -1767,7 +2030,7 @@
  * @note For now the configuration file is only used to store the emulated eeprom state.
  */
 #ifndef MY_LINUX_CONFIG_FILE
-#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+#define MY_LINUX_CONFIG_FILE "/etc/mysensors.conf"
 #endif
 /** @}*/ // End of LinuxSettingGrpPub group
 /** @}*/ // End of PlatformSettingGrpPub group
@@ -1782,7 +2045,7 @@
  * MY_IS_GATEWAY is true when @ref MY_GATEWAY_FEATURE is set.
  * MY_NODE_TYPE contain a string describing the class of sketch/node (gateway/repeater/node).
  */
-#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT)
+#if defined(MY_GATEWAY_SERIAL) || defined(MY_GATEWAY_W5100) || defined(MY_GATEWAY_ENC28J60) || defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)|| defined(MY_GATEWAY_LINUX) || defined(MY_GATEWAY_MQTT_CLIENT) || defined(MY_GATEWAY_TINYGSM)
 #define MY_GATEWAY_FEATURE
 #define MY_IS_GATEWAY (true)
 #define MY_NODE_TYPE "GW"
@@ -1908,7 +2171,10 @@
 #define MY_DISABLED_SERIAL
 #define MY_SPLASH_SCREEN_DISABLED
 // linux
+#define MY_LINUX_SERIAL_PORT
+#define MY_LINUX_SERIAL_IS_PTY
 #define MY_LINUX_SERIAL_GROUPNAME
+#define MY_LINUX_SERIAL_PTY
 #define MY_LINUX_IS_SERIAL_PTY
 // inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
@@ -1925,12 +2191,18 @@
 #define MY_REPEATER_FEATURE
 #define MY_PASSIVE_NODE
 #define MY_MQTT_CLIENT_PUBLISH_RETAIN
+#define MY_MQTT_PASSWORD
+#define MY_MQTT_USER
+#define MY_MQTT_CLIENT_ID
+#define MY_MQTT_PUBLISH_TOPIC_PREFIX
+#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX
 #define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
 #define MY_INDICATION_HANDLER
 #define MY_DISABLE_REMOTE_RESET
 #define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
+#define MY_LOCK_DEVICE
 // core
 #define MY_CORE_ONLY
 // GW
@@ -1940,21 +2212,75 @@
 #define MY_GATEWAY_W5100
 #define MY_GATEWAY_ENC28J60
 #define MY_GATEWAY_ESP8266
+#define MY_GATEWAY_ESP32
+#define MY_WIFI_SSID
+#define MY_WIFI_BSSID
+#define MY_WIFI_PASSWORD
+#define MY_HOSTNAME
 #define MY_GATEWAY_LINUX
-#define MY_IP_ADDRESS 192,168,178,66
+#define MY_GATEWAY_TINYGSM
+#define MY_GATEWAY_MQTT_CLIENT
+#define MY_GATEWAY_SERIAL
+#define MY_IP_ADDRESS
+#define MY_IP_GATEWAY_ADDRESS
+#define MY_IP_SUBNET_ADDRESS
 #define MY_USE_UDP
-#define MY_CONTROLLER_IP_ADDRESS 192,168,178,254
+#define MY_CONTROLLER_IP_ADDRESS
+#define MY_CONTROLLER_URL_ADDRESS
+// TinyGSM
+/**
+ * @def MY_GSM_APN
+ * @brief APN from your cell carrier / mobile provider. Example: 4g.tele2.se
+ */
+#define MY_GSM_APN
+/**
+ * @def MY_GSM_BAUDRATE
+ * @brief Baudrate for your GSM modem. If left undefined, TinyGSM will try to auto detect the correct rate
+ */
+#define MY_GSM_BAUDRATE
+/**
+ * @def MY_GSM_PIN
+ * @brief PIN code for your SIM card, if PIN lock is active.
+ */
+#define MY_GSM_PIN
+/**
+ * @def MY_GSM_PSW
+ * @brief If using a GSM modem, this is the password supplied by your cell carrier / mobile provider. If using ESP8266 as a WiFi modem, this is your WiFi network password
+ */
+#define MY_GSM_PSW
+/**
+ * @def MY_GSM_RX
+ * @brief If defined, uses softSerial using defined pins (must also define MY_GSM_TX)
+ */
+#define MY_GSM_RX
+/**
+ * @def MY_GSM_SSID
+ * @brief If using ESP8266 as WiFi modem, this is your network SSID
+ */
+#define MY_GSM_SSID
+/**
+ * @def MY_GSM_TX
+ * @brief If defined, uses softSerial using defined pins (must also define MY_GSM_RX)
+ */
+#define MY_GSM_TX
+/**
+ * @def MY_GSM_USR
+ * @brief Supplied by your cell carrier / mobile operator. If not required, leave undefined.
+ */
+#define MY_GSM_USR
 // LED
 #define MY_DEFAULT_ERR_LED_PIN
 #define MY_DEFAULT_TX_LED_PIN
 #define MY_DEFAULT_RX_LED_PIN
 // signing
-#define MY_SIGNING_SIMPLE_PASSWD "MyInsecurePassword"
+#define MY_SECURITY_SIMPLE_PASSWD
+#define MY_SIGNING_SIMPLE_PASSWD
+#define MY_ENCRYPTION_SIMPLE_PASSWD
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
 #define MY_SIGNING_WEAK_SECURITY
-#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_SIGNING_NODE_WHITELISTING
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_SIGNING_FEATURE
 #define MY_ENCRYPTION_FEATURE
@@ -1963,7 +2289,7 @@
 #define MY_OTA_USE_I2C_EEPROM
 // RS485
 #define MY_RS485
-#define MY_RS485_HWSERIAL (Serial1)
+#define MY_RS485_HWSERIAL
 // RF24
 #define MY_RADIO_RF24
 #define MY_DEBUG_VERBOSE_RF24
@@ -1983,6 +2309,7 @@
 #define MY_IS_RFM69HW
 #define MY_RFM69_NEW_DRIVER
 #define MY_RFM69_POWER_PIN
+#define MY_RFM69_MODEM_CONFIGURATION
 #define MY_RFM69_ENABLE_ENCRYPTION
 #define MY_RFM69_ATC_MODE_DISABLED
 #define MY_RFM69_MAX_POWER_LEVEL_DBM
@@ -1993,6 +2320,7 @@
 // RFM95
 #define MY_RADIO_RFM95
 #define MY_DEBUG_VERBOSE_RFM95
+#define MY_RFM95_ENABLE_ENCRYPTION
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
 #define MY_RFM95_MODEM_CONFIGRUATION

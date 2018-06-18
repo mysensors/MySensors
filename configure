@@ -37,7 +37,7 @@ Installation options:
 
 MySensors options:
     --my-debug=[enable|disable] Enables or disables MySensors core debugging. [enable]
-    --my-config-file=<FILE>     Config file path. [/etc/mysensors.dat]
+    --my-config-file=<FILE>     Config file path. [/etc/mysensors.conf]
     --my-gateway=[none|ethernet|serial|mqtt]
                                 Set the protocol used to communicate with the controller. [ethernet]
     --my-node-id=<ID>           Disable gateway feature and run as a node with the specified id.
@@ -47,11 +47,12 @@ MySensors options:
                                 Controller or MQTT broker ip.
     --my-port=<PORT>            The port to keep open on gateway mode.
                                 If gateway is set to mqtt, it sets the broker port.
-    --my-serial-port=<PORT>     Serial port. [/dev/ttyACM0]
+    --my-serial-port=<PORT>     Serial port.
     --my-serial-baudrate=<BAUD> Serial baud rate. [115200]
     --my-serial-is-pty          Set the serial port to be a pseudo terminal. Use this if you want
                                 to connect to a controller running on the same device.
-    --my-serial-pty=<NAME>      Symlink name for the PTY device. [/dev/ttyMySensorsGateway]
+                                You also need to set the symlink name for the PTY device with
+                                the --my-serial-port option.
     --my-serial-groupname=<GROUP>
                                 Grant access to the specified system group for the serial device.
     --my-mqtt-client-id=<ID>    MQTT client id.
@@ -72,7 +73,7 @@ MySensors options:
     --my-rf24-encryption-enabled
                                 Enables RF24 encryption.
                                 All nodes and gateway must have this enabled, and all must be
-                                personalized with the same AES key
+                                personalized with the same AES key.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
     --my-rfm69-frequency=[315|433|868|915]
@@ -80,6 +81,18 @@ MySensors options:
     --my-is-rfm69hw             Enable high-powered rfm69hw.
     --my-rfm69-irq-pin=<PIN>    Pin number connected to RFM69 IRQ pin.
     --my-rfm69-cs-pin=<PIN>     Pin number to use for RFM69 Chip-Select.
+    --my-rfm69-encryption-enabled
+                                Enables RFM69 encryption.
+                                All nodes and gateway must have this enabled, and all must be
+                                personalized with the same AES key.
+    --my-rfm95-frequency=[169|315|434|868|915]
+                                RFM95 Module Frequency. [868]
+    --my-rfm95-irq-pin=<PIN>    Pin number connected to RFM95 IRQ pin.
+    --my-rfm95-cs-pin=<PIN>     Pin number to use for RFM95 Chip-Select.
+    --my-rfm95-encryption-enabled
+                                Enables RFM95 encryption.
+                                All nodes and gateway must have this enabled, and all must be
+                                personalized with the same AES key.
     --my-rs485-serial-port=<PORT>
                                 RS485 serial port. You must provide a port.
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
@@ -98,13 +111,30 @@ MySensors options:
                                 gateway signature.
     --my-signing-weak_security  Enable this to permit downgrade of security preferences and
                                 relaxed gateway signing requirements.
-    --my-signing-password=<PASSWORD>
-                                If you are using password as the signature type, set your password here.
+    --my-signing-whitelist=<WHITELIST>
+                                If you want to use a whitelist, provide it here, make sure to avoid
+                                spaces in the <whitelist> expression.
+    --my-signing-verification-timeout-ms=<TIMEOUT>
+                                Signing timeout. [5000]
+    --my-security-password=<PASSWORD>
+                                If you are using password for signing/encryption, set your password here.
 EOF
 }
 
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+LIGHT_BLUE='\033[1;34m'
+NO_COLOR='\033[0m'
+
+OK="${GREEN}[OK]${NO_COLOR}"
+ERROR="${RED}[ERROR]${NO_COLOR}"
+FAILED="${YELLOW}[FAILED]${NO_COLOR}"
+SECTION="${LIGHT_BLUE}[SECTION]${NO_COLOR}"
+
 function die {
-    echo "[ERROR] $1"
+    printf "${ERROR} $1 \n"
     exit $2
 }
 
@@ -258,6 +288,7 @@ gateway_type=ethernet
 transport_type=nrf24
 signing=none
 signing_request_signatures=false
+encryption=false
 
 params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER"
 
@@ -338,10 +369,6 @@ for opt do
     --my-transport=*)
         transport_type=${optarg}
         ;;
-    --my-radio=*)
-        echo "Warning: --my-radio is deprecated, please use --my-transport"
-        transport_type=${optarg}
-        ;;
     --my-serial-port=*)
         CPPFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
@@ -349,10 +376,11 @@ for opt do
         CPPFLAGS="-DMY_BAUD_RATE=${optarg} $CPPFLAGS"
         ;;
     --my-serial-is-pty*)
-        CPPFLAGS="-DMY_LINUX_IS_SERIAL_PTY $CPPFLAGS"
+        CPPFLAGS="-DMY_LINUX_SERIAL_IS_PTY $CPPFLAGS"
         ;;
     --my-serial-pty=*)
-        CPPFLAGS="-DMY_LINUX_SERIAL_PTY=\\\"${optarg}\\\" $CPPFLAGS"
+        echo "Warning: --my-serial-pty is deprecated, please use --my-serial-port"
+        CPPFLAGS="-DMY_LINUX_SERIAL_PORT=\\\"${optarg}\\\" $CPPFLAGS"
         ;;
     --my-serial-groupname=*)
         CPPFLAGS="-DMY_LINUX_SERIAL_GROUPNAME=\\\"${optarg}\\\" $CPPFLAGS"
@@ -398,6 +426,7 @@ for opt do
         CPPFLAGS="-DMY_RX_MESSAGE_BUFFER_FEATURE -DMY_RF24_IRQ_PIN=${optarg} $CPPFLAGS"
         ;;
     --my-rf24-encryption-enabled*)
+        encryption=true
         CPPFLAGS="-DMY_RF24_ENABLE_ENCRYPTION $CPPFLAGS"
         ;;
     --my-rx-message-buffer-size=*)
@@ -424,6 +453,35 @@ for opt do
         ;;
     --my-rfm69-cs-pin=*)
         CPPFLAGS="-DMY_RFM69_CS_PIN=${optarg} $CPPFLAGS"
+        ;;
+    --my-rfm69-encryption-enabled*)
+        encryption=true
+        CPPFLAGS="-DMY_RFM69_ENABLE_ENCRYPTION $CPPFLAGS"
+        ;;
+    --my-rfm95-frequency=*)
+        if [[ ${optarg} == "169" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_169MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "315" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_315MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "434" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_434MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "868" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_868MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "915" ]]; then
+            CPPFLAGS="-DMY_RFM95_FREQUENCY=RFM95_915MHZ $CPPFLAGS"
+        else
+            echo "[WARNING] Illegal value for --my-rfm95-frequency=${optarg}, ignored"
+        fi
+        ;;
+    --my-rfm95-irq-pin=*)
+        CPPFLAGS="-DMY_RFM95_IRQ_NUM=${optarg} $CPPFLAGS"
+        ;;
+    --my-rfm95-cs-pin=*)
+        CPPFLAGS="-DMY_RFM95_CS_PIN=${optarg} $CPPFLAGS"
+        ;;
+    --my-rfm95-encryption-enabled*)
+        encryption=true
+        CPPFLAGS="-DMY_RFM95_ENABLE_ENCRYPTION $CPPFLAGS"
         ;;
     --my-rs485-serial-port=*)
         CPPFLAGS="-DMY_RS485_HWSERIAL=\\\"${optarg}\\\" $CPPFLAGS"
@@ -461,8 +519,14 @@ for opt do
     --my-signing-weak_security*)
         CPPFLAGS="-DMY_SIGNING_WEAK_SECURITY $CPPFLAGS"
         ;;
-    --my-signing-password=*)
-        signing_password=${optarg}
+    --my-signing-whitelist*)
+        CPPFLAGS="-DMY_SIGNING_NODE_WHITELISTING=${optarg} $CPPFLAGS"
+        ;;
+    --my-signing-verification-timeout-ms*)
+        CPPFLAGS="-DMY_VERIFICATION_TIMEOUT_MS=${optarg} $CPPFLAGS"
+        ;;
+    --my-security-password=*)
+        security_password=${optarg}
         ;;
     *)
         echo "[WARNING] Unknown option detected:$opt, ignored"
@@ -478,12 +542,12 @@ CC=${CC:-gcc}
 CXX=${CXX:-g++}
 
 if [ -z "${SOC}" ]; then
-    echo "[SECTION] Detecting target machine."
+    printf "${SECTION} Detecting target machine.\n"
     info=($(detect_machine))
     SOC=${info[0]}
     TYPE=${info[1]}
     CPU=${info[2]}
-    echo "  [OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}."
+    printf "  ${OK} machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}.\n"
 fi
 
 if [ -z "${CPUFLAGS}" ]; then
@@ -493,23 +557,23 @@ fi
 if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
     CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
 else
-    echo "[SECTION] Checking GPIO Sysfs."
+    printf "${SECTION} Checking GPIO Sysfs.\n"
     if [[ $(eval 'ls /sys/class/gpio/export 2>/dev/null') ]]; then
-        echo "  [OK] /sys/class/gpio/export found"
+        printf "  ${OK} /sys/class/gpio/export found.\n"
     else
         echo "  [WARNING] /sys/class/gpio/export not found."
     fi
 fi
 
 if [ -z "${SPI_DRIVER}" ]; then
-    echo "[SECTION] Detecting SPI driver."
+    printf "${SECTION} Detecting SPI driver.\n"
     if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
         SPI_DRIVER=BCM
     elif [[ $(eval 'ls /dev/spidev* 2>/dev/null') ]]; then
         SPI_DRIVER=SPIDEV
     fi
     if [ -n "${SPI_DRIVER}" ]; then
-        echo "  [OK] SPI driver detected:${SPI_DRIVER}."
+        printf "  ${OK} SPI driver detected:${SPI_DRIVER}.\n"
     else
         echo "  [WARNING] No supported SPI driver detected. Using SPIDEV."
         SPI_DRIVER=SPIDEV
@@ -532,6 +596,8 @@ if [ -n "${SPI_DRIVER}" ]; then
     esac
 fi
 
+printf "${SECTION} Gateway configuration.\n"
+
 if [[ ${debug} == "enable" ]]; then
     CPPFLAGS="-DMY_DEBUG $CPPFLAGS"
 fi
@@ -548,6 +614,7 @@ elif [[ ${gateway_type} == "mqtt" ]]; then
 else
     die "Invalid gateway type." 2
 fi
+printf "  ${OK} Type: ${gateway_type}.\n"
 
 if [[ ${transport_type} == "none" ]]; then
     # Transport disabled
@@ -563,53 +630,68 @@ elif [[ ${transport_type} == "rfm95" ]]; then
 else
     die "Invalid transport type." 3
 fi
+printf "  ${OK} Transport: ${transport_type}.\n"
 
 if [[ ${signing} == "none" ]]; then
     # Signing disabled
-    :
+    printf "  ${OK} Signing: Disabled.\n"
 elif [[ ${signing} == "software" ]]; then
     CPPFLAGS="-DMY_SIGNING_SOFT $CPPFLAGS"
     if [[ ${signing_request_signatures} == true ]]; then
         CPPFLAGS="-DMY_SIGNING_REQUEST_SIGNATURES $CPPFLAGS"
     fi
+    printf "  ${OK} Signing: Enabled - Using key from config file.\n"
 elif [[ ${signing} == "password" ]]; then
-    if [ -z "${signing_password}" ]; then
-        die "You need to set the password for signing with --my-signing-password= option" 6
+    if [ -z "${security_password}" ]; then
+        die "You need to set the password for signing with --my-security-password option" 6
     fi
-    echo "Simplified signing using password"
-    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${signing_password}\\\" $CPPFLAGS"
+    printf "  ${OK} Signing: Enabled - Simplified signing using password.\n"
+    CPPFLAGS="-DMY_SIGNING_SIMPLE_PASSWD=\\\"${security_password}\\\" $CPPFLAGS"
 else
     die "Invalid signing type." 7
+fi
+
+if [[ ${encryption} == true ]]; then
+    # Encryption enabled on some transport
+    if [ -z "${security_password}" ]; then
+        printf "  ${OK} Encryption: Enabled - Using key from config file.\n"
+    else
+        printf "  ${OK} Encryption: Enabled - Simplified encryption using password.\n"
+        CPPFLAGS="-DMY_ENCRYPTION_SIMPLE_PASSWD=\\\"${security_password}\\\" $CPPFLAGS"
+    fi
+else
+    printf "  ${OK} Encryption: Disabled.\n"
 fi
 
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
-echo "[SECTION] Detecting init system."
+printf "${SECTION} Detecting init system.\n"
 if [ "${NO_INIT}" ];  then
-    echo "  [OK] no init system chosen."
+    printf "  ${OK} No init system chosen.\n"
 elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
-    echo "  [OK] init system detected: systemd."
+    printf "  ${OK} Init system detected: systemd.\n"
 elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
     INIT_SYSTEM=sysvinit
-    echo "  [OK] init system detected: sysvinit."
+    printf "  ${OK} Init system detected: sysvinit.\n"
 else
-    echo "  [FAILED] unknown init system."
+    printf "  ${FAILED} Unknown init system."
 fi
 
-echo "[SECTION] Saving configuration."
+printf "${SECTION} Saving configuration.\n"
 echo -n "" > Makefile.inc
 for param in ${params}; do
     if [[ ${!param} ]]; then
         echo "${param}=${!param}" >> Makefile.inc
     fi
 done
+printf "  ${OK} Saved.\n"
 
 if [ -z "${NO_CLEAN}" ]; then
-    echo "[SECTION] Cleaning previous builds."
+    printf "${SECTION} Cleaning previous builds.\n"
     make clean >/dev/null
 fi
 
 
-echo "[OK] Finished."
+printf "  ${OK} Finished.\n"

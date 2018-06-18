@@ -19,18 +19,18 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 - Henrik EKblad
+ * Version 1.0 - Henrik Ekblad
  *
  * DESCRIPTION
- * This sketch provides an example how to implement a distance sensor using HC-SR04
- * Use this sensor to measure KWH and Watt of your house meeter
- * You need to set the correct pulsefactor of your meeter (blinks per KWH).
- * The sensor starts by fetching current KWH value from gateway.
- * Reports both KWH and Watt back to gateway.
+ * This sketch provides an example how to implement a LM393 PCB
+ * Use this sensor to measure kWh and Watt of your house meter
+ * You need to set the correct pulsefactor of your meter (blinks per kWh).
+ * The sensor starts by fetching current kWh value from gateway.
+ * Reports both kWh and Watt back to gateway.
  *
  * Unfortunately millis() won't increment when the Arduino is in
  * sleepmode. So we cannot make this sensor sleep if we also want
- * to calculate/report watt-number.
+ * to calculate/report watt value.
  * http://www.mysensors.org/build/pulse_power
  */
 
@@ -46,13 +46,13 @@
 #include <MySensors.h>
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
-#define PULSE_FACTOR 1000       // Nummber of blinks per KWH of your meeter
-#define SLEEP_MODE false        // Watt-value can only be reported when sleep mode is false.
-#define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
+#define PULSE_FACTOR 1000       // Number of blinks per of your meter
+#define SLEEP_MODE false        // Watt value can only be reported when sleep mode is false.
+#define MAX_WATT 10000          // Max watt value to report. This filters outliers.
 #define CHILD_ID 1              // Id of the sensor child
 
 uint32_t SEND_FREQUENCY =
-    20000; // Minimum time between send (in milliseconds). We don't wnat to spam the gateway.
+    20000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
 bool pcReceived = false;
 volatile uint32_t pulseCount = 0;
@@ -60,10 +60,10 @@ volatile uint32_t lastBlink = 0;
 volatile uint32_t watt = 0;
 uint32_t oldPulseCount = 0;
 uint32_t oldWatt = 0;
-double oldKwh;
+double oldkWh;
 uint32_t lastSend;
 MyMessage wattMsg(CHILD_ID,V_WATT);
-MyMessage kwhMsg(CHILD_ID,V_KWH);
+MyMessage kWhMsg(CHILD_ID,V_KWH);
 MyMessage pcMsg(CHILD_ID,V_VAR1);
 
 
@@ -97,8 +97,8 @@ void loop()
 	if (pcReceived && (SLEEP_MODE || sendTime)) {
 		// New watt value has been calculated
 		if (!SLEEP_MODE && watt != oldWatt) {
-			// Check that we dont get unresonable large watt value.
-			// could hapen when long wraps or false interrupt triggered
+			// Check that we don't get unreasonable large watt value.
+			// could happen when long wraps or false interrupt triggered
 			if (watt<((uint32_t)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
 			}
@@ -107,19 +107,19 @@ void loop()
 			oldWatt = watt;
 		}
 
-		// Pulse cout has changed
+		// Pulse count value has changed
 		if (pulseCount != oldPulseCount) {
 			send(pcMsg.set(pulseCount));  // Send pulse count value to gw
-			double kwh = ((double)pulseCount/((double)PULSE_FACTOR));
+			double kWh = ((double)pulseCount/((double)PULSE_FACTOR));
 			oldPulseCount = pulseCount;
-			if (kwh != oldKwh) {
-				send(kwhMsg.set(kwh, 4));  // Send kwh value to gw
-				oldKwh = kwh;
+			if (kWh != oldkWh) {
+				send(kWhMsg.set(kWh, 4));  // Send kWh value to gw
+				oldkWh = kWh;
 			}
 		}
 		lastSend = now;
 	} else if (sendTime && !pcReceived) {
-		// No count received. Try requesting it again
+		// No pulse count value received. Try requesting it again
 		request(CHILD_ID, V_VAR1);
 		lastSend=now;
 	}
@@ -133,7 +133,7 @@ void receive(const MyMessage &message)
 {
 	if (message.type==V_VAR1) {
 		pulseCount = oldPulseCount = message.getLong();
-		Serial.print("Received last pulse count from gw:");
+		Serial.print("Received last pulse count value from gw:");
 		Serial.println(pulseCount);
 		pcReceived = true;
 	}

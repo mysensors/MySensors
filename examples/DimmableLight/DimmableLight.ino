@@ -48,7 +48,7 @@
 #define LIGHT_OFF 0
 #define LIGHT_ON 1
 
-#define SN "Dimable Light"
+#define SN "Dimmable Light"
 #define SV "1.0"
 
 int16_t LastLightState=LIGHT_OFF;
@@ -70,7 +70,7 @@ void setup()
 		}
 	}
 
-	//Here you actualy switch on/off the light with the last known dim level
+	//Here you actually switch on/off the light with the last known dim level
 	SetCurrentState2Hardware();
 
 	Serial.println( "Node ready to receive messages..." );

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -20,10 +20,10 @@
 #ifndef MyTransportHAL_h
 #define MyTransportHAL_h
 
-#define INVALID_SNR					((int16_t)-256)	//!< INVALID_SNR
-#define INVALID_RSSI				((int16_t)-256)	//!< INVALID_RSSI
-#define INVALID_PERCENT				((int16_t)-100)	//!< INVALID_PERCENT
-#define INVALID_LEVEL				((int16_t)-256)	//!< INVALID_LEVEL
+#define INVALID_SNR         ((int16_t)-256)	//!< INVALID_SNR
+#define INVALID_RSSI        ((int16_t)-256)	//!< INVALID_RSSI
+#define INVALID_PERCENT     ((int16_t)-100)	//!< INVALID_PERCENT
+#define INVALID_LEVEL       ((int16_t)-256)	//!< INVALID_LEVEL
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 #if defined(MY_RADIO_NRF5_ESB)
@@ -46,14 +46,14 @@
 * @brief Signal report selector
 */
 typedef enum {
-	SR_RX_RSSI,				//!< SR_RX_RSSI
-	SR_TX_RSSI,				//!< SR_TX_RSSI
-	SR_RX_SNR,				//!< SR_RX_SNR
-	SR_TX_SNR,				//!< SR_TX_SNR
-	SR_TX_POWER_LEVEL,		//!< SR_TX_POWER_LEVEL
-	SR_TX_POWER_PERCENT,	//!< SR_TX_POWER_PERCENT
-	SR_UPLINK_QUALITY,		//!< SR_UPLINK_QUALITY
-	SR_NOT_DEFINED			//!< SR_NOT_DEFINED
+	SR_RX_RSSI,            //!< SR_RX_RSSI
+	SR_TX_RSSI,            //!< SR_TX_RSSI
+	SR_RX_SNR,             //!< SR_RX_SNR
+	SR_TX_SNR,             //!< SR_TX_SNR
+	SR_TX_POWER_LEVEL,     //!< SR_TX_POWER_LEVEL
+	SR_TX_POWER_PERCENT,   //!< SR_TX_POWER_PERCENT
+	SR_UPLINK_QUALITY,     //!< SR_UPLINK_QUALITY
+	SR_NOT_DEFINED         //!< SR_NOT_DEFINED
 } signalReport_t;
 
 
@@ -69,7 +69,7 @@ void transportSetAddress(const uint8_t address);
 /**
 * @brief Retrieve node address
 */
-uint8_t transportGetAddress(void);
+uint8_t transportGetAddress(void) __attribute__((unused));
 /**
 * @brief Send message
 * @param to recipient
@@ -78,7 +78,7 @@ uint8_t transportGetAddress(void);
 * @param noACK do not wait for ACK
 * @return true if message sent successfully
 */
-bool transportSend(const uint8_t to, const void* data, const uint8_t len,
+bool transportSend(const uint8_t to, const void *data, const uint8_t len,
                    const bool noACK = false);
 /**
 * @brief Verify if RX FIFO has pending messages
@@ -86,7 +86,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len,
 */
 bool transportAvailable(void);
 /**
-* @brief Sanity check for transport: is transport still responsive?
+* @brief Sanity check for transport: is transport HW still responsive?
 * @return true if transport HW is ok
 */
 bool transportSanityCheck(void);
@@ -94,7 +94,7 @@ bool transportSanityCheck(void);
 * @brief Receive message from FIFO
 * @return length of received message (header + payload)
 */
-uint8_t transportReceive(void* data);
+uint8_t transportReceive(void *data);
 /**
 * @brief Power down transport HW (if corresponding MY_XYZ_POWER_PIN defined)
 */
@@ -113,29 +113,35 @@ void transportSleep(void);
 void transportStandBy(void);
 /**
 * @brief transportGetSendingRSSI
-* @return RSSI
+* @return RSSI of outgoing message (via ACK packet)
 */
 int16_t transportGetSendingRSSI(void);
 /**
 * @brief transportGetReceivingRSSI
-* @return RSSI
+* @return RSSI of incoming message
 */
 int16_t transportGetReceivingRSSI(void);
 /**
 * @brief transportGetSendingSNR
-* @return SNR
+* @return SNR of outgoing message (via ACK packet)
 */
 int16_t transportGetSendingSNR(void);
 /**
 * @brief transportGetReceivingSNR
-* @return SNR
+* @return SNR of incoming message
 */
 int16_t transportGetReceivingSNR(void);
 /**
 * @brief transportGetTxPowerPercent
-* @return TX power in percent
+* @return TX power level in percent
 */
 int16_t transportGetTxPowerPercent(void);
+/**
+* @brief transportSetTxPowerPercent
+* @param powerPercent power level in percent
+* @return True if power level set
+*/
+bool transportSetTxPowerPercent(const uint8_t powerPercent) __attribute__((unused));
 /**
 * @brief transportGetTxPowerLevel
 * @return TX power in dBm

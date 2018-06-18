@@ -31,34 +31,20 @@
  *
  * VERA CONFIGURATION:
  * Enter "ip-number:port" in the ip-field of the Arduino GW device. This will temporarily override any serial configuration for the Vera plugin.
- * E.g. If you want to use the defualt values in this sketch enter: 192.168.178.66:5003
+ * E.g. If you want to use the default values in this sketch enter: 192.168.178.66:5003
  *
  * LED purposes:
  * - To use the feature, uncomment WITH_LEDS_BLINKING in MyConfig.h
- * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
+ * - RX (green) - blink fast on radio message received. In inclusion mode will blink fast only on presentation received
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
- * - ERR (red) - fast blink on error during transmission error or recieve crc error
+ * - ERR (red) - fast blink on error during transmission error or receive crc error
  *
- * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
- * nRF24L01+  ESP8266
- * VCC        VCC
- * CE         GPIO4
- * CSN/CS     GPIO15
- * SCK        GPIO14
- * MISO       GPIO12
- * MOSI       GPIO13
- * GND        GND
+ * See https://www.mysensors.org/build/connect_radio for wiring instructions.
  *
- * Not all ESP8266 modules have all pins available on their external interface.
- * This code has been tested on an ESP-12 module.
- * The ESP8266 requires a certain pin configuration to download code, and another one to run code:
- * - Connect REST (reset) via 10K pullup resistor to VCC, and via switch to GND ('reset switch')
- * - Connect GPIO15 via 10K pulldown resistor to GND
- * - Connect CH_PD via 10K resistor to VCC
- * - Connect GPIO2 via 10K resistor to VCC
- * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
+ * If you are using a "barebone" ESP8266, see
+ * https://www.mysensors.org/build/esp8266_gateway#wiring-for-barebone-esp8266
  *
-  * Inclusion mode button:
+ * Inclusion mode button:
  * - Connect GPIO5 via switch to GND ('inclusion switch')
  *
  * Hardware SHA204 signing is currently not supported!
@@ -79,12 +65,12 @@
 
 #define MY_GATEWAY_ESP8266
 
-#define MY_ESP8266_SSID "MySSID"
-#define MY_ESP8266_PASSWORD "MyVerySecretPassword"
+#define MY_WIFI_SSID "MySSID"
+#define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Set the hostname for the WiFi Client. This is the hostname
 // it will pass to the DHCP server if not static.
-// #define MY_ESP8266_HOSTNAME "sensor-ota-gateway"
+// #define MY_HOSTNAME "sensor-ota-gateway"
 
 // Enable UDP communication
 //#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
@@ -170,7 +156,7 @@ void presentation()
 
 void loop()
 {
-	// Send locally attech sensors data here
+	// Send locally attached sensors data here
 	ArduinoOTA.handle();
 }
 

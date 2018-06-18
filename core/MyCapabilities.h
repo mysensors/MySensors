@@ -160,6 +160,8 @@
 #define MY_CAP_ARCH "N"
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define MY_CAP_ARCH "E"
+#elif defined(ARDUINO_ARCH_ESP32)
+#define MY_CAP_ARCH "F"
 #elif defined(ARDUINO_ARCH_AVR)
 #define MY_CAP_ARCH "A"
 #elif defined(ARDUINO_ARCH_STM32F1)
@@ -216,14 +218,14 @@
  * @def MY_CAP_ENCR
  * @brief Indicate the encryption setting.
  *
- * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION
+ * @see MY_ENCRYPTION_FEATURE
  *
  * | Setting    | Indicator
  * |------------|----------
  * | Enabled    | X
  * | Disabled   | -
  */
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined (MY_NRF5_ESB_ENABLE_ENCRYPTION)
+#if defined(MY_ENCRYPTION_FEATURE)
 #define MY_CAP_ENCR "X"
 #else
 #define MY_CAP_ENCR "-"

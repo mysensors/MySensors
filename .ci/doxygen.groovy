@@ -6,7 +6,7 @@ def call(config) {
 				Documentation/doxygen.sh"""
 	warnings canComputeNew: false, canResolveRelativePaths: false,
 		defaultEncoding: '',
-		excludePattern: '''.*/sha204_library\\.h,.*/drivers/Linux/.*,.*/cores/esp8266/.*,hardware/.*''',
+		excludePattern: '''.*/sha204_library\\.h,.*/drivers/Linux/.*,.*/drivers/TinyGSM/.*,.*/cores/esp8266/.*,hardware/.*''',
 		failedTotalAll: '', healthy: '', includePattern: '', messagesPattern: '',
 		parserConfigurations: [[parserName: 'Doxygen', pattern: config.repository_root+'doxygen.log']],
 		unHealthy: '', unstableTotalAll: '0'
@@ -19,7 +19,7 @@ def call(config) {
 		// Publish docs to API server
 		if (env.BRANCH_NAME == 'master') {
 			sh """#!/bin/bash
-						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io"""
+						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:"""
 		} else if (env.BRANCH_NAME == 'development') {
 			sh """#!/bin/bash
 						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:beta"""

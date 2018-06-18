@@ -76,7 +76,6 @@ const char* MyMessage::getString() const
 	}
 }
 
-// handles single character hex (0 - 15)
 char MyMessage::i2h(uint8_t i) const
 {
 	uint8_t k = i & 0x0F;

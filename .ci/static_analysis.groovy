@@ -29,7 +29,7 @@ def cppCheck(config) {
 				"grep -q \"<td>0</td><td>total</td>\" cppcheck-avr_cppcheck_reports/index.html || exit_code=\$?\n"+
 				"exit \$((exit_code == 0 ? 0 : 1))")
 	if (ret == 1) {
-		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Code analysis - Cppcheck)', 'Issues found', '${BUILD_URL}CppCheck_AVR/index.html')
+		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Code analysis - Cppcheck)', 'Issues found', '${BUILD_URL}CppCheck_20AVR/index.html')
 		error 'Terminating due to Cppcheck error'
 	} else {
 		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (Code analysis - Cppcheck)', 'Pass', '')

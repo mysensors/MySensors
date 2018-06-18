@@ -83,7 +83,7 @@ void loop()
 	// recover voltage
 	calcVoltage = voMeasured * (5.0 / 1024.0);
 
-	// linear eqaution taken from http://www.howmuchsnow.com/arduino/airquality/
+	// linear equation taken from http://www.howmuchsnow.com/arduino/airquality/
 	// Chris Nafis (c) 2012
 	dustDensity = (0.17 * calcVoltage - 0.1)*1000;
 

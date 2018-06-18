@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -19,49 +19,196 @@
 
 #include "log.h"
 #include <stdio.h>
-#include <stdint.h>
-#include <syslog.h>
 #include <stdarg.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <errno.h>
 
-// Default values
-static const int log_opts = LOG_CONS | LOG_PERROR;	// print syslog to stderror
-static const int log_facility = LOG_USER;
+static const char *_log_level_colors[] = {
+	"\x1b[1;5;91m", "\x1b[1;91m", "\x1b[91m", "\x1b[31m", "\x1b[33m", "\x1b[34m", "\x1b[32m", "\x1b[36m"
+};
+static const char *_log_level_names[] = {
+	"EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"
+};
+static uint8_t _log_quiet = 0;
+static uint8_t _log_level = LOG_DEBUG;
+static uint8_t _log_syslog = 0;
 
-static uint8_t log_open = 0;
+static uint8_t _log_pipe = 0;
+static char *_log_pipe_file = NULL;
+static int _log_pipe_fd = -1;
 
-void logOpen(int options, int facility)
+static FILE *_log_file_fp = NULL;
+
+void logSetQuiet(uint8_t enable)
 {
-	openlog(NULL, options, facility);
-	log_open = 1;
+	_log_quiet = enable ? 1 : 0;
 }
 
-void vlogInfo(const char *fmt, va_list args)
+void logSetLevel(int level)
 {
-	if (!log_open) {
-		logOpen(log_opts, log_facility);
+	if (level < LOG_EMERG || level > LOG_DEBUG) {
+		return;
 	}
-	vsyslog(LOG_INFO, fmt, args);
+
+	_log_level = level;
+}
+
+void logSetSyslog(int options, int facility)
+{
+	openlog(NULL, options, facility);
+	_log_syslog = 1;
+}
+
+int logSetPipe(char *pipe_file)
+{
+	if (pipe_file == NULL) {
+		return -1;
+	}
+
+	_log_pipe_file = strdup(pipe_file);
+	if (_log_pipe_file == NULL) {
+		return -1;
+	}
+
+	int ret = mkfifo(_log_pipe_file, 0666);
+	if (ret == 0) {
+		_log_pipe = 1;
+	}
+
+	return ret;
+}
+
+int logSetFile(char *file)
+{
+	if (file == NULL) {
+		return -1;
+	}
+
+	_log_file_fp = fopen(file, "a");
+	if (_log_file_fp == NULL) {
+		return errno;
+	}
+
+	return 0;
+}
+
+void logClose(void)
+{
+	if (_log_syslog) {
+		closelog();
+		_log_syslog = 0;
+	}
+
+	if (_log_pipe) {
+		if (_log_pipe_fd > 0) {
+			close(_log_pipe_fd);
+		}
+		/* remove the FIFO */
+		unlink(_log_pipe_file);
+		_log_pipe = 0;
+	}
+	if (_log_pipe_file != NULL) {
+		free(_log_pipe_file);
+		_log_pipe_file = NULL;
+	}
+
+	if (_log_file_fp != NULL) {
+		fclose(_log_file_fp);
+		_log_file_fp = NULL;
+	}
+}
+
+void vlog(int level, const char *fmt, va_list args)
+{
+	if (_log_level < level) {
+		return;
+	}
+
+	if (!_log_quiet || _log_file_fp != NULL) {
+		/* Get current time */
+		time_t t = time(NULL);
+		struct tm *lt = localtime(&t);
+
+		char date[16];
+		date[strftime(date, sizeof(date), "%b %d %H:%M:%S", lt)] = '\0';
+
+		if (_log_file_fp != NULL) {
+			fprintf(_log_file_fp, "%s %-5s ", date, _log_level_names[level]);
+			vfprintf(_log_file_fp, fmt, args);
+		}
+
+		if (!_log_quiet) {
+#ifdef LOG_DISABLE_COLOR
+			(void)_log_level_colors;
+			fprintf(stderr, "%s %-5s ", date, _log_level_names[level]);
+			vfprintf(stderr, fmt, args);
+#else
+			fprintf(stderr, "%s %s%-5s\x1b[0m ", date, _log_level_colors[level], _log_level_names[level]);
+			vfprintf(stderr, fmt, args);
+#endif
+		}
+	}
+
+	if (_log_syslog) {
+		vsyslog(level, fmt, args);
+	}
+
+	if (_log_pipe) {
+		if (_log_pipe_fd < 0) {
+			_log_pipe_fd = open(_log_pipe_file, O_WRONLY | O_NONBLOCK);
+		}
+		if (_log_pipe_fd > 0) {
+			if (vdprintf(_log_pipe_fd, fmt, args) < 0) {
+				close(_log_pipe_fd);
+				_log_pipe_fd = -1;
+			}
+		}
+
+	}
 }
 
 void
 #ifdef __GNUC__
 __attribute__((format(printf, 1, 2)))
 #endif
-logInfo(const char *fmt, ...)
+logEmergency(const char *fmt, ...)
 {
 	va_list args;
 
 	va_start(args, fmt);
-	vlogInfo(fmt, args);
+	vlog(LOG_EMERG, fmt, args);
 	va_end(args);
 }
 
-void vlogError(const char *fmt, va_list args)
+void
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+logAlert(const char *fmt, ...)
 {
-	if (!log_open) {
-		logOpen(log_opts, log_facility);
-	}
-	vsyslog(LOG_ERR, fmt, args);
+	va_list args;
+
+	va_start(args, fmt);
+	vlog(LOG_ALERT, fmt, args);
+	va_end(args);
+}
+
+void
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+logCritical(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vlog(LOG_CRIT, fmt, args);
+	va_end(args);
 }
 
 void
@@ -73,58 +220,8 @@ logError(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	vlogError(fmt, args);
+	vlog(LOG_ERR, fmt, args);
 	va_end(args);
-}
-
-void vlogNotice(const char *fmt, va_list args)
-{
-	if (!log_open) {
-		logOpen(log_opts, log_facility);
-	}
-	vsyslog(LOG_NOTICE, fmt, args);
-}
-
-void
-#ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
-#endif
-logNotice(const char *fmt, ...)
-{
-	va_list args;
-
-	va_start(args, fmt);
-	vlogNotice(fmt, args);
-	va_end(args);
-}
-
-void vlogDebug(const char *fmt, va_list args)
-{
-	if (!log_open) {
-		logOpen(log_opts, log_facility);
-	}
-	vsyslog(LOG_DEBUG, fmt, args);
-}
-
-void
-#ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
-#endif
-logDebug(const char *fmt, ...)
-{
-	va_list args;
-
-	va_start(args, fmt);
-	vlogDebug(fmt, args);
-	va_end(args);
-}
-
-void vlogWarning(const char *fmt, va_list args)
-{
-	if (!log_open) {
-		logOpen(log_opts, log_facility);
-	}
-	vsyslog(LOG_WARNING, fmt, args);
 }
 
 void
@@ -136,6 +233,45 @@ logWarning(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	vlogWarning(fmt, args);
+	vlog(LOG_WARNING, fmt, args);
+	va_end(args);
+}
+
+void
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+logNotice(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vlog(LOG_NOTICE, fmt, args);
+	va_end(args);
+}
+
+void
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+logInfo(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vlog(LOG_INFO, fmt, args);
+	va_end(args);
+}
+
+void
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+logDebug(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vlog(LOG_DEBUG, fmt, args);
 	va_end(args);
 }

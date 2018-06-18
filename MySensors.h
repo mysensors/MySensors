@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -59,6 +59,8 @@
 #include "hal/architecture/MyHw.h"
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/ESP8266/MyHwESP8266.cpp"
+#elif defined(ARDUINO_ARCH_ESP32)
+#include "hal/architecture/ESP32/MyHwESP32.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
@@ -75,6 +77,8 @@
 #include "hal/architecture/Teensy3/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/Linux/MyHwLinuxGeneric.cpp"
+#else
+#error Hardware abstraction not defined (unsupported platform)
 #endif
 
 // OTA Debug second part, depends on HAL
@@ -126,10 +130,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // FLASH
 #if defined(MY_OTA_FIRMWARE_FEATURE)
+#ifndef MCUBOOT_PRESENT
 #if defined(MY_OTA_USE_I2C_EEPROM)
 #include "drivers/I2CEeprom/I2CEeprom.cpp"
 #else
 #include "drivers/SPIFlash/SPIFlash.cpp"
+#endif
 #endif
 #include "core/MyOTAFirmwareUpdate.cpp"
 #endif
@@ -147,12 +153,17 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(MY_SENSOR_NETWORK)
 // We assume that a gateway having a radio also should act as repeater
 #define MY_REPEATER_FEATURE
-
 #endif
+
 // GATEWAY - COMMON FUNCTIONS
-// We support MQTT Client using W5100, ESP8266 and Linux
-#if !defined(MY_GATEWAY_CLIENT_MODE)
+// We support MQTT Client using W5100, ESP8266, GSM modems supported by TinyGSM library and Linux
+#if !defined(MY_GATEWAY_CLIENT_MODE) && !defined(MY_GATEWAY_TINYGSM)
 #error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS
+#endif
+
+#if defined(MY_GATEWAY_TINYGSM) && !defined(MY_GATEWAY_MQTT_CLIENT)
+// TinyGSM currently only supports MQTTClient mode.
+#error MY_GATEWAY_TINYGSM only works with MY_GATEWAY_MQTT_CLIENT
 #endif
 
 #if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
@@ -169,6 +180,10 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 #include "core/MyGatewayTransport.cpp"
 #include "core/MyProtocolMySensors.cpp"
+
+#if defined(MY_GATEWAY_TINYGSM)
+#include "drivers/TinyGSM/TinyGsmClient.h"
+#endif
 
 #if defined(MY_GATEWAY_LINUX)
 #include "drivers/Linux/EthernetClient.h"
@@ -188,11 +203,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // We assume that a gateway having a radio also should act as repeater
 #define MY_REPEATER_FEATURE
 #endif
+
 #if !defined(MY_PORT)
-#error You must define MY_PORT (controller or gatway port to open)
+#error You must define MY_PORT (controller or gateway port to open)
 #endif
-#if defined(MY_GATEWAY_ESP8266)
-// GATEWAY - ESP8266
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+// GATEWAY - ESP8266 / ESP32
 #include "core/MyGatewayTransportEthernet.cpp"
 #elif defined(MY_GATEWAY_LINUX)
 // GATEWAY - Generic Linux
@@ -268,13 +284,13 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 #if defined(MY_TRANSPORT_DONT_CARE_MODE)
-#error This directive is deprecated, set MY_TRANSPORT_WAIT_READY_MS instead!
+#error MY_TRANSPORT_DONT_CARE_MODE is deprecated, set MY_TRANSPORT_WAIT_READY_MS instead!
 #endif
 
 // RAM ROUTING TABLE
 #if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR)
 #if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__)
@@ -304,6 +320,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "drivers/AVR/DigitalIO/DigitalIO.h"
 #endif
 
+// SOFTSERIAL
+#if defined(MY_GSM_TX) != defined(MY_GSM_RX)
+#error Both, MY_GSM_TX and MY_GSM_RX need to be defined when using SoftSerial
+#endif
+
+#if defined(MY_GATEWAY_TINYGSM) && !defined(SerialAT) && (!defined(MY_GSM_TX) || !defined(MY_GSM_RX))
+#error You need to define either SerialAT or MY_GSM_RX and MY_GSM_TX pins
+#endif
+
 // POWER PIN
 #ifndef DOXYGEN
 #if defined(MY_RF24_POWER_PIN) || defined(MY_RFM69_POWER_PIN) || defined(MY_RFM95_POWER_PIN) || defined(MY_RADIO_NRF5_ESB)
@@ -315,21 +340,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // Transport drivers
 #if defined(MY_RADIO_RF24)
-#if defined(MY_RF24_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 #include "drivers/RF24/RF24.cpp"
-#include "hal/transport/MyTransportRF24.cpp"
+#include "hal/transport/RF24/MyTransportRF24.cpp"
 #elif defined(MY_RADIO_NRF5_ESB)
 #if !defined(ARDUINO_ARCH_NRF5)
 #error No support for nRF5 radio on this platform
 #endif
-#if defined(MY_NRF5_ESB_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 #include "drivers/NRF5/Radio.cpp"
 #include "drivers/NRF5/Radio_ESB.cpp"
-#include "hal/transport/MyTransportNRF5_ESB.cpp"
+#include "hal/transport/NRF5_ESB/MyTransportNRF5_ESB.cpp"
 #elif defined(MY_RS485)
 #if !defined(MY_RS485_HWSERIAL)
 #if defined(__linux__)
@@ -337,20 +356,17 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 #include "drivers/AltSoftSerial/AltSoftSerial.cpp"
 #endif
-#include "hal/transport/MyTransportRS485.cpp"
+#include "hal/transport/RS485/MyTransportRS485.cpp"
 #elif defined(MY_RADIO_RFM69)
 #if defined(MY_RFM69_NEW_DRIVER)
 #include "drivers/RFM69/new/RFM69_new.cpp"
 #else
 #include "drivers/RFM69/old/RFM69_old.cpp"
 #endif
-#include "hal/transport/MyTransportRFM69.cpp"
+#include "hal/transport/RFM69/MyTransportRFM69.cpp"
 #elif defined(MY_RADIO_RFM95)
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 #include "drivers/RFM95/RFM95.cpp"
-#include "hal/transport/MyTransportRFM95.cpp"
+#include "hal/transport/RFM95/MyTransportRFM95.cpp"
 #endif
 
 // PASSIVE MODE
@@ -396,7 +412,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "core/MySensorsCore.cpp"
 
 // HW mains
-#if !defined(MY_CORE_ONLY)
 #if defined(ARDUINO_ARCH_AVR)
 #include "hal/architecture/AVR/MyMainAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
@@ -405,13 +420,14 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/ESP8266/MyMainESP8266.cpp"
 #elif defined(ARDUINO_ARCH_NRF5)
 #include "hal/architecture/NRF5/MyMainNRF5.cpp"
+#elif defined(ARDUINO_ARCH_ESP32)
+#include "hal/architecture/ESP32/MyMainESP32.cpp"
 #elif defined(__linux__)
-#include "hal/architecture/Linux/MyMainLinux.cpp"
+#include "hal/architecture/Linux/MyMainLinuxGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
 #elif defined(TEENSYDUINO)
 #include "hal/architecture/Teensy3/MyMainTeensy3.cpp"
-#endif
 #endif
 
 #endif

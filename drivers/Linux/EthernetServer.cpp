@@ -155,13 +155,11 @@ size_t EthernetServer::write(uint8_t b)
 size_t EthernetServer::write(const uint8_t *buffer, size_t size)
 {
 	size_t n = 0;
-	size_t i = 0;
 
-	while (i < clients.size()) {
+	for (size_t i = 0; i < clients.size(); ++i) {
 		EthernetClient client(clients[i]);
 		if (client.status() == ETHERNETCLIENT_W5100_ESTABLISHED) {
 			n += client.write(buffer, size);
-			i++;
 		}
 	}
 
