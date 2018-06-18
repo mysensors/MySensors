@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -37,7 +37,7 @@ public:
 	/**
 	 * @brief SoftEeprom constructor.
 	 */
-	SoftEeprom(const char *fileName, size_t length);
+	SoftEeprom();
 	/**
 	 * @brief SoftEeprom copy constructor.
 	 */
@@ -46,6 +46,19 @@ public:
 	 * @brief SoftEeprom destructor.
 	 */
 	~SoftEeprom();
+	/**
+	 * @brief Initializes the eeprom class.
+	 *
+	 * @param fileName filepath where the data is saved.
+	 * @param length eeprom size in bytes.
+	 * @return 0 if SUCCESS or -1 if FAILURE.
+	 */
+	int init(const char *fileName, size_t length);
+	/**
+	 * @brief Clear all allocated memory variables.
+	 *
+	 */
+	void destroy();
 	/**
 	 * @brief Read a block of bytes from eeprom.
 	 *

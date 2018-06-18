@@ -66,6 +66,31 @@ void hwWriteConfig(int adr, uint8_t value)
 
 bool hwInit()
 {
+#ifdef MY_LOCK_MCU
+#ifdef NRF51
+	// Lock MCU
+	if((uint32_t)((NRF_UICR->RBPCONF & UICR_RBPCONF_PALL_Msk) >> UICR_RBPCONF_PALL_Pos) !=
+	        UICR_RBPCONF_PALL_Enabled) {
+		Flash.write((uint32_t *)&NRF_UICR->RBPCONF, (NRF_UICR->RBPCONF & ~UICR_RBPCONF_PALL_Msk));
+		hwReboot();
+	}
+#else
+	// Lock MCU
+	if((uint32_t)((NRF_UICR->APPROTECT & UICR_APPROTECT_PALL_Msk) >> UICR_APPROTECT_PALL_Pos) !=
+	        UICR_APPROTECT_PALL_Enabled) {
+		Flash.write((uint32_t *)&NRF_UICR->APPROTECT, (NRF_UICR->APPROTECT & ~UICR_APPROTECT_PALL_Msk));
+		hwReboot();
+	}
+#endif
+#endif
+
+#if defined(NRF51) && defined(CONFIG_ENABLE_PINRESET)
+	// Enabling reset for NRF51 isn't handled by arduino-nrf5. Enable it, if requested.
+	NRF_POWER->RESET = POWER_RESET_RESET_Enabled;
+	NRF_POWER->RAMON |= (POWER_RAMON_ONRAM0_RAM0On << POWER_RAMON_ONRAM0_Pos) |
+	                    (POWER_RAMON_ONRAM1_RAM1On << POWER_RAMON_ONRAM1_Pos);
+#endif
+
 	// Clock is manged by sleep modes. Radio depends on HFCLK.
 	// Force to start HFCLK
 	NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;

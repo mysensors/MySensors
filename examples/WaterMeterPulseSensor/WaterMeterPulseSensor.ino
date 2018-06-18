@@ -23,7 +23,7 @@
  * Version 1.1 - GizMoCuz
  *
  * DESCRIPTION
- * Use this sensor to measure volume and flow of your house watermeter.
+ * Use this sensor to measure volume and flow of your house water meter.
  * You need to set the correct pulsefactor of your meter (pulses per m3).
  * The sensor starts by fetching current volume reading from gateway (VAR 1).
  * Reports both volume and flow back to gateway.
@@ -47,7 +47,7 @@
 
 #define DIGITAL_INPUT_SENSOR 3                  // The digital input you attached your sensor.  (Only 2 and 3 generates interrupt!)
 
-#define PULSE_FACTOR 1000                       // Nummber of blinks per m3 of your meter (One rotation/liter)
+#define PULSE_FACTOR 1000                       // Number of blinks per m3 of your meter (One rotation/liter)
 
 #define SLEEP_MODE false                        // flowvalue can only be reported when sleep mode is false.
 
@@ -96,7 +96,7 @@ void presentation()
 	// Send the sketch version information to the gateway and Controller
 	sendSketchInfo("Water Meter", "1.1");
 
-	// Register this device as Waterflow sensor
+	// Register this device as Water flow sensor
 	present(CHILD_ID, S_WATER);
 }
 
@@ -120,8 +120,8 @@ void loop()
 			Serial.print("l/min:");
 			Serial.println(flow);
 
-			// Check that we dont get unresonable large flow value.
-			// could hapen when long wraps or false interrupt triggered
+			// Check that we don't get unreasonable large flow value.
+			// could happen when long wraps or false interrupt triggered
 			if (flow<((uint32_t)MAX_FLOW)) {
 				send(flowMsg.set(flow, 2));                   // Send flow value to gw
 			}
@@ -178,7 +178,7 @@ void onPulse()
 		if (interval!=0) {
 			lastPulse = millis();
 			if (interval<500000L) {
-				// Sometimes we get interrupt on RISING,  500000 = 0.5sek debounce ( max 120 l/min)
+				// Sometimes we get interrupt on RISING,  500000 = 0.5 second debounce ( max 120 l/min)
 				return;
 			}
 			flow = (60000000.0 /interval) / ppl;

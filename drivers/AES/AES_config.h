@@ -31,6 +31,8 @@ typedef unsigned char byte;
 #define PSTR(x) (x)
 #elif defined(ARDUINO_ARCH_ESP8266)
 #include <pgmspace.h>
+#elif defined(ARDUINO_ARCH_ESP32)
+#include <pgmspace.h>
 #elif defined(ARDUINO_ARCH_SAMD)
 #define printf_P printf
 #else

@@ -34,7 +34,7 @@ def buildSerial(config) {
 	buildLinux(config, '--my-debug=disable --my-transport=none --my-gateway=serial', 'Serial')
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Linux builds - Serial GW)', 'Warnings found', '${BUILD_URL}warnings28Result/new')
-		error 'Termiated due to warnings found'
+		error 'Terminated due to warnings found'
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Linux builds - Serial GW)', 'Build error', '${BUILD_URL}')
 	} else {
@@ -47,7 +47,7 @@ def buildEthernet(config) {
 	buildLinux(config, '--my-debug=enable --my-transport=rs485 --my-gateway=ethernet', 'Ethernet')
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Linux builds - Ethernet GW)', 'Warnings found', '${BUILD_URL}warnings28Result/new')
-		error 'Termiated due to warnings found'
+		error 'Terminated due to warnings found'
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Linux builds - Ethernet GW)', 'Build error', '${BUILD_URL}')
 	} else {
@@ -60,7 +60,7 @@ def buildMQTT(config) {
 	buildLinux(config, '--my-debug=disable --my-transport=none --my-gateway=mqtt', 'MQTT')
 	if (currentBuild.currentResult == 'UNSTABLE') {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Linux builds - MQTT GW)', 'Warnings found', '${BUILD_URL}warnings28Result/new')
-		error 'Termiated due to warnings found'
+		error 'Terminated due to warnings found'
 	} else if (currentBuild.currentResult == 'FAILURE') {
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Linux builds - MQTT GW)', 'Build error', '${BUILD_URL}')
 	} else {

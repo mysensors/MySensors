@@ -36,11 +36,7 @@ void OTALog(uint8_t logNode, bool enableAck, const char *fmt, ... )
 
 	// create message
 	va_start (args, fmt );
-#ifdef vsnprintf_P
 	int n = vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#else
-	int n = vsnprintf(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#endif
 	va_end (args);
 
 	// Check number of chars
@@ -92,14 +88,9 @@ void OTALogPrintPrefix()
 {
 	char prefix[37];
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-#ifdef snprintf_P
 	snprintf_P(prefix, sizeof(prefix),
 	           PSTR("%" PRId8 ";%" PRId8 ";%" PRId8 ";0;%" PRId8 ";%" PRIu32 " "),
 	           OTALogBufferNode, OTALogBufferSensor, C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-#else
-	snprintf(prefix, sizeof(prefix), PSTR("%" PRId8 ";%" PRId8 ";%" PRId8 ";0;%" PRId8 ";%" PRIu32 " "),
-	         OTALogBufferNode, OTALogBufferSensor, C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-#endif
 	MY_SERIALDEVICE.print(prefix);
 }
 
