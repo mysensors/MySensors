@@ -36,8 +36,8 @@
  *			100-200 Soil is becoming dangerously dry for maximum production. Proceed with caution.
  *
  * Connection:
- *  D6, D7: alternative powering to avoid sensor degradation
- * A0, A1: alternative resistance mesuring
+ * D6, D7: alternative powering to avoid sensor degradation
+ * A0, A1: alternative resistance measuring
  *
  *  Based on:
  *  "Vinduino" portable soil moisture sensor code V3.00
@@ -138,7 +138,7 @@ void loop()
 	Serial.println ();
 
 	//send back the values
-	send(msg.set((long int)ceil(sensor1)));
+	send(msg.set((int32_t)ceil(sensor1)));
 	// delay until next measurement (msec)
 	sleep(SLEEP_TIME);
 }

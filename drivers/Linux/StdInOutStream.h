@@ -17,8 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef SerialSimulator_h
-#define SerialSimulator_h
+#ifndef StdInOutStream_h
+#define StdInOutStream_h
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,9 +26,9 @@
 #include "Stream.h"
 
 /**
- * @brief A class equivalent to Serial in Arduino but outputs to stdout
+ * @brief A class that prints to stdout and reads from stdin
  */
-class SerialSimulator : public Stream
+class StdInOutStream : public Stream
 {
 
 public:

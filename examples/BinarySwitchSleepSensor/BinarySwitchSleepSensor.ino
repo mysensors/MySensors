@@ -23,7 +23,7 @@
  * Interrupt driven binary switch example with dual interrupts
  * Author: Patrick 'Anticimex' Fallberg
  * Connect one button or door/window reed switch between
- * digitial I/O pin 3 (BUTTON_PIN below) and GND and the other
+ * digital I/O pin 3 (BUTTON_PIN below) and GND and the other
  * one in similar fashion on digital I/O pin 2.
  * This example is designed to fit Arduino Nano/Pro Mini
  *

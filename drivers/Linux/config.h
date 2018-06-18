@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -17,40 +17,32 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include <stdio.h>
-#include "SerialSimulator.h"
+#ifndef CONFIG_H
+#define CONFIG_H
 
-void SerialSimulator::begin(int baud)
-{
-	(void)baud;
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int SerialSimulator::available()
-{
-	return 1;
-}
+struct config {
+	int verbose;
+	int log_file;
+	char *log_filepath;
+	int log_pipe;
+	char *log_pipe_file;
+	int syslog;
+	char *eeprom_file;
+	int eeprom_size;
+	char *soft_hmac_key;
+	char *soft_serial_key;
+	char *aes_key;
+} conf;
 
-int SerialSimulator::read()
-{
-	return getchar();
-}
+int config_parse(const char *config_file);
+void config_cleanup(void);
 
-size_t SerialSimulator::write(uint8_t b)
-{
-	return (size_t)::printf("%c", b);
+#ifdef __cplusplus
 }
+#endif
 
-int SerialSimulator::peek()
-{
-	return -1;
-}
-
-void SerialSimulator::flush()
-{
-	fflush(stdout);
-}
-
-void SerialSimulator::end()
-{
-	flush();
-}
+#endif

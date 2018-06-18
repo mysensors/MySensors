@@ -12,11 +12,43 @@ def call(Closure body) {
 
 	if (env.CHANGE_ID) {
 		config.is_pull_request = true
-		echo "Building pull request: #"+env.CHANGE_ID+"\nTarget branch: "+env.CHANGE_TARGET
+		echo "Building pull request: #"+env.CHANGE_ID+"\nTarget branch: "+env.CHANGE_TARGET+"\nAuthor: "+env.CHANGE_AUTHOR+" ("+env.CHANGE_AUTHOR_EMAIL+")"
 		config.git_sha = sh(returnStdout: true,
 			script: """#!/bin/bash
 								 cd ${config.repository_root}
 								 git log -n 1 --pretty=format:'%H' refs/remotes/origin/PR-${env.CHANGE_ID}""").trim()
+		// Pre-register all build statues so github shows what is going to happen
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate', 'Validating...', '${BUILD_URL}flowGraphTable/')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Butler)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Code analysis - Cppcheck)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Documentation)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Linux builds - Serial GW)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Linux builds - Ethernet GW)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Linux builds - MQTT GW)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - Examples)', 'Not run yet...', '')
+/*
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - Examples)', 'Not run yet...', '')
+*/
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Examples)', 'Not run yet...', '')
+/*
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
+*/
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Examples)', 'Not run yet...', '')
 	} else {
 		config.is_pull_request = false
 		echo "Building branch: "+env.BRANCH_NAME
@@ -24,15 +56,14 @@ def call(Closure body) {
 			script: """#!/bin/bash
 								 cd ${config.repository_root}
 								 git log -n 1 --pretty=format:'%H' refs/remotes/origin/${env.BRANCH_NAME}""").trim()
-		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate', 'Validating...', '${BUILD_URL}flowGraphTable/')
 	}
 
 	try {
 		ansiColor('xterm') {
 			if (config.is_pull_request) {
-				def gitler = load(config.repository_root+'.ci/gitler.groovy')
-				stage('Gitler') {
-					gitler(config)
+				def butler = load(config.repository_root+'.ci/butler.groovy')
+				stage('Butler') {
+					butler(config)
 				}
 			}
 
@@ -58,7 +89,7 @@ def call(Closure body) {
 
 				config.tests    = findFiles(glob: config.library_root+'tests/**/*.ino')
 				config.examples = findFiles(glob: config.library_root+'examples/**/*.ino')
-				
+
 			}
 
 			parallel Doxygen: {
@@ -97,6 +128,9 @@ def call(Closure body) {
 					stage('MySensorsGW (tests)') {
 						arduino.buildMySensorsGw(config, config.tests, 'Tests')
 					}
+					stage('ESP32 (tests)') {
+						arduino.buildESP32(config, config.tests, 'Tests')
+					}
 					stage('nRF52832 (tests)') {
 						arduino.buildnRF52832(config, config.tests, 'Tests')
 					}
@@ -107,7 +141,7 @@ def call(Closure body) {
 						arduino.buildnRF5(config, config.tests, 'Tests')
 					}
 					stage('ESP8266 (tests)') {
-						arduino.buildEsp8266(config, config.tests, 'Tests')
+						arduino.buildESP8266(config, config.tests, 'Tests')
 					}
 					stage('STM32F1 (tests)') {
 						arduino.buildSTM32F1(config, config.tests, 'Tests')
@@ -140,13 +174,18 @@ def call(Closure body) {
 						arduino.buildnRF5(config, config.examples, 'Examples')
 					}
 					stage('ESP8266 (examples)') {
-						arduino.buildEsp8266(config, config.examples, 'Examples')
+						arduino.buildESP8266(config, config.examples, 'Examples')
 					}
+					// No point in building examples for ESP32 yet
+					/*
+					stage('ESP32 (examples)') {
+						arduino.buildESP32(config, config.examples, 'Examples')
+					}
+					*/
 					// No point in building examples for STM32F1 yet
 					/*
 					stage('STM32F1 (Examples)') {
 						arduino.buildSTM32F1(config, config.tests, 'Examples')
-					}
 					*/
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
@@ -166,20 +205,37 @@ def call(Closure body) {
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate', 'Failed', '${BUILD_URL}flowGraphTable/')
 			if (config.is_pull_request) {
 				slackSend color: 'danger',
-					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>' failed with result ${currentBuild.result}."
+					message: "Failed to build <${env.CHANGE_URL}|PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}>. Job <${env.BUILD_URL}|${env.JOB_NAME} #${env.BUILD_NUMBER}> ended with ${currentBuild.result}."
 				emailext (
-					subject: "Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' failed",
-					body: """Job '${env.JOB_NAME} <a href="${env.BUILD_URL}">#${env.BUILD_NUMBER}</a> (<a href="${env.CHANGE_URL}">PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE}</a>)' ended with result ${currentBuild.result}.
-					<br>Check attached console output or <a href="${env.BUILD_URL}">here</a> for a hint on what the problem might be.""",
+					subject: "PR#${env.CHANGE_ID} - ${env.CHANGE_TITLE} failed to build",
+					body: '''Greetings!<p>
+					I am The Butler. My task is to help you create a pull request that fit the MySensors organizations coding style and builds for all supported platforms.<p>
+					I am afraid I failed to validate your pull request. Result was '''+currentBuild.result+'''.
+					<br>Please check the attached build log or <a href="${BUILD_URL}">here</a> for a hint on what the problem might be.<p>
+					If you have difficulties determining the cause for the failure, feel free to ask questions <a href="${CHANGE_URL}">here</a>.<p>
+					Changes:<br>
+					${CHANGES}<p>
+					Notable build log lines:<br>
+					${BUILD_LOG_REGEX, regex="^.*?Terminated.*?$", linesBefore=0, linesAfter=0, maxMatches=5, showTruncatedLines=false, escapeHtml=true}<p>
+					My personal evaluation of your pull request is available <a href="${BUILD_URL}The_20Butler_20report/butler.html">here</a>.<p>
+					--<br>
+					Yours sincerely, The Butler, serving the MySensors community''',
 					mimeType: 'text/html', to: env.CHANGE_AUTHOR_EMAIL, attachLog: true, compressLog: false
 				)
 			} else {
 				slackSend color: 'danger',
-					message: "Job '${env.JOB_NAME} <${env.BUILD_URL}|#${env.BUILD_NUMBER}> ${env.BRANCH_NAME}]' failed with result ${currentBuild.result}."
+					message: "Failed to build branch ${env.BRANCH_NAME}. Job <${env.BUILD_URL}|${env.JOB_NAME} #${env.BUILD_NUMBER}> ended with ${currentBuild.result}."
 				emailext (
-					subject: "Job '${env.JOB_NAME} #${env.BUILD_NUMBER} ${env.BRANCH_NAME}' failed",
-					body: """Job '${env.JOB_NAME} <a href="${env.BUILD_URL}">#${env.BUILD_NUMBER}</a> (${env.BRANCH_NAME})' ended with result ${currentBuild.result}.
-					<br>Check attached console output or <a href="${env.BUILD_URL}">here</a> for a hint on what the problem might be.""",
+					subject: "MySensors branch ${env.BRANCH_NAME} failed to build",
+					body: '''I am afraid I failed to build branch ${BRANCH_NAME}. Result was '''+currentBuild.result+'''.
+					<br>Please check the attached build log or <a href="${BUILD_URL}">here</a> for a hint on what the problem might be.<p>
+					Changes:<br>
+					${CHANGES}<p>
+					Notable build log lines:<br>
+					${BUILD_LOG_REGEX, regex="^.*?Terminated.*?$", linesBefore=0, linesAfter=0, maxMatches=5, showTruncatedLines=false, escapeHtml=true}<p>
+					My personal evaluation of your pull request is available <a href="${BUILD_URL}The_20Butler_20report/butler.html">here</a>.<p>
+					--<br>
+					Yours sincerely, The Butler, serving the MySensors community''',
 					mimeType: 'text/html', to: 'builds@mysensors.org', attachLog: true, compressLog: false
 				)
 			}

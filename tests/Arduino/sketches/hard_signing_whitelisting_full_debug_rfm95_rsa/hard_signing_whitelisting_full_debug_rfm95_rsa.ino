@@ -33,6 +33,6 @@
 #ifndef MY_SIGNING_ATSHA204_PIN
 #define MY_SIGNING_ATSHA204_PIN 17
 #endif
-#define MY_RFM69_ENABLE_ENCRYPTION
+#define MY_RFM95_ENABLE_ENCRYPTION
 
 #include <MySensors.h>

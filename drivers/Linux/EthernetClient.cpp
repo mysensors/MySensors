@@ -220,9 +220,8 @@ void EthernetClient::stop()
 	gettimeofday(&startTime, NULL);
 
 	// wait up to a second for the connection to close
-	uint8_t s;
 	do {
-		s = status();
+		uint8_t s = status();
 		if (s == ETHERNETCLIENT_W5100_CLOSED) {
 			break; // exit the loop
 		}
@@ -231,10 +230,8 @@ void EthernetClient::stop()
 	} while (((curTime.tv_sec - startTime.tv_sec) * 1000000) + (curTime.tv_usec - startTime.tv_usec) <
 	         1000000);
 
-	// if it hasn't closed, close it forcefully
-	if (s != ETHERNETCLIENT_W5100_CLOSED) {
-		::close(_sock);
-	}
+	// free up the socket descriptor
+	::close(_sock);
 	_sock = -1;
 }
 

@@ -50,6 +50,7 @@ typedef enum {
 	C_STREAM				= 4		//!< For firmware and other larger chunks of data that need to be divided into pieces.
 } mysensor_command;
 
+#if !DOXYGEN // Hide until we migrate
 /// @brief Type of sensor (used when presenting sensors)
 typedef enum {
 	S_DOOR					= 0,	//!< Door sensor, V_TRIPPED, V_ARMED
@@ -158,6 +159,7 @@ typedef enum {
 	V_VA					= 55,	//!< S_POWER, Apparent power: volt-ampere (VA)
 	V_POWER_FACTOR			= 56,	//!< S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
 } mysensor_data;
+#endif
 
 
 /// @brief Type of internal messages (for internal messages)
@@ -206,7 +208,9 @@ typedef enum {
 	ST_FIRMWARE_REQUEST			= 2,	//!< Request FW block
 	ST_FIRMWARE_RESPONSE		= 3,	//!< Response FW block
 	ST_SOUND					= 4,	//!< Sound
-	ST_IMAGE					= 5		//!< Image
+	ST_IMAGE					= 5,	//!< Image
+	ST_FIRMWARE_CONFIRM	= 6, //!< Mark running firmware as valid (MyOTAFirmwareUpdateNVM + mcuboot)
+	ST_FIRMWARE_RESPONSE_RLE = 7,	//!< Response FW block with run length encoded data
 } mysensor_stream;
 
 /// @brief Type of payload
@@ -275,23 +279,37 @@ typedef enum {
 #define miGetPayloadType() (uint8_t)BF_GET(command_ack_payload, 5, 3) //!< Internal getter for payload type field
 
 
-#if !DOXYGEN
-#ifdef __cplusplus
+#if defined(__cplusplus) || defined(DOXYGEN)
+/**
+ * @brief MyMessage is used to create, manipulate, send and read MySensors messages
+ */
 class MyMessage
 {
 private:
 	char* getCustomString(char *buffer) const;
 
 public:
-	// Constructors
+	/**
+	 * Default constructor
+	 */
 	MyMessage();
 
+	/**
+	 * Constructor
+	 * @param sensor id of the child sensor for this message
+	 * @param type see http://korturl.nu/stupidurl
+	 */
 	MyMessage(uint8_t sensor, uint8_t type);
 
+	/**
+	 * Single character hex (0 - 15) conversion
+	 * @param i byte (only lower 4 bits will be considered)
+	 * @return single char with the hex representation (0 to F) of the parameter
+	 */
 	char i2h(uint8_t i) const;
 
 	/**
-	 * Clear message contents.
+	 * @brief Clear message contents.
 	 */
 	void clear();
 
@@ -299,42 +317,158 @@ public:
 	 * If payload is something else than P_STRING you can have the payload value converted
 	 * into string representation by supplying a buffer with the minimum size of
 	 * 2*MAX_PAYLOAD+1. This is to be able to fit hex-conversion of a full binary payload.
+	 * @param buffer pointer to a buffer that's at least 2*MAX_PAYLOAD+1 bytes large
 	 */
 	char* getStream(char *buffer) const;
+
+	/**
+	 * @brief Copy the payload into the supplied buffer
+	 */
 	char* getString(char *buffer) const;
+
+	/**
+	 * @brief Get payload as string
+	 * @return pointer to a char array storing the string
+	 */
 	const char* getString() const;
+
+	/**
+	 * @brief Get custom payload
+	 * @return pointer to the raw payload
+	 */
 	void* getCustom() const;
+
+	/**
+	 * @brief Get bool payload
+	 * @return a bool with the value of the payload (true/false)
+	 */
 	bool getBool() const;
+
+	/**
+	 * @brief Get unsigned 8-bit integer payload
+	 * @return the value of the payload, 0 to 255
+	 */
 	uint8_t getByte() const;
+
+	/**
+	 * @brief Get float payload
+	 * @return the floating-point value of the payload
+	 */
 	float getFloat() const;
+
+	/**
+	 * @brief Get signed 16-bit integer payload
+	 * @return the value of the payload, –32768 to 32767
+	 */
 	int16_t getInt() const;
+
+	/**
+	 * @brief Get unsigned 16-bit integer payload
+	 * @return the value of the payload, 0 to 65535
+	 */
 	uint16_t getUInt() const;
+
+	/**
+	 * @brief Get signed 32-bit integer payload
+	 * @return the value of the payload, –2147483648 to 2147483647
+	 */
 	int32_t getLong() const;
+
+	/**
+	 * @brief Get unsigned 32-bit integer payload
+	 * @return the value of the payload, 0 to 4294967295
+	 */
 	uint32_t getULong() const;
 
-	// Getter for command type
+	/**
+	 * @brief Getter for command type
+	 * @return #mysensor_command
+	 */
 	uint8_t getCommand() const;
 
-	// Getter for ack-flag. True if this is an ack message.
+	/**
+	 * @brief Getter for ack-flag.
+	 * @return true if this is an ack message
+	 */
 	bool isAck() const;
 
-	// Setters for building message "on the fly"
+	/**
+	 * @brief Set message type
+	 * @param type see http://korturl.nu/stupidurl
+	 */
 	MyMessage& setType(uint8_t type);
+
+	/**
+	 * @brief Set which child sensor this message belongs to
+	 */
 	MyMessage& setSensor(uint8_t sensor);
+
+	/**
+	 * @brief Set final destination node id for this message
+	 */
 	MyMessage& setDestination(uint8_t destination);
 
-	// Setters for payload
+	/**
+	 * @brief Set entire payload
+	 * @param payload pointer to the buffer where the payload is stored
+	 * @param length of the payload
+	 */
 	MyMessage& set(void* payload, uint8_t length);
+
+	/**
+	 * @brief Set payload to character array
+	 * @param value pointer to the character array. The array must be null-terminated.
+	 */
 	MyMessage& set(const char* value);
 #if !defined(__linux__)
+	/**
+	 * @brief Set payload to character array from flash
+	 * @param value pointer to the character array. The array must be null-terminated.
+	 */
 	MyMessage& set(const __FlashStringHelper* value);
 #endif
+
+	/**
+	 * @brief Set payload to decimal number
+	 * @param value float
+	 * @param decimals number of decimals to include
+	 */
 	MyMessage& set(float value, uint8_t decimals);
+
+	/**
+	 * @brief Set payload to bool value
+	 * @param value true or false
+	 */
 	MyMessage& set(bool value);
+
+	/**
+	 * @brief Set payload to unsigned 8-bit integer value
+	 * @param value (0 to 255)
+	 */
 	MyMessage& set(uint8_t value);
+
+	/**
+	 * @brief Set payload to unsigned 32-bit integer value
+	 * @param value (0 to 4294967295)
+	 */
 	MyMessage& set(uint32_t value);
+
+	/**
+	 * @brief Set payload to signed 32-bit integer value
+	 * @param value (–2147483648 to 2147483647)
+	 */
 	MyMessage& set(int32_t value);
+
+	/**
+	 * @brief Set payload to unsigned 16-bit integer value
+	 * @param value (0 to 65535)
+	 */
 	MyMessage& set(uint16_t value);
+
+	/**
+	 * @brief Set payload to signed 16-bit integer value
+	 * @param value (–32768 to 32767)
+	 */
 	MyMessage& set(int16_t value);
 
 #else
@@ -343,46 +477,55 @@ typedef union {
 	struct {
 
 #endif
-	uint8_t last;            	 // 8 bit - Id of last node this message passed
-	uint8_t sender;          	 // 8 bit - Id of sender node (origin)
-	uint8_t destination;     	 // 8 bit - Id of destination node
+	uint8_t last;            	 ///< 8 bit - Id of last node this message passed
+	uint8_t sender;          	 ///< 8 bit - Id of sender node (origin)
+	uint8_t destination;     	 ///< 8 bit - Id of destination node
 
-	uint8_t version_length;		 // 2 bit - Protocol version
-	// 1 bit - Signed flag
-	// 5 bit - Length of payload
-	uint8_t command_ack_payload; // 3 bit - Command type
-	// 1 bit - Request an ack - Indicator that receiver should send an ack back.
-	// 1 bit - Is ack message - Indicator that this is the actual ack message.
-	// 3 bit - Payload data type
-	uint8_t type;            	 // 8 bit - Type varies depending on command
-	uint8_t sensor;          	 // 8 bit - Id of sensor that this message concerns.
+	/**
+	 * 2 bit - Protocol version<br>
+	 * 1 bit - Signed flag<br>
+	 * 5 bit - Length of payload
+	 */
+	uint8_t version_length;
 
-	// Each message can transfer a payload. We add one extra byte for string
-	// terminator \0 to be "printable" this is not transferred OTA
-	// This union is used to simplify the construction of the binary data types transferred.
+	/**
+	 * 3 bit - Command type<br>
+	 * 1 bit - Request an ack - Indicator that receiver should send an ack back<br>
+	 * 1 bit - Is ack message - Indicator that this is the actual ack message<br>
+	 * 3 bit - Payload data type
+	 */
+	uint8_t command_ack_payload;
+
+	uint8_t type; ///< 8 bit - Type varies depending on command
+	uint8_t sensor; ///< 8 bit - Id of sensor that this message concerns.
+
+	/*
+	 * Each message can transfer a payload. We add one extra byte for string
+	 * terminator \0 to be "printable" this is not transferred OTA
+	 * This union is used to simplify the construction of the binary data types transferred.
+	 */
 	union {
-		uint8_t bValue;
-		uint16_t uiValue;
-		int16_t iValue;
-		uint32_t ulValue;
-		int32_t lValue;
-		struct { // Float messages
+		uint8_t bValue; ///< unsigned byte value (8-bit)
+		uint16_t uiValue; ///< unsigned integer value (16-bit)
+		int16_t iValue; ///< signed integer value (16-bit)
+		uint32_t ulValue; ///< unsigned long value (32-bit)
+		int32_t lValue; ///< signed long value (32-bit)
+		struct { //< Float messages
 			float fValue;
-			uint8_t fPrecision;   // Number of decimals when serializing
+			uint8_t fPrecision; ///< Number of decimals when serializing
 		};
-		struct {  // Presentation messages
-			uint8_t version; 	  // Library version
-			uint8_t sensorType;   // Sensor type hint for controller, see table above
+		struct {  //< Presentation messages
+			uint8_t version; ///< Library version
+			uint8_t sensorType; ///< Sensor type hint for controller, see table above
 		};
-		char data[MAX_PAYLOAD + 1];
-	} __attribute__((packed));
-#ifdef __cplusplus
+		char data[MAX_PAYLOAD + 1]; ///< Buffer for raw payload data
+	} __attribute__((packed)); ///< Doxygen will complain without this comment
+#if defined(__cplusplus) || defined(DOXYGEN)
 } __attribute__((packed));
 #else
 };
-uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1];
+uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1]; ///< buffer for entire message
 } __attribute__((packed)) MyMessage;
-#endif
 #endif
 
 #endif

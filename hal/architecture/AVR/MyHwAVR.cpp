@@ -20,6 +20,7 @@
 #include "MyHwAVR.h"
 #include "avr/boot.h"
 
+
 bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
@@ -38,7 +39,7 @@ volatile uint8_t _wakeUp1Interrupt  =
 volatile uint8_t _wakeUp2Interrupt  =
     INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
 
-void wakeUp1()
+void wakeUp1(void)
 {
 	// Disable sleep. When an interrupt occurs after attachInterrupt,
 	// but before sleeping the CPU would not wake up.
@@ -50,7 +51,7 @@ void wakeUp1()
 		_wokeUpByInterrupt = _wakeUp1Interrupt;
 	}
 }
-void wakeUp2()
+void wakeUp2(void)
 {
 	sleep_disable();
 	detachInterrupt(_wakeUp2Interrupt);
@@ -60,7 +61,7 @@ void wakeUp2()
 	}
 }
 
-inline bool interruptWakeUp()
+inline bool interruptWakeUp(void)
 {
 	return _wokeUpByInterrupt != INVALID_INTERRUPT_NUM;
 }
@@ -86,7 +87,7 @@ void hwPowerDown(const uint8_t wdto)
 	// disable ADC for power saving
 	ADCSRA &= ~(1 << ADEN);
 	// save WDT settings
-	uint8_t WDTsave = WDTCSR;
+	const uint8_t WDTsave = WDTCSR;
 	if (wdto != WDTO_SLEEP_FOREVER) {
 		wdt_enable(wdto);
 		// enable WDT interrupt before system reset
@@ -98,7 +99,7 @@ void hwPowerDown(const uint8_t wdto)
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
 	sleep_enable();
-#if defined __AVR_ATmega328P__
+#if defined(__AVR_ATmega328P__)
 	sleep_bod_disable();
 #endif
 	// Enable interrupts & sleep until WDT or ext. interrupt
@@ -140,16 +141,32 @@ void hwInternalSleep(uint32_t ms)
 
 int8_t hwSleep(uint32_t ms)
 {
-	hwInternalSleep(ms);
-	return MY_WAKE_UP_BY_TIMER;
+	// Return what woke the mcu.
+	// Default: no interrupt triggered, timer wake up
+	int8_t ret = MY_WAKE_UP_BY_TIMER;
+	if (ms > 0u) {
+		// sleep for defined time
+		hwInternalSleep(ms);
+	} else {
+		// sleep until ext interrupt triggered
+		hwPowerDown(WDTO_SLEEP_FOREVER);
+	}
+	if (interruptWakeUp()) {
+		ret = static_cast<int8_t>(_wokeUpByInterrupt);
+	}
+	// Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
+	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+
+	return ret;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
-	return hwSleep(interrupt,mode,INVALID_INTERRUPT_NUM,0u,ms);
+	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
 }
 
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+               const uint8_t mode2,
                uint32_t ms)
 {
 	// ATMega328P supports following modes to wake from sleep: LOW, CHANGE, RISING, FALLING
@@ -203,14 +220,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return ret;
 }
 
-inline void hwRandomNumberInit()
+inline void hwRandomNumberInit(void)
 {
 	// This function initializes the random number generator with a seed
 	// of 32 bits.  This method is good enough to earn FIPS 140-2 conform
 	// random data. This should reach to generate 32 Bit for randomSeed().
 	uint32_t seed = 0;
-	uint32_t start = millis();
-	uint32_t timeout = start + 20;
+	uint32_t timeout = millis() + 20;
 
 	// Trigger floating effect of an unconnected pin
 	pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
@@ -219,7 +235,7 @@ inline void hwRandomNumberInit()
 
 	// Generate 32 bits of datas
 	for (uint8_t i=0; i<32; i++) {
-		int pinValue = analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN);
+		const int pinValue = analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN);
 		// Wait until the analog value has changed
 		while ((pinValue == analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN)) && (timeout>=millis())) {
 			seed ^= (millis() << i);
@@ -230,11 +246,10 @@ inline void hwRandomNumberInit()
 				pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
 				// Pause a short while
 				delay(seed % 10);
-				timeout = millis()+20;
+				timeout = millis() + 20;
 			}
 		}
 	}
-
 	randomSeed(seed);
 }
 
@@ -247,14 +262,18 @@ bool hwUniqueID(unique_id_t* uniqueID)
 	*((uint8_t*)uniqueID + 1) = boot_signature_byte_get(0x02);
 	*((uint8_t*)uniqueID + 2) = boot_signature_byte_get(0x04);
 	*((uint8_t*)uniqueID + 3) = boot_signature_byte_get(0x01); //OSCCAL
+#if defined(__AVR_ATmega328PB__)
 	// ATMEGA328PB specifics, has unique ID
-	//for(uint8_t idx = 0; idx < 10; idx++) {
-	//	*((uint8_t*)uniqueID + 4 + idx) = boot_signature_byte_get(0xE + idx);
-	//}
-	return false;	// false, since no unique ID returned
+	for(uint8_t idx = 0; idx < 10; idx++) {
+		*((uint8_t*)uniqueID + 4 + idx) = boot_signature_byte_get(0xE + idx);
+	}
+	return true; // unique ID returned
+#else
+	return false;	// no unique ID returned
+#endif
 }
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 	// Measure Vcc against 1.1V Vref
 #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -275,16 +294,19 @@ uint16_t hwCPUVoltage()
 	return (1125300UL) / ADC;
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	cli();
+	// save WDT & timer settings
+	const uint8_t WDTsave = WDTCSR;
+	const uint8_t TCCR1Asave = TCCR1A;
+	const uint8_t TCCR1Csave = TCCR1C;
 	// setup timer1
 	TIFR1 = 0xFF;
 	TCNT1 = 0;
 	TCCR1A = 0;
 	TCCR1C = 0;
-	// save WDT settings
-	uint8_t WDTsave = WDTCSR;
+	// set wdt
 	wdt_enable(WDTO_500MS);
 	// enable WDT interrupt mode => first timeout WDIF, 2nd timeout reset
 	WDTCSR |= (1 << WDIE);
@@ -300,11 +322,14 @@ uint16_t hwCPUFrequency()
 	WDTCSR |= (1 << WDCE) | (1 << WDE);
 	WDTCSR = WDTsave;
 	sei();
+	// restore timer settings
+	TCCR1A = TCCR1Asave;
+	TCCR1C = TCCR1Csave;
 	// return frequency in 1/10MHz (accuracy +- 10%)
 	return TCNT1 * 2048UL / 100000UL;
 }
 
-uint16_t hwFreeMem()
+uint16_t hwFreeMem(void)
 {
 	extern int __heap_start, *__brkval;
 	int v;
