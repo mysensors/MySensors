@@ -270,7 +270,7 @@
  */
 // legacy
 #ifdef MY_RADIO_NRF24
-//MY_RADIO_NRF24 is deprecated
+#warning MY_RADIO_NRF24 is deprecated, use MY_RADIO_RF24 instead.
 #define MY_RADIO_RF24
 #endif
 
