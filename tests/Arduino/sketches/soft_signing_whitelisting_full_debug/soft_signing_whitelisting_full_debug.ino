@@ -22,7 +22,7 @@
 #include <pins_arduino.h>
 #define MY_DEBUG
 #define MY_DEBUG_VERBOSE_SIGNING
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 #define MY_SIGNING_SOFT
 //#define MY_SIGNING_ATSHA204
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}

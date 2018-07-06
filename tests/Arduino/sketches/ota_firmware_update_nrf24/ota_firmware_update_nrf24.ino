@@ -21,6 +21,6 @@
 #include <stdint.h>
 #include <pins_arduino.h>
 #define MY_DEBUG
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 #define MY_OTA_FIRMWARE_FEATURE
 #include <MySensors.h>
