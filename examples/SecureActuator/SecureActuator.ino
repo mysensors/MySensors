@@ -46,7 +46,7 @@
 #define MY_NODE_LOCK_FEATURE //!< Enable lockdown of node if suspicious activity is detected
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24 //!< NRF24L01 radio driver
+#define MY_RADIO_RF24 //!< NRF24L01 radio driver
 //#define MY_RADIO_NRF5_ESB //!< nRF5 radio driver (NRF24 compatible)
 //#define MY_RADIO_RFM69 //!< RFM69 radio driver
 //#define MY_RADIO_RFM95 //!< RFM95 radio driver
