@@ -209,9 +209,10 @@
 
 // RX queue ==> shift to HAL
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-#if defined(MY_RADIO_RFM69)
-#error Receive message buffering not supported for RFM69!
-#endif
+//KORESH TEST
+//#if defined(MY_RADIO_RFM69)
+//#error Receive message buffering not supported for RFM69!
+//#endif
 #if defined(MY_RS485)
 #error Receive message buffering not supported for RS485!
 #endif

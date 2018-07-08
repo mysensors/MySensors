@@ -343,7 +343,7 @@
  * This feature is currently not supported for anything but RF24.
  * Require @ref MY_RF24_IRQ_PIN to be set.
  */
-//#define MY_RX_MESSAGE_BUFFER_FEATURE
+#define MY_RX_MESSAGE_BUFFER_FEATURE
 
 /**
  * @def MY_RX_MESSAGE_BUFFER_SIZE

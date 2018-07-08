@@ -29,9 +29,10 @@
 #if defined(MY_RADIO_NRF5_ESB)
 #error Receive message buffering not supported for NRF5 radio! Please define MY_NRF5_RX_BUFFER_SIZE
 #endif
-#if defined(MY_RADIO_RFM69)
-#error Receive message buffering not supported for RFM69!
-#endif
+//KORESH TEST
+//#if defined(MY_RADIO_RFM69)
+//#error Receive message buffering not supported for RFM69!
+//#endif
 #if defined(MY_RADIO_RFM95)
 #error Receive message buffering not supported for RFM95!
 #endif
