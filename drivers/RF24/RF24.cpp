@@ -179,6 +179,18 @@ LOCAL void RF24_setRFSetup(const uint8_t RFsetup)
 LOCAL void RF24_setFeature(const uint8_t feature)
 {
 	RF24_writeByteRegister(RF24_REG_FEATURE, feature);
+
+	if (RF24_getFeature() != feature)
+	{
+		// toggle features (necessary on some clones and non-P versions)
+		RF24_enableFeatures();
+		RF24_writeByteRegister(RF24_REG_FEATURE, feature);
+	}
+}
+
+LOCAL uint8_t RF24_getFeature(void)
+{
+	return RF24_readByteRegister(RF24_REG_FEATURE);
 }
 
 LOCAL void RF24_setPipe(const uint8_t pipe)
@@ -220,6 +232,7 @@ LOCAL void RF24_setStatus(const uint8_t status)
 {
 	RF24_writeByteRegister(RF24_REG_STATUS, status);
 }
+
 LOCAL void RF24_enableFeatures(void)
 {
 	RF24_RAW_writeByteRegister(RF24_CMD_ACTIVATE, 0x73);
@@ -502,8 +515,6 @@ LOCAL bool RF24_initialize(void)
 	RF24_setChannel(MY_RF24_CHANNEL);
 	// set data rate and pa level
 	RF24_setRFSetup(RF24_RF_SETUP);
-	// toggle features (necessary on some clones and non-P versions)
-	RF24_enableFeatures();
 	// enable ACK payload and dynamic payload
 	RF24_setFeature(RF24_FEATURE);
 	// sanity check (this function is P/non-P independent)
