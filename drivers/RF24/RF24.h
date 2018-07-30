@@ -320,6 +320,11 @@ LOCAL void RF24_setRFSetup(const uint8_t RFsetup);
 */
 LOCAL void RF24_setFeature(const uint8_t feature);
 /**
+* @brief RF24_getFeature
+* @return
+*/
+LOCAL uint8_t RF24_getFeature(void);
+/**
 * @brief RF24_setPipe
 * @param pipe
 */
