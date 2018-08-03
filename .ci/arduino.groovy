@@ -210,7 +210,7 @@ def buildSTM32F1(config, sketches, String key) {
 }
 
 def buildESP8266(config, sketches, String key) {
-	def fqbn = '-fqbn=esp8266:esp8266:generic:CpuFrequency=80,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=qio,FlashSize=512K0,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200'
+	def fqbn = '-fqbn=esp8266:esp8266:generic:CpuFrequency=80,VTable=flash,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=qio,FlashSize=512K0,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200' 
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {

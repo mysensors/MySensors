@@ -180,8 +180,7 @@ LOCAL void RF24_setFeature(const uint8_t feature)
 {
 	RF24_writeByteRegister(RF24_REG_FEATURE, feature);
 
-	if (RF24_getFeature() != feature)
-	{
+	if (RF24_getFeature() != feature) {
 		// toggle features (necessary on some clones and non-P versions)
 		RF24_enableFeatures();
 		RF24_writeByteRegister(RF24_REG_FEATURE, feature);
