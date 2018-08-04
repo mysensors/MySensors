@@ -255,7 +255,7 @@ def buildESP8266(config, sketches, String key) {
 }
 
 def buildESP32(config, sketches, String key) {
-	def fqbn = '-fqbn espressif:esp32:esp32:PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none -warnings=default'
+	def fqbn = '-fqbn=esp32:esp32:esp32:PSRAM=disabled,PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none -warnings=default'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
