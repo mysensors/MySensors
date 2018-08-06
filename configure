@@ -663,6 +663,8 @@ else
     printf "  ${OK} Encryption: Disabled.\n"
 fi
 
+printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
+
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
@@ -676,7 +678,7 @@ elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
     INIT_SYSTEM=sysvinit
     printf "  ${OK} Init system detected: sysvinit.\n"
 else
-    printf "  ${FAILED} Unknown init system."
+    printf "  ${FAILED} Unknown init system.\n"
 fi
 
 printf "${SECTION} Saving configuration.\n"
