@@ -428,7 +428,7 @@ bool transportWaitUntilReady(const uint32_t waitingMS = 0);
 /**
 * @brief Initialize transport and SM
 */
-void transportInitialize(void);
+void transportInitialise(void);
 /**
 * @brief Process FIFO msg and update SM
 */
