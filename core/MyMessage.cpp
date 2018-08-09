@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -23,19 +23,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-MyMessage::MyMessage()
+MyMessage::MyMessage(void)
 {
 	clear();
 }
 
-MyMessage::MyMessage(uint8_t _sensor, uint8_t _type)
+MyMessage::MyMessage(const uint8_t _sensor, const uint8_t _type)
 {
 	clear();
 	sensor = _sensor;
 	type   = _type;
 }
 
-void MyMessage::clear()
+void MyMessage::clear(void)
 {
 	last                = 0u;
 	sender              = 0u;
@@ -50,23 +50,23 @@ void MyMessage::clear()
 	miSetVersion(PROTOCOL_VERSION);
 }
 
-bool MyMessage::isAck() const
+bool MyMessage::isAck(void) const
 {
 	return miGetAck();
 }
 
-uint8_t MyMessage::getCommand() const
+uint8_t MyMessage::getCommand(void) const
 {
 	return miGetCommand();
 }
 
 /* Getters for payload converted to desired form */
-void* MyMessage::getCustom() const
+void* MyMessage::getCustom(void) const
 {
 	return (void *)data;
 }
 
-const char* MyMessage::getString() const
+const char* MyMessage::getString(void) const
 {
 	uint8_t payloadType = miGetPayloadType();
 	if (payloadType == P_STRING) {
@@ -76,7 +76,7 @@ const char* MyMessage::getString() const
 	}
 }
 
-char MyMessage::i2h(uint8_t i) const
+char MyMessage::i2h(const uint8_t i) const
 {
 	uint8_t k = i & 0x0F;
 	if (k <= 9) {
@@ -111,20 +111,20 @@ char* MyMessage::getString(char *buffer) const
 	uint8_t payloadType = miGetPayloadType();
 	if (buffer != NULL) {
 		if (payloadType == P_STRING) {
-			strncpy(buffer, data, miGetLength());
+			(void)strncpy(buffer, data, miGetLength());
 			buffer[miGetLength()] = 0;
 		} else if (payloadType == P_BYTE) {
-			itoa(bValue, buffer, 10);
+			(void)itoa(bValue, buffer, 10);
 		} else if (payloadType == P_INT16) {
-			itoa(iValue, buffer, 10);
+			(void)itoa(iValue, buffer, 10);
 		} else if (payloadType == P_UINT16) {
-			utoa(uiValue, buffer, 10);
+			(void)utoa(uiValue, buffer, 10);
 		} else if (payloadType == P_LONG32) {
-			ltoa(lValue, buffer, 10);
+			(void)ltoa(lValue, buffer, 10);
 		} else if (payloadType == P_ULONG32) {
-			ultoa(ulValue, buffer, 10);
+			(void)ultoa(ulValue, buffer, 10);
 		} else if (payloadType == P_FLOAT32) {
-			dtostrf(fValue,2,min(fPrecision, (uint8_t)8),buffer);
+			(void)dtostrf(fValue, 2, min(fPrecision, (uint8_t)8), buffer);
 		} else if (payloadType == P_CUSTOM) {
 			return getCustomString(buffer);
 		}
@@ -134,12 +134,12 @@ char* MyMessage::getString(char *buffer) const
 	}
 }
 
-bool MyMessage::getBool() const
+bool MyMessage::getBool(void) const
 {
 	return getByte();
 }
 
-uint8_t MyMessage::getByte() const
+uint8_t MyMessage::getByte(void) const
 {
 	if (miGetPayloadType() == P_BYTE) {
 		return data[0];
@@ -151,7 +151,7 @@ uint8_t MyMessage::getByte() const
 }
 
 
-float MyMessage::getFloat() const
+float MyMessage::getFloat(void) const
 {
 	if (miGetPayloadType() == P_FLOAT32) {
 		return fValue;
@@ -162,7 +162,7 @@ float MyMessage::getFloat() const
 	}
 }
 
-int32_t MyMessage::getLong() const
+int32_t MyMessage::getLong(void) const
 {
 	if (miGetPayloadType() == P_LONG32) {
 		return lValue;
@@ -173,7 +173,7 @@ int32_t MyMessage::getLong() const
 	}
 }
 
-uint32_t MyMessage::getULong() const
+uint32_t MyMessage::getULong(void) const
 {
 	if (miGetPayloadType() == P_ULONG32) {
 		return ulValue;
@@ -184,7 +184,7 @@ uint32_t MyMessage::getULong() const
 	}
 }
 
-int16_t MyMessage::getInt() const
+int16_t MyMessage::getInt(void) const
 {
 	if (miGetPayloadType() == P_INT16) {
 		return iValue;
@@ -195,7 +195,7 @@ int16_t MyMessage::getInt() const
 	}
 }
 
-uint16_t MyMessage::getUInt() const
+uint16_t MyMessage::getUInt(void) const
 {
 	if (miGetPayloadType() == P_UINT16) {
 		return uiValue;
@@ -207,26 +207,26 @@ uint16_t MyMessage::getUInt() const
 
 }
 
-MyMessage& MyMessage::setType(uint8_t _type)
+MyMessage& MyMessage::setType(const uint8_t _type)
 {
 	type = _type;
 	return *this;
 }
 
-MyMessage& MyMessage::setSensor(uint8_t _sensor)
+MyMessage& MyMessage::setSensor(const uint8_t _sensor)
 {
 	sensor = _sensor;
 	return *this;
 }
 
-MyMessage& MyMessage::setDestination(uint8_t _destination)
+MyMessage& MyMessage::setDestination(const uint8_t _destination)
 {
 	destination = _destination;
 	return *this;
 }
 
 // Set payload
-MyMessage& MyMessage::set(void* value, uint8_t length)
+MyMessage& MyMessage::set(const void* value, const uint8_t length)
 {
 	uint8_t payloadLength = value == NULL ? 0 : min(length, (uint8_t)MAX_PAYLOAD);
 	miSetLength(payloadLength);
@@ -265,7 +265,7 @@ MyMessage& MyMessage::set(const __FlashStringHelper* value)
 #endif
 
 
-MyMessage& MyMessage::set(bool value)
+MyMessage& MyMessage::set(const bool value)
 {
 	miSetLength(1);
 	miSetPayloadType(P_BYTE);
@@ -273,7 +273,7 @@ MyMessage& MyMessage::set(bool value)
 	return *this;
 }
 
-MyMessage& MyMessage::set(uint8_t value)
+MyMessage& MyMessage::set(const uint8_t value)
 {
 	miSetLength(1);
 	miSetPayloadType(P_BYTE);
@@ -281,7 +281,7 @@ MyMessage& MyMessage::set(uint8_t value)
 	return *this;
 }
 
-MyMessage& MyMessage::set(float value, uint8_t decimals)
+MyMessage& MyMessage::set(const float value, const uint8_t decimals)
 {
 	miSetLength(5); // 32 bit float + persi
 	miSetPayloadType(P_FLOAT32);
@@ -290,7 +290,7 @@ MyMessage& MyMessage::set(float value, uint8_t decimals)
 	return *this;
 }
 
-MyMessage& MyMessage::set(uint32_t value)
+MyMessage& MyMessage::set(const uint32_t value)
 {
 	miSetPayloadType(P_ULONG32);
 	miSetLength(4);
@@ -298,7 +298,7 @@ MyMessage& MyMessage::set(uint32_t value)
 	return *this;
 }
 
-MyMessage& MyMessage::set(int32_t value)
+MyMessage& MyMessage::set(const int32_t value)
 {
 	miSetPayloadType(P_LONG32);
 	miSetLength(4);
@@ -306,7 +306,7 @@ MyMessage& MyMessage::set(int32_t value)
 	return *this;
 }
 
-MyMessage& MyMessage::set(uint16_t value)
+MyMessage& MyMessage::set(const uint16_t value)
 {
 	miSetPayloadType(P_UINT16);
 	miSetLength(2);
@@ -314,7 +314,7 @@ MyMessage& MyMessage::set(uint16_t value)
 	return *this;
 }
 
-MyMessage& MyMessage::set(int16_t value)
+MyMessage& MyMessage::set(const int16_t value)
 {
 	miSetPayloadType(P_INT16);
 	miSetLength(2);

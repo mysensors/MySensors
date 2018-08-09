@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -59,18 +59,18 @@ bool hwInit(void)
 	return false;
 }
 
-void hwReadConfigBlock(void* buf, void* addr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* dst = static_cast<uint8_t*>(buf);
+	uint8_t *dst = static_cast<uint8_t*>(buf);
 	int pos = reinterpret_cast<int>(addr);
 	while (length-- > 0) {
 		*dst++ = EEPROM.read(pos++);
 	}
 }
 
-void hwWriteConfigBlock(void* buf, void* addr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* src = static_cast<uint8_t*>(buf);
+	uint8_t *src = static_cast<uint8_t*>(buf);
 	int pos = reinterpret_cast<int>(addr);
 	while (length-- > 0) {
 		EEPROM.write(pos++, *src++);
@@ -149,7 +149,7 @@ bool hwUniqueID(unique_id_t* uniqueID)
 	return true;
 }
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 	adc_reg_map *regs = ADC1->regs;
 	regs->CR2 |= ADC_CR2_TSVREFE;    // enable VREFINT and temp sensor
@@ -157,12 +157,12 @@ uint16_t hwCPUVoltage()
 	return 1200 * 4096 / adc_read(ADC1, 17);
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	return F_CPU/100000UL;
 }
 
-uint16_t hwFreeMem()
+uint16_t hwFreeMem(void)
 {
 	//Not yet implemented
 	return FUNCTION_NOT_SUPPORTED;

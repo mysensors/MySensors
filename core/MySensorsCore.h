@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -38,7 +38,7 @@
 * MySensorsCore debug log messages:
 *
 * |E| SYS | SUB | Message																			| Comment
-* |-|-----|-----|---------------------------------------------|----------------------------------------------------------------------------
+* |-|-----|-----|---------------------------------------------|--------------------------------------------------------------------------------------------------
 * |!| MCO | BGN | HW ERR																			| Error HW initialization (e.g. ext. EEPROM)
 * | | MCO | BGN | INIT %%s,CP=%%s,VER=%%s											| Core initialization, capabilities (CP), library version (VER)
 * | | MCO | BGN | BFR																					| Callback before()
@@ -460,7 +460,6 @@ static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type)
 	mSetAck(msg, false);
 	return msg;
 }
-
 
 #endif
 

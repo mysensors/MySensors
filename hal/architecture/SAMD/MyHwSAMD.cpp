@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -41,30 +41,29 @@ ISR (WDT_vect)
 */
 
 
-void hwReadConfigBlock(void* buf, void* adr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
 	uint8_t* dst = static_cast<uint8_t*>(buf);
-	const int offs = reinterpret_cast<int>(adr);
+	const int offs = reinterpret_cast<int>(addr);
 	(void)eep.read(offs, dst, length);
-
 }
 
-void hwWriteConfigBlock(void* buf, void* adr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
 	uint8_t* src = static_cast<uint8_t*>(buf);
-	const int offs = reinterpret_cast<int>(adr);
+	const int offs = reinterpret_cast<int>(addr);
 	// use update() instead of write() to reduce e2p wear off
 	(void)eep.update(offs, src, length);
 }
 
-uint8_t hwReadConfig(int adr)
+uint8_t hwReadConfig(const int addr)
 {
-	return eep.read(adr);
+	return eep.read(addr);
 }
 
-void hwWriteConfig(int adr, uint8_t value)
+void hwWriteConfig(const int addr, uint8_t value)
 {
-	(void)eep.update(adr, value);
+	(void)eep.update(addr, value);
 }
 
 bool hwInit(void)
@@ -125,12 +124,12 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 
 bool hwUniqueID(unique_id_t *uniqueID)
 {
-	(void)memcpy((uint8_t*)uniqueID, (uint32_t *)0x0080A00C, 4);
-	(void)memcpy((uint8_t*)uniqueID + 4, (uint32_t *)0x0080A040, 12);
+	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)0x0080A00C, 4);
+	(void)memcpy((uint8_t *)uniqueID + 4, (uint32_t *)0x0080A040, 12);
 	return true;
 }
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 
 	// disable ADC
@@ -167,13 +166,13 @@ uint16_t hwCPUVoltage()
 	return valueRead * 4;
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	// TODO: currently reporting compile time frequency (in 1/10MHz)
 	return F_CPU / 100000UL;
 }
 
-uint16_t hwFreeMem()
+uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;

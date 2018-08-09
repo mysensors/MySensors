@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -176,7 +176,7 @@ extern HardwareSPI SPI;		//!< SPI
 
 // available frequency bands, non trivial values to avoid misconfiguration
 #define RFM69_315MHZ                     (315000000ul)	//!< RFM69_315MHZ
-#define RFM69_433MHZ                     (433920000ul)	//!< RFM69_433MHZ, center frequencz 433.92 MHz
+#define RFM69_433MHZ                     (433920000ul)	//!< RFM69_433MHZ, center frequency 433.92 MHz
 #define RFM69_865MHZ                     (865500000ul)  //!< RFM69_865MHZ, center frequency 865.5 MHz
 #define RFM69_868MHZ                     (868000000ul)	//!< RFM69_868MHZ
 #define RFM69_915MHZ                     (915000000ul)	//!< RFM69_915MHZ

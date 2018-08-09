@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -7,10 +7,10 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
- * https://github.com/mysensors/Arduino/graphs/contributors
+ * https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -42,31 +42,31 @@ void wakeUp2() // place to send the second interrupts
 	_wokeUpByInterrupt = _wakeUp2Interrupt;
 }
 
-void hwReadConfigBlock(void *buf, void *adr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
 	uint8_t *dst = static_cast<uint8_t *>(buf);
-	const int offs = reinterpret_cast<int>(adr);
+	const int offs = reinterpret_cast<int>(addr);
 	(void)NVRAM.read_block(dst, offs, length);
 }
 
-void hwWriteConfigBlock(void *buf, void *adr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
 	uint8_t *src = static_cast<uint8_t *>(buf);
-	const int offs = reinterpret_cast<int>(adr);
+	const int offs = reinterpret_cast<int>(addr);
 	(void)NVRAM.write_block(src, offs, length);
 }
 
-uint8_t hwReadConfig(int adr)
+uint8_t hwReadConfig(const int addr)
 {
-	return NVRAM.read(adr);
+	return NVRAM.read(addr);
 }
 
-void hwWriteConfig(int adr, uint8_t value)
+void hwWriteConfig(const int addr, uint8_t value)
 {
-	(void)NVRAM.write(adr, value);
+	(void)NVRAM.write(addr, value);
 }
 
-bool hwInit()
+bool hwInit(void)
 {
 #ifdef MY_LOCK_MCU
 #ifdef NRF51
@@ -133,7 +133,7 @@ bool hwInit()
 static nrf_ecb_t hwRngData;
 static int8_t hwRndDataReadPos = -1;
 
-void hwRandomNumberInit()
+void hwRandomNumberInit(void)
 {
 	// Start HWRNG
 #ifdef NRF51
@@ -222,12 +222,12 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 	return __length;
 }
 
-void hwWatchdogReset()
+void hwWatchdogReset(void)
 {
 	NRF_WDT->RR[0] = WDT_RR_RR_Reload;
 }
 
-void hwReboot()
+void hwReboot(void)
 {
 	NVIC_SystemReset();
 	while (true)
@@ -332,14 +332,14 @@ void hwSleepEnd(uint32_t ms)
 }
 
 // Halt CPU until next interrupt event
-inline void hwWaitForInterrupt()
+inline void hwWaitForInterrupt(void)
 {
 	__DSB();
 	__WFI();
 }
 
 // Sleep in System ON mode
-inline void hwSleep()
+inline void hwSleep(void)
 {
 	__WFE();
 	__SEV();
@@ -440,7 +440,7 @@ bool hwUniqueID(unique_id_t *uniqueID)
 	return true;
 }
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 	// VDD is prescaled 1/3 and compared with the internal 1.2V reference
 #if defined(NRF_ADC)
@@ -515,7 +515,7 @@ uint16_t hwCPUVoltage()
 #endif
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 #if defined(VARIANT_MCK)
 	return (VARIANT_MCK) / 100000UL;
@@ -526,7 +526,7 @@ uint16_t hwCPUFrequency()
 #endif
 }
 
-uint16_t hwFreeMem()
+uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;

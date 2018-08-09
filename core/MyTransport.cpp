@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -67,7 +67,7 @@ static uint32_t _lastSanityCheck;		//!< last sanity check
 // regular network discovery, sends I_DISCOVER_REQUESTS to update routing table
 // sufficient to have GW triggering requests to also update repeater nodes
 #if defined(MY_GATEWAY_FEATURE)
-static uint32_t _lastNetworkDiscovery;	//! last network discovery
+static uint32_t _lastNetworkDiscovery;	//!< last network discovery
 #endif
 
 // stInit: initialise transport HW
@@ -77,13 +77,13 @@ void stInitTransition(void)
 	// initialise status variables
 	_transportSM.pingActive = false;
 	_transportSM.transportActive = false;
-	_transportSM.lastUplinkCheck = 0ul;
+	_transportSM.lastUplinkCheck = 0;
 
 #if defined(MY_TRANSPORT_SANITY_CHECK)
 	_lastSanityCheck = hwMillis();
 #endif
 #if defined(MY_GATEWAY_FEATURE)
-	_lastNetworkDiscovery = 0ul;
+	_lastNetworkDiscovery = 0;
 #endif
 #if defined(MY_RAM_ROUTING_TABLE_ENABLED)
 	_lastRoutingTableSave = hwMillis();
@@ -675,7 +675,7 @@ void transportProcessMessage(void)
 	// Reject payloads with incorrect length
 	if (payloadLength != expectedMessageLength) {
 		setIndication(INDICATION_ERR_LENGTH);
-		TRANSPORT_DEBUG(PSTR("!TSF:MSG:LEN,%" PRIu8 "!=%" PRIu8 "\n"), payloadLength,
+		TRANSPORT_DEBUG(PSTR("!TSF:MSG:LEN=%" PRIu8 ",EXP=%" PRIu8 "\n"), payloadLength,
 		                expectedMessageLength); // invalid payload length
 		return;
 	}

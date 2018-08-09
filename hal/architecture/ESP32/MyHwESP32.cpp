@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -154,13 +154,12 @@ void hwDebugPrint(const char *fmt, ...)
 #endif
 	va_list args;
 	va_start(args, fmt);
+	// cppcheck-suppress wrongPrintfScanfArgNum
+	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 	// Truncate message if this is gateway node
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#else
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #endif
 	va_end(args);
 	MY_SERIALDEVICE.print(fmtBuffer);

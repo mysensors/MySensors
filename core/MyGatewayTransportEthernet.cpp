@@ -7,7 +7,7 @@
  *
  * Created by Tomas Hozza <thozza@gmail.com>
  * Copyright (C) 2015  Tomas Hozza
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org

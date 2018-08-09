@@ -81,7 +81,7 @@ fi
 astyle --options=.mystools/astyle/config/style.cfg -nq --recursive "*.h" "*.c" "*.cpp"
 git diff > restyling.patch
 if [ -s restyling.patch ]; then
-	echo "I am afraid your coding style is not entirely in line with the MySensors preffered style.<b><br>A mail with a patch has been sent to you that, if applied to your PR, will make it follow the MySensors coding standards.</b><br>" >> butler.html
+	echo "I am afraid your coding style is not entirely in line with the MySensors prefered style.<b><br>A mail with a patch has been sent to you that, if applied to your PR, will make it follow the MySensors coding standards.</b><br>" >> butler.html
 	echo "You can apply the patch using:<br>" >> butler.html
 	echo "git apply restyling.patch<br>" >> butler.html
 	echo "<br>" >> butler.html
