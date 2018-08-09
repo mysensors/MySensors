@@ -119,6 +119,8 @@
 * | | TSF | SRT   | OK												| Saving routing table successful
 * |!| TSF | RTE   | FPAR ACTIVE								| Finding parent active, message not sent
 * |!| TSF | RTE   | DST %%d UNKNOWN						| Routing for destination (DST) unknown, send message to parent
+* | | TSF | RTE   | N2N OK										| Node-to-node communication succeeded
+* |!| TSF | RTE   | N2N FAIL									| Node-to-node communication failed, handing over to parent for re-routing
 * | | TSF | RRT   | ROUTE N=%%d,R=%%d					| Routing table, messages to node (N) are routed via node (R)
 * |!| TSF | SND   | TNR												| Transport not ready, message cannot be sent
 * | | TSF | TDI   | TSL												| Set transport to sleep

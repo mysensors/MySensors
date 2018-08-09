@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -546,10 +546,18 @@ bool transportRouteMessage(MyMessage &message)
 #endif
 		}
 #else
+		if (destination > GATEWAY_ADDRESS && destination < BROADCAST_ADDRESS) {
+			// node2node traffic: assume node is in vincinity. If transmission fails, hand over to parent
+			if (transportSendWrite(destination, message)) {
+				TRANSPORT_DEBUG(PSTR("TSF:RTE:N2N OK\n"));
+				return true;
+			}
+			TRANSPORT_DEBUG(PSTR("!TSF:RTE:N2N FAIL\n"));
+		}
 		route = _transportConfig.parentNodeId;	// not a repeater, all traffic routed via parent
 #endif
 	}
-	// send message, HAL
+	// send message
 	const bool result = transportSendWrite(route, message);
 #if !defined(MY_GATEWAY_FEATURE)
 	// update counter
