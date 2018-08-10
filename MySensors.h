@@ -41,6 +41,9 @@
 #include <Arduino.h>
 #endif
 
+
+
+
 // general macros
 #if !defined(_BV)
 #define _BV(x) (1<<(x))	//!< _BV
@@ -242,6 +245,11 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #else
 #define __RF24CNT 0		//!< __RF24CNT
 #endif
+#if defined(MY_RADIO_HC12)
+#define __HC12CNT 1		//!< __HC12CNT
+#else
+#define __HC12CNT 0		//!< __HC12CNT
+#endif
 #if defined(MY_RADIO_NRF5_ESB)
 #define __NRF5ESBCNT 1 //!< __NRF5ESBCNT
 #else
@@ -263,7 +271,10 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define __RS485CNT 0	//!< __RS485CNT
 #endif
 
-#if (__RF24CNT + __NRF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT > 1)
+
+
+
+#if (__RF24CNT + __NRF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT + __HC12CNT > 1)
 #error Only one forward link driver can be activated
 #endif
 #endif //DOXYGEN
@@ -273,8 +284,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_TRANSPORT_SANITY_CHECK		//!< enable regular transport sanity checks
 #endif
 
-// TRANSPORT INCLUDES
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+// TRANSPORT INCLUDES //Added MY_RADIO_HC12
+#if defined(MY_RADIO_HC12) || defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
 #include "hal/transport/MyTransportHAL.h"
 #include "core/MyTransport.h"
 
@@ -342,6 +353,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(MY_RADIO_RF24)
 #include "drivers/RF24/RF24.cpp"
 #include "hal/transport/RF24/MyTransportRF24.cpp"
+#elif defined(MY_RADIO_HC12)
+#include "hal/transport/HC12/MyTransportHC12.cpp"
 #elif defined(MY_RADIO_NRF5_ESB)
 #if !defined(ARDUINO_ARCH_NRF5)
 #error No support for nRF5 radio on this platform
@@ -413,6 +426,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // HW mains
 #if defined(ARDUINO_ARCH_AVR)
+
 #include "hal/architecture/AVR/MyMainAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "hal/architecture/SAMD/MyMainSAMD.cpp"

@@ -38,6 +38,9 @@
 #if defined(MY_RS485)
 #error Receive message buffering not supported for RS485!
 #endif
+#if defined(MY_RADIO_HC12)
+#error Receive message buffering not supported for HC12!
+#endif
 #elif defined(MY_RX_MESSAGE_BUFFER_SIZE)
 #error Receive message buffering requires message buffering feature enabled!
 #endif

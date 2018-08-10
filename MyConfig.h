@@ -249,6 +249,96 @@
 //#define MY_RS485_HWSERIAL (Serial1)
 /** @}*/ // End of RS485SettingGrpPub group
 
+
+
+
+
+/**
+ * @defgroup HC12SettingGrpPub HC12
+ * @ingroup RadioSettingGrpPub
+ * @brief These options are specific to the HC12 serial radio transport.
+ * @{
+ */
+
+/**
+ * @def MY_HC12
+ * @brief Define this to use the RS485 wired transport for sensor network communication.
+ */
+//#define MY_HC12
+/**
+ * @def MY_HC12_BAUD_RATE
+ * @brief The HC12 BAUD rate.
+ */
+#ifndef MY_HC12_BAUD_RATE
+#define MY_HC12_BAUD_RATE (9600)
+#endif
+
+#ifndef MY_HC12_MAX_MESSAGE_LENGTH
+#define MY_HC12_MAX_MESSAGE_LENGTH (40)
+#endif
+
+
+/**
+ * @def MY_HC12_SOH_COUNT
+ * @brief Use this in case of collisions on the bus. 3 might be a good setting.
+ */
+#ifndef MY_HC12_SOH_COUNT
+#define MY_HC12_SOH_COUNT (1)
+#endif
+
+/**
+ * @def MY_HC12_SET_PIN
+ * @brief Define this to change the chip enable pin from the default.
+ */
+#ifndef MY_HC12_SET_PIN 
+#if defined MY_RADIO_HC12
+#ERROR SET pin should be set, Remember to set before include of mysensor.h
+#endif
+#endif
+
+/**
+ * @def MY_HC12_TXPIN
+ * @brief Use this to set the TXPIN for the interface to the HC12 Radio
+ */
+#ifndef MY_HC12_TXPIN
+#if defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
+#define MY_HC12_TXPIN (11)
+#endif
+#else
+#define MY_HC12_TXPIN (14)
+#endif
+
+
+/**
+ * @def MY_HC12_RXPIN
+ * @brief Use this to set the RXPIN for the interface to the HC12 Radio
+ */
+#ifndef MY_HC12_RXPIN
+#if defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
+#define MY_HC12_RXPIN (10)
+#endif
+#else
+#define MY_HC12_RXPIN (12)
+#endif
+
+/**
+ * @def MY_HC12_PA_LEVEL
+ * @brief Default HC12 PA level. Override in sketch if needed.
+ *
+ * - transmission_power1 = -1dBm
+ * - transmission_power2 =  2dBm
+ * - transmission_power3 =  5dBm
+ * - transmission_power4 =  8dBm
+ * - transmission_power5 = 11dBm
+ * - transmission_power6 = 14dBm
+ * - transmission_power7 = 17dBm
+ * - transmission_power8 = 20dBm
+ */
+#ifndef MY_HC12_PA_LEVEL
+#define MY_HC12_PA_LEVEL (transmission_power1)
+#endif
+
+
 /**
  * @defgroup RF24SettingGrpPub RF24
  * @ingroup RadioSettingGrpPub
@@ -2104,7 +2194,7 @@
 #endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485) || defined(MY_RADIO_HC12)
 #define MY_SENSOR_NETWORK
 #endif
 
@@ -2149,6 +2239,7 @@
  * @brief Automatically set when building for AVR targets
  */
 #define ARDUINO_ARCH_AVR
+
 
 /**
  * @def ARDUINO_ARCH_STM32F1
