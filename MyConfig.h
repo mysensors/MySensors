@@ -290,7 +290,8 @@
  * @def MY_HC12_SET_PIN
  * @brief Define this to change the chip enable pin from the default.
  */
-#ifndef MY_HC12_SET_PIN 
+
+#ifndef MY_HC12_SET_PIN
 #if defined MY_RADIO_HC12
 #ERROR SET pin should be set, Remember to set before include of mysensor.h
 #endif
