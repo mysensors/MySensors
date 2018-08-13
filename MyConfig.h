@@ -274,6 +274,10 @@
 #define MY_HC12_BAUD_RATE (9600)
 #endif
 
+/**
+ * @def MY_HC12_MAX_MESSAGE_LENGTH
+ * @brief The maximum message length used for HC12.
+ */
 #ifndef MY_HC12_MAX_MESSAGE_LENGTH
 #define MY_HC12_MAX_MESSAGE_LENGTH (40)
 #endif
@@ -2393,11 +2397,10 @@
 #define MY_RX_MESSAGE_BUFFER_SIZE
 // HC12
 #define MY_HC12
-#define MY_HC12_MAX_MESSAGE_LENGTH
+#defien MY_HC12_MAX_MESSAGE_LENGTH
 #define MY_HC12_SET_PIN
 #define MY_HC12_TXPIN
 #define MY_HC12_RXPIN
-
 // NRF5_ESB
 #define MY_RADIO_NRF5_ESB
 #define MY_NRF5_ESB_ENABLE_ENCRYPTION
