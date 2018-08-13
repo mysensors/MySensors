@@ -262,9 +262,10 @@
 
 /**
  * @def MY_HC12
- * @brief Define this to use the RS485 wired transport for sensor network communication.
+ * @brief Define this to use the HC12 wired transport for sensor network communication.
  */
 //#define MY_HC12
+
 /**
  * @def MY_HC12_BAUD_RATE
  * @brief The HC12 BAUD rate.
@@ -338,7 +339,7 @@
 #ifndef MY_HC12_PA_LEVEL
 #define MY_HC12_PA_LEVEL (transmission_power1)
 #endif
-
+/** @}*/ // End of HC12SettingGrpPub group
 
 /**
  * @defgroup RF24SettingGrpPub RF24
