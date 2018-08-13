@@ -84,7 +84,8 @@ HardwareSerial& _dev = MY_RS485_HWSERIAL;
 #elif defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
 SoftwareSerial _dev(MY_HC12_RXPIN, MY_HC12_TXPIN); // RX, TX;		//For Arduino
 #else
-SoftwareSerial _dev(MY_HC12_RXPIN, MY_HC12_TXPIN,false,128); // RX, TX;  //For ESP8266 pin 5(14)RX, pin6(12)TX
+SoftwareSerial _dev(MY_HC12_RXPIN, MY_HC12_TXPIN,false,
+                    128); // RX, TX;  //For ESP8266 pin 5(14)RX, pin6(12)TX
 #endif
 
 unsigned char _nodeId;
@@ -110,7 +111,6 @@ void _serialReset()
 	_recCommand = 0;
 	_recCS = 0;
 	_recCalcCS = 0;
-	
 }
 
 // This is the main reception state machine.  Progress through the states
@@ -122,7 +122,6 @@ void _serialReset()
 // function.
 bool _serialProcess()
 {
-	
 	unsigned char i;
 	if (!_dev.available()) {
 		return false;
@@ -131,19 +130,19 @@ bool _serialProcess()
 	while (_dev.available()) {
 		char inch;
 		inch = _dev.read();
-        
 
 		switch (_recPhase) {
 
-			// Case 0 looks for the header.  Bytes arrive in the serial interface and get
-			// shifted through a header buffer.  When the start and end characters in
-			// the buffer match the SOH/STX pair, and the destination station ID matches
-			// our ID, save the header information and progress to the next state.
+		// Case 0 looks for the header.  Bytes arrive in the serial interface and get
+		// shifted through a header buffer.  When the start and end characters in
+		// the buffer match the SOH/STX pair, and the destination station ID matches
+		// our ID, save the header information and progress to the next state.
 		case 0:
-			
+
 			memcpy(&_header[0], &_header[1], 5);
 			_header[5] = inch;
-			if ((_header[0] == SOH) && (_header[5] == STX)) {  
+
+			if ((_header[0] == SOH) && (_header[5] == STX)) {
 				_recCalcCS = 0;
 				_recStation = _header[1];
 				_recSender = _header[2];
@@ -158,8 +157,8 @@ bool _serialProcess()
 
 				//Avoid _data[] overflow
 				if (_recLen >= MY_HC12_MAX_MESSAGE_LENGTH) {
-				Serial.println("DATA OVERFLOW :");
-				_serialReset();
+					Serial.println("DATA OVERFLOW :");
+					_serialReset();
 					break;
 				}
 
@@ -170,10 +169,10 @@ bool _serialProcess()
 			}
 			break;
 
-			// Case 1 receives the data portion of the packet.  Read in "_recLen" number
-			// of bytes and store them in the _data array.
+		// Case 1 receives the data portion of the packet.  Read in "_recLen" number
+		// of bytes and store them in the _data array.
 		case 1:
-			
+
 			_data[_recPos++] = inch;
 			_recCalcCS += inch;
 			if (_recPos == _recLen) {
@@ -181,36 +180,36 @@ bool _serialProcess()
 			}
 			break;
 
-			// After the data comes a single ETX character.  Do we have it?  If not,
-			// reset the state machine to default and start looking for a new header.
+		// After the data comes a single ETX character.  Do we have it?  If not,
+		// reset the state machine to default and start looking for a new header.
 		case 2:
 			// Packet properly terminated?
-			
+
 			if (inch == ETX) {
 				_recPhase = 3;
-			}
-			else {
+
+			} else {
 				_serialReset();
 			}
 			break;
 
-			// Next comes the checksum.  We have already calculated it from the incoming
-			// data, so just store the incoming checksum byte for later.
+		// Next comes the checksum.  We have already calculated it from the incoming
+		// data, so just store the incoming checksum byte for later.
 		case 3:
-		
-		_recCS = inch;
+
+			_recCS = inch;
 			_recPhase = 4;
 			break;
 
-			// The final state - check the last character is EOT and that the checksum matches.
-			// If that test passes, then look for a valid command callback to execute.
-			// Execute it if found.
+		// The final state - check the last character is EOT and that the checksum matches.
+		// If that test passes, then look for a valid command callback to execute.
+		// Execute it if found.
 		case 4:
-		
+
 			if (inch == EOT) {
 				if (_recCS == _recCalcCS) {
-				
-				// First, check for system level commands.  It is possible
+
+					// First, check for system level commands.  It is possible
 					// to register your own callback as well for system level
 					// commands which will be called after the system default
 					// hook.
@@ -239,7 +238,6 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 
 	(void)noACK;	// not implemented
 	const char *datap = static_cast<char const *>(data);
-	
 	unsigned char i;
 	unsigned char cs = 0;
 
@@ -249,7 +247,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	// Let's start out by looking for a collision.  If there has been anything seen in
 	// the last millisecond, then wait for a random time and check again.
 
-		while (_serialProcess()) {
+	while (_serialProcess()) {
 		unsigned char del;
 		del = rand() % 20;
 		for (i = 0; i < del; i++) {
@@ -278,7 +276,6 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	_dev.print((char)len);      		// Length of text
 	cs += len;
 	_dev.print((char)STX);      		// Start of text
-	
 	for (i = 0; i<len; i++) {
 		_dev.print((char)datap[i]);     // Text bytes
 		cs += datap[i];
@@ -343,13 +340,13 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	
+
 	if (_packet_received) {
 		memcpy(data, _data, _packet_len);
 		_packet_received = false;
 		return _packet_len;
-	}
-	else {
+
+	} else {
 		return (0);
 	}
 }
