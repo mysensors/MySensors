@@ -37,8 +37,6 @@
 #ifndef MySensors_h
 #define MySensors_h
 
-
-
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
