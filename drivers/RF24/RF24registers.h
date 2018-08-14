@@ -41,7 +41,7 @@
 #define RF24_CRC_16				(3)
 
 // ARD, auto retry delay
-#define RF24_SET_ARD			(5)	//=1500us
+#define RF24_SET_ARD			(10)	//=1500us
 
 // ARD, auto retry count
 #define RF24_SET_ARC			(15)
