@@ -298,7 +298,7 @@
 
 #ifndef MY_HC12_SET_PIN
 #if defined MY_RADIO_HC12
-#ERROR SET pin should be set, Remember to set before include of mysensor.h
+//#warning SET is not defined, Remember to set before include of mysensor.h if needed
 #endif
 #endif
 
@@ -308,7 +308,7 @@
  */
 #ifndef MY_HC12_TXPIN
 #if defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
-#define MY_HC12_TXPIN (11)
+#define MY_HC12_TXPIN (9)
 #endif
 #else
 #define MY_HC12_TXPIN (14)
@@ -321,7 +321,7 @@
  */
 #ifndef MY_HC12_RXPIN
 #if defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
-#define MY_HC12_RXPIN (10)
+#define MY_HC12_RXPIN (8)
 #endif
 #else
 #define MY_HC12_RXPIN (12)

@@ -55,7 +55,7 @@
 
 #ifdef __linux__
 #include "SerialPort.h"
-#else
+#elif defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO)
 #include <SoftwareSerial.h>
 #endif
 
@@ -81,8 +81,8 @@ unsigned char _recCalcCS;
 SerialPort _dev = SerialPort(MY_RS485_HWSERIAL);
 #elif defined(MY_RS485_HWSERIAL)
 HardwareSerial& _dev = MY_RS485_HWSERIAL;
-#elif defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
-SoftwareSerial _dev(MY_HC12_RXPIN, MY_HC12_TXPIN); // RX, TX;		//For Arduino
+#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
+AltSoftSerial _dev;
 #else
 SoftwareSerial _dev(MY_HC12_RXPIN, MY_HC12_TXPIN,false,
                     128); // RX, TX;  //For ESP8266 pin 5(14)RX, pin6(12)TX
