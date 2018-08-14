@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+#include "c_types.h"
+
+
 #define GPIO_PIN_ADDR(i) (GPIO_PIN0_ADDRESS + i*4)
 
 #define GPIO_ID_IS_PIN_REGISTER(reg_id) \
