@@ -26,6 +26,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern "C" {
 #include "gpio.h"
 }
+#define cli()        ets_intr_lock()       // IRQ Disable
+#define sei()        ets_intr_unlock()     // IRQ Enable
+
 
 #include "SoftwareSerial_esp.h"
 
