@@ -354,7 +354,11 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "drivers/RF24/RF24.cpp"
 #include "hal/transport/RF24/MyTransportRF24.cpp"
 #elif defined(MY_RADIO_HC12)
+#if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) || (__AVR_YUN__)
 #include "drivers/AltSoftSerial/AltSoftSerial.cpp"
+#else
+#include "drivers/espsoftwareserial/SoftwareSerial_esp.cpp"
+#endif
 #include "hal/transport/HC12/MyTransportHC12.cpp"
 #elif defined(MY_RADIO_NRF5_ESB)
 #if !defined(ARDUINO_ARCH_NRF5)

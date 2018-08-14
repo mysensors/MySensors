@@ -309,9 +309,9 @@
 #ifndef MY_HC12_TXPIN
 #if defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
 #define MY_HC12_TXPIN (9)
-#endif
 #else
 #define MY_HC12_TXPIN (14)
+#endif
 #endif
 
 
@@ -322,9 +322,9 @@
 #ifndef MY_HC12_RXPIN
 #if defined(__AVR_ATmega168__) ||defined(__AVR_ATmega168P__) ||defined(__AVR_ATmega328P__)
 #define MY_HC12_RXPIN (8)
-#endif
 #else
 #define MY_HC12_RXPIN (12)
+#endif
 #endif
 
 /**
