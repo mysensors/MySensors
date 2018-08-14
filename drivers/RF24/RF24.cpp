@@ -64,7 +64,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t
 
 	RF24_csn(LOW);
 	// timing
-	delayMicroseconds(10);
+	delayMicroseconds(100);
 #ifdef LINUX_SPI_BCM
 	uint8_t *prx = RF24_spi_rxbuff;
 	uint8_t *ptx = RF24_spi_txbuff;
@@ -111,7 +111,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t
 	RF24_SPI.endTransaction();
 #endif
 	// timing
-	delayMicroseconds(10);
+	delayMicroseconds(100);
 	return status;
 }
 
