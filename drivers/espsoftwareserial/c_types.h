@@ -70,11 +70,11 @@ typedef double              real64;
 
 /* probably should not put STATUS here */
 typedef enum {
-    OK = 0,
-    FAIL,
-    PENDING,
-    BUSY,
-    CANCEL,
+	OK = 0,
+	FAIL,
+	PENDING,
+	BUSY,
+	CANCEL,
 } STATUS;
 
 #define BIT(nr)                 (1UL << (nr))
