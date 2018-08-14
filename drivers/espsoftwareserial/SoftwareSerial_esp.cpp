@@ -95,7 +95,7 @@ static void (*ISRList[MAX_PIN+1])() = {
 	sws_isr_14,
 	sws_isr_15
 };
-
+// cppcheck-suppress uninitMemberVar
 SoftwareSerial::SoftwareSerial(int receivePin, int transmitPin, bool inverse_logic,
                                unsigned int buffSize)
 {
@@ -260,6 +260,7 @@ size_t SoftwareSerial::write(uint8_t b)
 	}
 	// Stop bit
 	digitalWrite(m_txPin, HIGH);
+	// cppcheck-suppress unreadVariable
 	WAIT;
 	if (m_txEnableValid) {
 		digitalWrite(m_txEnablePin, LOW);
@@ -308,6 +309,7 @@ void ICACHE_RAM_ATTR SoftwareSerial::rxRead()
 		rec = ~rec;
 	}
 	// Stop bit
+	// cppcheck-suppress unreadVariable
 	WAIT;
 	// Store the received value in the buffer unless we have an overflow
 	int next = (m_inPos+1) % m_buffSize;
