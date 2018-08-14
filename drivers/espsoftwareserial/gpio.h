@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-#include "c_types.h"
+
 
 
 #define GPIO_PIN_ADDR(i) (GPIO_PIN0_ADDRESS + i*4)
@@ -38,7 +38,7 @@ extern "C" {
 	((reg_id >= GPIO_ID_PIN0) && (reg_id <= GPIO_ID_PIN(GPIO_PIN_COUNT-1)))
 
 #define GPIO_REGID_TO_PINIDX(reg_id) ((reg_id) - GPIO_ID_PIN0)
-
+typedef unsigned int        uint32;
 typedef enum {
 	GPIO_PIN_INTR_DISABLE = 0,
 	GPIO_PIN_INTR_POSEDGE = 1,
