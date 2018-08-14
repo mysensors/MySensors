@@ -26,6 +26,8 @@
 #include <Arduino.h>
 #endif
 
+#define CRYPTO_LITTLE_ENDIAN
+
 // Define NRF5_SOFTDEVICE when SoftDevice found
 #if defined(S110) || defined(S130) || defined(S132) || defined(S140)
 #ifndef SOFTDEVICE_PRESENT

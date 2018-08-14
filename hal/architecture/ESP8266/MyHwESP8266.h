@@ -23,6 +23,8 @@
 #include <Arduino.h>
 #endif
 
+#define CRYPTO_LITTLE_ENDIAN
+
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
 #endif

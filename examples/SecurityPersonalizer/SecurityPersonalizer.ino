@@ -686,17 +686,21 @@ static void	reset_eeprom(void)
 
 static void write_eeprom_checksum(void)
 {
-	uint8_t buffer[32];
-	uint8_t* hash;
-	signerSha256Init();
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-	signerSha256Update(buffer, 32);
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-	signerSha256Update(buffer, 16);
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-	signerSha256Update(buffer, 9);
-	hash = signerSha256Final();
-	hwWriteConfigBlock((void*)&hash[0], (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS, 1);
+	uint8_t buffer[SIZE_SIGNING_SOFT_HMAC_KEY + SIZE_RF_ENCRYPTION_AES_KEY + SIZE_SIGNING_SOFT_SERIAL];
+	uint8_t hash[32];
+	uint8_t checksum;
+	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS,
+	                  SIZE_SIGNING_SOFT_HMAC_KEY);
+	hwReadConfigBlock((void*)&buffer[SIZE_SIGNING_SOFT_HMAC_KEY],
+	                  (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, SIZE_RF_ENCRYPTION_AES_KEY);
+	hwReadConfigBlock((void*)&buffer[SIZE_SIGNING_SOFT_HMAC_KEY + SIZE_RF_ENCRYPTION_AES_KEY],
+	                  (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, SIZE_SIGNING_SOFT_SERIAL);
+	hwReadConfigBlock((void*)&checksum, (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS,
+	                  SIZE_PERSONALIZATION_CHECKSUM);
+
+	SHA256(hash, buffer, sizeof(buffer));
+	hwWriteConfigBlock((void*)&hash[0], (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS,
+	                   SIZE_PERSONALIZATION_CHECKSUM);
 }
 
 /** @brief Store keys depending on configuration */

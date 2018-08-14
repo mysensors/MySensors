@@ -33,6 +33,8 @@
 #include <Arduino.h>
 #endif
 
+#define MYSENSORS_SHA256_ASM_AVR	// use the ASM implementation for the sha256 code
+
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
 #endif
