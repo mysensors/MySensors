@@ -62,7 +62,7 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485|rfm95|rfm69]
+    --my-transport=[none|nrf24|rs485|rfm95|rfm69|hc12]
                                 Set the transport to be used to communicate with other nodes. [nrf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
@@ -98,6 +98,11 @@ MySensors options:
     --my-rs485-baudrate=<BAUD>  RS485 baudrate. [9600]
     --my-rs485-de-pin=<PIN>     Pin number connected to RS485 driver enable pin.
     --my-rs485-max-msg-length=<LENGTH>
+	
+    --my-hc12-channel=<1-127>   RF channel for the sensor net. [76]
+    --my-hc12-baudrate=<BAUD>   hc12 baudrate. [9600]
+    --my-hc12-set-pin=<PIN>     Pin number connected to RS485 driver enable pin.
+    --my-hc12-max-msg-length=<LENGTH>
                                 The maximum message length used for RS485. [40]
     --my-leds-err-pin=<PIN>     Error LED pin.
     --my-leds-rx-pin=<PIN>      Receive LED pin.
