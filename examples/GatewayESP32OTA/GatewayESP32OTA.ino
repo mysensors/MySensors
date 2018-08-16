@@ -61,15 +61,15 @@
 
 
 // Advanced Gateway Options
-#define MY_DEFAULT_LED_BLINK_PERIOD 50
+//#define MY_DEFAULT_LED_BLINK_PERIOD 50
 
 // Flash leds on rx/tx/err
 // Led pins used if blinking feature is enabled above
-#define MY_DEFAULT_ERR_LED_PIN 32  // Transfer data error led pin
-#define MY_DEFAULT_RX_LED_PIN  25  // Receive Data led pin
-#define MY_DEFAULT_TX_LED_PIN  27  // Transmit Data led pin
+//#define MY_DEFAULT_ERR_LED_PIN 32  // Transfer data error led pin
+//#define MY_DEFAULT_RX_LED_PIN  25  // Receive Data led pin
+//#define MY_DEFAULT_TX_LED_PIN  27  // Transmit Data led pin
 
-#define MY_WITH_LEDS_BLINKING_INVERSE  // At the time of Error, Receive, Transmit the pin is at a high level
+//#define MY_WITH_LEDS_BLINKING_INVERSE  // At the time of Error, Receive, Transmit the pin is at a high level
 
 
 
