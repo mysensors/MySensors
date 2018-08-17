@@ -76,7 +76,7 @@ MySensors options:
                                 personalized with the same AES key.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
-    --my-rfm69-frequency=[315|433|868|915]
+    --my-rfm69-frequency=[315|433|865|868|915]
                                 RFM69 Module Frequency. [868]
     --my-is-rfm69hw             Enable high-powered rfm69hw.
     --my-rfm69-irq-pin=<PIN>    Pin number connected to RFM69 IRQ pin.
@@ -437,6 +437,8 @@ for opt do
             CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_315MHZ $CPPFLAGS"
         elif [[ ${optarg} == "433" ]]; then
             CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_433MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "865" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_865MHZ $CPPFLAGS"
         elif [[ ${optarg} == "868" ]]; then
             CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_868MHZ $CPPFLAGS"
         elif [[ ${optarg} == "915" ]]; then
