@@ -25,6 +25,8 @@
 
 #include <avr/dtostrf.h>
 
+#define CRYPTO_LITTLE_ENDIAN
+
 // defines for sensebender gw variant.h
 #define MY_EXT_EEPROM_I2C_ADDRESS	(0x50u)
 #define MY_EXT_EEPROM_SIZE			(kbits_512)

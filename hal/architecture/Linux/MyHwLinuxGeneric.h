@@ -25,6 +25,8 @@
 #include "SerialPort.h"
 #include "StdInOutStream.h"
 
+#define CRYPTO_LITTLE_ENDIAN
+
 #ifdef MY_LINUX_SERIAL_PORT
 #ifdef MY_LINUX_SERIAL_IS_PTY
 SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT, true);

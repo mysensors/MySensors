@@ -57,26 +57,35 @@
 
 // HARDWARE
 #include "hal/architecture/MyHw.h"
+#include "hal/crypto/MyCryptoHAL.h"
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/ESP8266/MyHwESP8266.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_ESP32)
 #include "hal/architecture/ESP32/MyHwESP32.cpp"
+#include "hal/crypto/ESP32/MyCryptoESP32.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
+#include "hal/crypto/AVR/MyCryptoAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "hal/architecture/SAMD/MyHwSAMD.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/STM32F1/MyHwSTM32F1.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
 #include "drivers/NVM/VirtualPage.cpp"
 #include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/NRF5/MyHwNRF5.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(__arm__) && defined(TEENSYDUINO)
 #include "hal/architecture/Teensy3/MyHwTeensy3.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/Linux/MyHwLinuxGeneric.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #else
 #error Hardware abstraction not defined (unsupported platform)
 #endif
@@ -109,7 +118,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // SIGNING
 #include "core/MySigning.cpp"
-#include "drivers/ATSHA204/sha256.cpp"
 #if defined(MY_SIGNING_FEATURE)
 // SIGNING COMMON FUNCTIONS
 #if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)

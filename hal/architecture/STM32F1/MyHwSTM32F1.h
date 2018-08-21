@@ -27,6 +27,8 @@
 #include <Arduino.h>
 #endif
 
+#define CRYPTO_LITTLE_ENDIAN
+
 // SS default
 #ifndef SS
 #define SS PA4

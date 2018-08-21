@@ -23,6 +23,8 @@
 #include "MyHwNRF5.h"
 #include <nrf.h>
 
+#define CRYPTO_LITTLE_ENDIAN
+
 #define INVALID_INTERRUPT_NUM (0xFFu)
 
 volatile uint8_t _wokeUpByInterrupt = INVALID_INTERRUPT_NUM; // Interrupt number that woke the mcu.

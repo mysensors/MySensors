@@ -33,6 +33,8 @@
 #endif
 #include "util/atomic.h"
 
+#define CRYPTO_LITTLE_ENDIAN
+
 #ifndef _BV
 #define _BV(x) (1<<(x))
 #endif
@@ -49,8 +51,11 @@
 #define SIM_SCGC6_RNGA			((uint32_t)0x00000200)
 #endif
 
-#define MIN(a,b) min(a,b)
-#define MAX(a,b) max(a,b)
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+
+#define MIN min
+#define MAX max
 
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)

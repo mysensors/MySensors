@@ -45,6 +45,8 @@
 #include <Arduino.h>
 #endif
 
+#define CRYPTO_LITTLE_ENDIAN
+
 #define MY_SERIALDEVICE Serial
 
 #define min(a,b) ((a)<(b)?(a):(b))
