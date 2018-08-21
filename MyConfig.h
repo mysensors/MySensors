@@ -604,6 +604,7 @@
  *
  * - RFM69_315MHZ
  * - RFM69_433MHZ
+ * - RFM69_865MHZ
  * - RFM69_868MHZ
  * - RFM69_915MHZ
  * - Custom frequency in Hz (new %RFM69 driver only)
