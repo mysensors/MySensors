@@ -1,5 +1,5 @@
 ﻿
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -10,7 +10,7 @@
  * Created by Frank Holtz
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
- * https://github.com/mysensors/Arduino/graphs/contributors
+ * https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org

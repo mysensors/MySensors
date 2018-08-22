@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -22,8 +22,6 @@
  * @ingroup publics
  * @{
  * @brief The primary public API declaration for the MySensors library
- *
- *
  */
 
 /**
@@ -39,11 +37,6 @@
 
 #ifdef __cplusplus
 #include <Arduino.h>
-#endif
-
-// general macros
-#if !defined(_BV)
-#define _BV(x) (1<<(x))	//!< _BV
 #endif
 
 #include "MyConfig.h"
@@ -90,6 +83,27 @@
 #error Hardware abstraction not defined (unsupported platform)
 #endif
 
+// commonly used macros, sometimes missing in arch definitions
+#if !defined(_BV)
+#define _BV(x) (1<<(x))	//!< _BV
+#endif
+
+#if !defined(min) && !defined(__linux__)
+#define min(a,b) ((a)<(b)?(a):(b)) //!< min
+#endif
+
+#if !defined(max) && !defined(__linux__)
+#define max(a,b) ((a)>(b)?(a):(b)) //!< max
+#endif
+
+#if !defined(MIN)
+#define MIN min //!< MIN
+#endif
+
+#if !defined(MAX)
+#define MAX max //!< MAX
+#endif
+
 // OTA Debug second part, depends on HAL
 #if defined(MY_OTA_LOG_SENDER_FEATURE) || defined(MY_OTA_LOG_RECEIVER_FEATURE)
 #include "core/MyOTALogging.cpp"
@@ -134,7 +148,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "core/MySigningAtsha204Soft.cpp"
 #endif
 #endif
-
 
 // FLASH
 #if defined(MY_OTA_FIRMWARE_FEATURE)

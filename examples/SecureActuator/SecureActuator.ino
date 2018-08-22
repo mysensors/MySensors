@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -46,8 +46,8 @@
 #define MY_NODE_LOCK_FEATURE //!< Enable lockdown of node if suspicious activity is detected
 
 // Enable and select radio type attached
-#define MY_RADIO_NRF24 //!< NRF24L01 radio driver
-//#define MY_RADIO_NRF5_ESB //!< nRF5 radio driver (NRF24 compatible)
+#define MY_RADIO_RF24 //!< nRF24L01 radio driver
+//#define MY_RADIO_NRF5_ESB //!< nRF5 radio driver (RF24 compatible)
 //#define MY_RADIO_RFM69 //!< RFM69 radio driver
 //#define MY_RADIO_RFM95 //!< RFM95 radio driver
 

@@ -41,9 +41,6 @@ StdInOutStream Serial = StdInOutStream();
 #define MY_SERIALDEVICE Serial
 #endif
 
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)>(b)?(a):(b))
-
 // Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
@@ -53,14 +50,14 @@ inline int hwDigitalRead(uint8_t);
 inline void hwPinMode(uint8_t, uint8_t);
 
 bool hwInit(void);
-inline void hwReadConfigBlock(void* buf, void* addr, size_t length);
-inline void hwWriteConfigBlock(void* buf, void* addr, size_t length);
-inline uint8_t hwReadConfig(int addr);
-inline void hwWriteConfig(int addr, uint8_t value);
-inline void hwRandomNumberInit();
+inline void hwReadConfigBlock(void *buf, void *addr, size_t length);
+inline void hwWriteConfigBlock(void *buf, void *addr, size_t length);
+inline uint8_t hwReadConfig(const int addr);
+inline void hwWriteConfig(const int addr, uint8_t value);
+inline void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
-inline uint32_t hwMillis();
+inline uint32_t hwMillis(void);
 
 #ifdef MY_RF24_IRQ_PIN
 static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

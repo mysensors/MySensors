@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -9,7 +9,7 @@
  * Created by Frank Holtz
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
- * https://github.com/mysensors/Arduino/graphs/contributors
+ * https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -38,7 +38,7 @@
 /** Wait for start of an ACK packet in us
  * Calculation: ramp up time + packet header (57 Bit): round to 9 Byte
  * If you don't receive ACK packages, you have to increase this value.
- * My measured (Aurduino Uno+NRF24L01P) minimal timeouts:
+ * My measured (Arduino Uno + nRF24L01P) minimal timeouts:
  *   250kbit 411us -> 182 us to ACK start
  *   1MBit   205us -> 147 us
  *   2MBit   173us -> 143 us

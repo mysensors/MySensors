@@ -6,8 +6,8 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2017 Sensnology AB
-* Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+* Copyright (C) 2013-2018 Sensnology AB
+* Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
 * Support Forum: http://forum.mysensors.org
@@ -35,8 +35,8 @@
 
 #define CRYPTO_LITTLE_ENDIAN
 
-#ifndef _BV
-#define _BV(x) (1<<(x))
+#ifndef MY_SERIALDEVICE
+#define MY_SERIALDEVICE Serial
 #endif
 
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
@@ -51,12 +51,6 @@
 #define SIM_SCGC6_RNGA			((uint32_t)0x00000200)
 #endif
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
-
-#define MIN min
-#define MAX max
-
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
@@ -69,14 +63,10 @@ void hwWatchdogReset(void);
 void hwReboot(void);
 
 // Teensy 3.x implements avr-libc EEPROM API
-#define hwReadConfig(__pos) eeprom_read_byte((uint8_t*)(__pos))
-#define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t*)(__pos), (__val))
-#define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void*)(__buf), (void*)(__pos), (__length))
-#define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((void*)(__buf), (void*)(__pos), (__length))
-
-#ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE Serial
-#endif
+#define hwReadConfig(__pos) eeprom_read_byte((const uint8_t *)__pos)
+#define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t *)__pos, (uint8_t)__val)
+#define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void *)__buf, (const void *)__pos, (uint32_t)__length)
+#define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((const void *)__buf, (void *)__pos, (uint32_t)__length)
 
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define MY_HW_HAS_GETENTROPY

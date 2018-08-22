@@ -7,7 +7,7 @@
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
 * Copyright (C) 2013-2018 Sensnology AB
-* Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+* Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
 * Support Forum: http://forum.mysensors.org
@@ -19,7 +19,7 @@
 * Based on maniacbug's RF24 library, copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
 * RF24 driver refactored and optimized for speed and size, copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
 *
-* Definitions for Nordic NRF24L01+ radios:
+* Definitions for Nordic nRF24L01+ radios:
 * https://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01P
 *
 */

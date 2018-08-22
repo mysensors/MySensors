@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -30,7 +30,7 @@ bool hwInit(void)
 	return true;
 }
 
-void hwReadConfigBlock(void* buf, void* addr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
 	uint8_t* dst = static_cast<uint8_t*>(buf);
 	int pos = reinterpret_cast<int>(addr);
@@ -39,7 +39,7 @@ void hwReadConfigBlock(void* buf, void* addr, size_t length)
 	}
 }
 
-void hwWriteConfigBlock(void* buf, void* addr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
 	uint8_t* src = static_cast<uint8_t*>(buf);
 	int pos = reinterpret_cast<int>(addr);
@@ -125,7 +125,7 @@ ADC_MODE(ADC_VCC);
 ADC_MODE(ADC_TOUT);
 #endif
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 #if defined(MY_SPECIAL_DEBUG)
 	// in mV, requires ADC_VCC set
@@ -136,13 +136,13 @@ uint16_t hwCPUVoltage()
 #endif
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	// in 1/10Mhz
 	return ESP.getCpuFreqMHz()*10;
 }
 
-uint16_t hwFreeMem()
+uint16_t hwFreeMem(void)
 {
 	return ESP.getFreeHeap();
 }
@@ -166,6 +166,7 @@ void hwDebugPrint(const char *fmt, ... )
 #endif
 	va_list args;
 	va_start (args, fmt );
+	// cppcheck-suppress wrongPrintfScanfArgNum
 	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 	// Truncate message if this is gateway node

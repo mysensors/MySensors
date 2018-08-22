@@ -62,14 +62,14 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485|rfm95|rfm69]
-                                Set the transport to be used to communicate with other nodes. [nrf24]
+    --my-transport=[none|rf24|rs485|rfm95|rfm69]
+                                Set the transport to be used to communicate with other nodes. [rf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-ce-pin=<PIN>      Pin number to use for rf24 Chip-Enable.
     --my-rf24-cs-pin=<PIN>      Pin number to use for rf24 Chip-Select.
-    --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
+    --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01P IRQ pin.
     --my-rf24-encryption-enabled
                                 Enables RF24 encryption.
                                 All nodes and gateway must have this enabled, and all must be
@@ -285,7 +285,7 @@ function gcc_cpu_flags {
 # Default values
 debug=enable
 gateway_type=ethernet
-transport_type=nrf24
+transport_type=rf24
 signing=none
 signing_request_signatures=false
 encryption=false
@@ -621,8 +621,8 @@ printf "  ${OK} Type: ${gateway_type}.\n"
 if [[ ${transport_type} == "none" ]]; then
     # Transport disabled
     :
-elif [[ ${transport_type} == "nrf24" ]]; then
-    CPPFLAGS="-DMY_RADIO_NRF24 $CPPFLAGS"
+elif [[ ${transport_type} == "rf24" ]]; then
+    CPPFLAGS="-DMY_RADIO_RF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm69" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM69 -DMY_RFM69_NEW_DRIVER $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then

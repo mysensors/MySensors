@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -21,6 +21,6 @@
 #include <stdint.h>
 #include <pins_arduino.h>
 #define MY_DEBUG
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 #define MY_OTA_FIRMWARE_FEATURE
 #include <MySensors.h>

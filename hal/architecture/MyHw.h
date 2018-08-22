@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -43,10 +43,10 @@
 #define hwDigitalRead(__pin)
 #define hwPinMode(__pin, __value)
 
-void hwReadConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfig(int adr, uint8_t value);
-uint8_t hwReadConfig(int adr);
+void hwReadConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfig(const int addr, uint8_t value);
+uint8_t hwReadConfig(const int addr);
 */
 
 /**
@@ -99,19 +99,19 @@ bool hwUniqueID(unique_id_t* uniqueID);
  * CPU voltage
  * @return CPU voltage in mV
  */
-uint16_t hwCPUVoltage();
+uint16_t hwCPUVoltage(void);
 
 /**
  * CPU frequency
  * @return CPU frequency in 1/10Mhz
  */
-uint16_t hwCPUFrequency();
+uint16_t hwCPUFrequency(void);
 
 /**
  * Free memory
  * @return free memory in bytes
  */
-uint16_t hwFreeMem();
+uint16_t hwFreeMem(void);
 
 #if defined(DEBUG_OUTPUT_ENABLED)
 void hwDebugPrint(const char *fmt, ... );

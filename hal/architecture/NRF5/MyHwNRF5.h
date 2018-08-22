@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -7,10 +7,10 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
+ * Copyright (C) 2013-2018 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
- * https://github.com/mysensors/Arduino/graphs/contributors
+ * https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -61,9 +61,6 @@
 #define printf_P printf
 #endif
 
-#define MIN(a,b) min(a,b)
-#define MAX(a,b) max(a,b)
-
 // redefine 8 bit types of inttypes.h until fix of https://github.com/sandeepmistry/arduino-nRF5/issues/197
 #undef PRId8
 #undef PRIi8
@@ -108,14 +105,14 @@
 #define hwPinMode(__pin, __value) nrf5_pinMode(__pin, __value)
 #define hwMillis() millis()
 
-bool hwInit();
-void hwWatchdogReset();
-void hwReboot();
-void hwReadConfigBlock(void *buf, void *adr, size_t length);
-void hwWriteConfigBlock(void *buf, void *adr, size_t length);
-void hwWriteConfig(int adr, uint8_t value);
-uint8_t hwReadConfig(int adr);
-void hwRandomNumberInit();
+bool hwInit(void);
+void hwWatchdogReset(void);
+void hwReboot(void);
+void hwReadConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfig(const int addr, uint8_t value);
+uint8_t hwReadConfig(const int addr);
+void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
 

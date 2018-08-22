@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -49,8 +49,8 @@
 #define MYSENSORS_LIBRARY_VERSION_MAJOR							2							//!< Major release version
 #define MYSENSORS_LIBRARY_VERSION_MINOR							3							//!< Minor release version
 #define MYSENSORS_LIBRARY_VERSION_PATCH							1							//!< Patch version
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE				"alpha"				//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER	0x00					//!< incremental counter, starting at 0x00. 0xFF for final release
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE				"beta"				//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER	0x01					//!< incremental counter, starting at 0x00. 0xFF for final release
 
 
 #if (MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER != 0xFF)

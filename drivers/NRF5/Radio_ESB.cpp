@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors formrs a self healing radio network with optional repeaters. Each
@@ -9,7 +9,7 @@
  * Created by Frank Holtz
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
- * https://github.com/mysensors/Arduino/graphs/contributors
+ * https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -142,7 +142,7 @@ static bool NRF5_ESB_initialize()
 	// Enable listening on Node and BC address
 	NRF_RADIO->RXADDRESSES = (1 << NRF5_ESB_NODE_ADDR) | (1 << NRF5_ESB_BC_ADDR);
 
-	// Packet configuration for NRF24 compatibility
+	// Packet configuration for nRF24 compatibility
 	NRF_RADIO->PCNF0 = (6 << RADIO_PCNF0_LFLEN_Pos) | // 6 Bits length field
 	                   (0 << RADIO_PCNF0_S0LEN_Pos) | // No S0
 #ifdef RADIO_PCNF0_S1INCL_Pos
@@ -159,7 +159,7 @@ static bool NRF5_ESB_initialize()
 	    (RADIO_PCNF1_WHITEEN_Disabled << RADIO_PCNF1_WHITEEN_Pos); // Disable whitening
 
 	// HINT: Fast ramp up can enabled here. Needs more code on other lines
-	// Fast ramp up isn't supported by NRF24 and NRF51 series.
+	// Fast ramp up isn't supported by nRF24 and NRF51 series.
 
 	// Set bitcounter to trigger interrupt after ACK bit
 	NRF_RADIO->BCC = NRF5_ESB_BITCOUNTER;
@@ -571,7 +571,7 @@ extern "C" {
 
 			// In RX mode -> prepare ACK or RX
 			if (NRF_RADIO->STATE == RADIO_STATE_STATE_Rx) {
-				// Send ACK only for node address, don't care about the ACK bit to handle bad NRF24 clones
+				// Send ACK only for node address, don't care about the ACK bit to handle bad nRF24 clones
 				if (NRF_RADIO->RXMATCH == NRF5_ESB_NODE_ADDR) {
 					// Send ACK after END, an empty packet is provided in READY event
 					NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_RX_TX;
