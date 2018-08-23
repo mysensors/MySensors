@@ -147,6 +147,11 @@ uint16_t hwCPUFrequency(void)
 	return FUNCTION_NOT_SUPPORTED;
 }
 
+int8_t hwCPUTemperature(void)
+{
+	return -127;
+}
+
 uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!

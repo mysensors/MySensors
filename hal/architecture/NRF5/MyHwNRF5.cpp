@@ -33,11 +33,11 @@ volatile uint8_t _wakeUp1Interrupt =
 volatile uint8_t _wakeUp2Interrupt =
     INVALID_INTERRUPT_NUM; // Interrupt number for wakeUp2-callback.
 
-void wakeUp1() // place to send the interrupts
+void wakeUp1(void) // place to send the interrupts
 {
 	_wokeUpByInterrupt = _wakeUp1Interrupt;
 }
-void wakeUp2() // place to send the second interrupts
+void wakeUp2(void) // place to send the second interrupts
 {
 	_wokeUpByInterrupt = _wakeUp2Interrupt;
 }
@@ -522,8 +522,13 @@ uint16_t hwCPUFrequency(void)
 #elif defined(F_CPU)
 	return (F_CPU) / 100000UL;
 #else
-	return 16;
+	return 160;
 #endif
+}
+
+int8_t hwCPUTemperature(void)
+{
+	return -127; // not implemented yet
 }
 
 uint16_t hwFreeMem(void)
@@ -534,9 +539,6 @@ uint16_t hwFreeMem(void)
 
 void hwDebugPrint(const char *fmt, ...)
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
@@ -550,14 +552,14 @@ void hwDebugPrint(const char *fmt, ...)
 	MY_DEBUGDEVICE.print(F(" "));
 #endif
 	va_list args;
-	va_start (args, fmt );
+	va_start(args, fmt);
 	vsnprintf(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 	// Truncate message if this is gateway node
 	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
 #endif
-	va_end (args);
+	va_end(args);
 	MY_DEBUGDEVICE.print(fmtBuffer);
 	MY_DEBUGDEVICE.flush();
 #else

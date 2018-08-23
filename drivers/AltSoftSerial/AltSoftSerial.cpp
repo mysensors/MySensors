@@ -21,6 +21,9 @@
  * THE SOFTWARE.
  */
 
+// Revisions are now tracked on GitHub
+// https://github.com/PaulStoffregen/AltSoftSerial
+//
 // Version 1.2: Support Teensy 3.x
 //
 // Version 1.1: Improve performance in receiver code
@@ -55,23 +58,45 @@ static uint8_t tx_bit;
 static volatile uint8_t tx_buffer_head;
 static volatile uint8_t tx_buffer_tail;
 #define TX_BUFFER_SIZE 68
-static volatile uint8_t tx_buffer[RX_BUFFER_SIZE];
+static volatile uint8_t tx_buffer[TX_BUFFER_SIZE];
 
 
 #ifndef INPUT_PULLUP
 #define INPUT_PULLUP INPUT
 #endif
 
+#define MAX_COUNTS_PER_BIT  6241  // 65536 / 10.5
+
 void AltSoftSerial::init(uint32_t cycles_per_bit)
 {
-	if (cycles_per_bit < 7085) {
+	//Serial.printf("cycles_per_bit = %d\n", cycles_per_bit);
+	if (cycles_per_bit < MAX_COUNTS_PER_BIT) {
 		CONFIG_TIMER_NOPRESCALE();
 	} else {
 		cycles_per_bit /= 8;
-		if (cycles_per_bit < 7085) {
+		//Serial.printf("cycles_per_bit/8 = %d\n", cycles_per_bit);
+		if (cycles_per_bit < MAX_COUNTS_PER_BIT) {
 			CONFIG_TIMER_PRESCALE_8();
 		} else {
-			return; // minimum 283 baud at 16 MHz clock
+#if defined(CONFIG_TIMER_PRESCALE_256)
+			cycles_per_bit /= 32;
+			//Serial.printf("cycles_per_bit/256 = %d\n", cycles_per_bit);
+			if (cycles_per_bit < MAX_COUNTS_PER_BIT) {
+				CONFIG_TIMER_PRESCALE_256();
+			} else {
+				return; // baud rate too low for AltSoftSerial
+			}
+#elif defined(CONFIG_TIMER_PRESCALE_128)
+			cycles_per_bit /= 16;
+			//Serial.printf("cycles_per_bit/128 = %d\n", cycles_per_bit);
+			if (cycles_per_bit < MAX_COUNTS_PER_BIT) {
+				CONFIG_TIMER_PRESCALE_128();
+			} else {
+				return; // baud rate too low for AltSoftSerial
+			}
+#else
+			return; // baud rate too low for AltSoftSerial
+#endif
 		}
 	}
 	ticks_per_bit = cycles_per_bit;
@@ -111,7 +136,7 @@ void AltSoftSerial::writeByte(uint8_t b)
 	if (head >= TX_BUFFER_SIZE) {
 		head = 0;
 	}
-	while (tx_buffer_tail == head) {} // wait until space in buffer
+	while (tx_buffer_tail == head) ; // wait until space in buffer
 	intr_state = SREG;
 	cli();
 	if (tx_state) {
@@ -131,16 +156,19 @@ void AltSoftSerial::writeByte(uint8_t b)
 
 ISR(COMPARE_A_INTERRUPT)
 {
-	uint8_t state, byte, head, tail;
+	uint8_t state, byte, bit, head, tail;
 	uint16_t target;
 
 	state = tx_state;
 	byte = tx_byte;
 	target = GET_COMPARE_A();
-	while (state < 9) {
-		uint8_t bit;
+	while (state < 10) {
 		target += ticks_per_bit;
-		bit = byte & 1;
+		if (state < 9) {
+			bit = byte & 1;
+		} else {
+			bit = 1;    // stopbit
+		}
 		byte >>= 1;
 		state++;
 		if (bit != tx_bit) {
@@ -157,20 +185,19 @@ ISR(COMPARE_A_INTERRUPT)
 			return;
 		}
 	}
-	if (state == 9) {
-		tx_state = 10;
-		CONFIG_MATCH_SET();
-		SET_COMPARE_A(target + ticks_per_bit);
-		return;
-	}
 	head = tx_buffer_head;
 	tail = tx_buffer_tail;
 	if (head == tail) {
-		tx_state = 0;
-		CONFIG_MATCH_NORMAL();
-		DISABLE_INT_COMPARE_A();
+		if (state == 10) {
+			// Wait for final stop bit to finish
+			tx_state = 11;
+			SET_COMPARE_A(target + ticks_per_bit);
+		} else {
+			tx_state = 0;
+			CONFIG_MATCH_NORMAL();
+			DISABLE_INT_COMPARE_A();
+		}
 	} else {
-		tx_state = 1;
 		if (++tail >= TX_BUFFER_SIZE) {
 			tail = 0;
 		}
@@ -178,21 +205,25 @@ ISR(COMPARE_A_INTERRUPT)
 		tx_byte = tx_buffer[tail];
 		tx_bit = 0;
 		CONFIG_MATCH_CLEAR();
-		SET_COMPARE_A(target + ticks_per_bit);
+		if (state == 10) {
+			SET_COMPARE_A(target + ticks_per_bit);
+		} else {
+			SET_COMPARE_A(GET_TIMER_COUNT() + 16);
+		}
+		tx_state = 1;
 		// TODO: how to detect timing_error?
 	}
 }
 
 void AltSoftSerial::flushOutput(void)
 {
-	while (tx_state) {}/* wait */
+	while (tx_state) /* wait */ ;
 }
 
 
 /****************************************/
 /**            Reception               **/
 /****************************************/
-
 
 ISR(CAPTURE_INTERRUPT)
 {
@@ -211,27 +242,26 @@ ISR(CAPTURE_INTERRUPT)
 	state = rx_state;
 	if (state == 0) {
 		if (!bit) {
-			SET_COMPARE_B(capture + rx_stop_ticks);
+			uint16_t end = capture + rx_stop_ticks;
+			SET_COMPARE_B(end);
 			ENABLE_INT_COMPARE_B();
 			rx_target = capture + ticks_per_bit + ticks_per_bit/2;
 			rx_state = 1;
 		}
 	} else {
-		uint16_t target;
-		target = rx_target;
+		uint16_t target = rx_target;
+		const uint16_t offset_overflow = 65535 - ticks_per_bit;
 		while (1) {
-			int16_t offset;
-			offset = capture - target;
-			if (offset < 0) {
+			const uint16_t offset = capture - target;
+			if (offset > offset_overflow) {
 				break;
 			}
 			rx_byte = (rx_byte >> 1) | rx_bit;
 			target += ticks_per_bit;
 			state++;
 			if (state >= 9) {
-				uint8_t head;
 				DISABLE_INT_COMPARE_B();
-				head = rx_buffer_head + 1;
+				uint8_t head = rx_buffer_head + 1;
 				if (head >= RX_BUFFER_SIZE) {
 					head = 0;
 				}
@@ -304,6 +334,9 @@ int AltSoftSerial::peek(void)
 	if (head == tail) {
 		return -1;
 	}
+	if (++tail >= RX_BUFFER_SIZE) {
+		tail = 0;
+	}
 	return rx_buffer[tail];
 }
 
@@ -330,14 +363,15 @@ void ftm0_isr(void)
 {
 	uint32_t flags = FTM0_STATUS;
 	FTM0_STATUS = 0;
+	if (flags & (1<<0) && (FTM0_C0SC & 0x40)) {
+		altss_compare_b_interrupt();
+	}
 	if (flags & (1<<5)) {
 		altss_capture_interrupt();
 	}
-	if (flags & (1<<6)) {
+	if (flags & (1<<6) && (FTM0_C6SC & 0x40)) {
 		altss_compare_a_interrupt();
-	}
-	if (flags & (1<<0)) {
-		altss_compare_b_interrupt();
 	}
 }
 #endif
+

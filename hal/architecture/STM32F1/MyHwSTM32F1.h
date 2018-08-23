@@ -29,6 +29,14 @@
 
 #define CRYPTO_LITTLE_ENDIAN
 
+#ifndef MY_SERIALDEVICE
+#define MY_SERIALDEVICE Serial
+#endif
+
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
 // SS default
 #ifndef SS
 #define SS PA4
@@ -40,10 +48,6 @@
 #define strncpy_P strncpy
 #define printf_P printf
 #define yield()				  // not defined
-
-#ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE Serial
-#endif
 
 #ifndef digitalPinToInterrupt
 #define digitalPinToInterrupt(__pin) (__pin)

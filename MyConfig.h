@@ -1641,6 +1641,7 @@
  * | @ref MY_SIGNING_SOFT_RANDOMSEED_PIN | Change default software RNG seed pin | "#define" in the top of your sketch | Not supported
  * | @ref MY_RF24_ENABLE_ENCRYPTION | Enables encryption on RF24 radios | "#define" in the top of your sketch | @verbatim --my-rf24-encryption-enabled @endverbatim
  * | @ref MY_RFM69_ENABLE_ENCRYPTION | Enables encryption on %RFM69 radios | "#define" in the top of your sketch | @verbatim --my-rfm69-encryption-enabled @endverbatim
+ * | @ref MY_RFM95_ENABLE_ENCRYPTION | Enables encryption on %RFM95 radios | "#define" in the top of your sketch | @verbatim --my-rfm95-encryption-enabled @endverbatim
  * | @ref MY_NRF5_ESB_ENABLE_ENCRYPTION | Enables encryption on nRF5 radios | "#define" in the top of your sketch | Not supported
  * | @ref MY_NODE_LOCK_FEATURE | Enables the node locking feature | "#define" in the top of your sketch | Not supported
  * | @ref MY_NODE_UNLOCK_PIN | Change default unlock pin | "#define" in the top of your sketch | Not supported
