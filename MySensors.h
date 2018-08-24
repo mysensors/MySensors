@@ -60,8 +60,7 @@
 #elif defined(ARDUINO_ARCH_AVR)
 #include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
-//#include "hal/crypto/AVR/MyCryptoAVR.cpp" // temporarily disabled, stack corruption possible
-#include "hal/crypto/generic/MyCryptoGeneric.cpp"
+#include "hal/crypto/AVR/MyCryptoAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "hal/architecture/SAMD/MyHwSAMD.cpp"

@@ -48,6 +48,8 @@
 
 #include "hal/crypto/MyCryptoHAL.h"
 
+#define MY_CRYPTO_SHA256_ASM	//!< Switch to define correct variable scope for ASM SHA256 implementation
+
 #define SHA256_HASH_BITS  256	//!< Defines the size of a SHA-256 hash value in bits
 #define SHA256_HASH_BYTES (SHA256_HASH_BITS/8) //!< Defines the size of a SHA-256 hash value in bytes
 #define SHA256_BLOCK_BITS 512 //!< Defines the size of a SHA-256 input block in bits
