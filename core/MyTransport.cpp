@@ -775,7 +775,7 @@ void transportProcessMessage(void)
 					} else {
 						TRANSPORT_DEBUG(PSTR("!TSF:MSG:FPAR INACTIVE\n"));	// find parent response received, but inactive
 					}
-					return;
+					return; // no further processing required
 #endif
 				}
 #endif // !defined(MY_GATEWAY_FEATURE)
@@ -802,16 +802,13 @@ void transportProcessMessage(void)
 					}
 					return; // no further processing required
 				}
-				if (_processInternalMessages()) {
-					return; // no further processing required
-				}
 				if (type == I_SIGNAL_REPORT_REVERSE) {
 					return; // no further processing required
 				}
 				if (type == I_SIGNAL_REPORT_REQUEST) {
-					const char command = _msg.data[0];
 					int16_t value = INVALID_RSSI;
 #if defined(MY_SIGNAL_REPORT_ENABLED)
+					const char command = _msg.data[0];
 					if (_msg.data[1] != '!') {
 						value = transportSignalReport(command);
 					} else {
@@ -822,13 +819,15 @@ void transportProcessMessage(void)
 							value = transportSignalReport(command + 32);	// reverse
 						};
 					}
-#else
-					(void)command;
 #endif
 					(void)transportRouteMessage(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
 					                                  I_SIGNAL_REPORT_RESPONSE).set(value));
-					return;
+					return; // no further processing required
 				}
+				if (_processInternalCoreMessage()) {
+					return; // no further processing required
+				}
+				return; // other C_INTERNAL messages do not require further processing
 			} else if (command == C_STREAM) {
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 				if(firmwareOTAUpdateProcess()) {
@@ -918,6 +917,7 @@ void transportProcessMessage(void)
 			(void)gatewayTransportSend(_msg);
 #endif
 			if (receive) {
+				TRANSPORT_DEBUG(PSTR("TSF:MSG:RCV CB\n")); // hand over message to receive callback function
 				receive(_msg);
 			}
 		}
@@ -926,18 +926,18 @@ void transportProcessMessage(void)
 		// msg not to us and not BC, relay msg
 #if defined(MY_REPEATER_FEATURE)
 		if (isTransportReady()) {
-			TRANSPORT_DEBUG(PSTR("TSF:MSG:REL MSG\n"));	// relay msg
 			if (command == C_INTERNAL) {
 				if (type == I_PING || type == I_PONG) {
 					uint8_t hopsCnt = _msg.getByte();
+					TRANSPORT_DEBUG(PSTR("TSF:MSG:REL PxNG,HP=%" PRIu8 "\n"), hopsCnt);
 					if (hopsCnt != MAX_HOPS) {
-						TRANSPORT_DEBUG(PSTR("TSF:MSG:REL PxNG,HP=%" PRIu8 "\n"), hopsCnt);
 						hopsCnt++;
 						_msg.set(hopsCnt);
 					}
 				}
 			}
 			// Relay this message to another node
+			TRANSPORT_DEBUG(PSTR("TSF:MSG:REL MSG\n"));	// relay msg
 			(void)transportRouteMessage(_msg);
 		}
 #else

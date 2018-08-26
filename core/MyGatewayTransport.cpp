@@ -52,7 +52,7 @@ inline void gatewayTransportProcess(void)
 					inclusionModeSet(atoi(_msg.data) == 1);
 #endif
 				} else {
-					_processInternalMessages();
+					(void)_processInternalCoreMessage();
 				}
 			} else {
 				// Call incoming message callback if available

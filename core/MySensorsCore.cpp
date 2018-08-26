@@ -400,15 +400,14 @@ bool requestTime(const bool ack)
 }
 
 // Message delivered through _msg
-bool _processInternalMessages(void)
+bool _processInternalCoreMessage(void)
 {
 	const uint8_t type = _msg.type;
-
 	if (_msg.sender == GATEWAY_ADDRESS) {
 		if (type == I_REBOOT) {
 #if !defined(MY_DISABLE_REMOTE_RESET)
-			// Requires MySensors or other bootloader with watchdogs enabled
 			setIndication(INDICATION_REBOOT);
+			// WDT fuse should be enabled
 			hwReboot();
 #endif
 		} else if (type == I_REGISTRATION_RESPONSE) {
@@ -468,7 +467,7 @@ bool _processInternalMessages(void)
 			}
 #endif
 		} else {
-			return false;
+			return false; // further processing required
 		}
 	} else {
 		// sender is a node
@@ -496,10 +495,10 @@ bool _processInternalMessages(void)
 #endif
 #endif
 		} else {
-			return false;
+			return false; // further processing required
 		}
 	}
-	return true;
+	return true; // if not GW or no further processing required
 }
 
 

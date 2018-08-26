@@ -103,6 +103,7 @@
 * | | TSF | MSG   | BC												| Broadcast message received
 * | | TSF | MSG   | GWL OK										| Link to GW ok
 * | | TSF | MSG   | FWD BC MSG								| Controlled broadcast message forwarding
+* | | TSF | MSG   | RCV CB										| Hand over message to @ref receive() callback function
 * | | TSF | MSG   | REL MSG										| Relay message
 * | | TSF | MSG   | REL PxNG,HP=%%d						| Relay PING/PONG message, increment hop counter (HP)
 * |!| TSF | MSG   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
