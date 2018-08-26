@@ -395,11 +395,11 @@ LOCAL int16_t RF24_getSendingRSSI(void);
 /**
 * @brief Generate a constant carrier wave at active channel & transmit power (for testing only).
 */
-LOCAL void RF24_enableConstantCarrierWave(void);
+LOCAL void RF24_enableConstantCarrierWave(void) __attribute__((unused));
 /**
 * @brief Stop generating a constant carrier wave (for testing only).
 */
-LOCAL void RF24_disableConstantCarrierWave(void);
+LOCAL void RF24_disableConstantCarrierWave(void) __attribute__((unused));
 
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
