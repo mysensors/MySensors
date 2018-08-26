@@ -56,7 +56,8 @@
 #define RF24_REG_RF_SETUP		(0x06)
 #define RF24_REG_STATUS			(0x07)
 #define RF24_REG_OBSERVE_TX		(0x08)
-#define RF24_REG_CD				(0x09)
+#define RF24_REG_RPD			(0x09)          // nRF24L01+
+#define RF24_REG_CD				(RF24_REG_RPD)  // nRF24L01
 #define RF24_REG_RX_ADDR_P0		(0x0A)
 #define RF24_REG_RX_ADDR_P1		(0x0B)
 #define RF24_REG_RX_ADDR_P2		(0x0C)
@@ -79,7 +80,6 @@
 
 // instructions
 #define RF24_CMD_READ_REGISTER				(0x00)
-#define RF24_CMD_RPD						(0x09)
 #define RF24_CMD_WRITE_REGISTER				(0x20)
 #define RF24_CMD_ACTIVATE					(0x50)
 #define RF24_CMD_READ_RX_PL_WID				(0x60)
@@ -144,6 +144,8 @@
 #define RF24_TX_EMPTY		(4)
 #define RF24_RX_FULL		(1)
 #define RF24_RX_EMPTY		(0)
+#define RF24_RPD    		(0)         // nRF24L01+
+#define RF24_CD     		(RF24_RPD)  // nRF24L01
 
 // features
 #define RF24_EN_DPL			(2)

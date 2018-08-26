@@ -400,6 +400,11 @@ LOCAL void RF24_enableConstantCarrierWave(void) __attribute__((unused));
 * @brief Stop generating a constant carrier wave (for testing only).
 */
 LOCAL void RF24_disableConstantCarrierWave(void) __attribute__((unused));
+/**
+* @brief Retrieve latched RPD power level, in receive mode (for testing, nRF24L01+ only).
+* @return True when power level >-64dBm for more than 40us.
+*/
+LOCAL bool RF24_getReceivedPowerDetector(void) __attribute__((unused));
 
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
