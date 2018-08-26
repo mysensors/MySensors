@@ -418,6 +418,20 @@ LOCAL int16_t RF24_getSendingRSSI(void)
 	return static_cast<int16_t>(-29 - (8 * (RF24_getObserveTX() & 0xF)));
 }
 
+LOCAL void RF24_enableConstantCarrierWave(void)
+{
+	RF24_standBy();
+	delayMicroseconds(1500);
+	RF24_setRFSetup(RF24_RF_SETUP | _BV(RF24_CONT_WAVE) | _BV(RF24_PLL_LOCK) );
+	RF24_ce(HIGH);
+}
+
+LOCAL void RF24_disableConstantCarrierWave(void)
+{
+	RF24_ce(LOW);
+	RF24_setRFSetup(RF24_RF_SETUP);
+}
+
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 LOCAL void RF24_irqHandler(void)
 {
