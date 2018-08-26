@@ -146,7 +146,7 @@ extern HardwareSPI SPI;		//!<  SPI
 #define RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)		//!< RF24_CONFIGURATION
 #endif
 #define RF24_FEATURE (uint8_t)( _BV(RF24_EN_DPL))	//!<  RF24_FEATURE
-#define RF24_RF_SETUP (uint8_t)( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1 		//!< RF24_RF_SETUP, +1 for Si24R1 and LNA
+#define RF24_RF_SETUP (uint8_t)(( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1) 		//!< RF24_RF_SETUP, +1 for Si24R1 and LNA
 
 // powerup delay
 #define RF24_POWERUP_DELAY_MS	(100u)		//!< Power up delay, allow VCC to settle, transport to become fully operational
@@ -392,6 +392,14 @@ LOCAL bool RF24_setTxPowerPercent(const uint8_t newPowerPercent);
 * @return Pseudo-RSSI based on ARC register
 */
 LOCAL int16_t RF24_getSendingRSSI(void);
+/**
+* @brief Generate a constant carrier wave at active channel & transmit power (for testing only).
+*/
+LOCAL void RF24_enableConstantCarrierWave(void);
+/**
+* @brief Stop generating a constant carrier wave (for testing only).
+*/
+LOCAL void RF24_disableConstantCarrierWave(void);
 
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)

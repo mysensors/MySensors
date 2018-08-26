@@ -129,6 +129,7 @@
 #define RF24_ARD			(4)
 #define RF24_ARC			(0)
 #define RF24_PLL_LOCK		(4)
+#define RF24_CONT_WAVE	(7)
 #define RF24_RF_DR			(3)
 #define RF24_RF_PWR			(6)
 #define RF24_RX_DR			(6)
