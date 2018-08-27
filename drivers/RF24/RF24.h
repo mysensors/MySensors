@@ -406,7 +406,6 @@ LOCAL void RF24_disableConstantCarrierWave(void) __attribute__((unused));
 */
 LOCAL bool RF24_getReceivedPowerDetector(void) __attribute__((unused));
 
-
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 /**
 * @brief Callback type

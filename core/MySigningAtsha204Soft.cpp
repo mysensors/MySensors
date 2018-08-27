@@ -187,7 +187,6 @@ void signerAtsha204SoftPutNonce(MyMessage &msg)
 	if (!_signing_init_ok) {
 		return;
 	}
-
 	(void)memcpy((void *)_signing_nonce, (const void *)msg.getCustom(), MIN(MAX_PAYLOAD, 32));
 	if (MAX_PAYLOAD < 32) {
 		// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
@@ -355,36 +354,40 @@ static void signerAtsha204AHmac(uint8_t *dest, const uint8_t *nonce, const uint8
 	// 25 bytes zeroes
 	// 32 bytes nonce
 
-	uint8_t buffer[96];
+#if defined(MY_CRYPTO_SHA256_ASM)
+	static uint8_t _signing_buffer[96]; // static for AVR ASM SHA256
+#else
+	uint8_t _signing_buffer[96];
+#endif
 	// Calculate message digest first
-	(void)memset((void *)buffer, 0x00, sizeof(buffer));
-	(void)memcpy((void *)buffer, (const void *)data, 32);
-	buffer[0 + 32] = 0x15; // OPCODE
-	buffer[1 + 32] = 0x02; // param1
-	buffer[2 + 32] = 0x08; // param2(1)
-	//buffer[3 + 32] = 0x00; // param2(2)
-	buffer[4 + 32] = 0xEE; // SN[8]
-	buffer[5 + 32] = 0x01; // SN[0]
-	buffer[6 + 32] = 0x23; // SN[1]
-	// buffer[7 + 32..31 + 32] => 0x00;
-	(void)memcpy((void *)&buffer[64], (const void *)nonce, 32);
-	SHA256(_signing_hmac, buffer, 96);
+	(void)memset((void *)_signing_buffer, 0x00, sizeof(_signing_buffer));
+	(void)memcpy((void *)_signing_buffer, (const void *)data, 32);
+	_signing_buffer[0 + 32] = 0x15; // OPCODE
+	_signing_buffer[1 + 32] = 0x02; // param1
+	_signing_buffer[2 + 32] = 0x08; // param2(1)
+	//_signing_buffer[3 + 32] = 0x00; // param2(2)
+	_signing_buffer[4 + 32] = 0xEE; // SN[8]
+	_signing_buffer[5 + 32] = 0x01; // SN[0]
+	_signing_buffer[6 + 32] = 0x23; // SN[1]
+	// _signing_buffer[7 + 32..31 + 32] => 0x00;
+	(void)memcpy((void *)&_signing_buffer[64], (const void *)nonce, 32);
+	SHA256(_signing_hmac, _signing_buffer, 96);
 
 	// Feed "message" to HMAC calculator
-	(void)memset((void *)buffer, 0x00, sizeof(buffer));
-	(void)memcpy((void *)&buffer[32], (const void *)_signing_hmac, 32);
-	buffer[0 + 64] = 0x11; // OPCODE
-	buffer[1 + 64] = 0x04; // Mode
-	//buffer[2 + 64] = 0x00; // SlotID(1)
-	//buffer[3 + 64] = 0x00; // SlotID(2)
-	//buffer[4 + 64..14 + 64] => 0x00;  // 11 bytes zeroes
-	buffer[15 + 64] = 0xEE; // SN[8]
-	//buffer[16 + 64..19 + 64] => 0x00; // 4 bytes zeroes
-	buffer[20 + 64] = 0x01;
-	buffer[21 + 64] = 0x23;
-	//buffer[22 + 64] = 0x00; // SN[0]
-	//buffer[23 + 64] = 0x00; // SN[1]
-	SHA256HMAC(dest, _signing_hmac_key, 32, buffer, 88);
+	(void)memset((void *)_signing_buffer, 0x00, sizeof(_signing_buffer));
+	(void)memcpy((void *)&_signing_buffer[32], (const void *)_signing_hmac, 32);
+	_signing_buffer[0 + 64] = 0x11; // OPCODE
+	_signing_buffer[1 + 64] = 0x04; // Mode
+	//_signing_buffer[2 + 64] = 0x00; // SlotID(1)
+	//_signing_buffer[3 + 64] = 0x00; // SlotID(2)
+	//_signing_buffer[4 + 64..14 + 64] => 0x00;  // 11 bytes zeroes
+	_signing_buffer[15 + 64] = 0xEE; // SN[8]
+	//_signing_buffer[16 + 64..19 + 64] => 0x00; // 4 bytes zeroes
+	_signing_buffer[20 + 64] = 0x01;
+	_signing_buffer[21 + 64] = 0x23;
+	//_signing_buffer[22 + 64] = 0x00; // SN[0]
+	//_signing_buffer[23 + 64] = 0x00; // SN[1]
+	SHA256HMAC(dest, _signing_hmac_key, 32, _signing_buffer, 88);
 }
 
 #endif //MY_SIGNING_SOFT
