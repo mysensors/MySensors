@@ -295,6 +295,8 @@ LOCAL void RF24_standBy(void)
 	RF24_DEBUG(PSTR("RF24:SBY\n")); // put radio to standby
 	RF24_ce(LOW);
 	RF24_setRFConfiguration(RF24_CONFIGURATION | _BV(RF24_PWR_UP));
+	// There must be a delay of up to 4.5ms after the nRF24L01+ leaves power down mode before the CE is set high.
+	delayMicroseconds(4500);
 }
 
 
@@ -421,7 +423,6 @@ LOCAL int16_t RF24_getSendingRSSI(void)
 LOCAL void RF24_enableConstantCarrierWave(void)
 {
 	RF24_standBy();
-	delayMicroseconds(1500);
 	RF24_setRFSetup(RF24_RF_SETUP | _BV(RF24_CONT_WAVE) | _BV(RF24_PLL_LOCK) );
 	RF24_ce(HIGH);
 }
@@ -515,10 +516,8 @@ LOCAL bool RF24_initialize(void)
 	// attach interrupt
 	attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
 #endif
-	// CRC and power up
-	RF24_setRFConfiguration(RF24_CONFIGURATION | _BV(RF24_PWR_UP)) ;
-	// settle >2ms
-	delay(5);
+	// power up and standby
+	RF24_standBy();
 	// set address width
 	RF24_setAddressWidth(MY_RF24_ADDR_WIDTH);
 	// auto retransmit delay 1500us, auto retransmit count 15
