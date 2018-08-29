@@ -355,8 +355,19 @@ bool present(const uint8_t childSensorId, const uint8_t sensorType, const char *
              const bool ack)
 {
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType,
-	                        ack).set(childSensorId==NODE_SENSOR_ID?MYSENSORS_LIBRARY_VERSION:description));
+	                        ack).set(childSensorId == NODE_SENSOR_ID ? MYSENSORS_LIBRARY_VERSION : description));
 }
+
+#if !defined(__linux__)
+bool present(const uint8_t childSensorId, const uint8_t sensorType,
+             const __FlashStringHelper *description,
+             const bool ack)
+{
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType,
+	                        ack).set(childSensorId == NODE_SENSOR_ID ? F(" MYSENSORS_LIBRARY_VERSION "): description));
+}
+#endif
+
 
 bool sendSketchInfo(const char *name, const char *version, const bool ack)
 {
