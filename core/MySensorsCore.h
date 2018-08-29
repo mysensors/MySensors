@@ -32,7 +32,7 @@
 *  - MCO:<b>BGN</b>	from @ref _begin()
 *  - MCO:<b>REG</b>	from @ref _registerNode()
 *  - MCO:<b>SND</b>	from @ref send()
-*  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
+*  - MCO:<b>PIM</b>	from @ref _processInternalCoreMessage()
 *  - MCO:<b>NLK</b>	from @ref _nodeLock()
 *
 * MySensorsCore debug log messages:
@@ -385,10 +385,10 @@ void _begin(void);
 */
 void _process(void);
 /**
-* @brief Processes internal messages
-* @return True if received message requires further processing
+* @brief Processes internal core message
+* @return True if no further processing required
 */
-bool _processInternalMessages(void);
+bool _processInternalCoreMessage(void);
 /**
 * @brief Puts node to a infinite loop if unrecoverable situation detected
 */
