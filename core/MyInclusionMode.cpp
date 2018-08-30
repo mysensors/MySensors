@@ -30,8 +30,7 @@ inline void inclusionInit()
 	_inclusionMode = false;
 #if defined(MY_INCLUSION_BUTTON_FEATURE)
 	// Setup digital in that triggers inclusion mode
-	hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
-	hwDigitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
+	hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT_PULLUP);
 #endif
 #if defined (MY_INCLUSION_LED_PIN)
 	// Setup LED pin that indicates inclusion mode
