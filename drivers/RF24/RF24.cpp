@@ -432,6 +432,13 @@ LOCAL void RF24_disableConstantCarrierWave(void)
 	RF24_setRFSetup(RF24_RF_SETUP);
 }
 
+LOCAL bool RF24_getReceivedPowerDetector(void)
+{
+	// nRF24L01+ only. nRF24L01 contains a carrier detect function (same register & bit) which works
+	// slightly different and takes at least 128us to become active.
+	return (RF24_readByteRegister(RF24_REG_RPD) & _BV(RF24_RPD)) != 0;
+}
+
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 LOCAL void RF24_irqHandler(void)
 {
