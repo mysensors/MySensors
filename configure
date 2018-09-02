@@ -193,25 +193,25 @@ function detect_machine {
             soc="BCM2837"
         fi
         ;;
-    sun4i|Sun4iw1p1)
+    *sun4i*|*Sun4iw1p1*)
         soc="A10"
         ;;
-    sun5i|Sun4iw2p1)
+    *sun5i*|*Sun4iw2p1*)
         soc="A13"
         ;;
-    Sun4iw2p2)
+    *Sun4iw2p2*)
         soc="A12"
         ;;
-    Sun4iw2p3)
+    *Sun4iw2p3*)
         soc="A10s"
         ;;
-    sun6i|Sun8iw1p1)
+    *sun6i*|*Sun8iw1p1*)
         soc="A31"
         ;;
-    Sun8iw1p2)
+    *Sun8iw1p2*)
         soc="A31s"
         ;;
-    sun7i|Sun8iw2p1)
+    *sun7i*|*Sun8iw2p1*)
         soc="A20"
         if [[ $machine == "Banana Pi"* ]]; then
             tp="BananaPi"
@@ -219,25 +219,25 @@ function detect_machine {
             tp="BananaPro"
         fi
         ;;
-    sun8i|Sun8iw7p1)
+    *sun8i*|*Sun8iw7p1*)
         soc="H3"
         ;;
-    Sun8iw3p1)
+    *Sun8iw3p1*)
         soc="A23"
         ;;
-    Sun8iw5p1)
+    *Sun8iw5p1*)
         soc="A33"
         ;;
-    Sun8iw6p1)
+    *Sun8iw6p1*)
         soc="A83t"
         ;;
-    sun9i|Sun9iw1p1)
+    *sun9i*|*Sun9iw1p1*)
         soc="A80"
         ;;
-    Sun9iw1p2)
+    *Sun9iw1p2*)
         soc="A80t"
         ;;
-    sun50i|Sun50iw1p1)
+    *sun50i*|*Sun50iw1p1*)
         soc="A64"
         ;;
     'Generic AM33XX'*)

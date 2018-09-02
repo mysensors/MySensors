@@ -44,7 +44,7 @@
 rfm69_internal_t RFM69;	//!< internal variables
 volatile uint8_t RFM69_irq; //!< rfm69 irq flag
 
-#if defined(LINUX_SPI_BCM)
+#if defined(__linux__)
 // SPI RX and TX buffers (max packet len + 1 byte for the command)
 uint8_t RFM69_spi_rxbuff[RFM69_MAX_PACKET_LEN + 1];
 uint8_t RFM69_spi_txbuff[RFM69_MAX_PACKET_LEN + 1];
@@ -52,7 +52,11 @@ uint8_t RFM69_spi_txbuff[RFM69_MAX_PACKET_LEN + 1];
 
 LOCAL void RFM69_csn(const bool level)
 {
+#if defined(__linux__)
+	(void)level;
+#else
 	hwDigitalWrite(MY_RFM69_CS_PIN, level);
+#endif
 }
 
 LOCAL void RFM69_prepareSPITransaction(void)
@@ -79,7 +83,7 @@ LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_
 	RFM69_prepareSPITransaction();
 	RFM69_csn(LOW);
 
-#if defined(LINUX_SPI_BCM)
+#if defined(__linux__)
 	uint8_t *prx = RFM69_spi_rxbuff;
 	uint8_t *ptx = RFM69_spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
@@ -203,8 +207,10 @@ LOCAL bool RFM69_initialise(const uint32_t frequencyHz)
 	RFM69.ATCtargetRSSI = RFM69_RSSItoInternal(MY_RFM69_ATC_TARGET_RSSI_DBM);
 
 	// SPI init
+#if !defined(__linux__)
 	hwDigitalWrite(MY_RFM69_CS_PIN, HIGH);
 	hwPinMode(MY_RFM69_CS_PIN, OUTPUT);
+#endif
 	RFM69_SPI.begin();
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
 	// set configuration, encryption is disabled
@@ -251,7 +257,7 @@ LOCAL void RFM69_interruptHandling(void)
 		if (regIrqFlags2 & RFM69_IRQFLAGS2_FIFOLEVEL) {
 			RFM69_prepareSPITransaction();
 			RFM69_csn(LOW);
-#if defined(LINUX_SPI_BCM)
+#if defined(__linux__)
 			char data[RFM69_MAX_PACKET_LEN + 1];   // max packet len + 1 byte for the command
 			data[0] = RFM69_REG_FIFO & RFM69_READ_REGISTER;
 			RFM69_SPI.transfern(data, 3);
