@@ -94,35 +94,34 @@ bool hwUniqueID(unique_id_t *uniqueID)
 	return false;
 }
 
-// Not supported!
-int8_t hwSleep(uint32_t ms)
+int8_t hwSleep(uint32_t ms, uint32_t *remaining_ms)
 {
 	(void)ms;
-
+	(void)remaining_ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 // Not supported!
-int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms, uint32_t *remaining_ms)
 {
 	(void)interrupt;
 	(void)mode;
 	(void)ms;
-
+	(void)remaining_ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 // Not supported!
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
                const uint8_t mode2,
-               uint32_t ms)
+               uint32_t ms, uint32_t *remaining_ms)
 {
 	(void)interrupt1;
 	(void)mode1;
 	(void)interrupt2;
 	(void)mode2;
 	(void)ms;
-
+	(void)remaining_ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 

@@ -691,25 +691,27 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 #endif
 
 	int8_t result = MY_SLEEP_NOT_POSSIBLE;	// default
+	uint32_t remainingSleepingtimeMS = 0;
 	if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 != INTERRUPT_NOT_DEFINED) {
 		// both IRQs
-		result = hwSleep(interrupt1, mode1, interrupt2, mode2, sleepingTimeMS);
+		result = hwSleep(interrupt1, mode1, interrupt2, mode2, sleepingTimeMS, &remainingSleepingtimeMS);
 	} else if (interrupt1 != INTERRUPT_NOT_DEFINED && interrupt2 == INTERRUPT_NOT_DEFINED) {
 		// one IRQ
-		result = hwSleep(interrupt1, mode1, sleepingTimeMS);
+		result = hwSleep(interrupt1, mode1, sleepingTimeMS, &remainingSleepingtimeMS);
 	} else if (interrupt1 == INTERRUPT_NOT_DEFINED && interrupt2 == INTERRUPT_NOT_DEFINED) {
 		// no IRQ
-		result = hwSleep(sleepingTimeMS);
+		result = hwSleep(sleepingTimeMS, &remainingSleepingtimeMS);
 	}
 	setIndication(INDICATION_WAKEUP);
-	CORE_DEBUG(PSTR("MCO:SLP:WUP=%" PRIi8 "\n"), result);	// sleep wake-up
+	CORE_DEBUG(PSTR("MCO:SLP:WUP=%" PRIi8 ",ELA=%" PRIu32 "\n"), result,
+	           sleepingTimeMS - remainingSleepingtimeMS);	// sleep wake-up
 #if defined(MY_SENSOR_NETWORK)
 	transportReInitialise();
 #endif
 	if (smartSleep) {
-		// notify controller about waking up, payload indicates sleeping time in MS
+		// notify controller about waking up, payload indicates elapsed sleeping time in MS, accuracy +/- 8s
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
-		                       I_POST_SLEEP_NOTIFICATION).set(sleepingTimeMS));
+		                       I_POST_SLEEP_NOTIFICATION).set(sleepingTimeMS - remainingSleepingtimeMS));
 	}
 	return result;
 #endif
@@ -771,7 +773,7 @@ void _nodeLock(const char *str)
 		CORE_DEBUG(PSTR("MCO:NLK:TSL\n"));	// sleep transport
 #endif
 		setIndication(INDICATION_SLEEP);
-		(void)hwSleep((uint32_t)1000*60*30); // Sleep for 30 min before resending LOCKED message
+		(void)hwSleep((uint32_t)1000*60*30, NULL); // Sleep for 30 min before resending LOCKED message
 		setIndication(INDICATION_WAKEUP);
 	}
 #else

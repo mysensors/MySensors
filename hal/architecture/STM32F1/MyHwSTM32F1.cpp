@@ -92,25 +92,27 @@ void hwWriteConfig(const int addr, uint8_t value)
 	hwWriteConfigBlock(&value, reinterpret_cast<void *>(addr), 1);
 }
 
-int8_t hwSleep(uint32_t ms)
+int8_t hwSleep(uint32_t ms, uint32_t *remaining_ms)
 {
 	// TODO: Not supported!
 	(void)ms;
+	(void)remaining_ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms, uint32_t *remaining_ms)
 {
 	// TODO: Not supported!
 	(void)interrupt;
 	(void)mode;
 	(void)ms;
+	(void)remaining_ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
                const uint8_t mode2,
-               uint32_t ms)
+               uint32_t ms, uint32_t *remaining_ms)
 {
 	// TODO: Not supported!
 	(void)interrupt1;
@@ -118,9 +120,9 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
 	(void)interrupt2;
 	(void)mode2;
 	(void)ms;
+	(void)remaining_ms;
 	return MY_SLEEP_NOT_POSSIBLE;
 }
-
 
 void hwRandomNumberInit(void)
 {

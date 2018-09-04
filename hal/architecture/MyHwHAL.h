@@ -68,33 +68,35 @@ typedef uint8_t unique_id_t[16];
 
 /**
  * Sleep for a defined time, using minimum power.
- * @param ms         Time to sleep, in [ms].
+ * @param ms           Time to sleep, in [ms].
+ * @param remaining_ms Remaining sleeping time, in [ms], accuracy: +/- 8s
  * @return MY_WAKE_UP_BY_TIMER.
  */
-int8_t hwSleep(uint32_t ms);
+int8_t hwSleep(uint32_t ms, uint32_t *remaining_ms);
 
 /**
  * Sleep for a defined time, using minimum power, or until woken by interrupt.
- * @param interrupt  Interrupt number, which can wake the mcu from sleep.
- * @param mode       Interrupt mode, as passed to attachInterrupt.
- * @param ms         Time to sleep, in [ms].
+ * @param interrupt    Interrupt number, which can wake the mcu from sleep.
+ * @param mode         Interrupt mode, as passed to attachInterrupt.
+ * @param ms           Time to sleep, in [ms].
+ * @param remaining_ms Remaining sleeping time, in [ms], accuracy: +/- 8s
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms);
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms, uint32_t *remaining_ms);
 
 /**
  * Sleep for a defined time, using minimum power, or until woken by one of the interrupts.
- * @param interrupt1  Interrupt1 number, which can wake the mcu from sleep.
- * @param mode1       Interrupt1 mode, as passed to attachInterrupt.
- * @param interrupt2  Interrupt2 number, which can wake the mcu from sleep.
- * @param mode2       Interrupt2 mode, as passed to attachInterrupt.
- * @param ms          Time to sleep, in [ms].
+ * @param interrupt1   Interrupt1 number, which can wake the mcu from sleep.
+ * @param mode1        Interrupt1 mode, as passed to attachInterrupt.
+ * @param interrupt2   Interrupt2 number, which can wake the mcu from sleep.
+ * @param mode2        Interrupt2 mode, as passed to attachInterrupt.
+ * @param ms           Time to sleep, in [ms].
+ * @param remaining_ms Remaining sleeping time, in [ms], accuracy: +/- 8s
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
-               const  uint8_t mode2,
-               uint32_t ms);
-
+               const uint8_t mode2,
+               uint32_t ms, uint32_t *remaining_ms);
 /**
 * Retrieve unique hardware ID
 * @param uniqueID unique ID

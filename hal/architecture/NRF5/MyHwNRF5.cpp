@@ -341,8 +341,10 @@ inline void hwSleep(void)
 	__WFE();
 }
 
-int8_t hwSleep(uint32_t ms)
+int8_t hwSleep(uint32_t ms, uint32_t *remaining_ms)
 {
+	// not implemented yet
+	*remaining_ms = 0;
 	hwSleepPrepare(ms);
 	while (nrf5_rtc_event_triggered == false) {
 		hwSleep();
@@ -351,13 +353,14 @@ int8_t hwSleep(uint32_t ms)
 	return MY_WAKE_UP_BY_TIMER;
 }
 
-int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms, uint32_t *remaining_ms)
 {
-	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
+	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms, remaining_ms);
 }
 
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
-               uint8_t mode2, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+               const uint8_t mode2,
+               uint32_t ms, uint32_t *remaining_ms)
 {
 	// Disable interrupts until going to sleep, otherwise interrupts occurring
 	// between attachInterrupt()
@@ -381,11 +384,13 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2,
 		_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
 	}
 
+	// not implemented yet
+	*remaining_ms = 0;
 	// Prepare Timer and Hardware
 	hwSleepPrepare(ms);
 
 	// Sleep until timeout or interrupt
-	while ((nrf5_rtc_event_triggered == false) and
+	while ((nrf5_rtc_event_triggered == false) &&
 	        (_wokeUpByInterrupt == INVALID_INTERRUPT_NUM)) {
 		hwSleep();
 	}
