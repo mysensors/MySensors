@@ -38,6 +38,12 @@ public:
 	 */
 	~BCMClass();
 	/**
+	 * @brief Initializes BCM.
+	 *
+	 * @return 1 if successful, else exits the program.
+	 */
+	uint8_t init();
+	/**
 	 * @brief Configures the specified pin to behave either as an input or an output.
 	 *
 	 * @param gpio The GPIO pin number.
@@ -65,6 +71,12 @@ public:
 	 * @return The GPIO pin number.
 	 */
 	inline uint8_t digitalPinToInterrupt(uint8_t gpio);
+	/**
+	 * @brief Checks if SPI was initialized.
+	 *
+	 * @return 1 if initialized, else 0.
+	 */
+	uint8_t isInitialized();
 
 private:
 	static uint8_t initialized; //!< @brief BCM initialized flag.
