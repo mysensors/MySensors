@@ -827,7 +827,6 @@ void transportProcessMessage(void)
 				if (_processInternalCoreMessage()) {
 					return; // no further processing required
 				}
-				return; // other C_INTERNAL messages do not require further processing
 			} else if (command == C_STREAM) {
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 				if(firmwareOTAUpdateProcess()) {
