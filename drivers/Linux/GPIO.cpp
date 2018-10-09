@@ -20,6 +20,7 @@
 #include "GPIO.h"
 #include <dirent.h>
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -110,19 +111,27 @@ GPIOClass::~GPIOClass()
 
 void GPIOClass::pinMode(uint8_t pin, uint8_t mode)
 {
-	FILE *f;
-
 	if (pin > lastPinNum) {
 		return;
 	}
 
-	f = fopen("/sys/class/gpio/export", "w");
-	fprintf(f, "%d\n", pin);
-	fclose(f);
-
+	FILE *f;
 	int counter = 0;
 	char file[128];
 	sprintf(file, "/sys/class/gpio/gpio%d/direction", pin);
+	
+	f = fopen(file, "r");
+	if(f != NULL) {
+		fclose(f);
+	} else {
+		f = fopen("/sys/class/gpio/export", "w");
+		if(f == NULL) {
+			logError("Could not export: %s\n", strerror(errno));
+		}
+		fprintf(f, "%d\n", pin);
+		fclose(f);
+		sleep(1);
+	}
 
 	while ((f = fopen(file,"w")) == NULL) {
 		// Wait 10 seconds for the file to be accessible if not open on first attempt
@@ -140,7 +149,6 @@ void GPIOClass::pinMode(uint8_t pin, uint8_t mode)
 	}
 
 	exportedPins[pin] = 1;
-
 	fclose(f);
 }
 

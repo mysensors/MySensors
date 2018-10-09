@@ -142,25 +142,8 @@ void attachInterrupt(uint8_t gpioPin, void (*func)(), uint8_t mode)
 		usleep(1000);
 	}
 
-	// Export pin for interrupt
-	if ((fd = fopen("/sys/class/gpio/export", "w")) == NULL) {
-		logError("attachInterrupt: Unable to export pin %d for interrupt: %s\n", gpioPin, strerror(errno));
-		exit(1);
-	}
-	fprintf(fd, "%d\n", gpioPin);
-	fclose(fd);
-
 	// Wait a bit the system to create /sys/class/gpio/gpio<GPIO number>
 	usleep(1000);
-
-	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/direction", gpioPin) ;
-	if ((fd = fopen (fName, "w")) == NULL) {
-		logError("attachInterrupt: Unable to open GPIO direction interface for pin %d: %s\n",
-		         gpioPin, strerror(errno));
-		exit(1) ;
-	}
-	fprintf(fd, "in\n") ;
-	fclose(fd) ;
 
 	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/edge", gpioPin) ;
 	if ((fd = fopen(fName, "w")) == NULL) {
