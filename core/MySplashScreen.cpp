@@ -19,6 +19,10 @@
 
 #include "MySensorsCore.h"
 
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
 void displaySplashScreen(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
@@ -44,9 +48,9 @@ void displaySplashScreen(void)
 		}
 		const uint8_t rep = val > 7 ? val - 5 : 1;
 		for (uint8_t c = 0; c<rep; c++) {
-			MY_SERIALDEVICE.print(display);
+		        MY_DEBUGDEVICE.print(display);
 		}
 	}
-	MY_SERIALDEVICE.println(F(MYSENSORS_LIBRARY_VERSION "\n"));
+	MY_DEBUGDEVICE.println(F(MYSENSORS_LIBRARY_VERSION "\n"));
 #endif
 }
