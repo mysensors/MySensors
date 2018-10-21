@@ -18,7 +18,14 @@
  *
  */
 
-#if defined(ARDUINO_ARCH_NRF5)
+#if defined(ARDUINO_ARCH_SAMD)
+/* workaround to prevent compiler error */
+	.thumb_func
+doNothing:
+	nop
+	.size	doNothing, .-doNothing
+ 
+#elif defined(ARDUINO_ARCH_NRF5)
 /* workaround to prevent compiler error */
 	.thumb_func
 doNothing:

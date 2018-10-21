@@ -9,6 +9,7 @@
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
 // > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02,
 // >                             use define MY_SPIFLASH_SST25TYPE for SST25 Type Flash Memory
+// > Updated Sep 07, 2018 tekka, sync with https://github.com/LowPowerLab/SPIFlash
 // **********************************************************************************
 // License
 // **********************************************************************************
@@ -76,7 +77,6 @@ void SPIFlash::select()
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setClockDivider(
 	    SPI_CLOCK_DIV4); //decided to slow down from DIV2 after SPI stalling in some instances, especially visible on mega1284p when RFM69 and FLASH chip both present
-	SPI.begin();
 #endif
 	hwDigitalWrite(_slaveSelectPin, LOW);
 }
@@ -105,6 +105,7 @@ bool SPIFlash::initialize()
 	_SPSR = SPSR;
 #endif
 	hwPinMode(_slaveSelectPin, OUTPUT);
+	SPI.begin(); // see https://github.com/LowPowerLab/SPIFlash/issues/20
 #ifdef SPI_HAS_TRANSACTION
 	_settings = SPISettings(4000000, MSBFIRST, SPI_MODE0);
 #endif
@@ -340,6 +341,15 @@ void SPIFlash::blockErase4K(uint32_t addr)
 void SPIFlash::blockErase32K(uint32_t addr)
 {
 	command(SPIFLASH_BLOCKERASE_32K, true); // Block Erase
+	SPI.transfer(addr >> 16);
+	SPI.transfer(addr >> 8);
+	SPI.transfer(addr);
+	unselect();
+}
+/// erase a 64Kbyte block
+void SPIFlash::blockErase64K(uint32_t addr)
+{
+	command(SPIFLASH_BLOCKERASE_64K, true); // Block Erase
 	SPI.transfer(addr >> 16);
 	SPI.transfer(addr >> 8);
 	SPI.transfer(addr);

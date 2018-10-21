@@ -479,9 +479,9 @@ typedef union {
 	struct {
 
 #endif
-	uint8_t last;            	 ///< 8 bit - Id of last node this message passed
-	uint8_t sender;          	 ///< 8 bit - Id of sender node (origin)
-	uint8_t destination;     	 ///< 8 bit - Id of destination node
+	uint8_t last;							//!< 8 bit - Id of last node this message passed
+	uint8_t sender;						//!< 8 bit - Id of sender node (origin)
+	uint8_t destination;			//!< 8 bit - Id of destination node
 
 	/**
 	 * 2 bit - Protocol version<br>
@@ -498,8 +498,8 @@ typedef union {
 	 */
 	uint8_t command_ack_payload;
 
-	uint8_t type; ///< 8 bit - Type varies depending on command
-	uint8_t sensor; ///< 8 bit - Id of sensor that this message concerns.
+	uint8_t type; //!< 8 bit - Type varies depending on command
+	uint8_t sensor; //!< 8 bit - Id of sensor that this message concerns.
 
 	/*
 	 * Each message can transfer a payload. We add one extra byte for string
@@ -507,26 +507,26 @@ typedef union {
 	 * This union is used to simplify the construction of the binary data types transferred.
 	 */
 	union {
-		uint8_t bValue; ///< unsigned byte value (8-bit)
-		uint16_t uiValue; ///< unsigned integer value (16-bit)
-		int16_t iValue; ///< signed integer value (16-bit)
-		uint32_t ulValue; ///< unsigned long value (32-bit)
-		int32_t lValue; ///< signed long value (32-bit)
-		struct { //< Float messages
+		uint8_t bValue; //!< unsigned byte value (8-bit)
+		uint16_t uiValue; //!< unsigned integer value (16-bit)
+		int16_t iValue; //!< signed integer value (16-bit)
+		uint32_t ulValue; //!< unsigned long value (32-bit)
+		int32_t lValue; //!< signed long value (32-bit)
+		struct { //!< Float messages
 			float fValue;
-			uint8_t fPrecision; ///< Number of decimals when serializing
+			uint8_t fPrecision; //!< Number of decimals when serializing
 		};
-		struct {  //< Presentation messages
-			uint8_t version; ///< Library version
-			uint8_t sensorType; ///< Sensor type hint for controller, see table above
+		struct { //!< Presentation messages
+			uint8_t version; //!< Library version
+			uint8_t sensorType; //!< Sensor type hint for controller, see table above
 		};
-		char data[MAX_PAYLOAD + 1]; ///< Buffer for raw payload data
-	} __attribute__((packed)); ///< Doxygen will complain without this comment
+		char data[MAX_PAYLOAD + 1]; //!< Buffer for raw payload data
+	} __attribute__((packed)); //!< Doxygen will complain without this comment
 #if defined(__cplusplus) || defined(DOXYGEN)
 } __attribute__((packed));
 #else
 };
-uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1]; ///< buffer for entire message
+uint8_t array[HEADER_SIZE + MAX_PAYLOAD + 1]; //!< buffer for entire message
 } __attribute__((packed)) MyMessage;
 #endif
 

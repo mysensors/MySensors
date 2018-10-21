@@ -1,4 +1,4 @@
-﻿/*-----------------------------------------------------------------------------*
+/*-----------------------------------------------------------------------------*
  * extEEPROM.cpp - Arduino library to support external I2C EEPROMs.            *
  *                                                                             *
  * This library will work with most I2C serial EEPROM chips between 2k bits    *
@@ -56,11 +56,10 @@
  *-----------------------------------------------------------------------------*/
 
 #include "extEEPROM.h"
-#include <Wire.h>
 
-// added for SAMD arch, tekka 2017
-#if !defined(BUFFER_LENGTH)
-#define BUFFER_LENGTH SERIAL_BUFFER_SIZE
+// workaround, BUFFER_LENGTH is not defined in Wire.h for SAMD controllers
+#ifndef BUFFER_LENGTH
+#define BUFFER_LENGTH 32
 #endif
 
 // Constructor.
@@ -75,6 +74,7 @@
 extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize,
                      uint8_t eepromAddr)
 {
+	communication = NULL;
 	_dvcCapacity = deviceCapacity;
 	_nDevice = nDevice;
 	_pageSize = pageSize;
@@ -104,16 +104,17 @@ extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pa
 //when using a 400kHz bus speed and there are multiple I2C devices on the
 //bus (other than EEPROM), call extEEPROM::begin() after any initialization
 //calls for the other devices to ensure the intended I2C clock speed is set.
-byte extEEPROM::begin(twiClockFreq_t twiFreq)
+byte extEEPROM::begin(twiClockFreq_t twiFreq, TwoWire *_comm)
 {
-	Wire.begin();
-	Wire.setClock(twiFreq);
-	Wire.beginTransmission(_eepromAddr);
+	communication = _comm;
+	communication->begin();
+	communication->setClock(twiFreq);
+	communication->beginTransmission(_eepromAddr);
 	if (_nAddrBytes == 2) {
-		Wire.write((byte)0);    //high addr byte
+		communication->write((byte)0);    //high addr byte
 	}
-	Wire.write((byte)0);                            //low addr byte
-	return Wire.endTransmission();
+	communication->write((byte)0);                            //low addr byte
+	return communication->endTransmission();
 }
 
 //Write bytes to external EEPROM.
@@ -129,21 +130,18 @@ byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
 	}
 
 	while (nBytes > 0) {
-		uint8_t ctrlByte;       //control byte (I2C device address & chip/block select bits)
-		uint16_t nWrite;        //number of bytes to write
-		uint16_t nPage;         //number of bytes remaining on current page, starting at addr
-		nPage = _pageSize - ( addr & (_pageSize - 1) );
+		const uint16_t nPage = _pageSize - ( addr & (_pageSize - 1) );
 		//find min(nBytes, nPage, BUFFER_LENGTH) -- BUFFER_LENGTH is defined in the Wire library.
-		nWrite = nBytes < nPage ? nBytes : nPage;
+		uint16_t nWrite = nBytes < nPage ? nBytes : nPage;
 		nWrite = BUFFER_LENGTH - _nAddrBytes < nWrite ? BUFFER_LENGTH - _nAddrBytes : nWrite;
-		ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
-		Wire.beginTransmission(ctrlByte);
+		const uint8_t ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
+		communication->beginTransmission(ctrlByte);
 		if (_nAddrBytes == 2) {
-			Wire.write( (byte) (addr >> 8) );    //high addr byte
+			communication->write( (byte) (addr >> 8) );    //high addr byte
 		}
-		Wire.write( (byte) addr );                                //low addr byte
-		Wire.write(values, nWrite);
-		txStatus = Wire.endTransmission();
+		communication->write( (byte) addr );                                //low addr byte
+		communication->write(values, nWrite);
+		txStatus = communication->endTransmission();
 		if (txStatus != 0) {
 			return txStatus;
 		}
@@ -151,12 +149,12 @@ byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
 		//wait up to 50ms for the write to complete
 		for (uint8_t i=100; i; --i) {
 			delayMicroseconds(500);                     //no point in waiting too fast
-			Wire.beginTransmission(ctrlByte);
+			communication->beginTransmission(ctrlByte);
 			if (_nAddrBytes == 2) {
-				Wire.write((byte)0);    //high addr byte
+				communication->write((byte)0);    //high addr byte
 			}
-			Wire.write((byte)0);                              //low addr byte
-			txStatus = Wire.endTransmission();
+			communication->write((byte)0);                              //low addr byte
+			txStatus = communication->endTransmission();
 			if (txStatus == 0) {
 				break;
 			}
@@ -183,27 +181,23 @@ byte extEEPROM::read(unsigned long addr, byte *values, unsigned int nBytes)
 	}
 
 	while (nBytes > 0) {
-		byte ctrlByte;
-		byte rxStatus;
-		uint16_t nRead;             //number of bytes to read
-		uint16_t nPage;             //number of bytes remaining on current page, starting at addr
-		nPage = _pageSize - ( addr & (_pageSize - 1) );
-		nRead = nBytes < nPage ? nBytes : nPage;
+		const uint16_t nPage = _pageSize - ( addr & (_pageSize - 1) );
+		uint16_t nRead = nBytes < nPage ? nBytes : nPage;
 		nRead = BUFFER_LENGTH < nRead ? BUFFER_LENGTH : nRead;
-		ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
-		Wire.beginTransmission(ctrlByte);
+		byte ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
+		communication->beginTransmission(ctrlByte);
 		if (_nAddrBytes == 2) {
-			Wire.write( (byte) (addr >> 8) );    //high addr byte
+			communication->write( (byte) (addr >> 8) );    //high addr byte
 		}
-		Wire.write( (byte) addr );                                //low addr byte
-		rxStatus = Wire.endTransmission();
+		communication->write( (byte) addr );                                //low addr byte
+		const byte rxStatus = communication->endTransmission();
 		if (rxStatus != 0) {
 			return rxStatus;    //read error
 		}
 
-		Wire.requestFrom(ctrlByte, nRead);
+		communication->requestFrom(ctrlByte, nRead);
 		for (byte i=0; i<nRead; i++) {
-			values[i] = Wire.read();
+			values[i] = communication->read();
 		}
 
 		addr += nRead;          //increment the EEPROM address

@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "drivers/RF24/RF24.h"
+#include "hal/transport/RF24/driver/RF24.h"
 
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 #include "drivers/AES/AES.cpp"

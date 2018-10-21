@@ -170,7 +170,7 @@ extern FlashClass Flash;
 
 /** Load Hardwarespecific files */
 #ifdef NRF5
-#include "drivers/NRF5/Flash.cpp"
+#include "hal/architecture/NRF5/drivers/Flash.cpp"
 #else
 #error "Unsupported platform."
 #endif

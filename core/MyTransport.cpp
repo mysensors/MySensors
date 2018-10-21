@@ -90,7 +90,7 @@ void stInitTransition(void)
 #endif
 
 	// Read node settings (ID, parent ID, GW distance) from EEPROM
-	hwReadConfigBlock((void*)&_transportConfig, (void*)EEPROM_NODE_ID_ADDRESS,
+	hwReadConfigBlock((void *)&_transportConfig, (void *)EEPROM_NODE_ID_ADDRESS,
 	                  sizeof(transportConfig_t));
 }
 
@@ -360,7 +360,7 @@ void stFailureUpdate(void)
 	}
 }
 
-void transportSwitchSM(transportState_t& newState)
+void transportSwitchSM(transportState_t &newState)
 {
 	if (_transportSM.currentState != &newState) {
 		_transportSM.stateRetries = 0u;	// state change, reset retry counter
@@ -411,7 +411,6 @@ void resetMessageReceived(void)
 	_transportSM.msgReceived = false;
 }
 
-
 void transportInitialise(void)
 {
 	_transportSM.failureCounter = 0u;	// reset failure counter
@@ -431,6 +430,7 @@ void transportDisable(void)
 		transportSleep();
 	}
 }
+
 void transportReInitialise(void)
 {
 	if (RADIO_CAN_POWER_OFF == true) {
@@ -442,7 +442,6 @@ void transportReInitialise(void)
 		transportStandBy();
 	}
 }
-
 
 bool transportWaitUntilReady(const uint32_t waitingMS)
 {
@@ -466,7 +465,6 @@ void transportProcess(void)
 	// process transport FIFO
 	transportProcessFIFO();
 }
-
 
 bool transportCheckUplink(const bool force)
 {
@@ -717,7 +715,7 @@ void transportProcessMessage(void)
 	// Is message addressed to this node?
 	if (destination == _transportConfig.nodeId) {
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
-		mSetLength(_msg, min(mGetLength(_msg),(uint8_t)MAX_PAYLOAD));
+		mSetLength(_msg, min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD));
 		// null terminate data
 		_msg.data[msgLength] = 0u;
 		// Check if sender requests an ack back.
