@@ -108,13 +108,14 @@ uint16_t hwCPUVoltage(void);
 uint16_t hwCPUFrequency(void);
 
 /**
- * Non-calibrated CPU temperature (if available)
- * @return CPU temperature in °C
+ * CPU temperature (if available)
+ * Adjust calibration parameters via MY_<ARCH>_TEMPERATURE_OFFSET and MY_<ARCH>_TEMPERATURE_GAIN
+ * @return CPU temperature in °C, -127 if not available
  */
 int8_t hwCPUTemperature(void);
 
 /**
- * Free memory
+ * Report free memory (if function available)
  * @return free memory in bytes
  */
 uint16_t hwFreeMem(void);

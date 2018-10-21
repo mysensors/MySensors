@@ -149,7 +149,7 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	return -127;
+	return -127;  // not implemented yet
 }
 
 uint16_t hwFreeMem(void)

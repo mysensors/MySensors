@@ -35,6 +35,14 @@
 #define MY_DEBUGDEVICE MY_SERIALDEVICE
 #endif
 
+#ifndef MY_SAMD_TEMPERATURE_OFFSET
+#define MY_SAMD_TEMPERATURE_OFFSET (0.0f)
+#endif
+
+#ifndef MY_SAMD_TEMPERATURE_GAIN
+#define MY_SAMD_TEMPERATURE_GAIN (1.0f)
+#endif
+
 // defines for sensebender gw variant.h
 #define MY_EXT_EEPROM_I2C_ADDRESS	(0x50u)
 #define MY_EXT_EEPROM_SIZE			(kbits_512)

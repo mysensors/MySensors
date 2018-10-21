@@ -133,7 +133,9 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	return -127; // not implemented yet
+	// CPU temperature in °C
+	return static_cast<int8_t>((temperatureRead() - MY_ESP32_TEMPERATURE_OFFSET) /
+	                           MY_ESP32_TEMPERATURE_GAIN);
 }
 
 uint16_t hwFreeMem(void)

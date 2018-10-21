@@ -334,7 +334,19 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	return -127; // not implemented yet
+#if defined(__AVR_ATmega168A__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328BP__) || defined(__AVR_ATmega32U4__)
+	// Set the internal reference and mux.
+	ADMUX = (_BV(REFS1) | _BV(REFS0) | _BV(MUX3));
+	ADCSRA |= _BV(ADEN);  // enable the ADC
+	delay(20);            // wait for voltages to become stable.
+	ADCSRA |= _BV(ADSC);  // Start the ADC
+	// Wait until conversion done
+	while (bit_is_set(ADCSRA, ADSC));
+	// temperature is in degrees Celsius
+	return static_cast<int8_t>((ADCW - MY_AVR_TEMPERATURE_OFFSET) / MY_AVR_TEMPERATURE_GAIN);
+#else
+	return -127; // not available
+#endif
 }
 
 uint16_t hwFreeMem(void)
