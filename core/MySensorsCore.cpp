@@ -110,9 +110,8 @@ void _begin(void)
 	displaySplashScreen();
 #endif
 
-	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",VER="
-	                MYSENSORS_LIBRARY_VERSION "\n"));
-
+	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",REL=%" PRIu8 ",VER="
+	                MYSENSORS_LIBRARY_VERSION "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
 	if (!hwInitResult) {
 		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
 		setIndication(INDICATION_ERR_HW_INIT);
@@ -438,6 +437,11 @@ bool _processInternalCoreMessage(void)
 			presentNode();
 		} else if (type == I_HEARTBEAT_REQUEST) {
 			(void)sendHeartbeat();
+		} else if (_msg.type == I_VERSION) {
+#if !defined(MY_GATEWAY_FEATURE)
+			(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
+			                       I_VERSION).set(MYSENSORS_LIBRARY_VERSION_INT));
+#endif
 		} else if (type == I_TIME) {
 			// Deliver time to callback
 			if (receiveTime) {
