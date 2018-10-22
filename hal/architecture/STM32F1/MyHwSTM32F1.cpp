@@ -46,7 +46,12 @@ bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+#if defined(MY_GATEWAY_SERIAL)
+	while (!MY_SERIALDEVICE) {}
 #endif
+#endif
+	adc_calibrate(ADC1);
+
 	if (EEPROM.init() == EEPROM_OK) {
 		uint16 cnt;
 		EEPROM.count(&cnt);
@@ -61,7 +66,7 @@ bool hwInit(void)
 
 void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t *dst = static_cast<uint8_t*>(buf);
+	uint8_t *dst = static_cast<uint8_t *>(buf);
 	int pos = reinterpret_cast<int>(addr);
 	while (length-- > 0) {
 		*dst++ = EEPROM.read(pos++);
@@ -70,7 +75,7 @@ void hwReadConfigBlock(void *buf, void *addr, size_t length)
 
 void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t *src = static_cast<uint8_t*>(buf);
+	uint8_t *src = static_cast<uint8_t *>(buf);
 	int pos = reinterpret_cast<int>(addr);
 	while (length-- > 0) {
 		EEPROM.write(pos++, *src++);
@@ -80,13 +85,13 @@ void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 uint8_t hwReadConfig(const int addr)
 {
 	uint8_t value;
-	hwReadConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
+	hwReadConfigBlock(&value, reinterpret_cast<void *>(addr), 1);
 	return value;
 }
 
 void hwWriteConfig(const int addr, uint8_t value)
 {
-	hwWriteConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
+	hwWriteConfigBlock(&value, reinterpret_cast<void *>(addr), 1);
 }
 
 int8_t hwSleep(uint32_t ms)
@@ -129,7 +134,7 @@ void hwRandomNumberInit(void)
 	uint16_t currentValue = 0;
 	uint16_t newValue = 0;
 
-	for (uint8_t i = 0; i<32; i++) {
+	for (uint8_t i = 0; i < 32; i++) {
 		const uint32_t timeout = hwMillis() + 20;
 		while (timeout >= hwMillis()) {
 			newValue = adc_read(ADC1, 16);
@@ -143,23 +148,28 @@ void hwRandomNumberInit(void)
 	randomSeed(seed);
 }
 
-bool hwUniqueID(unique_id_t* uniqueID)
+bool hwUniqueID(unique_id_t *uniqueID)
 {
-	(void)memcpy((uint8_t*)uniqueID, (uint32_t*)0x1FFFF7E0, 16);
+	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)0x1FFFF7E0, 16); // FlashID + ChipID
 	return true;
 }
 
 uint16_t hwCPUVoltage(void)
 {
 	adc_reg_map *regs = ADC1->regs;
-	regs->CR2 |= ADC_CR2_TSVREFE;    // enable VREFINT and temp sensor
-	regs->SMPR1 =  ADC_SMPR1_SMP17;  // sample rate for VREFINT ADC channel
+	regs->CR2 |= ADC_CR2_TSVREFE; // enable VREFINT and temp sensor
+	regs->SMPR1 =  ADC_SMPR1_SMP17; // sample rate for VREFINT ADC channel
 	return 1200 * 4096 / adc_read(ADC1, 17);
 }
 
 uint16_t hwCPUFrequency(void)
 {
 	return F_CPU/100000UL;
+}
+
+int8_t hwCPUTemperature(void)
+{
+	return -127; // not implemented yet
 }
 
 uint16_t hwFreeMem(void)
@@ -170,9 +180,6 @@ uint16_t hwFreeMem(void)
 
 void hwDebugPrint(const char *fmt, ...)
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
@@ -183,7 +190,7 @@ void hwDebugPrint(const char *fmt, ...)
 #else
 	// prepend timestamp
 	MY_DEBUGDEVICE.print(hwMillis());
-	MY_DEBUGDEVICE.print(" ");
+	MY_DEBUGDEVICE.print(F(" "));
 #endif
 	va_list args;
 	va_start(args, fmt);

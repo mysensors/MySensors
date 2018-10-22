@@ -13,6 +13,8 @@
 // Wiring-S           5         6          4
 // Sanguino          13        14         12
 
+// This example code is in the public domain.
+
 AltSoftSerial altSerial;
 
 void setup() {

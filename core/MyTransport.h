@@ -253,7 +253,7 @@ typedef int16_t transportRSSI_t;				//!< Datatype for internal RSSI storage
  */
 typedef struct {
 	// SM variables
-	transportState_t* currentState;			//!< pointer to current FSM state
+	transportState_t *currentState;			//!< pointer to current FSM state
 	uint32_t stateEnter;					//!< state enter timepoint
 	// general transport variables
 	uint32_t lastUplinkCheck;				//!< last uplink check, required to prevent GW flooding
@@ -334,7 +334,7 @@ void stFailureUpdate(void);
 * @brief Switch SM state
 * @param newState New state to switch SM to
 */
-void transportSwitchSM(transportState_t& newState);
+void transportSwitchSM(transportState_t &newState);
 /**
 * @brief Update SM state
 */

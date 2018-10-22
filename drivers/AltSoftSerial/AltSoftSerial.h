@@ -46,11 +46,11 @@ public:
 	AltSoftSerial() { } //!< Constructor
 	~AltSoftSerial()
 	{
-		end();    //!< Destructor
+		end(); //!< Destructor
 	}
 	static void begin(uint32_t baud)
 	{
-		init((ALTSS_BASE_FREQ + baud / 2) / baud);    //!< begin
+		init((ALTSS_BASE_FREQ + baud / 2) / baud); //!< begin
 	}
 	static void end(); //!< end
 	int peek(); //!< peek
@@ -59,47 +59,55 @@ public:
 #if ARDUINO >= 100
 	size_t write(uint8_t byte)
 	{
-		writeByte(byte);    //!< write
+		writeByte(byte); //!< write
 		return 1;
 	}
 	void flush()
 	{
-		flushOutput();    //!< flush
+		flushOutput(); //!< flush
 	}
 #else
 	void write(uint8_t byte)
 	{
-		writeByte(byte);    //!< write
+		writeByte(byte); //!< write
 	}
 	void flush()
 	{
-		flushInput();    //!< flush
+		flushInput(); //!< flush
 	}
 #endif
 	using Print::write;
 	static void flushInput(); //!< flushInput
 	static void flushOutput(); //!< flushOutput
 	// for drop-in compatibility with NewSoftSerial, rxPin & txPin ignored
-	//AltSoftSerial(uint8_t rxPin, uint8_t txPin, bool inverse = false) { }
+	AltSoftSerial(uint8_t rxPin, uint8_t txPin, bool inverse = false)
+	{
+		(void)rxPin; //!< AltSoftSerial
+		(void)txPin;
+		(void)inverse;
+	}
 	bool listen()
 	{
-		return false;    //!< listen
+		return false; //!< listen
 	}
 	bool isListening()
 	{
-		return true;    //!< isListening
+		return true; //!< isListening
 	}
 	bool overflow()
 	{
-		bool r = timing_error;    //!< overflow
+		bool r = timing_error; //!< overflow
 		timing_error = false;
 		return r;
 	}
 	static int library_version()
 	{
-		return 1;    //!< library_version
+		return 1; //!< library_version
 	}
-	static void enable_timer0(bool) { } //!< enable_timer0
+	static void enable_timer0(bool enable)
+	{
+		(void)enable; //!< enable_timer0
+	}
 	static bool timing_error; //!< timing_error
 private:
 	static void init(uint32_t cycles_per_bit);

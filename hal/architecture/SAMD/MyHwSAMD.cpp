@@ -19,7 +19,6 @@
 
 #include "MyHwSAMD.h"
 
-
 /*
 int8_t pinIntTrigger = 0;
 void wakeUp()	 //place to send the interrupts
@@ -43,14 +42,14 @@ ISR (WDT_vect)
 
 void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* dst = static_cast<uint8_t*>(buf);
+	uint8_t *dst = static_cast<uint8_t *>(buf);
 	const int offs = reinterpret_cast<int>(addr);
 	(void)eep.read(offs, dst, length);
 }
 
 void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* src = static_cast<uint8_t*>(buf);
+	uint8_t *src = static_cast<uint8_t *>(buf);
 	const int offs = reinterpret_cast<int>(addr);
 	// use update() instead of write() to reduce e2p wear off
 	(void)eep.update(offs, src, length);
@@ -68,12 +67,13 @@ void hwWriteConfig(const int addr, uint8_t value)
 
 bool hwInit(void)
 {
+#if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
 #endif
-
-	const uint8_t eepInit = eep.begin(MY_EXT_EEPROM_TWI_CLOCK);
+#endif
+	const uint8_t eepInit = eep.begin(MY_EXT_EEPROM_TWI_CLOCK, &Wire);
 #if defined(SENSEBENDER_GW_SAMD_V1)
 	// check connection to external EEPROM - only sensebender GW
 	return eepInit==0;
@@ -129,40 +129,44 @@ bool hwUniqueID(unique_id_t *uniqueID)
 	return true;
 }
 
+// Wait for synchronization of registers between the clock domains
+static __inline__ void syncADC() __attribute__((always_inline, unused));
+static void syncADC()
+{
+	while (ADC->STATUS.bit.SYNCBUSY);
+}
+
 uint16_t hwCPUVoltage(void)
 {
-
-	// disable ADC
-	while (ADC->STATUS.bit.SYNCBUSY);
-	ADC->CTRLA.bit.ENABLE = 0x00;
-
-	// internal 1V reference (default)
-	analogReference(AR_INTERNAL1V0);
-	// 12 bit resolution (default)
-	analogWriteResolution(12);
-	// MUXp 0x1B = SCALEDIOVCC/4 => connected to Vcc
-	ADC->INPUTCTRL.bit.MUXPOS = 0x1B ;
-
+	// Set ADC reference to internal 1v
+	ADC->INPUTCTRL.bit.GAIN = ADC_INPUTCTRL_GAIN_1X_Val;
+	ADC->REFCTRL.bit.REFSEL = ADC_REFCTRL_REFSEL_INT1V_Val;
+	syncADC();
+	// Set to 10 bits reading resolution
+	ADC->CTRLB.reg = ADC_CTRLB_RESSEL_10BIT | ADC_CTRLB_PRESCALER_DIV256;
+	syncADC();
+	// Select MUXPOS as SCALEDIOVCC/4 channel, and MUXNEG as internal ground
+	ADC->INPUTCTRL.bit.MUXPOS = ADC_INPUTCTRL_MUXPOS_SCALEDIOVCC_Val;
+	ADC->INPUTCTRL.bit.MUXNEG = ADC_INPUTCTRL_MUXNEG_GND_Val;
+	syncADC();
 	// enable ADC
-	while (ADC->STATUS.bit.SYNCBUSY);
-	ADC->CTRLA.bit.ENABLE = 0x01;
+	ADC->CTRLA.bit.ENABLE = 1;
+	syncADC();
 	// start conversion
-	while (ADC->STATUS.bit.SYNCBUSY);
 	ADC->SWTRIG.bit.START = 1;
 	// clear the Data Ready flag
 	ADC->INTFLAG.bit.RESRDY = 1;
+	syncADC();
 	// start conversion again, since The first conversion after the reference is changed must not be used.
-	while (ADC->STATUS.bit.SYNCBUSY);
 	ADC->SWTRIG.bit.START = 1;
-
 	// waiting for conversion to complete
 	while (!ADC->INTFLAG.bit.RESRDY);
+	syncADC();
 	const uint32_t valueRead = ADC->RESULT.reg;
-
 	// disable ADC
-	while (ADC->STATUS.bit.SYNCBUSY);
-	ADC->CTRLA.bit.ENABLE = 0x00;
-
+	ADC->CTRLA.bit.ENABLE = 0;
+	syncADC();
+	// value is 1/4 scaled, multiply by 4
 	return valueRead * 4;
 }
 
@@ -172,6 +176,12 @@ uint16_t hwCPUFrequency(void)
 	return F_CPU / 100000UL;
 }
 
+int8_t hwCPUTemperature(void)
+{
+	return -127; // not implemented yet
+}
+
+
 uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
@@ -180,9 +190,6 @@ uint16_t hwFreeMem(void)
 
 void hwDebugPrint(const char *fmt, ... )
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	if (MY_DEBUGDEVICE) {
 		char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
@@ -197,14 +204,14 @@ void hwDebugPrint(const char *fmt, ... )
 		MY_DEBUGDEVICE.print(" ");
 #endif
 		va_list args;
-		va_start (args, fmt );
+		va_start(args, fmt);
 		vsnprintf(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 		// Truncate message if this is gateway node
 		fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 		fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
 #endif
-		va_end (args);
+		va_end(args);
 		MY_DEBUGDEVICE.print(fmtBuffer);
 		//	MY_SERIALDEVICE.flush();
 	}

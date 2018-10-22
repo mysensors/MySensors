@@ -4,30 +4,87 @@
 //so the sketch doesn't do unnecessary EEPROM writes every time it's reset.
 //Jack Christensen 09Jul2014
 //Paolo Paolucci 17Mar2016 (fix 28Jun2017)
+//Mik 03Jan2017            (configured Library to use the Wire1 as I2C channel)
 
 #include <extEEPROM.h>    //https://github.com/PaoloP74/extEEPROM
 
 //One 24LC256 EEPROMs on the bus
 const uint32_t totalKBytes = 32;         //for read and write test functions
-extEEPROM eep(kbits_256, 1, 64);         //device size, number of devices, page size
+extEEPROM eep(kbits_256, 1, 64, 0x57);         //device size, number of devices, page size
 
 const uint8_t btnStart = 6;              //start button
 
 void setup(void)
 {
+	uint8_t eepStatus;
 	pinMode(btnStart, INPUT_PULLUP);
 	Serial.begin(115200);
-	uint8_t eepStatus = eep.begin(eep.twiClock400kHz);   //go fast!
+	while (!SerialUSB) {}
+
+	bool channelInsert = false;
+	Serial.println(F("Select the number of Wire channel use the eeprom"));
+	Serial.println(F("0 = Wire"));
+	Serial.println(F("1 = Wire1"));
+	Serial.println(F("...."));
+	Serial.println(F("x = WIRE_INTERFACES_COUNT"));
+
+	do {
+		if (Serial.available()) {
+			char I2Cchannel = Serial.read();
+
+			// only number that are less than WIRE_INTERFACES_COUNT are allowed
+			if ((I2Cchannel > '0') && (I2Cchannel < ('0' + WIRE_INTERFACES_COUNT))) {
+				channelInsert = true;
+			}
+
+			switch ((I2Cchannel - '0')) {
+
+			case 0:
+				Serial.println(F("Using the default Wire interface"));
+				eepStatus = eep.begin(eep.twiClock400kHz);   //go fast!
+				break;
+
+			case 1:
+				Serial.println(F("Using the Wire1 interface"));
+				eepStatus = eep.begin(eep.twiClock400kHz, &Wire1);   //go fast!
+				break;
+
+			/*
+			   Uncomment till the number of WIRE_INTERFACES_COUNT of your Arduino board
+			  case 2:
+			  Serial.println(F("Using the Wire2 interface"));
+			  eepStatus = eep.begin(eep.twiClock400kHz, &Wire2);   //go fast!
+			  break;
+
+			  case 3:
+			  Serial.println(F("Using the Wire3 interface"));
+			  eepStatus = eep.begin(eep.twiClock400kHz, &Wire3);   //go fast!
+			  break;
+
+			  case 4:
+			  Serial.println(F("Using the Wire4 interface"));
+			  eepStatus = eep.begin(eep.twiClock400kHz, &Wire4);   //go fast!
+			  break;
+
+			  case 5:
+			  Serial.println(F("Using the Wire5 interface"));
+			  eepStatus = eep.begin(eep.twiClock400kHz, &Wire5);   //go fast!
+			  break;*/
+
+			default:
+				Serial.println(F("A wrong channel has been inserted (Arduino manage max 5)"));
+				break;
+			}
+		}
+	} while (!channelInsert);
+
 	if (eepStatus) {
 		Serial.print(F("extEEPROM.begin() failed, status = "));
 		Serial.println(eepStatus);
 		while (1);
 	}
 
-	Serial.println(F("Press button to start..."));
-	while (digitalRead(btnStart) == HIGH) {
-		delay(10);    //wait for button push
-	}
+	Serial.println(F("Started !!"));
 
 	uint8_t chunkSize =
 	    64;    //this can be changed, but must be a multiple of 4 since we're writing 32-bit integers

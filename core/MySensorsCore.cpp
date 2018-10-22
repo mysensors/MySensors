@@ -706,7 +706,7 @@ void _nodeLock(const char* str)
 {
 #ifdef MY_NODE_LOCK_FEATURE
 	// Make sure EEPROM is updated to locked status
-	hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, 0);
+	hwWriteConfig(EEPROM_NODE_LOCK_COUNTER_ADDRESS, 0);
 	while (1) {
 		setIndication(INDICATION_ERR_LOCKED);
 		CORE_DEBUG(PSTR("MCO:NLK:NODE LOCKED. TO UNLOCK, GND PIN %" PRIu8 " AND RESET\n"),
@@ -730,7 +730,7 @@ void _checkNodeLock(void)
 {
 #ifdef MY_NODE_LOCK_FEATURE
 	// Check if node has been locked down
-	if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {
+	if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER_ADDRESS) == 0) {
 		// Node is locked, check if unlock pin is asserted, else hang the node
 		hwPinMode(MY_NODE_UNLOCK_PIN, INPUT_PULLUP);
 		// Make a short delay so we are sure any large external nets are fully pulled
@@ -738,7 +738,7 @@ void _checkNodeLock(void)
 		while (hwMillis() - enter < 2) {}
 		if (hwDigitalRead(MY_NODE_UNLOCK_PIN) == 0) {
 			// Pin is grounded, reset lock counter
-			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
+			hwWriteConfig(EEPROM_NODE_LOCK_COUNTER_ADDRESS, MY_NODE_LOCK_COUNTER_MAX);
 			// Disable pullup
 			hwPinMode(MY_NODE_UNLOCK_PIN, INPUT);
 			setIndication(INDICATION_ERR_LOCKED);
@@ -748,9 +748,9 @@ void _checkNodeLock(void)
 			hwPinMode(MY_NODE_UNLOCK_PIN, INPUT);
 			_nodeLock("LDB"); //Locked during boot
 		}
-	} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0xFF) {
+	} else if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER_ADDRESS) == 0xFF) {
 		// Reset value
-		hwWriteConfig(EEPROM_NODE_LOCK_COUNTER, MY_NODE_LOCK_COUNTER_MAX);
+		hwWriteConfig(EEPROM_NODE_LOCK_COUNTER_ADDRESS, MY_NODE_LOCK_COUNTER_MAX);
 	}
 #endif
 }

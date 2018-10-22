@@ -29,6 +29,10 @@
 #define MY_SERIALDEVICE Serial
 #endif
 
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
 #define EEPROM_size (1024)
 
 // Define these as macros to save valuable space

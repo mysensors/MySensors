@@ -1,4 +1,4 @@
-﻿/*-----------------------------------------------------------------------------*
+/*-----------------------------------------------------------------------------*
  * extEEPROM.h - Arduino library to support external I2C EEPROMs.              *
  *                                                                             *
  * This library will work with most I2C serial EEPROM chips between 2k bits    *
@@ -55,10 +55,15 @@
  * http://creativecommons.org/licenses/by-sa/4.0/                              *
  *-----------------------------------------------------------------------------*/
 
+/*
+ * tekka 2018:
+ * Re-implementing extEEPROM::update(unsigned long addr, byte value);
+ */
 #ifndef extEEPROM_h
 #define extEEPROM_h
 
 #include <Arduino.h>
+#include <Wire.h>
 
 //EEPROM size in kilobits. EEPROM part numbers are usually designated in k-bits.
 enum eeprom_size_t {
@@ -75,16 +80,24 @@ enum eeprom_size_t {
 	kbits_2048 = 2048
 };
 
-enum twiClockFreq_t { twiClock100kHz = 100000, twiClock400kHz = 400000 };
-
 //EEPROM addressing error, returned by write() or read() if upper address bound is exceeded
 const uint8_t EEPROM_ADDR_ERR = 9;
 
 /** extEEPROM class */
-
 class extEEPROM
 {
+private:
+	// the private attribute used to comunicate with the correct I2C SERCOM
+	TwoWire *communication;
+
 public:
+	/**
+	* I2C clock frequencies
+	*/
+	enum twiClockFreq_t {
+		twiClock100kHz = 100000,  //!< twiClock100kHz
+		twiClock400kHz = 400000   //!< twiClock400kHz
+	};
 	/**
 	* @brief Constructor
 	* @param deviceCapacity
@@ -94,7 +107,9 @@ public:
 	*/
 	extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize,
 	          byte eepromAddr = 0x50);
-	byte begin(twiClockFreq_t twiFreq = twiClock100kHz);	//!< begin()
+
+	// It is ready for every I2C Sercom, by default use the main Wire
+	byte begin(twiClockFreq_t twiFreq = twiClock100kHz, TwoWire *_comm=&Wire);	//!< begin()
 	byte write(unsigned long addr, byte *values, unsigned int nBytes);	//!< write()
 	byte write(unsigned long addr, byte value);	//!< write()
 	byte read(unsigned long addr, byte *values, unsigned int nBytes);	//!< read()

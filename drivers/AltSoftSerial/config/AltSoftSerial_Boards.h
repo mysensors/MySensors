@@ -55,9 +55,9 @@
 //#define OUTPUT_COMPARE_C_PIN		14 // unusable PWM
 
 
-// Teensy 3.0 & 3.1
+// Teensy 3.x
 //
-#elif defined(__MK20DX128__) || defined(__MK20DX256__)
+#elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define ALTSS_USE_FTM0
 #define INPUT_CAPTURE_PIN		20 // receive       (FTM0_CH5)
 #define OUTPUT_COMPARE_A_PIN		21 // transmit      (FTM0_CH6)
@@ -123,16 +123,25 @@
 
 
 
-// Sanguino
-#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644__)
+// EnviroDIY Mayfly, Sodaq Mbili
+#elif defined ARDUINO_AVR_ENVIRODIY_MAYFLY || defined ARDUINO_AVR_SODAQ_MBILI
+#define ALTSS_USE_TIMER1
+#define INPUT_CAPTURE_PIN		6 // receive
+#define OUTPUT_COMPARE_A_PIN	5 // transmit
+#define OUTPUT_COMPARE_B_PIN	4 // unusable PWM
+
+
+
+// Sanguino, Mighty 1284
+#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
 #define ALTSS_USE_TIMER1
 #define INPUT_CAPTURE_PIN		14 // receive
 #define OUTPUT_COMPARE_A_PIN		13 // transmit
 #define OUTPUT_COMPARE_B_PIN		12 // unusable PWM
 
 
+
 // Unknown board
 #else
 #error "Please define your board timer and pins"
 #endif
-

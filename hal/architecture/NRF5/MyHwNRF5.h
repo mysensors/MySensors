@@ -28,6 +28,14 @@
 
 #define CRYPTO_LITTLE_ENDIAN
 
+#ifndef MY_SERIALDEVICE
+#define MY_SERIALDEVICE Serial
+#endif
+
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
 // Define NRF5_SOFTDEVICE when SoftDevice found
 #if defined(S110) || defined(S130) || defined(S132) || defined(S140)
 #ifndef SOFTDEVICE_PRESENT
@@ -40,8 +48,9 @@
 #define ARDUINO_ARCH_NRF5
 #endif
 
-#include "drivers/NRF5/nrf5_wiring_digital.c"
-#include "drivers/NRF5/wdt.h"
+#include "hal/architecture/NRF5/drivers/nrf5_wiring_digital.c"
+#include "hal/architecture/NRF5/drivers/wdt.h"
+#include "hal/architecture/NRF5/drivers/nrf_temp.h"
 #include "drivers/NVM/NVRAM.h"
 #include "drivers/NVM/VirtualPage.h"
 #include <avr/dtostrf.h>
@@ -115,10 +124,6 @@ uint8_t hwReadConfig(const int addr);
 void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
-
-#ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE Serial
-#endif
 
 /**
  * Disable all interrupts.

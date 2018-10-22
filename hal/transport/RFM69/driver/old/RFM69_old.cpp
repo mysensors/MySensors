@@ -400,7 +400,7 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 	SPI.transfer(CTLbyte);
 
 	for (uint8_t i = 0; i < bufferSize; i++) {
-		SPI.transfer(((uint8_t*) buffer)[i]);
+		SPI.transfer(((uint8_t *)buffer)[i]);
 	}
 	unselect();
 

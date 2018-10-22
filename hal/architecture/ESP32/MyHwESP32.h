@@ -47,7 +47,13 @@
 
 #define CRYPTO_LITTLE_ENDIAN
 
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
+#endif
+
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
 
 #define MY_EEPROM_SIZE 1024
 
