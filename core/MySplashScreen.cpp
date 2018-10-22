@@ -19,10 +19,6 @@
 
 #include "MySensorsCore.h"
 
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
-
 void displaySplashScreen(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
