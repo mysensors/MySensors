@@ -191,35 +191,3 @@ uint16_t hwFreeMem(void)
 	//Not yet implemented
 	return FUNCTION_NOT_SUPPORTED;
 }
-
-void hwDebugPrint(const char *fmt, ...)
-{
-#ifndef MY_DISABLED_SERIAL
-	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-#ifdef MY_GATEWAY_SERIAL
-	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
-	           C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-	MY_DEBUGDEVICE.print(fmtBuffer);
-#else
-	// prepend timestamp
-	MY_DEBUGDEVICE.print(hwMillis());
-	MY_DEBUGDEVICE.print(F(" "));
-#endif
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#ifdef MY_GATEWAY_SERIAL
-	// Truncate message if this is gateway node
-	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
-	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#endif
-	va_end(args);
-	MY_DEBUGDEVICE.print(fmtBuffer);
-	// Disable flush since current STM32duino implementation performs a reset
-	// instead of an actual flush
-	//MY_DEBUGDEVICE.flush();
-#else
-	(void)fmt;
-#endif
-}

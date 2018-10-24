@@ -83,6 +83,8 @@
 #error Hardware abstraction not defined (unsupported platform)
 #endif
 
+#include "hal/architecture/MyHwHAL.cpp"
+
 // commonly used macros, sometimes missing in arch definitions
 #if !defined(_BV)
 #define _BV(x) (1<<(x))	//!< _BV
