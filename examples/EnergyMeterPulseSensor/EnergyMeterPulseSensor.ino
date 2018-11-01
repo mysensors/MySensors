@@ -46,10 +46,10 @@
 #include <MySensors.h>
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
-#define PULSE_FACTOR 1000       // Number of blinks per of your meter
+#define PULSE_FACTOR 1000       // Number of blinks per KWh of your meter.
 #define SLEEP_MODE false        // Watt value can only be reported when sleep mode is false.
 #define MAX_WATT 10000          // Max watt value to report. This filters outliers.
-#define CHILD_ID 1              // Id of the sensor child
+#define CHILD_ID 1              // Id of the sensor child.
 
 uint32_t SEND_FREQUENCY =
     20000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
@@ -69,7 +69,7 @@ MyMessage pcMsg(CHILD_ID,V_VAR1);
 
 void setup()
 {
-	// Fetch last known pulse count value from gw
+	// Fetch last known pulse count value from gateway
 	request(CHILD_ID, V_VAR1);
 
 	// Use the internal pullup to be able to hook up this sketch directly to an energy meter with S0 output
