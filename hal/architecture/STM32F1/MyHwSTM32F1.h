@@ -37,6 +37,14 @@
 #define MY_DEBUGDEVICE MY_SERIALDEVICE
 #endif
 
+#ifndef MY_STM32F1_TEMPERATURE_OFFSET
+#define MY_STM32F1_TEMPERATURE_OFFSET (0.0f)
+#endif
+
+#ifndef MY_STM32F1_TEMPERATURE_GAIN
+#define MY_STM32F1_TEMPERATURE_GAIN (1.0f)
+#endif
+
 // SS default
 #ifndef SS
 #define SS PA4

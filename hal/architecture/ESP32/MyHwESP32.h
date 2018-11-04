@@ -55,6 +55,14 @@
 #define MY_DEBUGDEVICE MY_SERIALDEVICE
 #endif
 
+#ifndef MY_ESP32_TEMPERATURE_OFFSET
+#define MY_ESP32_TEMPERATURE_OFFSET (0.0f)
+#endif
+
+#ifndef MY_ESP32_TEMPERATURE_GAIN
+#define MY_ESP32_TEMPERATURE_GAIN (1.0f)
+#endif
+
 #define MY_EEPROM_SIZE 1024
 
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)

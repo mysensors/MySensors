@@ -73,6 +73,11 @@ bool hwInit(void)
 	while (!MY_SERIALDEVICE) {}
 #endif
 #endif
+
+	SYSCTRL->VREF.reg |= SYSCTRL_VREF_TSEN; // Enable the temperature sensor
+	while (ADC->STATUS.bit.SYNCBUSY ==
+	        1); // Wait for synchronization of registers between the clock domains
+
 	const uint8_t eepInit = eep.begin(MY_EXT_EEPROM_TWI_CLOCK, &Wire);
 #if defined(SENSEBENDER_GW_SAMD_V1)
 	// check connection to external EEPROM - only sensebender GW
@@ -178,7 +183,68 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	return -127; // not implemented yet
+	// taken from https://github.com/arduino/ArduinoCore-samd/pull/277
+	// Set to 12 bits resolution
+	ADC->CTRLB.reg = ADC_CTRLB_RESSEL_12BIT | ADC_CTRLB_PRESCALER_DIV256;
+	syncADC();
+	// Ensure we are sampling slowly
+	ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(0x3f);
+	syncADC();
+	// Set ADC reference to internal 1v
+	ADC->INPUTCTRL.bit.GAIN = ADC_INPUTCTRL_GAIN_1X_Val;
+	ADC->REFCTRL.bit.REFSEL = ADC_REFCTRL_REFSEL_INT1V_Val;
+	syncADC();
+	// Select MUXPOS as temperature channel, and MUXNEG as internal ground
+	ADC->INPUTCTRL.bit.MUXPOS = ADC_INPUTCTRL_MUXPOS_TEMP_Val;
+	ADC->INPUTCTRL.bit.MUXNEG = ADC_INPUTCTRL_MUXNEG_GND_Val;
+	syncADC();
+	// Enable ADC
+	ADC->CTRLA.bit.ENABLE = 1;
+	syncADC();
+	// Start ADC conversion
+	ADC->SWTRIG.bit.START = 1;
+	// Clear the Data Ready flag
+	ADC->INTFLAG.reg = ADC_INTFLAG_RESRDY;
+	syncADC();
+	// Start conversion again, since The first conversion after the reference is changed must not be used.
+	ADC->SWTRIG.bit.START = 1;
+	// Wait until ADC conversion is done
+	while (!(ADC->INTFLAG.bit.RESRDY));
+	syncADC();
+	// Get result
+	// This is signed so that the math later is done signed
+	const int32_t adcReading = ADC->RESULT.reg;
+	// Clear result ready flag
+	ADC->INTFLAG.reg = ADC_INTFLAG_RESRDY;
+	syncADC();
+	// Disable ADC
+	ADC->CTRLA.bit.ENABLE = 0;
+	syncADC();
+	// Factory room temperature readings
+	const uint8_t roomInteger = (*(uint32_t *)FUSES_ROOM_TEMP_VAL_INT_ADDR &
+	                             FUSES_ROOM_TEMP_VAL_INT_Msk)
+	                            >> FUSES_ROOM_TEMP_VAL_INT_Pos;
+	const uint8_t roomDecimal = (*(uint32_t *)FUSES_ROOM_TEMP_VAL_DEC_ADDR &
+	                             FUSES_ROOM_TEMP_VAL_DEC_Msk)
+	                            >> FUSES_ROOM_TEMP_VAL_DEC_Pos;
+	const int32_t roomReading = ((*(uint32_t *)FUSES_ROOM_ADC_VAL_ADDR & FUSES_ROOM_ADC_VAL_Msk) >>
+	                             FUSES_ROOM_ADC_VAL_Pos);
+	const int32_t roomTemperature = 1000 * roomInteger + 100 * roomDecimal;
+	// Factory hot temperature readings
+	const uint8_t hotInteger = (*(uint32_t *)FUSES_HOT_TEMP_VAL_INT_ADDR & FUSES_HOT_TEMP_VAL_INT_Msk)
+	                           >>
+	                           FUSES_HOT_TEMP_VAL_INT_Pos;
+	const uint8_t hotDecimal = (*(uint32_t *)FUSES_HOT_TEMP_VAL_DEC_ADDR & FUSES_HOT_TEMP_VAL_DEC_Msk)
+	                           >>
+	                           FUSES_HOT_TEMP_VAL_DEC_Pos;
+	const int32_t hotReading = ((*(uint32_t *)FUSES_HOT_ADC_VAL_ADDR & FUSES_HOT_ADC_VAL_Msk) >>
+	                            FUSES_HOT_ADC_VAL_Pos);
+	const int32_t hotTemperature = 1000 * hotInteger + 100 * hotDecimal;
+	// Linear interpolation of temperature using factory room temperature and hot temperature
+	const int32_t temperature = roomTemperature + ((hotTemperature - roomTemperature) *
+	                            (adcReading - roomReading)) / (hotReading - roomReading);
+	return static_cast<int8_t>(((temperature / 1000) - MY_SAMD_TEMPERATURE_OFFSET) /
+	                           MY_SAMD_TEMPERATURE_GAIN);
 }
 
 
