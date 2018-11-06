@@ -46,13 +46,12 @@
 #include <MySensors.h>
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
-#define PULSE_FACTOR 1000       // Number of blinks per of your meter
+#define PULSE_FACTOR 1000       // Number of blinks per kWh of your meter.
 #define SLEEP_MODE false        // Watt value can only be reported when sleep mode is false.
 #define MAX_WATT 10000          // Max watt value to report. This filters outliers.
-#define CHILD_ID 1              // Id of the sensor child
+#define CHILD_ID 1              // Id of the sensor child.
 
-uint32_t SEND_FREQUENCY =
-    20000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+uint32_t SEND_FREQUENCY = 20000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
 bool pcReceived = false;
 volatile uint32_t pulseCount = 0;
@@ -66,10 +65,9 @@ MyMessage wattMsg(CHILD_ID,V_WATT);
 MyMessage kWhMsg(CHILD_ID,V_KWH);
 MyMessage pcMsg(CHILD_ID,V_VAR1);
 
-
 void setup()
 {
-	// Fetch last known pulse count value from gw
+	// Fetch last known pulse count value from gateway
 	request(CHILD_ID, V_VAR1);
 
 	// Use the internal pullup to be able to hook up this sketch directly to an energy meter with S0 output
@@ -100,7 +98,7 @@ void loop()
 			// Check that we don't get unreasonable large watt value.
 			// could happen when long wraps or false interrupt triggered
 			if (watt<((uint32_t)MAX_WATT)) {
-				send(wattMsg.set(watt));  // Send watt value to gw
+				send(wattMsg.set(watt));  // Send watt value to gateway
 			}
 			Serial.print("Watt:");
 			Serial.println(watt);
@@ -109,11 +107,11 @@ void loop()
 
 		// Pulse count value has changed
 		if (pulseCount != oldPulseCount) {
-			send(pcMsg.set(pulseCount));  // Send pulse count value to gw
+			send(pcMsg.set(pulseCount));  // Send pulse count value to gateway
 			double kWh = ((double)pulseCount/((double)PULSE_FACTOR));
 			oldPulseCount = pulseCount;
 			if (kWh != oldkWh) {
-				send(kWhMsg.set(kWh, 4));  // Send kWh value to gw
+				send(kWhMsg.set(kWh, 4));  // Send kWh value to gateway
 				oldkWh = kWh;
 			}
 		}
@@ -133,7 +131,7 @@ void receive(const MyMessage &message)
 {
 	if (message.type==V_VAR1) {
 		pulseCount = oldPulseCount = message.getLong();
-		Serial.print("Received last pulse count value from gw:");
+		Serial.print("Received last pulse count value from gateway:");
 		Serial.println(pulseCount);
 		pcReceived = true;
 	}
