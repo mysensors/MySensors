@@ -253,6 +253,19 @@
 //#define MY_RS485_HWSERIAL (Serial1)
 /** @}*/ // End of RS485SettingGrpPub group
 
+
+#ifdef MY_PJON
+#ifndef PJON_STRATEGY_ALL
+	#define PJON_STRATEGY_BITBANG
+#endif
+
+#define PJON_NOT_ASSIGNED 253
+#define PJON_BROADCAST 255
+
+#define SWBB_MAX_ATTEMPTS       50
+#define PJON_INCLUDE_SWBB
+#endif
+
 /**
  * @defgroup RF24SettingGrpPub RF24
  * @ingroup RadioSettingGrpPub
@@ -2116,7 +2129,7 @@
 #endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485) || defined(MY_PJON)
 #define MY_SENSOR_NETWORK
 #endif
 
