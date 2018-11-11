@@ -119,10 +119,11 @@ bool gatewayTransportSend(MyMessage &message)
 	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
 
-void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
+void incomingMQTT(char *topic, uint8_t *payload, unsigned int length)
 {
 	GATEWAY_DEBUG(PSTR("GWT:IMQ:TOPIC=%s, MSG RECEIVED\n"), topic);
 	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
+	setIndication(INDICATION_GW_RX);
 }
 
 bool reconnectMQTT(void)
