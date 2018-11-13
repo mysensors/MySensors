@@ -199,6 +199,39 @@
  * @{
  */
 
+/**
+ * @defgroup PJONSettingGrpPub PJON
+ * @ingroup RadioSettingGrpPub
+ * @brief These options are specific to the PJON wired transport.
+ * @{
+ */
+
+/**
+ * @def MY_PJON
+ * @bref Define this to use the PJON wired transport for sensor network communication.
+ */
+//#define MY_PJON
+
+/**
+ * @def MY_PJON_PIN
+ * @brief Define this to change pin for PJON communication
+ */
+#ifndef MY_PJON_PIN
+#define MY_PJON_PIN 12
+#endif
+
+#ifdef MY_PJON
+
+#ifndef PJON_STRATEGY_ALL
+	#define PJON_STRATEGY_BITBANG
+#endif
+
+#define PJON_NOT_ASSIGNED 253
+#define PJON_BROADCAST 255
+
+#define SWBB_MAX_ATTEMPTS       50
+#define PJON_INCLUDE_SWBB
+#endif
 
 /**
  * @defgroup RS485SettingGrpPub RS485
@@ -252,19 +285,6 @@
  */
 //#define MY_RS485_HWSERIAL (Serial1)
 /** @}*/ // End of RS485SettingGrpPub group
-
-
-#ifdef MY_PJON
-#ifndef PJON_STRATEGY_ALL
-	#define PJON_STRATEGY_BITBANG
-#endif
-
-#define PJON_NOT_ASSIGNED 253
-#define PJON_BROADCAST 255
-
-#define SWBB_MAX_ATTEMPTS       50
-#define PJON_INCLUDE_SWBB
-#endif
 
 /**
  * @defgroup RF24SettingGrpPub RF24

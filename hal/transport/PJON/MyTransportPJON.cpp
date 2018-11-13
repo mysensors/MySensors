@@ -20,10 +20,6 @@
  * 
  */
 
-#ifndef MY_PJON_PIN
-  #define MY_PJON_PIN 12
-#endif
-
 PJON<SoftwareBitBang> bus;
 
 char _data[MAX_MESSAGE_LENGTH];
