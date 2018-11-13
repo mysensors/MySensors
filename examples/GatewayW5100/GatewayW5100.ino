@@ -49,6 +49,7 @@
 //#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
 //#define MY_RADIO_RFM95
+//#define MY_PJON
 
 // Enable gateway ethernet module type
 #define MY_GATEWAY_W5100

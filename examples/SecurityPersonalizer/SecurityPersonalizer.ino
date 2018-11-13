@@ -211,9 +211,12 @@
 
 #ifdef PERSONALIZE_ATSHA204A
 #define LOCK_ATSHA204A_CONFIGURATION // We have to lock configuration to enable random number generation
-#define STORE_HMAC_KEY // Store the HMAC key
-#define STORE_AES_KEY // Store the AES key
-#define SKIP_UART_CONFIRMATION // This is an automated mode
+#define STOR/#define MY_PJON //!< PJON protocol based wire
+//#define MY_PJONHMAC_KEY // Store the HMAC key
+#define STOR/#define MY_PJON //!< PJON protocol based wire
+//#define MY_PJONAES_KEY // Store the AES key
+#define SKIP/#define MY_PJON //!< PJON protocol based wire
+//#define MY_PJONART_CONFIRMATION // This is an automated mode
 #endif
 
 #ifdef PERSONALIZE_SOFT_RANDOM_SERIAL
