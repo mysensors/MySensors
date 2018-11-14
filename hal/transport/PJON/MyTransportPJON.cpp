@@ -27,77 +27,58 @@ uint8_t _packet_len;
 unsigned char _packet_from;
 bool _packet_received;
 
+// debug
+#if defined(MY_DEBUG_VERBOSE_PJON)
+#define PJON_DEBUG(x,...)	DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< Debug print
+#else
+#define PJON_DEBUG(x,...)	//!< DEBUG null
+#endif
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool transportSend(const uint8_t to, const void* data, const uint8_t length, const bool noACK)
 {
 	(void)noACK;	// not implemented
 	const char *datap = static_cast<char const *>(data);
 	char *dataToSend = const_cast<char *>(datap);
-	unsigned char timeout = 5;
+	unsigned char retry = 0;
 	uint16_t res = PJON_FAIL;
-	while(timeout-->0) {
+	while(retry++ < MY_PJON_MAX_RETRIES) {
 		bus.receive();
 		// This is how many times to try and transmit before failing.
-		res = bus.send_packet_blocking(to, dataToSend, len);
-		#ifdef PJON_DEBUG
-			Serial.print("PJON_SEND: to=");
-			Serial.print(to, HEX);
-			Serial.print(" len=");
-			Serial.print(len, DEC);
-			Serial.print(" -> ");
-			for (char i = 0; i < len; i++) {
-				if (datap[i] < 15) {
-					Serial.print('0');
-				}
-				Serial.print(datap[i], HEX);
-			}
-			Serial.print(" res: ");
-			switch(res) {
-				case PJON_ACK: Serial.println("ACK"); break;
-				case PJON_BUSY: Serial.println("BUSY"); break;
-				case PJON_FAIL: Serial.println("FAIL"); break;
-				default: Serial.println(res);
-			}
-		#endif
-		if (res == PJON_ACK) break;
+		res = bus.send_packet_blocking(to, dataToSend, length);
+		PJON_DEBUG(PSTR("PJON:SEND:TO=%,LEN=%,RETRY=%/%\n"), to, length, retry, MY_PJON_MAX_RETRIES);
+		switch(res) {
+				case PJON_ACK: PJON_DEBUG(PSTR("PJON:SEND:ACK\n")); break;
+				case PJON_BUSY: PJON_DEBUG(PSTR("!PJON:SEND:BUSY\n")); break;
+				case PJON_FAIL: PJON_DEBUG(PSTR("!PJON:SEND:FAIL\n")); break;
+				default: PJON_DEBUG(PSTR("!PJON:SEND:RESPONSE=%\n"), res);
+		}
+		if (res == PJON_ACK) return true;
 	}
+	PJON_DEBUG(PSTR("!PJON:SEND:TO=%,NACK\n"), to);
 	return res == PJON_ACK;
 }
 
-void _receiver_function(uint8_t *payload, uint16_t l, const PJON_Packet_Info &packet_info) {
-  #ifdef PJON_DEBUG
-	Serial.print("PJON_READ: ");
-	Serial.print(packet_info.receiver_id);
-	Serial.print(": ");
-	for (char i = 0; i < l; i++) {
-		if (payload[i] < 15) {
-		Serial.print('0');
-		}
-		Serial.print(payload[i], HEX);
+void _receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
+	PJON_DEBUG(PSTR("PJON:RECEIVE:TO=%,LEN=%\n"), packet_info.receiver_id, length);
+	if (!_packet_received) {
+		_packet_len = length;
+		_packet_received = true;
+		memcpy(_data, (const void *)payload, length);
 	}
-	Serial.println();
-  #endif
-  if (!_packet_received) {
-    _packet_len = l;
-    _packet_received = true;
-    memcpy(_data, (const void *)payload, l);
-  }
-};
+}
 
 bool transportInit(void)
 {
+	PJON_DEBUG(PSTR("PJON:INIT\n"));
 	bus.begin();
 	bus.set_receiver(_receiver_function);
 	bus.strategy.set_pin(MY_PJON_PIN);
+	PJON_DEBUG(PSTR("PJON:INIT:PIN=%\n"), MY_PJON_PIN);
 	return true;
 }
 
 void transportSetAddress(const uint8_t address)
 {
-	#ifdef PJON_DEBUG
-	  Serial.print("PJON_ADDR: ");
-	  Serial.println(address);
-    #endif
 	bus.set_id(address);
 }
 
@@ -126,7 +107,8 @@ uint8_t transportReceive(void* data)
 		_packet_received = false;
 		return _packet_len;
 	}
-	else {
+	else 
+	{
 		return (0);
 	}
 }

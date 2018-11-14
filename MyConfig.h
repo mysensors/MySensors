@@ -220,6 +220,20 @@
 #define MY_PJON_PIN 12
 #endif
 
+/**
+ * @def MY_DEBUG_VERBOSE_PJON
+ * @brief Define this for verbose debug prints related to the %PJON driver.
+ */
+//#define MY_DEBUG_VERBOSE_PJON
+
+/**
+ * @def MY_PJON_MAX_RETRIES
+ * @brief Define this to change max send retry in PJON communication
+ */
+#ifndef MY_PJON_MAX_RETRIES
+	#define MY_PJON_MAX_RETRIES 5
+#endif
+
 #ifdef MY_PJON
 
 #ifndef PJON_STRATEGY_ALL
