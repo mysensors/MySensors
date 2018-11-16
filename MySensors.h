@@ -394,7 +394,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/transport/RFM95/driver/RFM95.cpp"
 #include "hal/transport/RFM95/MyTransportRFM95.cpp"
 #elif defined(MY_PJON)
-#include <PJON.h>
+#include "hal/transport/PJON/driver/PJON.h"
 #if (PJON_BROADCAST == 0)
 #error "You must change PJON_BROADCAST to BROADCAST_ADDRESS (255u) and PJON_NOT_ASSIGNED to other one."
 #endif
