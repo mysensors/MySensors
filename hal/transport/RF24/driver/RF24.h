@@ -62,6 +62,10 @@
 
 #include "RF24registers.h"
 
+#if !defined(RF24_SPI)
+#define RF24_SPI hwSPI //!< default SPI
+#endif
+
 #if defined(ARDUINO_ARCH_AVR)
 #define DEFAULT_RF24_CE_PIN				(9)		//!< DEFAULT_RF24_CE_PIN
 #elif defined(ARDUINO_ARCH_ESP8266)
@@ -91,30 +95,6 @@
 #define RF24_SPI_DATA_MODE				SPI_MODE0	//!< RF24_SPI_DATA_MODE
 
 #define RF24_BROADCAST_ADDRESS	(255u)	//!< RF24_BROADCAST_ADDRESS
-
-#if defined(ARDUINO) && !defined(__arm__) && !defined(RF24_SPI)
-#include <SPI.h>
-#if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RF24_SPI_DATA_MODE>
-RF24_SPI;
-#else
-#define RF24_SPI SPI			//!< SPI
-#endif
-#else
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#if defined(__arm__) || defined(__linux__)
-#include <SPI.h>
-#else
-extern HardwareSPI SPI;		//!<  SPI
-#endif
-
-#if !defined(RF24_SPI)
-#define RF24_SPI SPI			//!<  SPI
-#endif
-#endif
 
 // verify RF24 IRQ defs
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)

@@ -71,6 +71,10 @@
 
 #include "RFM69registers_new.h"
 
+#if !defined(RFM69_SPI)
+#define RFM69_SPI hwSPI //!< default SPI
+#endif
+
 #if defined(ARDUINO_ARCH_AVR)
 #if defined(__AVR_ATmega32U4__)
 #define DEFAULT_RFM69_IRQ_PIN			(3)												//!< DEFAULT_RFM69_IRQ_PIN
@@ -99,26 +103,6 @@
 // SPI settings
 #define RFM69_SPI_DATA_ORDER			MSBFIRST		//!< SPI data order
 #define RFM69_SPI_DATA_MODE				SPI_MODE0		//!< SPI mode
-
-#if defined(ARDUINO) && !defined(__arm__) && !defined(RFM69_SPI)
-#include <SPI.h>
-#if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM69_SPI_DATA_MODE>RFM69_SPI;
-#else
-#define RFM69_SPI SPI
-#endif
-#else
-#if defined(__arm__) || defined(__linux__)
-#include <SPI.h>
-#else
-extern HardwareSPI SPI;		//!< SPI
-#endif
-
-#if !defined(RFM69_SPI)
-#define RFM69_SPI SPI			//!< SPI
-#endif
-#endif
-
 
 // Additional radio settings
 #define RFM69_SYNCVALUE1		(0x2D)					//!< Make this compatible with sync1 byte of RFM12B lib

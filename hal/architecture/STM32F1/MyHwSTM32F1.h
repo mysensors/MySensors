@@ -23,6 +23,8 @@
 #include <libmaple/iwdg.h>
 #include <itoa.h>
 #include <EEPROM.h>
+#include <SPI.h>
+
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
@@ -75,6 +77,13 @@ void hwReadConfigBlock(void *buf, void *addr, size_t length);
 void hwWriteConfigBlock(void *buf, void *addr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
+
 
 #ifndef DOXYGEN
 #define MY_CRITICAL_SECTION

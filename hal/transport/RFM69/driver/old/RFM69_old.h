@@ -1,4 +1,4 @@
-﻿// **********************************************************************************
+// **********************************************************************************
 // Driver definition for HopeRF RFM69W/RFM69HW/RFM69CW/RFM69HCW, Semtech SX1231/1231H
 // **********************************************************************************
 // Copyright Felix Rusu (2014), felix@lowpowerlab.com
@@ -30,10 +30,12 @@
 // **********************************************************************************
 #ifndef RFM69_h
 #define RFM69_h
-#include <Arduino.h>            // assumes Arduino IDE v1.0 or greater
-#include <SPI.h>
 
-#define RFM69_MAX_DATA_LEN       61 // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
+#if !defined(RFM69_SPI)
+#define RFM69_SPI hwSPI	//!< default SPI
+#endif
+
+#define RFM69_MAX_DATA_LEN       (61u) // to take advantage of the built in AES/CRC we want to limit the frame size to the internal FIFO size (66 bytes - 3 bytes overhead - 2 bytes crc)
 
 #if defined(ARDUINO_ARCH_AVR)
 #if defined(__AVR_ATmega32U4__)
@@ -138,6 +140,7 @@ public:
 	 * @param isRFM69HW Set to @c true to indicate RFM69HW variant.
 	 * @param interruptNum Interrupt number.
 	 */
+	// cppcheck-suppress uninitMemberVar
 	RFM69(uint8_t slaveSelectPin=MY_RFM69_CS_PIN, uint8_t interruptPin=MY_RFM69_IRQ_PIN,
 	      bool isRFM69HW=false,
 	      uint8_t interruptNum=digitalPinToInterrupt(MY_RFM69_IRQ_PIN))

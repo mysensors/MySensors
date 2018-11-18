@@ -26,8 +26,14 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
+#include <avr/boot.h>
 #include <util/atomic.h>
+#include <SPI.h>
 
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#include "hal/architecture/AVR/drivers/DigitalIO/DigitalIO.h"
+#endif
 
 #ifdef __cplusplus
 #include <Arduino.h>
@@ -69,6 +75,12 @@ bool hwInit(void);
 
 inline void hwRandomNumberInit(void);
 void hwInternalSleep(uint32_t ms);
+
+#if defined(MY_SOFTSPI)
+SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, 0> hwSPI; //!< hwSPI
+#else
+#define hwSPI SPI //!< hwSPI
+#endif
 
 #ifndef DOXYGEN
 #define MY_CRITICAL_SECTION     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)

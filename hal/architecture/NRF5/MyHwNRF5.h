@@ -55,6 +55,7 @@
 #include "drivers/NVM/VirtualPage.h"
 #include <avr/dtostrf.h>
 #include <nrf.h>
+#include <SPI.h>
 
 // mapping
 #ifndef strncpy_P
@@ -124,6 +125,13 @@ uint8_t hwReadConfig(const int addr);
 void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
+
 
 /**
  * Disable all interrupts.
