@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -16,6 +16,7 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  */
+
 /**
  * @file MyConfig.h
  * @ingroup MyConfigGrp
@@ -35,6 +36,7 @@
  * @brief These options control serial and debugging features and functionalities in the library.
  * @{
  */
+
 /**
  * @def MY_DEBUG
  * @brief Define MY_DEBUG to show debug prints.
@@ -46,6 +48,7 @@
  * the flag in your sketch.
  */
 //#define MY_DEBUG
+
 /**
  * @def MY_DEBUGDEVICE
  * @brief Define MY_DEBUGDEVICE to redirect debug prints.
@@ -61,6 +64,7 @@
  * hardware serial device or a software serial device.
  */
 //#define MY_DEBUGDEVICE
+
 /**
  * @def MY_DEBUG_OTA
  * @brief Define MY_DEBUG_OTA to redirect debug prints to given node ID
@@ -268,9 +272,16 @@
  * | Silicon Labs(?)          | SI24R1
  * @{
  */
-// legacy
+
+// legacy - remove for 3.0.0
+/**
+* @def MY_RADIO_NRF24
+* @brief Define this to use a RF24-based radio transport for sensor network communication.
+* @deprecated This flag is deprecated and replaced by @ref MY_RADIO_RF24
+*/
 #ifdef MY_RADIO_NRF24
-//MY_RADIO_NRF24 is deprecated
+#warning MY_RADIO_NRF24 is deprecated, use MY_RADIO_RF24 instead.
+#undef MY_RADIO_NRF24
 #define MY_RADIO_RF24
 #endif
 
@@ -332,7 +343,7 @@
 
 /**
  * @def MY_RF24_POWER_PIN
- * @brief Define this to use the NRF24 power pin (optional).
+ * @brief Define this to use the RF24 power pin (optional).
  */
 //#define MY_RF24_POWER_PIN (3)
 
@@ -604,6 +615,7 @@
  *
  * - RFM69_315MHZ
  * - RFM69_433MHZ
+ * - RFM69_865MHZ
  * - RFM69_868MHZ
  * - RFM69_915MHZ
  * - Custom frequency in Hz (new %RFM69 driver only)
@@ -1117,7 +1129,7 @@
  * @brief Timeout in ms until transport is ready during startup, set to 0 for no timeout
  */
 #ifndef MY_TRANSPORT_WAIT_READY_MS
-#define MY_TRANSPORT_WAIT_READY_MS (0ul)
+#define MY_TRANSPORT_WAIT_READY_MS (0)
 #endif
 
 /**
@@ -1629,6 +1641,7 @@
  * | @ref MY_SIGNING_SOFT_RANDOMSEED_PIN | Change default software RNG seed pin | "#define" in the top of your sketch | Not supported
  * | @ref MY_RF24_ENABLE_ENCRYPTION | Enables encryption on RF24 radios | "#define" in the top of your sketch | @verbatim --my-rf24-encryption-enabled @endverbatim
  * | @ref MY_RFM69_ENABLE_ENCRYPTION | Enables encryption on %RFM69 radios | "#define" in the top of your sketch | @verbatim --my-rfm69-encryption-enabled @endverbatim
+ * | @ref MY_RFM95_ENABLE_ENCRYPTION | Enables encryption on %RFM95 radios | "#define" in the top of your sketch | @verbatim --my-rfm95-encryption-enabled @endverbatim
  * | @ref MY_NRF5_ESB_ENABLE_ENCRYPTION | Enables encryption on nRF5 radios | "#define" in the top of your sketch | Not supported
  * | @ref MY_NODE_LOCK_FEATURE | Enables the node locking feature | "#define" in the top of your sketch | Not supported
  * | @ref MY_NODE_UNLOCK_PIN | Change default unlock pin | "#define" in the top of your sketch | Not supported
@@ -2097,9 +2110,8 @@
 #endif
 
 // temp. workaround for nRF5 verifier: redirect RF24 to NRF_ESB
-#if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF24) )
+#if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) )
 #undef MY_RADIO_RF24
-#undef MY_RADIO_NRF24
 #define MY_RADIO_NRF5_ESB
 #endif
 
@@ -2268,6 +2280,7 @@
  * @brief Supplied by your cell carrier / mobile operator. If not required, leave undefined.
  */
 #define MY_GSM_USR
+
 // LED
 #define MY_DEFAULT_ERR_LED_PIN
 #define MY_DEFAULT_TX_LED_PIN
@@ -2292,6 +2305,7 @@
 #define MY_RS485_HWSERIAL
 // RF24
 #define MY_RADIO_RF24
+#define MY_RADIO_NRF24 //deprecated
 #define MY_DEBUG_VERBOSE_RF24
 #define MY_RF24_POWER_PIN
 #define MY_RF24_IRQ_PIN

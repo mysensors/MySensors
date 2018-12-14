@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -22,8 +22,6 @@
  * @ingroup publics
  * @{
  * @brief The primary public API declaration for the MySensors library
- *
- *
  */
 
 /**
@@ -41,11 +39,6 @@
 #include <Arduino.h>
 #endif
 
-// general macros
-#if !defined(_BV)
-#define _BV(x) (1<<(x))	//!< _BV
-#endif
-
 #include "MyConfig.h"
 #include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
@@ -56,29 +49,59 @@
 #endif
 
 // HARDWARE
-#include "hal/architecture/MyHw.h"
+#include "hal/architecture/MyHwHAL.h"
+#include "hal/crypto/MyCryptoHAL.h"
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hal/architecture/ESP8266/MyHwESP8266.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_ESP32)
 #include "hal/architecture/ESP32/MyHwESP32.cpp"
+#include "hal/crypto/ESP32/MyCryptoESP32.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
-#include "drivers/AVR/DigitalWriteFast/digitalWriteFast.h"
+#include "hal/architecture/AVR/drivers/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
+#include "hal/crypto/AVR/MyCryptoAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "hal/architecture/SAMD/MyHwSAMD.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/STM32F1/MyHwSTM32F1.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
 #include "drivers/NVM/VirtualPage.cpp"
 #include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/NRF5/MyHwNRF5.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(__arm__) && defined(TEENSYDUINO)
 #include "hal/architecture/Teensy3/MyHwTeensy3.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/Linux/MyHwLinuxGeneric.cpp"
+#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #else
 #error Hardware abstraction not defined (unsupported platform)
+#endif
+
+// commonly used macros, sometimes missing in arch definitions
+#if !defined(_BV)
+#define _BV(x) (1<<(x))	//!< _BV
+#endif
+
+#if !defined(min) && !defined(__linux__)
+#define min(a,b) ((a)<(b)?(a):(b)) //!< min
+#endif
+
+#if !defined(max) && !defined(__linux__)
+#define max(a,b) ((a)>(b)?(a):(b)) //!< max
+#endif
+
+#if !defined(MIN)
+#define MIN min //!< MIN
+#endif
+
+#if !defined(MAX)
+#define MAX max //!< MAX
 #endif
 
 // OTA Debug second part, depends on HAL
@@ -109,7 +132,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // SIGNING
 #include "core/MySigning.cpp"
-#include "drivers/ATSHA204/sha256.cpp"
 #if defined(MY_SIGNING_FEATURE)
 // SIGNING COMMON FUNCTIONS
 #if defined(MY_SIGNING_ATSHA204) && defined(MY_SIGNING_SOFT)
@@ -126,7 +148,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "core/MySigningAtsha204Soft.cpp"
 #endif
 #endif
-
 
 // FLASH
 #if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -317,7 +338,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(ARDUINO_ARCH_ESP8266)
 #error Soft SPI is not available on ESP8266
 #endif
-#include "drivers/AVR/DigitalIO/DigitalIO.h"
+#include "hal/architecture/AVR/drivers/DigitalIO/DigitalIO.h"
 #endif
 
 // SOFTSERIAL
@@ -340,14 +361,14 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // Transport drivers
 #if defined(MY_RADIO_RF24)
-#include "drivers/RF24/RF24.cpp"
+#include "hal/transport/RF24/driver/RF24.cpp"
 #include "hal/transport/RF24/MyTransportRF24.cpp"
 #elif defined(MY_RADIO_NRF5_ESB)
 #if !defined(ARDUINO_ARCH_NRF5)
 #error No support for nRF5 radio on this platform
 #endif
-#include "drivers/NRF5/Radio.cpp"
-#include "drivers/NRF5/Radio_ESB.cpp"
+#include "hal/transport/NRF5_ESB/driver/Radio.cpp"
+#include "hal/transport/NRF5_ESB/driver/Radio_ESB.cpp"
 #include "hal/transport/NRF5_ESB/MyTransportNRF5_ESB.cpp"
 #elif defined(MY_RS485)
 #if !defined(MY_RS485_HWSERIAL)
@@ -359,13 +380,13 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/transport/RS485/MyTransportRS485.cpp"
 #elif defined(MY_RADIO_RFM69)
 #if defined(MY_RFM69_NEW_DRIVER)
-#include "drivers/RFM69/new/RFM69_new.cpp"
+#include "hal/transport/RFM69/driver/new/RFM69_new.cpp"
 #else
-#include "drivers/RFM69/old/RFM69_old.cpp"
+#include "hal/transport/RFM69/driver/old/RFM69_old.cpp"
 #endif
 #include "hal/transport/RFM69/MyTransportRFM69.cpp"
 #elif defined(MY_RADIO_RFM95)
-#include "drivers/RFM95/RFM95.cpp"
+#include "hal/transport/RFM95/driver/RFM95.cpp"
 #include "hal/transport/RFM95/MyTransportRFM95.cpp"
 #endif
 

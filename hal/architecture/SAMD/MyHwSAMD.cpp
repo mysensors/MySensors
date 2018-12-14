@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -18,7 +18,6 @@
  */
 
 #include "MyHwSAMD.h"
-
 
 /*
 int8_t pinIntTrigger = 0;
@@ -41,40 +40,45 @@ ISR (WDT_vect)
 */
 
 
-void hwReadConfigBlock(void* buf, void* adr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* dst = static_cast<uint8_t*>(buf);
-	const int offs = reinterpret_cast<int>(adr);
+	uint8_t *dst = static_cast<uint8_t *>(buf);
+	const int offs = reinterpret_cast<int>(addr);
 	(void)eep.read(offs, dst, length);
-
 }
 
-void hwWriteConfigBlock(void* buf, void* adr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* src = static_cast<uint8_t*>(buf);
-	const int offs = reinterpret_cast<int>(adr);
+	uint8_t *src = static_cast<uint8_t *>(buf);
+	const int offs = reinterpret_cast<int>(addr);
 	// use update() instead of write() to reduce e2p wear off
 	(void)eep.update(offs, src, length);
 }
 
-uint8_t hwReadConfig(int adr)
+uint8_t hwReadConfig(const int addr)
 {
-	return eep.read(adr);
+	return eep.read(addr);
 }
 
-void hwWriteConfig(int adr, uint8_t value)
+void hwWriteConfig(const int addr, uint8_t value)
 {
-	(void)eep.update(adr, value);
+	(void)eep.update(addr, value);
 }
 
 bool hwInit(void)
 {
+#if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
 #endif
+#endif
 
-	const uint8_t eepInit = eep.begin(MY_EXT_EEPROM_TWI_CLOCK);
+	SYSCTRL->VREF.reg |= SYSCTRL_VREF_TSEN; // Enable the temperature sensor
+	while (ADC->STATUS.bit.SYNCBUSY ==
+	        1); // Wait for synchronization of registers between the clock domains
+
+	const uint8_t eepInit = eep.begin(MY_EXT_EEPROM_TWI_CLOCK, &Wire);
 #if defined(SENSEBENDER_GW_SAMD_V1)
 	// check connection to external EEPROM - only sensebender GW
 	return eepInit==0;
@@ -125,55 +129,126 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 
 bool hwUniqueID(unique_id_t *uniqueID)
 {
-	(void)memcpy((uint8_t*)uniqueID, (uint32_t *)0x0080A00C, 4);
-	(void)memcpy((uint8_t*)uniqueID + 4, (uint32_t *)0x0080A040, 12);
+	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)0x0080A00C, 4);
+	(void)memcpy((uint8_t *)uniqueID + 4, (uint32_t *)0x0080A040, 12);
 	return true;
 }
 
-uint16_t hwCPUVoltage()
+// Wait for synchronization of registers between the clock domains
+static __inline__ void syncADC() __attribute__((always_inline, unused));
+static void syncADC()
 {
-
-	// disable ADC
 	while (ADC->STATUS.bit.SYNCBUSY);
-	ADC->CTRLA.bit.ENABLE = 0x00;
+}
 
-	// internal 1V reference (default)
-	analogReference(AR_INTERNAL1V0);
-	// 12 bit resolution (default)
-	analogWriteResolution(12);
-	// MUXp 0x1B = SCALEDIOVCC/4 => connected to Vcc
-	ADC->INPUTCTRL.bit.MUXPOS = 0x1B ;
-
+uint16_t hwCPUVoltage(void)
+{
+	// Set ADC reference to internal 1v
+	ADC->INPUTCTRL.bit.GAIN = ADC_INPUTCTRL_GAIN_1X_Val;
+	ADC->REFCTRL.bit.REFSEL = ADC_REFCTRL_REFSEL_INT1V_Val;
+	syncADC();
+	// Set to 10 bits reading resolution
+	ADC->CTRLB.reg = ADC_CTRLB_RESSEL_10BIT | ADC_CTRLB_PRESCALER_DIV256;
+	syncADC();
+	// Select MUXPOS as SCALEDIOVCC/4 channel, and MUXNEG as internal ground
+	ADC->INPUTCTRL.bit.MUXPOS = ADC_INPUTCTRL_MUXPOS_SCALEDIOVCC_Val;
+	ADC->INPUTCTRL.bit.MUXNEG = ADC_INPUTCTRL_MUXNEG_GND_Val;
+	syncADC();
 	// enable ADC
-	while (ADC->STATUS.bit.SYNCBUSY);
-	ADC->CTRLA.bit.ENABLE = 0x01;
+	ADC->CTRLA.bit.ENABLE = 1;
+	syncADC();
 	// start conversion
-	while (ADC->STATUS.bit.SYNCBUSY);
 	ADC->SWTRIG.bit.START = 1;
 	// clear the Data Ready flag
 	ADC->INTFLAG.bit.RESRDY = 1;
+	syncADC();
 	// start conversion again, since The first conversion after the reference is changed must not be used.
-	while (ADC->STATUS.bit.SYNCBUSY);
 	ADC->SWTRIG.bit.START = 1;
-
 	// waiting for conversion to complete
 	while (!ADC->INTFLAG.bit.RESRDY);
+	syncADC();
 	const uint32_t valueRead = ADC->RESULT.reg;
-
 	// disable ADC
-	while (ADC->STATUS.bit.SYNCBUSY);
-	ADC->CTRLA.bit.ENABLE = 0x00;
-
+	ADC->CTRLA.bit.ENABLE = 0;
+	syncADC();
+	// value is 1/4 scaled, multiply by 4
 	return valueRead * 4;
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	// TODO: currently reporting compile time frequency (in 1/10MHz)
 	return F_CPU / 100000UL;
 }
 
-uint16_t hwFreeMem()
+int8_t hwCPUTemperature(void)
+{
+	// taken from https://github.com/arduino/ArduinoCore-samd/pull/277
+	// Set to 12 bits resolution
+	ADC->CTRLB.reg = ADC_CTRLB_RESSEL_12BIT | ADC_CTRLB_PRESCALER_DIV256;
+	syncADC();
+	// Ensure we are sampling slowly
+	ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(0x3f);
+	syncADC();
+	// Set ADC reference to internal 1v
+	ADC->INPUTCTRL.bit.GAIN = ADC_INPUTCTRL_GAIN_1X_Val;
+	ADC->REFCTRL.bit.REFSEL = ADC_REFCTRL_REFSEL_INT1V_Val;
+	syncADC();
+	// Select MUXPOS as temperature channel, and MUXNEG as internal ground
+	ADC->INPUTCTRL.bit.MUXPOS = ADC_INPUTCTRL_MUXPOS_TEMP_Val;
+	ADC->INPUTCTRL.bit.MUXNEG = ADC_INPUTCTRL_MUXNEG_GND_Val;
+	syncADC();
+	// Enable ADC
+	ADC->CTRLA.bit.ENABLE = 1;
+	syncADC();
+	// Start ADC conversion
+	ADC->SWTRIG.bit.START = 1;
+	// Clear the Data Ready flag
+	ADC->INTFLAG.reg = ADC_INTFLAG_RESRDY;
+	syncADC();
+	// Start conversion again, since The first conversion after the reference is changed must not be used.
+	ADC->SWTRIG.bit.START = 1;
+	// Wait until ADC conversion is done
+	while (!(ADC->INTFLAG.bit.RESRDY));
+	syncADC();
+	// Get result
+	// This is signed so that the math later is done signed
+	const int32_t adcReading = ADC->RESULT.reg;
+	// Clear result ready flag
+	ADC->INTFLAG.reg = ADC_INTFLAG_RESRDY;
+	syncADC();
+	// Disable ADC
+	ADC->CTRLA.bit.ENABLE = 0;
+	syncADC();
+	// Factory room temperature readings
+	const uint8_t roomInteger = (*(uint32_t *)FUSES_ROOM_TEMP_VAL_INT_ADDR &
+	                             FUSES_ROOM_TEMP_VAL_INT_Msk)
+	                            >> FUSES_ROOM_TEMP_VAL_INT_Pos;
+	const uint8_t roomDecimal = (*(uint32_t *)FUSES_ROOM_TEMP_VAL_DEC_ADDR &
+	                             FUSES_ROOM_TEMP_VAL_DEC_Msk)
+	                            >> FUSES_ROOM_TEMP_VAL_DEC_Pos;
+	const int32_t roomReading = ((*(uint32_t *)FUSES_ROOM_ADC_VAL_ADDR & FUSES_ROOM_ADC_VAL_Msk) >>
+	                             FUSES_ROOM_ADC_VAL_Pos);
+	const int32_t roomTemperature = 1000 * roomInteger + 100 * roomDecimal;
+	// Factory hot temperature readings
+	const uint8_t hotInteger = (*(uint32_t *)FUSES_HOT_TEMP_VAL_INT_ADDR & FUSES_HOT_TEMP_VAL_INT_Msk)
+	                           >>
+	                           FUSES_HOT_TEMP_VAL_INT_Pos;
+	const uint8_t hotDecimal = (*(uint32_t *)FUSES_HOT_TEMP_VAL_DEC_ADDR & FUSES_HOT_TEMP_VAL_DEC_Msk)
+	                           >>
+	                           FUSES_HOT_TEMP_VAL_DEC_Pos;
+	const int32_t hotReading = ((*(uint32_t *)FUSES_HOT_ADC_VAL_ADDR & FUSES_HOT_ADC_VAL_Msk) >>
+	                            FUSES_HOT_ADC_VAL_Pos);
+	const int32_t hotTemperature = 1000 * hotInteger + 100 * hotDecimal;
+	// Linear interpolation of temperature using factory room temperature and hot temperature
+	const int32_t temperature = roomTemperature + ((hotTemperature - roomTemperature) *
+	                            (adcReading - roomReading)) / (hotReading - roomReading);
+	return static_cast<int8_t>(((temperature / 1000) - MY_SAMD_TEMPERATURE_OFFSET) /
+	                           MY_SAMD_TEMPERATURE_GAIN);
+}
+
+
+uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;
@@ -181,9 +256,6 @@ uint16_t hwFreeMem()
 
 void hwDebugPrint(const char *fmt, ... )
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	if (MY_DEBUGDEVICE) {
 		char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
@@ -198,14 +270,14 @@ void hwDebugPrint(const char *fmt, ... )
 		MY_DEBUGDEVICE.print(" ");
 #endif
 		va_list args;
-		va_start (args, fmt );
+		va_start(args, fmt);
 		vsnprintf(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 		// Truncate message if this is gateway node
 		fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 		fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
 #endif
-		va_end (args);
+		va_end(args);
 		MY_DEBUGDEVICE.print(fmtBuffer);
 		//	MY_SERIALDEVICE.flush();
 	}

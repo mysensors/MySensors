@@ -9,7 +9,7 @@
  * Copyright (C) 2013-2018 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
- * https://github.com/mysensors/Arduino/graphs/contributors
+ * https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -19,8 +19,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "drivers/NRF5/Radio.h"
-#include "drivers/NRF5/Radio_ESB.h"
+#include "hal/transport/NRF5_ESB/driver/Radio.h"
+#include "hal/transport/NRF5_ESB/driver/Radio_ESB.h"
 
 #include "drivers/CircularBuffer/CircularBuffer.h"
 

@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -83,9 +83,9 @@
 /** @brief Address RF AES encryption key. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS (EEPROM_SIGNING_SOFT_SERIAL_ADDRESS + SIZE_SIGNING_SOFT_SERIAL)
 /** @brief Address node lock counter. This is set with @ref SecurityPersonalizer.ino */
-#define EEPROM_NODE_LOCK_COUNTER (EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS + SIZE_RF_ENCRYPTION_AES_KEY)
+#define EEPROM_NODE_LOCK_COUNTER_ADDRESS (EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS + SIZE_RF_ENCRYPTION_AES_KEY)
 /** @brief First free address for sketch static configuration */
-#define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_NODE_LOCK_COUNTER + SIZE_NODE_LOCK_COUNTER)
+#define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_NODE_LOCK_COUNTER_ADDRESS + SIZE_NODE_LOCK_COUNTER)
 
 #endif // MyEepromAddresses_h
 

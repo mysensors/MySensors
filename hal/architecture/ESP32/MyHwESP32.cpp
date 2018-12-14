@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -28,6 +28,9 @@ bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1);
+#if defined(MY_GATEWAY_SERIAL)
+	while (!MY_SERIALDEVICE) {}
+#endif
 #endif
 	return EEPROM.begin(MY_EEPROM_SIZE);
 }
@@ -128,10 +131,11 @@ uint16_t hwCPUFrequency(void)
 	return static_cast<uint16_t>(ESP.getCpuFreqMHz() * 10);
 }
 
-uint8_t hwCPUTemperature(void)
+int8_t hwCPUTemperature(void)
 {
 	// CPU temperature in °C
-	return static_cast<uint8_t>(temperatureRead());
+	return static_cast<int8_t>((temperatureRead() - MY_ESP32_TEMPERATURE_OFFSET) /
+	                           MY_ESP32_TEMPERATURE_GAIN);
 }
 
 uint16_t hwFreeMem(void)
@@ -141,28 +145,30 @@ uint16_t hwFreeMem(void)
 
 void hwDebugPrint(const char *fmt, ...)
 {
+#ifndef MY_DISABLED_SERIAL
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
 	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%d;0;%d;%lu "), C_INTERNAL, I_LOG_MESSAGE,
-	           millis());
-	MY_SERIALDEVICE.print(fmtBuffer);
+	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
+	           C_INTERNAL, I_LOG_MESSAGE, hwMillis());
+	MY_DEBUGDEVICE.print(fmtBuffer);
 #else
 	// prepend timestamp
-	MY_SERIALDEVICE.print(millis());
-	MY_SERIALDEVICE.print(" ");
+	MY_DEBUGDEVICE.print(hwMillis());
+	MY_DEBUGDEVICE.print(F(" "));
 #endif
 	va_list args;
 	va_start(args, fmt);
+	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 	// Truncate message if this is gateway node
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#else
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #endif
 	va_end(args);
-	MY_SERIALDEVICE.print(fmtBuffer);
-	MY_SERIALDEVICE.flush();
+	MY_DEBUGDEVICE.print(fmtBuffer);
+	MY_DEBUGDEVICE.flush();
+#else
+	(void)fmt;
+#endif
 }

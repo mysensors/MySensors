@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -103,9 +103,10 @@
 * | | TSF | MSG   | BC												| Broadcast message received
 * | | TSF | MSG   | GWL OK										| Link to GW ok
 * | | TSF | MSG   | FWD BC MSG								| Controlled broadcast message forwarding
+* | | TSF | MSG   | RCV CB										| Hand over message to @ref receive() callback function
 * | | TSF | MSG   | REL MSG										| Relay message
 * | | TSF | MSG   | REL PxNG,HP=%%d						| Relay PING/PONG message, increment hop counter (HP)
-* |!| TSF | MSG   | LEN,%%d!=%%d							| Invalid message length, (actual!=expected)
+* |!| TSF | MSG   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
 * |!| TSF | MSG   | PVER,%%d!=%%d							| Message protocol version mismatch (actual!=expected)
 * |!| TSF | MSG   | SIGN VERIFY FAIL					| Signing verification failed
 * |!| TSF | MSG   | REL MSG,NORP							| Node received a message for relaying, but node is not a repeater, message skipped
@@ -119,6 +120,8 @@
 * | | TSF | SRT   | OK												| Saving routing table successful
 * |!| TSF | RTE   | FPAR ACTIVE								| Finding parent active, message not sent
 * |!| TSF | RTE   | DST %%d UNKNOWN						| Routing for destination (DST) unknown, send message to parent
+* | | TSF | RTE   | N2N OK										| Node-to-node communication succeeded
+* |!| TSF | RTE   | N2N FAIL									| Node-to-node communication failed, handing over to parent for re-routing
 * | | TSF | RRT   | ROUTE N=%%d,R=%%d					| Routing table, messages to node (N) are routed via node (R)
 * |!| TSF | SND   | TNR												| Transport not ready, message cannot be sent
 * | | TSF | TDI   | TSL												| Set transport to sleep
@@ -207,21 +210,6 @@
 #define isValidDistance(_distance) (bool)(_distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
 #define isValidParent(_parent) (bool)(_parent != AUTO)					//!<  returns true if parent is valid
 
-// RX queue ==> shift to HAL
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-#if defined(MY_RADIO_RFM69)
-#error Receive message buffering not supported for RFM69!
-#endif
-#if defined(MY_RS485)
-#error Receive message buffering not supported for RS485!
-#endif
-#if defined(MY_RADIO_NRF5_ESB)
-#error Receive message buffering not supported for NRF5 radio! Please define MY_NRF5_RX_BUFFER_SIZE
-#endif
-#elif !defined(MY_RX_MESSAGE_BUFFER_FEATURE) && defined(MY_RX_MESSAGE_BUFFER_SIZE)
-#error Receive message buffering requires message buffering feature enabled!
-#endif
-
 /**
  * @brief Callback type
  */
@@ -247,10 +235,10 @@ typedef struct {
  */
 typedef struct {
 	void(*Transition)(void);					//!< state transition function
-	void(*Update)(void);						//!< state update function
+	void(*Update)(void);							//!< state update function
 } transportState_t;
 /**
-* @brief
+* @brief Datatype for internal RSSI storage
 */
 typedef int16_t transportRSSI_t;				//!< Datatype for internal RSSI storage
 
@@ -265,7 +253,7 @@ typedef int16_t transportRSSI_t;				//!< Datatype for internal RSSI storage
  */
 typedef struct {
 	// SM variables
-	transportState_t* currentState;			//!< pointer to current FSM state
+	transportState_t *currentState;			//!< pointer to current FSM state
 	uint32_t stateEnter;					//!< state enter timepoint
 	// general transport variables
 	uint32_t lastUplinkCheck;				//!< last uplink check, required to prevent GW flooding
@@ -346,7 +334,7 @@ void stFailureUpdate(void);
 * @brief Switch SM state
 * @param newState New state to switch SM to
 */
-void transportSwitchSM(transportState_t& newState);
+void transportSwitchSM(transportState_t &newState);
 /**
 * @brief Update SM state
 */
@@ -428,7 +416,7 @@ bool transportWaitUntilReady(const uint32_t waitingMS = 0);
 /**
 * @brief Initialize transport and SM
 */
-void transportInitialize(void);
+void transportInitialise(void);
 /**
 * @brief Process FIFO msg and update SM
 */

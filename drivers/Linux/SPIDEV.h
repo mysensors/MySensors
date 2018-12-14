@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -199,8 +199,9 @@ private:
 	static uint8_t initialized; //!< @brief SPI initialized flag.
 	static int fd; //!< @brief SPI device file descriptor.
 	static std::string device; //!< @brief Default SPI device.
+	static uint8_t mode; //!< @brief SPI mode.
 	static uint32_t speed; //!< @brief SPI speed.
-	static uint32_t speed_temp; //!< @brief Used when doing transaction.
+	static uint8_t bit_order; //!< @brief SPI bit order.
 	static struct spi_ioc_transfer tr; //!< @brief Auxiliar struct for data transfer.
 
 	static void init();

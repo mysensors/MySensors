@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -34,6 +34,9 @@ uint8_t SPIBCMClass::initialized = 0;
 void SPIBCMClass::begin()
 {
 	if (!initialized) {
+		if (!BCM.isInitialized()) {
+			BCM.init();
+		}
 		if (!bcm2835_spi_begin()) {
 			logError("You need root privilege to use SPI.\n");
 			exit(1);

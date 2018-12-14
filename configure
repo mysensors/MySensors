@@ -62,21 +62,21 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|nrf24|rs485|rfm95|rfm69]
-                                Set the transport to be used to communicate with other nodes. [nrf24]
+    --my-transport=[none|rf24|rs485|rfm95|rfm69]
+                                Set the transport to be used to communicate with other nodes. [rf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
     --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-ce-pin=<PIN>      Pin number to use for rf24 Chip-Enable.
     --my-rf24-cs-pin=<PIN>      Pin number to use for rf24 Chip-Select.
-    --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01 IRQ pin.
+    --my-rf24-irq-pin=<PIN>     Pin number connected to nRF24L01P IRQ pin.
     --my-rf24-encryption-enabled
                                 Enables RF24 encryption.
                                 All nodes and gateway must have this enabled, and all must be
                                 personalized with the same AES key.
     --my-rx-message-buffer-size=<SIZE>
                                 Buffer size for incoming messages when using rf24 interrupts. [20]
-    --my-rfm69-frequency=[315|433|868|915]
+    --my-rfm69-frequency=[315|433|865|868|915]
                                 RFM69 Module Frequency. [868]
     --my-is-rfm69hw             Enable high-powered rfm69hw.
     --my-rfm69-irq-pin=<PIN>    Pin number connected to RFM69 IRQ pin.
@@ -193,25 +193,25 @@ function detect_machine {
             soc="BCM2837"
         fi
         ;;
-    sun4i|Sun4iw1p1)
+    *sun4i*|*Sun4iw1p1*)
         soc="A10"
         ;;
-    sun5i|Sun4iw2p1)
+    *sun5i*|*Sun4iw2p1*)
         soc="A13"
         ;;
-    Sun4iw2p2)
+    *Sun4iw2p2*)
         soc="A12"
         ;;
-    Sun4iw2p3)
+    *Sun4iw2p3*)
         soc="A10s"
         ;;
-    sun6i|Sun8iw1p1)
+    *sun6i*|*Sun8iw1p1*)
         soc="A31"
         ;;
-    Sun8iw1p2)
+    *Sun8iw1p2*)
         soc="A31s"
         ;;
-    sun7i|Sun8iw2p1)
+    *sun7i*|*Sun8iw2p1*)
         soc="A20"
         if [[ $machine == "Banana Pi"* ]]; then
             tp="BananaPi"
@@ -219,25 +219,25 @@ function detect_machine {
             tp="BananaPro"
         fi
         ;;
-    sun8i|Sun8iw7p1)
+    *sun8i*|*Sun8iw7p1*)
         soc="H3"
         ;;
-    Sun8iw3p1)
+    *Sun8iw3p1*)
         soc="A23"
         ;;
-    Sun8iw5p1)
+    *Sun8iw5p1*)
         soc="A33"
         ;;
-    Sun8iw6p1)
+    *Sun8iw6p1*)
         soc="A83t"
         ;;
-    sun9i|Sun9iw1p1)
+    *sun9i*|*Sun9iw1p1*)
         soc="A80"
         ;;
-    Sun9iw1p2)
+    *Sun9iw1p2*)
         soc="A80t"
         ;;
-    sun50i|Sun50iw1p1)
+    *sun50i*|*Sun50iw1p1*)
         soc="A64"
         ;;
     'Generic AM33XX'*)
@@ -285,7 +285,7 @@ function gcc_cpu_flags {
 # Default values
 debug=enable
 gateway_type=ethernet
-transport_type=nrf24
+transport_type=rf24
 signing=none
 signing_request_signatures=false
 encryption=false
@@ -437,6 +437,8 @@ for opt do
             CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_315MHZ $CPPFLAGS"
         elif [[ ${optarg} == "433" ]]; then
             CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_433MHZ $CPPFLAGS"
+        elif [[ ${optarg} == "865" ]]; then
+            CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_865MHZ $CPPFLAGS"
         elif [[ ${optarg} == "868" ]]; then
             CPPFLAGS="-DMY_RFM69_FREQUENCY=RFM69_868MHZ $CPPFLAGS"
         elif [[ ${optarg} == "915" ]]; then
@@ -619,8 +621,8 @@ printf "  ${OK} Type: ${gateway_type}.\n"
 if [[ ${transport_type} == "none" ]]; then
     # Transport disabled
     :
-elif [[ ${transport_type} == "nrf24" ]]; then
-    CPPFLAGS="-DMY_RADIO_NRF24 $CPPFLAGS"
+elif [[ ${transport_type} == "rf24" ]]; then
+    CPPFLAGS="-DMY_RADIO_RF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm69" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM69 -DMY_RFM69_NEW_DRIVER $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then
@@ -663,6 +665,8 @@ else
     printf "  ${OK} Encryption: Disabled.\n"
 fi
 
+printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
+
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
@@ -676,7 +680,7 @@ elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
     INIT_SYSTEM=sysvinit
     printf "  ${OK} Init system detected: sysvinit.\n"
 else
-    printf "  ${FAILED} Unknown init system."
+    printf "  ${FAILED} Unknown init system.\n"
 fi
 
 printf "${SECTION} Saving configuration.\n"

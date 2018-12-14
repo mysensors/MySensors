@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -25,6 +25,9 @@ bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+#if defined(MY_GATEWAY_SERIAL)
+	while (!MY_SERIALDEVICE) {}
+#endif
 #endif
 	return true;
 }
@@ -253,19 +256,19 @@ inline void hwRandomNumberInit(void)
 	randomSeed(seed);
 }
 
-bool hwUniqueID(unique_id_t* uniqueID)
+bool hwUniqueID(unique_id_t *uniqueID)
 {
 	// padding
 	(void)memset(uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
 	// no unique ID for non-PB AVR, use HW specifics for diversification
-	*((uint8_t*)uniqueID) = boot_signature_byte_get(0x00);
-	*((uint8_t*)uniqueID + 1) = boot_signature_byte_get(0x02);
-	*((uint8_t*)uniqueID + 2) = boot_signature_byte_get(0x04);
-	*((uint8_t*)uniqueID + 3) = boot_signature_byte_get(0x01); //OSCCAL
+	*((uint8_t *)uniqueID) = boot_signature_byte_get(0x00);
+	*((uint8_t *)uniqueID + 1) = boot_signature_byte_get(0x02);
+	*((uint8_t *)uniqueID + 2) = boot_signature_byte_get(0x04);
+	*((uint8_t *)uniqueID + 3) = boot_signature_byte_get(0x01); //OSCCAL
 #if defined(__AVR_ATmega328PB__)
 	// ATMEGA328PB specifics, has unique ID
 	for(uint8_t idx = 0; idx < 10; idx++) {
-		*((uint8_t*)uniqueID + 4 + idx) = boot_signature_byte_get(0xE + idx);
+		*((uint8_t *)uniqueID + 4 + idx) = boot_signature_byte_get(0xE + idx);
 	}
 	return true; // unique ID returned
 #else
@@ -329,6 +332,23 @@ uint16_t hwCPUFrequency(void)
 	return TCNT1 * 2048UL / 100000UL;
 }
 
+int8_t hwCPUTemperature(void)
+{
+#if defined(__AVR_ATmega168A__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328BP__) || defined(__AVR_ATmega32U4__)
+	// Set the internal reference and mux.
+	ADMUX = (_BV(REFS1) | _BV(REFS0) | _BV(MUX3));
+	ADCSRA |= _BV(ADEN);  // enable the ADC
+	delay(20);            // wait for voltages to become stable.
+	ADCSRA |= _BV(ADSC);  // Start the ADC
+	// Wait until conversion done
+	while (bit_is_set(ADCSRA, ADSC));
+	// temperature is in degrees Celsius
+	return static_cast<int8_t>((ADCW - MY_AVR_TEMPERATURE_OFFSET) / MY_AVR_TEMPERATURE_GAIN);
+#else
+	return -127; // not available
+#endif
+}
+
 uint16_t hwFreeMem(void)
 {
 	extern int __heap_start, *__brkval;
@@ -338,9 +358,6 @@ uint16_t hwFreeMem(void)
 
 void hwDebugPrint(const char *fmt, ... )
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
@@ -354,14 +371,14 @@ void hwDebugPrint(const char *fmt, ... )
 	MY_DEBUGDEVICE.print(F(" "));
 #endif
 	va_list args;
-	va_start (args, fmt );
+	va_start(args, fmt);
 	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 	// Truncate message if this is gateway node
 	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
 #endif
-	va_end (args);
+	va_end(args);
 	MY_DEBUGDEVICE.print(fmtBuffer);
 	MY_DEBUGDEVICE.flush();
 #else

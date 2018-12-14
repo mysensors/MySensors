@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -34,14 +34,21 @@ BCMClass::~BCMClass()
 	}
 }
 
+uint8_t BCMClass::init()
+{
+	if (!bcm2835_init()) {
+		logError("Failed to initialized bcm2835.\n");
+		exit(1);
+	}
+	initialized = 1;
+
+	return 1;
+}
+
 void BCMClass::pinMode(uint8_t gpio, uint8_t mode)
 {
 	if (!initialized) {
-		if (!bcm2835_init()) {
-			logError("Failed to initialized bcm2835.\n");
-			exit(1);
-		}
-		initialized = 1;
+		init();
 	}
 
 	bcm2835_gpio_fsel(gpio, mode);
@@ -50,11 +57,7 @@ void BCMClass::pinMode(uint8_t gpio, uint8_t mode)
 void BCMClass::digitalWrite(uint8_t gpio, uint8_t value)
 {
 	if (!initialized) {
-		if (!bcm2835_init()) {
-			logError("Failed to initialized bcm2835.\n");
-			exit(1);
-		}
-		initialized = 1;
+		init();
 	}
 
 	bcm2835_gpio_write(gpio, value);
@@ -65,12 +68,13 @@ void BCMClass::digitalWrite(uint8_t gpio, uint8_t value)
 uint8_t BCMClass::digitalRead(uint8_t gpio)
 {
 	if (!initialized) {
-		if (!bcm2835_init()) {
-			logError("Failed to initialized bcm2835.\n");
-			exit(1);
-		}
-		initialized = 1;
+		init();
 	}
 
 	return bcm2835_gpio_lev(gpio);
+}
+
+uint8_t BCMClass::isInitialized()
+{
+	return initialized;
 }

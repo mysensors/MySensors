@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -51,27 +51,27 @@ bool hwInit(void)
 	return true;
 }
 
-void hwReadConfigBlock(void* buf, void* addr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
 	eeprom.readBlock(buf, addr, length);
 }
 
-void hwWriteConfigBlock(void* buf, void* addr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
 	eeprom.writeBlock(buf, addr, length);
 }
 
-uint8_t hwReadConfig(int addr)
+uint8_t hwReadConfig(const int addr)
 {
 	return eeprom.readByte(addr);
 }
 
-void hwWriteConfig(int addr, uint8_t value)
+void hwWriteConfig(const int addr, uint8_t value)
 {
 	eeprom.writeByte(addr, value);
 }
 
-void hwRandomNumberInit()
+void hwRandomNumberInit(void)
 {
 	uint32_t seed=0;
 
@@ -92,7 +92,7 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 	return(fread(__buffer, 1, __length, randomFp));
 }
 
-uint32_t hwMillis()
+uint32_t hwMillis(void)
 {
 	return millis();
 }
@@ -135,19 +135,24 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;
 }
 
-uint16_t hwFreeMem()
+int8_t hwCPUTemperature(void)
+{
+	return -127;  // not implemented yet
+}
+
+uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;

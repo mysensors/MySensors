@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -710,33 +710,6 @@ bool signerSignMsg(MyMessage &msg);
  * @returns @c true if successful, else @c false.
  */
 bool signerVerifyMsg(MyMessage &msg);
-
-/**
- * @brief Initialize a hash calculation session.
- *
- * Any ongoing calculation session will be terminated/reset.
- */
-void signerSha256Init(void);
-
-/**
- * @brief Add data to an ongoing hash calculation session.
- *
- * More data can be added by repeated calls to this function.
- *
- * @param data Buffer with data to add.
- * @param sz Size of data buffer.
- */
-void signerSha256Update(const uint8_t* data, size_t sz);
-
-/**
- * @brief Finalize an ongoing hash calculation session and return the hash.
- *
- * The returned hash size is always 32 bytes. Buffer can be assumed to be valid
- * until @ref signerSha256Init() is called again.
- *
- * @returns Buffer with 32-byte hash.
- */
-uint8_t* signerSha256Final(void);
 
 /**
  * @brief Do a timing neutral memory comparison.

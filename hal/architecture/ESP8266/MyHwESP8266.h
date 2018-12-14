@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -23,14 +23,15 @@
 #include <Arduino.h>
 #endif
 
+#define CRYPTO_LITTLE_ENDIAN
+
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
 #endif
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
-#define MIN(a,b) min(a,b)
-#define MAX(a,b) max(a,b)
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
 
 #define EEPROM_size (1024)
 
@@ -45,8 +46,8 @@
 #define hwRandomNumberInit()
 
 bool hwInit(void);
-void hwReadConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfigBlock(void* buf, void* adr, size_t length);
+void hwReadConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfigBlock(void *buf, void *addr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
 ssize_t hwGetentropy(void *__buffer, size_t __length);

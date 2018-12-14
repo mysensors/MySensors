@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -67,7 +67,7 @@ static uint32_t _lastSanityCheck;		//!< last sanity check
 // regular network discovery, sends I_DISCOVER_REQUESTS to update routing table
 // sufficient to have GW triggering requests to also update repeater nodes
 #if defined(MY_GATEWAY_FEATURE)
-static uint32_t _lastNetworkDiscovery;	//! last network discovery
+static uint32_t _lastNetworkDiscovery;	//!< last network discovery
 #endif
 
 // stInit: initialise transport HW
@@ -77,20 +77,20 @@ void stInitTransition(void)
 	// initialise status variables
 	_transportSM.pingActive = false;
 	_transportSM.transportActive = false;
-	_transportSM.lastUplinkCheck = 0ul;
+	_transportSM.lastUplinkCheck = 0;
 
 #if defined(MY_TRANSPORT_SANITY_CHECK)
 	_lastSanityCheck = hwMillis();
 #endif
 #if defined(MY_GATEWAY_FEATURE)
-	_lastNetworkDiscovery = 0ul;
+	_lastNetworkDiscovery = 0;
 #endif
 #if defined(MY_RAM_ROUTING_TABLE_ENABLED)
 	_lastRoutingTableSave = hwMillis();
 #endif
 
 	// Read node settings (ID, parent ID, GW distance) from EEPROM
-	hwReadConfigBlock((void*)&_transportConfig, (void*)EEPROM_NODE_ID_ADDRESS,
+	hwReadConfigBlock((void *)&_transportConfig, (void *)EEPROM_NODE_ID_ADDRESS,
 	                  sizeof(transportConfig_t));
 }
 
@@ -305,7 +305,8 @@ void stReadyTransition(void)
 void stReadyUpdate(void)
 {
 #if defined(MY_GATEWAY_FEATURE)
-	if (hwMillis() - _lastNetworkDiscovery > MY_TRANSPORT_DISCOVERY_INTERVAL_MS) {
+	if (!_lastNetworkDiscovery ||
+	        (hwMillis() - _lastNetworkDiscovery > MY_TRANSPORT_DISCOVERY_INTERVAL_MS)) {
 		_lastNetworkDiscovery = hwMillis();
 		TRANSPORT_DEBUG(PSTR("TSM:READY:NWD REQ\n"));	// send transport network discovery
 		(void)transportRouteMessage(build(_msgTmp, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
@@ -359,7 +360,7 @@ void stFailureUpdate(void)
 	}
 }
 
-void transportSwitchSM(transportState_t& newState)
+void transportSwitchSM(transportState_t &newState)
 {
 	if (_transportSM.currentState != &newState) {
 		_transportSM.stateRetries = 0u;	// state change, reset retry counter
@@ -410,7 +411,6 @@ void resetMessageReceived(void)
 	_transportSM.msgReceived = false;
 }
 
-
 void transportInitialise(void)
 {
 	_transportSM.failureCounter = 0u;	// reset failure counter
@@ -430,6 +430,7 @@ void transportDisable(void)
 		transportSleep();
 	}
 }
+
 void transportReInitialise(void)
 {
 	if (RADIO_CAN_POWER_OFF == true) {
@@ -441,7 +442,6 @@ void transportReInitialise(void)
 		transportStandBy();
 	}
 }
-
 
 bool transportWaitUntilReady(const uint32_t waitingMS)
 {
@@ -465,7 +465,6 @@ void transportProcess(void)
 	// process transport FIFO
 	transportProcessFIFO();
 }
-
 
 bool transportCheckUplink(const bool force)
 {
@@ -546,10 +545,18 @@ bool transportRouteMessage(MyMessage &message)
 #endif
 		}
 #else
+		if (destination > GATEWAY_ADDRESS && destination < BROADCAST_ADDRESS) {
+			// node2node traffic: assume node is in vincinity. If transmission fails, hand over to parent
+			if (transportSendWrite(destination, message)) {
+				TRANSPORT_DEBUG(PSTR("TSF:RTE:N2N OK\n"));
+				return true;
+			}
+			TRANSPORT_DEBUG(PSTR("!TSF:RTE:N2N FAIL\n"));
+		}
 		route = _transportConfig.parentNodeId;	// not a repeater, all traffic routed via parent
 #endif
 	}
-	// send message, HAL
+	// send message
 	const bool result = transportSendWrite(route, message);
 #if !defined(MY_GATEWAY_FEATURE)
 	// update counter
@@ -666,7 +673,7 @@ void transportProcessMessage(void)
 	// Reject payloads with incorrect length
 	if (payloadLength != expectedMessageLength) {
 		setIndication(INDICATION_ERR_LENGTH);
-		TRANSPORT_DEBUG(PSTR("!TSF:MSG:LEN,%" PRIu8 "!=%" PRIu8 "\n"), payloadLength,
+		TRANSPORT_DEBUG(PSTR("!TSF:MSG:LEN=%" PRIu8 ",EXP=%" PRIu8 "\n"), payloadLength,
 		                expectedMessageLength); // invalid payload length
 		return;
 	}
@@ -708,7 +715,7 @@ void transportProcessMessage(void)
 	// Is message addressed to this node?
 	if (destination == _transportConfig.nodeId) {
 		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
-		mSetLength(_msg, min(mGetLength(_msg),(uint8_t)MAX_PAYLOAD));
+		mSetLength(_msg, min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD));
 		// null terminate data
 		_msg.data[msgLength] = 0u;
 		// Check if sender requests an ack back.
@@ -766,7 +773,7 @@ void transportProcessMessage(void)
 					} else {
 						TRANSPORT_DEBUG(PSTR("!TSF:MSG:FPAR INACTIVE\n"));	// find parent response received, but inactive
 					}
-					return;
+					return; // no further processing required
 #endif
 				}
 #endif // !defined(MY_GATEWAY_FEATURE)
@@ -793,16 +800,13 @@ void transportProcessMessage(void)
 					}
 					return; // no further processing required
 				}
-				if (_processInternalMessages()) {
-					return; // no further processing required
-				}
 				if (type == I_SIGNAL_REPORT_REVERSE) {
 					return; // no further processing required
 				}
 				if (type == I_SIGNAL_REPORT_REQUEST) {
-					const char command = _msg.data[0];
 					int16_t value = INVALID_RSSI;
 #if defined(MY_SIGNAL_REPORT_ENABLED)
+					const char command = _msg.data[0];
 					if (_msg.data[1] != '!') {
 						value = transportSignalReport(command);
 					} else {
@@ -813,12 +817,13 @@ void transportProcessMessage(void)
 							value = transportSignalReport(command + 32);	// reverse
 						};
 					}
-#else
-					(void)command;
 #endif
 					(void)transportRouteMessage(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
 					                                  I_SIGNAL_REPORT_RESPONSE).set(value));
-					return;
+					return; // no further processing required
+				}
+				if (_processInternalCoreMessage()) {
+					return; // no further processing required
 				}
 			} else if (command == C_STREAM) {
 #if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -909,6 +914,7 @@ void transportProcessMessage(void)
 			(void)gatewayTransportSend(_msg);
 #endif
 			if (receive) {
+				TRANSPORT_DEBUG(PSTR("TSF:MSG:RCV CB\n")); // hand over message to receive callback function
 				receive(_msg);
 			}
 		}
@@ -917,18 +923,18 @@ void transportProcessMessage(void)
 		// msg not to us and not BC, relay msg
 #if defined(MY_REPEATER_FEATURE)
 		if (isTransportReady()) {
-			TRANSPORT_DEBUG(PSTR("TSF:MSG:REL MSG\n"));	// relay msg
 			if (command == C_INTERNAL) {
 				if (type == I_PING || type == I_PONG) {
 					uint8_t hopsCnt = _msg.getByte();
+					TRANSPORT_DEBUG(PSTR("TSF:MSG:REL PxNG,HP=%" PRIu8 "\n"), hopsCnt);
 					if (hopsCnt != MAX_HOPS) {
-						TRANSPORT_DEBUG(PSTR("TSF:MSG:REL PxNG,HP=%" PRIu8 "\n"), hopsCnt);
 						hopsCnt++;
 						_msg.set(hopsCnt);
 					}
 				}
 			}
 			// Relay this message to another node
+			TRANSPORT_DEBUG(PSTR("TSF:MSG:REL MSG\n"));	// relay msg
 			(void)transportRouteMessage(_msg);
 		}
 #else

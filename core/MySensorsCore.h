@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -32,15 +32,15 @@
 *  - MCO:<b>BGN</b>	from @ref _begin()
 *  - MCO:<b>REG</b>	from @ref _registerNode()
 *  - MCO:<b>SND</b>	from @ref send()
-*  - MCO:<b>PIM</b>	from @ref _processInternalMessages()
+*  - MCO:<b>PIM</b>	from @ref _processInternalCoreMessage()
 *  - MCO:<b>NLK</b>	from @ref _nodeLock()
 *
 * MySensorsCore debug log messages:
 *
 * |E| SYS | SUB | Message																			| Comment
-* |-|-----|-----|---------------------------------------------|----------------------------------------------------------------------------
+* |-|-----|-----|---------------------------------------------|--------------------------------------------------------------------------------------------------
 * |!| MCO | BGN | HW ERR																			| Error HW initialization (e.g. ext. EEPROM)
-* | | MCO | BGN | INIT %%s,CP=%%s,VER=%%s											| Core initialization, capabilities (CP), library version (VER)
+* | | MCO | BGN | INIT %%s,CP=%%s,REL=%%d,VER=%%s (%%d)				| Core initialization, capabilities (CP), release number (REL), library version (VER)
 * | | MCO | BGN | BFR																					| Callback before()
 * | | MCO | BGN | STP																					| Callback setup()
 * | | MCO | BGN | INIT OK,TSP=%%d															| Core initialised, transport status (TSP): 0=not initialised, 1=initialised, NA=not available
@@ -137,10 +137,14 @@ void presentNode(void);
 */
 bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description="",
              const bool ack = false);
-
+#if !defined(__linux__)
+bool present(const uint8_t childSensorId, const uint8_t sensorType,
+             const __FlashStringHelper *description,
+             const bool ack = false);
+#endif
 /**
  * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
- * @param name String containing a short Sketch name or NULL  if not applicable
+ * @param name String containing a short Sketch name or NULL if not applicable
  * @param version String containing a short Sketch version or NULL if not applicable
  * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
  * @return true Returns true if message reached the first stop on its way to destination.
@@ -153,7 +157,6 @@ bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *
 
 /**
 * Sends a message to gateway or one of the other nodes in the radio network
-*
 * @param msg Message to send
 * @param ack Set this to true if you want destination node to send ack back to this node. Default is not to request any ack.
 * @return true Returns true if message reached the first stop on its way to destination.
@@ -385,10 +388,10 @@ void _begin(void);
 */
 void _process(void);
 /**
-* @brief Processes internal messages
-* @return True if received message requires further processing
+* @brief Processes internal core message
+* @return True if no further processing required
 */
-bool _processInternalMessages(void);
+bool _processInternalCoreMessage(void);
 /**
 * @brief Puts node to a infinite loop if unrecoverable situation detected
 */
@@ -460,7 +463,6 @@ static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type)
 	mSetAck(msg, false);
 	return msg;
 }
-
 
 #endif
 

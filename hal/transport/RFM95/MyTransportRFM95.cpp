@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "drivers/RFM95/RFM95.h"
+#include "hal/transport/RFM95/driver/RFM95.h"
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
 #include "drivers/AES/AES.h"
 #endif
@@ -36,15 +36,15 @@ bool transportInit(void)
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
 	uint8_t RFM95_psk[16];
 #ifdef MY_SIGNING_SIMPLE_PASSWD
-	memset(RFM95_psk, 0, 16);
-	memcpy(RFM95_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
+	(void)memset((void *)RFM95_psk, 0, 16);
+	(void)memcpy((void *)RFM95_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
 #else
-	hwReadConfigBlock((void*)RFM95_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
+	hwReadConfigBlock((void *)RFM95_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
 #endif
 	//set up AES-key
 	RFM95_aes.set_key(RFM95_psk, 16);
 	// Make sure it is purged from memory when set
-	memset(RFM95_psk, 0, 16);
+	(void)memset((void *)RFM95_psk, 0, 16);
 #endif
 
 	const bool result = RFM95_initialise(MY_RFM95_FREQUENCY);
@@ -72,12 +72,12 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 {
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
 	// copy input data because it is read-only
-	(void)memcpy(RFM95_dataenc,data,len);
+	(void)memcpy((void *)RFM95_dataenc, (const void *)data, len);
 	// has to be adjusted, WIP!
 	RFM95_aes.set_IV(0);
 	const uint8_t finalLength = len > 16 ? 32 : 16;
 	//encrypt data
-	RFM95_aes.cbc_encrypt(RFM95_dataenc, RFM95_dataenc, finalLength /16);
+	RFM95_aes.cbc_encrypt(RFM95_dataenc, RFM95_dataenc, finalLength / 16);
 	if (noACK) {
 		(void)RFM95_sendWithRetry(to, RFM95_dataenc, finalLength, 0, 0);
 		return true;
@@ -105,12 +105,12 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void *data)
 {
-	uint8_t len = RFM95_receive((uint8_t*)data, MAX_MESSAGE_LENGTH);
+	uint8_t len = RFM95_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
 #if defined(MY_RFM95_ENABLE_ENCRYPTION)
 	// has to be adjusted, WIP!
 	RFM95_aes.set_IV(0);
 	// decrypt data
-	if (RFM95_aes.cbc_decrypt((uint8_t*)(data), (uint8_t*)(data), len > 16 ? 2 : 1) != AES_SUCCESS) {
+	if (RFM95_aes.cbc_decrypt((uint8_t *)data, (uint8_t *)data, len > 16 ? 2 : 1) != AES_SUCCESS) {
 		len = 0;
 	}
 #endif

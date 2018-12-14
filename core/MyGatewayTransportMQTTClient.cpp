@@ -6,8 +6,8 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2017 Sensnology AB
-* Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+* Copyright (C) 2013-2018 Sensnology AB
+* Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
 * Support Forum: http://forum.mysensors.org
@@ -119,10 +119,11 @@ bool gatewayTransportSend(MyMessage &message)
 	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
 
-void incomingMQTT(char* topic, uint8_t* payload, unsigned int length)
+void incomingMQTT(char *topic, uint8_t *payload, unsigned int length)
 {
 	GATEWAY_DEBUG(PSTR("GWT:IMQ:TOPIC=%s, MSG RECEIVED\n"), topic);
 	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
+	setIndication(INDICATION_GW_RX);
 }
 
 bool reconnectMQTT(void)

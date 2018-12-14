@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -30,8 +30,7 @@ inline void inclusionInit()
 	_inclusionMode = false;
 #if defined(MY_INCLUSION_BUTTON_FEATURE)
 	// Setup digital in that triggers inclusion mode
-	hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
-	hwDigitalWrite(MY_INCLUSION_MODE_BUTTON_PIN, HIGH);
+	hwPinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT_PULLUP);
 #endif
 #if defined (MY_INCLUSION_LED_PIN)
 	// Setup LED pin that indicates inclusion mode

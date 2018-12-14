@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -18,7 +18,6 @@
  */
 
 #include "MySigning.h"
-#include "drivers/ATSHA204/sha256.h"
 
 #define SIGNING_PRESENTATION_VERSION_1 1
 #define SIGNING_PRESENTATION_REQUIRE_SIGNATURES   (1 << 0)
@@ -319,25 +318,6 @@ bool signerVerifyMsg(MyMessage &msg)
 	return verificationResult;
 }
 
-Sha256Class _soft_sha256;
-
-void signerSha256Init(void)
-{
-	_soft_sha256.init();
-}
-
-void signerSha256Update(const uint8_t* data, size_t sz)
-{
-	for (size_t i = 0; i < sz; i++) {
-		_soft_sha256.write(data[i]);
-	}
-}
-
-uint8_t* signerSha256Final(void)
-{
-	return _soft_sha256.result();
-}
-
 int signerMemcmp(const void* a, const void* b, size_t sz)
 {
 	int retVal;
@@ -586,24 +566,20 @@ static bool signerInternalValidatePersonalization(void)
 	// Personalization on linux is a bit more crude
 	return true;
 #else
-	uint8_t buffer[32];
-	uint8_t* hash;
+	uint8_t buffer[SIZE_SIGNING_SOFT_HMAC_KEY + SIZE_RF_ENCRYPTION_AES_KEY + SIZE_SIGNING_SOFT_SERIAL];
+	uint8_t hash[32];
 	uint8_t checksum;
+	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS,
+	                  SIZE_SIGNING_SOFT_HMAC_KEY);
+	hwReadConfigBlock((void*)&buffer[SIZE_SIGNING_SOFT_HMAC_KEY],
+	                  (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, SIZE_RF_ENCRYPTION_AES_KEY);
+	hwReadConfigBlock((void*)&buffer[SIZE_SIGNING_SOFT_HMAC_KEY + SIZE_RF_ENCRYPTION_AES_KEY],
+	                  (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, SIZE_SIGNING_SOFT_SERIAL);
+	hwReadConfigBlock((void*)&checksum, (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS,
+	                  SIZE_PERSONALIZATION_CHECKSUM);
 
-	signerSha256Init();
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS, 32);
-	signerSha256Update(buffer, 32);
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-	signerSha256Update(buffer, 16);
-	hwReadConfigBlock((void*)buffer, (void*)EEPROM_SIGNING_SOFT_SERIAL_ADDRESS, 9);
-	signerSha256Update(buffer, 9);
-	hash = signerSha256Final();
-	hwReadConfigBlock((void*)&checksum, (void*)EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS, 1);
-	if (checksum != hash[0]) {
-		return false;
-	} else {
-		return true;
-	}
+	SHA256(hash, buffer, sizeof(buffer));
+	return (checksum == hash[0]);
 #endif
 }
 #endif

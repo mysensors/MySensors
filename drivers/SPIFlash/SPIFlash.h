@@ -9,6 +9,7 @@
 // > Selective merge by Felix after testing in IDE 1.0.6, 1.6.4
 // > Updated May 19, 2016 D-H-R, added support for SST25/Microchip Flash which does not support Page programming with OPCode 0x02,
 // >                             use define MY_SPIFLASH_SST25TYPE for SST25 Type Flash Memory. Added / changed comments to better suit doxygen
+// > Updated Sep 07, 2018 tekka, sync with https://github.com/LowPowerLab/SPIFlash
 // **********************************************************************************
 // License
 // **********************************************************************************
@@ -175,6 +176,7 @@ public:
 	void chipErase(); //!< erase entire flash memory array
 	void blockErase4K(uint32_t address); //!< erase a 4Kbyte block
 	void blockErase32K(uint32_t address); //!< erase a 32Kbyte block
+	void blockErase64K(uint32_t addr); //!< erase a 64Kbyte block
 	uint16_t readDeviceId(); //!< Get the manufacturer and device ID bytes (as a short word)
 	uint8_t* readUniqueId(); //!< Get the 64 bit unique identifier, stores it in @ref UNIQUEID[8]
 

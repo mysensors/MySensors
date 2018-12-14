@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -45,13 +45,23 @@
 #include <Arduino.h>
 #endif
 
+#define CRYPTO_LITTLE_ENDIAN
+
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
+#endif
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
 
-#define MIN min
-#define MAX max
+#ifndef MY_ESP32_TEMPERATURE_OFFSET
+#define MY_ESP32_TEMPERATURE_OFFSET (0.0f)
+#endif
+
+#ifndef MY_ESP32_TEMPERATURE_GAIN
+#define MY_ESP32_TEMPERATURE_GAIN (1.0f)
+#endif
 
 #define MY_EEPROM_SIZE 1024
 

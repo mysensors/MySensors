@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -25,20 +25,34 @@
 
 #include <avr/dtostrf.h>
 
+#define CRYPTO_LITTLE_ENDIAN
+
+#ifndef MY_SERIALDEVICE
+#define MY_SERIALDEVICE SerialUSB
+#endif
+
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
+#ifndef MY_SAMD_TEMPERATURE_OFFSET
+#define MY_SAMD_TEMPERATURE_OFFSET (0.0f)
+#endif
+
+#ifndef MY_SAMD_TEMPERATURE_GAIN
+#define MY_SAMD_TEMPERATURE_GAIN (1.0f)
+#endif
+
 // defines for sensebender gw variant.h
 #define MY_EXT_EEPROM_I2C_ADDRESS	(0x50u)
 #define MY_EXT_EEPROM_SIZE			(kbits_512)
 #define MY_EXT_EEPROM_PAGE_SIZE		(32u)
-#define MY_EXT_EEPROM_TWI_CLOCK		(twiClock100kHz)	// can be set to 400kHz with precaution if other i2c devices on bus
 
 extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
               MY_EXT_EEPROM_I2C_ADDRESS);	//device size, number of devices, page size
 
+#define MY_EXT_EEPROM_TWI_CLOCK		(eep.twiClock100kHz)	// can be set to 400kHz with precaution if other i2c devices on bus
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
-#define MIN(a,b) min(a,b)
-#define MAX(a,b) max(a,b)
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 #define vsnprintf_P(s, n, f, ...) vsnprintf((s), (n), (f), __VA_ARGS__)
 
@@ -52,14 +66,10 @@ extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
 bool hwInit(void);
 void hwWatchdogReset(void);
 void hwReboot(void);
-void hwReadConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfigBlock(void* buf, void* adr, size_t length);
-void hwWriteConfig(int adr, uint8_t value);
-uint8_t hwReadConfig(int adr);
-
-#ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE SerialUSB
-#endif
+void hwReadConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfig(const int addr, uint8_t value);
+uint8_t hwReadConfig(const int addr);
 
 /**
  * Disable all interrupts.

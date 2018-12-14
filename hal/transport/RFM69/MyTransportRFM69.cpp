@@ -7,7 +7,7 @@
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
  * Copyright (C) 2013-2018 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -19,7 +19,7 @@
 
 #if defined(MY_RFM69_NEW_DRIVER)
 
-#include "drivers/RFM69/new/RFM69_new.h"
+#include "hal/transport/RFM69/driver/new/RFM69_new.h"
 
 bool transportInit(void)
 {
@@ -154,7 +154,7 @@ bool transportSetTxPowerPercent(const uint8_t powerPercent)
 
 #else
 
-#include "drivers/RFM69/old/RFM69_old.h"
+#include "hal/transport/RFM69/driver/old/RFM69_old.h"
 
 RFM69 _radio(MY_RFM69_CS_PIN, MY_RFM69_IRQ_PIN, MY_RFM69HW, MY_RFM69_IRQ_NUM);
 uint8_t _address;

@@ -1,4 +1,4 @@
-/**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -25,23 +25,26 @@ bool hwInit(void)
 #if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE, SERIAL_8N1, MY_ESP8266_SERIAL_MODE, 1);
 	MY_SERIALDEVICE.setDebugOutput(true);
+#if defined(MY_GATEWAY_SERIAL)
+	while (!MY_SERIALDEVICE) {}
+#endif
 #endif
 	EEPROM.begin(EEPROM_size);
 	return true;
 }
 
-void hwReadConfigBlock(void* buf, void* addr, size_t length)
+void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* dst = static_cast<uint8_t*>(buf);
+	uint8_t *dst = static_cast<uint8_t *>(buf);
 	int pos = reinterpret_cast<int>(addr);
 	while (length-- > 0) {
 		*dst++ = EEPROM.read(pos++);
 	}
 }
 
-void hwWriteConfigBlock(void* buf, void* addr, size_t length)
+void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
-	uint8_t* src = static_cast<uint8_t*>(buf);
+	uint8_t *src = static_cast<uint8_t *>(buf);
 	int pos = reinterpret_cast<int>(addr);
 	while (length-- > 0) {
 		EEPROM.write(pos++, *src++);
@@ -53,23 +56,23 @@ void hwWriteConfigBlock(void* buf, void* addr, size_t length)
 uint8_t hwReadConfig(const int addr)
 {
 	uint8_t value;
-	hwReadConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
+	hwReadConfigBlock(&value, reinterpret_cast<void *>(addr), 1);
 	return value;
 }
 
 void hwWriteConfig(const int addr, uint8_t value)
 {
-	hwWriteConfigBlock(&value, reinterpret_cast<void*>(addr), 1);
+	hwWriteConfigBlock(&value, reinterpret_cast<void *>(addr), 1);
 }
 
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 	// padding
-	(void)memset((uint8_t*)uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
+	(void)memset((uint8_t *)uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
 	uint32_t val = ESP.getChipId();
-	(void)memcpy((uint8_t*)uniqueID, &val, 4);
+	(void)memcpy((uint8_t *)uniqueID, &val, 4);
 	val = ESP.getFlashChipId();
-	(void)memcpy((uint8_t*)uniqueID + 4, &val, 4);
+	(void)memcpy((uint8_t *)uniqueID + 4, &val, 4);
 	return true;
 }
 
@@ -125,7 +128,7 @@ ADC_MODE(ADC_VCC);
 ADC_MODE(ADC_TOUT);
 #endif
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 #if defined(MY_SPECIAL_DEBUG)
 	// in mV, requires ADC_VCC set
@@ -136,22 +139,24 @@ uint16_t hwCPUVoltage()
 #endif
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	// in 1/10Mhz
 	return ESP.getCpuFreqMHz()*10;
 }
 
-uint16_t hwFreeMem()
+int8_t hwCPUTemperature(void)
+{
+	return -127; // not available
+}
+
+uint16_t hwFreeMem(void)
 {
 	return ESP.getFreeHeap();
 }
 
 void hwDebugPrint(const char *fmt, ... )
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
@@ -165,14 +170,15 @@ void hwDebugPrint(const char *fmt, ... )
 	MY_DEBUGDEVICE.print(" ");
 #endif
 	va_list args;
-	va_start (args, fmt );
+	va_start(args, fmt);
+	// cppcheck-suppress wrongPrintfScanfArgNum
 	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
 #ifdef MY_GATEWAY_SERIAL
 	// Truncate message if this is gateway node
 	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
 	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
 #endif
-	va_end (args);
+	va_end(args);
 	MY_DEBUGDEVICE.print(fmtBuffer);
 	MY_DEBUGDEVICE.flush();
 #else

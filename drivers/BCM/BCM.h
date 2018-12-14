@@ -6,8 +6,8 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2017 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+ * Copyright (C) 2013-2018 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
  * Support Forum: http://forum.mysensors.org
@@ -38,6 +38,12 @@ public:
 	 */
 	~BCMClass();
 	/**
+	 * @brief Initializes BCM.
+	 *
+	 * @return 1 if successful, else exits the program.
+	 */
+	uint8_t init();
+	/**
 	 * @brief Configures the specified pin to behave either as an input or an output.
 	 *
 	 * @param gpio The GPIO pin number.
@@ -65,6 +71,12 @@ public:
 	 * @return The GPIO pin number.
 	 */
 	inline uint8_t digitalPinToInterrupt(uint8_t gpio);
+	/**
+	 * @brief Checks if SPI was initialized.
+	 *
+	 * @return 1 if initialized, else 0.
+	 */
+	uint8_t isInitialized();
 
 private:
 	static uint8_t initialized; //!< @brief BCM initialized flag.

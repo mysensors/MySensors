@@ -6,8 +6,8 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2017 Sensnology AB
-* Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+* Copyright (C) 2013-2018 Sensnology AB
+* Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
 * Support Forum: http://forum.mysensors.org
@@ -42,9 +42,11 @@ ISR (WDT_vect)
 
 bool hwInit(void)
 {
+#if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
+#endif
 #endif
 	return true;
 }
@@ -91,15 +93,15 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 #if defined(__MKL26Z64__)
-	(void)memcpy((uint8_t*)uniqueID, &SIM_UIDMH, 12);
-	(void)memset((uint8_t*)uniqueID + 12, MY_HWID_PADDING_BYTE, 4);
+	(void)memcpy((uint8_t *)uniqueID, &SIM_UIDMH, 12);
+	(void)memset((uint8_t *)uniqueID + 12, MY_HWID_PADDING_BYTE, 4);
 #else
-	(void)memcpy((uint8_t*)uniqueID, &SIM_UIDH, 16);
+	(void)memcpy((uint8_t *)uniqueID, &SIM_UIDH, 16);
 #endif
 	return true;
 }
 
-uint16_t hwCPUVoltage()
+uint16_t hwCPUVoltage(void)
 {
 	analogReference(DEFAULT);
 	analogReadResolution(12);
@@ -120,13 +122,18 @@ uint16_t hwCPUVoltage()
 #endif
 }
 
-uint16_t hwCPUFrequency()
+uint16_t hwCPUFrequency(void)
 {
 	// TODO: currently reporting compile time frequency (in 1/10MHz)
 	return F_CPU / 100000UL;
 }
 
-uint16_t hwFreeMem()
+int8_t hwCPUTemperature(void)
+{
+	return -127; // not implemented yet
+}
+
+uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;
@@ -144,7 +151,7 @@ ssize_t hwGetentropy(void *__buffer, const size_t __length)
 		while (!(RNG_SR & RNG_SR_OREG_LVL(0xF)));
 		const uint32_t rndVar = RNG_OR;
 		const uint8_t bsize = (__length - pos) > sizeof(rndVar) ? sizeof(rndVar) : (__length - pos);
-		(void)memcpy((uint8_t*)__buffer + pos, &rndVar, bsize);
+		(void)memcpy((uint8_t *)__buffer + pos, &rndVar, bsize);
 		pos += bsize;
 	}
 	SIM_SCGC6 &= ~SIM_SCGC6_RNGA; // disable RNG
@@ -167,9 +174,6 @@ void hwRandomNumberInit(void)
 
 void hwDebugPrint(const char *fmt, ...)
 {
-#ifndef MY_DEBUGDEVICE
-#define MY_DEBUGDEVICE MY_SERIALDEVICE
-#endif
 #ifndef MY_DISABLED_SERIAL
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 #ifdef MY_GATEWAY_SERIAL
