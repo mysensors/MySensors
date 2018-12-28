@@ -1,4 +1,4 @@
-#include "drivers/NRF5/Radio.h"
+#include "Radio.h"
 
 int16_t NRF5_getTxPowerPercent(void)
 {

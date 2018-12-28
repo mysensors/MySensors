@@ -19,8 +19,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "drivers/NRF5/Radio.h"
-#include "drivers/NRF5/Radio_ESB.h"
+#include "hal/transport/NRF5_ESB/driver/Radio.h"
+#include "hal/transport/NRF5_ESB/driver/Radio_ESB.h"
 
 #include "drivers/CircularBuffer/CircularBuffer.h"
 

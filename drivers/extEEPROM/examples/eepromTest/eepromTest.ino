@@ -3,7 +3,7 @@
 //Wire a button from digital pin 6 to ground, this is used as a start button
 //so the sketch doesn't do unnecessary EEPROM writes every time it's reset.
 //Jack Christensen 09Jul2014
-//Paolo Paolucci 17Mar2016
+//Paolo Paolucci 17Mar2016 (fix 28Jun2017)
 
 #include <extEEPROM.h>    //https://github.com/PaoloP74/extEEPROM
 
@@ -17,7 +17,7 @@ void setup(void)
 {
 	pinMode(btnStart, INPUT_PULLUP);
 	Serial.begin(115200);
-	uint8_t eepStatus = eep.begin(twiClock400kHz);      //go fast!
+	uint8_t eepStatus = eep.begin(eep.twiClock400kHz);   //go fast!
 	if (eepStatus) {
 		Serial.print(F("extEEPROM.begin() failed, status = "));
 		Serial.println(eepStatus);

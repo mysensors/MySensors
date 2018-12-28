@@ -27,14 +27,31 @@
 
 #define CRYPTO_LITTLE_ENDIAN
 
+#ifndef MY_SERIALDEVICE
+#define MY_SERIALDEVICE SerialUSB
+#endif
+
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
+#ifndef MY_SAMD_TEMPERATURE_OFFSET
+#define MY_SAMD_TEMPERATURE_OFFSET (0.0f)
+#endif
+
+#ifndef MY_SAMD_TEMPERATURE_GAIN
+#define MY_SAMD_TEMPERATURE_GAIN (1.0f)
+#endif
+
 // defines for sensebender gw variant.h
 #define MY_EXT_EEPROM_I2C_ADDRESS	(0x50u)
 #define MY_EXT_EEPROM_SIZE			(kbits_512)
 #define MY_EXT_EEPROM_PAGE_SIZE		(32u)
-#define MY_EXT_EEPROM_TWI_CLOCK		(twiClock100kHz)	// can be set to 400kHz with precaution if other i2c devices on bus
 
 extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
               MY_EXT_EEPROM_I2C_ADDRESS);	//device size, number of devices, page size
+
+#define MY_EXT_EEPROM_TWI_CLOCK		(eep.twiClock100kHz)	// can be set to 400kHz with precaution if other i2c devices on bus
 
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 #define vsnprintf_P(s, n, f, ...) vsnprintf((s), (n), (f), __VA_ARGS__)
@@ -49,14 +66,10 @@ extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
 bool hwInit(void);
 void hwWatchdogReset(void);
 void hwReboot(void);
-void hwReadConfigBlock(void *buf, void * addr, size_t length);
-void hwWriteConfigBlock(void *buf, void * addr, size_t length);
+void hwReadConfigBlock(void *buf, void *addr, size_t length);
+void hwWriteConfigBlock(void *buf, void *addr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
-
-#ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE SerialUSB
-#endif
 
 /**
  * Disable all interrupts.

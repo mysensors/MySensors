@@ -1,4 +1,4 @@
-#AltSoftSerial Library#
+# AltSoftSerial Library
 
 Improved software emulated serial, using hardware timers for precise signal
 timing and availability of CPU time for other libraries to respond to interrupts

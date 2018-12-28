@@ -74,7 +74,7 @@ LOCAL void RFM69_concludeSPITransaction(void)
 #endif
 }
 
-LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t* buf, uint8_t len,
+LOCAL uint8_t RFM69_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t len,
         const bool aReadMode)
 {
 	uint8_t status;

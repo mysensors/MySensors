@@ -1,4 +1,3 @@
-﻿
 /*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.

@@ -18,13 +18,13 @@
  */
 
 /**
-* @file MyHw.h
+* @file MyHwHAL.h
 *
 * MySensors hardware abstraction layer
 */
 
-#ifndef MyHw_h
-#define MyHw_h
+#ifndef MyHwHAL_h
+#define MyHwHAL_h
 
 /**
  * @def MY_HWID_PADDING_BYTE
@@ -93,7 +93,7 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 * @param uniqueID unique ID
 * @return True if unique ID successfully retrieved
 */
-bool hwUniqueID(unique_id_t* uniqueID);
+bool hwUniqueID(unique_id_t *uniqueID);
 
 /**
  * CPU voltage
@@ -108,7 +108,14 @@ uint16_t hwCPUVoltage(void);
 uint16_t hwCPUFrequency(void);
 
 /**
- * Free memory
+ * CPU temperature (if available)
+ * Adjust calibration parameters via MY_<ARCH>_TEMPERATURE_OFFSET and MY_<ARCH>_TEMPERATURE_GAIN
+ * @return CPU temperature in °C, -127 if not available
+ */
+int8_t hwCPUTemperature(void);
+
+/**
+ * Report free memory (if function available)
  * @return free memory in bytes
  */
 uint16_t hwFreeMem(void);

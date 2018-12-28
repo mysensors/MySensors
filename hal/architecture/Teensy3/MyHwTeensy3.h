@@ -39,6 +39,10 @@
 #define MY_SERIALDEVICE Serial
 #endif
 
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define RNG_CR_GO_MASK			0x1u
 #define RNG_CR_HA_MASK			0x2u

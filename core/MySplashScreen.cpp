@@ -21,7 +21,7 @@
 
 void displaySplashScreen(void)
 {
-#if !defined(MY_DISABLED_SERIAL)
+#if !defined(MY_DISABLED_SERIAL) && defined(MY_DEBUGDEVICE)
 	static const uint8_t splashScreen[] PROGMEM = {
 		0x20, 0x7C, 0x5F, 0x5c, 0x2F, 0x60, 0x2C, 0x0A, // substitution matrix
 		0x07, 0x02, 0x20, 0x02, 0x20, 0xB2, 0x87, 0x10, 0x03, 0x40, 0x01, 0x20, 0x00, 0x24, 0x02, 0x22,
@@ -44,9 +44,9 @@ void displaySplashScreen(void)
 		}
 		const uint8_t rep = val > 7 ? val - 5 : 1;
 		for (uint8_t c = 0; c<rep; c++) {
-			MY_SERIALDEVICE.print(display);
+			MY_DEBUGDEVICE.print(display);
 		}
 	}
-	MY_SERIALDEVICE.println(F(MYSENSORS_LIBRARY_VERSION "\n"));
+	MY_DEBUGDEVICE.println(F(MYSENSORS_LIBRARY_VERSION "\n"));
 #endif
 }

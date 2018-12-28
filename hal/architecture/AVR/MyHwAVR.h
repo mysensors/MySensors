@@ -39,6 +39,19 @@
 #define MY_SERIALDEVICE Serial
 #endif
 
+#ifndef MY_DEBUGDEVICE
+#define MY_DEBUGDEVICE MY_SERIALDEVICE
+#endif
+
+// AVR temperature calibration reference: http://ww1.microchip.com/downloads/en/AppNotes/Atmel-8108-Calibration-of-the-AVRs-Internal-Temperature-Reference_ApplicationNote_AVR122.pdf
+#ifndef MY_AVR_TEMPERATURE_OFFSET
+#define MY_AVR_TEMPERATURE_OFFSET (324.31f)
+#endif
+
+#ifndef MY_AVR_TEMPERATURE_GAIN
+#define MY_AVR_TEMPERATURE_GAIN (1.22f)
+#endif
+
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
