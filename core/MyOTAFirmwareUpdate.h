@@ -73,9 +73,12 @@
 #define FIRMWARE_PROTOCOL_31
 #endif
 #endif
-#define FIRMWARE_MAX_REQUESTS	(10u)				//!< Number of times a firmware block should be requested before giving up
-#define MY_OTA_RETRY			(10u)				//!< Number of times to request a fw block before giving up
-#define MY_OTA_RETRY_DELAY		(1000u)				//!< Number of milliseconds before re-requesting a FW block
+#ifndef MY_OTA_RETRY
+#define MY_OTA_RETRY			(5u)				//!< Number of times to request a fw block before giving up
+#endif
+#ifndef MY_OTA_RETRY_DELAY
+#define MY_OTA_RETRY_DELAY		(500u)				//!< Number of milliseconds before re-requesting a FW block
+#endif
 #ifndef MCUBOOT_PRESENT
 #define FIRMWARE_START_OFFSET	(10u)				//!< Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
 #else
