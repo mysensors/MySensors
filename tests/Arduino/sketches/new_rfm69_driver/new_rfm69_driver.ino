@@ -18,7 +18,9 @@
  *
  *******************************
  */
+#define MY_DEBUG
 #define MY_RADIO_RFM69
 #define MY_RFM69_NEW_DRIVER
+#define MY_RFM69_ENABLE_ENCRYPTION
 #define MY_DEBUG_VERBOSE_RFM69
 #include <MySensors.h>
