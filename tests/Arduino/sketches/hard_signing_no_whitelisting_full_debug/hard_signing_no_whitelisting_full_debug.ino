@@ -18,8 +18,6 @@
  *
  *******************************
  */
-#include <stdint.h>
-#include <pins_arduino.h>
 #define MY_DEBUG
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_RADIO_RF24

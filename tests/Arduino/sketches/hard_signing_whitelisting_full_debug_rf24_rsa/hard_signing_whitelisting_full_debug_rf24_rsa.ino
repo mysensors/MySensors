@@ -18,9 +18,19 @@
  *
  *******************************
  */
-#include <stdint.h>
-#include <pins_arduino.h>
 #define MY_DEBUG
+#define MY_DEBUG_VERBOSE_SIGNING
 #define MY_RADIO_RF24
-#define MY_OTA_FIRMWARE_FEATURE
+#define MY_RF24_ENABLE_ENCRYPTION
+//#define MY_SIGNING_SOFT
+#define MY_SIGNING_ATSHA204
+#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_SIGNING_REQUEST_SIGNATURES
+#ifndef MY_SIGNING_SOFT_RANDOMSEED_PIN
+#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+#endif
+#ifndef MY_SIGNING_ATSHA204_PIN
+#define MY_SIGNING_ATSHA204_PIN 17
+#endif
+
 #include <MySensors.h>
