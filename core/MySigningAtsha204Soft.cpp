@@ -170,7 +170,7 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 	}
 
 	// Transfer the first part of the nonce to the message
-	msg.set(_signing_verifying_nonce, MIN(MAX_PAYLOAD, 32));
+	msg.set(_signing_verifying_nonce, MIN((uint8_t)MAX_PAYLOAD, (uint8_t)32));
 	_signing_verification_ongoing = true;
 	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
 	// Be a little fancy to handle turnover (prolong the time allowed to timeout after turnover)
@@ -187,7 +187,8 @@ void signerAtsha204SoftPutNonce(MyMessage &msg)
 	if (!_signing_init_ok) {
 		return;
 	}
-	(void)memcpy((void *)_signing_nonce, (const void *)msg.getCustom(), MIN(MAX_PAYLOAD, 32));
+	(void)memcpy((void *)_signing_nonce, (const void *)msg.getCustom(), MIN((uint8_t)MAX_PAYLOAD,
+	             (uint8_t)32));
 	if (MAX_PAYLOAD < 32) {
 		// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
 		(void)memset((void *)&_signing_nonce[MAX_PAYLOAD], 0xAA, 32-MAX_PAYLOAD);
@@ -226,7 +227,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 
 	// Transfer as much signature data as the remaining space in the message permits
 	(void)memcpy((void *)&msg.data[mGetLength(msg)], (const void *)_signing_hmac,
-	             MIN(MAX_PAYLOAD-mGetLength(msg), 32));
+	             MIN((uint8_t)(MAX_PAYLOAD-mGetLength(msg)), (uint8_t)32));
 
 	return true;
 }
@@ -280,7 +281,7 @@ bool signerAtsha204SoftVerifyMsg(MyMessage &msg)
 
 		// Compare the calculated signature with the provided signature
 		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
-		                 MIN(MAX_PAYLOAD-mGetLength(msg), 32))) {
+		                 MIN((uint8_t)(MAX_PAYLOAD-mGetLength(msg)), (uint8_t)32))) {
 			return false;
 		} else {
 			return true;
@@ -304,7 +305,7 @@ static void signerCalculateSignature(MyMessage &msg, const bool signing)
 	uint8_t _signing_temp_message[32];
 
 	while (bytes_left) {
-		uint8_t bytes_to_include = MIN(bytes_left, 32);
+		uint8_t bytes_to_include = MIN(bytes_left, (uint8_t)32);
 
 		(void)memset((void *)_signing_temp_message, 0x00, sizeof(_signing_temp_message));
 		(void)memcpy((void *)_signing_temp_message, (const void *)&msg.data[current_pos], bytes_to_include);
