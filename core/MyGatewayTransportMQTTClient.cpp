@@ -273,6 +273,11 @@ bool gatewayTransportAvailable(void)
 	if (_MQTT_connecting) {
 		return false;
 	}
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+	if (WiFi.status() != WL_CONNECTED) {
+		return false;
+	}
+#endif
 	//keep lease on dhcp address
 	//Ethernet.maintain();
 	if (!_MQTT_client.connected()) {
