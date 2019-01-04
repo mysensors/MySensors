@@ -39,6 +39,10 @@ MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among othe
 // core configuration
 static coreConfig_t _coreConfig;
 
+#if defined(MY_DEBUG_VERBOSE_CORE)
+static uint8_t waitLock = 0;
+#endif
+
 #if defined(DEBUG_OUTPUT_ENABLED)
 char _convBuf[MAX_PAYLOAD*2+1];
 #endif
@@ -529,10 +533,19 @@ uint8_t loadState(const uint8_t pos)
 
 void wait(const uint32_t waitingMS)
 {
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	if (waitLock) {
+		CORE_DEBUG(PSTR("!MCO:WAI:RC=%" PRIu8 "\n"), waitLock);	// recursive call detected
+	}
+	waitLock++;
+#endif
 	const uint32_t enteringMS = hwMillis();
 	while (hwMillis() - enteringMS < waitingMS) {
 		_process();
 	}
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	waitLock--;
+#endif
 }
 
 bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
