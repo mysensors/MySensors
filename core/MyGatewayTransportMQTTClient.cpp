@@ -47,8 +47,18 @@
 #undef MY_ESP8266_HOSTNAME // cleanup
 #endif
 
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
+#ifndef MY_MQTT_USER
+#define MY_MQTT_USER NULL
+#endif
+
+#ifndef MY_MQTT_PASSWORD
+#define MY_MQTT_PASSWORD NULL
+#endif
+
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if !defined(MY_WIFI_SSID)
+#error ESP8266/ESP32 MQTT gateway: MY_WIFI_SSID not defined!
+#endif
 #endif
 
 #if defined MY_CONTROLLER_IP_ADDRESS
@@ -72,21 +82,20 @@ IPAddress _subnetIp(255, 255, 255, 0);
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 
-#if defined(MY_GATEWAY_ESP8266)  || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 #define EthernetClient WiFiClient
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
 #else
 uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
-#endif /* End of MY_GATEWAY_ESP8266 */
+#endif /* End of MY_GATEWAY_ESPxy */
 
 #if defined(MY_GATEWAY_TINYGSM)
 #if defined(MY_GSM_RX) && defined(MY_GSM_TX)
 SoftwareSerial SerialAT(MY_GSM_RX, MY_GSM_TX);
 #endif
 static TinyGsm modem(SerialAT);
-static TinyGsmClient _MQTT_gsmClient(modem);
-static PubSubClient _MQTT_client(_MQTT_gsmClient);
+static TinyGsmClient _MQTT_ethClient(modem);
 #if defined(MY_GSM_BAUDRATE)
 uint32_t rate = MY_GSM_BAUDRATE;
 #else /* Else part of MY_GSM_BAUDRATE */
@@ -94,10 +103,9 @@ uint32_t rate = 0;
 #endif /* End of MY_GSM_BAUDRATE */
 #else /* Else part of MY_GATEWAY_TINYGSM */
 static EthernetClient _MQTT_ethClient;
-static PubSubClient _MQTT_client(_MQTT_ethClient);
 #endif /* End of MY_GATEWAY_TINYGSM */
 
-
+static PubSubClient _MQTT_client(_MQTT_ethClient);
 static bool _MQTT_connecting = true;
 static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
@@ -111,10 +119,10 @@ bool gatewayTransportSend(MyMessage &message)
 	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	GATEWAY_DEBUG(PSTR("GWT:TPS:TOPIC=%s,MSG SENT\n"), topic);
 #if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
-	bool retain = mGetCommand(message) == C_SET ||
-	              (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
+	const bool retain = mGetCommand(message) == C_SET ||
+	                    (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
 #else
-	bool retain = false;
+	const bool retain = false;
 #endif /* End of MY_MQTT_CLIENT_PUBLISH_RETAIN */
 	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
@@ -128,39 +136,39 @@ void incomingMQTT(char *topic, uint8_t *payload, unsigned int length)
 
 bool reconnectMQTT(void)
 {
-	GATEWAY_DEBUG(PSTR("GWT:RMQ:MQTT RECONNECT\n"));
+	GATEWAY_DEBUG(PSTR("GWT:RMQ:CONNECTING...\n"));
 	// Attempt to connect
-	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID
-#if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
-	                         , MY_MQTT_USER, MY_MQTT_PASSWORD
-#endif
-	                        )) {
-		GATEWAY_DEBUG(PSTR("GWT:RMQ:MQTT CONNECTED\n"));
-
+	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID, MY_MQTT_USER, MY_MQTT_PASSWORD)) {
+		GATEWAY_DEBUG(PSTR("GWT:RMQ:OK\n"));
 		// Send presentation of locally attached sensors (and node if applicable)
 		presentNode();
+		// Once connected, publish subscribe
+		if (__builtin_constant_p(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)) {
+			// to save some memory
+			_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
+		} else {
+			char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+")];
+			(void)strncpy(inTopic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX, strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1);
+			(void)strcat(inTopic, "/+/+/+/+/+");
+			_MQTT_client.subscribe(inTopic);
+		}
 
-		// Once connected, publish an announcement...
-		//_MQTT_client.publish("outTopic","hello world");
-		// ... and resubscribe
-		char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+")];
-		strncpy( inTopic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX, strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1 );
-		strcat( inTopic, "/+/+/+/+/+" );
-		_MQTT_client.subscribe( inTopic );
 		return true;
 	}
-	delay(500);
+	delay(1000);
+	GATEWAY_DEBUG(PSTR("!GWT:RMQ:FAIL\n"));
 	return false;
 }
 
 bool gatewayTransportConnect(void)
 {
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-	while (WiFi.status() != WL_CONNECTED) {
-		delay(500);
+	if (WiFi.status() != WL_CONNECTED) {
 		GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING...\n"));
+		delay(1000);
+		return false;
 	}
-	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"),WiFi.localIP().toString().c_str());
+	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"), WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
@@ -238,31 +246,17 @@ bool gatewayTransportInit(void)
 
 	_MQTT_client.setCallback(incomingMQTT);
 
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+	// Turn off access point
+	WiFi.mode(WIFI_STA);
 #if defined(MY_GATEWAY_ESP8266)
-	// Turn off access point
-	WiFi.mode(WIFI_STA);
-#if defined(MY_HOSTNAME)
 	WiFi.hostname(MY_HOSTNAME);
-#endif /* End of MY_ESP8266_HOSTNAME */
-#if defined(MY_IP_ADDRESS)
-	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
-#endif /* End of MY_IP_ADDRESS */
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
-#endif
-	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #elif defined(MY_GATEWAY_ESP32)
-	// Turn off access point
-	WiFi.mode(WIFI_STA);
-#if defined(MY_HOSTNAME)
 	WiFi.setHostname(MY_HOSTNAME);
-#endif /* End of MY_HOSTNAME */
+#endif
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
-#endif
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #endif
 
@@ -279,12 +273,12 @@ bool gatewayTransportAvailable(void)
 	}
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	if (WiFi.status() != WL_CONNECTED) {
-		gatewayTransportInit();
+#if defined(MY_GATEWAY_ESP32)
+		(void)gatewayTransportInit();
+#endif
 		return false;
 	}
 #endif
-	//keep lease on dhcp address
-	//Ethernet.maintain();
 	if (!_MQTT_client.connected()) {
 		//reinitialise client
 		if (gatewayTransportConnect()) {

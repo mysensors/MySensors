@@ -1407,7 +1407,9 @@
 * @def MY_WIFI_BSSID
 * @brief BSSID of your WiFi network
 */
-//#define MY_WIFI_BSSID "MyBSSID"
+#ifndef MY_WIFI_BSSID
+#define MY_WIFI_BSSID NULL
+#endif
 
 /**
 * @def MY_WIFI_PASSWORD
@@ -1419,7 +1421,9 @@
 * @def MY_HOSTNAME
 * @brief Hostname of your device
 */
-//#define MY_HOSTNAME "MyHostname"
+#ifndef MY_HOSTNAME
+#define MY_HOSTNAME "MYSENSORS_DEVICE"
+#endif
 
 /**
  * @def MY_PORT

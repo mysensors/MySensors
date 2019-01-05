@@ -47,8 +47,10 @@ extern MyMessage _msgTmp;
 #undef MY_ESP8266_HOSTNAME // cleanup
 #endif
 
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if !defined(MY_WIFI_SSID)
+#error ESP8266/ESP32 gateway: MY_WIFI_SSID not defined!
+#endif
 #endif
 
 #if defined(MY_CONTROLLER_IP_ADDRESS)
@@ -119,15 +121,11 @@ static EthernetClient client = EthernetClient();
 static inputBuffer inputString;
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
-#ifndef MY_IP_ADDRESS
-void gatewayTransportRenewIP();
-#endif
-
 // On W5100 boards with SPI_EN exposed we can use the real SPI bus together with radio
 // (if we enable it during usage)
-#if defined(MY_W5100_SPI_EN)
-void _w5100_spi_en(bool enable)
+void _w5100_spi_en(const bool enable)
 {
+#if defined(MY_W5100_SPI_EN)
 	if (enable) {
 		// Pull up pin
 		hwPinMode(MY_W5100_SPI_EN, INPUT);
@@ -137,9 +135,35 @@ void _w5100_spi_en(bool enable)
 		hwPinMode(MY_W5100_SPI_EN, OUTPUT);
 		hwDigitalWrite(MY_W5100_SPI_EN, LOW);
 	}
-}
 #else
-#define _w5100_spi_en(x)
+	(void)enable;
+#endif
+}
+
+#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
+void gatewayTransportRenewIP(void)
+{
+	/* renew/rebind IP address
+	 0 - nothing happened
+	 1 - renew failed
+	 2 - renew success
+	 3 - rebind failed
+	 4 - rebind success
+	 */
+	static uint32_t _nextIPRenewal = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
+	const uint32_t now = hwMillis();
+
+	// http://playground.arduino.cc/Code/TimingRollover
+	if ((int32_t)(now - _nextIPRenewal) < 0) {
+		return;
+	}
+	if (Ethernet.maintain() & ~(0x06)) {
+		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
+		return;
+	}
+	_w5100_spi_en(false);
+	next_time = now + MY_IP_RENEWAL_INTERVAL_MS;
+}
 #endif
 
 bool gatewayTransportInit(void)
@@ -147,26 +171,22 @@ bool gatewayTransportInit(void)
 	_w5100_spi_en(true);
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-#if defined(MY_WIFI_SSID)
 	// Turn off access point
 	WiFi.mode(WIFI_STA);
-#if defined(MY_HOSTNAME)
 #if defined(MY_GATEWAY_ESP8266)
 	WiFi.hostname(MY_HOSTNAME);
 #elif defined(MY_GATEWAY_ESP32)
 	WiFi.setHostname(MY_HOSTNAME);
-#endif
 #endif
 #ifdef MY_IP_ADDRESS
 	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 #endif
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 	while (WiFi.status() != WL_CONNECTED) {
-		wait(500);
+		delay(1000);
 		GATEWAY_DEBUG(PSTR("GWT:TIN:CONNECTING...\n"));
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
-#endif
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
 #else
@@ -204,7 +224,7 @@ bool gatewayTransportInit(void)
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
 		GATEWAY_DEBUG(PSTR("GWT:TIN:ETH OK\n"));
 		_w5100_spi_en(false);
-		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
+		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(F(MSG_GW_STARTUP_COMPLETE)));
 		_w5100_spi_en(true);
 		presentNode();
 	} else {
@@ -381,7 +401,7 @@ bool gatewayTransportAvailable(void)
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
 			GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
 			_w5100_spi_en(false);
-			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
+			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(F(MSG_GW_STARTUP_COMPLETE)));
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
@@ -474,29 +494,4 @@ MyMessage& gatewayTransportReceive(void)
 	return _ethernetMsg;
 }
 
-#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_ESP32) && !defined(MY_GATEWAY_LINUX)
-void gatewayTransportRenewIP(void)
-{
-	/* renew/rebind IP address
-	 0 - nothing happened
-	 1 - renew failed
-	 2 - renew success
-	 3 - rebind failed
-	 4 - rebind success
-	 */
-	static unsigned long next_time = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
-	unsigned long now = hwMillis();
 
-	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(now - next_time) < 0) {
-		return;
-	}
-	if (Ethernet.maintain() & ~(0x06)) {
-		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
-		/* Error occurred -> IP was not renewed */
-		return;
-	}
-	_w5100_spi_en(false);
-	next_time = now + MY_IP_RENEWAL_INTERVAL_MS;
-}
-#endif

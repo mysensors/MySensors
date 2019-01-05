@@ -51,9 +51,10 @@
 * | | GWT | TPS   | ETH OK                    | Connected to network
 * |!| GWT | TPS   | ETH FAIL                  | Connection failed
 * | | GWT | IMQ   | TOPIC=%%s,MSG RECEIVE     | MQTT message received on topic [%%s]
-* | | GWT | RMQ   | MQTT RECONNECT            | Reconnecting to MQTT broker
-* | | GWT | RMQ   | MQTT CONNECTED            | Connected to MQTT broker
-* | | GWT | TPC   | CONNECTING...             | Connecting to MQTT broker
+* | | GWT | RMQ   | CONNECTING...             | Connecting to MQTT broker
+* | | GWT | RMQ   | OK                        | Connected to MQTT broker
+* |!| GWT | RMQ   | FAIL                      | Connection to MQTT broker failed
+* | | GWT | TPC   | CONNECTING...             | Obtaining IP address
 * | | GWT | TPC   | IP=%%s                    | IP address [%%s] obtained
 * |!| GWT | TPC   | DHCP FAIL                 | DHCP request failed
 * | | GWT | RFC   | C=%%d,MSG=%%s             | Received message [%%s] from client [%%d]
