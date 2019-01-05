@@ -146,6 +146,7 @@ bool reconnectMQTT(void)
 		_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
 		return true;
 	}
+	delay(500);
 	return false;
 }
 
@@ -153,7 +154,7 @@ bool gatewayTransportConnect(void)
 {
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	while (WiFi.status() != WL_CONNECTED) {
-		wait(500);
+		delay(500);
 		GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING...\n"));
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"),WiFi.localIP().toString().c_str());
@@ -275,6 +276,7 @@ bool gatewayTransportAvailable(void)
 	}
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	if (WiFi.status() != WL_CONNECTED) {
+		gatewayTransportInit();
 		return false;
 	}
 #endif
