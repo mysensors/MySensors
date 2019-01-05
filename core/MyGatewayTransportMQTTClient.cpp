@@ -143,7 +143,10 @@ bool reconnectMQTT(void)
 		// Once connected, publish an announcement...
 		//_MQTT_client.publish("outTopic","hello world");
 		// ... and resubscribe
-		_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
+		char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+")];
+		strncpy( inTopic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX, strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1 );
+		strcat( inTopic, "/+/+/+/+/+" );
+		_MQTT_client.subscribe( inTopic );
 		return true;
 	}
 	delay(500);
