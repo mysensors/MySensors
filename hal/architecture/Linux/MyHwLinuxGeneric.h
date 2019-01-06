@@ -24,6 +24,7 @@
 #include <pthread.h>
 #include "SerialPort.h"
 #include "StdInOutStream.h"
+#include <SPI.h>
 
 #define CRYPTO_LITTLE_ENDIAN
 
@@ -58,6 +59,12 @@ inline void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
 inline uint32_t hwMillis(void);
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
 
 #ifdef MY_RF24_IRQ_PIN
 static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

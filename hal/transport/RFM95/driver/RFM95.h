@@ -81,6 +81,10 @@
 
 #include "RFM95registers.h"
 
+#if !defined(RFM95_SPI)
+#define RFM95_SPI hwSPI //!< default SPI
+#endif
+
 // default PIN assignments, can be overridden
 #if defined(ARDUINO_ARCH_AVR)
 #if defined(__AVR_ATmega32U4__)
@@ -110,25 +114,6 @@
 // SPI settings
 #define RFM95_SPI_DATA_ORDER		MSBFIRST		//!< SPI data order
 #define RFM95_SPI_DATA_MODE			SPI_MODE0		//!< SPI mode
-
-#if defined (ARDUINO) && !defined (__arm__) && !defined (RFM95_SPI)
-#include <SPI.h>
-#if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM95_SPI_DATA_MODE>RFM95_SPI;
-#else
-#define RFM95_SPI SPI					//!< SPI
-#endif
-#else
-#if defined(__arm__) || defined(__linux__)
-#include <SPI.h>
-#else
-extern HardwareSPI SPI;				//!< SPI
-#endif
-
-#if !defined(RFM95_SPI)
-#define RFM95_SPI SPI					//!< SPI
-#endif
-#endif
 
 // RFM95 radio configurations: reg_1d, reg_1e, reg_26 (see datasheet)
 #define RFM95_BW125CR45SF128 RFM95_BW_125KHZ | RFM95_CODING_RATE_4_5, RFM95_SPREADING_FACTOR_128CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x72,0x74,0x04

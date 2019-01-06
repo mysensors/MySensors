@@ -18,8 +18,6 @@
  */
 
 #include "MyHwAVR.h"
-#include "avr/boot.h"
-
 
 bool hwInit(void)
 {

@@ -28,6 +28,8 @@
 #ifndef MyHwTeensy3_h
 #define MyHwTeensy3_h
 
+#include <SPI.h>
+
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
@@ -71,6 +73,13 @@ void hwReboot(void);
 #define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t *)__pos, (uint8_t)__val)
 #define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void *)__buf, (const void *)__pos, (uint32_t)__length)
 #define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((const void *)__buf, (void *)__pos, (uint32_t)__length)
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
+
 
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #define MY_HW_HAS_GETENTROPY

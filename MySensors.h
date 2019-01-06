@@ -333,14 +333,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #endif
 
-// SOFTSPI
-#ifdef MY_SOFTSPI
-#if defined(ARDUINO_ARCH_ESP8266)
-#error Soft SPI is not available on ESP8266
-#endif
-#include "hal/architecture/AVR/drivers/DigitalIO/DigitalIO.h"
-#endif
-
 // SOFTSERIAL
 #if defined(MY_GSM_TX) != defined(MY_GSM_RX)
 #error Both, MY_GSM_TX and MY_GSM_RX need to be defined when using SoftSerial
