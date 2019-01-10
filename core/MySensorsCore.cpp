@@ -550,6 +550,12 @@ void wait(const uint32_t waitingMS)
 
 bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
 {
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	if (waitLock) {
+		CORE_DEBUG(PSTR("!MCO:WAI:RC=%" PRIu8 "\n"), waitLock);	// recursive call detected
+	}
+	waitLock++;
+#endif
 	const uint32_t enteringMS = hwMillis();
 	// invalidate msg type
 	_msg.type = !msgType;
@@ -558,6 +564,9 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
 		_process();
 		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgType);
 	}
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	waitLock--;
+#endif
 	return expectedResponse;
 }
 
