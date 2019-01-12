@@ -38,7 +38,7 @@ bool transportInit(void)
 	(void)memset(NRF5_ESB_psk, 0, 16);
 	(void)memcpy(NRF5_ESB_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
 #else
-	hwReadConfigBlock((void*)NRF5_ESB_psk, (void*)EEPROM_RF_ENCRYPTION_KEY_ADDRESS,
+	hwReadConfigBlock((void*)NRF5_ESB_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS,
 	                  16);
 #endif
 	// set up AES-key
