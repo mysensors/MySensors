@@ -69,6 +69,9 @@ void loop()
 
 	// Sleep until interrupt comes in on motion sensor. Send update every two minute.
 	sleep(digitalPinToInterrupt(DIGITAL_INPUT_SENSOR), CHANGE, SLEEP_TIME);
+	
+	// without this sleep; only the initial state is send to the gateway
+	delay(5);
 }
 
 
