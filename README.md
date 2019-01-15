@@ -17,4 +17,3 @@ Current build status of development branch: [![Build Status](https://ci.mysensor
 Current build status of master branch (nightly build of Arduino IDE): [![Build Status](https://ci.mysensors.org/job/MySensors-nightly-IDE/job/MySensors/job/master/badge/icon)](https://ci.mysensors.org/job/MySensors-nightly-IDE/job/MySensors/job/master/)
 
 Current build status of development branch (nightly build of Arduino IDE): [![Build Status](https://ci.mysensors.org/job/MySensors-nightly-IDE/job/MySensors/job/development/badge/icon)](https://ci.mysensors.org/job/MySensors-nightly-IDE/job/MySensors/job/development/)
-
