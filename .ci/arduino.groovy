@@ -20,7 +20,7 @@ def buildArduino(config, String buildFlags, String sketch, String key) {
 	def build_cmd         = builder+standard_args+builder_specifics+site_specifics+repo_specifics+build_path_cmd+buildFlags
 	sh """#!/bin/bash
 				printf "\\e[1m\\e[32mBuilding \\e[34m${sketch} \\e[0musing \\e[1m\\e[36m${build_cmd}\\e[0m\\n"
-				rm -r ${build_path}
+				if [ -d ${build_path} ]; then rm -r ${build_path}; fi
 				mkdir ${build_path}
 				${build_cmd} ${sketch} 2>> compiler_${key}.log"""
 }

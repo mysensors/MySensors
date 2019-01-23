@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -27,9 +27,9 @@
 #define MyHwHAL_h
 
 /**
- * @def MY_HWID_PADDING_BYTE
- * @brief HwID padding byte
- */
+* @def MY_HWID_PADDING_BYTE
+* @brief HwID padding byte
+*/
 #define MY_HWID_PADDING_BYTE	(0xAAu)
 
 // Implement these as functions or macros
@@ -74,7 +74,7 @@ int8_t hwSleep(uint32_t ms);
  * @param ms         Time to sleep, in [ms].
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms);
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms);
 
 /**
  * Sleep for a defined time, using minimum power, or until woken by one of the interrupts.
@@ -85,7 +85,8 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms);
  * @param ms          Time to sleep, in [ms].
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+               const  uint8_t mode2,
                uint32_t ms);
 
 /**
@@ -121,7 +122,7 @@ int8_t hwCPUTemperature(void);
 uint16_t hwFreeMem(void);
 
 #if defined(DEBUG_OUTPUT_ENABLED)
-void hwDebugPrint(const char *fmt, ... );
+void hwDebugPrint(const char *fmt, ...);
 #endif
 
 /**

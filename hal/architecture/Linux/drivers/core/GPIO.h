@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -17,66 +17,75 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef RPi_h
-#define	RPi_h
+#ifndef GPIO_h
+#define	GPIO_h
 
 #include <stdint.h>
-#include "BCM.h"
+
+#define INPUT 0
+#define OUTPUT 1
+
+#define LOW 0
+#define HIGH 1
 
 /**
- * @brief RPi class
+ * @brief GPIO class
  */
-class RPiClass
+class GPIOClass
 {
 
 public:
 	/**
+	 * @brief GPIOClass constructor.
+	 */
+	GPIOClass();
+	/**
+	 * @brief GPIOClass copy constructor.
+	 */
+	GPIOClass(const GPIOClass& other);
+	/**
+	 * @brief GPIOClass destructor.
+	 */
+	~GPIOClass();
+	/**
 	 * @brief Configures the specified pin to behave either as an input or an output.
 	 *
-	 * @param physPin The physical number of the pin.
+	 * @param pin The number of the pin.
 	 * @param mode INPUT or OUTPUT.
 	 */
-	void pinMode(uint8_t physPin, uint8_t mode);
+	void pinMode(uint8_t pin, uint8_t mode);
 	/**
 	 * @brief Write a high or a low value for the given pin.
 	 *
-	 * @param physPin The physical number of the pin.
+	 * @param pin number.
 	 * @param value HIGH or LOW.
 	 */
-	void digitalWrite(uint8_t physPin, uint8_t value);
+	void digitalWrite(uint8_t pin, uint8_t value);
 	/**
 	 * @brief Reads the value from a specified pin.
 	 *
-	 * @param physPin The physical number of the pin.
+	 * @param pin The number of the pin.
 	 * @return HIGH or LOW.
 	 */
-	uint8_t digitalRead(uint8_t physPin);
+	uint8_t digitalRead(uint8_t pin);
 	/**
-	 * @brief Translate the physical pin number to the GPIO number for use in interrupt.
+	 * @brief Arduino compatibility function, returns the same given pin.
 	 *
-	 * @param physPin The physical number of the pin.
-	 * @return The GPIO pin number.
+	 * @param pin The number of the pin.
+	 * @return The same parameter pin number.
 	 */
-	uint8_t digitalPinToInterrupt(uint8_t physPin);
+	uint8_t digitalPinToInterrupt(uint8_t pin);
 	/**
-	 * @brief Translate the physical pin number to the GPIO number.
+	 * @brief Overloaded assign operator.
 	 *
-	 * @param physPin The physical number of the pin.
-	 * @param gpio Pointer to write the GPIO pin number when success.
-	 * @return -1 if FAILURE or 0 if SUCCESS.
 	 */
-	static int physToGPIO(uint8_t physPin, uint8_t *gpio);
+	GPIOClass& operator=(const GPIOClass& other);
 
 private:
-	static const int *phys_to_gpio; //!< @brief Pointer to array of GPIO pins numbers.
-	/**
-	 * @brief Get the gpio layout.
-	 *
-	 * @return The gpio layout number.
-	 */
-	static int rpiGpioLayout(void);
+	int lastPinNum; //!< @brief Highest pin number supported.
+	uint8_t *exportedPins; //!< @brief Array with information of which pins were exported.
 };
 
-extern RPiClass RPi;
+extern GPIOClass GPIO;
 
 #endif
