@@ -62,23 +62,23 @@
 #endif
 
 #if defined MY_CONTROLLER_IP_ADDRESS
-IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
+#define _brokerIp IPAddress(MY_CONTROLLER_IP_ADDRESS)
 #endif
 
 #if defined(MY_IP_ADDRESS)
-IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
+#define _MQTT_clientIp IPAddress(MY_IP_ADDRESS)
 #if defined(MY_IP_GATEWAY_ADDRESS)
-IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+#define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
-IPAddress _gatewayIp(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1);
+#define _gatewayIp IPAddress(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1)
 #endif /* End of MY_IP_GATEWAY_ADDRESS */
 
 #if defined(MY_IP_SUBNET_ADDRESS)
-IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+#define _subnetIp IPAddress(MY_IP_SUBNET_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-IPAddress _subnetIp(255, 255, 255, 0);
+#define _subnetIp IPAddress(255, 255, 255, 0)
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 

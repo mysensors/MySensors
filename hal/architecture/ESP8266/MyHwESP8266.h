@@ -20,6 +20,8 @@
 #define MyHwESP8266_h
 
 #include <SPI.h>
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 
 #ifdef __cplusplus
 #include <Arduino.h>
