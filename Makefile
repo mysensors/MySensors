@@ -20,18 +20,18 @@ DEPFLAGS=-MT $@ -MMD -MP
 
 GATEWAY_BIN=mysgw
 GATEWAY=$(BINDIR)/$(GATEWAY_BIN)
-GATEWAY_C_SOURCES=$(wildcard drivers/Linux/*.c)
-GATEWAY_CPP_SOURCES=$(wildcard drivers/Linux/*.cpp) examples_linux/mysgw.cpp
+GATEWAY_C_SOURCES=$(wildcard hal/architecture/Linux/drivers/core/*.c)
+GATEWAY_CPP_SOURCES=$(wildcard hal/architecture/Linux/drivers/core/*.cpp) examples_linux/mysgw.cpp
 GATEWAY_OBJECTS=$(patsubst %.c,$(BUILDDIR)/%.o,$(GATEWAY_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(GATEWAY_CPP_SOURCES))
 
-INCLUDES=-I. -I./core -I./drivers/Linux
+INCLUDES=-I. -I./core -I./hal/architecture/Linux/drivers/core
 
 ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836 BCM2837))
-BCM_C_SOURCES=$(wildcard drivers/BCM/*.c)
-BCM_CPP_SOURCES=$(wildcard drivers/BCM/*.cpp)
+BCM_C_SOURCES=$(wildcard hal/architecture/Linux/drivers/BCM/*.c)
+BCM_CPP_SOURCES=$(wildcard hal/architecture/Linux/drivers/BCM/*.cpp)
 GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(BCM_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(BCM_CPP_SOURCES))
 
-INCLUDES+=-I./drivers/BCM
+INCLUDES+=-I./hal/architecture/Linux/drivers/BCM
 endif
 
 # Gets include flags for library

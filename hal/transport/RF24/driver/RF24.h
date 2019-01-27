@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -36,8 +36,7 @@
 *
 * |E| SYS  | SUB  | Message              | Comment
 * |-|------|------|----------------------|---------------------------------------------------------------------
-* | | RF24 | INIT |                      | Initialise RF24 radio
-* | | RF24 | INIT | PIN,CE=%%d,CS=%%d    | Pin configuration: chip enable (CE), chip select (CS)
+* | | RF24 | INIT | PIN,CE=%%d,CS=%%d    | Initialise RF24 radio, pin configuration: chip enable (CE), chip select (CS)
 * |!| RF24 | INIT | SANCHK FAIL          | Sanity check failed, check wiring or replace module
 * | | RF24 | SPP  | PCT=%%d,TX LEVEL=%%d | Set TX level, input TX percent (PCT)
 * | | RF24 | RBR  | REG=%%d,VAL=%%d      | Read register (REG), value=(VAL)

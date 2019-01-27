@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -58,7 +58,6 @@
 #include "hal/architecture/ESP32/MyHwESP32.cpp"
 #include "hal/crypto/ESP32/MyCryptoESP32.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
-#include "hal/architecture/AVR/drivers/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
 #include "hal/crypto/AVR/MyCryptoAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
@@ -209,16 +208,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 #if defined(MY_GATEWAY_LINUX)
-#include "drivers/Linux/EthernetClient.h"
-#include "drivers/Linux/EthernetServer.h"
-#include "drivers/Linux/IPAddress.h"
+#include "hal/architecture/Linux/drivers/core/EthernetClient.h"
+#include "hal/architecture/Linux/drivers/core/EthernetServer.h"
+#include "hal/architecture/Linux/drivers/core/IPAddress.h"
 #endif
 #include "drivers/PubSubClient/PubSubClient.cpp"
 #include "core/MyGatewayTransportMQTTClient.cpp"
 #elif defined(MY_GATEWAY_FEATURE)
 // GATEWAY - COMMON FUNCTIONS
 #include "core/MyGatewayTransport.cpp"
-
 #include "core/MyProtocolMySensors.cpp"
 
 // GATEWAY - CONFIGURATION
@@ -227,9 +225,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_REPEATER_FEATURE
 #endif
 
-#if !defined(MY_PORT)
-#error You must define MY_PORT (controller or gateway port to open)
-#endif
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // GATEWAY - ESP8266 / ESP32
 #include "core/MyGatewayTransportEthernet.cpp"
@@ -238,9 +233,9 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(MY_USE_UDP)
 #error UDP mode is not available for Linux
 #endif
-#include "drivers/Linux/EthernetClient.h"
-#include "drivers/Linux/EthernetServer.h"
-#include "drivers/Linux/IPAddress.h"
+#include "hal/architecture/Linux/drivers/core/EthernetClient.h"
+#include "hal/architecture/Linux/drivers/core/EthernetServer.h"
+#include "hal/architecture/Linux/drivers/core/IPAddress.h"
 #include "core/MyGatewayTransportEthernet.cpp"
 #elif defined(MY_GATEWAY_W5100)
 // GATEWAY - W5100
@@ -391,7 +386,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #undef MY_REGISTRATION_FEATURE
 #undef MY_SIGNING_FEATURE
 #undef MY_OTA_FIRMWARE_FEATURE
-#if (defined(MY_GATEWAY_FEATURE) || defined(MY_REPEATER_FEATURE))
+#if defined(MY_GATEWAY_FEATURE) || defined(MY_REPEATER_FEATURE)
 #error This node is configured as GW/repeater, MY_PASSIVE_NODE cannot be set simultaneously
 #endif
 #if (MY_NODE_ID == AUTO)
@@ -441,7 +436,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/Linux/MyMainLinuxGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
-#elif defined(TEENSYDUINO)
+#elif defined(__arm__) && defined(TEENSYDUINO)
 #include "hal/architecture/Teensy3/MyMainTeensy3.cpp"
 #endif
 

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -113,7 +113,7 @@ int8_t hwSleep(uint32_t ms)
 }
 
 // Not supported!
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
 	(void)interrupt;
 	(void)mode;
@@ -123,7 +123,8 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
 }
 
 // Not supported!
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+               const uint8_t mode2,
                uint32_t ms)
 {
 	(void)interrupt1;

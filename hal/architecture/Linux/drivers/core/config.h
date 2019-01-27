@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -17,15 +17,32 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef _SPI_H_
-#define _SPI_H_
+#ifndef CONFIG_H
+#define CONFIG_H
 
-#ifdef LINUX_SPI_BCM
-#include "SPIBCM.h"
-#define SPI SPIBCM
-#elif LINUX_SPI_SPIDEV
-#include "SPIDEV.h"
-#define SPI SPIDEV
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct config {
+	int verbose;
+	int log_file;
+	char *log_filepath;
+	int log_pipe;
+	char *log_pipe_file;
+	int syslog;
+	char *eeprom_file;
+	int eeprom_size;
+	char *soft_hmac_key;
+	char *soft_serial_key;
+	char *aes_key;
+} conf;
+
+int config_parse(const char *config_file);
+void config_cleanup(void);
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

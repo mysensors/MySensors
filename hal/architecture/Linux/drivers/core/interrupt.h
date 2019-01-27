@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -15,31 +15,28 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
+ *
+ * Based on wiringPi Copyright (c) 2012 Gordon Henderson.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef interrupt_h
+#define interrupt_h
+
+#include <stdint.h>
+
+#define CHANGE 1
+#define FALLING 2
+#define RISING 3
+#define NONE 4
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct config {
-	int verbose;
-	int log_file;
-	char *log_filepath;
-	int log_pipe;
-	char *log_pipe_file;
-	int syslog;
-	char *eeprom_file;
-	int eeprom_size;
-	char *soft_hmac_key;
-	char *soft_serial_key;
-	char *aes_key;
-} conf;
-
-int config_parse(const char *config_file);
-void config_cleanup(void);
+void attachInterrupt(uint8_t gpioPin, void(*func)(), uint8_t mode);
+void detachInterrupt(uint8_t gpioPin);
+void interrupts();
+void noInterrupts();
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -301,6 +301,7 @@ uint16_t hwCPUFrequency(void)
 	// save WDT & timer settings
 	const uint8_t WDTsave = WDTCSR;
 	const uint8_t TCCR1Asave = TCCR1A;
+	const uint8_t TCCR1Bsave = TCCR1B;
 	const uint8_t TCCR1Csave = TCCR1C;
 	// setup timer1
 	TIFR1 = 0xFF;
@@ -325,6 +326,7 @@ uint16_t hwCPUFrequency(void)
 	sei();
 	// restore timer settings
 	TCCR1A = TCCR1Asave;
+	TCCR1B = TCCR1Bsave;
 	TCCR1C = TCCR1Csave;
 	// return frequency in 1/10MHz (accuracy +- 10%)
 	return TCNT1 * 2048UL / 100000UL;

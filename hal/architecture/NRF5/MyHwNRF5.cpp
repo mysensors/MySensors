@@ -7,7 +7,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
  * https://github.com/mysensors/MySensors/graphs/contributors
@@ -356,7 +356,7 @@ int8_t hwSleep(uint32_t ms)
 	return MY_WAKE_UP_BY_TIMER;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
 	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
 }
