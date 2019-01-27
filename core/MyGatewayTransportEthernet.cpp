@@ -54,22 +54,22 @@ extern MyMessage _msgTmp;
 #endif
 
 #if defined(MY_CONTROLLER_IP_ADDRESS)
-IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
+#define _ethernetControllerIP IPAddress(MY_CONTROLLER_IP_ADDRESS)
 #endif
 
 #if defined(MY_IP_ADDRESS)
-IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
+#define _ethernetGatewayIP IPAddress(MY_IP_ADDRESS)
 #if defined(MY_IP_GATEWAY_ADDRESS)
-IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+#define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
-IPAddress _gatewayIp(_ethernetGatewayIP[0], _ethernetGatewayIP[1], _ethernetGatewayIP[2], 1);
+#define _gatewayIp IPAddress(_ethernetGatewayIP[0], _ethernetGatewayIP[1], _ethernetGatewayIP[2], 1)
 #endif /* End of MY_IP_GATEWAY_ADDRESS */
 #if defined(MY_IP_SUBNET_ADDRESS)
-IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+#define _subnetIp IPAddress(MY_IP_SUBNET_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-IPAddress _subnetIp(255, 255, 255, 0);
+#define _subnetIp IPAddress(255, 255, 255, 0)
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 
@@ -162,7 +162,7 @@ void gatewayTransportRenewIP(void)
 		return;
 	}
 	_w5100_spi_en(false);
-	next_time = now + MY_IP_RENEWAL_INTERVAL_MS;
+	_nextIPRenewal = now + MY_IP_RENEWAL_INTERVAL_MS;
 }
 #endif
 
@@ -260,7 +260,7 @@ bool gatewayTransportSend(MyMessage &message)
 #else
 	_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-	_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
+	_ethernetServer.write((uint8_t *)_ethernetMsg, strlen(_ethernetMsg));
 	// returns 1 if the packet was sent successfully
 	nbytes = _ethernetServer.endPacket();
 #else /* Else part of MY_USE_UDP */
@@ -290,12 +290,12 @@ bool gatewayTransportSend(MyMessage &message)
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
-			nbytes += clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
+			nbytes += clients[i].write((uint8_t *)_ethernetMsg, strlen(_ethernetMsg));
 		}
 	}
-#else /* Else part of MY_GATEWAY_ESP8266 */
+#else /* Else part of MY_GATEWAY_ESPxx*/
 	nbytes = _ethernetServer.write(_ethernetMsg);
-#endif /* End of MY_GATEWAY_ESP8266 */
+#endif /* End of MY_GATEWAY_ESPxx */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 	_w5100_spi_en(false);
 	return (nbytes > 0);
@@ -380,7 +380,6 @@ bool gatewayTransportAvailable(void)
 	int packet_size = _ethernetServer.parsePacket();
 
 	if (packet_size) {
-		//GATEWAY_DEBUG(PSTR("UDP packet available. Size:%" PRIu8 "\n"), packet_size);
 		_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 		inputString.string[packet_size] = 0;
 		GATEWAY_DEBUG(PSTR("GWT:TSA:UDP MSG=%s\n"), inputString.string);
@@ -418,7 +417,7 @@ bool gatewayTransportAvailable(void)
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX)
-	// ESP8266: Go over list of clients and stop any that are no longer connected.
+	// ESP8266/ESP32: Go over list of clients and stop any that are no longer connected.
 	// If the server has a new client connection it will be assigned to a free slot.
 	bool allSlotsOccupied = true;
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {

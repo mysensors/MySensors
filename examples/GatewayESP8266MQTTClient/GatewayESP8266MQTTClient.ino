@@ -74,8 +74,8 @@
 #define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Set the hostname for the WiFi Client. This is the hostname
-// it will pass to the DHCP server if not static.
-// #define MY_HOSTNAME "mqtt-sensor-gateway"
+// passed to the DHCP server if not static.
+#define MY_HOSTNAME "ESP8266_MQTT_GW"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 //#define MY_IP_ADDRESS 192,168,178,87
@@ -110,7 +110,6 @@
 //#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
 //#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
 
-#include <ESP8266WiFi.h>
 #include <MySensors.h>
 
 void setup()
