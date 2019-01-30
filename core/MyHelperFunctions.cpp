@@ -17,17 +17,25 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyProtocol_h
-#define MyProtocol_h
+#include "MyHelperFunctions.h"
 
-#include "MySensorsCore.h"
+static uint8_t convertH2I(const char c)
+{
+	if (c <= '9') {
+		return c - '0';
+	} else if (c >= 'a') {
+		return c - 'a' + 10;
+	} else {
+		return c - 'A' + 10;
+	}
+}
 
-// parse(message, inputString)
-// parse a string into a message element
-// returns true if successfully parsed the input string
-bool protocolSerial2MyMessage(MyMessage &message, char *inputString);
-
-// Format MyMessage to the protocol representation
-char *protocolMyMessage2Serial(MyMessage &message);
-
-#endif
+static char convertI2H(const uint8_t i)
+{
+	const uint8_t k = i & 0x0F;
+	if (k <= 9) {
+		return '0' + k;
+	} else {
+		return 'A' + k - 10;
+	}
+}

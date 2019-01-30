@@ -17,17 +17,22 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyProtocol_h
-#define MyProtocol_h
+#ifndef MyHelperFunctions_h
+#define MyHelperFunctions_h
 
-#include "MySensorsCore.h"
+/**
+* Single character hex conversion
+* @param c hex char
+* @return byte representation of the paramter
+*/
+static uint8_t convertH2I(const char c) __attribute__((unused));
 
-// parse(message, inputString)
-// parse a string into a message element
-// returns true if successfully parsed the input string
-bool protocolSerial2MyMessage(MyMessage &message, char *inputString);
+/**
+* Lower nibble byte to hex conversion
+* @param i byte
+* @return hex char representation of the parameter
+*/
+static char convertI2H(const uint8_t i) __attribute__((unused));
 
-// Format MyMessage to the protocol representation
-char *protocolMyMessage2Serial(MyMessage &message);
 
 #endif

@@ -36,13 +36,6 @@
 extern "C" {
 #endif
 
-/**
-* @defgroup nrf_temp_hal TEMP HAL
-* @{
-* @ingroup nrf_temp temperature_example
-* @brief   Temperature module init and read functions.
-*/
-
 #define MASK_SIGN           (0x00000200UL) 	//!< MASK_SIGN
 #define MASK_SIGN_EXTENSION (0xFFFFFC00UL)	//!< MASK_SIGN_EXTENSION
 
@@ -69,7 +62,6 @@ static __INLINE int32_t nrf_temp_read(void)
 	       (NRF_TEMP->TEMP);
 }
 
-/** @} */
 
 #ifdef __cplusplus
 }

@@ -40,6 +40,8 @@
 #endif
 
 #include "MyConfig.h"
+#include "core/MyHelperFunctions.cpp"
+
 #include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
 
@@ -68,8 +70,6 @@
 #include "hal/architecture/STM32F1/MyHwSTM32F1.cpp"
 #include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
-#include "drivers/NVM/VirtualPage.cpp"
-#include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/NRF5/MyHwNRF5.cpp"
 #include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(__arm__) && defined(TEENSYDUINO)
@@ -171,6 +171,22 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS for UDP
 #endif
 
+
+
+// Set MQTT defaults if not set
+
+#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
+#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
+#endif
+
+#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
+#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
+#endif
+
+#if !defined(MY_MQTT_CLIENT_ID)
+#define MY_MQTT_CLIENT_ID "mysensors-1"
+#endif
+
 #if defined(MY_GATEWAY_MQTT_CLIENT)
 #if defined(MY_SENSOR_NETWORK)
 // We assume that a gateway having a radio also should act as repeater
@@ -188,20 +204,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error MY_GATEWAY_TINYGSM only works with MY_GATEWAY_MQTT_CLIENT
 #endif
 
-#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
-#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
-#endif
-
-#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
-#error You must specify a topic subscribe prefix MY_MQTT_SUBSCRIBE_TOPIC_PREFIX for this MQTT client
-#endif
-
-#if !defined(MY_MQTT_CLIENT_ID)
-#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
-#endif
-
 #include "core/MyGatewayTransport.cpp"
-#include "core/MyProtocolMySensors.cpp"
+#include "core/MyProtocol.cpp"
 
 #if defined(MY_GATEWAY_TINYGSM)
 #include "drivers/TinyGSM/TinyGsmClient.h"
@@ -217,7 +221,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #elif defined(MY_GATEWAY_FEATURE)
 // GATEWAY - COMMON FUNCTIONS
 #include "core/MyGatewayTransport.cpp"
-#include "core/MyProtocolMySensors.cpp"
+#include "core/MyProtocol.cpp"
 
 // GATEWAY - CONFIGURATION
 #if defined(MY_SENSOR_NETWORK)

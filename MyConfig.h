@@ -2145,6 +2145,12 @@
 #define ARDUINO_ARCH_ESP8266
 
 /**
+ * @def ARDUINO_ARCH_ESP32
+ * @brief Automatically set when building for ESP32 targets
+ */
+#define ARDUINO_ARCH_ESP32
+
+/**
  * @def ARDUINO_ARCH_AVR
  * @brief Automatically set when building for AVR targets
  */
