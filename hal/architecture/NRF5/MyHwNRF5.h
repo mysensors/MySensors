@@ -51,8 +51,8 @@
 #include "hal/architecture/NRF5/drivers/nrf5_wiring_digital.c"
 #include "hal/architecture/NRF5/drivers/wdt.h"
 #include "hal/architecture/NRF5/drivers/nrf_temp.h"
-#include "drivers/NVM/NVRAM.h"
-#include "drivers/NVM/VirtualPage.h"
+#include "drivers/NVM/NVRAM.cpp"
+#include "drivers/NVM/VirtualPage.cpp"
 #include <avr/dtostrf.h>
 #include <nrf.h>
 #include <SPI.h>

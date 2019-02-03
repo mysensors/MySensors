@@ -19,6 +19,7 @@
 
 
 #include "MyMessage.h"
+#include "MyHelperFunctions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,12 +40,12 @@ void MyMessage::clear(void)
 {
 	last                = 0u;
 	sender              = 0u;
-	destination         = 0u;       // Gateway is default destination
+	destination         = 0u; // Gateway is default destination
 	version_length      = 0u;
 	command_ack_payload = 0u;
 	type                = 0u;
 	sensor              = 0u;
-	(void)memset(data, 0u, sizeof(data));
+	(void)memset((void *)data, 0u, sizeof(data));
 
 	// set message protocol version
 	miSetVersion(PROTOCOL_VERSION);
@@ -76,21 +77,11 @@ const char* MyMessage::getString(void) const
 	}
 }
 
-char MyMessage::i2h(const uint8_t i) const
-{
-	uint8_t k = i & 0x0F;
-	if (k <= 9) {
-		return '0' + k;
-	} else {
-		return 'A' + k - 10;
-	}
-}
-
 char* MyMessage::getCustomString(char *buffer) const
 {
 	for (uint8_t i = 0; i < miGetLength(); i++) {
-		buffer[i * 2] = i2h(data[i] >> 4);
-		buffer[(i * 2) + 1] = i2h(data[i]);
+		buffer[i * 2] = convertI2H(data[i] >> 4);
+		buffer[(i * 2) + 1] = convertI2H(data[i]);
 	}
 	buffer[miGetLength() * 2] = '\0';
 	return buffer;
@@ -204,7 +195,6 @@ uint16_t MyMessage::getUInt(void) const
 	} else {
 		return 0;
 	}
-
 }
 
 MyMessage& MyMessage::setType(const uint8_t _type)
@@ -226,40 +216,40 @@ MyMessage& MyMessage::setDestination(const uint8_t _destination)
 }
 
 // Set payload
-MyMessage& MyMessage::set(const void* value, const uint8_t length)
+MyMessage& MyMessage::set(const void* value, const size_t length)
 {
-	uint8_t payloadLength = value == NULL ? 0 : min(length, (uint8_t)MAX_PAYLOAD);
+	const size_t payloadLength = value == NULL ? 0 : min(length, (size_t)MAX_PAYLOAD);
 	miSetLength(payloadLength);
 	miSetPayloadType(P_CUSTOM);
-	memcpy(data, value, payloadLength);
+	(void)memcpy(data, value, payloadLength);
 	return *this;
 }
 
 MyMessage& MyMessage::set(const char* value)
 {
-	uint8_t length = value == NULL ? 0 : min(strlen(value), (size_t)MAX_PAYLOAD);
-	miSetLength(length);
+	const size_t payloadLength = value == NULL ? 0 : min(strlen(value), (size_t)MAX_PAYLOAD);
+	miSetLength(payloadLength);
 	miSetPayloadType(P_STRING);
-	if (length) {
-		strncpy(data, value, length);
+	if (payloadLength) {
+		(void)strncpy(data, value, payloadLength);
 	}
 	// null terminate string
-	data[length] = 0;
+	data[payloadLength] = 0;
 	return *this;
 }
 
 #if !defined(__linux__)
 MyMessage& MyMessage::set(const __FlashStringHelper* value)
 {
-	uint8_t length = value == NULL ? 0
-	                 : min(strlen_P(reinterpret_cast<const char *>(value)), (size_t)MAX_PAYLOAD);
-	miSetLength(length);
+	const size_t payloadLength = value == NULL ? 0
+	                             : min(strlen_P(reinterpret_cast<const char *>(value)), (size_t)MAX_PAYLOAD);
+	miSetLength(payloadLength);
 	miSetPayloadType(P_STRING);
-	if (length) {
-		strncpy_P(data, reinterpret_cast<const char *>(value), length);
+	if (payloadLength) {
+		(void)strncpy_P(data, reinterpret_cast<const char *>(value), payloadLength);
 	}
 	// null terminate string
-	data[length] = 0;
+	data[payloadLength] = 0;
 	return *this;
 }
 #endif

@@ -302,13 +302,6 @@ public:
 	MyMessage(const uint8_t sensor, const uint8_t type);
 
 	/**
-	 * Single character hex (0 - 15) conversion
-	 * @param i byte (only lower 4 bits will be considered)
-	 * @return single char with the hex representation (0 to F) of the parameter
-	 */
-	char i2h(const uint8_t i) const;
-
-	/**
 	 * @brief Clear message contents.
 	 */
 	void clear(void);
@@ -415,7 +408,7 @@ public:
 	 * @param payload pointer to the buffer where the payload is stored
 	 * @param length of the payload
 	 */
-	MyMessage& set(const void* payload, const uint8_t length);
+	MyMessage& set(const void* payload, const size_t length);
 
 	/**
 	 * @brief Set payload to character array

@@ -116,7 +116,7 @@ bool gatewayTransportSend(MyMessage &message)
 		return false;
 	}
 	setIndication(INDICATION_GW_TX);
-	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
+	char *topic = protocolMyMessage2MQTT(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	GATEWAY_DEBUG(PSTR("GWT:TPS:TOPIC=%s,MSG SENT\n"), topic);
 #if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
 	const bool retain = mGetCommand(message) == C_SET ||
@@ -130,7 +130,7 @@ bool gatewayTransportSend(MyMessage &message)
 void incomingMQTT(char *topic, uint8_t *payload, unsigned int length)
 {
 	GATEWAY_DEBUG(PSTR("GWT:IMQ:TOPIC=%s, MSG RECEIVED\n"), topic);
-	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
+	_MQTT_available = protocolMQTT2MyMessage(_MQTT_msg, topic, payload, length);
 	setIndication(INDICATION_GW_RX);
 }
 

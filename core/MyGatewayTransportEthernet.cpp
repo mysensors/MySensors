@@ -248,7 +248,7 @@ bool gatewayTransportInit(void)
 bool gatewayTransportSend(MyMessage &message)
 {
 	int nbytes = 0;
-	char *_ethernetMsg = protocolFormat(message);
+	char *_ethernetMsg = protocolMyMessage2Serial(message);
 
 	setIndication(INDICATION_GW_TX);
 
@@ -316,10 +316,9 @@ bool _readFromClient(uint8_t i)
 				inputString[i].string[inputString[i].idx] = 0;
 				GATEWAY_DEBUG(PSTR("GWT:RFC:C=%" PRIu8 ",MSG=%s\n"), i, inputString[i].string);
 				inputString[i].idx = 0;
-				if (protocolParse(_ethernetMsg, inputString[i].string)) {
+				if (protocolSerial2MyMessage(_ethernetMsg, inputString[i].string)) {
 					return true;
 				}
-
 			} else {
 				// add it to the inputString:
 				inputString[i].string[inputString[i].idx++] = inChar;
@@ -346,7 +345,7 @@ bool _readFromClient(void)
 				inputString.string[inputString.idx] = 0;
 				GATEWAY_DEBUG(PSTR("GWT:RFC:MSG=%s\n"), inputString.string);
 				inputString.idx = 0;
-				if (protocolParse(_ethernetMsg, inputString.string)) {
+				if (protocolSerial2MyMessage(_ethernetMsg, inputString.string)) {
 					return true;
 				}
 
@@ -384,7 +383,7 @@ bool gatewayTransportAvailable(void)
 		inputString.string[packet_size] = 0;
 		GATEWAY_DEBUG(PSTR("GWT:TSA:UDP MSG=%s\n"), inputString.string);
 		_w5100_spi_en(false);
-		const bool ok = protocolParse(_ethernetMsg, inputString.string);
+		const bool ok = protocolSerial2MyMessage(_ethernetMsg, inputString.string);
 		if (ok) {
 			setIndication(INDICATION_GW_RX);
 		}

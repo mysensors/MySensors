@@ -259,10 +259,10 @@ bool hwUniqueID(unique_id_t *uniqueID)
 	// padding
 	(void)memset(uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
 	// no unique ID for non-PB AVR, use HW specifics for diversification
-	*((uint8_t *)uniqueID) = boot_signature_byte_get(0x00);
-	*((uint8_t *)uniqueID + 1) = boot_signature_byte_get(0x02);
-	*((uint8_t *)uniqueID + 2) = boot_signature_byte_get(0x04);
-	*((uint8_t *)uniqueID + 3) = boot_signature_byte_get(0x01); //OSCCAL
+	*((uint8_t *)uniqueID) = SIGNATURE_2;
+	*((uint8_t *)uniqueID + 1) = SIGNATURE_1;
+	*((uint8_t *)uniqueID + 2) = SIGNATURE_0;
+	*((uint8_t *)uniqueID + 3) = OSCCAL;
 #if defined(__AVR_ATmega328PB__)
 	// ATMEGA328PB specifics, has unique ID
 	for(uint8_t idx = 0; idx < 10; idx++) {
