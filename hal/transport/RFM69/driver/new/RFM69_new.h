@@ -150,7 +150,7 @@
 
 // CSMA settings
 #if !defined(MY_RFM69_CSMA_LIMIT_DBM)
-#define MY_RFM69_CSMA_LIMIT_DBM             (-95)			//!< upper RX signal sensitivity threshold in dBm for carrier sense access
+#define MY_RFM69_CSMA_LIMIT_DBM             (-85)			//!< upper RX signal sensitivity threshold in dBm for carrier sense access
 #endif
 #if !defined(MY_RFM69_CSMA_TIMEOUT_MS)
 #define MY_RFM69_CSMA_TIMEOUT_MS            (500ul)		//!< CSMA timeout
@@ -460,6 +460,17 @@ LOCAL void RFM69_powerUp(void);
 */
 LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t sequenceNumber,
                          const rfm69_RSSI_t RSSI);
+						 
+						 
+/**
+* @brief RFM69_sendACK_fast
+* @param recipient
+* @param sequenceNumber
+* @param RSSI (rfm95_RSSI_t)
+*/
+LOCAL void RFM69_sendACK_fast(const uint8_t recipient, const rfm69_sequenceNumber_t sequenceNumber,
+const rfm69_RSSI_t RSSI);						 
+
 
 /**
 * @brief RFM69_sendWithRetry
@@ -556,6 +567,31 @@ LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARG
 * @note define RFM69_REGISTER_DETAIL for register content decoding.
 */
 LOCAL void RFM69_readAllRegs(void);
+
+
+/**
+* @brief RFM69_readMessage
+* @return
+*/
+LOCAL uint8_t RFM69_readMessage(void *buf);
+
+
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+/**
+* @brief Callback type
+*/
+typedef void (*RFM69_receiveCallbackType)(void);
+/**
+* @brief RFM69_registerReceiveCallback
+* Register a callback, which will be called (from interrupt context) for every message received.
+* @note When a callback is registered, it _must_ retrieve the message from the nRF24
+* by calling RFM69_readMessage(). Otherwise the interrupt will not get deasserted
+* and message reception will stop.
+* @param cb
+*/
+LOCAL void RFM69_registerReceiveCallback(RFM69_receiveCallbackType cb);
+#endif
+
 
 #endif
 
