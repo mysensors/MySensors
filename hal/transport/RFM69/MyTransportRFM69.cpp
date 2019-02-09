@@ -17,6 +17,11 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+// debug
+#define TRANSPORT_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
+extern char _convBuf[MAX_PAYLOAD * 2 + 1];
+
+
 #if defined(MY_RFM69_NEW_DRIVER)
 
 #include "hal/transport/RFM69/driver/new/RFM69_new.h"
@@ -50,7 +55,7 @@ static void transportRxCallback(void)
 				transportQueuedMessage* msg = transportRxQueue.getFront();
 				msg->m_len = RFM69_readMessage(msg->m_data);		// Read payload & clear RX_DR
 				(void)transportRxQueue.pushFront(msg);
-				} else {
+			} else {
 				// Queue is full. Discard message.
 				(void)RFM69_readMessage(NULL);		// Read payload & clear RX_DR
 				// Keep track of messages lost. Max 255, prevent wrapping.
@@ -58,8 +63,9 @@ static void transportRxCallback(void)
 					++transportLostMessageCount;
 				}
 			}
-		}
 		} else {
+		}
+	} else {
 		RFM69_tx_completed = true;
 		// back to RX
 		RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
@@ -121,6 +127,9 @@ bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool n
 bool transportAvailable(void)
 {
 	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+		if (transportRxQueue.available() > 0){
+			TRANSPORT_DEBUG(PSTR("Q:S=%" PRIi8 "\n"), transportRxQueue.available());
+		}
 		RFM69_available();
 		//	(void)RFM69_available;				// Prevent 'defined but not used' warning
 		return !transportRxQueue.empty();
