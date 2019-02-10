@@ -444,16 +444,14 @@ LOCAL bool RFM69_sendFrame(rfm69_packet_t *packet, const bool increaseSequenceCo
 	        ((hwMillis() - CSMA_START_MS) < MY_RFM69_CSMA_TIMEOUT_MS)) {
 		doYield();
 		
-		//A LITTLE DELAY BEFORE NEXT ATTEMPT
+		//A little delay before the next attempt
 		delay(1);
 	}
 	
-	//KORESH TO DO
-	//DO NOT SEND MESSGE IF THE AIR IS BUSY
+	//Do not send the message if the air is still busy
 	if (!((hwMillis() - CSMA_START_MS) < MY_RFM69_CSMA_TIMEOUT_MS)){
 		return false;
 	}
-	//END KORESH
 	
 	// set radio to standby to load fifo
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
@@ -659,10 +657,6 @@ const rfm69_RSSI_t RSSI)
 	rfm69_controlFlags_t flags = 0u;	// reset flags
 	RFM69_setACKReceived(flags, true);
 	RFM69_setACKRSSIReport(flags, true);
-	//(void)RFM69_send(recipient, (uint8_t *)&ACK, sizeof(rfm69_ack_t), flags);
-
-	//LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
-	//                      const rfm69_controlFlags_t flags, const bool increaseSequenceCounter)
 
 	rfm69_packet_t packet;
 	packet.header.version = RFM69_PACKET_HEADER_VERSION;
@@ -673,11 +667,6 @@ const rfm69_RSSI_t RSSI)
 	packet.header.controlFlags = flags;
 	(void)memcpy((void *)&packet.payload, (void *)&ACK, packet.payloadLen); // copy payload
 	packet.header.packetLen = packet.payloadLen + (RFM69_HEADER_LEN - 1); // -1 length byte
-
-	//return RFM69_sendFrame(&packet, increaseSequenceCounter);
-
-	//LOCAL bool RFM69_sendFrame(rfm69_packet_t *packet, const bool increaseSequenceCounter)
-	// ensure we are in RX for correct RSSI sampling, dirty hack to enforce rx restart :)
 
 
 	rfm69_packet_t *packet_ = &packet;
@@ -714,10 +703,6 @@ const rfm69_RSSI_t RSSI)
 	// send message
 	RFM69_tx_completed = false;
 	(void)RFM69_setRadioMode(RFM69_RADIO_MODE_TX); // irq upon txsent
-
-	//while (!RFM69_tx_completed && (hwMillis() - txStartMS < MY_RFM69_TX_TIMEOUT_MS)) {
-	//	doYield();
-	//};
 }
 
 
@@ -775,7 +760,6 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
 		rfm69_controlFlags_t flags = 0u; // reset all flags
 		RFM69_setACKRequested(flags, (recipient != RFM69_BROADCAST_ADDRESS));
 		RFM69_setACKRSSIReport(flags, RFM69.ATCenabled);
-		//(void)RFM69_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry);
 		if (!RFM69_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry)){
 			continue;
 		}
