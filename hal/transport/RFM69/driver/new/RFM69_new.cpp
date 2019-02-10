@@ -34,7 +34,7 @@
 
 #include "RFM69_new.h"
 
-#define MY_DEBUG_VERBOSE_RFM69
+//#define MY_DEBUG_VERBOSE_RFM69
 
 // debug
 #if defined(MY_DEBUG_VERBOSE_RFM69)

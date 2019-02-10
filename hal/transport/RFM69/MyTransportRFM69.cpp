@@ -18,8 +18,7 @@
  */
 
 // debug
-#define TRANSPORT_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
-extern char _convBuf[MAX_PAYLOAD * 2 + 1];
+//#define TRANSPORT_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 
 
 #if defined(MY_RFM69_NEW_DRIVER)
@@ -127,9 +126,11 @@ bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool n
 bool transportAvailable(void)
 {
 	#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+		/*
 		if (transportRxQueue.available() > 0){
 			TRANSPORT_DEBUG(PSTR("Q:S=%" PRIi8 "\n"), transportRxQueue.available());
 		}
+		*/
 		RFM69_available();
 		//	(void)RFM69_available;				// Prevent 'defined but not used' warning
 		return !transportRxQueue.empty();
