@@ -140,6 +140,7 @@ void vlog(int level, const char *fmt, va_list args)
 		if (_log_file_fp != NULL) {
 			fprintf(_log_file_fp, "%s %-5s ", date, _log_level_names[level]);
 			vfprintf(_log_file_fp, fmt, args);
+			fflush(_log_file_fp);
 		}
 
 		if (!_log_quiet) {
