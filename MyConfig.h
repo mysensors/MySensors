@@ -1208,7 +1208,7 @@
 #endif
 
 /**
- * @def MY_SMART_SLEEP_WAIT_DURATION_MS
+ * @def MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS
  * @brief The wait period (in ms) before going to sleep when using smartSleep-functions.
  *
  * This period has to be long enough for controller to process sleep command
