@@ -1206,6 +1206,21 @@
 #ifndef MY_SMART_SLEEP_WAIT_DURATION_MS
 #define MY_SMART_SLEEP_WAIT_DURATION_MS (500ul)
 #endif
+
+/**
+ * @def MY_SMART_SLEEP_WAIT_DURATION_MS
+ * @brief The wait period (in ms) before going to sleep when using smartSleep-functions.
+ *
+ * This period has to be long enough for controller to process sleep command
+ * before sending it an awake command.
+ * 300 ms seems to be OK (smaller values let the controller think that the node went to sleep)
+ */
+#ifndef MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS
+#define MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS (300ul)
+#endif
+
+
+
 /** @}*/ // End of SleepSettingGrpPub group
 
 /**
