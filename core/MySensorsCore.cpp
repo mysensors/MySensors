@@ -638,7 +638,17 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		// notify controller about going to sleep, payload indicates smartsleep waiting time in MS
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
 		                       I_PRE_SLEEP_NOTIFICATION).set((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS));
-		wait(MY_SMART_SLEEP_WAIT_DURATION_MS);		// listen for incoming messages
+		if (wait(MY_SMART_SLEEP_WAIT_DURATION_MS, C_SET,
+		         I_VERSION)) { //cancel sleeping request if there is a new C_SET Command
+			CORE_DEBUG(PSTR("!MCO:SLP:RVKE\n")); //sleep revoked
+			wait(MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS);
+			CORE_DEBUG(PSTR("MCO:SLP:WUP=%" PRIi8 "\n"),
+			           MY_SLEEP_NOT_POSSIBLE);	// inform controller about wake-up
+			(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
+			                       I_POST_SLEEP_NOTIFICATION).set(MY_SMART_SLEEP_WAIT_DURATION_MS +
+			                               MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS));
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 		// check if during smart sleep waiting period a FOTA request was received
 		if (isFirmwareUpdateOngoing()) {
