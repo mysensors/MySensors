@@ -643,10 +643,11 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 			CORE_DEBUG(PSTR("!MCO:SLP:RVKE\n")); //sleep revoked
 			wait(MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS);
 			CORE_DEBUG(PSTR("MCO:SLP:WUP=%" PRIi8 "\n"),
-			           MY_SLEEP_NOT_POSSIBLE);	// inform controller about wake-up
+			           MY_SLEEP_NOT_POSSIBLE);
+			// inform controller about wake-up, even if node did not sleep
 			(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
-			                       I_POST_SLEEP_NOTIFICATION).set(MY_SMART_SLEEP_WAIT_DURATION_MS +
-			                               MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS));
+			                       I_POST_SLEEP_NOTIFICATION).set((uint32_t)MY_SMART_SLEEP_WAIT_DURATION_MS +
+			                               (uint32_t)MY_SMART_SLEEP_REVOKE_WAIT_DURATION_MS));
 			return MY_SLEEP_NOT_POSSIBLE;
 		}
 #if defined(MY_OTA_FIRMWARE_FEATURE)
