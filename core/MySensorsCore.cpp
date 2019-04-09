@@ -346,6 +346,10 @@ bool sendHeartbeat(const bool ack)
 	const uint32_t heartbeat = transportGetHeartbeat();
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE,
 	                        ack).set(heartbeat));
+#elif defined(MY_GATEWAY_FEATURE)
+	const uint32_t heartbeat = hwMillis();
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE,
+	                        ack).set(heartbeat));
 #else
 	(void)ack;
 	return false;
