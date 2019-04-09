@@ -1,13 +1,12 @@
 #!groovy
 def buildArduino(config, String buildFlags, String sketch, String key) {
-	def root              = '/opt/arduino-1.8.8/'	
+	def root              = '/opt/arduino-1.8.9/'	
 	def build_path        = 'build'
-	def build_path_cmd    = ''
+	def build_path_cmd    = ' -build-path '+build_path+' '
 	if (config.nightly_arduino_ide)
 	{
 		root = '/opt/arduino-nightly/'
-		// patch for arduino-builder 1.8.9
-		build_path_cmd    = ' -build-path '+build_path+' '
+		// patch for nightly arduino-builder
 	}
 	def jenkins_root      = '/var/lib/jenkins/'
 	def builder           = root+'arduino-builder'
