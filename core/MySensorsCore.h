@@ -38,9 +38,9 @@
 * MySensorsCore debug log messages:
 *
 * |E| SYS | SUB | Message																			| Comment
-* |-|-----|-----|---------------------------------------------|--------------------------------------------------------------------------------------------------
+* |-|-----|-----|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------
 * |!| MCO | BGN | HW ERR																			| Error HW initialization (e.g. ext. EEPROM)
-* | | MCO | BGN | INIT %%s,CP=%%s,REL=%%d,VER=%%s (%%d)				| Core initialization, capabilities (CP), release number (REL), library version (VER)
+* | | MCO | BGN | INIT %%s,CP=%%s,FQ=%%d,REL=%%d,VER=%%s			| Core initialization, capabilities (CP), CPU frequency [Mhz] (FQ), release number (REL), library version (VER)
 * | | MCO | BGN | BFR																					| Callback before()
 * | | MCO | BGN | STP																					| Callback setup()
 * | | MCO | BGN | INIT OK,TSP=%%d															| Core initialised, transport status (TSP): 0=not initialised, 1=initialised, NA=not available

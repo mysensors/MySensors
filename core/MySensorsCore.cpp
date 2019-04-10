@@ -114,8 +114,16 @@ void _begin(void)
 	displaySplashScreen();
 #endif
 
-	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",REL=%" PRIu8 ",VER="
+#if defined(F_CPU)
+	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=%" PRIu16 ",REL=%"
+	                PRIu8 ",VER="
+	                MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU/1000000),
+	           MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
+#else
+	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=NA,REL=%"
+	                PRIu8 ",VER="
 	                MYSENSORS_LIBRARY_VERSION "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
+#endif
 	if (!hwInitResult) {
 		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
 		setIndication(INDICATION_ERR_HW_INIT);
