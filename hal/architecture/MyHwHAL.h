@@ -27,6 +27,12 @@
 #define MyHwHAL_h
 
 /**
+* @def INVALID_INTERRUPT_NUM
+* @brief Invalid interrupt
+*/
+#define INVALID_INTERRUPT_NUM	(0xFFu)
+
+/**
 * @def MY_HWID_PADDING_BYTE
 * @brief HwID padding byte
 */

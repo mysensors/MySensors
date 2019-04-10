@@ -20,12 +20,11 @@
 #define MyHwSAMD_h
 
 #include <SPI.h>
+#include <avr/dtostrf.h>
 
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
-
-#include <avr/dtostrf.h>
 
 #define CRYPTO_LITTLE_ENDIAN
 

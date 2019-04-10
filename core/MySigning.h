@@ -765,7 +765,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * | | SGN | PRE | SGN NREQ,FROM='node'			| Node 'node' does not require signing
  * |!| SGN | PRE | SGN NREQ,FROM='node' REJ	| Node 'node' does not require signing but used to (requirement remain unchanged)
  * | | SGN | PRE | WHI REQ									| Whitelisting required
- * | | SGN | PRE | WHI REQ;TO='node'				| Tell 'node' that we require whitelisting
+ * | | SGN | PRE | WHI REQ,TO='node'				| Tell 'node' that we require whitelisting
  * | | SGN | PRE | WHI REQ,FROM='node'			| Node 'node' require whitelisting
  * | | SGN | PRE | WHI NREQ									| Whitelisting not required
  * | | SGN | PRE | WHI NREQ,TO='node'				| Tell 'node' that we do not require whitelisting

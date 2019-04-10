@@ -31,7 +31,6 @@ bool hwInit(void)
 }
 
 #define WDTO_SLEEP_FOREVER		(0xFFu)
-#define INVALID_INTERRUPT_NUM	(0xFFu)
 
 volatile uint8_t _wokeUpByInterrupt =
     INVALID_INTERRUPT_NUM;    // Interrupt number that woke the mcu.

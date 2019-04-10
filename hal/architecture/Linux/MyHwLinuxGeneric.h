@@ -25,6 +25,15 @@
 #include "SerialPort.h"
 #include "StdInOutStream.h"
 #include <SPI.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <syscall.h>
+#include <unistd.h>
+#include "SoftEeprom.h"
+#include "log.h"
+#include "config.h"
 
 #define CRYPTO_LITTLE_ENDIAN
 
