@@ -28,7 +28,6 @@
  */
 #ifndef MyConfig_h
 #define MyConfig_h
-#include <stdint.h>
 
 /**
  * @defgroup SerialDebugGrpPub Serial and debugging

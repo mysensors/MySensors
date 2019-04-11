@@ -204,8 +204,8 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 					}
 				}
 				hwRndDataReadPos=0;
-				for (uint8_t i=0; i<sizeof(hwRngData.ciphertext); i++) {
-					hwRngData.cleartext[i] ^= hwRngData.ciphertext[i];
+				for (uint8_t pos = 0; pos < sizeof(hwRngData.ciphertext); pos++) {
+					hwRngData.cleartext[pos] ^= hwRngData.ciphertext[pos];
 				}
 			} else
 			{

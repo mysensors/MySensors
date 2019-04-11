@@ -17,9 +17,10 @@
  * along with the Arduino DigitalIO Library.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
+#if defined(__AVR__) || defined(DOXYGEN)  // AVR only
 /**
  * @file
- * @brief Software I2C library
+ * @brief AVR Software I2C library
  *
  * @defgroup softI2C Software I2C
  * @details  Software Two Wire Interface library.
@@ -55,10 +56,10 @@ bool I2cMasterBase::transfer(uint8_t addrRW,
 		start();
 	}
 	if (!write(addrRW)) {
-		_state = addrRW & I2C_READ ? STATE_RX_ADDR_NACK : STATE_TX_ADDR_NACK;
+		_state = (addrRW & I2C_READ) ? STATE_RX_ADDR_NACK : STATE_TX_ADDR_NACK;
 		return false;
 	}
-	_state = addrRW & I2C_READ ? STATE_RX_DATA : STATE_TX_DATA;
+	_state = (addrRW & I2C_READ) ? STATE_RX_DATA : STATE_TX_DATA;
 	return transferContinue(buf, nbytes, option);
 }
 //------------------------------------------------------------------------------
@@ -246,4 +247,6 @@ bool SoftI2cMaster::write(uint8_t data)
 	writeSda(LOW);
 	return rtn == 0;
 }
+#endif  // __AVR__
 /** @} */
+

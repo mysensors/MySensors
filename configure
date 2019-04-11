@@ -4,7 +4,7 @@
 # Original work: https://github.com/TMRh20/RF24/blob/master/configure
 
 function help {
-cat <<EOF
+cat <<EOF	
 configure script for MySensors gateway.
 Options:
 
@@ -62,10 +62,10 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|rf24|rs485|rfm95|rfm69]
+    --my-transport=[none|rf24|rfm69|rfm95|rs485]
                                 Set the transport to be used to communicate with other nodes. [rf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
-    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
+    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_HIGH|RF24_PA_LOW|RF24_PA_MIN]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-ce-pin=<PIN>      Pin number to use for rf24 Chip-Enable.
     --my-rf24-cs-pin=<PIN>      Pin number to use for rf24 Chip-Select.
@@ -318,7 +318,7 @@ for opt do
         CFLAGS="$optarg"
         ;;
     --extra-cxxflags=*)
-        CXXFLAGS="$optarg"
+        CXXFLAGS="$optarg $CXXFLAGS"
         ;;
     --extra-ldflags=*)
         LDFLAGS="$optarg"
@@ -542,6 +542,7 @@ BINDIR=${BINDIR:-bin}
 GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
 CC=${CC:-gcc}
 CXX=${CXX:-g++}
+CXXFLAGS="-std=c++11"
 
 if [ -z "${SOC}" ]; then
     printf "${SECTION} Detecting target machine.\n"
@@ -625,10 +626,10 @@ elif [[ ${transport_type} == "rf24" ]]; then
     CPPFLAGS="-DMY_RADIO_RF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm69" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM69 -DMY_RFM69_NEW_DRIVER $CPPFLAGS"
-elif [[ ${transport_type} == "rs485" ]]; then
-    CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm95" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
+elif [[ ${transport_type} == "rs485" ]]; then
+    CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 else
     die "Invalid transport type." 3
 fi

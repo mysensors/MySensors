@@ -21,18 +21,14 @@
 #define SOFT_I2C_MASTER_H
 /**
  * @file
- * @brief Software I2C library
+ * @brief AVR Software I2C library
  *
  * @defgroup softI2C Software I2C
- * @ingroup internals
  * @details  Software Two Wire Interface library.
  * @{
  */
-#if ARDUINO < 100
-#error Requires Arduino 1.0 or greater.
-#else  // ARDUINO
+#if defined(__AVR__) || defined(DOXYGEN)  // AVR only
 #include <Arduino.h>
-#endif  // ARDUINO
 #include <util/delay_basic.h>
 #include "DigitalPin.h"
 #include "I2cConstants.h"
@@ -92,45 +88,9 @@ public:
 	 */
 	virtual void stop() = 0;
 
-	/**
-	 * Start an I2C transfer with possible continuation.
-	 *
-	 * @param[in] addressRW I2C slave address plus R/W bit.
-	 *                      The I2C slave address is in the high seven bits
-	 *                      and is ORed with on of the following:
-	 *                      - I2C_READ for a read transfer.
-	 *                      - I2C_WRITE for a write transfer.
-	 *                      .
-	 * @param[in,out] buf   Source or destination for transfer.
-	 * @param[in] nbyte     Number of bytes to transfer (may be zero).
-	 * @param[in] option    Option for ending the transfer, one of:
-	 *                      - I2C_STOP end the transfer with an I2C stop
-	 *                        condition.
-	 *                      - I2C_REP_START end the transfer with an I2C
-	 *                        repeated start condition.
-	 *                      - I2C_CONTINUE allow additional transferContinue()
-	 *                        calls.
-	 *                      .
-	 * @return true for success else false.
-	 */
 	bool transfer(uint8_t addressRW, void *buf,
 	              size_t nbyte, uint8_t option = I2C_STOP);
 
-	/**
-	 * Continue an I2C transfer.
-	 *
-	 * @param[in,out] buf   Source or destination for transfer.
-	 * @param[in] nbyte     Number of bytes to transfer (may be zero).
-	 * @param[in] option    Option for ending the transfer, one of:
-	 *                      - I2C_STOP end the transfer with an I2C stop
-	 *                        condition.
-	 *                      - I2C_REP_START end the transfer with an I2C
-	 *                        repeated start condition.
-	 *                      - I2C_CONTINUE allow additional transferContinue()
-	 *                        calls.
-	 *                      .
-	 * @return true for success else false.
-	 */
 	bool transferContinue(void *buf, size_t nbyte, uint8_t option = I2C_STOP);
 	/** Write a byte
 	 *
@@ -147,27 +107,13 @@ private:
 //==============================================================================
 /**
  * @class SoftI2cMaster
- * @brief Software I2C master class
+ * @brief AVR Software I2C master class
  */
 class SoftI2cMaster : public I2cMasterBase
 {
 public:
 	SoftI2cMaster() {}
-	/**
-	 * Constructor, initialize SCL/SDA pins and set the bus high.
-	 *
-	 * @param[in] sdaPin The software SDA pin number.
-	 *
-	 * @param[in] sclPin The software SCL pin number.
-	 */
 	SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin);
-	/**
-	 * Initialize SCL/SDA pins and set the bus high.
-	 *
-	 * @param[in] sdaPin The software SDA pin number.
-	 *
-	 * @param[in] sclPin The software SCL pin number.
-	 */
 	void begin(uint8_t sclPin, uint8_t sdaPin);
 	uint8_t read(uint8_t last);
 	void start();
@@ -224,7 +170,7 @@ private:
 //------------------------------------------------------------------------------
 /**
  * @class FastI2cMaster
- * @brief Fast software I2C master class.
+ * @brief AVR Fast software I2C master class.
  */
 template<uint8_t sclPin, uint8_t sdaPin>
 class FastI2cMaster : public I2cMasterBase
@@ -323,13 +269,13 @@ private:
 	inline __attribute__((always_inline))
 	void sclWrite(bool value)
 	{
-		fastPinMode(sclPin, !value);
+		fastDdrWrite(sclPin, !value);
 	}
 	//----------------------------------------------------------------------------
 	inline __attribute__((always_inline))
 	void sdaWrite(bool value)
 	{
-		fastPinMode(sdaPin, !value);
+		fastDdrWrite(sdaPin, !value);
 	}
 	//----------------------------------------------------------------------------
 	inline __attribute__((always_inline))
@@ -362,6 +308,7 @@ private:
 		sclDelay(5);
 	}
 };
+#endif  // __AVR__
 #endif  // SOFT_I2C_MASTER_H
 /** @} */
 

@@ -27,7 +27,6 @@
 #endif
 
 // message buffers
-
 MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 
@@ -305,12 +304,14 @@ bool _sendRoute(MyMessage &message)
 {
 #if defined(MY_CORE_ONLY)
 	(void)message;
+	return false;
 #elif defined(MY_GATEWAY_FEATURE)
 	if (message.destination == getNodeId()) {
 		// This is a message sent from a sensor attached on the gateway node.
 		// Pass it directly to the gateway transport layer.
 		return gatewayTransportSend(message);
 	}
+	return false;
 #elif defined(MY_SENSOR_NETWORK)
 	return transportSendRoute(message);
 #else

@@ -74,11 +74,6 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#if defined(__linux__)
-#include <stdlib.h>
-#include <unistd.h>
-#endif
-
 #define GATEWAY_ADDRESS					((uint8_t)0)		//!< Node ID for GW sketch
 #define NODE_SENSOR_ID					((uint8_t)255)	//!< Node child is always created/presented when a node is started
 #define MY_CORE_VERSION					((uint8_t)2)		//!< core version
@@ -140,7 +135,7 @@ void presentNode(void);
 * @param description A textual description of the sensor.
 * @return true Returns true if message reached the first stop on its way to destination.
 */
-bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description="",
+bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description = "",
              const bool ack = false);
 #if !defined(__linux__)
 bool present(const uint8_t childSensorId, const uint8_t sensorType,

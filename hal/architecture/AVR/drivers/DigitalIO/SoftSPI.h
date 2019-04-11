@@ -22,7 +22,6 @@
  * @brief  Software SPI.
  *
  * @defgroup softSPI Software SPI
- * @ingroup internals
  * @details  Software SPI Template Class.
  * @{
  */
@@ -35,13 +34,13 @@
 #define nop asm volatile ("nop\n\t")
 //------------------------------------------------------------------------------
 /** Pin Mode for MISO is input.*/
-const bool MISO_MODE  = false;
+#define MISO_MODE INPUT
 /** Pullups disabled for MISO are disabled. */
-const bool MISO_LEVEL = false;
+#define MISO_LEVEL false
 /** Pin Mode for MOSI is output.*/
-const bool MOSI_MODE  = true;
+#define MOSI_MODE  OUTPUT
 /** Pin Mode for SCK is output. */
-const bool SCK_MODE   = true;
+#define SCK_MODE  OUTPUT
 //------------------------------------------------------------------------------
 /**
  * @class SoftSPI
@@ -63,7 +62,8 @@ public:
 	/** Soft SPI receive byte.
 	 * @return Data byte received.
 	 */
-	ALWAYS_INLINE uint8_t receive()
+	inline __attribute__((always_inline))
+	uint8_t receive()
 	{
 		uint8_t data = 0;
 		receiveBit(7, &data);
@@ -80,7 +80,8 @@ public:
 	/** Soft SPI send byte.
 	 * @param[in] data Data byte to send.
 	 */
-	ALWAYS_INLINE void send(uint8_t data)
+	inline __attribute__((always_inline))
+	void send(uint8_t data)
 	{
 		sendBit(7, data);
 		sendBit(6, data);
@@ -96,7 +97,8 @@ public:
 	 * @param[in] txData Data byte to send.
 	 * @return Data byte received.
 	 */
-	ALWAYS_INLINE uint8_t transfer(uint8_t txData)
+	inline __attribute__((always_inline))
+	uint8_t transfer(uint8_t txData)
 	{
 		uint8_t rxData = 0;
 		transferBit(7, &rxData, txData);
@@ -112,15 +114,18 @@ public:
 
 private:
 	//----------------------------------------------------------------------------
-	ALWAYS_INLINE bool MODE_CPHA(uint8_t mode)
+	inline __attribute__((always_inline))
+	bool MODE_CPHA(uint8_t mode)
 	{
 		return (mode & 1) != 0;
 	}
-	ALWAYS_INLINE bool MODE_CPOL(uint8_t mode)
+	inline __attribute__((always_inline))
+	bool MODE_CPOL(uint8_t mode)
 	{
 		return (mode & 2) != 0;
 	}
-	ALWAYS_INLINE void receiveBit(uint8_t bit, uint8_t* data)
+	inline __attribute__((always_inline))
+	void receiveBit(uint8_t bit, uint8_t* data)
 	{
 		if (MODE_CPHA(Mode)) {
 			fastDigitalWrite(SckPin, !MODE_CPOL(Mode));
@@ -137,7 +142,8 @@ private:
 		}
 	}
 	//----------------------------------------------------------------------------
-	ALWAYS_INLINE void sendBit(uint8_t bit, uint8_t data)
+	inline __attribute__((always_inline))
+	void sendBit(uint8_t bit, uint8_t data)
 	{
 		if (MODE_CPHA(Mode)) {
 			fastDigitalWrite(SckPin, !MODE_CPOL(Mode));
@@ -152,7 +158,8 @@ private:
 		}
 	}
 	//----------------------------------------------------------------------------
-	ALWAYS_INLINE void transferBit(uint8_t bit, uint8_t* rxData, uint8_t txData)
+	inline __attribute__((always_inline))
+	void transferBit(uint8_t bit, uint8_t* rxData, uint8_t txData)
 	{
 		if (MODE_CPHA(Mode)) {
 			fastDigitalWrite(SckPin, !MODE_CPOL(Mode));
