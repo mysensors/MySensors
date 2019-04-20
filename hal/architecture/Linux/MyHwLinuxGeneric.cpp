@@ -19,16 +19,6 @@
 
 #include "MyHwLinuxGeneric.h"
 
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <syscall.h>
-#include <unistd.h>
-#include "SoftEeprom.h"
-#include "log.h"
-#include "config.h"
-
 static SoftEeprom eeprom;
 static FILE *randomFp = NULL;
 

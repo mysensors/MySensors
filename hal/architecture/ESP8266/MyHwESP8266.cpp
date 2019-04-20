@@ -18,7 +18,6 @@
  */
 
 #include "MyHwESP8266.h"
-#include <EEPROM.h>
 
 bool hwInit(void)
 {

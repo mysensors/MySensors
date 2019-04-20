@@ -192,13 +192,13 @@
 #define MY_TRANSPORT_STATE_RETRIES				(3u)			//!< retries before switching to FAILURE
 #endif
 
-#define AUTO						(255u)			//!< ID 255 is reserved
+#define AUTO									(255u)			//!< ID 255 is reserved
 #define BROADCAST_ADDRESS			(255u)			//!< broadcasts are addressed to ID 255
 #define DISTANCE_INVALID			(255u)			//!< invalid distance when searching for parent
-#define MAX_HOPS					(254u)			//!< maximal number of hops for ping/pong
-#define INVALID_HOPS				(255u)			//!< invalid hops
-#define MAX_SUBSEQ_MSGS				(5u)			//!< Maximum number of subsequently processed messages in FIFO (to prevent transport deadlock if HW issue)
-#define UPLINK_QUALITY_WEIGHT		(0.05f)			//!< UPLINK_QUALITY_WEIGHT
+#define MAX_HOPS							(254u)			//!< maximal number of hops for ping/pong
+#define INVALID_HOPS					(255u)			//!< invalid hops
+#define MAX_SUBSEQ_MSGS				(5u)				//!< Maximum number of subsequently processed messages in FIFO (to prevent transport deadlock if HW issue)
+#define UPLINK_QUALITY_WEIGHT	(0.05f)			//!< UPLINK_QUALITY_WEIGHT
 
 
 // parent node check
@@ -222,10 +222,10 @@ typedef void(*transportCallback_t)(void);
  */
 typedef struct {
 	uint8_t nodeId;								//!< Current node id
-	uint8_t parentNodeId;						//!< Where this node sends its messages
-	uint8_t distanceGW;							//!< This nodes distance to sensor net gateway (number of hops)
-	uint8_t passiveMode : 1;					//!< Passive mode
-	uint8_t reserved : 7;						//!< Reserved
+	uint8_t parentNodeId;					//!< Where this node sends its messages
+	uint8_t distanceGW;						//!< This nodes distance to sensor net gateway (number of hops)
+	uint8_t passiveMode : 1;			//!< Passive mode
+	uint8_t reserved : 7;					//!< Reserved
 } transportConfig_t;
 
 /**
@@ -243,8 +243,8 @@ typedef struct {
 typedef int16_t transportRSSI_t;				//!< Datatype for internal RSSI storage
 
 // helper macro for conversion
-#define transportInternalToRSSI(__value)	((int16_t)__value>>4)				//!< Convert internal RSSI to RSSI
-#define transportRSSItoInternal(__value)	((transportRSSI_t)__value<<4)		//!< Convert RSSI to internal RSSI
+#define transportInternalToRSSI(__value)	((int16_t)__value >> 4)				//!< Convert internal RSSI to RSSI
+#define transportRSSItoInternal(__value)	((transportRSSI_t)__value << 4)		//!< Convert RSSI to internal RSSI
 
 /**
  * @brief Status variables and SM state
@@ -253,31 +253,30 @@ typedef int16_t transportRSSI_t;				//!< Datatype for internal RSSI storage
  */
 typedef struct {
 	// SM variables
-	transportState_t *currentState;			//!< pointer to current FSM state
-	uint32_t stateEnter;					//!< state enter timepoint
+	transportState_t *currentState;					//!< pointer to current FSM state
+	uint32_t stateEnter;										//!< state enter timepoint
 	// general transport variables
-	uint32_t lastUplinkCheck;				//!< last uplink check, required to prevent GW flooding
+	uint32_t lastUplinkCheck;								//!< last uplink check, required to prevent GW flooding
 	// 8 bits
-	bool findingParentNode : 1;				//!< flag finding parent node is active
-	bool preferredParentFound : 1;			//!< flag preferred parent found
-	bool uplinkOk : 1;						//!< flag uplink ok
-	bool pingActive : 1;					//!< flag ping active
-	bool transportActive : 1;				//!< flag transport active
-	uint8_t stateRetries : 3;				//!< retries / state re-enter (max 7)
+	bool findingParentNode : 1;							//!< flag finding parent node is active
+	bool preferredParentFound : 1;					//!< flag preferred parent found
+	bool uplinkOk : 1;											//!< flag uplink ok
+	bool pingActive : 1;										//!< flag ping active
+	bool transportActive : 1;								//!< flag transport active
+	uint8_t stateRetries : 3;								//!< retries / state re-enter (max 7)
 	// 8 bits
 	uint8_t failedUplinkTransmissions : 4;	//!< counter failed uplink transmissions (max 15)
-	uint8_t failureCounter : 3;				//!< counter for TSM failures (max 7)
-	bool msgReceived : 1;					//!< flag message received
-
-	uint8_t pingResponse;					//!< stores I_PONG hops
-	transportRSSI_t uplinkQualityRSSI;		//!< Uplink quality, internal RSSI representation
+	uint8_t failureCounter : 3;							//!< counter for TSM failures (max 7)
+	bool msgReceived : 1;										//!< flag message received
+	uint8_t pingResponse;										//!< stores I_PONG hops
+	transportRSSI_t uplinkQualityRSSI;			//!< Uplink quality, internal RSSI representation
 } transportSM_t;
 
 /**
 * @brief RAM routing table
 */
 typedef struct {
-	uint8_t route[SIZE_ROUTES];				//!< route for node
+	uint8_t route[SIZE_ROUTES];	//!< route for node
 } routingTable_t;
 
 // PRIVATE functions

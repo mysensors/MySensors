@@ -26,11 +26,11 @@
 #define DigitalIO_h 1
 //------------------------------------------------------------------------------
 /** DigitalPin version YYYYMMDD */
-#define DIGITAL_IO_VERSION 20140217
+#define DIGITAL_IO_VERSION 20151127
 //------------------------------------------------------------------------------
 #include "DigitalPin.h"
 #include "I2cConstants.h"
 #include "PinIO.h"
 #include "SoftI2cMaster.h"
 #include "SoftSPI.h"
-#endif // DigitalIO_h
+#endif  // DigitalIO_h

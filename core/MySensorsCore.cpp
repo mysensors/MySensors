@@ -19,20 +19,14 @@
 
 #include "MySensorsCore.h"
 
-#if defined(__linux__)
-#include <stdlib.h>
-#include <unistd.h>
-#endif
-
 // debug output
 #if defined(MY_DEBUG_VERBOSE_CORE)
 #define CORE_DEBUG(x,...)	DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 #else
-#define CORE_DEBUG(x,...)									//!< debug NULL
+#define CORE_DEBUG(x,...)	//!< debug NULL
 #endif
 
 // message buffers
-
 MyMessage _msg;			// Buffer for incoming messages
 MyMessage _msgTmp;		// Buffer for temporary messages (acks and nonces among others)
 
@@ -44,7 +38,7 @@ static uint8_t waitLock = 0;
 #endif
 
 #if defined(DEBUG_OUTPUT_ENABLED)
-char _convBuf[MAX_PAYLOAD*2+1];
+char _convBuf[MAX_PAYLOAD * 2 + 1];
 #endif
 
 // Callback for transport=ok transition
@@ -83,12 +77,13 @@ void _process(void)
 
 void _infiniteLoop(void)
 {
+#if defined(__linux__)
+	exit(1);
+#else
 	while(1) {
 		doYield();
-#if defined(__linux__)
-		exit(1);
-#endif
 	}
+#endif
 }
 
 void _begin(void)
@@ -117,7 +112,7 @@ void _begin(void)
 #if defined(F_CPU)
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=%" PRIu16 ",REL=%"
 	                PRIu8 ",VER="
-	                MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU/1000000),
+	                MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU/1000000UL),
 	           MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
 #else
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=NA,REL=%"
@@ -147,7 +142,7 @@ void _begin(void)
 
 	// Read latest received controller configuration from EEPROM
 	// Note: _coreConfig.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
-	hwReadConfigBlock((void*)&_coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS,
+	hwReadConfigBlock((void *)&_coreConfig.controllerConfig, (void *)EEPROM_CONTROLLER_CONFIG_ADDRESS,
 	                  sizeof(controllerConfig_t));
 
 #if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -309,15 +304,15 @@ bool _sendRoute(MyMessage &message)
 {
 #if defined(MY_CORE_ONLY)
 	(void)message;
-#endif
-#if defined(MY_GATEWAY_FEATURE)
+	return false;
+#elif defined(MY_GATEWAY_FEATURE)
 	if (message.destination == getNodeId()) {
 		// This is a message sent from a sensor attached on the gateway node.
 		// Pass it directly to the gateway transport layer.
 		return gatewayTransportSend(message);
 	}
-#endif
-#if defined(MY_SENSOR_NETWORK)
+	return false;
+#elif defined(MY_SENSOR_NETWORK)
 	return transportSendRoute(message);
 #else
 	return false;
@@ -560,6 +555,28 @@ void wait(const uint32_t waitingMS)
 #endif
 }
 
+bool wait(const uint32_t waitingMS, const uint8_t cmd)
+{
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	if (waitLock) {
+		CORE_DEBUG(PSTR("!MCO:WAI:RC=%" PRIu8 "\n"), waitLock);	// recursive call detected
+	}
+	waitLock++;
+#endif
+	const uint32_t enteringMS = hwMillis();
+	// invalidate cmd
+	mSetCommand(_msg, !cmd);
+	bool expectedResponse = false;
+	while ((hwMillis() - enteringMS < waitingMS) && !expectedResponse) {
+		_process();
+		expectedResponse = (mGetCommand(_msg) == cmd);
+	}
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	waitLock--;
+#endif
+	return expectedResponse;
+}
+
 bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
 {
 #if defined(MY_DEBUG_VERBOSE_CORE)
@@ -585,9 +602,7 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
 void doYield(void)
 {
 	hwWatchdogReset();
-
 	yield();
-
 #if defined (MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	ledsProcess();
 #endif
@@ -740,7 +755,7 @@ int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t i
 
 
 
-void _nodeLock(const char* str)
+void _nodeLock(const char *str)
 {
 #ifdef MY_NODE_LOCK_FEATURE
 	// Make sure EEPROM is updated to locked status

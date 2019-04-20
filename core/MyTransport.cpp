@@ -648,8 +648,8 @@ void transportProcessMessage(void)
 	(void)signerCheckTimer();
 	// receive message
 	setIndication(INDICATION_RX);
-	uint8_t payloadLength = transportReceive((uint8_t *)
-	                        &_msg.last); // last is the first byte of the payload buffer
+	// last is the first byte of the payload buffer
+	uint8_t payloadLength = transportReceive((uint8_t *)&_msg.last);
 	// get message length and limit size
 	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
@@ -722,8 +722,8 @@ void transportProcessMessage(void)
 		if (mGetRequestAck(_msg)) {
 			TRANSPORT_DEBUG(PSTR("TSF:MSG:ACK REQ\n"));	// ACK requested
 			_msgTmp = _msg;	// Copy message
-			mSetRequestAck(_msgTmp,
-			               false); // Reply without ack flag (otherwise we would end up in an eternal loop)
+			// Reply without ack flag (otherwise we would end up in an eternal loop)
+			mSetRequestAck(_msgTmp, false);
 			mSetAck(_msgTmp, true); // set ACK flag
 			_msgTmp.sender = _transportConfig.nodeId;
 			_msgTmp.destination = sender;

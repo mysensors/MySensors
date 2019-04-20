@@ -29,11 +29,11 @@
 #define MyHwTeensy3_h
 
 #include <SPI.h>
+#include "util/atomic.h"
 
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
-#include "util/atomic.h"
 
 #define CRYPTO_LITTLE_ENDIAN
 

@@ -38,6 +38,7 @@
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
+#include <stdint.h>
 
 #include "MyConfig.h"
 #include "core/MyHelperFunctions.cpp"

@@ -4,7 +4,7 @@
 
 This directory hosts MySensors development tools. The following
 conventions are employed to facilitate consistent re-use/invocation
-across modalitiies (e.g. local development, continuous integration,
+across modalities (e.g. local development, continuous integration,
 editor linters, etc.)
 
 1.  All common tools are hosted and managed in 
