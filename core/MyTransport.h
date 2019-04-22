@@ -106,8 +106,6 @@
 * | | TSF | MSG   | RCV CB										| Hand over message to @ref receive() callback function
 * | | TSF | MSG   | REL MSG										| Relay message
 * | | TSF | MSG   | REL PxNG,HP=%%d						| Relay PING/PONG message, increment hop counter (HP)
-* |!| TSF | MSG   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
-* |!| TSF | MSG   | PVER,%%d!=%%d							| Message protocol version mismatch (actual!=expected)
 * |!| TSF | MSG   | SIGN VERIFY FAIL					| Signing verification failed
 * |!| TSF | MSG   | REL MSG,NORP							| Node received a message for relaying, but node is not a repeater, message skipped
 * |!| TSF | MSG   | SIGN FAIL									| Signing message failed

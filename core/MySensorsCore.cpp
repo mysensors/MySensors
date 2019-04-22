@@ -183,7 +183,8 @@ void _begin(void)
 		setup();
 	}
 #if defined(MY_SENSOR_NETWORK)
-	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%" PRIu8 "\n"), isTransportReady() && transportSanityCheck());
+	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%" PRIu8 "\n"), isTransportReady() &&
+	           transportHALSanityCheck());
 #else
 	// no sensor network defined, call presentation & registration
 	_callbackTransportReady();

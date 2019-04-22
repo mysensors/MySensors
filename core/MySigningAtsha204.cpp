@@ -33,19 +33,6 @@
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
 #define SIGN_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)
-static char printStr[65];
-static void buf2str(const uint8_t* buf, size_t sz)
-{
-	uint8_t i;
-	if (sz > 32) {
-		sz = 32; //clamp to 32 bytes
-	}
-	for (i = 0; i < sz; i++) {
-		printStr[i * 2] = convertI2H(buf[i] >> 4);
-		printStr[(i * 2) + 1] = convertI2H(buf[i]);
-	}
-	printStr[sz * 2] = '\0';
-}
 #else
 #define SIGN_DEBUG(x,...)
 #endif
@@ -192,8 +179,8 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 		(void)signerSha256(_signing_signing_nonce, 32+1+9);
 		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%" PRIu8 "\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-		buf2str(_signing_node_serial_info, 9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), printStr);
+		hwDebugBuf2Str(_signing_node_serial_info, 9);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), hwDebugPrintStr);
 #endif
 	}
 
@@ -242,8 +229,8 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 				(void)signerSha256(_signing_verifying_nonce, 32+1+9);
 				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%" PRIu8 "\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-				buf2str(_signing_whitelist[j].serial, 9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), printStr);
+				hwDebugBuf2Str(_signing_whitelist[j].serial, 9);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), hwDebugPrintStr);
 #endif
 				break;
 			}
@@ -282,8 +269,8 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 	uint8_t* nonce = signing ? _signing_signing_nonce : _signing_verifying_nonce;
 
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-	buf2str(nonce, 32);
-	SIGN_DEBUG(PSTR("SGN:BND:NONCE=%s\n"), printStr);
+	hwDebugBuf2Str(nonce, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:NONCE=%s\n"), hwDebugPrintStr);
 #endif
 
 	while (bytes_left) {
@@ -308,8 +295,8 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 		}
 	}
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-	buf2str(_signing_hmac, 32);
-	SIGN_DEBUG(PSTR("SGN:BND:HMAC=%s\n"), printStr);
+	hwDebugBuf2Str(_signing_hmac, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:HMAC=%s\n"), hwDebugPrintStr);
 #endif
 }
 

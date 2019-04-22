@@ -15,31 +15,29 @@
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
 * version 2 as published by the Free Software Foundation.
+*
 */
 
-#include "MyCryptoGeneric.h"
+#ifndef _SHA256_H_
+#define _SHA256_H_
 
-void SHA256HMAC(uint8_t *dest, const uint8_t *key, size_t keyLength, const uint8_t *data,
-                size_t dataLength)
-{
-	SHA256HMACInit(key, keyLength);
-	SHA256HMACAdd(data, dataLength);
-	SHA256HMACResult(dest);
-}
+#define HASH_LENGTH 32	//!< HASH_LENGTH
+#define BLOCK_LENGTH 64	//!< BLOCK_LENGTH
 
-AES _aes;
+/**
+* @brief buffer for SHA256 calculator
+*/
+union _SHA256buffer_t {
+	uint8_t b[BLOCK_LENGTH];			//!< SHA256 b
+	uint32_t w[BLOCK_LENGTH / 4];	//!< SHA256 w
+};
 
-void AES128CBCInit(const uint8_t *key)
-{
-	_aes.set_key((byte *)key, 16);
-}
+/**
+* @brief state variables for SHA256 calculator
+*/
+union _SHA256state_t {
+	uint8_t b[HASH_LENGTH];	//!< SHA256 b
+	uint32_t w[HASH_LENGTH / 4]; //!< SHA256 w
+};
 
-void AES128CBCEncrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength)
-{
-	_aes.cbc_encrypt((byte *)buffer, (byte *)buffer, dataLength / 16, iv);
-}
-
-void AES128CBCDecrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength)
-{
-	_aes.cbc_decrypt((byte *)buffer, (byte *)buffer, dataLength / 16, iv);
-}
+#endif

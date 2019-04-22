@@ -54,3 +54,18 @@ void hwDebugPrint(const char *fmt, ...)
 	(void)fmt;
 #endif
 }
+
+#if defined(DEBUG_OUTPUT_ENABLED)
+static char hwDebugPrintStr[65];
+static void hwDebugBuf2Str(const uint8_t *buf, size_t sz)
+{
+	if (sz > 32) {
+		sz = 32; //clamp to 32 bytes
+	}
+	for (uint8_t i = 0; i < sz; i++) {
+		hwDebugPrintStr[i * 2] = convertI2H(buf[i] >> 4);
+		hwDebugPrintStr[(i * 2) + 1] = convertI2H(buf[i]);
+	}
+	hwDebugPrintStr[sz * 2] = '\0';
+}
+#endif

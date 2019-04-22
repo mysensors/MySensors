@@ -20,8 +20,6 @@
 #ifndef MyCryptoHAL_h
 #define MyCryptoHAL_h
 
-// Implement these as functions or macros
-
 /**
 * @brief SHA256 calculation
 *
@@ -46,4 +44,25 @@ void SHA256(uint8_t *dest, const uint8_t *data, size_t dataLength);
 */
 void SHA256HMAC(uint8_t *dest, const uint8_t *key, size_t keyLength, const uint8_t *data,
                 size_t dataLength);
+
+/**
+* @brief AES128CBCInit
+* @param key AES encryption key, 16 bytes
+*/
+void AES128CBCInit(const uint8_t *key);
+/**
+* @brief AES128CBCEncrypt
+* @param iv Initialization vector, 16 bytes
+* @param buffer Buffer to enctypt
+* @param dataLength Buffer length
+*/
+void AES128CBCEncrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength);
+/**
+* @brief AES128CBCDecrypt
+* @param iv Initialization vector, 16 bytes
+* @param buffer Buffer to decrypt
+* @param dataLength Buffer length
+*/
+void AES128CBCDecrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength);
+
 #endif

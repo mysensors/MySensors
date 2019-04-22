@@ -66,7 +66,7 @@ bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool n
 	return RFM69_sendWithRetry(to, data, len);
 }
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 	RFM69_handler();
 	return RFM69_available();
@@ -80,6 +80,11 @@ bool transportSanityCheck(void)
 uint8_t transportReceive(void *data)
 {
 	return RFM69_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
+}
+
+void transportEncrypt(const char *key)
+{
+	RFM69_encrypt(key);
 }
 
 void transportSleep(void)
@@ -185,6 +190,11 @@ bool transportInit(void)
 	return false;
 }
 
+void transportEncrypt(const char *key)
+{
+	_radio.encrypt(key);
+}
+
 void transportSetAddress(const uint8_t address)
 {
 	_address = address;
@@ -205,7 +215,7 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 	return _radio.sendWithRetry(to, data, len);
 }
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 	return _radio.receiveDone();
 }
@@ -283,5 +293,13 @@ bool transportSetTxPowerLevel(const uint8_t powerLevel)
 	(void)powerLevel;
 	return false;
 }
+
+bool transportSetTxPowerPercent(const uint8_t powerPercent)
+{
+	// not implemented
+	(void)powerPercent;
+	return false;
+}
+
 
 #endif
