@@ -364,6 +364,13 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep = false,
               const uint8_t interrupt1 = INTERRUPT_NOT_DEFINED, const uint8_t mode1 = MODE_NOT_DEFINED,
               const uint8_t interrupt2 = INTERRUPT_NOT_DEFINED, const uint8_t mode2 = MODE_NOT_DEFINED);
 
+/**
+ * Return the sleep time remaining after waking up from sleep.
+ * Depending on the CPU architecture, the remaining time can be seconds off (e.g. upto roughly 8 seconds on AVR).
+ * @return Time remaining, in ms, when wake from sleep by an interrupt, 0 by timer (@ref MY_WAKE_UP_BY_TIMER), undefined otherwise.
+*/
+uint32_t getSleepRemaining(void);
+
 
 // **** private functions ********
 

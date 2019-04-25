@@ -39,6 +39,8 @@ volatile uint8_t _wakeUp1Interrupt  =
 volatile uint8_t _wakeUp2Interrupt  =
     INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
 
+static uint32_t sleepRemainingMs = 0ul;
+
 void wakeUp1(void)
 {
 	// Disable sleep. When an interrupt occurs after attachInterrupt,
@@ -120,7 +122,7 @@ void hwPowerDown(const uint8_t wdto)
 	ADCSRA |= (1 << ADEN);
 }
 
-void hwInternalSleep(uint32_t ms)
+uint32_t hwInternalSleep(uint32_t ms)
 {
 	// Sleeping with watchdog only supports multiples of 16ms.
 	// Round up to next multiple of 16ms, to assure we sleep at least the
@@ -137,6 +139,10 @@ void hwInternalSleep(uint32_t ms)
 			}
 		}
 	}
+	if (interruptWakeUp()) {
+		return ms;
+	}
+	return 0ul;
 }
 
 int8_t hwSleep(uint32_t ms)
@@ -144,9 +150,10 @@ int8_t hwSleep(uint32_t ms)
 	// Return what woke the mcu.
 	// Default: no interrupt triggered, timer wake up
 	int8_t ret = MY_WAKE_UP_BY_TIMER;
+	sleepRemainingMs = 0ul;
 	if (ms > 0u) {
 		// sleep for defined time
-		hwInternalSleep(ms);
+		sleepRemainingMs = hwInternalSleep(ms);
 	} else {
 		// sleep until ext interrupt triggered
 		hwPowerDown(WDTO_SLEEP_FOREVER);
@@ -192,9 +199,10 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
 		attachInterrupt(interrupt2, wakeUp2, mode2);
 	}
 
+	sleepRemainingMs = 0ul;
 	if (ms > 0u) {
 		// sleep for defined time
-		hwInternalSleep(ms);
+		sleepRemainingMs = hwInternalSleep(ms);
 	} else {
 		// sleep until ext interrupt triggered
 		hwPowerDown(WDTO_SLEEP_FOREVER);
@@ -218,6 +226,11 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
 	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
 
 	return ret;
+}
+
+uint32_t hwGetSleepRemaining(void)
+{
+	return sleepRemainingMs;
 }
 
 inline void hwRandomNumberInit(void)

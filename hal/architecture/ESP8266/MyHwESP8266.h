@@ -49,6 +49,7 @@
 #define hwMillis() millis()
 // The use of randomSeed switch to pseudo random number. Keep hwRandomNumberInit empty
 #define hwRandomNumberInit()
+#define hwGetSleepRemaining() (0ul)
 
 bool hwInit(void);
 void hwReadConfigBlock(void *buf, void *addr, size_t length);

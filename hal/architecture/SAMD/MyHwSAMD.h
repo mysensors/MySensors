@@ -63,6 +63,7 @@ extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
 #define hwPinMode(__pin, __value) pinMode(__pin, __value)
 #define hwMillis() millis()
 #define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
+#define hwGetSleepRemaining() (0ul)
 
 bool hwInit(void);
 void hwWatchdogReset(void);

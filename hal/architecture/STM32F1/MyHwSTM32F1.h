@@ -69,6 +69,7 @@
 #define hwWatchdogReset() iwdg_feed()
 #define hwReboot() nvic_sys_reset()
 #define hwMillis() millis()
+#define hwGetSleepRemaining() (0ul)
 
 extern void serialEventRun(void) __attribute__((weak));
 bool hwInit(void);

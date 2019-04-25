@@ -77,7 +77,7 @@ bool hwInit(void);
 #define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((const void *)__buf, (void *)__pos, (uint32_t)__length)
 
 inline void hwRandomNumberInit(void);
-void hwInternalSleep(uint32_t ms);
+uint32_t hwInternalSleep(uint32_t ms);
 
 #if defined(MY_SOFTSPI)
 SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, 0> hwSPI; //!< hwSPI

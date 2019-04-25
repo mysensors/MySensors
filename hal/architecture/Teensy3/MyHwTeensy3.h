@@ -62,6 +62,7 @@
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
 #define hwPinMode(__pin, __value) pinMode(__pin, __value)
 #define hwMillis() millis()
+#define hwGetSleepRemaining() (0ul)
 
 void hwRandomNumberInit(void);
 bool hwInit(void);
