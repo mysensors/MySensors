@@ -54,6 +54,7 @@ StdInOutStream Serial = StdInOutStream();
 // Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
+#define hwGetSleepRemaining() (0ul)
 
 inline void hwDigitalWrite(uint8_t, uint8_t);
 inline int hwDigitalRead(uint8_t);

@@ -114,6 +114,8 @@
 #define hwDigitalRead(__pin) digitalRead(__pin)
 #define hwPinMode(__pin, __value) nrf5_pinMode(__pin, __value)
 #define hwMillis() millis()
+// TODO: Can nrf5 determine time slept?
+#define hwGetSleepRemaining() (0ul)
 
 bool hwInit(void);
 void hwWatchdogReset(void);

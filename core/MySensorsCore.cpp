@@ -753,6 +753,10 @@ int8_t smartSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t i
 	return _sleep(sleepingMS, true, interrupt1, mode1, interrupt2, mode2);
 }
 
+uint32_t getSleepRemaining(void)
+{
+	return hwGetSleepRemaining();
+}
 
 
 void _nodeLock(const char *str)

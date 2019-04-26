@@ -74,6 +74,7 @@
 #define hwMillis() millis()
 #define hwMicros() micros()
 #define hwRandomNumberInit() randomSeed(esp_random())
+#define hwGetSleepRemaining() (0ul)
 
 bool hwInit(void);
 void hwReadConfigBlock(void *buf, void *addr, size_t length);
