@@ -97,7 +97,7 @@ void stInitTransition(void)
 void stInitUpdate(void)
 {
 	// initialise radio
-	if (!transportInit()) {
+	if (!transportHALInit()) {
 		TRANSPORT_DEBUG(PSTR("!TSM:INIT:TSP FAIL\n"));
 		setIndication(INDICATION_ERR_INIT_TRANSPORT);
 		transportSwitchSM(stFailure);
@@ -116,7 +116,7 @@ void stInitUpdate(void)
 		_transportConfig.parentNodeId = GATEWAY_ADDRESS;
 		_transportConfig.distanceGW = 0u;
 		_transportConfig.nodeId = GATEWAY_ADDRESS;
-		transportSetAddress(GATEWAY_ADDRESS);
+		transportHALSetAddress(GATEWAY_ADDRESS);
 		// GW mode: skip FPAR,ID,UPL states
 		transportSwitchSM(stReady);
 #else
@@ -424,10 +424,10 @@ void transportDisable(void)
 {
 	if (RADIO_CAN_POWER_OFF == true) {
 		TRANSPORT_DEBUG(PSTR("TSF:TDI:TPD\n"));	// power down transport
-		transportPowerDown();
+		transportHALPowerDown();
 	} else {
 		TRANSPORT_DEBUG(PSTR("TSF:TDI:TSL\n"));	// send transport to sleep
-		transportSleep();
+		transportHALSleep();
 	}
 }
 
@@ -435,11 +435,11 @@ void transportReInitialise(void)
 {
 	if (RADIO_CAN_POWER_OFF == true) {
 		TRANSPORT_DEBUG(PSTR("TSF:TRI:TPU\n"));		// transport power up
-		transportPowerUp();
-		transportSetAddress(_transportConfig.nodeId);
+		transportHALPowerUp();
+		transportHALSetAddress(_transportConfig.nodeId);
 	} else {
 		TRANSPORT_DEBUG(PSTR("TSF:TRI:TSB\n"));		// transport standby
-		transportStandBy();
+		transportHALStandBy();
 	}
 }
 
@@ -497,7 +497,7 @@ bool transportAssignNodeID(const uint8_t newNodeId)
 	// verify if ID valid
 	if (newNodeId != GATEWAY_ADDRESS && newNodeId != AUTO) {
 		_transportConfig.nodeId = newNodeId;
-		transportSetAddress(newNodeId);
+		transportHALSetAddress(newNodeId);
 		// Write ID to EEPROM
 		hwWriteConfig(EEPROM_NODE_ID_ADDRESS, newNodeId);
 		TRANSPORT_DEBUG(PSTR("TSF:SID:OK,ID=%" PRIu8 "\n"),newNodeId);	// Node ID assigned
@@ -648,16 +648,15 @@ void transportProcessMessage(void)
 	(void)signerCheckTimer();
 	// receive message
 	setIndication(INDICATION_RX);
+	uint8_t payloadLength;
 	// last is the first byte of the payload buffer
-	uint8_t payloadLength = transportReceive((uint8_t *)&_msg.last);
+	if (!transportHALReceive(&_msg, &payloadLength)) {
+		return;
+	}
 	// get message length and limit size
 	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
 	// calculate expected length
-	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(_msg) ? MAX_PAYLOAD : msgLength);
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
-	// payload length = a multiple of blocksize length for decrypted messages, i.e. cannot be used for payload length check
-	payloadLength = expectedMessageLength;
-#endif
+
 	const uint8_t command = mGetCommand(_msg);
 	const uint8_t type = _msg.type;
 	const uint8_t sender = _msg.sender;
@@ -669,22 +668,6 @@ void transportProcessMessage(void)
 	                sender, last, destination, _msg.sensor, command, type, mGetPayloadType(_msg), msgLength,
 	                mGetSigned(_msg), ((command == C_INTERNAL &&
 	                                    type == I_NONCE_RESPONSE) ? "<NONCE>" : _msg.getString(_convBuf)));
-
-	// Reject payloads with incorrect length
-	if (payloadLength != expectedMessageLength) {
-		setIndication(INDICATION_ERR_LENGTH);
-		TRANSPORT_DEBUG(PSTR("!TSF:MSG:LEN=%" PRIu8 ",EXP=%" PRIu8 "\n"), payloadLength,
-		                expectedMessageLength); // invalid payload length
-		return;
-	}
-
-	// Reject messages with incorrect protocol version
-	if (mGetVersion(_msg) != PROTOCOL_VERSION) {
-		setIndication(INDICATION_ERR_VERSION);
-		TRANSPORT_DEBUG(PSTR("!TSF:MSG:PVER,%" PRIu8 "!=%" PRIu8 "\n"), mGetVersion(_msg),
-		                PROTOCOL_VERSION);	// protocol version mismatch
-		return;
-	}
 
 	// Reject messages that do not pass verification
 	if (!signerVerifyMsg(_msg)) {
@@ -948,7 +931,7 @@ void transportInvokeSanityCheck(void)
 {
 	// Suppress this because the function may return a variable value in some configurations
 	// cppcheck-suppress knownConditionTrueFalse
-	if (!transportSanityCheck()) {
+	if (!transportHALSanityCheck()) {
 		TRANSPORT_DEBUG(PSTR("!TSF:SAN:FAIL\n"));	// sanity check fail
 		transportSwitchSM(stFailure);
 	} else {
@@ -972,7 +955,7 @@ void transportProcessFIFO(void)
 
 	uint8_t _processedMessages = MAX_SUBSEQ_MSGS;
 	// process all msgs in FIFO or counter exit
-	while (transportAvailable() && _processedMessages--) {
+	while (transportHALDataAvailable() && _processedMessages--) {
 		transportProcessMessage();
 	}
 #if defined(MY_OTA_FIRMWARE_FEATURE)
@@ -999,8 +982,8 @@ bool transportSendWrite(const uint8_t to, MyMessage &message)
 
 	// send
 	setIndication(INDICATION_TX);
-	bool result = transportSend(to, &message, min((uint8_t)MAX_MESSAGE_LENGTH, totalMsgLength),
-	                            _transportConfig.passiveMode);
+	bool result = transportHALSend(to, &message, min((uint8_t)MAX_MESSAGE_LENGTH, totalMsgLength),
+	                               _transportConfig.passiveMode);
 	// broadcasting (workaround counterfeits)
 	result |= (to == BROADCAST_ADDRESS);
 
@@ -1113,22 +1096,22 @@ int16_t transportGetSignalReport(const signalReport_t signalReport)
 	int16_t result;
 	switch (signalReport) {
 	case SR_RX_RSSI:
-		result = transportGetReceivingRSSI();
+		result = transportHALGetReceivingRSSI();
 		break;
 	case SR_TX_RSSI:
-		result = transportGetSendingRSSI();
+		result = transportHALGetSendingRSSI();
 		break;
 	case SR_RX_SNR:
-		result = transportGetReceivingSNR();
+		result = transportHALGetReceivingSNR();
 		break;
 	case SR_TX_SNR:
-		result = transportGetSendingSNR();
+		result = transportHALGetSendingSNR();
 		break;
 	case SR_TX_POWER_LEVEL:
-		result = transportGetTxPowerLevel();
+		result = transportHALGetTxPowerLevel();
 		break;
 	case SR_TX_POWER_PERCENT:
-		result = transportGetTxPowerPercent();
+		result = transportHALGetTxPowerPercent();
 		break;
 	case SR_UPLINK_QUALITY:
 		result = transportInternalToRSSI(_transportSM.uplinkQualityRSSI);

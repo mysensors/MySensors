@@ -15,31 +15,14 @@
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
 * version 2 as published by the Free Software Foundation.
+*
 */
 
-#include "MyCryptoGeneric.h"
+#ifndef _HMAC_SHA256_
+#define _HMAC_SHA256_
 
-void SHA256HMAC(uint8_t *dest, const uint8_t *key, size_t keyLength, const uint8_t *data,
-                size_t dataLength)
-{
-	SHA256HMACInit(key, keyLength);
-	SHA256HMACAdd(data, dataLength);
-	SHA256HMACResult(dest);
-}
+#define HMAC_IPAD 0x36	//!< HMAC_IPAD
+#define HMAC_OPAD 0x5c	//!< HMAC_OPAD
 
-AES _aes;
 
-void AES128CBCInit(const uint8_t *key)
-{
-	_aes.set_key((byte *)key, 16);
-}
-
-void AES128CBCEncrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength)
-{
-	_aes.cbc_encrypt((byte *)buffer, (byte *)buffer, dataLength / 16, iv);
-}
-
-void AES128CBCDecrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength)
-{
-	_aes.cbc_decrypt((byte *)buffer, (byte *)buffer, dataLength / 16, iv);
-}
+#endif

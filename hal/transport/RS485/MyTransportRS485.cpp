@@ -340,7 +340,7 @@ uint8_t transportGetAddress(void)
 }
 
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 	_serialProcess();
 	return _packet_received;
