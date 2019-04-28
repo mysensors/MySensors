@@ -106,7 +106,7 @@ bool transportHALReceive(MyMessage *inMsg, uint8_t *msgLength)
 	AES128CBCDecrypt(IV, (uint8_t *)rx_data, payloadLength);
 #if defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL)
 	hwDebugBuf2Str((const uint8_t *)rx_data, payloadLength);
-	SIGN_DEBUG(PSTR("THA:RCV:PLAIN=%s\n"), hwDebugPrintStr);
+	TRANSPORT_HAL_DEBUG(PSTR("THA:RCV:PLAIN=%s\n"), hwDebugPrintStr);
 #endif
 #endif
 	// Reject messages with incorrect protocol version
@@ -144,7 +144,7 @@ bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, cons
 	}
 #if defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL)
 	hwDebugBuf2Str((const uint8_t *)&outMsg->last, len);
-	SIGN_DEBUG(PSTR("THA:SND:MSG=%s\n"), hwDebugPrintStr);
+	TRANSPORT_HAL_DEBUG(PSTR("THA:SND:MSG=%s\n"), hwDebugPrintStr);
 #endif
 
 #if defined(MY_TRANSPORT_ENCRYPTION) && !defined(MY_RADIO_RFM69)
