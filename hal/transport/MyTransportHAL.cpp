@@ -39,8 +39,10 @@ bool transportHALInit(void)
 	hwReadConfigBlock((void *)transportPSK, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS,
 	                  sizeof(transportPSK));
 #endif
+#if defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL)
 	hwDebugBuf2Str((const uint8_t *)transportPSK, sizeof(transportPSK));
 	TRANSPORT_HAL_DEBUG(PSTR("THA:INIT:PSK=%s\n"),hwDebugPrintStr);
+#endif
 #endif
 	bool result = transportInit();
 
