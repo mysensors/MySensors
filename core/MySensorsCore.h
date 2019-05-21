@@ -162,6 +162,7 @@ bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *
 * @return true Returns true if message reached the first stop on its way to destination.
 */
 bool send(MyMessage &msg, const bool ack = false);
+bool sendAsIs(MyMessage &msg, const bool ack = false);
 
 /**
  * Send this nodes battery level to gateway.

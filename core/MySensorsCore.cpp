@@ -322,8 +322,13 @@ bool _sendRoute(MyMessage &message)
 
 bool send(MyMessage &message, const bool enableAck)
 {
-	message.sender = getNodeId();
 	mSetCommand(message, C_SET);
+	return sendAsIs(message, enableAck)
+}
+
+bool sendAsIs(MyMessage &message, const bool enableAck)
+{
+	message.sender = getNodeId();
 	mSetRequestAck(message, enableAck);
 
 #if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
