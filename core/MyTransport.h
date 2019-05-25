@@ -155,6 +155,10 @@
 * - <b>ft</b>=failed uplink transmission counter
 * - <b>st</b>=send status, OK=success, NACK=no radio ACK received
 *
+*  @startuml
+*    Alice -> Bob : Hello
+*  @enduml
+*
 * @brief API declaration for MyTransport
 *
 */
