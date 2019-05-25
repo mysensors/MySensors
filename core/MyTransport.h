@@ -155,8 +155,34 @@
 * - <b>ft</b>=failed uplink transmission counter
 * - <b>st</b>=send status, OK=success, NACK=no radio ACK received
 *
-*  @startuml
-*    Alice -> Bob : Hello
+*  @startuml{transport_statechart.png} "Transport Statechart"
+*    [*] --> Init
+*    Init : entry / Read config from eeprom
+*    Init --> Failure : [! transportInit()\n|| (ID == 0 || ID == 255) ]
+*    Init --> Ready : [MY_GATEWAY_FEATURE]
+*    Init --> Parent
+*    
+*    Parent : entry / Broadcast Find Parent
+*    Parent --> ID : [MY_PARENT_NODE_IS_STATIC\n|| MY_PASSIVE_NODE\n|| Parent found]
+*    Parent --> Parent : [timeout\n&& retries left]
+*    Parent --> Failure : [timeout\n&& no retries left]
+*    
+*    ID : entry / Request Node ID
+*    ID --> Uplink : [ID valid]
+*    ID --> ID : [timeout\n&& retries left]
+*    ID --> Failure : [timeout\n&& no retries left]
+*    
+*    Uplink : entry / Check uplink (PING)
+*    Uplink --> Uplink : [timeout\n&& retries left]
+*    Uplink --> Parent : [timeout\n&& no retries left]
+*    Uplink --> Ready : [MY_TRANSPORT_UPLINK_CHECK_DISABLED\n|| Uplink ok (PONG)]
+*    
+*    Ready : entry / Transport ready callback
+*    Ready : MY_GATEWAY_FEATURE && Network discovery required / Send discovery
+*    Ready --> Parent : [!MY_PARENT_NODE_IS_STATIC\n&& Uplink failure overflow]
+*    
+*    Failure : entry / Disable transport
+*    Failure --> Init : [timeout]
 *  @enduml
 *
 * @brief API declaration for MyTransport
