@@ -156,6 +156,13 @@
 * - <b>st</b>=send status, OK=success, NACK=no radio ACK received
 *
 * @startuml{transport_statechart.png} "Transport Statechart"
+* state Init
+* state Failure
+* state Ready
+* state Parent
+* state ID
+* state Uplink
+*
 * [*] --> Init
 * Init : entry / Read config from eeprom
 * Init --> Failure : [! transportInit()\n|| ID == 0\n|| ID == 255 ]
