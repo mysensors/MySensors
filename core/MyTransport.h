@@ -155,7 +155,7 @@
 * - <b>ft</b>=failed uplink transmission counter
 * - <b>st</b>=send status, OK=success, NACK=no radio ACK received
 *
-* @startuml{transport_statechart.png} "Transport Statechart"
+* @startuml
 * state top as "Transport" {
 * state Init
 * state Failure
