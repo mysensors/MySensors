@@ -157,7 +157,7 @@
 *
 * @startuml{transport_statechart.png} "Transport Statechart"
 * state top as "Transport" {
-	state Init
+* state Init
 * state Failure
 * state Ready
 * state Parent
