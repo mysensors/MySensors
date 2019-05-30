@@ -31,13 +31,14 @@ inline void gatewayTransportProcess(void)
 		_msg = gatewayTransportReceive();
 		if (_msg.destination == GATEWAY_ADDRESS) {
 
-			// Check if sender requests an ack back.
-			if (mGetRequestAck(_msg)) {
+			// Check if sender requests an echo
+			if (mGetRequestEcho(_msg)) {
 				// Copy message
 				_msgTmp = _msg;
-				mSetRequestAck(_msgTmp,
-				               false); // Reply without ack flag (otherwise we would end up in an eternal loop)
-				mSetAck(_msgTmp, true);
+				// Reply without echo flag, otherwise we would end up in an eternal loop
+				mSetRequestEcho(_msgTmp,
+				                false);
+				mSetEcho(_msgTmp, true);
 				_msgTmp.sender = getNodeId();
 				_msgTmp.destination = _msg.sender;
 				gatewayTransportSend(_msgTmp);

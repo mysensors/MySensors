@@ -42,7 +42,7 @@ void MyMessage::clear(void)
 	sender              = 0u;
 	destination         = 0u; // Gateway is default destination
 	version_length      = 0u;
-	command_ack_payload = 0u;
+	command_echo_payload = 0u;
 	type                = 0u;
 	sensor              = 0u;
 	(void)memset((void *)data, 0u, sizeof(data));
@@ -51,9 +51,15 @@ void MyMessage::clear(void)
 	miSetVersion(PROTOCOL_VERSION);
 }
 
+// TODO: Remove before v3 is released, use isEcho instead
 bool MyMessage::isAck(void) const
 {
-	return miGetAck();
+	return isEcho();
+}
+
+bool MyMessage::isEcho(void) const
+{
+	return miGetEcho();
 }
 
 uint8_t MyMessage::getCommand(void) const

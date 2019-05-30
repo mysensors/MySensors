@@ -353,7 +353,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz)
 static bool skipSign(MyMessage &msg)
 {
 	bool ret = false;
-	if (mGetAck(msg)) {
+	if (mGetEcho(msg)) {
 		ret = true;
 	}	else if (mGetCommand(msg) == C_INTERNAL &&
 	             (msg.type == I_SIGNING_PRESENTATION	||
@@ -373,7 +373,7 @@ static bool skipSign(MyMessage &msg)
 		ret = true;
 	}
 	if (ret) {
-		SIGN_DEBUG(PSTR("SGN:SKP:%s CMD=%" PRIu8 ",TYPE=%" PRIu8 "\n"), mGetAck(msg) ? "ACK" : "MSG",
+		SIGN_DEBUG(PSTR("SGN:SKP:%s CMD=%" PRIu8 ",TYPE=%" PRIu8 "\n"), mGetEcho(msg) ? "ECHO" : "MSG",
 		           mGetCommand(msg),
 		           msg.type); //Skip signing/verification of this message
 	}
