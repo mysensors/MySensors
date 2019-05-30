@@ -192,16 +192,16 @@
 
 
 /**
- * @defgroup RadioSettingGrpPub Radio selection
+ * @defgroup TransportSettingGrpPub Transport selection
  * @ingroup MyConfigGrp
- * @brief These options control what radio type to use and various radio specific customisations.
+ * @brief These options control what transport type to use and various transport specific customisations.
  * @{
  */
 
 
 /**
  * @defgroup RS485SettingGrpPub RS485
- * @ingroup RadioSettingGrpPub
+ * @ingroup TransportSettingGrpPub
  * @brief These options are specific to the RS485 wired transport.
  * @{
  */
@@ -254,7 +254,7 @@
 
 /**
  * @defgroup RF24SettingGrpPub RF24
- * @ingroup RadioSettingGrpPub
+ * @ingroup TransportSettingGrpPub
  * @brief These options are specific to the RF24 family of wireless transport modules.
  *
  * The following chips are supported by this driver:
@@ -441,7 +441,7 @@
 
 /**
  * @defgroup NRF5SettingGrpPub nRF5
- * @ingroup RadioSettingGrpPub
+ * @ingroup TransportSettingGrpPub
  * @brief These options are specific to the nRF5 (with Enhanced ShockBurst) family of wireless
  * transport modules.
  *
@@ -572,7 +572,7 @@
 
 /**
  * @defgroup RFM69SettingGrpPub RFM69
- * @ingroup RadioSettingGrpPub
+ * @ingroup TransportSettingGrpPub
  * @brief These options are specific to the %RFM69 family of wireless transport modules.
  *
  * The following chips are supported by this driver:
@@ -793,7 +793,7 @@
 
 /**
  * @defgroup RFM95SettingGrpPub RFM95
- * @ingroup RadioSettingGrpPub
+ * @ingroup TransportSettingGrpPub
  * @brief These options are specific to the %RFM95 family of wireless transport modules.
  *
  * The following chips are supported by this driver:
@@ -955,7 +955,7 @@
 
 /**
  * @defgroup SoftSpiSettingGrpPub Soft SPI
- * @ingroup RadioSettingGrpPub
+ * @ingroup TransportSettingGrpPub
  * @brief These options are specific the soft SPI driver for certain radio transport drivers.
  *
  * The following transport drivers supported by this driver:
@@ -997,7 +997,7 @@
 #endif
 /** @}*/ // End of SoftSpiSettingGrpPub group
 
-/** @}*/ // End of RadioSettingGrpPub group
+/** @}*/ // End of TransportSettingGrpPub group
 
 /**
  * @defgroup RoutingNodeSettingGrpPub Routing and node
