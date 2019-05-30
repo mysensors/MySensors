@@ -9,6 +9,9 @@ echo "No subjects with leading lower case characters<br>" > leading_lowercases.t
 echo "No subjects with trailing periods<br>" > trailing_periods.txt
 echo "No body lines are too wide<br>" > too_long_body_lines.txt
 echo "No keywords are missing in keywords.txt<br>" > missing_keywords.txt
+echo "No keywords in code that don't exist in keywords.txt<br>" > missing_keywords_2.txt
+echo "No keywords in code that don't have Doxygen comments and aren't blacklisted in keywords.txt<br>" > missing_keywords_3.txt
+echo "No lines in keywords.txt using spaces instead of TAB (the Arduino IDE doesn't support space)<br>" > tab_spaces_keywords.txt
 echo "No occurences of the deprecated boolean data type<br>" >> booleans.txt
 
 too_long_subjects=`awk 'length > 72' subjects.txt`
@@ -49,6 +52,33 @@ if [ -n "$missing_keywords" ]; then
   result=1
 fi
 
+missing_keywords_2=$(SOURCE_FILES="core/ drivers/ hal/ examples/ examples_linux/ MyConfig.h MySensors.h"; for keyword in $(grep -whore  'MY_[A-Z][A-Z_0-9]*' $SOURCE_FILES | sort -u ); do grep -q $keyword keywords.txt || echo $keyword; done)
+if [ -n "$missing_keywords_2" ]; then
+  echo "<b>Keywords in code that don't exist in keywords.txt:</b>" > missing_keywords_2.txt
+  echo "If keywords aren't in keywords.txt, they will not be highlighted in the Arduino IDE. Highlighting makes the code easier to follow and helps spot spelling mistakes." > missing_keywords_2.txt
+  echo "$missing_keywords_2" >> missing_keywords_2.txt
+  sed -i -e 's/$/<br>/' missing_keywords_2.txt
+  result=1
+fi
+
+missing_keywords_3=$(SOURCE_FILES="core/ drivers/ hal/ examples/ examples_linux/ MyConfig.h MySensors.h"; for keyword in $(grep -whore  'MY_[A-Z][A-Z_0-9]*' $SOURCE_FILES | sort -u ); do grep -q $keyword keywords.txt || echo $keyword; done)
+if [ -n "$missing_keywords_3" ]; then
+  echo "<b>Keywords in code that don't have Doxygen comments and aren't blacklisted in keywords.txt:</b>" > missing_keywords_3.txt
+  echo "If keywords don't have Doxygen comments, they will not be available at https://www.mysensors.org/apidocs/index.html Add Doxygen comments to make it easier for users to find and understand how to use the new keywords." > missing_keywords_3.txt
+  echo "$missing_keywords_3" >> missing_keywords_3.txt
+  sed -i -e 's/$/<br>/' missing_keywords_3.txt
+  result=1
+fi
+
+
+tab_spaces_keywords=$(grep -e '[[:space:]]KEYWORD' -e '[[:space:]]LITERAL1' keywords.txt | grep -v -e $'\tLITERAL1' -e $'\tKEYWORD')
+if [ -n "$tab_spaces_keywords" ]; then
+  echo "<b>Keywords that use space instead of TAB in keywords.txt:</b>" > tab_spaces_keywords.txt
+  echo "$tab_spaces_keywords" >> tab_spaces_keywords.txt
+  sed -i -e 's/$/<br>/' tab_spaces_keywords.txt
+  result=1
+fi
+
 # Evaluate if there exists booleans in the code tree (not counting this file)
 if git grep -q boolean -- `git ls-files | grep -v butler.sh`; then
   echo "<b>You have added at least one occurence of the deprecated boolean data type. Please use bool instead.</b><br>" > booleans.txt
@@ -57,7 +87,7 @@ fi
 
 printf "%s" "<html>" > butler.html
 echo "Greetings! Here is my evaluation of your pull request:<br>" >> butler.html
-awk 'FNR==1{print "<br>"}1' too_long_subjects.txt leading_lowercases.txt trailing_periods.txt too_long_body_lines.txt missing_keywords.txt booleans.txt >> butler.html
+awk 'FNR==1{print "<br>"}1' too_long_subjects.txt leading_lowercases.txt trailing_periods.txt too_long_body_lines.txt missing_keywords.txt missing_keywords_2.txt missing_keywords_3.txt tab_spaces_keywords.txt booleans.txt >> butler.html
 echo "<br>" >> butler.html
 if [ $result -ne 0 ]; then
 	echo "<b>I am afraid there are some issues with your commit messages and/or use of keywords.</b><br>" >> butler.html
