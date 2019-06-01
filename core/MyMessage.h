@@ -96,7 +96,7 @@ typedef enum {
 	S_WATER_QUALITY			= 39	//!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS
 } mysensors_sensor_t;
 
-/// @brief Type of sensor data (for set/req/ack messages)
+/// @brief Type of sensor data (for set/req/echo messages)
 typedef enum {
 	V_TEMP					= 0,	//!< S_TEMP. Temperature S_TEMP, S_HEATER, S_HVAC
 	V_HUM					= 1,	//!< S_HUM. Humidity
@@ -250,11 +250,11 @@ typedef enum {
 #define mSetCommand(_message,_command) BF_SET(_message.command_echo_payload, _command, 0, 3) //!< Set command field
 #define mGetCommand(_message) ((uint8_t)BF_GET(_message.command_echo_payload, 0, 3)) //!< Get command field
 
-#define mSetRequestEcho(_message,_rack) BF_SET(_message.command_echo_payload, _rack, 3, 1) //!< Set ack-request field
-#define mGetRequestEcho(_message) ((bool)BF_GET(_message.command_echo_payload, 3, 1)) //!< Get  ack-request field
+#define mSetRequestEcho(_message,_rEcho) BF_SET(_message.command_echo_payload, _rEcho, 3, 1) //!< Set echo request field
+#define mGetRequestEcho(_message) ((bool)BF_GET(_message.command_echo_payload, 3, 1)) //!< Get  echo request field
 
-#define mSetEcho(_message,_ackMsg) BF_SET(_message.command_echo_payload, _ackMsg, 4, 1) //!< Set ack field
-#define mGetEcho(_message) ((bool)BF_GET(_message.command_echo_payload, 4, 1)) //!< Get ack field
+#define mSetEcho(_message,_echoMsg) BF_SET(_message.command_echo_payload, _echoMsg, 4, 1) //!< Set echo field
+#define mGetEcho(_message) ((bool)BF_GET(_message.command_echo_payload, 4, 1)) //!< Get echo field
 
 #define mSetPayloadType(_message, _pt) BF_SET(_message.command_echo_payload, _pt, 5, 3) //!< Set payload type field
 #define mGetPayloadType(_message) ((uint8_t)BF_GET(_message.command_echo_payload, 5, 3)) //!< Get payload type field
@@ -269,10 +269,10 @@ typedef enum {
 #define miSetVersion(_version) BF_SET(version_length, _version, 0, 2) //!< Internal setter for version field
 #define miGetVersion() ((uint8_t)BF_GET(version_length, 0, 2)) //!< Internal getter for version field
 
-#define miSetRequestEcho(_rack) BF_SET(command_echo_payload, _rack, 3, 1) //!< Internal setter for echo request field
+#define miSetRequestEcho(_rEcho) BF_SET(command_echo_payload, _rEcho, 3, 1) //!< Internal setter for echo request field
 #define miGetRequestEcho() ((bool)BF_GET(command_echo_payload, 3, 1)) //!< Internal getter for echo request field
 
-#define miSetEcho(_ack) BF_SET(command_echo_payload, _ack, 4, 1) //!< Internal setter for echo field
+#define miSetEcho(_echo) BF_SET(command_echo_payload, _echo, 4, 1) //!< Internal setter for echo field
 #define miGetEcho() ((bool)BF_GET(command_echo_payload, 4, 1)) //!< Internal getter for echo field
 
 #define miSetPayloadType(_pt) BF_SET(command_echo_payload, _pt, 5, 3) //!< Internal setter for payload type field
