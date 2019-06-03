@@ -22,7 +22,7 @@
 // global variables
 static bool inOTALog = false;
 
-void OTALog(uint8_t logNode, bool enableEcho, const char *fmt, ... )
+void OTALog(uint8_t logNode, bool echo, const char *fmt, ... )
 {
 	// Avoid recursion
 	if (inOTALog==true) {
@@ -62,7 +62,7 @@ void OTALog(uint8_t logNode, bool enableEcho, const char *fmt, ... )
 	msg.sender = getNodeId();
 	msg.setDestination(logNode);
 	mSetCommand(msg, C_INTERNAL);
-	mSetRequestEcho(msg, enableEcho);
+	mSetRequestEcho(msg, echo);
 
 	// Send package
 	for (int pos = 0; pos<n; pos+=MAX_PAYLOAD) {

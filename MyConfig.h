@@ -87,13 +87,17 @@
 /**
  * @def MY_DEBUG_OTA_DISABLE_ECHO
  * @brief Define MY_DEBUG_OTA_DISABLE_ECHO to send messages without requesting the
- * estination to echo the message.
+ * destination to echo the message.
  *
  * This option reduces the latency added by OTA debug messages by sending packages
  * only once. You can loose debug messages.
  *
  */
 //#define MY_DEBUG_OTA_DISABLE_ECHO
+#if defined(MY_DEBUG_OTA_DISABLE_ACK) && !defined(DOXYGEN)
+#warning MY_DEBUG_OTA_DISABLE_ACK is deprecated, please use MY_DEBUG_OTA_DISABLE_ECHO instead
+#define MY_DEBUG_OTA_DISABLE_ECHO
+#endif
 
 /**
  * @def MY_OTA_LOG_RECEIVER_FEATURE
