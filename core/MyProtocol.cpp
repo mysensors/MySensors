@@ -33,7 +33,7 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 	uint8_t command = 0;
 	message.sender = GATEWAY_ADDRESS;
 	message.last = GATEWAY_ADDRESS;
-	mSetAck(message, false);
+	mSetEcho(message, false);
 
 	// Extract command data coming on serial line
 	for (str = strtok_r(inputString, ";", &p); // split using semicolon
@@ -51,8 +51,8 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 			command = atoi(str);
 			mSetCommand(message, command);
 			break;
-		case 3: // Should we request ack from destination?
-			mSetRequestAck(message, atoi(str) ? 1 : 0);
+		case 3: // Should we request echo from destination?
+			mSetRequestEcho(message, atoi(str) ? 1 : 0);
 			break;
 		case 4: // Data type
 			message.type = atoi(str);
@@ -91,7 +91,7 @@ char *protocolMyMessage2Serial(MyMessage &message)
 {
 	(void)snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
 	                 PSTR("%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%s\n"), message.sender,
-	                 message.sensor, mGetCommand(message), mGetAck(message), message.type,
+	                 message.sensor, mGetCommand(message), mGetEcho(message), message.type,
 	                 message.getString(_convBuffer));
 	return _fmtBuffer;
 }
@@ -100,7 +100,7 @@ char *protocolMyMessage2MQTT(const char *prefix, MyMessage &message)
 {
 	(void)snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
 	                 PSTR("%s/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 ""), prefix,
-	                 message.sender, message.sensor, mGetCommand(message), mGetAck(message), message.type);
+	                 message.sender, message.sensor, mGetCommand(message), mGetEcho(message), message.type);
 	return _fmtBuffer;
 }
 
@@ -111,7 +111,7 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 	uint8_t index = 0;
 	message.sender = GATEWAY_ADDRESS;
 	message.last = GATEWAY_ADDRESS;
-	mSetAck(message, false);
+	mSetEcho(message, false);
 	for (str = strtok_r(topic + strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1, "/", &p);
 	        str && index < 5;
 	        str = strtok_r(NULL, "/", &p)
@@ -150,8 +150,8 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 			break;
 		}
 		case 3:
-			// Ack flag
-			mSetRequestAck(message, atoi(str) ? 1 : 0);
+			// Echo flag
+			mSetRequestEcho(message, atoi(str) ? 1 : 0);
 			break;
 		case 4:
 			// Sub type

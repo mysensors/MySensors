@@ -701,20 +701,20 @@ void transportProcessMessage(void)
 		mSetLength(_msg, min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD));
 		// null terminate data
 		_msg.data[msgLength] = 0u;
-		// Check if sender requests an ack back.
-		if (mGetRequestAck(_msg)) {
-			TRANSPORT_DEBUG(PSTR("TSF:MSG:ACK REQ\n"));	// ACK requested
+		// Check if sender requests an echo.
+		if (mGetRequestEcho(_msg)) {
+			TRANSPORT_DEBUG(PSTR("TSF:MSG:ECHO REQ\n"));	// ECHO requested
 			_msgTmp = _msg;	// Copy message
-			// Reply without ack flag (otherwise we would end up in an eternal loop)
-			mSetRequestAck(_msgTmp, false);
-			mSetAck(_msgTmp, true); // set ACK flag
+			// Reply without echo flag (otherwise we would end up in an eternal loop)
+			mSetRequestEcho(_msgTmp, false);
+			mSetEcho(_msgTmp, true); // set ECHO flag
 			_msgTmp.sender = _transportConfig.nodeId;
 			_msgTmp.destination = sender;
-			// send ACK, use transportSendRoute since ACK reply is not internal, i.e. if !transportOK do not reply
+			// send ECHO, use transportSendRoute since ECHO reply is not internal, i.e. if !transportOK do not reply
 			(void)transportSendRoute(_msgTmp);
 		}
-		if(!mGetAck(_msg)) {
-			// only process if not ACK
+		if(!mGetEcho(_msg)) {
+			// only process if not ECHO
 			if (command == C_INTERNAL) {
 				// Process signing related internal messages
 				if (signerProcessInternal(_msg)) {
@@ -817,7 +817,7 @@ void transportProcessMessage(void)
 			}
 		} else {
 			TRANSPORT_DEBUG(
-			    PSTR("TSF:MSG:ACK\n")); // received message is ACK, no internal processing, handover to msg callback
+			    PSTR("TSF:MSG:ECHO\n")); // received message is ECHO, no internal processing, handover to msg callback
 		}
 #if defined(MY_OTA_LOG_RECEIVER_FEATURE)
 		if ((type == I_LOG_MESSAGE) && (command == C_INTERNAL)) {

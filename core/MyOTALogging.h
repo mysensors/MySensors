@@ -47,11 +47,11 @@
  * new debug message line starts. Incomplete messages are ending with '...'
  *
  * @param logNode    Destination node ID
- * @param enableAck  Enable or disable ACK flag
+ * @param echo       Enable or disable echo flag
  * @param fmt        printf format string
  * @param ...        arguments
  */
-void OTALog(uint8_t logNode, bool enableAck, const char *fmt, ... );
+void OTALog(uint8_t logNode, bool echo, const char *fmt, ... );
 
 /**
  * @brief Handles output of OTA log or debug messages

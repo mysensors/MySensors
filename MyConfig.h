@@ -85,14 +85,19 @@
 //#define MY_DEBUG_OTA (0)
 
 /**
- * @def MY_DEBUG_OTA_DISABLE_ACK
- * @brief Define MY_DEBUG_OTA_DISABLE_ACK to send messages with no ACK flag.
+ * @def MY_DEBUG_OTA_DISABLE_ECHO
+ * @brief Define MY_DEBUG_OTA_DISABLE_ECHO to send messages without requesting the
+ * destination to echo the message.
  *
  * This option reduces the latency added by OTA debug messages by sending packages
  * only once. You can loose debug messages.
  *
  */
-//#define MY_DEBUG_OTA_DISABLE_ACK
+//#define MY_DEBUG_OTA_DISABLE_ECHO
+#if defined(MY_DEBUG_OTA_DISABLE_ACK) && !defined(DOXYGEN)
+#warning MY_DEBUG_OTA_DISABLE_ACK is deprecated, please use MY_DEBUG_OTA_DISABLE_ECHO instead
+#define MY_DEBUG_OTA_DISABLE_ECHO
+#endif
 
 /**
  * @def MY_OTA_LOG_RECEIVER_FEATURE
@@ -2083,7 +2088,7 @@
 #ifndef MY_OTA_LOG_SENDER_FEATURE
 #define MY_OTA_LOG_SENDER_FEATURE
 #endif
-#ifndef MY_DEBUG_OTA_DISABLE_ACK
+#ifndef MY_DEBUG_OTA_DISABLE_ECHO
 #define DEBUG_OUTPUT(x,...)		OTALog((MY_DEBUG_OTA), true, x, ##__VA_ARGS__)	//!< debug
 #else
 #define DEBUG_OUTPUT(x,...)		OTALog((MY_DEBUG_OTA), false, x, ##__VA_ARGS__)	//!< debug
@@ -2174,7 +2179,7 @@
 #define MY_DEBUG
 #define MY_DEBUGDEVICE
 #define MY_DEBUG_OTA
-#define MY_DEBUG_OTA_DISABLE_ACK
+#define MY_DEBUG_OTA_DISABLE_ECHO
 #define MY_SPECIAL_DEBUG
 #define MY_DISABLED_SERIAL
 #define MY_SPLASH_SCREEN_DISABLED

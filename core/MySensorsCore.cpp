@@ -320,11 +320,11 @@ bool _sendRoute(MyMessage &message)
 #endif
 }
 
-bool send(MyMessage &message, const bool enableAck)
+bool send(MyMessage &message, const bool echo)
 {
 	message.sender = getNodeId();
 	mSetCommand(message, C_SET);
-	mSetRequestAck(message, enableAck);
+	mSetRequestEcho(message, echo);
 
 #if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
 	if (_coreConfig.nodeRegistered) {
@@ -338,24 +338,24 @@ bool send(MyMessage &message, const bool enableAck)
 #endif
 }
 
-bool sendBatteryLevel(const uint8_t value, const bool ack)
+bool sendBatteryLevel(const uint8_t value, const bool echo)
 {
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL,
-	                        ack).set(value));
+	                        echo).set(value));
 }
 
-bool sendHeartbeat(const bool ack)
+bool sendHeartbeat(const bool echo)
 {
 #if defined(MY_SENSOR_NETWORK)
 	const uint32_t heartbeat = transportGetHeartbeat();
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE,
-	                        ack).set(heartbeat));
+	                        echo).set(heartbeat));
 #elif defined(MY_GATEWAY_FEATURE)
 	const uint32_t heartbeat = hwMillis();
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE,
-	                        ack).set(heartbeat));
+	                        echo).set(heartbeat));
 #else
-	(void)ack;
+	(void)echo;
 	return false;
 #endif
 }
@@ -363,49 +363,49 @@ bool sendHeartbeat(const bool ack)
 
 
 bool present(const uint8_t childSensorId, const uint8_t sensorType, const char *description,
-             const bool ack)
+             const bool echo)
 {
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType,
-	                        ack).set(childSensorId == NODE_SENSOR_ID ? MYSENSORS_LIBRARY_VERSION : description));
+	                        echo).set(childSensorId == NODE_SENSOR_ID ? MYSENSORS_LIBRARY_VERSION : description));
 }
 
 #if !defined(__linux__)
 bool present(const uint8_t childSensorId, const uint8_t sensorType,
              const __FlashStringHelper *description,
-             const bool ack)
+             const bool echo)
 {
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType,
-	                        ack).set(childSensorId == NODE_SENSOR_ID ? F(" MYSENSORS_LIBRARY_VERSION "): description));
+	                        echo).set(childSensorId == NODE_SENSOR_ID ? F(" MYSENSORS_LIBRARY_VERSION "): description));
 }
 #endif
 
 
-bool sendSketchInfo(const char *name, const char *version, const bool ack)
+bool sendSketchInfo(const char *name, const char *version, const bool echo)
 {
 	bool result = true;
 	if (name) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME,
-		                           ack).set(name));
+		                           echo).set(name));
 	}
 	if (version) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION,
-		                           ack).set(version));
+		                           echo).set(version));
 	}
 	return result;
 }
 
 #if !defined(__linux__)
 bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version,
-                    const bool ack)
+                    const bool echo)
 {
 	bool result = true;
 	if (name) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME,
-		                           ack).set(name));
+		                           echo).set(name));
 	}
 	if (version) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION,
-		                           ack).set(version));
+		                           echo).set(version));
 	}
 	return result;
 }
@@ -416,9 +416,10 @@ bool request(const uint8_t childSensorId, const uint8_t variableType, const uint
 	return _sendRoute(build(_msgTmp, destination, childSensorId, C_REQ, variableType).set(""));
 }
 
-bool requestTime(const bool ack)
+bool requestTime(const bool echo)
 {
-	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME, ack).set(""));
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME,
+	                        echo).set(""));
 }
 
 // Message delivered through _msg

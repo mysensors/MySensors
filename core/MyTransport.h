@@ -91,8 +91,8 @@
 * |!| TSF | SID   | FAIL,ID=%%d								| Assigned ID is invalid
 * | | TSF | PNG   | SEND,TO=%%d								| Send ping to destination (TO)
 * | | TSF | WUR   | MS=%%lu										| Wait until transport ready, timeout (MS)
-* | | TSF | MSG   | ACK REQ										| ACK message requested
-* | | TSF | MSG   | ACK												| ACK message, do not proceed but forward to callback
+* | | TSF | MSG   | ECHO REQ										| ECHO message requested
+* | | TSF | MSG   | ECHO												| ECHO message, do not proceed but forward to callback
 * | | TSF | MSG   | FPAR RES,ID=%%d,D=%%d			| Response to find parent received from node (ID) with distance (D) to GW
 * | | TSF | MSG   | FPAR PREF FOUND						| Preferred parent found, i.e. parent defined via MY_PARENT_NODE_ID
 * | | TSF | MSG   | FPAR OK,ID=%%d,D=%%d			| Find parent response from node (ID) is valid, distance (D) to GW

@@ -96,7 +96,7 @@ typedef enum {
 	S_WATER_QUALITY			= 39	//!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS
 } mysensors_sensor_t;
 
-/// @brief Type of sensor data (for set/req/ack messages)
+/// @brief Type of sensor data (for set/req/echo messages)
 typedef enum {
 	V_TEMP					= 0,	//!< S_TEMP. Temperature S_TEMP, S_HEATER, S_HVAC
 	V_HUM					= 1,	//!< S_HUM. Humidity
@@ -247,21 +247,21 @@ typedef enum {
 #define mSetLength(_message,_length) BF_SET(_message.version_length, _length, 3, 5) //!< Set length field
 #define mGetLength(_message) ((uint8_t)BF_GET(_message.version_length, 3, 5)) //!< Get length field
 
-#define mSetCommand(_message,_command) BF_SET(_message.command_ack_payload, _command, 0, 3) //!< Set command field
-#define mGetCommand(_message) ((uint8_t)BF_GET(_message.command_ack_payload, 0, 3)) //!< Get command field
+#define mSetCommand(_message,_command) BF_SET(_message.command_echo_payload, _command, 0, 3) //!< Set command field
+#define mGetCommand(_message) ((uint8_t)BF_GET(_message.command_echo_payload, 0, 3)) //!< Get command field
 
-#define mSetRequestAck(_message,_rack) BF_SET(_message.command_ack_payload, _rack, 3, 1) //!< Set ack-request field
-#define mGetRequestAck(_message) ((bool)BF_GET(_message.command_ack_payload, 3, 1)) //!< Get  ack-request field
+#define mSetRequestEcho(_message,_rEcho) BF_SET(_message.command_echo_payload, _rEcho, 3, 1) //!< Set echo request field
+#define mGetRequestEcho(_message) ((bool)BF_GET(_message.command_echo_payload, 3, 1)) //!< Get  echo request field
 
-#define mSetAck(_message,_ackMsg) BF_SET(_message.command_ack_payload, _ackMsg, 4, 1) //!< Set ack field
-#define mGetAck(_message) ((bool)BF_GET(_message.command_ack_payload, 4, 1)) //!< Get ack field
+#define mSetEcho(_message,_echoMsg) BF_SET(_message.command_echo_payload, _echoMsg, 4, 1) //!< Set echo field
+#define mGetEcho(_message) ((bool)BF_GET(_message.command_echo_payload, 4, 1)) //!< Get echo field
 
-#define mSetPayloadType(_message, _pt) BF_SET(_message.command_ack_payload, _pt, 5, 3) //!< Set payload type field
-#define mGetPayloadType(_message) ((uint8_t)BF_GET(_message.command_ack_payload, 5, 3)) //!< Get payload type field
+#define mSetPayloadType(_message, _pt) BF_SET(_message.command_echo_payload, _pt, 5, 3) //!< Set payload type field
+#define mGetPayloadType(_message) ((uint8_t)BF_GET(_message.command_echo_payload, 5, 3)) //!< Get payload type field
 
 
 // internal access for special fields
-#define miGetCommand() ((uint8_t)BF_GET(command_ack_payload, 0, 3)) //!< Internal getter for command field
+#define miGetCommand() ((uint8_t)BF_GET(command_echo_payload, 0, 3)) //!< Internal getter for command field
 
 #define miSetLength(_length) BF_SET(version_length, _length, 3, 5) //!< Internal setter for length field
 #define miGetLength() ((uint8_t)BF_GET(version_length, 3, 5)) //!< Internal getter for length field
@@ -269,14 +269,14 @@ typedef enum {
 #define miSetVersion(_version) BF_SET(version_length, _version, 0, 2) //!< Internal setter for version field
 #define miGetVersion() ((uint8_t)BF_GET(version_length, 0, 2)) //!< Internal getter for version field
 
-#define miSetRequestAck(_rack) BF_SET(command_ack_payload, _rack, 3, 1) //!< Internal setter for ack-request field
-#define miGetRequestAck() ((bool)BF_GET(command_ack_payload, 3, 1)) //!< Internal getter for ack-request field
+#define miSetRequestEcho(_rEcho) BF_SET(command_echo_payload, _rEcho, 3, 1) //!< Internal setter for echo request field
+#define miGetRequestEcho() ((bool)BF_GET(command_echo_payload, 3, 1)) //!< Internal getter for echo request field
 
-#define miSetAck(_ack) BF_SET(command_ack_payload, _ack, 4, 1) //!< Internal setter for ack field
-#define miGetAck() ((bool)BF_GET(command_ack_payload, 4, 1)) //!< Internal getter for ack field
+#define miSetEcho(_echo) BF_SET(command_echo_payload, _echo, 4, 1) //!< Internal setter for echo field
+#define miGetEcho() ((bool)BF_GET(command_echo_payload, 4, 1)) //!< Internal getter for echo field
 
-#define miSetPayloadType(_pt) BF_SET(command_ack_payload, _pt, 5, 3) //!< Internal setter for payload type field
-#define miGetPayloadType() (uint8_t)BF_GET(command_ack_payload, 5, 3) //!< Internal getter for payload type field
+#define miSetPayloadType(_pt) BF_SET(command_echo_payload, _pt, 5, 3) //!< Internal setter for payload type field
+#define miGetPayloadType() (uint8_t)BF_GET(command_echo_payload, 5, 3) //!< Internal getter for payload type field
 
 
 #if defined(__cplusplus) || defined(DOXYGEN)
@@ -380,10 +380,17 @@ public:
 	uint8_t getCommand(void) const;
 
 	/**
-	 * @brief Getter for ack-flag.
-	 * @return true if this is an ack message
+	 * \deprecated use isEcho()
+	 * @brief Getter for echo-flag.
+	 * @return true if this is an echoed message
 	 */
 	bool isAck(void) const;
+
+	/**
+	 * @brief Getter for echo-flag.
+	 * @return true if this is an echoed message
+	 */
+	bool isEcho(void) const;
 
 	/**
 	 * @brief Set message type
@@ -485,11 +492,11 @@ typedef union {
 
 	/**
 	 * 3 bit - Command type<br>
-	 * 1 bit - Request an ack - Indicator that receiver should send an ack back<br>
-	 * 1 bit - Is ack message - Indicator that this is the actual ack message<br>
+	 * 1 bit - Request an echo - Indicator that receiver should echo the message back to the sender<br>
+	 * 1 bit - Is echo message - Indicator that this is the echoed message<br>
 	 * 3 bit - Payload data type
 	 */
-	uint8_t command_ack_payload;
+	uint8_t command_echo_payload;
 
 	uint8_t type; //!< 8 bit - Type varies depending on command
 	uint8_t sensor; //!< 8 bit - Id of sensor that this message concerns.

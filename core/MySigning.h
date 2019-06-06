@@ -791,7 +791,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * | | SGN | VER | LEFT='number'						| 'number' of failed verifications left in a row before node is locked
  * |!| SGN | VER | STATE  									| Security system in a invalid state (personalization data tampered)
  * | | SGN | SKP | MSG CMD='cmd',TYPE='type'| Message with command 'cmd' and type 'type' does not need to be signed
- * | | SGN | SKP | ACK CMD='cmd',TYPE='type'| ACK messages does not need to be signed
+ * | | SGN | SKP | ECHO CMD='cmd',TYPE='type'| ECHO messages does not need to be signed
  * | | SGN | NCE | LEFT='number'						| 'number' of nonce requests between successful verifications left before node is locked
  * | | SGN | NCE | XMT,TO='node'						| Nonce data transmitted to 'node'
  * |!| SGN | NCE | XMT,TO='node' FAIL				| Nonce data not properly transmitted to 'node'
