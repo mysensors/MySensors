@@ -30,7 +30,7 @@ def parseWarnings(String key) {
  		excludePattern: '''.*/EEPROM\\.h,.*/Dns\\.cpp,.*/socket\\.cpp,.*/util\\.h,.*/Servo\\.cpp,
  											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,
  											 .*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/Wire\\.cpp,
- 											 .*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/espressif/esp32.*,
+ 											 .*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/esp32.*,
 											 .*/libraries/SD/.*''',
 
  		healthy: '', includePattern: '', messagesPattern: '',
