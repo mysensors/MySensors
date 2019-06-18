@@ -37,8 +37,8 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 
 	// Extract command data coming on serial line
 	for (str = strtok_r(inputString, ";", &p); // split using semicolon
-	        str && index < 6; // loop while str is not null an max 5 times
-	        str = strtok_r(NULL, ";", &p) // get subsequent tokens
+	        str && index < 5; // loop while str is not null an max 4 times
+	        str = strtok_r(NULL, ";", &p), index++ // get subsequent tokens
 	    ) {
 		switch (index) {
 		case 0: // Radio id (destination)
@@ -57,34 +57,30 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 		case 4: // Data type
 			message.type = atoi(str);
 			break;
-		case 5: {// Variable value
-			if (command == C_STREAM) {
-				uint8_t bvalue[MAX_PAYLOAD];
-				uint8_t blen = 0;
-				while (*str) {
-					uint8_t val;
-					val = convertH2I(*str++) << 4;
-					val += convertH2I(*str++);
-					bvalue[blen] = val;
-					blen++;
-				}
-				message.set(bvalue, blen);
-			} else {
-				char *value = str;
-				// Remove trailing carriage return and newline character (if it exists)
-				const uint8_t lastCharacter = strlen(value) - 1;
-				if (value[lastCharacter] == '\r' || value[lastCharacter] == '\n') {
-					value[lastCharacter] = '\0';
-				}
-				message.set(value);
-			}
-			break;
 		}
-		}
-		index++;
 	}
-	// Return true if input valid
-	return (index == 6);
+	// payload
+	if (command == C_STREAM) {
+		uint8_t bvalue[MAX_PAYLOAD];
+		uint8_t blen = 0;
+		while (*str) {
+			uint8_t val;
+			val = convertH2I(*str++) << 4;
+			val += convertH2I(*str++);
+			bvalue[blen] = val;
+			blen++;
+		}
+		message.set(bvalue, blen);
+	} else {
+		char *value = str;
+		// Remove trailing carriage return and newline character (if it exists)
+		const uint8_t lastCharacter = strlen(value) - 1;
+		if (value[lastCharacter] == '\r' || value[lastCharacter] == '\n') {
+			value[lastCharacter] = '\0';
+		}
+		message.set(value);
+	}
+	return (index == 5);
 }
 
 char *protocolMyMessage2Serial(MyMessage &message)
@@ -114,7 +110,7 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 	mSetEcho(message, false);
 	for (str = strtok_r(topic + strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1, "/", &p);
 	        str && index < 5;
-	        str = strtok_r(NULL, "/", &p)
+	        str = strtok_r(NULL, "/", &p), index++
 	    ) {
 		switch (index) {
 		case 0:
@@ -158,7 +154,6 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 			message.type = atoi(str);
 			break;
 		}
-		index++;
 	}
 	// Return true if input valid
 	return (index == 5);
