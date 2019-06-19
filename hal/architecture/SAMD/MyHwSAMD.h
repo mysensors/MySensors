@@ -57,6 +57,44 @@ extEEPROM eep(MY_EXT_EEPROM_SIZE, 1, MY_EXT_EEPROM_PAGE_SIZE,
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
 #define vsnprintf_P(s, n, f, ...) vsnprintf((s), (n), (f), __VA_ARGS__)
 
+// redefine 8 bit types of inttypes.h (as of SAMD board defs 1.8.1)
+#undef PRId8
+#undef PRIi8
+#undef PRIo8
+#undef PRIu8
+#undef PRIx8
+#undef PRIX8
+#undef PRIdLEAST8
+#undef PRIiLEAST8
+#undef PRIoLEAST8
+#undef PRIuLEAST8
+#undef PRIxLEAST8
+#undef PRIXLEAST8
+#undef PRIdFAST8
+#undef PRIiFAST8
+#undef PRIoFAST8
+#undef PRIuFAST8
+#undef PRIxFAST8
+#undef PRIXFAST8
+#define PRId8		"d"
+#define PRIi8		"i"
+#define PRIo8		"o"
+#define PRIu8		"u"
+#define PRIx8		"x"
+#define PRIX8		"X"
+#define PRIdLEAST8	"d"
+#define PRIiLEAST8	"i"
+#define PRIoLEAST8	"o"
+#define PRIuLEAST8	"u"
+#define PRIxLEAST8	"x"
+#define PRIXLEAST8	"X"
+#define PRIdFAST8	"d"
+#define PRIiFAST8	"i"
+#define PRIoFAST8	"o"
+#define PRIuFAST8	"u"
+#define PRIxFAST8	"x"
+#define PRIXFAST8	"X"
+
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
 #define hwDigitalRead(__pin) digitalRead(__pin)

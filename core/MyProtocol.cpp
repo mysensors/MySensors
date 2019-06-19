@@ -85,7 +85,7 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 
 char *protocolMyMessage2Serial(MyMessage &message)
 {
-	(void)snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
+	(void)snprintf_P(_fmtBuffer, (uint8_t)MY_GATEWAY_MAX_SEND_LENGTH,
 	                 PSTR("%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%s\n"), message.sender,
 	                 message.sensor, mGetCommand(message), mGetEcho(message), message.type,
 	                 message.getString(_convBuffer));
@@ -94,7 +94,7 @@ char *protocolMyMessage2Serial(MyMessage &message)
 
 char *protocolMyMessage2MQTT(const char *prefix, MyMessage &message)
 {
-	(void)snprintf_P(_fmtBuffer, MY_GATEWAY_MAX_SEND_LENGTH,
+	(void)snprintf_P(_fmtBuffer, (uint8_t)MY_GATEWAY_MAX_SEND_LENGTH,
 	                 PSTR("%s/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 ""), prefix,
 	                 message.sender, message.sensor, mGetCommand(message), mGetEcho(message), message.type);
 	return _fmtBuffer;
