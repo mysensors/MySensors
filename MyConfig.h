@@ -703,8 +703,7 @@
 //#define MY_RFM69_RST_PIN (9)
 
 #ifdef MY_RF69_RESET
-// legacy, older board files
-// not enabled now: #warning MY_RF69_RESET is depreciated, please use MY_RFM69_RST_PIN instead.
+#warning MY_RF69_RESET is depreciated, please use MY_RFM69_RST_PIN instead.
 #define MY_RFM69_RST_PIN MY_RF69_RESET
 #endif
 
@@ -720,8 +719,7 @@
  */
 #ifndef MY_RFM69_IRQ_PIN
 #ifdef MY_RF69_IRQ_PIN
-// legacy, older board files
-// not enabled now: #warning MY_RF69_IRQ_PIN is depreciated, please use MY_RFM69_IRQ_PIN instead.
+#warning MY_RF69_IRQ_PIN is depreciated, please use MY_RFM69_IRQ_PIN instead.
 #define MY_RFM69_IRQ_PIN MY_RF69_IRQ_PIN
 #else
 #define MY_RFM69_IRQ_PIN DEFAULT_RFM69_IRQ_PIN
@@ -734,8 +732,7 @@
  */
 #ifndef MY_RFM69_IRQ_NUM
 #ifdef MY_RF69_IRQ_NUM
-// legacy, older board files
-// not enabled now: #warning MY_RF69_IRQ_NUM is depreciated, please use MY_RFM69_IRQ_NUM instead.
+#warning MY_RF69_IRQ_NUM is depreciated, please use MY_RFM69_IRQ_NUM instead.
 #define MY_RFM69_IRQ_NUM MY_RF69_IRQ_NUM
 #else
 #define MY_RFM69_IRQ_NUM digitalPinToInterrupt(MY_RFM69_IRQ_PIN)
@@ -748,8 +745,7 @@
  */
 #ifndef MY_RFM69_CS_PIN
 #ifdef MY_RF69_SPI_CS
-// legacy, older board files
-// not enabled now: #warning MY_RF69_SPI_CS is depreciated, please use MY_RFM69_CS_PIN instead.
+#warning MY_RF69_SPI_CS is depreciated, please use MY_RFM69_CS_PIN instead.
 #define MY_RFM69_CS_PIN MY_RF69_SPI_CS
 #else
 #define MY_RFM69_CS_PIN DEFAULT_RFM69_CS_PIN
