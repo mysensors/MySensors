@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2019 Sensnology AB
+ * Copyright (C) 2013-2015 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -20,6 +20,7 @@
  *
  * REVISION HISTORY
  * Version 1.0 - Henrik Ekblad
+ * Version 1.1 - Peter Andersson added millis watt calculation if time between pulses > 1h
  *
  * DESCRIPTION
  * This sketch provides an example how to implement a LM393 PCB
@@ -46,9 +47,9 @@
 #include <MySensors.h>
 
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
-#define PULSE_FACTOR 1000       // Number of blinks per of your meter
+#define PULSE_FACTOR 1000       // Number of blinks per kWh of your meter. Normally 1000.
 #define SLEEP_MODE false        // Watt value can only be reported when sleep mode is false.
-#define MAX_WATT 10000          // Max watt value to report. This filters outliers.
+#define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
 #define CHILD_ID 1              // Id of the sensor child
 
 uint32_t SEND_FREQUENCY =
@@ -56,7 +57,8 @@ uint32_t SEND_FREQUENCY =
 double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
 bool pcReceived = false;
 volatile uint32_t pulseCount = 0;
-volatile uint32_t lastBlink = 0;
+volatile uint32_t lastBlinkmicros = 0;
+volatile uint32_t lastBlinkmillis = 0;
 volatile uint32_t watt = 0;
 uint32_t oldPulseCount = 0;
 uint32_t oldWatt = 0;
@@ -83,7 +85,7 @@ void setup()
 void presentation()
 {
 	// Send the sketch version information to the gateway and Controller
-	sendSketchInfo("Energy Meter", "1.0");
+	sendSketchInfo(F("Energy Meter"), F("1.1"));
 
 	// Register this device as power sensor
 	present(CHILD_ID, S_POWER);
@@ -97,7 +99,7 @@ void loop()
 	if (pcReceived && (SLEEP_MODE || sendTime)) {
 		// New watt value has been calculated
 		if (!SLEEP_MODE && watt != oldWatt) {
-			// Check that we don't get unreasonable large watt value.
+			// Check that we dont get unresonable large watt value.
 			// could happen when long wraps or false interrupt triggered
 			if (watt<((uint32_t)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
@@ -119,7 +121,7 @@ void loop()
 		}
 		lastSend = now;
 	} else if (sendTime && !pcReceived) {
-		// No pulse count value received. Try requesting it again
+		// No pulse count value received from controller. Try requesting it again.
 		request(CHILD_ID, V_VAR1);
 		lastSend=now;
 	}
@@ -142,13 +144,21 @@ void receive(const MyMessage &message)
 void onPulse()
 {
 	if (!SLEEP_MODE) {
-		uint32_t newBlink = micros();
-		uint32_t interval = newBlink-lastBlink;
-		if (interval<10000L) { // Sometimes we get interrupt on RISING
+		uint32_t newBlinkmicros = micros();
+		uint32_t newBlinkmillis = millis();
+		uint32_t intervalmicros = newBlinkmicros-lastBlinkmicros;
+		uint32_t intervalmillis = newBlinkmillis-lastBlinkmillis;
+		if (intervalmicros<10000L && intervalmillis<10L) { // Sometimes we get interrupt on RISING
 			return;
 		}
-		watt = (3600000000.0 /interval) / ppwh;
-		lastBlink = newBlink;
+		if (intervalmillis<360000) { // Less than an hour since last pulse, use microseconds
+			watt = (3600000000.0 /intervalmicros) / ppwh;
+		} else {
+			watt = (3600000.0 /intervalmillis) /
+			       ppwh; // more thAn an hour since last pulse, use milliseconds as micros will overflow after 70min
+		}
+		lastBlinkmicros = newBlinkmicros;
+		lastBlinkmillis = newBlinkmillis;
 	}
 	pulseCount++;
 }
