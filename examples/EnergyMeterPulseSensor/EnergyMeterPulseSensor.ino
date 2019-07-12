@@ -49,7 +49,7 @@
 #define DIGITAL_INPUT_SENSOR 3  // The digital input you attached your light sensor.  (Only 2 and 3 generates interrupt!)
 #define PULSE_FACTOR 1000       // Number of blinks per kWh of your meter. Normally 1000.
 #define SLEEP_MODE false        // Watt value can only be reported when sleep mode is false.
-#define MAX_WATT 10000          // Max watt value to report. This filetrs outliers.
+#define MAX_WATT 10000          // Max watt value to report. This filters outliers.
 #define CHILD_ID 1              // Id of the sensor child
 
 uint32_t SEND_FREQUENCY =
@@ -99,7 +99,7 @@ void loop()
 	if (pcReceived && (SLEEP_MODE || sendTime)) {
 		// New watt value has been calculated
 		if (!SLEEP_MODE && watt != oldWatt) {
-			// Check that we dont get unresonable large watt value.
+			// Check that we don't get unreasonable large watt value, which
 			// could happen when long wraps or false interrupt triggered
 			if (watt < ((uint32_t)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
