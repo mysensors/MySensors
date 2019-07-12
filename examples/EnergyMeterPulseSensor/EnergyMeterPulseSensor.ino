@@ -1,39 +1,39 @@
 /*
- * The MySensors Arduino library handles the wireless radio link and protocol
- * between your home built sensors/actuators and HA controller of choice.
- * The sensors forms a self healing radio network with optional repeaters. Each
- * repeater and gateway builds a routing tables in EEPROM which keeps track of the
- * network topology allowing messages to be routed to nodes.
- *
- * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
- * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
- *
- * Documentation: http://www.mysensors.org
- * Support Forum: http://forum.mysensors.org
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * version 2 as published by the Free Software Foundation.
- *
+   The MySensors Arduino library handles the wireless radio link and protocol
+   between your home built sensors/actuators and HA controller of choice.
+   The sensors forms a self healing radio network with optional repeaters. Each
+   repeater and gateway builds a routing tables in EEPROM which keeps track of the
+   network topology allowing messages to be routed to nodes.
+
+   Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+   Copyright (C) 2013-2015 Sensnology AB
+   Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+
+   Documentation: http://www.mysensors.org
+   Support Forum: http://forum.mysensors.org
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
+
  *******************************
- *
- * REVISION HISTORY
- * Version 1.0 - Henrik Ekblad
- * Version 1.1 - Peter Andersson added millis watt calculation if time between pulses > 1h
- *
- * DESCRIPTION
- * This sketch provides an example how to implement a LM393 PCB
- * Use this sensor to measure kWh and Watt of your house meter
- * You need to set the correct pulsefactor of your meter (blinks per kWh).
- * The sensor starts by fetching current kWh value from gateway.
- * Reports both kWh and Watt back to gateway.
- *
- * Unfortunately millis() won't increment when the Arduino is in
- * sleepmode. So we cannot make this sensor sleep if we also want
- * to calculate/report watt value.
- * http://www.mysensors.org/build/pulse_power
- */
+
+   REVISION HISTORY
+   Version 1.0 - Henrik Ekblad
+   Version 1.1 - Peter Andersson added millis watt calculation if time between pulses > 1h
+
+   DESCRIPTION
+   This sketch provides an example how to implement a LM393 PCB
+   Use this sensor to measure kWh and Watt of your house meter
+   You need to set the correct pulsefactor of your meter (blinks per kWh).
+   The sensor starts by fetching current kWh value from gateway.
+   Reports both kWh and Watt back to gateway.
+
+   Unfortunately millis() won't increment when the Arduino is in
+   sleepmode. So we cannot make this sensor sleep if we also want
+   to calculate/report watt value.
+   http://www.mysensors.org/build/pulse_power
+*/
 
 // Enable debug prints
 #define MY_DEBUG
@@ -54,7 +54,7 @@
 
 uint32_t SEND_FREQUENCY =
     20000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
-double ppwh = ((double)PULSE_FACTOR)/1000; // Pulses per watt hour
+double ppwh = ((double)PULSE_FACTOR) / 1000; // Pulses per watt hour
 bool pcReceived = false;
 volatile uint32_t pulseCount = 0;
 volatile uint32_t lastBlinkmicros = 0;
@@ -64,9 +64,9 @@ uint32_t oldPulseCount = 0;
 uint32_t oldWatt = 0;
 double oldkWh;
 uint32_t lastSend;
-MyMessage wattMsg(CHILD_ID,V_WATT);
-MyMessage kWhMsg(CHILD_ID,V_KWH);
-MyMessage pcMsg(CHILD_ID,V_VAR1);
+MyMessage wattMsg(CHILD_ID, V_WATT);
+MyMessage kWhMsg(CHILD_ID, V_KWH);
+MyMessage pcMsg(CHILD_ID, V_VAR1);
 
 
 void setup()
@@ -76,10 +76,10 @@ void setup()
 
 	// Use the internal pullup to be able to hook up this sketch directly to an energy meter with S0 output
 	// If no pullup is used, the reported usage will be too high because of the floating pin
-	pinMode(DIGITAL_INPUT_SENSOR,INPUT_PULLUP);
+	pinMode(DIGITAL_INPUT_SENSOR, INPUT_PULLUP);
 
 	attachInterrupt(digitalPinToInterrupt(DIGITAL_INPUT_SENSOR), onPulse, RISING);
-	lastSend=millis();
+	lastSend = millis();
 }
 
 void presentation()
@@ -101,7 +101,7 @@ void loop()
 		if (!SLEEP_MODE && watt != oldWatt) {
 			// Check that we dont get unresonable large watt value.
 			// could happen when long wraps or false interrupt triggered
-			if (watt<((uint32_t)MAX_WATT)) {
+			if (watt < ((uint32_t)MAX_WATT)) {
 				send(wattMsg.set(watt));  // Send watt value to gw
 			}
 			Serial.print("Watt:");
@@ -112,7 +112,7 @@ void loop()
 		// Pulse count value has changed
 		if (pulseCount != oldPulseCount) {
 			send(pcMsg.set(pulseCount));  // Send pulse count value to gw
-			double kWh = ((double)pulseCount/((double)PULSE_FACTOR));
+			double kWh = ((double)pulseCount / ((double)PULSE_FACTOR));
 			oldPulseCount = pulseCount;
 			if (kWh != oldkWh) {
 				send(kWhMsg.set(kWh, 4));  // Send kWh value to gw
@@ -123,7 +123,7 @@ void loop()
 	} else if (sendTime && !pcReceived) {
 		// No pulse count value received from controller. Try requesting it again.
 		request(CHILD_ID, V_VAR1);
-		lastSend=now;
+		lastSend = now;
 	}
 
 	if (SLEEP_MODE) {
@@ -133,7 +133,7 @@ void loop()
 
 void receive(const MyMessage &message)
 {
-	if (message.type==V_VAR1) {
+	if (message.type == V_VAR1) {
 		pulseCount = oldPulseCount = message.getLong();
 		Serial.print("Received last pulse count value from gw:");
 		Serial.println(pulseCount);
@@ -146,15 +146,15 @@ void onPulse()
 	if (!SLEEP_MODE) {
 		uint32_t newBlinkmicros = micros();
 		uint32_t newBlinkmillis = millis();
-		uint32_t intervalmicros = newBlinkmicros-lastBlinkmicros;
-		uint32_t intervalmillis = newBlinkmillis-lastBlinkmillis;
-		if (intervalmicros<10000L && intervalmillis<10L) { // Sometimes we get interrupt on RISING
+		uint32_t intervalmicros = newBlinkmicros - lastBlinkmicros;
+		uint32_t intervalmillis = newBlinkmillis - lastBlinkmillis;
+		if (intervalmicros < 10000L && intervalmillis < 10L) { // Sometimes we get interrupt on RISING
 			return;
 		}
-		if (intervalmillis<360000) { // Less than an hour since last pulse, use microseconds
-			watt = (3600000000.0 /intervalmicros) / ppwh;
+		if (intervalmillis < 360000) { // Less than an hour since last pulse, use microseconds
+			watt = (3600000000.0 / intervalmicros) / ppwh;
 		} else {
-			watt = (3600000.0 /intervalmillis) /
+			watt = (3600000.0 / intervalmillis) /
 			       ppwh; // more thAn an hour since last pulse, use milliseconds as micros will overflow after 70min
 		}
 		lastBlinkmicros = newBlinkmicros;
