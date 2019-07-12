@@ -666,10 +666,11 @@ else
     printf "  ${OK} Encryption: Disabled.\n"
 fi
 
-printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
-
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
+
+printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
+printf "  ${OK} CXXFLAGS: $CXXFLAGS\n"
 
 printf "${SECTION} Detecting init system.\n"
 if [ "${NO_INIT}" ];  then
