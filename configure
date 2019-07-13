@@ -542,7 +542,7 @@ BINDIR=${BINDIR:-bin}
 GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
 CC=${CC:-gcc}
 CXX=${CXX:-g++}
-CXXFLAGS="-std=c++11"
+CXXFLAGS="$CXXFLAGS -std=c++11"
 
 if [ -z "${SOC}" ]; then
     printf "${SECTION} Detecting target machine.\n"
