@@ -417,7 +417,6 @@ LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
 	packet.header.version = RFM69_PACKET_HEADER_VERSION;
 	packet.header.sender = RFM69.address;
 	packet.header.recipient = recipient;
-	packet.header.controlFlags = 0u;	// reset
 	packet.payloadLen = min(len, (uint8_t)RFM69_MAX_PAYLOAD_LEN);
 	packet.header.controlFlags = flags;
 	(void)memcpy((void *)&packet.payload, (void *)data, packet.payloadLen); // copy payload
@@ -631,19 +630,19 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
 				// radio is in stdby
 				const uint8_t sender = RFM69.currentPacket.header.sender;
 				const rfm69_sequenceNumber_t ACKsequenceNumber = RFM69.currentPacket.ACK.sequenceNumber;
-				const rfm69_controlFlags_t flags = RFM69.currentPacket.header.controlFlags;
-				const rfm69_RSSI_t RSSI = RFM69.currentPacket.ACK.RSSI;
+				const rfm69_controlFlags_t ACKflags = RFM69.currentPacket.header.controlFlags;
+				const rfm69_RSSI_t ACKRSSI = RFM69.currentPacket.ACK.RSSI;
 				RFM69.ackReceived = false;
 				// packet read, back to RX
 				RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
 				if (sender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
-					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"),sender,
+					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"), sender,
 					            ACKsequenceNumber,
-					            RFM69_internalToRSSI(RSSI));
+					            RFM69_internalToRSSI(ACKRSSI));
 
 					// ATC
-					if (RFM69.ATCenabled && RFM69_getACKRSSIReport(flags)) {
-						(void)RFM69_executeATC(RSSI,RFM69.ATCtargetRSSI);
+					if (RFM69.ATCenabled && RFM69_getACKRSSIReport(ACKflags)) {
+						(void)RFM69_executeATC(ACKRSSI, RFM69.ATCtargetRSSI);
 					}
 					return true;
 				} // seq check

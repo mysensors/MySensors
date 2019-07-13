@@ -162,7 +162,7 @@ class SPIFlash
 {
 public:
 	static uint8_t UNIQUEID[8]; //!< Storage for unique identifier
-	SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0); //!< Constructor
+	explicit SPIFlash(uint8_t slaveSelectPin, uint16_t jedecID=0); //!< Constructor
 	bool initialize(); //!< setup SPI, read device ID etc...
 	void command(uint8_t cmd, bool isWrite=
 	                 false); //!< Send a command to the flash chip, pass TRUE for isWrite when its a write command

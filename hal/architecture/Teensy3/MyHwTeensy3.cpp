@@ -109,10 +109,10 @@ uint16_t hwCPUVoltage(void)
 	analogReadAveraging(32);
 #if defined(__MK20DX128__) || defined(__MK20DX256__)
 	// Teensy 3.0/3.1/3.2
-	return 1195 * 4096 / analogRead(39);
+	return  (uint16_t)(1195u * 4096u / analogRead(39));
 #elif defined(__MK64FX512__) || defined(__MK66FX1M0__)
 	// Teensy 3.6
-	return 1195 * 4096 / analogRead(71);
+	return  (uint16_t)(1195u * 4096u / analogRead(71));
 #elif defined(__MKL26Z64__)
 	// Teensy LC
 	// not supported

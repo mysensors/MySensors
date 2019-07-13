@@ -60,7 +60,6 @@ float lastDUST =0.0;
 int samplingTime = 280;
 int deltaTime = 40;
 int sleepTime = 9680;
-float voMeasured = 0;
 float calcVoltage = 0;
 float dustDensity = 0;
 

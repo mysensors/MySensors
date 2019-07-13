@@ -18,11 +18,12 @@ check_tool_prerequisite()
 	function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 
 	if is_installed ${1} ; then
-		#local version=$(${1} --version 2>&1 | sed -e 's/[[:alpha:]|(|[:space:]]//g')
-		local version=$(${1} --version 2>&1 | sed -ne 's/[^0-9]*\(\([0-9]\.\)\{0,4\}[0-9][^.]\).*/\1/p')
+		local version=$(${1} --version 2>&1 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')
 		if [ $(ver ${version}) -lt $(ver ${2}) ]; then
 			warn "Found ${1} ${version} however, version ${2} or greater is required..."
 			return 1
+		else
+			log "Found ${1} ${version}"
 		fi
 	else
 		warn "${1} not installed or not in current path."
@@ -73,8 +74,8 @@ check_git_remote "upstream" "${mysrepo}" || {
 
 #3
 log "Checking tool/utility prerequisites..."
-check_tool_prerequisite "astyle" "2.0.5"   || err "Install AStyle 2.0.5 or greater and re-run ${0}"
-check_tool_prerequisite "cppcheck" "1.76" || err "Install Cppcheck 1.76 or greater and re-run ${0}"
+check_tool_prerequisite "astyle" "3.1"   || err "Install AStyle 3.1 or greater and re-run ${0}"
+check_tool_prerequisite "cppcheck" "1.88" || err "Install Cppcheck 1.88 or greater and re-run ${0}"
 check_tool_prerequisite "git" "2.0" || err "Install git 2.0 or greater and re-run ${0}"
 
 #4

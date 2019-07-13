@@ -191,8 +191,8 @@ void addReading(long resistance)
 long average()
 {
 	long sum = 0;
-	for (int i = 0; i < NUM_READS; i++) {
-		sum += buffer[i];
+	for (int cnt = 0; cnt < NUM_READS; cnt++) {
+		sum += buffer[cnt];
 	}
 	return (long)(sum / NUM_READS);
 }

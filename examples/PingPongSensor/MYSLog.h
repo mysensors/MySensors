@@ -32,12 +32,12 @@
 #define LOGDEBUG 1
 
 #if defined ( LOGDEBUG )
-#define LOG(fmt, args... ) log( fmt, ## args );
+#define LOG(fmt, args... ) debugLog( fmt, ## args );
 #else
-#define log(fmt, args... )
+#define LOG(fmt, args... )
 #endif
 
-void log(const char *fmt, ... )
+void debugLog(const char *fmt, ... )
 {
 	char buff[128];
 	va_list args;
@@ -48,7 +48,7 @@ void log(const char *fmt, ... )
 	Serial.print(buff);
 }
 
-void log(const __FlashStringHelper *fmt, ... )
+void debugLog(const __FlashStringHelper *fmt, ... )
 {
 	char buf[128]; // resulting string limited to 128 chars
 	va_list args;
