@@ -358,7 +358,8 @@
  * This feature is currently not supported for anything but RF24.
  * Require @ref MY_RF24_IRQ_PIN to be set.
  *
- * Note: Not supported on ESP8266. See below issue for details
+ * Note: Not supported on ESP8266, ESP32, STM32, nRF5 and sketches
+ * that use SoftSPI. See below issue for details
  * https://github.com/mysensors/MySensors/issues/1128
  */
 //#define MY_RX_MESSAGE_BUFFER_FEATURE
