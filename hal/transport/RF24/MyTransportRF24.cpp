@@ -24,7 +24,7 @@
 
 typedef struct _transportQueuedMessage {
 	uint8_t m_len;                        // Length of the data
-	uint8_t m_data[MAX_MESSAGE_LENGTH];   // The raw data
+	uint8_t m_data[MAX_MESSAGE_SIZE];   // The raw data
 } transportQueuedMessage;
 
 /** Buffer to store queued messages in. */

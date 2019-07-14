@@ -113,25 +113,25 @@ bool transportHALReceive(MyMessage *inMsg, uint8_t *msgLength)
 #endif
 	// Reject messages with incorrect protocol version
 	MyMessage tmp = *inMsg;
-	if (mGetVersion(tmp) != PROTOCOL_VERSION) {
+	if (!tmp.isProtocolVersionValid()) {
 		setIndication(INDICATION_ERR_VERSION);
-		TRANSPORT_HAL_DEBUG(PSTR("!THA:RCV:PVER,%" PRIu8 "!=%" PRIu8 "\n"), mGetVersion(tmp),
+		TRANSPORT_HAL_DEBUG(PSTR("!THA:RCV:PVER,%" PRIu8 "!=%" PRIu8 "\n"), tmp.getVersion(),
 		                    PROTOCOL_VERSION);	// protocol version mismatch
 		return false;
 	}
-	*msgLength = min(mGetLength(tmp), (uint8_t)MAX_PAYLOAD);
-	const uint8_t expectedMessageLength = HEADER_SIZE + (mGetSigned(tmp) ? MAX_PAYLOAD : *msgLength);
+	*msgLength = tmp.getLength();
 #if defined(MY_TRANSPORT_ENCRYPTION) && !defined(MY_RADIO_RFM69)
 	// payload length = a multiple of blocksize length for decrypted messages, i.e. cannot be used for payload length check
-	payloadLength = expectedMessageLength;
-#endif
+#else
 	// Reject payloads with incorrect length
+	const uint8_t expectedMessageLength = tmp.getExpectedMessageSize();
 	if (payloadLength != expectedMessageLength) {
 		setIndication(INDICATION_ERR_LENGTH);
 		TRANSPORT_HAL_DEBUG(PSTR("!THA:RCV:LEN=%" PRIu8 ",EXP=%" PRIu8 "\n"), payloadLength,
 		                    expectedMessageLength); // invalid payload length
 		return false;
 	}
+#endif
 	TRANSPORT_HAL_DEBUG(PSTR("THA:RCV:MSG LEN=%" PRIu8 "\n"), payloadLength);
 	return true;
 }
@@ -151,7 +151,7 @@ bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, cons
 
 #if defined(MY_TRANSPORT_ENCRYPTION) && !defined(MY_RADIO_RFM69)
 	TRANSPORT_HAL_DEBUG(PSTR("THA:SND:ENCRYPT\n"));
-	uint8_t *tx_data[MAX_MESSAGE_LENGTH];
+	uint8_t *tx_data[MAX_MESSAGE_SIZE];
 	// copy input data because it is read-only
 	(void)memcpy((void *)tx_data, (void *)&outMsg->last, len);
 	// We us IV vector filled with zeros but randomize unused bytes in encryption block
@@ -159,7 +159,7 @@ bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, cons
 	const uint8_t finalLength = len > 16 ? 32 : 16;
 	// fill block with random data
 	for (uint8_t i = len; i < finalLength; i++) {
-		*((uint8_t *)tx_data + i) = random(255);
+		*((uint8_t *)tx_data + i) = random(256);
 	}
 	//encrypt data
 	AES128CBCEncrypt(IV, (uint8_t *)tx_data, finalLength);

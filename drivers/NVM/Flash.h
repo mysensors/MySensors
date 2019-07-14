@@ -74,11 +74,11 @@
 #define FLASH_WRITES_PER_WORD 2
 #define FLASH_WRITES_PER_PAGE 403
 #else
-#define FLASH_ERASE_CYCLES 10000
-#define FLASH_PAGE_SIZE 4096
-#define FLASH_ERASE_PAGE_TIME 100
+#define FLASH_ERASE_CYCLES 10000 //!< FLASH_ERASE_CYCLES
+#define FLASH_PAGE_SIZE 4096 //!< FLASH_PAGE_SIZE
+#define FLASH_ERASE_PAGE_TIME 100 //!< FLASH_ERASE_PAGE_TIME
 //#define FLASH_SUPPORTS_RANDOM_WRITE true
-#define FLASH_WRITES_PER_WORD 1
+#define FLASH_WRITES_PER_WORD 1 //!< FLASH_WRITES_PER_WORD
 #warning "Unknown platform. Please check the code."
 #endif
 
@@ -166,7 +166,7 @@ private:
 	void wait_for_ready();
 };
 
-extern FlashClass Flash;
+extern FlashClass Flash; //!< extern FlashClass
 
 /** Load Hardwarespecific files */
 #ifdef NRF5

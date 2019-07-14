@@ -20,9 +20,8 @@
 /**
  * @file MyConfig.h
  * @ingroup MyConfigGrp
- *
  * @brief MySensors specific configuration flags.
- *
+ * @{
  * Set these in your sketch before including MySensors.h to customize the library to your needs.
  * If the sketch does not define these flags, they will get default values where applicable.
  */
@@ -1658,7 +1657,7 @@
 #ifndef MY_DEFAULT_LED_BLINK_PERIOD
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 #endif
-/** @}*/ // End of lEDSettingGrpPub group
+/** @}*/ // End of LEDSettingGrpPub group
 
 /**
  * @defgroup SecuritySettingGrpPub Security

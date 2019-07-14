@@ -89,7 +89,7 @@ void loop()
 void receive(const MyMessage &message)
 {
 
-	LOG(F("Received %s from %s\n"), msgTypeAsCharRepresentation((mysensors_data_t)message.type),
+	LOG(F("Received %s from %s\n"), msgTypeAsCharRepresentation((mysensors_data_t)message.getType()),
 	    nodeTypeAsCharRepresentation(message.sender));
 
 	delay(250);
@@ -99,9 +99,9 @@ void receive(const MyMessage &message)
 void sendPingOrPongResponse( MyMessage msg )
 {
 
-	MyMessage response = (msg.type == V_VAR1 ? mPong : mPing);
+	MyMessage response = (msg.getType() == V_VAR1 ? mPong : mPing);
 
-	LOG(F("Sending %s to %s\n"), msgTypeAsCharRepresentation( (mysensors_data_t)response.type ),
+	LOG(F("Sending %s to %s\n"), msgTypeAsCharRepresentation( (mysensors_data_t)response.getType() ),
 	    nodeTypeAsCharRepresentation(msg.sender));
 
 	// Set payload to current time in millis to ensure each message is unique

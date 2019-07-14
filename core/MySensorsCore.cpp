@@ -35,10 +35,11 @@ static coreConfig_t _coreConfig;
 
 #if defined(MY_DEBUG_VERBOSE_CORE)
 static uint8_t waitLock = 0;
+static uint8_t processLock = 0;
 #endif
 
 #if defined(DEBUG_OUTPUT_ENABLED)
-char _convBuf[MAX_PAYLOAD * 2 + 1];
+char _convBuf[MAX_PAYLOAD_SIZE * 2 + 1];
 #endif
 
 // Callback for transport=ok transition
@@ -55,6 +56,12 @@ void _callbackTransportReady(void)
 
 void _process(void)
 {
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	if (processLock) {
+		CORE_DEBUG(PSTR("!MCO:PRO:RC=%" PRIu8 "\n"), processLock);	// recursive call detected
+	}
+	processLock++;
+#endif
 	doYield();
 
 #if defined(MY_INCLUSION_MODE_FEATURE)
@@ -72,6 +79,9 @@ void _process(void)
 #if defined(__linux__)
 	// To avoid high cpu usage
 	usleep(10000); // 10ms
+#endif
+#if defined(MY_DEBUG_VERBOSE_CORE)
+	processLock--;
 #endif
 }
 
@@ -307,7 +317,7 @@ bool _sendRoute(MyMessage &message)
 	(void)message;
 #endif
 #if defined(MY_GATEWAY_FEATURE)
-	if (message.destination == getNodeId()) {
+	if (message.getDestination() == getNodeId()) {
 		// This is a message sent from a sensor attached on the gateway node.
 		// Pass it directly to the gateway transport layer.
 		return gatewayTransportSend(message);
@@ -320,11 +330,11 @@ bool _sendRoute(MyMessage &message)
 #endif
 }
 
-bool send(MyMessage &message, const bool echo)
+bool send(MyMessage &message, const bool requestEcho)
 {
-	message.sender = getNodeId();
-	mSetCommand(message, C_SET);
-	mSetRequestEcho(message, echo);
+	message.setSender(getNodeId());
+	message.setCommand(C_SET);
+	message.setRequestEcho(requestEcho);
 
 #if defined(MY_REGISTRATION_FEATURE) && !defined(MY_GATEWAY_FEATURE)
 	if (_coreConfig.nodeRegistered) {
@@ -338,74 +348,77 @@ bool send(MyMessage &message, const bool echo)
 #endif
 }
 
-bool sendBatteryLevel(const uint8_t value, const bool echo)
+bool sendBatteryLevel(const uint8_t value, const bool requestEcho)
 {
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_BATTERY_LEVEL,
-	                        echo).set(value));
+	                        requestEcho).set(value));
 }
 
-bool sendHeartbeat(const bool echo)
+bool sendHeartbeat(const bool requestEcho)
 {
 #if defined(MY_SENSOR_NETWORK)
 	const uint32_t heartbeat = transportGetHeartbeat();
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE,
-	                        echo).set(heartbeat));
+	                        requestEcho).set(heartbeat));
 #elif defined(MY_GATEWAY_FEATURE)
 	const uint32_t heartbeat = hwMillis();
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_HEARTBEAT_RESPONSE,
-	                        echo).set(heartbeat));
+	                        requestEcho).set(heartbeat));
 #else
-	(void)echo;
+	(void)requestEcho;
 	return false;
 #endif
 }
 
 
 
-bool present(const uint8_t childSensorId, const uint8_t sensorType, const char *description,
-             const bool echo)
+bool present(const uint8_t childSensorId, const mysensors_sensor_t sensorType,
+             const char *description,
+             const bool requestEcho)
 {
-	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType,
-	                        echo).set(childSensorId == NODE_SENSOR_ID ? MYSENSORS_LIBRARY_VERSION : description));
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION,
+	                        static_cast<uint8_t>(sensorType),
+	                        requestEcho).set(childSensorId == NODE_SENSOR_ID ? MYSENSORS_LIBRARY_VERSION : description));
 }
 
 #if !defined(__linux__)
-bool present(const uint8_t childSensorId, const uint8_t sensorType,
+bool present(const uint8_t childSensorId, const mysensors_sensor_t sensorType,
              const __FlashStringHelper *description,
-             const bool echo)
+             const bool requestEcho)
 {
-	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION, sensorType,
-	                        echo).set(childSensorId == NODE_SENSOR_ID ? F(" MYSENSORS_LIBRARY_VERSION "): description));
+	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, childSensorId, C_PRESENTATION,
+	                        static_cast<uint8_t>(sensorType),
+	                        requestEcho).set(childSensorId == NODE_SENSOR_ID ? F(" MYSENSORS_LIBRARY_VERSION "): description));
 }
 #endif
 
 
-bool sendSketchInfo(const char *name, const char *version, const bool echo)
+bool sendSketchInfo(const char *name, const char *version, const bool requestEcho)
 {
 	bool result = true;
 	if (name) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME,
-		                           echo).set(name));
+		                           requestEcho).set(name));
 	}
 	if (version) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION,
-		                           echo).set(version));
+		                           requestEcho).set(version));
 	}
 	return result;
 }
 
 #if !defined(__linux__)
 bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version,
-                    const bool echo)
+                    const bool requestEcho)
 {
 	bool result = true;
 	if (name) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_NAME,
-		                           echo).set(name));
+		                           requestEcho).set(name));
 	}
 	if (version) {
 		result &= _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_SKETCH_VERSION,
-		                           echo).set(version));
+		                           requestEcho).set(version));
 	}
 	return result;
 }
@@ -416,17 +429,17 @@ bool request(const uint8_t childSensorId, const uint8_t variableType, const uint
 	return _sendRoute(build(_msgTmp, destination, childSensorId, C_REQ, variableType).set(""));
 }
 
-bool requestTime(const bool echo)
+bool requestTime(const bool requestEcho)
 {
 	return _sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL, I_TIME,
-	                        echo).set(""));
+	                        requestEcho).set(""));
 }
 
 // Message delivered through _msg
 bool _processInternalCoreMessage(void)
 {
-	const uint8_t type = _msg.type;
-	if (_msg.sender == GATEWAY_ADDRESS) {
+	const uint8_t type = _msg.getType();
+	if (_msg.getSender() == GATEWAY_ADDRESS) {
 		if (type == I_REBOOT) {
 #if !defined(MY_DISABLE_REMOTE_RESET)
 			setIndication(INDICATION_REBOOT);
@@ -450,7 +463,7 @@ bool _processInternalCoreMessage(void)
 			presentNode();
 		} else if (type == I_HEARTBEAT_REQUEST) {
 			(void)sendHeartbeat();
-		} else if (_msg.type == I_VERSION) {
+		} else if (type == I_VERSION) {
 #if !defined(MY_GATEWAY_FEATURE)
 			(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
 			                       I_VERSION).set(MYSENSORS_LIBRARY_VERSION_INT));
@@ -512,11 +525,11 @@ bool _processInternalCoreMessage(void)
 			approveRegistration = true;
 #endif
 
-#if (F_CPU>16000000)
+#if (F_CPU>16*1000000ul)
 			// delay for fast GW and slow nodes
 			delay(5);
 #endif
-			(void)_sendRoute(build(_msgTmp, _msg.sender, NODE_SENSOR_ID, C_INTERNAL,
+			(void)_sendRoute(build(_msgTmp, _msg.getSender(), NODE_SENSOR_ID, C_INTERNAL,
 			                       I_REGISTRATION_RESPONSE).set(approveRegistration));
 #else
 			return false;	// processing of this request via controller
@@ -557,7 +570,7 @@ void wait(const uint32_t waitingMS)
 #endif
 }
 
-bool wait(const uint32_t waitingMS, const uint8_t cmd)
+bool wait(const uint32_t waitingMS, const mysensors_command_t cmd)
 {
 #if defined(MY_DEBUG_VERBOSE_CORE)
 	if (waitLock) {
@@ -567,11 +580,12 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd)
 #endif
 	const uint32_t enteringMS = hwMillis();
 	// invalidate cmd
-	mSetCommand(_msg, !cmd);
+	//_msg.setCommand(!cmd);
+	_msg.setCommand(C_INVALID_7);
 	bool expectedResponse = false;
 	while ((hwMillis() - enteringMS < waitingMS) && !expectedResponse) {
 		_process();
-		expectedResponse = (mGetCommand(_msg) == cmd);
+		expectedResponse = (_msg.getCommand() == cmd);
 	}
 #if defined(MY_DEBUG_VERBOSE_CORE)
 	waitLock--;
@@ -579,7 +593,7 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd)
 	return expectedResponse;
 }
 
-bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
+bool wait(const uint32_t waitingMS, const mysensors_command_t cmd, const uint8_t msgType)
 {
 #if defined(MY_DEBUG_VERBOSE_CORE)
 	if (waitLock) {
@@ -588,12 +602,13 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
 	waitLock++;
 #endif
 	const uint32_t enteringMS = hwMillis();
-	// invalidate msg type
-	_msg.type = !msgType;
+	// invalidate cmd
+	//_msg.setCommand(!cmd);
+	_msg.setCommand(C_INVALID_7);
 	bool expectedResponse = false;
 	while ( (hwMillis() - enteringMS < waitingMS) && !expectedResponse ) {
 		_process();
-		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgType);
+		expectedResponse = (_msg.getCommand() == cmd && _msg.getType() == msgType);
 	}
 #if defined(MY_DEBUG_VERBOSE_CORE)
 	waitLock--;

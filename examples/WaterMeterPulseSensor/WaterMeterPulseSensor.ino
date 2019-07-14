@@ -157,7 +157,7 @@ void loop()
 
 void receive(const MyMessage &message)
 {
-	if (message.type==V_VAR1) {
+	if (message.getType()==V_VAR1) {
 		uint32_t gwPulseCount=message.getULong();
 		pulseCount += gwPulseCount;
 		flow=oldflow=0;

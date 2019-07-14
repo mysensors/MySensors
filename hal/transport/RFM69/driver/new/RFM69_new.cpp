@@ -628,15 +628,15 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
 			RFM69_handler();
 			if (RFM69.ackReceived) {
 				// radio is in stdby
-				const uint8_t sender = RFM69.currentPacket.header.sender;
+				const uint8_t ACKsender = RFM69.currentPacket.header.sender;
 				const rfm69_sequenceNumber_t ACKsequenceNumber = RFM69.currentPacket.ACK.sequenceNumber;
 				const rfm69_controlFlags_t ACKflags = RFM69.currentPacket.header.controlFlags;
 				const rfm69_RSSI_t ACKRSSI = RFM69.currentPacket.ACK.RSSI;
 				RFM69.ackReceived = false;
 				// packet read, back to RX
 				RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
-				if (sender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
-					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"), sender,
+				if (ACKsender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
+					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"), ACKsender,
 					            ACKsequenceNumber,
 					            RFM69_internalToRSSI(ACKRSSI));
 

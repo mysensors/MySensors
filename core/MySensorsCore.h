@@ -131,90 +131,90 @@ void presentNode(void);
  * @param sensorId Select a unique sensor id for this sensor. Choose a number between 0-254.
  * @param sensorType The sensor type. See sensor typedef in MyMessage.h.
  * @param description A textual description of the sensor.
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
- * @param description A textual description of the sensor.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool present(const uint8_t sensorId, const uint8_t sensorType, const char *description = "",
-             const bool echo = false);
+bool present(const uint8_t sensorId, const mysensors_sensor_t sensorType,
+             const char *description = "",
+             const bool requestEcho = false);
 #if !defined(__linux__)
-bool present(const uint8_t childSensorId, const uint8_t sensorType,
+bool present(const uint8_t childSensorId, const mysensors_sensor_t sensorType,
              const __FlashStringHelper *description,
-             const bool echo = false);
+             const bool requestEcho = false);
 #endif
 /**
  * Sends sketch meta information to the gateway. Not mandatory but a nice thing to do.
  * @param name String containing a short Sketch name or NULL if not applicable
  * @param version String containing a short Sketch version or NULL if not applicable
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool sendSketchInfo(const char *name, const char *version, const bool echo = false);
+bool sendSketchInfo(const char *name, const char *version, const bool requestEcho = false);
 #if !defined(__linux__)
 bool sendSketchInfo(const __FlashStringHelper *name, const __FlashStringHelper *version,
-                    const bool echo = false);
+                    const bool requestEcho = false);
 #endif
 
 /**
  * Sends a message to gateway or one of the other nodes in the radio network
  * @param msg Message to send
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool send(MyMessage &msg, const bool echo = false);
+bool send(MyMessage &msg, const bool requestEcho = false);
 
 /**
  * Send this nodes battery level to gateway.
  * @param level Level between 0-100(%)
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool sendBatteryLevel(const uint8_t level, const bool echo = false);
+bool sendBatteryLevel(const uint8_t level, const bool requestEcho = false);
 
 /**
  * Send a heartbeat message (I'm alive!) to the gateway/controller.
  * The payload will be an incremental 16 bit integer value starting at 1 when sensor is powered on.
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool sendHeartbeat(const bool echo = false);
+bool sendHeartbeat(const bool requestEcho = false);
 
 /**
  * Send this nodes signal strength to gateway.
  * @param level Signal strength can be RSSI if the radio provide it, or another kind of calculation
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool sendSignalStrength(const int16_t level, const bool echo = false);
+bool sendSignalStrength(const int16_t level, const bool requestEcho = false);
 
 /**
  * Send this nodes TX power level to gateway.
  * @param level For instance, can be TX power level in dbm
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool sendTXPowerLevel(const uint8_t level, const bool echo = false);
+bool sendTXPowerLevel(const uint8_t level, const bool requestEcho = false);
 
 /**
 * Requests a value from gateway or some other sensor in the radio network.
@@ -230,13 +230,13 @@ bool request(const uint8_t childSensorId, const uint8_t variableType,
 
 /**
  * Requests time from controller. Answer will be delivered to receiveTime function in sketch.
- * @param echo Set this to true if you want destination node to echo the message back to this node.
+ * @param requestEcho Set this to true if you want destination node to echo the message back to this node.
  * Default is not to request echo. If set to true, the final destination will echo back the
  * contents of the message, triggering the receive() function on the original node with a copy of
  * the message, with message.isEcho() set to true and sender/destination switched.
  * @return true Returns true if message reached the first stop on its way to destination.
  */
-bool requestTime(const bool echo = false);
+bool requestTime(const bool requestEcho = false);
 
 /**
  * Returns the most recent node configuration received from controller
@@ -281,7 +281,7 @@ void wait(const uint32_t waitingMS);
  * @param cmd Command of incoming message.
  * @return True if specified message received
  */
-bool wait(const uint32_t waitingMS, const uint8_t cmd);
+bool wait(const uint32_t waitingMS, const mysensors_command_t cmd);
 
 /**
  * Wait for a specified amount of time to pass or until specified message received.  Keeps process()ing.
@@ -293,7 +293,7 @@ bool wait(const uint32_t waitingMS, const uint8_t cmd);
  * @param msgtype Message type.
  * @return True if specified message received
  */
-bool wait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgtype);
+bool wait(const uint32_t waitingMS, const mysensors_command_t cmd, const uint8_t msgtype);
 
 /**
  * Function to allow scheduler to do some work.
@@ -448,26 +448,24 @@ void _registerNode(void);
 * @return true Returns true if message reached the first stop on its way to destination.
 */
 bool _sendRoute(MyMessage &message);
-
 /**
 * @brief Callback for incoming messages
-* @param message
 */
-void receive(const MyMessage &message)  __attribute__((weak));
+void receive(const MyMessage&) __attribute__((weak));
 /**
 * @brief Callback for incoming time messages
 */
-void receiveTime(uint32_t)  __attribute__((weak));
+void receiveTime(uint32_t) __attribute__((weak));
 /**
 * @brief Node presentation
 */
-void presentation(void)  __attribute__((weak));
+void presentation(void) __attribute__((weak));
 /**
 * @brief Called before node initialises
 */
 void before(void) __attribute__((weak));
 /**
-* @brief Called before any hwInitialization is done
+* @brief Called before any hardware initialisation is done
 */
 void preHwInit(void) __attribute__((weak));
 /**
@@ -482,27 +480,27 @@ void loop(void) __attribute__((weak));
 
 // Inline function and macros
 static inline MyMessage& build(MyMessage &msg, const uint8_t destination, const uint8_t sensor,
-                               const uint8_t command, const uint8_t type, const bool echo = false)
+                               const mysensors_command_t command, const uint8_t type, const bool requestEcho = false)
 {
-	msg.sender = getNodeId();
-	msg.destination = destination;
-	msg.sensor = sensor;
-	msg.type = type;
-	mSetCommand(msg, command);
-	mSetRequestEcho(msg, echo);
-	mSetEcho(msg, false);
+	msg.setSender(getNodeId());
+	msg.setDestination(destination);
+	msg.setSensor(sensor);
+	msg.setType(type);
+	msg.setCommand(command);
+	msg.setRequestEcho(requestEcho);
+	msg.setEcho(false);
 	return msg;
 }
 
 static inline MyMessage& buildGw(MyMessage &msg, const uint8_t type)
 {
-	msg.sender = GATEWAY_ADDRESS;
-	msg.destination = GATEWAY_ADDRESS;
-	msg.sensor = NODE_SENSOR_ID;
-	msg.type = type;
-	mSetCommand(msg, C_INTERNAL);
-	mSetRequestEcho(msg, false);
-	mSetEcho(msg, false);
+	msg.setSender(GATEWAY_ADDRESS);
+	msg.setDestination(GATEWAY_ADDRESS);
+	msg.setSensor(NODE_SENSOR_ID);
+	msg.setType(type);
+	msg.setCommand(C_INTERNAL);
+	msg.setRequestEcho(false);
+	msg.setEcho(false);
 	return msg;
 }
 

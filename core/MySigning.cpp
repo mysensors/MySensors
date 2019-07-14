@@ -171,7 +171,7 @@ void signerPresentation(MyMessage &msg, uint8_t destination)
 bool signerProcessInternal(MyMessage &msg)
 {
 	bool ret;
-	switch (msg.type) {
+	switch (msg.getType()) {
 	case I_SIGNING_PRESENTATION:
 		ret = signerInternalProcessPresentation(msg);
 		break;
@@ -199,7 +199,7 @@ bool signerSignMsg(MyMessage &msg)
 	bool ret;
 	// If destination is known to require signed messages and we are the sender,
 	// sign this message unless it is identified as an exception
-	if (DO_SIGN(msg.destination) && msg.sender == getNodeId()) {
+	if (DO_SIGN(msg.getDestination()) && msg.getSender() == getNodeId()) {
 		if (skipSign(msg)) {
 			ret = true;
 		} else {
@@ -210,13 +210,13 @@ bool signerSignMsg(MyMessage &msg)
 			} else {
 				// Send nonce-request
 				_signingNonceStatus=SIGN_WAITING_FOR_NONCE;
-				if (!_sendRoute(build(_msgSign, msg.destination, msg.sensor, C_INTERNAL,
+				if (!_sendRoute(build(_msgSign, msg.getDestination(), msg.getSensor(), C_INTERNAL,
 				                      I_NONCE_REQUEST).set(""))) {
 					SIGN_DEBUG(PSTR("!SGN:SGN:NCE REQ,TO=%" PRIu8 " FAIL\n"),
-					           msg.destination); // Failed to transmit nonce request!
+					           msg.getDestination()); // Failed to transmit nonce request!
 					ret = false;
 				} else {
-					SIGN_DEBUG(PSTR("SGN:SGN:NCE REQ,TO=%" PRIu8 "\n"), msg.destination); // Nonce requested
+					SIGN_DEBUG(PSTR("SGN:SGN:NCE REQ,TO=%" PRIu8 "\n"), msg.getDestination()); // Nonce requested
 					// We have to wait for the nonce to arrive before we can sign our original message
 					// Other messages could come in-between. We trust _process() takes care of them
 					unsigned long enter = hwMillis();
@@ -245,13 +245,13 @@ bool signerSignMsg(MyMessage &msg)
 				}
 			}
 		}
-	} else if (getNodeId() == msg.sender) {
-		mSetSigned(msg, 0); // Message is not supposed to be signed, make sure it is marked unsigned
+	} else if (getNodeId() == msg.getSender()) {
+		msg.setSigned(false); // Message is not supposed to be signed, make sure it is marked unsigned
 		SIGN_DEBUG(PSTR("SGN:SGN:NREQ=%" PRIu8 "\n"),
-		           msg.destination); // Do not sign message as it is not req
+		           msg.getDestination()); // Do not sign message as it is not req
 		ret = true;
 	} else {
-		SIGN_DEBUG(PSTR("SGN:SGN:%" PRIu8 "!=%" PRIu8 " NUS\n"), msg.sender,
+		SIGN_DEBUG(PSTR("SGN:SGN:%" PRIu8 "!=%" PRIu8 " NUS\n"), msg.getSender(),
 		           getNodeId()); // Will not sign message since it was from someone else
 		ret = true;
 	}
@@ -273,14 +273,14 @@ bool signerVerifyMsg(MyMessage &msg)
 	// If we are a node, or we are a gateway and the sender require signatures (or just a strict gw)
 	// and we are the destination...
 #if defined(MY_SIGNING_WEAK_SECURITY)
-	if ((!MY_IS_GATEWAY || DO_SIGN(msg.sender)) && msg.destination == getNodeId()) {
+	if ((!MY_IS_GATEWAY || DO_SIGN(msg.getSender())) && msg.getDestination() == getNodeId()) {
 #else
-	if (msg.destination == getNodeId()) {
+	if (msg.getDestination() == getNodeId()) {
 #endif
 		// Internal messages of certain types are not verified
 		if (skipSign(msg)) {
 			verificationResult = true;
-		} else if (!mGetSigned(msg)) {
+		} else if (!msg.getSigned()) {
 			// Got unsigned message that should have been signed
 			SIGN_DEBUG(PSTR("!SGN:VER:NSG\n")); // Message is not signed, but it should have been!
 			verificationResult = false;
@@ -310,7 +310,7 @@ bool signerVerifyMsg(MyMessage &msg)
 				}
 			}
 #endif
-			mSetSigned(msg,0); // Clear the sign-flag now as verification is completed
+			msg.setSigned(false); // Clear the sign-flag now as verification is completed
 		}
 	}
 #else
@@ -354,29 +354,29 @@ int signerMemcmp(const void* a, const void* b, size_t sz)
 static bool skipSign(MyMessage &msg)
 {
 	bool ret = false;
-	if (mGetEcho(msg)) {
+	if (msg.isEcho()) {
 		ret = true;
-	}	else if (mGetCommand(msg) == C_INTERNAL &&
-	             (msg.type == I_SIGNING_PRESENTATION	||
-	              msg.type == I_REGISTRATION_REQUEST	||
-	              msg.type == I_NONCE_REQUEST					|| msg.type == I_NONCE_RESPONSE				||
-	              msg.type == I_ID_REQUEST						|| msg.type == I_ID_RESPONSE					||
-	              msg.type == I_FIND_PARENT_REQUEST		|| msg.type == I_FIND_PARENT_RESPONSE	||
-	              msg.type == I_HEARTBEAT_REQUEST			|| msg.type == I_HEARTBEAT_RESPONSE		||
-	              msg.type == I_PING									|| msg.type == I_PONG									||
-	              msg.type == I_DISCOVER_REQUEST	    || msg.type == I_DISCOVER_RESPONSE    ||
-	              msg.type == I_LOG_MESSAGE)) {
+	}	else if (msg.getCommand() == C_INTERNAL &&
+	             (msg.getType() == I_SIGNING_PRESENTATION	||
+	              msg.getType() == I_REGISTRATION_REQUEST	||
+	              msg.getType() == I_NONCE_REQUEST					|| msg.getType() == I_NONCE_RESPONSE				||
+	              msg.getType() == I_ID_REQUEST						|| msg.getType() == I_ID_RESPONSE					||
+	              msg.getType() == I_FIND_PARENT_REQUEST		|| msg.getType() == I_FIND_PARENT_RESPONSE	||
+	              msg.getType() == I_HEARTBEAT_REQUEST			|| msg.getType() == I_HEARTBEAT_RESPONSE		||
+	              msg.getType() == I_PING									|| msg.getType() == I_PONG									||
+	              msg.getType() == I_DISCOVER_REQUEST	    || msg.getType() == I_DISCOVER_RESPONSE    ||
+	              msg.getType() == I_LOG_MESSAGE)) {
 		ret = true;
-	} else if (mGetCommand(msg) == C_STREAM &&
-	           (msg.type == ST_SOUND            ||
-	            msg.type == ST_IMAGE            ||
-	            msg.type == ST_FIRMWARE_REQUEST || msg.type == ST_FIRMWARE_RESPONSE )) {
+	} else if (msg.getCommand() == C_STREAM &&
+	           (msg.getType() == ST_SOUND            ||
+	            msg.getType() == ST_IMAGE            ||
+	            msg.getType() == ST_FIRMWARE_REQUEST || msg.getType() == ST_FIRMWARE_RESPONSE )) {
 		ret = true;
 	}
 	if (ret) {
-		SIGN_DEBUG(PSTR("SGN:SKP:%s CMD=%" PRIu8 ",TYPE=%" PRIu8 "\n"), mGetEcho(msg) ? "ECHO" : "MSG",
-		           mGetCommand(msg),
-		           msg.type); //Skip signing/verification of this message
+		SIGN_DEBUG(PSTR("SGN:SKP:%s CMD=%" PRIu8 ",TYPE=%" PRIu8 "\n"), msg.isEcho() ? "ECHO" : "MSG",
+		           msg.getCommand(),
+		           msg.getType()); //Skip signing/verification of this message
 	}
 	return ret;
 }
@@ -387,8 +387,8 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 {
 	// Only supports version 1 for now
 	(void)build(msg, destination, NODE_SENSOR_ID, C_INTERNAL, I_SIGNING_PRESENTATION).set("");
-	mSetLength(msg, 2);
-	mSetPayloadType(msg, P_CUSTOM);		// displayed as hex
+	msg.setLength(2);
+	msg.setPayloadType(P_CUSTOM);		// displayed as hex
 	msg.data[0] = SIGNING_PRESENTATION_VERSION_1;
 	msg.data[1] = 0;
 }
@@ -396,7 +396,7 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 // Helper to process presentation messages
 static bool signerInternalProcessPresentation(MyMessage &msg)
 {
-	const uint8_t sender = msg.sender;
+	const uint8_t sender = msg.getSender();
 #if defined(MY_SIGNING_FEATURE)
 	if (msg.data[0] != SIGNING_PRESENTATION_VERSION_1) {
 		SIGN_DEBUG(PSTR("!SGN:PRE:VER=%" PRIu8 "\n"),
@@ -520,10 +520,10 @@ static bool signerInternalProcessNonceRequest(MyMessage &msg)
 	}
 #endif // MY_NODE_LOCK_FEATURE
 	if (signerBackendGetNonce(msg)) {
-		if (!_sendRoute(build(msg, msg.sender, NODE_SENSOR_ID, C_INTERNAL, I_NONCE_RESPONSE))) {
-			SIGN_DEBUG(PSTR("!SGN:NCE:XMT,TO=%" PRIu8 " FAIL\n"), msg.sender); // Failed to transmit nonce!
+		if (!_sendRoute(build(msg, msg.getSender(), NODE_SENSOR_ID, C_INTERNAL, I_NONCE_RESPONSE))) {
+			SIGN_DEBUG(PSTR("!SGN:NCE:XMT,TO=%" PRIu8 " FAIL\n"), msg.getSender()); // Failed to transmit nonce!
 		} else {
-			SIGN_DEBUG(PSTR("SGN:NCE:XMT,TO=%" PRIu8 "\n"), msg.sender);
+			SIGN_DEBUG(PSTR("SGN:NCE:XMT,TO=%" PRIu8 "\n"), msg.getSender());
 		}
 	} else {
 		SIGN_DEBUG(PSTR("!SGN:NCE:GEN\n")); // Failed to generate nonce!
@@ -541,9 +541,10 @@ static bool signerInternalProcessNonceResponse(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)
 	// Proceed with signing if nonce has been received
-	SIGN_DEBUG(PSTR("SGN:NCE:FROM=%" PRIu8 "\n"), msg.sender);
-	if (msg.sender != _msgSign.destination) {
-		SIGN_DEBUG(PSTR("SGN:NCE:%" PRIu8 "!=%" PRIu8 " (DROPPED)\n"), _msgSign.destination, msg.sender);
+	SIGN_DEBUG(PSTR("SGN:NCE:FROM=%" PRIu8 "\n"), msg.getSender());
+	if (msg.getSender() != _msgSign.getDestination()) {
+		SIGN_DEBUG(PSTR("SGN:NCE:%" PRIu8 "!=%" PRIu8 " (DROPPED)\n"), _msgSign.getDestination(),
+		           msg.getSender());
 	} else {
 		signerBackendPutNonce(msg);
 		if (signerBackendSignMsg(_msgSign)) {
