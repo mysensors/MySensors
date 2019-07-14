@@ -141,13 +141,13 @@ LOCAL bool firmwareOTAUpdateProcess(void)
 #ifdef MCUBOOT_PRESENT
 		if (_msg.type == ST_FIRMWARE_CONFIRM) {
 			if (*(uint16_t *)MCUBOOT_IMAGE_0_MAGIC_ADDR == ((uint16_t)MCUBOOT_IMAGE_MAGIC)) {
-				if (*(uint8_t*)(MCUBOOT_IMAGE_0_IMG_OK_ADDR)!=MCUBOOT_IMAGE_0_IMG_OK_BYTE) {
+				if (*(uint8_t *)(MCUBOOT_IMAGE_0_IMG_OK_ADDR) != MCUBOOT_IMAGE_0_IMG_OK_BYTE) {
 					// Calculate data word to write
-					uint32_t *img_ok_base_addr = (uint32_t*)(MCUBOOT_IMAGE_0_IMG_OK_ADDR & ~3); // align word wise
+					uint32_t *img_ok_base_addr = (uint32_t *)(MCUBOOT_IMAGE_0_IMG_OK_ADDR & ~3); // align word wise
 					uint32_t img_ok_data = *img_ok_base_addr;
 					// Set copy of MCUBOOT_IMAGE_0_IMG_OK_ADDR to MCUBOOT_IMAGE_0_IMG_OK_BYTE (0x01)
-					uint8_t * img_ok_array = (uint8_t*)(&img_ok_data);
-					img_ok_array[MCUBOOT_IMAGE_0_IMG_OK_ADDR % 4] = MCUBOOT_IMAGE_0_IMG_OK_BYTE;
+					uint8_t *img_ok_array = (uint8_t *)&img_ok_data;
+					*(img_ok_array + (MCUBOOT_IMAGE_0_IMG_OK_ADDR % 4)) = MCUBOOT_IMAGE_0_IMG_OK_BYTE;
 					// Write word back
 					Flash.write(img_ok_base_addr, img_ok_data);
 				}

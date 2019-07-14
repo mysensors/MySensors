@@ -513,13 +513,14 @@ bool transportAssignNodeID(const uint8_t newNodeId)
 bool transportRouteMessage(MyMessage &message)
 {
 	const uint8_t destination = message.destination;
-	uint8_t route = _transportConfig.parentNodeId;	// by default, all traffic is routed via parent node
 
 	if (_transportSM.findingParentNode && destination != BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("!TSF:RTE:FPAR ACTIVE\n")); // find parent active, message not sent
 		// request to send a non-BC message while finding parent active, abort
 		return false;
 	}
+
+	uint8_t route;
 
 	if (destination == GATEWAY_ADDRESS) {
 		route = _transportConfig.parentNodeId;		// message to GW always routes via parent
@@ -789,15 +790,15 @@ void transportProcessMessage(void)
 				if (type == I_SIGNAL_REPORT_REQUEST) {
 					int16_t value = INVALID_RSSI;
 #if defined(MY_SIGNAL_REPORT_ENABLED)
-					const char command = _msg.data[0];
+					const char internalCommand = _msg.data[0];
 					if (_msg.data[1] != '!') {
-						value = transportSignalReport(command);
+						value = transportSignalReport(internalCommand);
 					} else {
 						// send request
 						if (transportRouteMessage(build(_msgTmp, _msg.last, NODE_SENSOR_ID, C_INTERNAL,
 						                                I_SIGNAL_REPORT_REVERSE).set((uint8_t)255))) {
 							// S>s, R>r, ascii delta = 32
-							value = transportSignalReport(command + 32);	// reverse
+							value = transportSignalReport(internalCommand + 32);	// reverse
 						};
 					}
 #endif

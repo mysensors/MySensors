@@ -163,7 +163,7 @@ uint16_t hwCPUVoltage(void)
 
 	const uint16_t vdd = adc_read(ADC1, 17);
 	regs->CR2 &= ~ADC_CR2_TSVREFE; // disable VREFINT and temp sensor
-	return 1200 * 4096 / vdd;
+	return (uint16_t)(1200u * 4096u / vdd);
 }
 
 uint16_t hwCPUFrequency(void)

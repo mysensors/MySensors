@@ -156,7 +156,7 @@ void hwRandomNumberInit(void)
 		while (NRF_RNG->EVENTS_VALRDY == 0) {
 			yield();
 		}
-		ecbstruct[i] = NRF_RNG->VALUE;
+		*(ecbstruct + i) = NRF_RNG->VALUE;
 		NRF_RNG->EVENTS_VALRDY = 0;
 	}
 	hwRndDataReadPos = 0;

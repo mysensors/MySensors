@@ -248,7 +248,7 @@ bool gatewayTransportInit(void)
 bool gatewayTransportSend(MyMessage &message)
 {
 	int nbytes = 0;
-	char *_ethernetMsg = protocolMyMessage2Serial(message);
+	char *_ethernetMessage = protocolMyMessage2Serial(message);
 
 	setIndication(INDICATION_GW_TX);
 
@@ -260,7 +260,7 @@ bool gatewayTransportSend(MyMessage &message)
 #else
 	_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-	_ethernetServer.write((uint8_t *)_ethernetMsg, strlen(_ethernetMsg));
+	_ethernetServer.write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
 	// returns 1 if the packet was sent successfully
 	nbytes = _ethernetServer.endPacket();
 #else /* Else part of MY_USE_UDP */
@@ -283,18 +283,18 @@ bool gatewayTransportSend(MyMessage &message)
 			return false;
 		}
 	}
-	nbytes = client.write((const uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
+	nbytes = client.write((const uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 	// Send message to connected clients
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
-			nbytes += clients[i].write((uint8_t *)_ethernetMsg, strlen(_ethernetMsg));
+			nbytes += clients[i].write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
 		}
 	}
 #else /* Else part of MY_GATEWAY_ESPxx*/
-	nbytes = _ethernetServer.write(_ethernetMsg);
+	nbytes = _ethernetServer.write(_ethernetMessage);
 #endif /* End of MY_GATEWAY_ESPxx */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 	_w5100_spi_en(false);

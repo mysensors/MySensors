@@ -195,8 +195,8 @@ bool signerCheckTimer(void)
 
 bool signerSignMsg(MyMessage &msg)
 {
-	bool ret;
 #if defined(MY_SIGNING_FEATURE)
+	bool ret;
 	// If destination is known to require signed messages and we are the sender,
 	// sign this message unless it is identified as an exception
 	if (DO_SIGN(msg.destination) && msg.sender == getNodeId()) {
@@ -255,11 +255,12 @@ bool signerSignMsg(MyMessage &msg)
 		           getNodeId()); // Will not sign message since it was from someone else
 		ret = true;
 	}
+	return ret;
 #else
 	(void)msg;
-	ret = true;
+	return true;
 #endif // MY_SIGNING_FEATURE
-	return ret;
+
 }
 
 bool signerVerifyMsg(MyMessage &msg)

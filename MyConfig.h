@@ -1553,7 +1553,56 @@
 /** @}*/ // End of GatewaySettingGrpPub group
 
 /**
- * @defgroup lEDSettingGrpPub LED
+ * @defgroup GSMSettingGrpPub GSM
+ * @ingroup MyConfigGrp
+ * @brief These options control GSM specific configurations.
+ * @{
+ */
+/**
+ * @def MY_GSM_APN
+ * @brief APN from your cell carrier / mobile provider. Example: 4g.tele2.se
+ */
+//#define MY_GSM_APN
+/**
+* @def MY_GSM_BAUDRATE
+* @brief Baudrate for your GSM modem. If left undefined, TinyGSM will try to auto detect the correct rate
+*/
+//#define MY_GSM_BAUDRATE (9600u)
+/**
+* @def MY_GSM_PIN
+* @brief PIN code for your SIM card, if PIN lock is active.
+*/
+//#define MY_GSM_PIN
+/**
+* @def MY_GSM_PSW
+* @brief If using a GSM modem, this is the password supplied by your cell carrier / mobile provider. If using ESP8266 as a WiFi modem, this is your WiFi network password
+*/
+//#define MY_GSM_PSW
+/**
+* @def MY_GSM_RX
+* @brief If defined, uses softSerial using defined pins (must also define MY_GSM_TX)
+*/
+//#define MY_GSM_RX
+/**
+* @def MY_GSM_SSID
+* @brief If using ESP8266 as WiFi modem, this is your network SSID
+*/
+//#define MY_GSM_SSID
+/**
+* @def MY_GSM_TX
+* @brief If defined, uses softSerial using defined pins (must also define MY_GSM_RX)
+*/
+//#define MY_GSM_TX
+/**
+* @def MY_GSM_USR
+* @brief Supplied by your cell carrier / mobile operator. If not required, leave undefined.
+*/
+//#define MY_GSM_USR
+
+/** @}*/ // End of GSMSettingGrpPub group
+
+/**
+ * @defgroup LEDSettingGrpPub LED
  * @ingroup MyConfigGrp
  * @brief These options control LED specific configurations.
  * @{
@@ -2238,47 +2287,14 @@
 #define MY_CONTROLLER_IP_ADDRESS
 #define MY_CONTROLLER_URL_ADDRESS
 // TinyGSM
-/**
- * @def MY_GSM_APN
- * @brief APN from your cell carrier / mobile provider. Example: 4g.tele2.se
- */
 #define MY_GSM_APN
-/**
- * @def MY_GSM_BAUDRATE
- * @brief Baudrate for your GSM modem. If left undefined, TinyGSM will try to auto detect the correct rate
- */
 #define MY_GSM_BAUDRATE
-/**
- * @def MY_GSM_PIN
- * @brief PIN code for your SIM card, if PIN lock is active.
- */
 #define MY_GSM_PIN
-/**
- * @def MY_GSM_PSW
- * @brief If using a GSM modem, this is the password supplied by your cell carrier / mobile provider. If using ESP8266 as a WiFi modem, this is your WiFi network password
- */
 #define MY_GSM_PSW
-/**
- * @def MY_GSM_RX
- * @brief If defined, uses softSerial using defined pins (must also define MY_GSM_TX)
- */
 #define MY_GSM_RX
-/**
- * @def MY_GSM_SSID
- * @brief If using ESP8266 as WiFi modem, this is your network SSID
- */
 #define MY_GSM_SSID
-/**
- * @def MY_GSM_TX
- * @brief If defined, uses softSerial using defined pins (must also define MY_GSM_RX)
- */
 #define MY_GSM_TX
-/**
- * @def MY_GSM_USR
- * @brief Supplied by your cell carrier / mobile operator. If not required, leave undefined.
- */
 #define MY_GSM_USR
-
 // LED
 #define MY_DEFAULT_ERR_LED_PIN
 #define MY_DEFAULT_TX_LED_PIN
