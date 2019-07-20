@@ -119,8 +119,8 @@ bool gatewayTransportSend(MyMessage &message)
 	char *topic = protocolMyMessage2MQTT(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	GATEWAY_DEBUG(PSTR("GWT:TPS:TOPIC=%s,MSG SENT\n"), topic);
 #if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
-	const bool retain = mGetCommand(message) == C_SET ||
-	                    (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
+	const bool retain = message.getCommand() == C_SET ||
+	                    (message.getCommand() == C_INTERNAL && message.getType() == I_BATTERY_LEVEL);
 #else
 	const bool retain = false;
 #endif /* End of MY_MQTT_CLIENT_PUBLISH_RETAIN */

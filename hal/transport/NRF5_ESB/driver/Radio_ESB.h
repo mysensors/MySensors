@@ -25,9 +25,9 @@
 #include "Radio.h"
 #include <Arduino.h>
 
-// Check maximum messae length
-#if MAX_MESSAGE_LENGTH > (32)
-#error "Unsupported message length. (MAX_MESSAGE_LENGTH)"
+// Check maximum message length
+#if MAX_MESSAGE_SIZE > (32)
+#error "Unsupported message size. (MAX_MESSAGE_SIZE)"
 #endif
 
 // check rx buffer size
@@ -153,7 +153,7 @@ typedef struct nrf5_radio_packet_s {
 				uint8_t pid : 2;
 			};
 		};
-		uint8_t data[MAX_MESSAGE_LENGTH];
+		uint8_t data[MAX_MESSAGE_SIZE];
 		int8_t rssi;
 		/** Debug data structure */
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB

@@ -64,7 +64,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void *data)
 {
-	uint8_t len = RFM95_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
+	uint8_t len = RFM95_receive((uint8_t *)data, MAX_MESSAGE_SIZE);
 	return len;
 }
 

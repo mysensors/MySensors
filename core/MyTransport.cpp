@@ -22,7 +22,7 @@
 // debug
 #if defined(MY_DEBUG_VERBOSE_TRANSPORT)
 #define TRANSPORT_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
-extern char _convBuf[MAX_PAYLOAD * 2 + 1];
+extern char _convBuf[MAX_PAYLOAD_SIZE * 2 + 1];
 #else
 #define TRANSPORT_DEBUG(x,...)	//!< debug NULL
 #endif
@@ -512,7 +512,7 @@ bool transportAssignNodeID(const uint8_t newNodeId)
 
 bool transportRouteMessage(MyMessage &message)
 {
-	const uint8_t destination = message.destination;
+	const uint8_t destination = message.getDestination();
 
 	if (_transportSM.findingParentNode && destination != BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("!TSF:RTE:FPAR ACTIVE\n")); // find parent active, message not sent
@@ -533,7 +533,7 @@ bool transportRouteMessage(MyMessage &message)
 		if (route == AUTO) {
 			TRANSPORT_DEBUG(PSTR("!TSF:RTE:%" PRIu8 " UNKNOWN\n"), destination);	// route unknown
 #if !defined(MY_GATEWAY_FEATURE)
-			if (message.last != _transportConfig.parentNodeId) {
+			if (message.getLast() != _transportConfig.parentNodeId) {
 				// message not from parent, i.e. child node - route it to parent
 				route = _transportConfig.parentNodeId;
 			} else {
@@ -603,13 +603,13 @@ bool transportWait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t ms
 {
 	const uint32_t enterMS = hwMillis();
 	// invalidate msg type
-	_msg.type = !msgType;
+	_msg.setType(!msgType);
 	bool expectedResponse = false;
 	while ((hwMillis() - enterMS < waitingMS) && !expectedResponse) {
 		// process incoming messages
 		transportProcessFIFO();
 		doYield();
-		expectedResponse = (mGetCommand(_msg) == cmd && _msg.type == msgType);
+		expectedResponse = (_msg.getCommand() == cmd && _msg.getType() == msgType);
 	}
 	return expectedResponse;
 }
@@ -655,19 +655,19 @@ void transportProcessMessage(void)
 		return;
 	}
 	// get message length and limit size
-	const uint8_t msgLength = min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD);
+	const uint8_t msgLength = _msg.getLength();
 	// calculate expected length
 
-	const uint8_t command = mGetCommand(_msg);
-	const uint8_t type = _msg.type;
-	const uint8_t sender = _msg.sender;
-	const uint8_t last = _msg.last;
-	const uint8_t destination = _msg.destination;
+	const uint8_t command = _msg.getCommand();
+	const uint8_t type = _msg.getType();
+	const uint8_t sender = _msg.getSender();
+	const uint8_t last = _msg.getLast();
+	const uint8_t destination = _msg.getDestination();
 
 	TRANSPORT_DEBUG(PSTR("TSF:MSG:READ,%" PRIu8 "-%" PRIu8 "-%" PRIu8 ",s=%" PRIu8 ",c=%" PRIu8 ",t=%"
 	                     PRIu8 ",pt=%" PRIu8 ",l=%" PRIu8 ",sg=%" PRIu8 ":%s\n"),
-	                sender, last, destination, _msg.sensor, command, type, mGetPayloadType(_msg), msgLength,
-	                mGetSigned(_msg), ((command == C_INTERNAL &&
+	                sender, last, destination, _msg.getSensor(), command, type, _msg.getPayloadType(), msgLength,
+	                _msg.getSigned(), ((command == C_INTERNAL &&
 	                                    type == I_NONCE_RESPONSE) ? "<NONCE>" : _msg.getString(_convBuf)));
 
 	// Reject messages that do not pass verification
@@ -698,23 +698,21 @@ void transportProcessMessage(void)
 
 	// Is message addressed to this node?
 	if (destination == _transportConfig.nodeId) {
-		// prevent buffer overflow by limiting max. possible message length (5 bits=31 bytes max) to MAX_PAYLOAD (25 bytes)
-		mSetLength(_msg, min(mGetLength(_msg), (uint8_t)MAX_PAYLOAD));
 		// null terminate data
 		_msg.data[msgLength] = 0u;
 		// Check if sender requests an echo.
-		if (mGetRequestEcho(_msg)) {
+		if (_msg.getRequestEcho()) {
 			TRANSPORT_DEBUG(PSTR("TSF:MSG:ECHO REQ\n"));	// ECHO requested
 			_msgTmp = _msg;	// Copy message
 			// Reply without echo flag (otherwise we would end up in an eternal loop)
-			mSetRequestEcho(_msgTmp, false);
-			mSetEcho(_msgTmp, true); // set ECHO flag
-			_msgTmp.sender = _transportConfig.nodeId;
-			_msgTmp.destination = sender;
+			_msgTmp.setRequestEcho(false);
+			_msgTmp.setEcho(true); // set ECHO flag
+			_msgTmp.setSender(_transportConfig.nodeId);
+			_msgTmp.setDestination(sender);
 			// send ECHO, use transportSendRoute since ECHO reply is not internal, i.e. if !transportOK do not reply
 			(void)transportSendRoute(_msgTmp);
 		}
-		if(!mGetEcho(_msg)) {
+		if(!_msg.isEcho()) {
 			// only process if not ECHO
 			if (command == C_INTERNAL) {
 				// Process signing related internal messages
@@ -725,7 +723,7 @@ void transportProcessMessage(void)
 				if (type == I_ID_RESPONSE) {
 #if (MY_NODE_ID == AUTO)
 					// only active if node ID dynamic
-					if ((_msg.sensor == _transportToken) || (_msg.sensor == AUTO)) {
+					if ((_msg.getSensor() == _transportToken) || (_msg.getSensor() == AUTO)) {
 						(void)transportAssignNodeID(_msg.getByte());
 					} else {
 						TRANSPORT_DEBUG(PSTR("!TSF:MSG:ID TK INVALID\n"));
@@ -795,7 +793,7 @@ void transportProcessMessage(void)
 						value = transportSignalReport(internalCommand);
 					} else {
 						// send request
-						if (transportRouteMessage(build(_msgTmp, _msg.last, NODE_SENSOR_ID, C_INTERNAL,
+						if (transportRouteMessage(build(_msgTmp, _msg.getLast(), NODE_SENSOR_ID, C_INTERNAL,
 						                                I_SIGNAL_REPORT_REVERSE).set((uint8_t)255))) {
 							// S>s, R>r, ascii delta = 32
 							value = transportSignalReport(internalCommand + 32);	// reverse
@@ -969,7 +967,7 @@ void transportProcessFIFO(void)
 
 bool transportSendWrite(const uint8_t to, MyMessage &message)
 {
-	message.last = _transportConfig.nodeId; // Update last
+	message.setLast(_transportConfig.nodeId); // Update last
 	// sign message if required
 	if (!signerSignMsg(message)) {
 		TRANSPORT_DEBUG(PSTR("!TSF:MSG:SIGN FAIL\n"));
@@ -978,27 +976,28 @@ bool transportSendWrite(const uint8_t to, MyMessage &message)
 	}
 
 	// msg length changes if signed
-	const uint8_t totalMsgLength = HEADER_SIZE + ( mGetSigned(message) ? MAX_PAYLOAD : mGetLength(
-	                                   message) );
+	const uint8_t totalMsgLength = HEADER_SIZE + ( message.getSigned() ? MAX_PAYLOAD_SIZE :
+	                               message.getLength() );
 
 	// send
 	setIndication(INDICATION_TX);
-	bool result = transportHALSend(to, &message, min((uint8_t)MAX_MESSAGE_LENGTH, totalMsgLength),
+	bool result = transportHALSend(to, &message, totalMsgLength,
 	                               _transportConfig.passiveMode);
 	// broadcasting (workaround counterfeits)
 	result |= (to == BROADCAST_ADDRESS);
 
 	TRANSPORT_DEBUG(PSTR("%sTSF:MSG:SEND,%" PRIu8 "-%" PRIu8 "-%" PRIu8 "-%" PRIu8 ",s=%" PRIu8 ",c=%"
 	                     PRIu8 ",t=%" PRIu8 ",pt=%" PRIu8 ",l=%" PRIu8 ",sg=%" PRIu8 ",ft=%" PRIu8 ",st=%s:%s\n"),
-	                (_transportConfig.passiveMode ? "?" : result ? "" : "!"), message.sender, message.last, to,
-	                message.destination,
-	                message.sensor,
-	                mGetCommand(message), message.type,
-	                mGetPayloadType(message), mGetLength(message), mGetSigned(message),
+	                (_transportConfig.passiveMode ? "?" : result ? "" : "!"), message.getSender(), message.getLast(),
+	                to,
+	                message.getDestination(),
+	                message.getSensor(),
+	                message.getCommand(), message.getType(),
+	                message.getPayloadType(), message.getLength(), message.getSigned(),
 	                _transportSM.failedUplinkTransmissions,
 	                (result ? "OK" : "NACK"),
-	                ((mGetCommand(message) == C_INTERNAL &&
-	                  message.type == I_NONCE_RESPONSE) ? "<NONCE>" : message.getString(_convBuf)));
+	                ((message.getCommand() == C_INTERNAL &&
+	                  message.getType() == I_NONCE_RESPONSE) ? "<NONCE>" : message.getString(_convBuf)));
 
 	return result;
 }

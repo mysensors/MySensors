@@ -29,55 +29,219 @@ MyMessage::MyMessage(void)
 	clear();
 }
 
-MyMessage::MyMessage(const uint8_t _sensor, const uint8_t _type)
+MyMessage::MyMessage(const uint8_t _sensorId, const mysensors_data_t _dataType)
 {
 	clear();
-	sensor = _sensor;
-	type   = _type;
+	(void)setSensor(_sensorId);
+	(void)setType(static_cast<uint8_t>(_dataType));
 }
 
 void MyMessage::clear(void)
 {
-	last                = 0u;
-	sender              = 0u;
-	destination         = 0u; // Gateway is default destination
-	version_length      = 0u;
-	command_echo_payload = 0u;
-	type                = 0u;
-	sensor              = 0u;
-	(void)memset((void *)data, 0u, sizeof(data));
+	this->last                 = 0u;
+	this->sender               = 0u;
+	this->destination          = GATEWAY_ADDRESS; // Gateway is default destination
+	this->version_length       = 0u;
+	this->command_echo_payload = 0u;
+	this->type                 = 0u;
+	this->sensor               = 0u;
+	(void)memset((void *)this->data, 0u, sizeof(this->data));
 
 	// set message protocol version
-	miSetVersion(PROTOCOL_VERSION);
+	(void)this->setVersion(PROTOCOL_VERSION);
+}
+
+uint8_t MyMessage::getHeaderSize(void) const
+{
+	return (uint8_t)HEADER_SIZE;
+}
+
+uint8_t MyMessage::getMaxPayloadSize(void) const
+{
+	return (uint8_t)MAX_PAYLOAD_SIZE;
+}
+
+uint8_t MyMessage::getExpectedMessageSize(void) const
+{
+	return this->getHeaderSize() + (this->getSigned() ? this->getMaxPayloadSize() : this->getLength());
+}
+
+bool MyMessage::isProtocolVersionValid(void) const
+{
+	return (this->getVersion() == PROTOCOL_VERSION);
+}
+
+uint8_t MyMessage::getType(void) const
+{
+	return this->type;
+}
+
+MyMessage& MyMessage::setType(const uint8_t _messageType)
+{
+	this->type = _messageType;
+	return *this;
+}
+
+uint8_t MyMessage::getLast(void) const
+{
+	return this->last;
+}
+
+MyMessage& MyMessage::setLast(const uint8_t _lastId)
+{
+	this->last = _lastId;
+	return *this;
+}
+
+uint8_t MyMessage::getSender(void) const
+{
+	return this->sender;
+}
+
+MyMessage& MyMessage::setSender(const uint8_t _senderId)
+{
+	this->sender = _senderId;
+	return *this;
+}
+
+uint8_t MyMessage::getSensor(void) const
+{
+	return this->sensor;
+}
+
+MyMessage& MyMessage::setSensor(const uint8_t _sensorId)
+{
+	this->sensor = _sensorId;
+	return *this;
+}
+
+uint8_t MyMessage::getDestination(void) const
+{
+	return this->destination;
+}
+
+MyMessage& MyMessage::setDestination(const uint8_t _destinationId)
+{
+	this->destination = _destinationId;
+	return *this;
 }
 
 // TODO: Remove before v3 is released, use isEcho instead
 bool MyMessage::isAck(void) const
 {
-	return isEcho();
+	return this->isEcho();
 }
 
 bool MyMessage::isEcho(void) const
 {
-	return miGetEcho();
+	return (bool)BF_GET(this->command_echo_payload, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
+	                    V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE);
 }
 
-uint8_t MyMessage::getCommand(void) const
+MyMessage& MyMessage::setEcho(const bool _echo)
 {
-	return miGetCommand();
+	BF_SET(this->command_echo_payload, _echo, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
+	       V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE);
+	return *this;
+}
+
+bool MyMessage::getRequestEcho(void) const
+{
+	return (bool)BF_GET(this->command_echo_payload, V2_MYS_HEADER_CEP_ECHO_POS,
+	                    V2_MYS_HEADER_CEP_ECHO_SIZE);
+}
+
+MyMessage& MyMessage::setRequestEcho(const bool _requestEcho)
+{
+	BF_SET(this->command_echo_payload, _requestEcho, V2_MYS_HEADER_CEP_ECHO_POS,
+	       V2_MYS_HEADER_CEP_ECHO_SIZE);
+	return *this;
+}
+
+uint8_t MyMessage::getVersion(void) const
+{
+	return (uint8_t)BF_GET(this->version_length, V2_MYS_HEADER_VSL_VERSION_POS,
+	                       V2_MYS_HEADER_VSL_VERSION_SIZE);
+}
+
+MyMessage& MyMessage::setVersion(const uint8_t _version)
+{
+	BF_SET(this->version_length, _version, V2_MYS_HEADER_VSL_VERSION_POS,
+	       V2_MYS_HEADER_VSL_VERSION_SIZE);
+	return *this;
+}
+
+mysensors_command_t MyMessage::getCommand(void) const
+{
+	return static_cast<mysensors_command_t>(BF_GET(this->command_echo_payload,
+	                                        V2_MYS_HEADER_CEP_COMMAND_POS, V2_MYS_HEADER_CEP_COMMAND_SIZE));
+}
+
+MyMessage& MyMessage::setCommand(const mysensors_command_t _command)
+{
+	BF_SET(this->command_echo_payload, static_cast<uint8_t>(_command), V2_MYS_HEADER_CEP_COMMAND_POS,
+	       V2_MYS_HEADER_CEP_COMMAND_SIZE);
+	return *this;
+}
+
+mysensors_payload_t MyMessage::getPayloadType(void) const
+{
+	return static_cast<mysensors_payload_t>(BF_GET(this->command_echo_payload,
+	                                        V2_MYS_HEADER_CEP_PAYLOADTYPE_POS, V2_MYS_HEADER_CEP_PAYLOADTYPE_SIZE));
+}
+
+MyMessage& MyMessage::setPayloadType(const mysensors_payload_t _payloadType)
+{
+	BF_SET(this->command_echo_payload, static_cast<uint8_t>(_payloadType),
+	       V2_MYS_HEADER_CEP_PAYLOADTYPE_POS, V2_MYS_HEADER_CEP_PAYLOADTYPE_SIZE);
+	return *this;
+}
+
+bool MyMessage::getSigned(void) const
+{
+	return (bool)BF_GET(this->version_length, V2_MYS_HEADER_VSL_SIGNED_POS,
+	                    V2_MYS_HEADER_VSL_SIGNED_SIZE);
+}
+
+MyMessage& MyMessage::setSigned(const bool _signed)
+{
+	BF_SET(this->version_length, _signed, V2_MYS_HEADER_VSL_SIGNED_POS, V2_MYS_HEADER_VSL_SIGNED_SIZE);
+	return *this;
+}
+
+uint8_t MyMessage::getLength(void) const
+{
+	uint8_t length = BF_GET(this->version_length, V2_MYS_HEADER_VSL_LENGTH_POS,
+	                        V2_MYS_HEADER_VSL_LENGTH_SIZE);
+	// limit length
+	if (length > MAX_PAYLOAD_SIZE) {
+		length = MAX_PAYLOAD_SIZE;
+	}
+	return length;
+}
+
+MyMessage& MyMessage::setLength(const uint8_t _length)
+{
+	uint8_t length = _length;
+	// limit length
+	if (length > MAX_PAYLOAD_SIZE) {
+		length = MAX_PAYLOAD_SIZE;
+	}
+
+	BF_SET(this->version_length, length, V2_MYS_HEADER_VSL_LENGTH_POS, V2_MYS_HEADER_VSL_LENGTH_SIZE);
+	return *this;
 }
 
 /* Getters for payload converted to desired form */
 void* MyMessage::getCustom(void) const
 {
-	return (void *)data;
+	return (void *)this->data;
 }
 
 const char* MyMessage::getString(void) const
 {
-	uint8_t payloadType = miGetPayloadType();
-	if (payloadType == P_STRING) {
-		return data;
+	if (this->getPayloadType() == P_STRING) {
+		return this->data;
 	} else {
 		return NULL;
 	}
@@ -85,19 +249,25 @@ const char* MyMessage::getString(void) const
 
 char* MyMessage::getCustomString(char *buffer) const
 {
-	for (uint8_t i = 0; i < miGetLength(); i++) {
-		buffer[i * 2] = convertI2H(data[i] >> 4);
-		buffer[(i * 2) + 1] = convertI2H(data[i]);
+	if (buffer != NULL) {
+		for (uint8_t i = 0; i < this->getLength(); i++) {
+			buffer[i * 2] = convertI2H(this->data[i] >> 4);
+			buffer[(i * 2) + 1] = convertI2H(this->data[i]);
+		}
+		buffer[this->getLength() * 2] = '\0';
+		return buffer;
+	} else {
+		return NULL;
 	}
-	buffer[miGetLength() * 2] = '\0';
-	return buffer;
 }
 
 char* MyMessage::getStream(char *buffer) const
 {
-	uint8_t cmd = miGetCommand();
-	if ((cmd == C_STREAM) && (buffer != NULL)) {
-		return getCustomString(buffer);
+	if (buffer != NULL) {
+		if (this->getCommand() == C_STREAM) {
+			return this->getCustomString(buffer);
+		}
+		return buffer;
 	} else {
 		return NULL;
 	}
@@ -105,11 +275,11 @@ char* MyMessage::getStream(char *buffer) const
 
 char* MyMessage::getString(char *buffer) const
 {
-	uint8_t payloadType = miGetPayloadType();
 	if (buffer != NULL) {
+		const uint8_t payloadType = this->getPayloadType();
 		if (payloadType == P_STRING) {
-			(void)strncpy(buffer, data, miGetLength());
-			buffer[miGetLength()] = 0;
+			(void)strncpy(buffer, this->data, this->getLength());
+			buffer[this->getLength()] = 0;
 		} else if (payloadType == P_BYTE) {
 			(void)itoa(bValue, buffer, 10);
 		} else if (payloadType == P_INT16) {
@@ -121,7 +291,7 @@ char* MyMessage::getString(char *buffer) const
 		} else if (payloadType == P_ULONG32) {
 			(void)ultoa(ulValue, buffer, 10);
 		} else if (payloadType == P_FLOAT32) {
-			(void)dtostrf(fValue, 2, min(fPrecision, (uint8_t)8), buffer);
+			(void)dtostrf(fValue, 2, min(fPrecision, (uint8_t)8u), buffer);
 		} else if (payloadType == P_CUSTOM) {
 			return getCustomString(buffer);
 		}
@@ -133,15 +303,15 @@ char* MyMessage::getString(char *buffer) const
 
 bool MyMessage::getBool(void) const
 {
-	return getByte();
+	return (bool)this->getByte();
 }
 
 uint8_t MyMessage::getByte(void) const
 {
-	if (miGetPayloadType() == P_BYTE) {
-		return data[0];
-	} else if (miGetPayloadType() == P_STRING) {
-		return atoi(data);
+	if (this->getPayloadType() == P_BYTE) {
+		return (uint8_t)this->data[0];
+	} else if (this->getPayloadType() == P_STRING) {
+		return (uint8_t)atoi(this->data);
 	} else {
 		return 0;
 	}
@@ -150,10 +320,10 @@ uint8_t MyMessage::getByte(void) const
 
 float MyMessage::getFloat(void) const
 {
-	if (miGetPayloadType() == P_FLOAT32) {
-		return fValue;
-	} else if (miGetPayloadType() == P_STRING) {
-		return atof(data);
+	if (this->getPayloadType() == P_FLOAT32) {
+		return this->fValue;
+	} else if (this->getPayloadType() == P_STRING) {
+		return (float)atof(this->data);
 	} else {
 		return 0;
 	}
@@ -161,10 +331,10 @@ float MyMessage::getFloat(void) const
 
 int32_t MyMessage::getLong(void) const
 {
-	if (miGetPayloadType() == P_LONG32) {
-		return lValue;
-	} else if (miGetPayloadType() == P_STRING) {
-		return atol(data);
+	if (this->getPayloadType() == P_LONG32) {
+		return this->lValue;
+	} else if (this->getPayloadType() == P_STRING) {
+		return (int32_t)atol(this->data);
 	} else {
 		return 0;
 	}
@@ -172,10 +342,10 @@ int32_t MyMessage::getLong(void) const
 
 uint32_t MyMessage::getULong(void) const
 {
-	if (miGetPayloadType() == P_ULONG32) {
-		return ulValue;
-	} else if (miGetPayloadType() == P_STRING) {
-		return atol(data);
+	if (this->getPayloadType() == P_ULONG32) {
+		return this->ulValue;
+	} else if (this->getPayloadType() == P_STRING) {
+		return (uint32_t)atol(this->data);
 	} else {
 		return 0;
 	}
@@ -183,10 +353,10 @@ uint32_t MyMessage::getULong(void) const
 
 int16_t MyMessage::getInt(void) const
 {
-	if (miGetPayloadType() == P_INT16) {
-		return iValue;
-	} else if (miGetPayloadType() == P_STRING) {
-		return atoi(data);
+	if (this->getPayloadType() == P_INT16) {
+		return this->iValue;
+	} else if (this->getPayloadType() == P_STRING) {
+		return (int16_t)atoi(this->data);
 	} else {
 		return 0;
 	}
@@ -194,68 +364,41 @@ int16_t MyMessage::getInt(void) const
 
 uint16_t MyMessage::getUInt(void) const
 {
-	if (miGetPayloadType() == P_UINT16) {
-		return uiValue;
-	} else if (miGetPayloadType() == P_STRING) {
-		return atoi(data);
+	if (this->getPayloadType() == P_UINT16) {
+		return this->uiValue;
+	} else if (this->getPayloadType() == P_STRING) {
+		return (uint16_t)atoi(this->data);
 	} else {
 		return 0;
 	}
 }
 
-MyMessage& MyMessage::setType(const uint8_t _type)
+MyMessage& MyMessage::set(const void* value, const size_t _length)
 {
-	type = _type;
-	return *this;
-}
-
-MyMessage& MyMessage::setSensor(const uint8_t _sensor)
-{
-	sensor = _sensor;
-	return *this;
-}
-
-MyMessage& MyMessage::setDestination(const uint8_t _destination)
-{
-	destination = _destination;
-	return *this;
-}
-
-// Set payload
-MyMessage& MyMessage::set(const void* value, const size_t length)
-{
-	const size_t payloadLength = value == NULL ? 0 : min(length, (size_t)MAX_PAYLOAD);
-	miSetLength(payloadLength);
-	miSetPayloadType(P_CUSTOM);
-	(void)memcpy(data, value, payloadLength);
+	(void)this->setLength((value != NULL) ? _length : 0);
+	(void)this->setPayloadType(P_CUSTOM);
+	(void)memcpy((void *)this->data, value, this->getLength());
 	return *this;
 }
 
 MyMessage& MyMessage::set(const char* value)
 {
-	const size_t payloadLength = value == NULL ? 0 : min(strlen(value), (size_t)MAX_PAYLOAD);
-	miSetLength(payloadLength);
-	miSetPayloadType(P_STRING);
-	if (payloadLength) {
-		(void)strncpy(data, value, payloadLength);
-	}
+	(void)this->setLength((value != NULL) ? strlen(value) : 0);
+	(void)this->setPayloadType(P_STRING);
+	(void)strncpy(this->data, value, this->getLength());
 	// null terminate string
-	data[payloadLength] = 0;
+	this->data[this->getLength()] = 0;
 	return *this;
 }
 
 #if !defined(__linux__)
 MyMessage& MyMessage::set(const __FlashStringHelper* value)
 {
-	const size_t payloadLength = value == NULL ? 0
-	                             : min(strlen_P(reinterpret_cast<const char *>(value)), (size_t)MAX_PAYLOAD);
-	miSetLength(payloadLength);
-	miSetPayloadType(P_STRING);
-	if (payloadLength) {
-		(void)strncpy_P(data, reinterpret_cast<const char *>(value), payloadLength);
-	}
+	(void)this->setLength((value != NULL) ? strlen_P(reinterpret_cast<const char *>(value)) : 0);
+	(void)this->setPayloadType(P_STRING);
+	(void)strncpy_P(this->data, reinterpret_cast<const char *>(value), this->getLength());
 	// null terminate string
-	data[payloadLength] = 0;
+	this->data[this->getLength()] = 0;
 	return *this;
 }
 #endif
@@ -263,57 +406,54 @@ MyMessage& MyMessage::set(const __FlashStringHelper* value)
 
 MyMessage& MyMessage::set(const bool value)
 {
-	miSetLength(1);
-	miSetPayloadType(P_BYTE);
-	data[0] = value;
-	return *this;
+	return this->set((uint8_t)value);
 }
 
 MyMessage& MyMessage::set(const uint8_t value)
 {
-	miSetLength(1);
-	miSetPayloadType(P_BYTE);
-	data[0] = value;
+	(void)this->setLength(1u);
+	(void)this->setPayloadType(P_BYTE);
+	this->bValue = value;
 	return *this;
 }
 
 MyMessage& MyMessage::set(const float value, const uint8_t decimals)
 {
-	miSetLength(5); // 32 bit float + persi
-	miSetPayloadType(P_FLOAT32);
-	fValue=value;
-	fPrecision = decimals;
+	(void)this->setLength(5u); // 32 bit float + persi
+	(void)this->setPayloadType(P_FLOAT32);
+	this->fValue = value;
+	this->fPrecision = decimals;
 	return *this;
 }
 
 MyMessage& MyMessage::set(const uint32_t value)
 {
-	miSetPayloadType(P_ULONG32);
-	miSetLength(4);
-	ulValue = value;
+	(void)this->setLength(4u);
+	(void)this->setPayloadType(P_ULONG32);
+	this->ulValue = value;
 	return *this;
 }
 
 MyMessage& MyMessage::set(const int32_t value)
 {
-	miSetPayloadType(P_LONG32);
-	miSetLength(4);
-	lValue = value;
+	(void)this->setLength(4u);
+	(void)this->setPayloadType(P_LONG32);
+	this->lValue = value;
 	return *this;
 }
 
 MyMessage& MyMessage::set(const uint16_t value)
 {
-	miSetPayloadType(P_UINT16);
-	miSetLength(2);
-	uiValue = value;
+	(void)this->setLength(2u);
+	(void)this->setPayloadType(P_UINT16);
+	this->uiValue = value;
 	return *this;
 }
 
 MyMessage& MyMessage::set(const int16_t value)
 {
-	miSetPayloadType(P_INT16);
-	miSetLength(2);
-	iValue = value;
+	(void)this->setLength(2u);
+	(void)this->setPayloadType(P_INT16);
+	this->iValue = value;
 	return *this;
 }

@@ -152,7 +152,7 @@ static bool NRF5_ESB_initialize()
 
 	// Packet configuration
 	NRF_RADIO->PCNF1 =
-	    (MAX_MESSAGE_LENGTH << RADIO_PCNF1_MAXLEN_Pos) | // maximum length
+	    (MAX_MESSAGE_SIZE << RADIO_PCNF1_MAXLEN_Pos) | // maximum length
 	    (0 << RADIO_PCNF1_STATLEN_Pos) |                 // minimum message length
 	    ((MY_NRF5_ESB_ADDR_WIDTH - 1) << RADIO_PCNF1_BALEN_Pos) | // Set base address length
 	    (RADIO_PCNF1_ENDIAN_Big << RADIO_PCNF1_ENDIAN_Pos) | // Big endian
@@ -424,8 +424,8 @@ static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len
 	}
 
 	// check length and truncate data
-	if (len > MAX_MESSAGE_LENGTH) {
-		len = MAX_MESSAGE_LENGTH;
+	if (len > MAX_MESSAGE_SIZE) {
+		len = MAX_MESSAGE_SIZE;
 	}
 
 	// copy data to tx_buffer
