@@ -329,7 +329,7 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void *buf, const uint
 	// timeout value after successful TX on 16Mhz AVR ~ 65500, i.e. msg is transmitted after ~36 loop cycles
 	RF24_ce(LOW);
 	// reset interrupts
-	const	uint8_t RF24_status = RF24_setStatus(_BV(RF24_RX_DR) || _BV(RF24_TX_DS) | _BV(RF24_MAX_RT));
+	const uint8_t RF24_status = RF24_setStatus(_BV(RF24_RX_DR) | _BV(RF24_TX_DS) | _BV(RF24_MAX_RT));
 	// Max retries exceeded
 	if (RF24_status & _BV(RF24_MAX_RT)) {
 		// flush packet
