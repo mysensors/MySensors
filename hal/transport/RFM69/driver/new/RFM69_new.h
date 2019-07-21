@@ -466,13 +466,12 @@ LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t s
 * @param recipient
 * @param buffer
 * @param bufferSize
-* @param retries
-* @param retryWaitTimeMS
+* @param noACK
 * @return True if packet successfully sent
 */
 LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
                                const uint8_t bufferSize,
-                               const uint8_t retries = RFM69_RETRIES, const uint32_t retryWaitTimeMS = RFM69_RETRY_TIMEOUT_MS);
+                               const bool noACK);
 
 /**
 * @brief RFM69_setRadioMode

@@ -609,22 +609,22 @@ LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI)
 
 
 LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
-                               const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTimeMS)
+                               const uint8_t bufferSize, const bool noACK)
 {
-	for (uint8_t retry = 0; retry <= retries; retry++) {
+	for (uint8_t retry = 0; retry < RFM69_RETRIES; retry++) {
 		RFM69_DEBUG(PSTR("RFM69:SWR:SEND,TO=%" PRIu8 ",SEQ=%" PRIu16 ",RETRY=%" PRIu8 "\n"), recipient,
 		            RFM69.txSequenceNumber,retry);
 		rfm69_controlFlags_t flags = 0u; // reset all flags
-		RFM69_setACKRequested(flags, (recipient != RFM69_BROADCAST_ADDRESS));
+		RFM69_setACKRequested(flags, noACK);
 		RFM69_setACKRSSIReport(flags, RFM69.ATCenabled);
 		(void)RFM69_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry);
-		if (recipient == RFM69_BROADCAST_ADDRESS) {
+		if (noACK) {
 			// no ACK requested
 			return true;
 		}
 		// radio is in RX
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < retryWaitTimeMS && !RFM69.dataReceived) {
+		while (hwMillis() - enterMS < RFM69_RETRY_TIMEOUT_MS && !RFM69.dataReceived) {
 			RFM69_handler();
 			if (RFM69.ackReceived) {
 				// radio is in stdby
