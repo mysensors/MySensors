@@ -197,7 +197,7 @@ LOCAL uint8_t RF24_getStatus(void);
 * @brief RF24_getFIFOStatus
 * @return
 */
-LOCAL uint8_t RF24_getFIFOStatus(void);
+LOCAL uint8_t RF24_getFIFOStatus(void) __attribute__((unused));
 /**
 * @brief RF24_openWritingPipe
 * @param recipient
@@ -344,8 +344,9 @@ LOCAL uint8_t RF24_getObserveTX(void);
 /**
 * @brief RF24_setStatus
 * @param status
+* @return status byte before setting new status
 */
-LOCAL void RF24_setStatus(const uint8_t status);
+LOCAL uint8_t RF24_setStatus(const uint8_t status);
 /**
 * @brief RF24_enableFeatures
 */
