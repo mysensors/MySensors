@@ -978,17 +978,15 @@ bool transportSendWrite(const uint8_t to, MyMessage &message)
 	// msg length changes if signed
 	const uint8_t totalMsgLength = HEADER_SIZE + ( message.getSigned() ? MAX_PAYLOAD_SIZE :
 	                               message.getLength() );
-
+	const bool noACK = _transportConfig.passiveMode || (to == BROADCAST_ADDRESS);
 	// send
 	setIndication(INDICATION_TX);
-	bool result = transportHALSend(to, &message, totalMsgLength,
-	                               _transportConfig.passiveMode);
-	// broadcasting (workaround counterfeits)
-	result |= (to == BROADCAST_ADDRESS);
+	const bool result = transportHALSend(to, &message, totalMsgLength,
+	                                     noACK);
 
 	TRANSPORT_DEBUG(PSTR("%sTSF:MSG:SEND,%" PRIu8 "-%" PRIu8 "-%" PRIu8 "-%" PRIu8 ",s=%" PRIu8 ",c=%"
 	                     PRIu8 ",t=%" PRIu8 ",pt=%" PRIu8 ",l=%" PRIu8 ",sg=%" PRIu8 ",ft=%" PRIu8 ",st=%s:%s\n"),
-	                (_transportConfig.passiveMode ? "?" : result ? "" : "!"), message.getSender(), message.getLast(),
+	                (noACK ? "?" : result ? "" : "!"), message.getSender(), message.getLast(),
 	                to,
 	                message.getDestination(),
 	                message.getSensor(),

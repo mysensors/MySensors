@@ -59,11 +59,7 @@ uint8_t transportGetAddress(void)
 
 bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool noACK)
 {
-	if (noACK) {
-		(void)RFM69_sendWithRetry(to, data, len, 0, 0);
-		return true;
-	}
-	return RFM69_sendWithRetry(to, data, len);
+	return RFM69_sendWithRetry(to, data, len, noACK);
 }
 
 bool transportDataAvailable(void)
