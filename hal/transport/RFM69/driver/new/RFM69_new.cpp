@@ -615,7 +615,7 @@ LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
 		RFM69_DEBUG(PSTR("RFM69:SWR:SEND,TO=%" PRIu8 ",SEQ=%" PRIu16 ",RETRY=%" PRIu8 "\n"), recipient,
 		            RFM69.txSequenceNumber,retry);
 		rfm69_controlFlags_t flags = 0u; // reset all flags
-		RFM69_setACKRequested(flags, noACK);
+		RFM69_setACKRequested(flags, !noACK);
 		RFM69_setACKRSSIReport(flags, RFM69.ATCenabled);
 		(void)RFM69_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry);
 		if (noACK) {
