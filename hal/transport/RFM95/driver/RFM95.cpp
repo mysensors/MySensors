@@ -546,7 +546,7 @@ LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void *buffer,
 		            RFM95.txSequenceNumber,
 		            retry);
 		rfm95_controlFlags_t flags = 0u;
-		RFM95_setACKRequested(flags, noACK);
+		RFM95_setACKRequested(flags, !noACK);
 		// send packet
 		if (!RFM95_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry)) {
 			return false;
