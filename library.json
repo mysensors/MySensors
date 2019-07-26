@@ -14,6 +14,12 @@
     "exclude": [
       "tests",
       "Documentation",
+      ".mystools",
+      "projects",
+      "examples_linux",
+      "initscripts",
+      "configure",
+      ".ci",
       "Doxyfile"
     ]
   }
