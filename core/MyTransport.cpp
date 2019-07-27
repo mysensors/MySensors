@@ -968,6 +968,7 @@ void transportProcessFIFO(void)
 bool transportSendWrite(const uint8_t to, MyMessage &message)
 {
 	message.setLast(_transportConfig.nodeId); // Update last
+
 	// sign message if required
 	if (!signerSignMsg(message)) {
 		TRANSPORT_DEBUG(PSTR("!TSF:MSG:SIGN FAIL\n"));

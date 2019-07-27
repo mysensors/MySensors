@@ -56,7 +56,6 @@
 #define V2_MYS_HEADER_CEP_PAYLOADTYPE_POS   (5u) //!< bitfield position payload type field
 #define V2_MYS_HEADER_CEP_PAYLOADTYPE_SIZE  (3u) //!< size payload type field
 
-#define PROTOCOL_VERSION                    V2_MYS_HEADER_PROTOCOL_VERSION	//!< The version of the protocol
 #define MAX_MESSAGE_SIZE                    V2_MYS_HEADER_MAX_MESSAGE_SIZE	//!< The maximum size of a message (including header)
 #define HEADER_SIZE                         V2_MYS_HEADER_SIZE	//!< The size of the header
 #define MAX_PAYLOAD_SIZE                    (MAX_MESSAGE_SIZE - HEADER_SIZE) //!< The maximum size of a payload depends on #MAX_MESSAGE_SIZE and #HEADER_SIZE
@@ -301,10 +300,10 @@ public:
 
 	/**
 	 * Constructor
-	 * @param _sensorId id of the child sensor for this message
-	 * @param _dataType
+	 * @param sensorId id of the child sensor for this message
+	 * @param dataType
 	 */
-	MyMessage(const uint8_t _sensorId, const mysensors_data_t _dataType);
+	MyMessage(const uint8_t sensorId, const mysensors_data_t dataType);
 
 	/**
 	 * @brief Clear message contents.
@@ -396,7 +395,6 @@ public:
 	*/
 	uint8_t getExpectedMessageSize(void) const;
 
-
 	/**
 	* @brief isProtocolVersionValid
 	* @return true if the protocol version is valid
@@ -411,9 +409,9 @@ public:
 
 	/**
 	 * @brief Setter for echo request
-	 * @param _requestEcho
+	 * @param requestEcho
 	 */
-	MyMessage& setRequestEcho(const bool _requestEcho);
+	MyMessage& setRequestEcho(const bool requestEcho);
 
 	/**
 	 * @brief Getter for version
@@ -423,9 +421,8 @@ public:
 
 	/**
 	 * @brief Setter for version
-	 * @param _version
 	 */
-	MyMessage& setVersion(const uint8_t _version);
+	MyMessage& setVersion(void);
 
 	/**
 	* @brief Getter for length
@@ -435,9 +432,9 @@ public:
 
 	/**
 	 * @brief Setter for length
-	 * @param _length
+	 * @param length
 	 */
-	MyMessage& setLength(const uint8_t _length);
+	MyMessage& setLength(const uint8_t length);
 
 	/**
 	* @brief Getter for command type
@@ -447,9 +444,9 @@ public:
 
 	/**
 	 * @brief Setter for command type
-	 * @param _command
+	 * @param command
 	 */
-	MyMessage& setCommand(const mysensors_command_t _command);
+	MyMessage& setCommand(const mysensors_command_t command);
 
 	/**
 	* @brief Getter for payload type
@@ -459,9 +456,9 @@ public:
 
 	/**
 	 * @brief Setter for payload type
-	 * @param _payloadType
+	 * @param payloadType
 	 */
-	MyMessage& setPayloadType(const mysensors_payload_t _payloadType);
+	MyMessage& setPayloadType(const mysensors_payload_t payloadType);
 
 	/**
 	* @brief Getter for sign field
@@ -471,9 +468,9 @@ public:
 
 	/**
 	 * @brief Setter for sign field
-	 * @param _signed
+	 * @param signedFlag
 	 */
-	MyMessage& setSigned(const bool _signed);
+	MyMessage& setSigned(const bool signedFlag);
 
 	/**
 	 * \deprecated use isEcho()
@@ -490,9 +487,9 @@ public:
 
 	/**
 	* @brief Setter for echo-flag.
-	* @param _echo true if this an echo message
+	* @param echo true if this an echo message
 	*/
-	MyMessage& setEcho(const bool _echo);
+	MyMessage& setEcho(const bool echo);
 
 	/**
 	 * @brief Get message type
@@ -502,9 +499,9 @@ public:
 
 	/**
 	 * @brief Set message type
-	 * @param _messageType
+	 * @param messageType
 	 */
-	MyMessage& setType(const uint8_t _messageType);
+	MyMessage& setType(const uint8_t messageType);
 
 	/**
 	* @brief Get last ID
@@ -514,9 +511,9 @@ public:
 
 	/**
 	 * @brief Set last ID
-	 * @param _lastId
+	 * @param lastId
 	 */
-	MyMessage& setLast(const uint8_t _lastId);
+	MyMessage& setLast(const uint8_t lastId);
 
 	/**
 	* @brief Get sender ID
@@ -526,9 +523,9 @@ public:
 
 	/**
 	 * @brief Set sender ID
-	 * @param _senderId
+	 * @param senderId
 	 */
-	MyMessage& setSender(const uint8_t _senderId);
+	MyMessage& setSender(const uint8_t senderId);
 
 	/**
 	 * @brief Get sensor ID of message
@@ -538,9 +535,9 @@ public:
 
 	/**
 	 * @brief Set which child sensor this message belongs to
-	 * @param _sensorId
+	 * @param sensorId
 	 */
-	MyMessage& setSensor(const uint8_t _sensorId);
+	MyMessage& setSensor(const uint8_t sensorId);
 
 	/**
 	 * @brief Get destination
@@ -550,16 +547,16 @@ public:
 
 	/**
 	 * @brief Set final destination node id for this message
-	 * @param _destinationId
+	 * @param destinationId
 	 */
-	MyMessage& setDestination(const uint8_t _destinationId);
+	MyMessage& setDestination(const uint8_t destinationId);
 
 	/**
 	 * @brief Set entire payload
 	 * @param payload pointer to the buffer where the payload is stored
-	 * @param _length of the payload
+	 * @param length of the payload
 	 */
-	MyMessage& set(const void* payload, const size_t _length);
+	MyMessage& set(const void* payload, const size_t length);
 
 	/**
 	 * @brief Set payload to character array

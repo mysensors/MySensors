@@ -115,8 +115,8 @@ bool transportHALReceive(MyMessage *inMsg, uint8_t *msgLength)
 	MyMessage tmp = *inMsg;
 	if (!tmp.isProtocolVersionValid()) {
 		setIndication(INDICATION_ERR_VERSION);
-		TRANSPORT_HAL_DEBUG(PSTR("!THA:RCV:PVER,%" PRIu8 "!=%" PRIu8 "\n"), tmp.getVersion(),
-		                    PROTOCOL_VERSION);	// protocol version mismatch
+		TRANSPORT_HAL_DEBUG(PSTR("!THA:RCV:PVER=%" PRIu8 "\n"),
+		                    tmp.getVersion());	// protocol version mismatch
 		return false;
 	}
 	*msgLength = tmp.getLength();

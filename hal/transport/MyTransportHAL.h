@@ -29,7 +29,7 @@
  * | | THA | RCV   | MSG=%%s										| Receive message (MSG)
  * | | THA | RCV   | DECRYPT										| Decrypt received message
  * | | THA | RCV   | PLAIN=%%s									| Decrypted message (PLAIN)
- * |!| THA | RCV   | PVER=%%d,EXP=%%d						| Message protocol version (PVER) mismatch, expected version (EXP)
+ * |!| THA | RCV   | PVER=%%d										| Message protocol version (PVER) mismatch
  * |!| THA | RCV   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
  * |!| THA | RCV   | MSG LEN=%%d								| Length of received message (LEN)
  * | | THA | SND   | MSG=%%s										| Send message (MSG)

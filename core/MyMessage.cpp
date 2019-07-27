@@ -26,14 +26,14 @@
 
 MyMessage::MyMessage(void)
 {
-	clear();
+	this->clear();
 }
 
 MyMessage::MyMessage(const uint8_t _sensorId, const mysensors_data_t _dataType)
 {
-	clear();
-	(void)setSensor(_sensorId);
-	(void)setType(static_cast<uint8_t>(_dataType));
+	this->clear();
+	(void)this->setSensor(_sensorId);
+	(void)this->setType(static_cast<uint8_t>(_dataType));
 }
 
 void MyMessage::clear(void)
@@ -45,10 +45,11 @@ void MyMessage::clear(void)
 	this->command_echo_payload = 0u;
 	this->type                 = 0u;
 	this->sensor               = 0u;
+	// clear data buffer
 	(void)memset((void *)this->data, 0u, sizeof(this->data));
 
 	// set message protocol version
-	(void)this->setVersion(PROTOCOL_VERSION);
+	(void)this->setVersion();
 }
 
 uint8_t MyMessage::getHeaderSize(void) const
@@ -68,7 +69,7 @@ uint8_t MyMessage::getExpectedMessageSize(void) const
 
 bool MyMessage::isProtocolVersionValid(void) const
 {
-	return (this->getVersion() == PROTOCOL_VERSION);
+	return (this->getVersion() == V2_MYS_HEADER_PROTOCOL_VERSION);
 }
 
 uint8_t MyMessage::getType(void) const
@@ -76,9 +77,9 @@ uint8_t MyMessage::getType(void) const
 	return this->type;
 }
 
-MyMessage& MyMessage::setType(const uint8_t _messageType)
+MyMessage& MyMessage::setType(const uint8_t messageType)
 {
-	this->type = _messageType;
+	this->type = messageType;
 	return *this;
 }
 
@@ -87,9 +88,9 @@ uint8_t MyMessage::getLast(void) const
 	return this->last;
 }
 
-MyMessage& MyMessage::setLast(const uint8_t _lastId)
+MyMessage& MyMessage::setLast(const uint8_t lastId)
 {
-	this->last = _lastId;
+	this->last = lastId;
 	return *this;
 }
 
@@ -98,9 +99,9 @@ uint8_t MyMessage::getSender(void) const
 	return this->sender;
 }
 
-MyMessage& MyMessage::setSender(const uint8_t _senderId)
+MyMessage& MyMessage::setSender(const uint8_t senderId)
 {
-	this->sender = _senderId;
+	this->sender = senderId;
 	return *this;
 }
 
@@ -109,9 +110,9 @@ uint8_t MyMessage::getSensor(void) const
 	return this->sensor;
 }
 
-MyMessage& MyMessage::setSensor(const uint8_t _sensorId)
+MyMessage& MyMessage::setSensor(const uint8_t sensorId)
 {
-	this->sensor = _sensorId;
+	this->sensor = sensorId;
 	return *this;
 }
 
@@ -120,9 +121,9 @@ uint8_t MyMessage::getDestination(void) const
 	return this->destination;
 }
 
-MyMessage& MyMessage::setDestination(const uint8_t _destinationId)
+MyMessage& MyMessage::setDestination(const uint8_t destinationId)
 {
-	this->destination = _destinationId;
+	this->destination = destinationId;
 	return *this;
 }
 
@@ -138,9 +139,9 @@ bool MyMessage::isEcho(void) const
 	                    V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE);
 }
 
-MyMessage& MyMessage::setEcho(const bool _echo)
+MyMessage& MyMessage::setEcho(const bool echo)
 {
-	BF_SET(this->command_echo_payload, _echo, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
+	BF_SET(this->command_echo_payload, echo, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
 	       V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE);
 	return *this;
 }
@@ -151,9 +152,9 @@ bool MyMessage::getRequestEcho(void) const
 	                    V2_MYS_HEADER_CEP_ECHO_SIZE);
 }
 
-MyMessage& MyMessage::setRequestEcho(const bool _requestEcho)
+MyMessage& MyMessage::setRequestEcho(const bool requestEcho)
 {
-	BF_SET(this->command_echo_payload, _requestEcho, V2_MYS_HEADER_CEP_ECHO_POS,
+	BF_SET(this->command_echo_payload, requestEcho, V2_MYS_HEADER_CEP_ECHO_POS,
 	       V2_MYS_HEADER_CEP_ECHO_SIZE);
 	return *this;
 }
@@ -164,9 +165,9 @@ uint8_t MyMessage::getVersion(void) const
 	                       V2_MYS_HEADER_VSL_VERSION_SIZE);
 }
 
-MyMessage& MyMessage::setVersion(const uint8_t _version)
+MyMessage& MyMessage::setVersion(void)
 {
-	BF_SET(this->version_length, _version, V2_MYS_HEADER_VSL_VERSION_POS,
+	BF_SET(this->version_length, V2_MYS_HEADER_PROTOCOL_VERSION, V2_MYS_HEADER_VSL_VERSION_POS,
 	       V2_MYS_HEADER_VSL_VERSION_SIZE);
 	return *this;
 }
@@ -177,9 +178,9 @@ mysensors_command_t MyMessage::getCommand(void) const
 	                                        V2_MYS_HEADER_CEP_COMMAND_POS, V2_MYS_HEADER_CEP_COMMAND_SIZE));
 }
 
-MyMessage& MyMessage::setCommand(const mysensors_command_t _command)
+MyMessage& MyMessage::setCommand(const mysensors_command_t command)
 {
-	BF_SET(this->command_echo_payload, static_cast<uint8_t>(_command), V2_MYS_HEADER_CEP_COMMAND_POS,
+	BF_SET(this->command_echo_payload, static_cast<uint8_t>(command), V2_MYS_HEADER_CEP_COMMAND_POS,
 	       V2_MYS_HEADER_CEP_COMMAND_SIZE);
 	return *this;
 }
@@ -190,9 +191,9 @@ mysensors_payload_t MyMessage::getPayloadType(void) const
 	                                        V2_MYS_HEADER_CEP_PAYLOADTYPE_POS, V2_MYS_HEADER_CEP_PAYLOADTYPE_SIZE));
 }
 
-MyMessage& MyMessage::setPayloadType(const mysensors_payload_t _payloadType)
+MyMessage& MyMessage::setPayloadType(const mysensors_payload_t payloadType)
 {
-	BF_SET(this->command_echo_payload, static_cast<uint8_t>(_payloadType),
+	BF_SET(this->command_echo_payload, static_cast<uint8_t>(payloadType),
 	       V2_MYS_HEADER_CEP_PAYLOADTYPE_POS, V2_MYS_HEADER_CEP_PAYLOADTYPE_SIZE);
 	return *this;
 }
@@ -203,9 +204,10 @@ bool MyMessage::getSigned(void) const
 	                    V2_MYS_HEADER_VSL_SIGNED_SIZE);
 }
 
-MyMessage& MyMessage::setSigned(const bool _signed)
+MyMessage& MyMessage::setSigned(const bool signedFlag)
 {
-	BF_SET(this->version_length, _signed, V2_MYS_HEADER_VSL_SIGNED_POS, V2_MYS_HEADER_VSL_SIGNED_SIZE);
+	BF_SET(this->version_length, signedFlag, V2_MYS_HEADER_VSL_SIGNED_POS,
+	       V2_MYS_HEADER_VSL_SIGNED_SIZE);
 	return *this;
 }
 
@@ -220,15 +222,16 @@ uint8_t MyMessage::getLength(void) const
 	return length;
 }
 
-MyMessage& MyMessage::setLength(const uint8_t _length)
+MyMessage& MyMessage::setLength(const uint8_t length)
 {
-	uint8_t length = _length;
+	uint8_t finalLength = length;
 	// limit length
-	if (length > MAX_PAYLOAD_SIZE) {
-		length = MAX_PAYLOAD_SIZE;
+	if (finalLength > MAX_PAYLOAD_SIZE) {
+		finalLength = MAX_PAYLOAD_SIZE;
 	}
 
-	BF_SET(this->version_length, length, V2_MYS_HEADER_VSL_LENGTH_POS, V2_MYS_HEADER_VSL_LENGTH_SIZE);
+	BF_SET(this->version_length, finalLength, V2_MYS_HEADER_VSL_LENGTH_POS,
+	       V2_MYS_HEADER_VSL_LENGTH_SIZE);
 	return *this;
 }
 
