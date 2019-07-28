@@ -187,19 +187,21 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 	msg.setSigned(true); // make sure signing flag is set before signature is calculated
 	signerCalculateSignature(msg, true);
 
-	if (DO_WHITELIST(msg.getDestination())) {
+#ifdef MY_SIGNING_NODE_WHITELISTING
+	if (DO_WHITELIST(msg.destination)) {
 		// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has
 		// provided. We can reuse the nonce buffer now since it is no longer needed
 		(void)memcpy((void *)_signing_nonce, (const void *)_signing_hmac, 32);
-		_signing_nonce[32] = msg.getSender();
+		_signing_nonce[32] = msg.sender;
 		(void)memcpy((void *)&_signing_nonce[33], (const void *)_signing_node_serial_info, 9);
 		SHA256(_signing_hmac, _signing_nonce, 32+1+9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%" PRIu8 "\n"), msg.getSender());
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%" PRIu8 "\n"), msg.sender);
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-		hwDebugBuf2Str(_signing_node_serial_info, 9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), hwDebugPrintStr);
+		buf2str(_signing_node_serial_info, 9);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), printStr);
 #endif
 	}
+#endif	
 
 	// Overwrite the first byte in the signature with the signing identifier
 	_signing_hmac[0] = SIGNING_IDENTIFIER;
