@@ -307,7 +307,9 @@ typedef struct {
 	uint8_t failureCounter : 3;							//!< counter for TSM failures (max 7)
 	bool msgReceived : 1;										//!< flag message received
 	uint8_t pingResponse;										//!< stores I_PONG hops
+#if defined(MY_SIGNAL_REPORT_ENABLED)
 	transportRSSI_t uplinkQualityRSSI;			//!< Uplink quality, internal RSSI representation
+#endif
 } transportSM_t;
 
 /**
@@ -545,6 +547,7 @@ void transportDisable(void);
 * @brief Reinitialise transport. Put transport to standby - If xxx_POWER_PIN set, power up and go to standby
 */
 void transportReInitialise(void);
+
 /**
 * @brief Get transport signal report
 * @param command:
@@ -557,14 +560,14 @@ void transportReInitialise(void);
 * U = Uplink quality (via ACK from parent node), avg. RSSI
 * @return Signal report (if report is not available, INVALID_RSSI, INVALID_SNR, INVALID_PERCENT, or INVALID_LEVEL is sent instead)
 */
-int16_t transportSignalReport(const char command);
+int16_t transportSignalReport(const char command) __attribute__((unused));
 
 /**
 * @brief Get transport signal report
 * @param signalReport
 * @return report
 */
-int16_t transportGetSignalReport(const signalReport_t signalReport);
+int16_t transportGetSignalReport(const signalReport_t signalReport) __attribute__((unused));
 
 #endif // MyTransport_h
 /** @}*/

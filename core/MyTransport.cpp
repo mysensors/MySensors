@@ -505,7 +505,6 @@ bool transportAssignNodeID(const uint8_t newNodeId)
 	} else {
 		TRANSPORT_DEBUG(PSTR("!TSF:SID:FAIL,ID=%" PRIu8 "\n"),newNodeId);	// ID is invalid, cannot assign ID
 		setIndication(INDICATION_ERR_NET_FULL);
-		_transportConfig.nodeId = AUTO;
 		return false;
 	}
 }
@@ -1092,6 +1091,7 @@ void transportTogglePassiveMode(const bool OnOff)
 
 int16_t transportGetSignalReport(const signalReport_t signalReport)
 {
+#if defined(MY_SIGNAL_REPORT_ENABLED)
 	int16_t result;
 	switch (signalReport) {
 	case SR_RX_RSSI:
@@ -1120,10 +1120,15 @@ int16_t transportGetSignalReport(const signalReport_t signalReport)
 		break;
 	}
 	return result;
+#else
+	(void)signalReport;
+	return 0;
+#endif
 }
 
 int16_t transportSignalReport(const char command)
 {
+#if defined(MY_SIGNAL_REPORT_ENABLED)
 	signalReport_t reportCommand;
 	switch (command) {
 	case 'S':
@@ -1161,4 +1166,8 @@ int16_t transportSignalReport(const char command)
 	const uint16_t result = transportGetSignalReport(reportCommand);
 	TRANSPORT_DEBUG(PSTR("TSF:SIR:CMD=%" PRIu8 ",VAL=%" PRIu16 "\n"), reportCommand, result);
 	return result;
+#else
+	(void)command;
+	return 0;
+#endif
 }
