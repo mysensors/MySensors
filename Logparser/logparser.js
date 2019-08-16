@@ -256,6 +256,7 @@ var match = [
 	{ re: "TSM:ID", d: "Transition to <b>Request Id</b> state" },
 	{ re: "TSM:ID:OK,ID=(\\d+)", d: "Node id <b>$1</b> is valid" },
 	{ re: "TSM:ID:REQ", d: "Request node id from controller" },
+	{ re: "!TSM:ID:FAIL", d: "Did not receive a node id from controller. Is your controller connected and correctly configured?" },
 	{ re: "!TSM:ID:FAIL,ID=(\\d+)", d: "Id verification failed, <b>$1</b> is invalid" },
 	{ re: "TSM:UPL", d: "Transition to <b>Check Uplink</b> state" },
 	{ re: "TSM:UPL:OK", d: "Uplink OK, GW returned ping" },
