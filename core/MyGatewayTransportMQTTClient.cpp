@@ -258,6 +258,7 @@ bool gatewayTransportInit(void)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
+	delay(250);
 #endif
 
 	gatewayTransportConnect();
