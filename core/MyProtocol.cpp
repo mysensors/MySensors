@@ -60,7 +60,11 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 		}
 	}
 	// payload
-	if (command == C_STREAM) {
+	if (str == NULL) {
+		// no payload, set default value
+		message.set((uint8_t)0);
+	} else if (command == C_STREAM) {
+		// stream payload
 		uint8_t bvalue[MAX_PAYLOAD_SIZE];
 		uint8_t blen = 0;
 		while (*str) {
@@ -72,6 +76,7 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 		}
 		message.set(bvalue, blen);
 	} else {
+		// regular payload
 		char *value = str;
 		// Remove trailing carriage return and newline character (if it exists)
 		const uint8_t lastCharacter = strlen(value) - 1;
