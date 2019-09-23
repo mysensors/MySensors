@@ -242,7 +242,7 @@ LOCAL void RFM69_clearFIFO(void)
 	(void)RFM69_writeReg(RFM69_REG_IRQFLAGS2, RFM69_IRQFLAGS2_FIFOOVERRUN);
 }
 // IRQ handler: PayloadReady (RX) & PacketSent (TX) mapped to DI0
-LOCAL void RFM69_interruptHandler(void)
+LOCAL void IRQ_HANDLER_ATTR RFM69_interruptHandler(void)
 {
 	// set flag
 	RFM69_irq = true;

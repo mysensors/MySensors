@@ -74,6 +74,31 @@ double oldvolume =0;
 uint32_t lastSend =0;
 uint32_t lastPulse =0;
 
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
+#else
+#define IRQ_HANDLER_ATTR
+#endif
+
+void IRQ_HANDLER_ATTR onPulse()
+{
+	if (!SLEEP_MODE) {
+		uint32_t newBlink = micros();
+		uint32_t interval = newBlink-lastBlink;
+
+		if (interval!=0) {
+			lastPulse = millis();
+			if (interval<500000L) {
+				// Sometimes we get interrupt on RISING,  500000 = 0.5 second debounce ( max 120 l/min)
+				return;
+			}
+			flow = (60000000.0 /interval) / ppl;
+		}
+		lastBlink = newBlink;
+	}
+	pulseCount++;
+}
+
 void setup()
 {
 	// initialize our digital pins internal pullup resistor so one pulse switches from high to low (less distortion)
@@ -151,7 +176,7 @@ void loop()
 		}
 	}
 	if (SLEEP_MODE) {
-		sleep(SEND_FREQUENCY);
+		sleep(SEND_FREQUENCY, false);
 	}
 }
 
@@ -167,21 +192,3 @@ void receive(const MyMessage &message)
 	}
 }
 
-void onPulse()
-{
-	if (!SLEEP_MODE) {
-		uint32_t newBlink = micros();
-		uint32_t interval = newBlink-lastBlink;
-
-		if (interval!=0) {
-			lastPulse = millis();
-			if (interval<500000L) {
-				// Sometimes we get interrupt on RISING,  500000 = 0.5 second debounce ( max 120 l/min)
-				return;
-			}
-			flow = (60000000.0 /interval) / ppl;
-		}
-		lastBlink = newBlink;
-	}
-	pulseCount++;
-}

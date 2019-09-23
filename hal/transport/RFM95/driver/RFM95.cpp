@@ -233,7 +233,7 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	return true;
 }
 
-LOCAL void RFM95_interruptHandler(void)
+LOCAL void IRQ_HANDLER_ATTR RFM95_interruptHandler(void)
 {
 	// set flag
 	RFM95_irq = true;

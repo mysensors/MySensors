@@ -68,6 +68,33 @@ MyMessage wattMsg(CHILD_ID, V_WATT);
 MyMessage kWhMsg(CHILD_ID, V_KWH);
 MyMessage pcMsg(CHILD_ID, V_VAR1);
 
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
+#else
+#define IRQ_HANDLER_ATTR
+#endif
+
+void IRQ_HANDLER_ATTR onPulse()
+{
+	if (!SLEEP_MODE) {
+		uint32_t newBlinkmicros = micros();
+		uint32_t newBlinkmillis = millis();
+		uint32_t intervalmicros = newBlinkmicros - lastBlinkmicros;
+		uint32_t intervalmillis = newBlinkmillis - lastBlinkmillis;
+		if (intervalmicros < 10000L && intervalmillis < 10L) { // Sometimes we get interrupt on RISING
+			return;
+		}
+		if (intervalmillis < 360000) { // Less than an hour since last pulse, use microseconds
+			watt = (3600000000.0 / intervalmicros) / ppwh;
+		} else {
+			watt = (3600000.0 / intervalmillis) /
+			       ppwh; // more thAn an hour since last pulse, use milliseconds as micros will overflow after 70min
+		}
+		lastBlinkmicros = newBlinkmicros;
+		lastBlinkmillis = newBlinkmillis;
+	}
+	pulseCount++;
+}
 
 void setup()
 {
@@ -127,7 +154,7 @@ void loop()
 	}
 
 	if (SLEEP_MODE) {
-		sleep(SEND_FREQUENCY);
+		sleep(SEND_FREQUENCY, false);
 	}
 }
 
@@ -139,26 +166,4 @@ void receive(const MyMessage &message)
 		Serial.println(pulseCount);
 		pcReceived = true;
 	}
-}
-
-void onPulse()
-{
-	if (!SLEEP_MODE) {
-		uint32_t newBlinkmicros = micros();
-		uint32_t newBlinkmillis = millis();
-		uint32_t intervalmicros = newBlinkmicros - lastBlinkmicros;
-		uint32_t intervalmillis = newBlinkmillis - lastBlinkmillis;
-		if (intervalmicros < 10000L && intervalmillis < 10L) { // Sometimes we get interrupt on RISING
-			return;
-		}
-		if (intervalmillis < 360000) { // Less than an hour since last pulse, use microseconds
-			watt = (3600000000.0 / intervalmicros) / ppwh;
-		} else {
-			watt = (3600000.0 / intervalmillis) /
-			       ppwh; // more thAn an hour since last pulse, use milliseconds as micros will overflow after 70min
-		}
-		lastBlinkmicros = newBlinkmicros;
-		lastBlinkmillis = newBlinkmillis;
-	}
-	pulseCount++;
 }
