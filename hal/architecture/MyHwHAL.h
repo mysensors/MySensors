@@ -38,6 +38,16 @@
 */
 #define MY_HWID_PADDING_BYTE	(0xAAu)
 
+/**
+* @def IRQ_HANDLER_ATTR
+* @brief ESP8266/ESP32 IRQ handlers need to be stored in IRAM
+*/
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
+#else
+#define IRQ_HANDLER_ATTR
+#endif
+
 // Implement these as functions or macros
 /*
 #define hwInit() MY_SERIALDEVICE.begin(BAUD_RATE)

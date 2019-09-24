@@ -414,7 +414,7 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 }
 
 // internal function - interrupt gets called when a packet is received
-void RFM69::interruptHandler()
+void IRQ_HANDLER_ATTR RFM69::interruptHandler()
 {
 	//hwPinMode(4, OUTPUT);
 	//hwDigitalWrite(4, 1);
@@ -461,7 +461,7 @@ void RFM69::interruptHandler()
 }
 
 // internal function
-void RFM69::isr0()
+void IRQ_HANDLER_ATTR RFM69::isr0()
 {
 	selfPointer->interruptHandler();
 }

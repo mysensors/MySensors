@@ -455,7 +455,7 @@ LOCAL bool RF24_getReceivedPowerDetector(void)
 }
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-LOCAL void RF24_irqHandler(void)
+LOCAL void IRQ_HANDLER_ATTR RF24_irqHandler(void)
 {
 	if (RF24_receiveCallback) {
 #if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
