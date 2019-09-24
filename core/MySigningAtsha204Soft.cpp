@@ -186,7 +186,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 	// Calculate signature of message
 	msg.setSigned(true); // make sure signing flag is set before signature is calculated
 	signerCalculateSignature(msg, true);
-
+#if defined(MY_SIGNING_NODE_WHITELISTING)
 	if (DO_WHITELIST(msg.getDestination())) {
 		// Salt the signature with the senders nodeId and the (hopefully) unique serial The Creator has
 		// provided. We can reuse the nonce buffer now since it is no longer needed
@@ -200,6 +200,7 @@ bool signerAtsha204SoftSignMsg(MyMessage &msg)
 		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), hwDebugPrintStr);
 #endif
 	}
+#endif
 
 	// Overwrite the first byte in the signature with the signing identifier
 	_signing_hmac[0] = SIGNING_IDENTIFIER;

@@ -171,6 +171,7 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 	msg.setSigned(true); // make sure signing flag is set before signature is calculated
 	signerCalculateSignature(msg, true);
 
+#if defined(MY_SIGNING_NODE_WHITELISTING)
 	if (DO_WHITELIST(msg.destination)) {
 		// Salt the signature with the senders nodeId and the unique serial of the ATSHA device
 		// We can reuse the nonce buffer now since it is no longer needed
@@ -185,6 +186,7 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), hwDebugPrintStr);
 #endif
 	}
+#endif
 
 	// Put device back to sleep
 	atsha204_sleep();
