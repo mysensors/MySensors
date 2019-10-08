@@ -50,7 +50,7 @@
 #define V2_MYS_HEADER_CEP_COMMAND_POS       (0) //!< bitfield position command field
 #define V2_MYS_HEADER_CEP_COMMAND_SIZE      (3u) //!< size command field
 #define V2_MYS_HEADER_CEP_ECHOREQUEST_POS   (3u) //!< bitfield position echo request field
-#define V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE   (1u) //!< size echo request field
+#define V2_MYS_HEADER_CEP_ECHOREQUEST_SIZE   (1u) //!< size echo request field
 #define V2_MYS_HEADER_CEP_ECHO_POS          (4u) //!< bitfield position echo field
 #define V2_MYS_HEADER_CEP_ECHO_SIZE         (1u) //!< size echo field
 #define V2_MYS_HEADER_CEP_PAYLOADTYPE_POS   (5u) //!< bitfield position payload type field
