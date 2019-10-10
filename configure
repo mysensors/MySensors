@@ -17,7 +17,7 @@ SPI driver options:
                                 Device path. [/dev/spidev0.0]
 
 Building options:
-    --soc=[BCM2835|BCM2836|BCM2837|AM33XX|A10|A13|A20|H3]
+    --soc=[BCM2711|BCM2835|BCM2836|BCM2837|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
     --cpu-flags=<CPUFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
     --extra-cflags=<CFLAGS>     Extra C flags passed to C compilation. []
@@ -183,6 +183,10 @@ function detect_machine {
                         soc="BCM2837"
                         tp="rpi3"
                         ;;
+                    3)
+                        soc="BCM2711"
+                        tp="rpi4"
+                        ;;                        
                 esac
             fi
         elif [[ $hardware == "BCM2708"* ]]; then
@@ -260,6 +264,9 @@ function gcc_cpu_flags {
         ;;
     BCM2837)
         flags="-march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+        ;;
+    BCM2711)
+        flags="-march=armv8-a+crc -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
         ;;
     AM33XX)
         flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
@@ -557,7 +564,7 @@ if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags $SOC)
 fi
 
-if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
+if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" || $SOC == "BCM2711" ]]; then
     CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
 else
     printf "${SECTION} Checking GPIO Sysfs.\n"
@@ -570,7 +577,7 @@ fi
 
 if [ -z "${SPI_DRIVER}" ]; then
     printf "${SECTION} Detecting SPI driver.\n"
-    if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
+    if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" || $SOC == "BCM2711" ]]; then
         SPI_DRIVER=BCM
     elif [[ $(eval 'ls /dev/spidev* 2>/dev/null') ]]; then
         SPI_DRIVER=SPIDEV
@@ -585,8 +592,8 @@ fi
 if [ -n "${SPI_DRIVER}" ]; then
     case ${SPI_DRIVER} in
         BCM)
-            if [[ $SOC != "BCM2835" && $SOC != "BCM2836" && $SOC != "BCM2837" ]]; then
-                die "BCM SPI driver is only supported for SOCs BCM2835, BCM2836 or BCM2837" 5
+            if [[ $SOC != "BCM2835" && $SOC != "BCM2836" && $SOC != "BCM2837" && $SOC != "BCM2711" ]]; then
+                die "BCM SPI driver is only supported for SOCs BCM2835, BCM2836, BCM2837 or BCM2711" 5
             fi
             CPPFLAGS="-DLINUX_SPI_BCM $CPPFLAGS"
             ;;
