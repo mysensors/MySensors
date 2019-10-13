@@ -135,27 +135,27 @@ bool MyMessage::isAck(void) const
 
 bool MyMessage::isEcho(void) const
 {
-	return (bool)BF_GET(this->command_echo_payload, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
-	                    V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE);
+	return (bool)BF_GET(this->command_echo_payload, V2_MYS_HEADER_CEP_ECHO_POS,
+	                    V2_MYS_HEADER_CEP_ECHO_SIZE);
 }
 
 MyMessage& MyMessage::setEcho(const bool echo)
 {
-	BF_SET(this->command_echo_payload, echo, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
-	       V2_MYS_HEADER_CEP_ECHOEQUEST_SIZE);
+	BF_SET(this->command_echo_payload, echo, V2_MYS_HEADER_CEP_ECHO_POS,
+	       V2_MYS_HEADER_CEP_ECHO_SIZE);
 	return *this;
 }
 
 bool MyMessage::getRequestEcho(void) const
 {
-	return (bool)BF_GET(this->command_echo_payload, V2_MYS_HEADER_CEP_ECHO_POS,
-	                    V2_MYS_HEADER_CEP_ECHO_SIZE);
+	return (bool)BF_GET(this->command_echo_payload, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
+	                    V2_MYS_HEADER_CEP_ECHOREQUEST_SIZE);
 }
 
 MyMessage& MyMessage::setRequestEcho(const bool requestEcho)
 {
-	BF_SET(this->command_echo_payload, requestEcho, V2_MYS_HEADER_CEP_ECHO_POS,
-	       V2_MYS_HEADER_CEP_ECHO_SIZE);
+	BF_SET(this->command_echo_payload, requestEcho, V2_MYS_HEADER_CEP_ECHOREQUEST_POS,
+	       V2_MYS_HEADER_CEP_ECHOREQUEST_SIZE);
 	return *this;
 }
 
