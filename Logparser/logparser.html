@@ -5,8 +5,8 @@
 		<link rel="stylesheet" href="logparser.css" />
 	</head>
 	<body>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
 		<div id="parser">
 			<h4>Paste log from gateway or node here:</h4>
 			<textarea class="form-control" @change="parse" rows="10" v-model="source"></textarea>
@@ -20,7 +20,7 @@
 						<th>Node Id</th>
 						<th>Child Sensor</th>
 						<th>Command Type</th>
-						<th>Ack Req/Resp</th>
+						<th>Echo Req/Resp</th>
 						<th>Type</th>
 						<th>Payload</th>
 						<th>Description</th>

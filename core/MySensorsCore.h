@@ -341,7 +341,7 @@ int8_t sleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interr
 /**
 * \deprecated Use sleep(ms, true) instead
 * Same as sleep(), send heartbeat and process incoming messages before going to sleep.
-* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* Specify the time to wait for incoming messages by defining @ref MY_SMART_SLEEP_WAIT_DURATION_MS to a time (ms).
 * @param sleepingMS Number of milliseconds to sleep.
 * @return @ref MY_WAKE_UP_BY_TIMER if timer woke it up, @ref MY_SLEEP_NOT_POSSIBLE if not possible (e.g. ongoing FW update)
 */
@@ -350,7 +350,7 @@ int8_t smartSleep(const uint32_t sleepingMS);
 /**
 * \deprecated Use sleep(interrupt, mode, ms, true) instead
 * Same as sleep(), send heartbeat and process incoming messages before going to sleep.
-* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* Specify the time to wait for incoming messages by defining @ref MY_SMART_SLEEP_WAIT_DURATION_MS to a time (ms).
 * @param interrupt Interrupt that should trigger the wakeup
 * @param mode RISING, FALLING, CHANGE
 * @param sleepingMS Number of milliseconds to sleep or 0 to sleep forever
@@ -361,7 +361,7 @@ int8_t smartSleep(const uint8_t interrupt, const uint8_t mode, const uint32_t sl
 /**
 * \deprecated Use sleep(interrupt1, mode1, interrupt2, mode2, ms, true) instead
 * Same as sleep(), send heartbeat and process incoming messages before going to sleep.
-* Specify the time to wait for incoming messages by defining MY_SMART_SLEEP_WAIT_DURATION to a time (ms).
+* Specify the time to wait for incoming messages by defining @ref MY_SMART_SLEEP_WAIT_DURATION_MS to a time (ms).
 * @param interrupt1 First interrupt that should trigger the wakeup
 * @param mode1 Mode for first interrupt (RISING, FALLING, CHANGE)
 * @param interrupt2 Second interrupt that should trigger the wakeup

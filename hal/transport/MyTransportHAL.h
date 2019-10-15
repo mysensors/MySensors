@@ -31,7 +31,7 @@
  * | | THA | RCV   | PLAIN=%%s									| Decrypted message (PLAIN)
  * |!| THA | RCV   | PVER=%%d										| Message protocol version (PVER) mismatch
  * |!| THA | RCV   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
- * |!| THA | RCV   | MSG LEN=%%d								| Length of received message (LEN)
+ * | | THA | RCV   | MSG LEN=%%d								| Length of received message (LEN)
  * | | THA | SND   | MSG=%%s										| Send message (MSG)
  * | | THA | SND   | ENCRYPT										| Encrypt message to send (%AES)
  * | | THA | SND   | CIP=%%s										| Ciphertext of encypted message (CIP)

@@ -224,6 +224,7 @@ var match = [
 	{ re: "MCO:BGN:INIT CP=([^,]+)", d: "Core initialization with capabilities <b>$1</b>" },
 	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, library version <b>$3</b>" },
 	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),REL=(.*),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, library version <b>$4</b>, release <b>$3</b>" },
+	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),FQ=(\\d+),REL=(.*),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, CPU frequency <b>$4</b> MHz, library version <b>$5</b>, release <b>$4</b>" },
 	{ re: "MCO:BGN:BFR", d: "Callback before()" },
 	{ re: "MCO:BGN:STP", d: "Callback setup()" },
 	{ re: "MCO:BGN:INIT OK,TSP=(.*)", d: "Core initialized, transport status <b>$1</b>, (1=initialized, 0=not initialized, NA=not available)" },
@@ -269,7 +270,6 @@ var match = [
 	{ re: "TSM:READY", d: "Transition to <b>Ready</b> state" },
 	{ re: "TSM:FAIL:DIS", d: "Disable transport" },
 	{ re: "TSM:FAIL:CNT=(\\d+)", d: "Transition to <b>Failure</b> state, consecutive failure counter is <b>$1</b>" },
-
 	{ re: "TSM:FAIL:PDT", d: "Power-down transport" },
 	{ re: "TSM:FAIL:RE-INIT", d: "Attempt to re-initialize transport" },
 	{ re: "TSF:CKU:OK,FCTRL", d: "Uplink OK, flood control prevents pinging GW in too short intervals" },
@@ -322,7 +322,27 @@ var match = [
 	{ re: "TSF:MSG:READ,(\\d+)-(\\d+)-(\\d+),s=(\\d+),c=(\\d+),t=(\\d+),pt=(\\d+),l=(\\d+),sg=(\\d+):(.*)", d: "<u><b>Received Message</b></u><br><b>Sender</b>: $1<br><b>Last Node</b>: $2<br><b>Destination</b>: $3<br><b>Sensor Id</b>: $4<br><b>Command</b>: {command:$5}<br><b>Message Type</b>: {type:$5:$6}<br><b>Payload Type</b>: {pt:$7}<br><b>Payload Length</b>: $8<br><b>Signing</b>: $9<br><b>Payload</b>: $10" },
 	{ re: "TSF:MSG:SEND,(\\d+)-(\\d+)-(\\d+)-(\\d+),s=(\\d+),c=(\\d+),t=(\\d+),pt=(\\d+),l=(\\d+),sg=(\\d+),ft=(\\d+),st=(\\w+):(.*)", d: "<u><b>Sent Message</b></u><br><b>Sender</b>: $1<br><b>Last Node</b>: $2<br><b>Next Node</b>: $3<br><b>Destination</b>: $4<br><b>Sensor Id</b>: $5<br><b>Command</b>: {command:$6}<br><b>Message Type</b>:{type:$6:$7}<br><b>Payload Type</b>: {pt:$8}<br><b>Payload Length</b>: $9<br><b>Signing</b>: $10<br><b>Failed uplink counter</b>: $11<br><b>Status</b>: $12 (OK=success, NACK=no radio ACK received)<br><b>Payload</b>: $13" },
 	{ re: "!TSF:MSG:SEND,(\\d+)-(\\d+)-(\\d+)-(\\d+),s=(\\d+),c=(\\d+),t=(\\d+),pt=(\\d+),l=(\\d+),sg=(\\d+),ft=(\\d+),st=(\\w+):(.*)", d: "<u><b style='color:red'>Sent Message</b></u><br><b>Sender</b>: $1<br><b>Last Node</b>: $2<br><b>Next Node</b>: $3<br><b>Destination</b>: $4<br><b>Sensor Id</b>: $5<br><b>Command</b>: {command:$6}<br><b>Message Type</b>:{type:$6:$7}<br><b>Payload Type</b>: {pt:$8}<br><b>Payload Length</b>: $9<br><b>Signing</b>: $10<br><b>Failed uplink counter</b>: $11<br><b>Status</b>: $12 (OK=success, NACK=no radio ACK received)<br><b>Payload</b>: $13" },
+	{ re: "\\?TSF:MSG:SEND,(\\d+)-(\\d+)-(\\d+)-(\\d+),s=(\\d+),c=(\\d+),t=(\\d+),pt=(\\d+),l=(\\d+),sg=(\\d+),ft=(\\d+),st=(\\w+):(.*)", d: "<u><b style='color:orange'>Sent Message without radio ACK</b></u><br><b>Sender</b>: $1<br><b>Last Node</b>: $2<br><b>Next Node</b>: $3<br><b>Destination</b>: $4<br><b>Sensor Id</b>: $5<br><b>Command</b>: {command:$6}<br><b>Message Type</b>:{type:$6:$7}<br><b>Payload Type</b>: {pt:$8}<br><b>Payload Length</b>: $9<br><b>Signing</b>: $10<br><b>Failed uplink counter</b>: $11<br><b>Status</b>: $12 (OK=success, NACK=no radio ACK received)<br><b>Payload</b>: $13" },
 
+	// transport HAL
+	
+	{ re: "THA:INIT", d: "Initialise transport HAL" },
+	{ re: "THA:INIT:PSK=(.*)", d: "Initialise transport HAL, PSK=<b>$1</b>" },
+	{ re: "THA:SAD:ADDR=(\\d+)", d: "Set transport address: <b>$1</b>" },
+	{ re: "THA:GAD:ADDR=(\\d+)", d: "Get transport address: <b>$1</b>" },
+	{ re: "THA:DATA:AVAIL", d: "Transport HAL received data" },
+	{ re: "THA:SAN:RES=(\\d+)", d: "Transport sanity check, result=<b>$1</b> (0=NOK, 1=OK)" },
+	{ re: "THA:RCV:MSG=(.*)", d: "Message received: <b>$1</b>" },
+	{ re: "THA:RCV:DECRYPT", d: "Decrypt message" },
+	{ re: "THA:RCV:PLAIN=(.*)", d: "Message plaint text: <b>$1</b>" },
+	{ re: "!THA:RCV:PVER=(\\d+)", d: "Message protocol version mismatch: <b>$1</b>" },
+	{ re: "!THA:RCV:LEN=(\\d+),EXP=(\\d+)", d: "Invalid message length, actual <b>$1</b>, expected <b>$2</b>" },
+	{ re: "THA:RCV:MSG LEN=(\\d+)", d: "Length of received message: <b>$1</b>" },
+	{ re: "THA:SND:MSG=(.*)", d: "Send message: <b>$1</b>" },
+	{ re: "THA:SND:ENCRYPT", d: "Encrypt message" },
+	{ re: "THA:SND:CIP=(.*)", d: "Ciphertext of encrypted message: <b>$1</b>" },
+	{ re: "THA:SND:MSG LEN=(\\d+),RES=(\\d+)", d: "Sending message with length=<b>$1</b>, result=<b>$2</b> (0=NOK, 1=OK)" },
+	
 	// Signing backend
 
 	{ re: "SGN:INI:BND OK", d: "Backend has initialized ok" },
