@@ -270,7 +270,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 #if defined(MY_RS485_DE_PIN)
 #if !defined(MY_RS485_DE_INVERSE)
 	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
-#else 
+#else
 	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
 #endif
 	delayMicroseconds(5);
@@ -319,9 +319,9 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 #endif
 #endif
 #if !defined(MY_RS485_DE_INVERSE)
-hwDigitalWrite(MY_RS485_DE_PIN, LOW);
+	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
 #else
-hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
+	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
 #endif
 #endif
 	return true;
