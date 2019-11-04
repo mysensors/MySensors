@@ -250,6 +250,12 @@
 //#define MY_RS485_DE_PIN (2)
 
 /**
+ * @def MY_RS485_DE_INVERSE
+ * @brief Define this if RS485 driver enable pin polarity is inverted (low-active).
+ */
+//#define MY_RS485_DE_INVERSE
+
+/**
  * @def MY_RS485_HWSERIAL
  * @brief Define this if RS485 is connected to a hardware serial port.
  *
