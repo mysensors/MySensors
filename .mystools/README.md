@@ -7,7 +7,7 @@ conventions are employed to facilitate consistent re-use/invocation
 across modalities (e.g. local development, continuous integration,
 editor linters, etc.)
 
-1.  All common tools are hosted and managed in 
+1.  All common tools are hosted and managed in
     the tools directory (used for both local development
     and continuous integration)
 2.  Each tool comprises a directory, akin to a bundle,
@@ -15,7 +15,7 @@ editor linters, etc.)
     configuration files and a run script
 3.  A single bootstrap script configures a
     development environment
-4.  A lightweight runtime provides a common set of 
+4.  A lightweight runtime provides a common set of
     convenience functions and variables to all scripts
 5.  Support for all MySensors development environments
 
@@ -92,7 +92,7 @@ One or more required tools not found.  Install required tools and re-run .mystoo
 
 To finish the bootstrap process, you will need to install the required
 tools for your specific operating system as follows.  Currently we use
-Astyle 2.0.5 or later and Cppcheck 1.76 or later.  Once you have
+Astyle 3.1 or later and Cppcheck 1.88 or later.  Once you have
 installed AStyle and Cppcheck, re-run bootstrap-dev.sh to finish
 configuring your development environment.
 
@@ -106,7 +106,18 @@ configuring your development environment.
 
 #### Linux Trusty or earlier
 
-##### Note: The apt versions are too old on Trusty so follow the [Linux - Build and Install from Source](#buildFromSource) instructions
+Note: The apt versions are too old on Trusty so follow the [Linux - Build and Install from Source](#buildFromSource) instructions
+
+##### Windows - WSL
+Tested with Ubuntu 18-04 LTS and 19.04
+```
+apt-get install astyle
+git clone https://github.com/danmar/cppcheck.git
+cd cppcheck/
+git checkout 1.89 # or later version if available
+mkdir build && cd build && cmake .. && cmake --build .
+sudo make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
+```
 
 ##### Windows - GitHub Git Shell
 
@@ -142,13 +153,9 @@ iwr 'http://github.com/danmar/cppcheck/releases/download/1.76.1/cppcheck-1.76.1-
 ### At this point you need to reboot for the path changes to take effect
 ```
 
-##### Windows - bash
-
-###### NOTE:  At the time of this writing, the apt vresions of cppcheck and astyle are too old. Follow the [Linux - Build and Install from Source](#buildFromSource) instructions
-
 ##### Windows - Cygwin
 ```
-Run Either Cygwin Setup-x86-64.exe or Setup-x86.exe depending upon your OS.  Select and install astyle and cppcheck 
+Run Either Cygwin Setup-x86-64.exe or Setup-x86.exe depending upon your OS. Select and install astyle and cppcheck
 ```
 
 ##### <a name="buildFromSource"></a>Linux - Build and Install from Source
@@ -163,15 +170,12 @@ curl -L 'https://sourceforge.net/projects/astyle/files/astyle/astyle%202.05.1/as
 cd astyle/build/gcc && sudo make shared release shared static install
 
 ### Install Cppcheck
-
-# Download
-curl -L 'https://sourceforge.net/projects/cppcheck/files/cppcheck/1.76.1/cppcheck-1.76.1.tar.gz/download' | tar xvz
-
-# Compile and install
-cd cppcheck-1.76.1
-sudo apt-get install libpcre++-dev
-sudo make SRCDIR=build CFGDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
-
+```
+git clone https://github.com/danmar/cppcheck.git
+cd cppcheck/
+git checkout 1.89 # or later version if available)
+mkdir build && cd build && cmake .. && cmake --build .
+sudo make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
 ```
 
 ### Implementation Details
