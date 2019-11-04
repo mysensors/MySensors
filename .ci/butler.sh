@@ -4,15 +4,15 @@ cd ..
 
 result=0
 
-echo "No subjects are of invalid size<br>" > too_long_subjects.txt
-echo "No subjects with leading lower case characters<br>" > leading_lowercases.txt
-echo "No subjects with trailing periods<br>" > trailing_periods.txt
-echo "No body lines are too wide<br>" > too_long_body_lines.txt
-echo "No keywords are missing in keywords.txt<br>" > missing_keywords.txt
-echo "No keywords in code that don't exist in keywords.txt<br>" > missing_keywords_2.txt
-echo "No keywords in code that don't have Doxygen comments and aren't blacklisted in keywords.txt<br>" > missing_keywords_3.txt
-echo "No lines in keywords.txt using spaces instead of TAB (the Arduino IDE doesn't support space)<br>" > tab_spaces_keywords.txt
-echo "No occurences of the deprecated boolean data type<br>" >> booleans.txt
+echo "No subjects are of invalid size - great!<br>" > too_long_subjects.txt
+echo "No subjects with leading lower case characters - great!<br>" > leading_lowercases.txt
+echo "No subjects with trailing periods - great!<br>" > trailing_periods.txt
+echo "No body lines are too wide - great!<br>" > too_long_body_lines.txt
+echo "No keywords are missing in keywords.txt - great!<br>" > missing_keywords.txt
+echo "No keywords in code that don't exist in keywords.txt - great!<br>" > missing_keywords_2.txt
+echo "No keywords in code that don't have Doxygen comments and aren't blacklisted in keywords.txt - great!<br>" > missing_keywords_3.txt
+echo "No lines in keywords.txt using spaces instead of TAB (the Arduino IDE doesn't support space) - great!<br>" > tab_spaces_keywords.txt
+echo "No occurences of the deprecated boolean data type - great!<br>" >> booleans.txt
 
 too_long_subjects=`awk 'length > 72' subjects.txt`
 if [ -n "$too_long_subjects" ]; then
