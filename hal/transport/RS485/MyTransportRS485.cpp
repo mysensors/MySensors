@@ -57,9 +57,13 @@
 #endif
 
 #if defined(MY_RS485_DE_PIN)
+#if !defined(MY_RS485_DE_INVERSE)
 #define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIGH); delayMicroseconds(5)
 #define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW)
-
+#else
+#define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW); delayMicroseconds(5)
+#define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIG)
+#endif
 #else
 #define assertDE()
 #define deassertDE()
@@ -264,7 +268,11 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	}
 
 #if defined(MY_RS485_DE_PIN)
+#if !defined(MY_RS485_DE_INVERSE)
 	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
+#else
+	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
+#endif
 	delayMicroseconds(5);
 #endif
 
@@ -310,7 +318,11 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	_dev.flush();
 #endif
 #endif
+#if !defined(MY_RS485_DE_INVERSE)
 	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
+#else
+	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
+#endif
 #endif
 	return true;
 }
@@ -324,7 +336,11 @@ bool transportInit(void)
 	_serialReset();
 #if defined(MY_RS485_DE_PIN)
 	hwPinMode(MY_RS485_DE_PIN, OUTPUT);
+#if !defined(MY_RS485_DE_INVERSE)
 	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
+#else
+	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
+#endif
 #endif
 	return true;
 }
