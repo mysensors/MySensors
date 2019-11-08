@@ -26,7 +26,7 @@ GATEWAY_OBJECTS=$(patsubst %.c,$(BUILDDIR)/%.o,$(GATEWAY_C_SOURCES)) $(patsubst 
 
 INCLUDES=-I. -I./core -I./hal/architecture/Linux/drivers/core
 
-ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836 BCM2837))
+ifeq ($(SOC),$(filter $(SOC),BCM2835 BCM2836 BCM2837 BCM2711))
 BCM_C_SOURCES=$(wildcard hal/architecture/Linux/drivers/BCM/*.c)
 BCM_CPP_SOURCES=$(wildcard hal/architecture/Linux/drivers/BCM/*.cpp)
 GATEWAY_OBJECTS+=$(patsubst %.c,$(BUILDDIR)/%.o,$(BCM_C_SOURCES)) $(patsubst %.cpp,$(BUILDDIR)/%.o,$(BCM_CPP_SOURCES))
