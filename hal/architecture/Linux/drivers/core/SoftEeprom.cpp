@@ -98,9 +98,11 @@ void SoftEeprom::destroy()
 {
 	if (_values) {
 		delete[] _values;
+		_values = NULL;
 	}
 	if (_fileName) {
 		free(_fileName);
+		_fileName = NULL;
 	}
 	_length = 0;
 }
