@@ -50,7 +50,7 @@ GPIOClass::GPIOClass()
 		}
 
 		if (strncmp("gpiochip", de->d_name, 8) == 0) {
-			sprintf(file, "/sys/class/gpio/%s/base", de->d_name);
+			snprintf(file, sizeof(file), "/sys/class/gpio/%s/base", de->d_name);
 			f = fopen(file, "r");
 			int base;
 			if (fscanf(f, "%d", &base) == EOF) {
@@ -59,7 +59,7 @@ GPIOClass::GPIOClass()
 			}
 			fclose(f);
 
-			sprintf(file, "/sys/class/gpio/%s/ngpio", de->d_name);
+			snprintf(file, sizeof(file), "/sys/class/gpio/%s/ngpio", de->d_name);
 			f = fopen(file, "r");
 			int ngpio;
 			if (fscanf(f, "%d", &ngpio) == EOF) {
