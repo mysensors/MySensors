@@ -131,7 +131,6 @@ void _serialReset()
 // function.
 bool _serialProcess()
 {
-	unsigned char i;
 	if (!_dev.available()) {
 		return false;
 	}
@@ -148,6 +147,7 @@ bool _serialProcess()
 		// our ID, save the header information and progress to the next state.
 		case 0:
 			#ifdef MY_RS485_LEGACY
+			unsigned char i;
 			memcpy(&_header[0],&_header[1],5);
 			_header[5] = inch;
 			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
@@ -313,12 +313,14 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
 		_dev.write(SOH);
 	}
+	#ifdef HDASKLJ
 	_dev.write(to);  // Destination address
 	cs += to;
 	_dev.write(_nodeId); // Source address
 	cs += _nodeId;
 	_dev.write(ICSC_SYS_PACK);  // Command code
 	cs += ICSC_SYS_PACK;
+	#endif
 	_dev.write(len);      // Length of text
 	cs += len;
 	_dev.write(STX);      // Start of text
