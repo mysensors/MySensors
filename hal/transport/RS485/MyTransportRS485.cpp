@@ -146,6 +146,7 @@ bool _serialProcess()
 		case 0:
 			memcpy(&_header[0],&_header[1],5);
 			_header[5] = inch;
+			#ifdef MY_RS485_LEGACY
 			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
 				_recCalcCS = 0;
 				_recStation = _header[1];
@@ -179,6 +180,30 @@ bool _serialProcess()
 					_recPhase = 2;
 				}
 
+			}
+			#endif  //MY_RS485_LEGACY
+			if ((_header[0] == SOH) && (_header[2] == STX)) {
+				_recCalcCS = 0;
+				_recLen = _header[1];
+				_recCalcCS += _recLen;
+				_recPhase = 1;
+				_recPos = 0;
+
+				//Avoid _data[] overflow
+				if (_recLen >= MY_RS485_MAX_MESSAGE_LENGTH) {
+					_serialReset();
+					break;
+				}
+
+				if (_recLen == 0) {
+					_recPhase = 2;
+				}
+				
+				//copy legacy header to package data
+				for (_recPos = 0; _recPos < 3; _recPos++) {
+					_data[0] = _header[i+3];
+					_recCalcCS += _header[i+3];
+				}
 			}
 			break;
 
@@ -220,7 +245,7 @@ bool _serialProcess()
 					// to register your own callback as well for system level
 					// commands which will be called after the system default
 					// hook.
-
+					#ifdef MY_RS485_LEGACY
 					switch (_recCommand) {
 					case ICSC_SYS_PACK:
 						_packet_from = _recSender;
@@ -228,6 +253,10 @@ bool _serialProcess()
 						_packet_received = true;
 						break;
 					}
+					#else
+					_packet_len = _recLen;
+					_packet_received = true;
+					#endif
 				}
 			}
 			//Clear the data
