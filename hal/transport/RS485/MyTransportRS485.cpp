@@ -73,8 +73,11 @@
 #define	ICSC_SYS_PACK	0x58
 
 // Receiving header information
+#ifdef MY_RS485_LEGACY
 char _header[6];
-
+#else
+char _header[3];
+#endif
 // Reception state machine control and storage variables
 unsigned char _recPhase;
 unsigned char _recPos;
@@ -144,9 +147,9 @@ bool _serialProcess()
 		// the buffer match the SOH/STX pair, and the destination station ID matches
 		// our ID, save the header information and progress to the next state.
 		case 0:
+			#ifdef MY_RS485_LEGACY
 			memcpy(&_header[0],&_header[1],5);
 			_header[5] = inch;
-			#ifdef MY_RS485_LEGACY
 			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
 				_recCalcCS = 0;
 				_recStation = _header[1];
@@ -181,6 +184,9 @@ bool _serialProcess()
 				}
 
 			}
+			#else
+			memcpy(&_header[0],&_header[1],2);
+			_header[2] = inch;
 			#endif  //MY_RS485_LEGACY
 			if ((_header[0] == SOH) && (_header[2] == STX)) {
 				_recCalcCS = 0;
@@ -194,16 +200,21 @@ bool _serialProcess()
 					_serialReset();
 					break;
 				}
-
-				if (_recLen == 0) {
+				
+				#ifdef MY_RS485_LEGACY
+				if (_recLen <= 3) {
 					_recPhase = 2;
 				}
-				
 				//copy legacy header to package data
 				for (_recPos = 0; _recPos < 3; _recPos++) {
 					_data[0] = _header[i+3];
 					_recCalcCS += _header[i+3];
 				}
+				#else
+				if (_recLen == 0) {
+					_recPhase = 2;
+				}
+				#endif
 			}
 			break;
 
