@@ -331,6 +331,8 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	_dev.write(ETX);      // End of text
 	_dev.write(cs);
 	_dev.write(EOT);
+	_serialReset(); // suppress echo
+	
 
 #if defined(MY_RS485_DE_PIN)
 #ifdef __PIC32MX__
