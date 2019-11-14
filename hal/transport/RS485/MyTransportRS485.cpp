@@ -122,6 +122,30 @@ void _serialReset()
 	_recCalcCS = 0;
 }
 
+// flush uart data
+void _flush(){
+#ifdef __PIC32MX__
+	// MPIDE has nothing yet for this.  It uses the hardware buffer, which
+	// could be up to 8 levels deep.  For now, let's just delay for 8
+	// characters worth.
+	delayMicroseconds((F_CPU/9600)+1);
+#else
+#if defined(ARDUINO) && ARDUINO >= 100
+#if ARDUINO >= 104
+	// Arduino 1.0.4 and upwards does it right
+	_dev.flush();
+#else
+	// Between 1.0.0 and 1.0.3 it almost does it - need to compensate
+	// for the hardware buffer. Delay for 2 bytes worth of transmission.
+	_dev.flush();
+	delayMicroseconds((20000000UL/9600)+1);
+#endif
+#elif defined(__linux__)
+	_dev.flush();
+#endif
+#endif
+}
+
 // This is the main reception state machine.  Progress through the states
 // is keyed on either special control characters, or counted number of bytes
 // received.  If all the data is in the right format, and the calculated
@@ -331,32 +355,14 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	_dev.write(ETX);      // End of text
 	_dev.write(cs);
 	_dev.write(EOT);
-	_serialReset(); // suppress echo
-	
+	_flush(); // suppress echo
+	_serialProcess();
+	_serialReset();
+	_packet_received = false;
 
-#if defined(MY_RS485_DE_PIN)
-#ifdef __PIC32MX__
-	// MPIDE has nothing yet for this.  It uses the hardware buffer, which
-	// could be up to 8 levels deep.  For now, let's just delay for 8
-	// characters worth.
-	delayMicroseconds((F_CPU/9600)+1);
-#else
-#if defined(ARDUINO) && ARDUINO >= 100
-#if ARDUINO >= 104
-	// Arduino 1.0.4 and upwards does it right
-	_dev.flush();
-#else
-	// Between 1.0.0 and 1.0.3 it almost does it - need to compensate
-	// for the hardware buffer. Delay for 2 bytes worth of transmission.
-	_dev.flush();
-	delayMicroseconds((20000000UL/9600)+1);
-#endif
-#elif defined(__linux__)
-	_dev.flush();
-#endif
-#endif
-deassertDE();
-#endif
+	#if defined(MY_RS485_DE_PIN)
+	deassertDE();
+	#endif
 	return true;
 }
 
