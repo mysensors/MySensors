@@ -56,6 +56,14 @@
 #include "SerialPort.h"
 #endif
 
+// debug
+#if defined(MY_DEBUG_VERBOSE_RS485)
+#define RS485_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
+#else
+#define RS485_DEBUG(x,...)	//!< debug NULL
+#endif
+
+
 #if defined(MY_RS485_DE_PIN)
 #if !defined(MY_RS485_DE_INVERSE)
 #define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIGH)
@@ -69,24 +77,35 @@
 #define deassertDE()
 #endif
 
-// We only use SYS_PACK in this application
-#define	ICSC_SYS_PACK	0x58
+#define MY_RS485_LEGACY
 
-// Receiving header information
+
 #ifdef MY_RS485_LEGACY
-char _header[6];
+const uint8_t RS485_HEADER_LENGTH = 6;
+// We only use SYS_PACK in this application
+#define  ICSC_SYS_PACK 0x58
+
+
+//storage variables
+unsigned char _recCommand;
+unsigned char _recStation;
+unsigned char _recSender;
+unsigned char _isNotLegacyNode[8] = { 0 };
 #else
-char _header[3];
+const unsigned char RS485_HEADER_LENGTH = 3;
 #endif
+// Receiving header information
+char _header[RS485_HEADER_LENGTH];
+
 // Reception state machine control and storage variables
 unsigned char _recPhase;
 unsigned char _recPos;
-unsigned char _recCommand;
+
 unsigned char _recLen;
-unsigned char _recStation;
-unsigned char _recSender;
 unsigned char _recCS;
 unsigned char _recCalcCS;
+
+static bool IS_LEGACY_PACK = true;
 
 
 #if defined(__linux__)
@@ -105,6 +124,7 @@ bool _packet_received;
 
 // Packet wrapping characters, defined in standard ASCII table
 #define SOH 1
+#define NEW_SOH 0x11
 #define STX 2
 #define ETX 3
 #define EOT 4
@@ -117,9 +137,11 @@ void _serialReset()
 	_recPhase = 0;
 	_recPos = 0;
 	_recLen = 0;
-	_recCommand = 0;
 	_recCS = 0;
 	_recCalcCS = 0;
+	#ifdef MY_RS485_LEGACY
+	_recCommand = 0;
+	#endif
 }
 
 // flush uart data
@@ -128,7 +150,7 @@ void _flush(){
 	// MPIDE has nothing yet for this.  It uses the hardware buffer, which
 	// could be up to 8 levels deep.  For now, let's just delay for 8
 	// characters worth.
-	delayMicroseconds((F_CPU/9600)+1);
+	delayMicroseconds((F_CPU/MY_RS485_BAUD_RATE)+1);
 #else
 #if defined(ARDUINO) && ARDUINO >= 100
 #if ARDUINO >= 104
@@ -138,7 +160,7 @@ void _flush(){
 	// Between 1.0.0 and 1.0.3 it almost does it - need to compensate
 	// for the hardware buffer. Delay for 2 bytes worth of transmission.
 	_dev.flush();
-	delayMicroseconds((20000000UL/9600)+1);
+	delayMicroseconds((20000000UL/MY_RS485_BAUD_RATE)+1);
 #endif
 #elif defined(__linux__)
 	_dev.flush();
@@ -155,6 +177,10 @@ void _flush(){
 // function.
 bool _serialProcess()
 {
+	#ifdef MY_RS485_LEGACY
+	unsigned char i;
+	unsigned isLegacyPackage = 0;
+	#endif
 	if (!_dev.available()) {
 		return false;
 	}
@@ -171,8 +197,7 @@ bool _serialProcess()
 		// our ID, save the header information and progress to the next state.
 		case 0:
 			#ifdef MY_RS485_LEGACY
-			unsigned char i;
-			memcpy(&_header[0],&_header[1],5);
+			memcpy(&_header[0],&_header[1],RS485_HEADER_LENGTH-1);
 			_header[5] = inch;
 			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
 				_recCalcCS = 0;
@@ -180,6 +205,7 @@ bool _serialProcess()
 				_recSender = _header[2];
 				_recCommand = _header[3];
 				_recLen = _header[4];
+				isLegacyPackage = 1;
 
 				for (i=1; i<=4; i++) {
 					_recCalcCS += _header[i];
@@ -208,13 +234,17 @@ bool _serialProcess()
 				}
 
 			}
+
+			//search for new header
+			if ((_header[3] == NEW_SOH) && (_header[5] == STX)) {
+				_recLen = _header[4];
 			#else
-			memcpy(&_header[0],&_header[1],2);
+			memcpy(&_header[0],&_header[1],RS485_HEADER_LENGTH-1);
 			_header[2] = inch;
-			#endif  //MY_RS485_LEGACY
-			if ((_header[0] == SOH) && (_header[2] == STX)) {
-				_recCalcCS = 0;
+			if ((_header[0] == NEW_SOH) && (_header[2] == STX)) {
 				_recLen = _header[1];
+			#endif  //MY_RS485_LEGACY
+				_recCalcCS = 0;
 				_recCalcCS += _recLen;
 				_recPhase = 1;
 				_recPos = 0;
@@ -225,20 +255,9 @@ bool _serialProcess()
 					break;
 				}
 				
-				#ifdef MY_RS485_LEGACY
-				if (_recLen <= 3) {
-					_recPhase = 2;
-				}
-				//copy legacy header to package data
-				for (_recPos = 0; _recPos < 3; _recPos++) {
-					_data[0] = _header[i+3];
-					_recCalcCS += _header[i+3];
-				}
-				#else
 				if (_recLen == 0) {
 					_recPhase = 2;
 				}
-				#endif
 			}
 			break;
 
@@ -281,16 +300,37 @@ bool _serialProcess()
 					// commands which will be called after the system default
 					// hook.
 					#ifdef MY_RS485_LEGACY
-					switch (_recCommand) {
-					case ICSC_SYS_PACK:
-						_packet_from = _recSender;
+					if (isLegacyPackage){
+						switch (_recCommand) {
+						case ICSC_SYS_PACK:
+							_packet_from = _recSender;
+							_packet_len = _recLen;
+							_packet_received = true;
+							RS485_DEBUG(PSTR("RS485:RLP:FROM:=%" PRIu8 "\n"),_packet_from );
+							// Gateways can swtich back to lagecy node to support old bootloaders after reboot
+							#if MY_IS_GATEWAY == true		
+							_isNotLegacyNode[_packet_from & 0xF0 >> 4] &= ~_BV(_packet_from & 0x0F); // Mark node as legacy node
+							#endif
+							break;
+						}
+					}
+					else{
+					#endif
 						_packet_len = _recLen;
+						//Check if we should process this message
+						//We reject the message if we are the sender
+						if (_data[0] == _nodeId) {
+							_serialReset();
+							break;
+						}
 						_packet_received = true;
+					#ifdef MY_RS485_LEGACY
+						_packet_from = _data[1];
+						RS485_DEBUG(PSTR("RS485:RNP:FROM:=%" PRIu8 "\n"),_packet_from );
+						_isNotLegacyNode[_packet_from & 0xF0 >> 4] |= _BV(_packet_from & 0x0F); // Mark node as not legacy node
 						break;
 					}
-					#else
-					_packet_len = _recLen;
-					_packet_received = true;
+					break;
 					#endif
 				}
 			}
@@ -304,9 +344,9 @@ bool _serialProcess()
 	return true;
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool _transportPackage(const uint8_t to, const void* data, const uint8_t len, const bool isLegacy)
 {
-	(void)noACK;	// not implemented
+	(void)isLegacy;	// unused when no legacy mode
 	const char *datap = static_cast<char const *>(data);
 	unsigned char i;
 	unsigned char cs = 0;
@@ -316,7 +356,6 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 
 	// Let's start out by looking for a collision.  If there has been anything seen in
 	// the last millisecond, then wait for a random time and check again.
-
 	while (_serialProcess()) {
 		unsigned char del;
 		del = rand() % 20;
@@ -330,21 +369,34 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 			return false;
 		}
 	}
-
 	assertDE();
-
-	// Start of header by writing multiple SOH
-	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
-		_dev.write(SOH);
+		// Start of header by writing multiple SOH
+	#ifdef MY_RS485_LEGACY
+	if (isLegacy){
+		RS485_DEBUG(PSTR("RS485:SLP:TO:=%" PRIu8 "\n"),to );
+		for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
+			_dev.write(SOH);
+		}
+		_dev.write(to);  // Destination address
+		cs += to;
+		_dev.write(_nodeId); // Source address
+		cs += _nodeId;
+		_dev.write(ICSC_SYS_PACK);  // Command code
+		cs += ICSC_SYS_PACK;
 	}
-	#ifdef HDASKLJ
-	_dev.write(to);  // Destination address
-	cs += to;
-	_dev.write(_nodeId); // Source address
-	cs += _nodeId;
-	_dev.write(ICSC_SYS_PACK);  // Command code
-	cs += ICSC_SYS_PACK;
+	else{
+		RS485_DEBUG(PSTR("RS485:SNP:TO:=%" PRIu8 "\n"),to );
+		for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
+			_dev.write(NEW_SOH);
+		}
+	}
+	#else
+	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
+		RS485_DEBUG(PSTR("RS485:SNP:TO:=%" PRIu8 "\n"),to );
+		_dev.write(NEW_SOH);
+	}
 	#endif
+
 	_dev.write(len);      // Length of text
 	cs += len;
 	_dev.write(STX);      // Start of text
@@ -355,13 +407,35 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	_dev.write(ETX);      // End of text
 	_dev.write(cs);
 	_dev.write(EOT);
-	_flush(); // suppress echo
-	_serialProcess();
-	_serialReset();
-	_packet_received = false;
-
-	#if defined(MY_RS485_DE_PIN)
+	_flush();
 	deassertDE();
+	return true;
+}
+
+bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+{
+	(void)noACK;	// not implemented
+
+	#ifdef MY_RS485_LEGACY
+	unsigned char isLegacy ;
+	#endif
+
+	#ifdef MY_RS485_LEGACY
+	if(to == BROADCAST_ADDRESS){
+		 if (!_transportPackage(to, data, len, IS_LEGACY_PACK)){
+			 return false;
+		 }
+		 return _transportPackage(to, data, len, !IS_LEGACY_PACK);	
+	}		
+
+	if(to == GATEWAY_ADDRESS){
+		return _transportPackage(to, data, len, !IS_LEGACY_PACK);
+	}
+
+	isLegacy = !(_isNotLegacyNode[to >> 4] & _BV(to & 0x0F));
+	return  _transportPackage(to, data, len, isLegacy);
+	#else
+	return _transportPackage(to, data, len, !IS_LEGACY_PACK);
 	#endif
 	return true;
 }
