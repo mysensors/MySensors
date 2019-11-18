@@ -77,7 +77,7 @@
 #define deassertDE()
 #endif
 
-#define MY_RS485_LEGACY
+#define MY_RS485_LEGACYs
 
 
 #ifdef MY_RS485_LEGACY
@@ -90,7 +90,13 @@ const uint8_t RS485_HEADER_LENGTH = 6;
 unsigned char _recCommand;
 unsigned char _recStation;
 unsigned char _recSender;
-unsigned char _isNotLegacyNode[8] = { 0 };
+
+#if (MY_IS_GATEWAY == true)
+unsigned char _isLegacyNode[8] = { 0 };
+#else 
+unsigned char _isLegacyNode[8] = { 0xFF };
+#endif
+
 #else
 const unsigned char RS485_HEADER_LENGTH = 3;
 #endif
@@ -117,6 +123,7 @@ AltSoftSerial _dev;
 #endif
 
 unsigned char _nodeId;
+unsigned char _hasNodeId = false;
 char _data[MY_RS485_MAX_MESSAGE_LENGTH];
 uint8_t _packet_len;
 unsigned char _packet_from;
@@ -303,14 +310,14 @@ bool _serialProcess()
 					if (isLegacyPackage){
 						switch (_recCommand) {
 						case ICSC_SYS_PACK:
-							_packet_from = _recSender;
+							_packet_from = _data[0];
 							_packet_len = _recLen;
 							_packet_received = true;
 							RS485_DEBUG(PSTR("RS485:RLP:FROM:=%" PRIu8 "\n"),_packet_from );
-							// Gateways can swtich back to lagecy node to support old bootloaders after reboot
-							#if MY_IS_GATEWAY == true		
-							_isNotLegacyNode[_packet_from & 0xF0 >> 4] &= ~_BV(_packet_from & 0x0F); // Mark node as legacy node
-							#endif
+							// Gateways can switch back to lagecy node to support old bootloaders after reboot
+							//#if MY_IS_GATEWAY == true		
+							_isLegacyNode[(_packet_from & 0xF0) >> 4] |= _BV(_packet_from & 0x0F); // Mark last node as legacy node
+							//#endif
 							break;
 						}
 					}
@@ -319,15 +326,16 @@ bool _serialProcess()
 						_packet_len = _recLen;
 						//Check if we should process this message
 						//We reject the message if we are the sender
-						if (_data[0] == _nodeId) {
+						//Message not surpressed if node ID was not assigned to support auto id
+						if ((_data[0] == _nodeId) && (_hasNodeId == true)) {
 							_serialReset();
 							break;
 						}
 						_packet_received = true;
 					#ifdef MY_RS485_LEGACY
-						_packet_from = _data[1];
+						_packet_from = _data[0];
 						RS485_DEBUG(PSTR("RS485:RNP:FROM:=%" PRIu8 "\n"),_packet_from );
-						_isNotLegacyNode[_packet_from & 0xF0 >> 4] |= _BV(_packet_from & 0x0F); // Mark node as not legacy node
+						_isLegacyNode[(_packet_from & 0xF0) >> 4] &= ~_BV(_packet_from & 0x0F); // Mark last node as not legacy node
 						break;
 					}
 					break;
@@ -409,6 +417,9 @@ bool _transportPackage(const uint8_t to, const void* data, const uint8_t len, co
 	_dev.write(EOT);
 	_flush();
 	deassertDE();
+	//while(_dev.available()){//clear echo
+	//	_dev.read();
+	//}	
 	return true;
 }
 
@@ -432,7 +443,8 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 		return _transportPackage(to, data, len, !IS_LEGACY_PACK);
 	}
 
-	isLegacy = !(_isNotLegacyNode[to >> 4] & _BV(to & 0x0F));
+	isLegacy = (_isLegacyNode[(to & 0xF0) >> 4] & _BV(to & 0x0F));
+	RS485_DEBUG(PSTR("_isLegacyNode[0x%x] = 0x%x" PRIu8 "\n"),to & 0xF0 >> 4 , _BV(to & 0x0F));
 	return  _transportPackage(to, data, len, isLegacy);
 	#else
 	return _transportPackage(to, data, len, !IS_LEGACY_PACK);
@@ -454,6 +466,7 @@ bool transportInit(void)
 void transportSetAddress(const uint8_t address)
 {
 	_nodeId = address;
+	_hasNodeId = true;
 }
 
 uint8_t transportGetAddress(void)
