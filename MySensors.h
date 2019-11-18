@@ -372,9 +372,9 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "drivers/AltSoftSerial/AltSoftSerial.cpp"
 #endif
 #if defined(MY_RS485_NEW_TRANSPORT)
-#include "hal/transport/RS485/MyTransportRS485.cpp"
-#else
 #include "hal/transport/RS485/MyTransportNewRS485.cpp"
+#else
+#include "hal/transport/RS485/MyTransportRS485.cpp"
 #endif
 #elif defined(MY_RADIO_RFM69)
 #if defined(MY_RFM69_NEW_DRIVER)
