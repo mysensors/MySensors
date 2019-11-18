@@ -77,7 +77,7 @@
 #define deassertDE()
 #endif
 
-#define MY_RS485_LEGACYs
+//#define MY_RS485_LEGACY
 
 
 #ifdef MY_RS485_LEGACY
