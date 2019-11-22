@@ -77,10 +77,7 @@
 #define deassertDE()
 #endif
 
-//#define MY_RS485_LEGACY
-
-
-#ifdef MY_RS485_LEGACY
+#ifdef MY_RS485_LEGACY_SUPPORT
 const uint8_t RS485_HEADER_LENGTH = 6;
 // We only use SYS_PACK in this application
 #define  ICSC_SYS_PACK 0x58
@@ -146,7 +143,7 @@ void _serialReset()
 	_recLen = 0;
 	_recCS = 0;
 	_recCalcCS = 0;
-	#ifdef MY_RS485_LEGACY
+	#ifdef MY_RS485_LEGACY_SUPPORT
 	_recCommand = 0;
 	#endif
 }
@@ -184,7 +181,7 @@ void _flush(){
 // function.
 bool _serialProcess()
 {
-	#ifdef MY_RS485_LEGACY
+	#ifdef MY_RS485_LEGACY_SUPPORT
 	unsigned char i;
 	unsigned isLegacyPackage = 0;
 	#endif
@@ -203,7 +200,7 @@ bool _serialProcess()
 		// the buffer match the SOH/STX pair, and the destination station ID matches
 		// our ID, save the header information and progress to the next state.
 		case 0:
-			#ifdef MY_RS485_LEGACY
+			#ifdef MY_RS485_LEGACY_SUPPORT
 			memcpy(&_header[0],&_header[1],RS485_HEADER_LENGTH-1);
 			_header[5] = inch;
 			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
@@ -250,7 +247,7 @@ bool _serialProcess()
 			_header[2] = inch;
 			if ((_header[0] == NEW_SOH) && (_header[2] == STX)) {
 				_recLen = _header[1];
-			#endif  //MY_RS485_LEGACY
+			#endif  //MY_RS485_LEGACY_SUPPORT
 				_recCalcCS = 0;
 				_recCalcCS += _recLen;
 				_recPhase = 1;
@@ -306,7 +303,7 @@ bool _serialProcess()
 					// to register your own callback as well for system level
 					// commands which will be called after the system default
 					// hook.
-					#ifdef MY_RS485_LEGACY
+					#ifdef MY_RS485_LEGACY_SUPPORT
 					if (isLegacyPackage){
 						switch (_recCommand) {
 						case ICSC_SYS_PACK:
@@ -332,7 +329,7 @@ bool _serialProcess()
 							break;
 						}
 						_packet_received = true;
-					#ifdef MY_RS485_LEGACY
+					#ifdef MY_RS485_LEGACY_SUPPORT
 						_packet_from = _data[0];
 						RS485_DEBUG(PSTR("RS485:RNP:FROM:=%" PRIu8 "\n"),_packet_from );
 						_isLegacyNode[(_packet_from & 0xF0) >> 4] &= ~_BV(_packet_from & 0x0F); // Mark last node as not legacy node
@@ -379,7 +376,7 @@ bool _transportPackage(const uint8_t to, const void* data, const uint8_t len, co
 	}
 	assertDE();
 		// Start of header by writing multiple SOH
-	#ifdef MY_RS485_LEGACY
+	#ifdef MY_RS485_LEGACY_SUPPORT
 	if (isLegacy){
 		RS485_DEBUG(PSTR("RS485:SLP:TO:=%" PRIu8 "\n"),to );
 		for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
@@ -427,11 +424,11 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 {
 	(void)noACK;	// not implemented
 
-	#ifdef MY_RS485_LEGACY
+	#ifdef MY_RS485_LEGACY_SUPPORT
 	unsigned char isLegacy ;
 	#endif
 
-	#ifdef MY_RS485_LEGACY
+	#ifdef MY_RS485_LEGACY_SUPPORT
 	if(to == BROADCAST_ADDRESS){
 		 if (!_transportPackage(to, data, len, IS_LEGACY_PACK)){
 			 return false;
