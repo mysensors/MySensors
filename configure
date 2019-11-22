@@ -99,6 +99,7 @@ MySensors options:
     --my-rs485-de-pin=<PIN>     Pin number connected to RS485 driver enable pin.
     --my-rs485-max-msg-length=<LENGTH>
                                 The maximum message length used for RS485. [40]
+    --my-rs485-new-transport    Use the new transaction layer for RS485.
     --my-leds-err-pin=<PIN>     Error LED pin.
     --my-leds-rx-pin=<PIN>      Receive LED pin.
     --my-leds-tx-pin=<PIN>      Transmit LED pin.
@@ -497,8 +498,8 @@ for opt do
     --my-rs485-max-msg-length=*)
         CPPFLAGS="-DMY_RS485_MAX_MESSAGE_LENGTH=${optarg} $CPPFLAGS"
         ;;
-    --my-leds-err-pin=*)
-        CPPFLAGS="-DMY_DEFAULT_ERR_LED_PIN=${optarg} $CPPFLAGS"
+	--my-rs485-new-transport*)
+        CPPFLAGS="-DMY_RS485_NEW_TRANSPORT $CPPFLAGS"
         ;;
     --my-leds-rx-pin=*)
         CPPFLAGS="-DMY_DEFAULT_RX_LED_PIN=${optarg} $CPPFLAGS"
