@@ -292,6 +292,12 @@ bool transportInit(void)
 	_dev.begin(MY_RS485_BAUD_RATE);
 	_serialReset();
 	deassertDE();
+	
+	// set pin modes for RS485 DE PIN 
+	#if defined(MY_RS485_DE_PIN)
+		pinMode(MY_RS485_DE_PIN, OUTPUT);
+	#endif
+
 	return true;
 }
 
