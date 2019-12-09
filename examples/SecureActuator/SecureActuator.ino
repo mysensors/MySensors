@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -58,7 +58,7 @@
 // Enable node whitelisting
 //#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
 // Enable this if you want destination node to sign all messages sent to this node.
-#define MY_SIGNING_REQUEST_SIGNATURES
+#define MY_SIGNING_REQUEST_SIGNATURES //!< destination node signs all messages sent to this node
 
 
 // SETTINGS FOR MY_SIGNING_SOFT
@@ -112,15 +112,15 @@ void loop()
 void receive(const MyMessage &message)
 {
 	// We only expect one type of message from controller. But we better check anyway.
-	// And acks are not accepted as control messages
-	if (message.type==V_LOCK_STATUS && message.sensor<=NOF_LOCKS && !mGetAck(message)) {
+	// And echoed messages are not accepted as control messages
+	if (message.getType()==V_LOCK_STATUS && message.getSensor()<=NOF_LOCKS && !message.isEcho()) {
 		// Change relay state
-		digitalWrite(message.sensor-1+LOCK_1, message.getBool()?LOCK_LOCK:LOCK_UNLOCK);
+		digitalWrite(message.getSensor()-1+LOCK_1, message.getBool()?LOCK_LOCK:LOCK_UNLOCK);
 		// Store state in eeprom
-		saveState(message.sensor, message.getBool());
+		saveState(message.getSensor(), message.getBool());
 		// Write some debug info
 		Serial.print("Incoming change for lock:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(message.getBool());
 	}

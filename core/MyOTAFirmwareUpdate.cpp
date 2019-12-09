@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -85,7 +85,7 @@ LOCAL void firmwareOTAUpdateRequest(void)
 
 LOCAL bool firmwareOTAUpdateProcess(void)
 {
-	if (_msg.type == ST_FIRMWARE_CONFIG_RESPONSE) {
+	if (_msg.getType() == ST_FIRMWARE_CONFIG_RESPONSE) {
 		if(_firmwareUpdateOngoing) {
 			OTA_DEBUG(PSTR("!OTA:FWP:UPDO\n"));	// FW config response received, FW update already ongoing
 			return true;
@@ -116,13 +116,13 @@ LOCAL bool firmwareOTAUpdateProcess(void)
 			return true;
 		}
 		OTA_DEBUG(PSTR("OTA:FWP:UPDATE SKIPPED\n"));		// FW update skipped, no newer version available
-	} else if (_msg.type == ST_FIRMWARE_RESPONSE) {
+	} else if (_msg.getType() == ST_FIRMWARE_RESPONSE) {
 		// extract FW block
 		replyFirmwareBlock_t *firmwareResponse = (replyFirmwareBlock_t *)_msg.data;
 		// Proceed firmware data
 		return _firmwareResponse(firmwareResponse->block, firmwareResponse->data);
 #ifdef FIRMWARE_PROTOCOL_31
-	} else if (_msg.type == ST_FIRMWARE_RESPONSE_RLE) {
+	} else if (_msg.getType() == ST_FIRMWARE_RESPONSE_RLE) {
 		// RLE encoded block
 		// extract FW block
 		replyFirmwareBlockRLE_t *firmwareResponse = (replyFirmwareBlockRLE_t *)_msg.data;
@@ -139,15 +139,15 @@ LOCAL bool firmwareOTAUpdateProcess(void)
 #endif
 	} else {
 #ifdef MCUBOOT_PRESENT
-		if (_msg.type == ST_FIRMWARE_CONFIRM) {
+		if (_msg.getType() == ST_FIRMWARE_CONFIRM) {
 			if (*(uint16_t *)MCUBOOT_IMAGE_0_MAGIC_ADDR == ((uint16_t)MCUBOOT_IMAGE_MAGIC)) {
-				if (*(uint8_t*)(MCUBOOT_IMAGE_0_IMG_OK_ADDR)!=MCUBOOT_IMAGE_0_IMG_OK_BYTE) {
+				if (*(uint8_t *)(MCUBOOT_IMAGE_0_IMG_OK_ADDR) != MCUBOOT_IMAGE_0_IMG_OK_BYTE) {
 					// Calculate data word to write
-					uint32_t *img_ok_base_addr = (uint32_t*)(MCUBOOT_IMAGE_0_IMG_OK_ADDR & ~3); // align word wise
+					uint32_t *img_ok_base_addr = (uint32_t *)(MCUBOOT_IMAGE_0_IMG_OK_ADDR & ~3); // align word wise
 					uint32_t img_ok_data = *img_ok_base_addr;
 					// Set copy of MCUBOOT_IMAGE_0_IMG_OK_ADDR to MCUBOOT_IMAGE_0_IMG_OK_BYTE (0x01)
-					uint8_t * img_ok_array = (uint8_t*)(&img_ok_data);
-					img_ok_array[MCUBOOT_IMAGE_0_IMG_OK_ADDR % 4] = MCUBOOT_IMAGE_0_IMG_OK_BYTE;
+					uint8_t *img_ok_array = (uint8_t *)&img_ok_data;
+					*(img_ok_array + (MCUBOOT_IMAGE_0_IMG_OK_ADDR % 4)) = MCUBOOT_IMAGE_0_IMG_OK_BYTE;
 					// Write word back
 					Flash.write(img_ok_base_addr, img_ok_data);
 				}
@@ -164,9 +164,9 @@ LOCAL bool firmwareOTAUpdateProcess(void)
 LOCAL void presentBootloaderInformation(void)
 {
 	requestFirmwareConfig_t *requestFirmwareConfig = (requestFirmwareConfig_t *)_msgTmp.data;
-	mSetLength(_msgTmp, sizeof(requestFirmwareConfig_t));
-	mSetCommand(_msgTmp, C_STREAM);
-	mSetPayloadType(_msgTmp, P_CUSTOM);
+	_msgTmp.setLength(sizeof(requestFirmwareConfig_t));
+	_msgTmp.setCommand(C_STREAM);
+	_msgTmp.setPayloadType(P_CUSTOM);
 	// copy node settings to reqFWConfig
 	(void)memcpy(requestFirmwareConfig, &_nodeFirmwareConfig, sizeof(nodeFirmwareConfig_t));
 	// add bootloader information

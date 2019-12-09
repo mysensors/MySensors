@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,11 +18,10 @@
  *
  *******************************
  */
-#include <stdint.h>
-#include <pins_arduino.h>
 #define MY_DEBUG
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_RADIO_RFM95
+#define MY_RFM95_ENABLE_ENCRYPTION
 //#define MY_SIGNING_SOFT
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
@@ -33,6 +32,5 @@
 #ifndef MY_SIGNING_ATSHA204_PIN
 #define MY_SIGNING_ATSHA204_PIN 17
 #endif
-#define MY_RFM95_ENABLE_ENCRYPTION
 
 #include <MySensors.h>

@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -105,7 +105,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t
 				*current++ = status;
 			}
 		} else {
-			status = RF24_SPI.transfer(*current++);
+			(void)RF24_SPI.transfer(*current++);
 		}
 	}
 #endif
@@ -231,9 +231,9 @@ LOCAL uint8_t RF24_getObserveTX(void)
 	return RF24_readByteRegister(RF24_REG_OBSERVE_TX);
 }
 
-LOCAL void RF24_setStatus(const uint8_t status)
+LOCAL uint8_t RF24_setStatus(const uint8_t status)
 {
-	RF24_writeByteRegister(RF24_REG_STATUS, status);
+	return RF24_writeByteRegister(RF24_REG_STATUS, status);
 }
 
 LOCAL void RF24_enableFeatures(void)
@@ -307,33 +307,37 @@ LOCAL void RF24_standBy(void)
 LOCAL bool RF24_sendMessage(const uint8_t recipient, const void *buf, const uint8_t len,
                             const bool noACK)
 {
-	uint8_t RF24_status;
 	RF24_stopListening();
-	RF24_openWritingPipe( recipient );
-	RF24_DEBUG(PSTR("RF24:TXM:TO=%" PRIu8 ",LEN=%" PRIu8 "\n"),recipient,len); // send message
+	RF24_openWritingPipe(recipient);
+	RF24_DEBUG(PSTR("RF24:TXM:TO=%" PRIu8 ",LEN=%" PRIu8 "\n"), recipient, len); // send message
 	// flush TX FIFO
 	RF24_flushTX();
+	if (noACK) {
+		// noACK messages are only sent once
+		RF24_setRetries(RF24_SET_ARD, 0);
+	}
 	// this command is affected in clones (e.g. Si24R1):  flipped NoACK bit when using W_TX_PAYLOAD_NO_ACK / W_TX_PAYLOAD
 	// AutoACK is disabled on the broadcasting pipe - NO_ACK prevents resending
-	RF24_spiMultiByteTransfer((recipient == RF24_BROADCAST_ADDRESS ||
-	                           noACK) ? RF24_CMD_WRITE_TX_PAYLOAD_NO_ACK :
-	                          RF24_CMD_WRITE_TX_PAYLOAD, (uint8_t *)buf, len, false );
+	(void)RF24_spiMultiByteTransfer(RF24_CMD_WRITE_TX_PAYLOAD, (uint8_t *)buf, len, false);
 	// go, TX starts after ~10us, CE high also enables PA+LNA on supported HW
 	RF24_ce(HIGH);
 	// timeout counter to detect HW issues
 	uint16_t timeout = 0xFFFF;
-	do {
-		RF24_status = RF24_getStatus();
-	} while  (!(RF24_status & ( _BV(RF24_MAX_RT) | _BV(RF24_TX_DS) )) && timeout--);
+	while (!(RF24_getStatus() & (_BV(RF24_MAX_RT) | _BV(RF24_TX_DS))) && timeout--) {
+		doYield();
+	}
 	// timeout value after successful TX on 16Mhz AVR ~ 65500, i.e. msg is transmitted after ~36 loop cycles
 	RF24_ce(LOW);
 	// reset interrupts
-	RF24_setStatus(_BV(RF24_TX_DS) | _BV(RF24_MAX_RT) );
+	const uint8_t RF24_status = RF24_setStatus(_BV(RF24_RX_DR) | _BV(RF24_TX_DS) | _BV(RF24_MAX_RT));
 	// Max retries exceeded
-	if(RF24_status & _BV(RF24_MAX_RT)) {
+	if (RF24_status & _BV(RF24_MAX_RT)) {
 		// flush packet
-		RF24_DEBUG(PSTR("!RF24:TXM:MAX_RT\n"));	// max retries, no ACK
+		RF24_DEBUG(PSTR("?RF24:TXM:MAX_RT\n"));	// max retries (normal messages) and noACK messages
 		RF24_flushTX();
+	}
+	if (noACK) {
+		RF24_setRetries(RF24_SET_ARD, RF24_SET_ARC);
 	}
 	RF24_startListening();
 	// true if message sent
@@ -354,17 +358,23 @@ LOCAL uint8_t RF24_getDynamicPayloadSize(void)
 
 LOCAL bool RF24_isDataAvailable(void)
 {
-	return (!(RF24_getFIFOStatus() & _BV(0)) );
+	// prevent debug message flooding
+#if defined(MY_DEBUG_VERBOSE_RF24)
+	const uint8_t value = RF24_spiMultiByteTransfer(RF24_CMD_READ_REGISTER | (RF24_REGISTER_MASK &
+	                      (RF24_REG_FIFO_STATUS)), NULL, 1, true);
+	return (bool)(!(value & _BV(RF24_RX_EMPTY)));
+#else
+	return (bool)(!(RF24_getFIFOStatus() & _BV(RF24_RX_EMPTY)) );
+#endif
 }
-
 
 LOCAL uint8_t RF24_readMessage(void *buf)
 {
 	const uint8_t len = RF24_getDynamicPayloadSize();
 	RF24_DEBUG(PSTR("RF24:RXM:LEN=%" PRIu8 "\n"), len);	// read message
-	RF24_spiMultiByteTransfer(RF24_CMD_READ_RX_PAYLOAD,(uint8_t *)buf,len,true);
+	RF24_spiMultiByteTransfer(RF24_CMD_READ_RX_PAYLOAD, (uint8_t *)buf, len, true);
 	// clear RX interrupt
-	RF24_setStatus(_BV(RF24_RX_DR));
+	(void)RF24_setStatus(_BV(RF24_RX_DR));
 	return len;
 }
 
@@ -445,7 +455,7 @@ LOCAL bool RF24_getReceivedPowerDetector(void)
 }
 
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-LOCAL void RF24_irqHandler(void)
+LOCAL void IRQ_HANDLER_ATTR RF24_irqHandler(void)
 {
 	if (RF24_receiveCallback) {
 #if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
@@ -502,7 +512,6 @@ LOCAL void RF24_registerReceiveCallback(RF24_receiveCallbackType cb)
 
 LOCAL bool RF24_initialize(void)
 {
-	RF24_DEBUG(PSTR("RF24:INIT\n"));
 	RF24_DEBUG(PSTR("RF24:INIT:PIN,CE=%" PRIu8 ",CS=%" PRIu8 "\n"), MY_RF24_CE_PIN, MY_RF24_CS_PIN);
 	// Initialize pins & HW
 #if defined(MY_RF24_POWER_PIN)

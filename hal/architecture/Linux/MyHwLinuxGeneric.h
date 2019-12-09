@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -24,6 +24,16 @@
 #include <pthread.h>
 #include "SerialPort.h"
 #include "StdInOutStream.h"
+#include <SPI.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <syscall.h>
+#include <unistd.h>
+#include "SoftEeprom.h"
+#include "log.h"
+#include "config.h"
 
 #define CRYPTO_LITTLE_ENDIAN
 
@@ -44,6 +54,7 @@ StdInOutStream Serial = StdInOutStream();
 // Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
+#define hwGetSleepRemaining() (0ul)
 
 inline void hwDigitalWrite(uint8_t, uint8_t);
 inline int hwDigitalRead(uint8_t);
@@ -58,6 +69,12 @@ inline void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
 inline uint32_t hwMillis(void);
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
 
 #ifdef MY_RF24_IRQ_PIN
 static pthread_mutex_t hw_mutex = PTHREAD_MUTEX_INITIALIZER;

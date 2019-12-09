@@ -143,6 +143,7 @@ void FlashClass::write_block(uint32_t *dst_address, uint32_t *src_address,
 	wait_for_ready();
 
 	while (word_count > 0) {
+		// cppcheck-suppress duplicateConditionalAssign
 		if (*dst_address != *src_address) {
 			*dst_address = *src_address;
 		}

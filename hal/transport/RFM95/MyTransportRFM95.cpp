@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,35 +18,9 @@
  */
 
 #include "hal/transport/RFM95/driver/RFM95.h"
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.h"
-#endif
-
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-AES RFM95_aes;
-uint8_t RFM95_dataenc[32] = {0};
-#endif
-
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-#endif
 
 bool transportInit(void)
 {
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-	uint8_t RFM95_psk[16];
-#ifdef MY_SIGNING_SIMPLE_PASSWD
-	(void)memset((void *)RFM95_psk, 0, 16);
-	(void)memcpy((void *)RFM95_psk, MY_SIGNING_SIMPLE_PASSWD, strnlen(MY_SIGNING_SIMPLE_PASSWD, 16));
-#else
-	hwReadConfigBlock((void *)RFM95_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-#endif
-	//set up AES-key
-	RFM95_aes.set_key(RFM95_psk, 16);
-	// Make sure it is purged from memory when set
-	(void)memset((void *)RFM95_psk, 0, 16);
-#endif
-
 	const bool result = RFM95_initialise(MY_RFM95_FREQUENCY);
 #if defined(MY_RFM95_TCXO)
 	RFM95_enableTCXO();
@@ -70,29 +44,10 @@ uint8_t transportGetAddress(void)
 
 bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-	// copy input data because it is read-only
-	(void)memcpy((void *)RFM95_dataenc, (const void *)data, len);
-	// has to be adjusted, WIP!
-	RFM95_aes.set_IV(0);
-	const uint8_t finalLength = len > 16 ? 32 : 16;
-	//encrypt data
-	RFM95_aes.cbc_encrypt(RFM95_dataenc, RFM95_dataenc, finalLength / 16);
-	if (noACK) {
-		(void)RFM95_sendWithRetry(to, RFM95_dataenc, finalLength, 0, 0);
-		return true;
-	}
-	return RFM95_sendWithRetry(to, RFM95_dataenc, finalLength);
-#else
-	if (noACK) {
-		(void)RFM95_sendWithRetry(to, data, len, 0, 0);
-		return true;
-	}
-	return RFM95_sendWithRetry(to, data, len);
-#endif
+	return RFM95_sendWithRetry(to, data, len, noACK);
 }
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 	RFM95_handler();
 	return RFM95_available();
@@ -105,15 +60,7 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void *data)
 {
-	uint8_t len = RFM95_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
-#if defined(MY_RFM95_ENABLE_ENCRYPTION)
-	// has to be adjusted, WIP!
-	RFM95_aes.set_IV(0);
-	// decrypt data
-	if (RFM95_aes.cbc_decrypt((uint8_t *)data, (uint8_t *)data, len > 16 ? 2 : 1) != AES_SUCCESS) {
-		len = 0;
-	}
-#endif
+	uint8_t len = RFM95_receive((uint8_t *)data, MAX_MESSAGE_SIZE);
 	return len;
 }
 

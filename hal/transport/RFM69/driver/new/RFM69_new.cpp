@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -242,7 +242,7 @@ LOCAL void RFM69_clearFIFO(void)
 	(void)RFM69_writeReg(RFM69_REG_IRQFLAGS2, RFM69_IRQFLAGS2_FIFOOVERRUN);
 }
 // IRQ handler: PayloadReady (RX) & PacketSent (TX) mapped to DI0
-LOCAL void RFM69_interruptHandler(void)
+LOCAL void IRQ_HANDLER_ATTR RFM69_interruptHandler(void)
 {
 	// set flag
 	RFM69_irq = true;
@@ -417,7 +417,6 @@ LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
 	packet.header.version = RFM69_PACKET_HEADER_VERSION;
 	packet.header.sender = RFM69.address;
 	packet.header.recipient = recipient;
-	packet.header.controlFlags = 0u;	// reset
 	packet.payloadLen = min(len, (uint8_t)RFM69_MAX_PAYLOAD_LEN);
 	packet.header.controlFlags = flags;
 	(void)memcpy((void *)&packet.payload, (void *)data, packet.payloadLen); // copy payload
@@ -610,40 +609,40 @@ LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI)
 
 
 LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
-                               const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTimeMS)
+                               const uint8_t bufferSize, const bool noACK)
 {
-	for (uint8_t retry = 0; retry <= retries; retry++) {
+	for (uint8_t retry = 0; retry < RFM69_RETRIES; retry++) {
 		RFM69_DEBUG(PSTR("RFM69:SWR:SEND,TO=%" PRIu8 ",SEQ=%" PRIu16 ",RETRY=%" PRIu8 "\n"), recipient,
 		            RFM69.txSequenceNumber,retry);
 		rfm69_controlFlags_t flags = 0u; // reset all flags
-		RFM69_setACKRequested(flags, (recipient != RFM69_BROADCAST_ADDRESS));
+		RFM69_setACKRequested(flags, !noACK);
 		RFM69_setACKRSSIReport(flags, RFM69.ATCenabled);
 		(void)RFM69_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry);
-		if (recipient == RFM69_BROADCAST_ADDRESS) {
+		if (noACK) {
 			// no ACK requested
 			return true;
 		}
 		// radio is in RX
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < retryWaitTimeMS && !RFM69.dataReceived) {
+		while (hwMillis() - enterMS < RFM69_RETRY_TIMEOUT_MS && !RFM69.dataReceived) {
 			RFM69_handler();
 			if (RFM69.ackReceived) {
 				// radio is in stdby
-				const uint8_t sender = RFM69.currentPacket.header.sender;
+				const uint8_t ACKsender = RFM69.currentPacket.header.sender;
 				const rfm69_sequenceNumber_t ACKsequenceNumber = RFM69.currentPacket.ACK.sequenceNumber;
-				const rfm69_controlFlags_t flags = RFM69.currentPacket.header.controlFlags;
-				const rfm69_RSSI_t RSSI = RFM69.currentPacket.ACK.RSSI;
+				const rfm69_controlFlags_t ACKflags = RFM69.currentPacket.header.controlFlags;
+				const rfm69_RSSI_t ACKRSSI = RFM69.currentPacket.ACK.RSSI;
 				RFM69.ackReceived = false;
 				// packet read, back to RX
 				RFM69_setRadioMode(RFM69_RADIO_MODE_RX);
-				if (sender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
-					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"),sender,
+				if (ACKsender == recipient && ACKsequenceNumber == RFM69.txSequenceNumber) {
+					RFM69_DEBUG(PSTR("RFM69:SWR:ACK,FROM=%" PRIu8 ",SEQ=%" PRIu8 ",RSSI=%" PRIi16 "\n"), ACKsender,
 					            ACKsequenceNumber,
-					            RFM69_internalToRSSI(RSSI));
+					            RFM69_internalToRSSI(ACKRSSI));
 
 					// ATC
-					if (RFM69.ATCenabled && RFM69_getACKRSSIReport(flags)) {
-						(void)RFM69_executeATC(RSSI,RFM69.ATCtargetRSSI);
+					if (RFM69.ATCenabled && RFM69_getACKRSSIReport(ACKflags)) {
+						(void)RFM69_executeATC(ACKRSSI, RFM69.ATCtargetRSSI);
 					}
 					return true;
 				} // seq check

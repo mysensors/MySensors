@@ -7,7 +7,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
  * https://github.com/mysensors/MySensors/graphs/contributors
@@ -21,11 +21,6 @@
  */
 
 #include "MyHwNRF5.h"
-#include <nrf.h>
-
-#define CRYPTO_LITTLE_ENDIAN
-
-#define INVALID_INTERRUPT_NUM (0xFFu)
 
 volatile uint8_t _wokeUpByInterrupt = INVALID_INTERRUPT_NUM; // Interrupt number that woke the mcu.
 volatile uint8_t _wakeUp1Interrupt =
@@ -161,7 +156,7 @@ void hwRandomNumberInit(void)
 		while (NRF_RNG->EVENTS_VALRDY == 0) {
 			yield();
 		}
-		ecbstruct[i] = NRF_RNG->VALUE;
+		*(ecbstruct + i) = NRF_RNG->VALUE;
 		NRF_RNG->EVENTS_VALRDY = 0;
 	}
 	hwRndDataReadPos = 0;
@@ -209,8 +204,8 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 					}
 				}
 				hwRndDataReadPos=0;
-				for (uint8_t i=0; i<sizeof(hwRngData.ciphertext); i++) {
-					hwRngData.cleartext[i] ^= hwRngData.ciphertext[i];
+				for (uint8_t pos = 0; pos < sizeof(hwRngData.ciphertext); pos++) {
+					hwRngData.cleartext[pos] ^= hwRngData.ciphertext[pos];
 				}
 			} else
 			{
@@ -356,7 +351,7 @@ int8_t hwSleep(uint32_t ms)
 	return MY_WAKE_UP_BY_TIMER;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
 	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
 }
@@ -535,34 +530,4 @@ uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;
-}
-
-void hwDebugPrint(const char *fmt, ...)
-{
-#ifndef MY_DISABLED_SERIAL
-	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-#ifdef MY_GATEWAY_SERIAL
-	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
-	         C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-	MY_DEBUGDEVICE.print(fmtBuffer);
-#else
-	// prepend timestamp
-	MY_DEBUGDEVICE.print(hwMillis());
-	MY_DEBUGDEVICE.print(F(" "));
-#endif
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#ifdef MY_GATEWAY_SERIAL
-	// Truncate message if this is gateway node
-	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
-	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#endif
-	va_end(args);
-	MY_DEBUGDEVICE.print(fmtBuffer);
-	MY_DEBUGDEVICE.flush();
-#else
-	(void)fmt;
-#endif
 }

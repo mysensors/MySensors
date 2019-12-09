@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -44,30 +44,23 @@ void SHA256HMAC(uint8_t *dest, const uint8_t *key, size_t keyLength, const uint8
 	mbedtls_md_hmac_finish(&ctx, dest);
 }
 
-/* not tested yet
 // ESP32 AES128 CBC
-esp_aes_context aes_ctx;
+static mbedtls_aes_context aes_ctx;
 
 void AES128CBCInit(const uint8_t *key)
 {
-	esp_aes_init(&aes_ctx);
-	(void)esp_aes_setkey(&aes_ctx, key, 128);
+	mbedtls_aes_init(&aes_ctx);
+	(void)mbedtls_aes_setkey_enc(&aes_ctx, key, 128);
 }
 
-void AES128CBCEncrypt(uint8_t *dest, const uint8_t *data, size_t dataLength)
+void AES128CBCEncrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength)
 {
-	uint8_t iv[16] = { 0 };
-	esp_aes_crypt_cbc(&aes_ctx, MBEDTLS_AES_ENCRYPT, dataLength, iv, (const unsigned char *)data, (unsigned char *)dest);
+	mbedtls_aes_crypt_cbc(&aes_ctx, MBEDTLS_AES_ENCRYPT, dataLength, iv, (const unsigned char *)buffer,
+	                      (unsigned char *)buffer);
 }
 
-void AES128CBCDecrypt(uint8_t *dest, const uint8_t *data, size_t dataLength)
+void AES128CBCDecrypt(uint8_t *iv, uint8_t *buffer, const size_t dataLength)
 {
-	uint8_t iv[16] = { 0 };
-	esp_aes_crypt_cbc(&aes_ctx, MBEDTLS_AES_DECRYPT, dataLength, iv, (const unsigned char *)data, (unsigned char *)dest);
+	mbedtls_aes_crypt_cbc(&aes_ctx, MBEDTLS_AES_DECRYPT, dataLength, iv, (const unsigned char *)buffer,
+	                      (unsigned char *)buffer);
 }
-
-void AES128CBCFree(void)
-{
-	esp_aes_free(&aes_ctx);
-}
-*/

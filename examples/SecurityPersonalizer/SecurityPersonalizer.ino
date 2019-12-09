@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -414,7 +414,7 @@ static uint8_t user_aes_key[16] = {MY_AES_KEY};
 
 #ifndef USE_SOFT_SIGNING
 const int sha204Pin = MY_SIGNING_ATSHA204_PIN; //!< The IO pin to use for ATSHA204A
-atsha204Class sha204(sha204Pin);
+atsha204Class sha204(sha204Pin);  //!< atsha204Class
 static uint8_t tx_buffer[SHA204_CMD_SIZE_MAX];
 static uint8_t rx_buffer[SHA204_RSP_SIZE_MAX];
 static uint8_t ret_code;
@@ -1868,3 +1868,5 @@ static void dump_detailed_atsha204a_configuration(void)
 #define PRINT_DETAILED_ATSHA204A_CONFIG
 #define RESET_EEPROM_PERSONALIZATION
 #endif
+
+/** @}*/

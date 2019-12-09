@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -26,35 +26,13 @@
  */
 
 #include "MySigning.h"
+#include "MyHelperFunctions.h"
 
 #ifdef MY_SIGNING_ATSHA204
 #define SIGNING_IDENTIFIER (1) //HMAC-SHA256
 
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
 #define SIGN_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)
-static char printStr[65];
-static char i2h(uint8_t i)
-{
-	uint8_t k = i & 0x0F;
-	if (k <= 9) {
-		return '0' + k;
-	} else {
-		return 'A' + k - 10;
-	}
-}
-
-static void buf2str(const uint8_t* buf, size_t sz)
-{
-	uint8_t i;
-	if (sz > 32) {
-		sz = 32; //clamp to 32 bytes
-	}
-	for (i = 0; i < sz; i++) {
-		printStr[i * 2] = i2h(buf[i] >> 4);
-		printStr[(i * 2) + 1] = i2h(buf[i]);
-	}
-	printStr[sz * 2] = '\0';
-}
 #else
 #define SIGN_DEBUG(x,...)
 #endif
@@ -147,19 +125,20 @@ bool signerAtsha204GetNonce(MyMessage &msg)
 	for (int i = 0; i < 32; i++) {
 		_signing_verifying_nonce[i] = _signing_rx_buffer[SHA204_BUFFER_POS_DATA+i] ^ (hwMillis()&0xFF);
 	}
-	memcpy(_signing_verifying_nonce, signerSha256(_signing_verifying_nonce, 32),
-	       min(MAX_PAYLOAD, 32));
+	(void)memcpy((void *)_signing_verifying_nonce, (const void *)signerSha256(_signing_verifying_nonce,
+	             32),
+	             min((uint8_t)MAX_PAYLOAD_SIZE, 32u));
 
 	// We just idle the chip now since we expect to use it soon when the signed message arrives
 	atsha204_idle();
 
-	if (MAX_PAYLOAD < 32) {
+	if (MAX_PAYLOAD_SIZE < 32) {
 		// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
-		memset(&_signing_verifying_nonce[MAX_PAYLOAD], 0xAA, 32-MAX_PAYLOAD);
+		(void)memset((void *)&_signing_verifying_nonce[MAX_PAYLOAD_SIZE], 0xAA, 32u - MAX_PAYLOAD_SIZE);
 	}
 
 	// Transfer the first part of the nonce to the message
-	msg.set(_signing_verifying_nonce, min(MAX_PAYLOAD, 32));
+	msg.set(_signing_verifying_nonce, min((uint8_t)MAX_PAYLOAD_SIZE, 32u));
 	_signing_verification_ongoing = true;
 	_signing_timestamp = hwMillis(); // Set timestamp to determine when to purge nonce
 	return true;
@@ -171,40 +150,43 @@ void signerAtsha204PutNonce(MyMessage &msg)
 		return;
 	}
 
-	memcpy(_signing_signing_nonce, (uint8_t*)msg.getCustom(), min(MAX_PAYLOAD, 32));
-	if (MAX_PAYLOAD < 32) {
+	(void)memcpy((void *)_signing_signing_nonce, (const void *)msg.getCustom(),
+	             min((uint8_t)MAX_PAYLOAD_SIZE, 32u));
+	if (MAX_PAYLOAD_SIZE < 32u) {
 		// We set the part of the 32-byte nonce that does not fit into a message to 0xAA
-		memset(&_signing_signing_nonce[MAX_PAYLOAD], 0xAA, 32-MAX_PAYLOAD);
+		(void)memset((void *)&_signing_signing_nonce[MAX_PAYLOAD_SIZE], 0xAA, 32u - MAX_PAYLOAD_SIZE);
 	}
 }
 
 bool signerAtsha204SignMsg(MyMessage &msg)
 {
 	// If we cannot fit any signature in the message, refuse to sign it
-	if (mGetLength(msg) > MAX_PAYLOAD-2) {
-		SIGN_DEBUG(PSTR("!SGN:BND:SIG,SIZE,%" PRIu8 ">%" PRIu8 "\n"), mGetLength(msg),
-		           MAX_PAYLOAD-2); //Message too large
+	if (msg.getLength() > MAX_PAYLOAD_SIZE - 2) {
+		SIGN_DEBUG(PSTR("!SGN:BND:SIG,SIZE,%" PRIu8 ">%" PRIu8 "\n"), msg.getLength(),
+		           MAX_PAYLOAD_SIZE - 2); //Message too large
 		return false;
 	}
 
 	// Calculate signature of message
-	mSetSigned(msg, 1); // make sure signing flag is set before signature is calculated
+	msg.setSigned(true); // make sure signing flag is set before signature is calculated
 	signerCalculateSignature(msg, true);
 
+#if defined(MY_SIGNING_NODE_WHITELISTING)
 	if (DO_WHITELIST(msg.destination)) {
 		// Salt the signature with the senders nodeId and the unique serial of the ATSHA device
 		// We can reuse the nonce buffer now since it is no longer needed
 		memcpy(_signing_signing_nonce, _signing_hmac, 32);
-		_signing_signing_nonce[32] = msg.sender;
+		_signing_signing_nonce[32] = msg.getSender();
 		memcpy(&_signing_signing_nonce[33], _signing_node_serial_info, 9);
 		// We can 'void' sha256 because the hash is already put in the correct place
 		(void)signerSha256(_signing_signing_nonce, 32+1+9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%" PRIu8 "\n"), msg.sender);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,ID=%" PRIu8 "\n"), msg.getSender());
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-		buf2str(_signing_node_serial_info, 9);
-		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), printStr);
+		hwDebugBuf2Str(_signing_node_serial_info, 9);
+		SIGN_DEBUG(PSTR("SGN:BND:SIG WHI,SERIAL=%s\n"), hwDebugPrintStr);
 #endif
 	}
+#endif
 
 	// Put device back to sleep
 	atsha204_sleep();
@@ -213,7 +195,8 @@ bool signerAtsha204SignMsg(MyMessage &msg)
 	_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 	// Transfer as much signature data as the remaining space in the message permits
-	memcpy(&msg.data[mGetLength(msg)], _signing_hmac, min(MAX_PAYLOAD-mGetLength(msg), 32));
+	(void)memcpy((void *)&msg.data[msg.getLength()], (const void *)_signing_hmac,
+	             min(MAX_PAYLOAD_SIZE - msg.getLength(), 32));
 
 	return true;
 }
@@ -231,8 +214,8 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 
 		_signing_verification_ongoing = false;
 
-		if (msg.data[mGetLength(msg)] != SIGNING_IDENTIFIER) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER,IDENT=%" PRIu8 "\n"), msg.data[mGetLength(msg)]);
+		if (msg.data[msg.getLength()] != SIGNING_IDENTIFIER) {
+			SIGN_DEBUG(PSTR("!SGN:BND:VER,IDENT=%" PRIu8 "\n"), msg.data[msg.getLength()]);
 			return false;
 		}
 
@@ -242,23 +225,23 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		// Look up the senders nodeId in our whitelist and salt the signature with that data
 		size_t j;
 		for (j=0; j < NUM_OF(_signing_whitelist); j++) {
-			if (_signing_whitelist[j].nodeId == msg.sender) {
+			if (_signing_whitelist[j].nodeId == msg.getSender()) {
 				// We can reuse the nonce buffer now since it is no longer needed
 				memcpy(_signing_verifying_nonce, _signing_hmac, 32);
-				_signing_verifying_nonce[32] = msg.sender;
+				_signing_verifying_nonce[32] = msg.getSender();
 				memcpy(&_signing_verifying_nonce[33], _signing_whitelist[j].serial, 9);
 				// We can 'void' sha256 because the hash is already put in the correct place
 				(void)signerSha256(_signing_verifying_nonce, 32+1+9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%" PRIu8 "\n"), msg.sender);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,ID=%" PRIu8 "\n"), msg.getSender());
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-				buf2str(_signing_whitelist[j].serial, 9);
-				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), printStr);
+				hwDebugBuf2Str(_signing_whitelist[j].serial, 9);
+				SIGN_DEBUG(PSTR("SGN:BND:VER WHI,SERIAL=%s\n"), hwDebugPrintStr);
 #endif
 				break;
 			}
 		}
 		if (j == NUM_OF(_signing_whitelist)) {
-			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI,ID=%" PRIu8 " MISSING\n"), msg.sender);
+			SIGN_DEBUG(PSTR("!SGN:BND:VER WHI,ID=%" PRIu8 " MISSING\n"), msg.getSender());
 			// Put device back to sleep
 			atsha204_sleep();
 			return false;
@@ -272,8 +255,8 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 		// Compare the calculated signature with the provided signature
-		if (signerMemcmp(&msg.data[mGetLength(msg)], _signing_hmac,
-		                 min(MAX_PAYLOAD-mGetLength(msg), 32))) {
+		if (signerMemcmp(&msg.data[msg.getLength()], _signing_hmac,
+		                 min(MAX_PAYLOAD_SIZE - msg.getLength(), 32))) {
 			return false;
 		} else {
 			return true;
@@ -286,13 +269,13 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 static void signerCalculateSignature(MyMessage &msg, bool signing)
 {
 	// Signature is calculated on everything expect the first byte in the header
-	uint16_t bytes_left = mGetLength(msg)+HEADER_SIZE-1;
+	uint16_t bytes_left = msg.getLength()+HEADER_SIZE-1;
 	int16_t current_pos = 1-(int16_t)HEADER_SIZE; // Start at the second byte in the header
 	uint8_t* nonce = signing ? _signing_signing_nonce : _signing_verifying_nonce;
 
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-	buf2str(nonce, 32);
-	SIGN_DEBUG(PSTR("SGN:BND:NONCE=%s\n"), printStr);
+	hwDebugBuf2Str(nonce, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:NONCE=%s\n"), hwDebugPrintStr);
 #endif
 
 	while (bytes_left) {
@@ -317,8 +300,8 @@ static void signerCalculateSignature(MyMessage &msg, bool signing)
 		}
 	}
 #ifdef MY_DEBUG_VERBOSE_SIGNING
-	buf2str(_signing_hmac, 32);
-	SIGN_DEBUG(PSTR("SGN:BND:HMAC=%s\n"), printStr);
+	hwDebugBuf2Str(_signing_hmac, 32);
+	SIGN_DEBUG(PSTR("SGN:BND:HMAC=%s\n"), hwDebugPrintStr);
 #endif
 }
 

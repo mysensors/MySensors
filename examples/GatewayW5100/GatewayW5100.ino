@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -19,8 +19,8 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 - Henrik EKblad
- * Contribution by a-lurker and Anticimex,
+ * Version 1.0 - Henrik Ekblad
+ * Contribution by a-lurker and Anticimex
  * Contribution by Norbert Truchsess <norbert.truchsess@t-online.de>
  * Contribution by Tomas Hozza <thozza@gmail.com>
  *
@@ -75,7 +75,7 @@
 #endif
 
 // Enable UDP communication
-//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
+//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS below
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 #define MY_IP_ADDRESS 192,168,178,66
@@ -93,11 +93,13 @@
 // Controller ip address. Enables client mode (default is "server" mode).
 // Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
+//#define MY_CONTROLLER_URL_ADDRESS "my.controller.org"
 
 // The MAC address can be anything you want but should be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
 // Note that most of the Arduino examples use  "DEAD BEEF FEED" for the MAC address.
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+
 
 // Enable inclusion mode
 #define MY_INCLUSION_MODE_FEATURE

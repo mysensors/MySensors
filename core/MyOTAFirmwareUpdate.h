@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -65,7 +65,7 @@
 
 #define LOCAL static //!< static
 
-#if MAX_PAYLOAD >= 22
+#if MAX_PAYLOAD_SIZE >= 22
 #define FIRMWARE_BLOCK_SIZE		(16u)				//!< Size of each firmware block
 #else
 #define FIRMWARE_BLOCK_SIZE		(8u)				//!< Size of each firmware block
@@ -73,9 +73,12 @@
 #define FIRMWARE_PROTOCOL_31
 #endif
 #endif
-#define FIRMWARE_MAX_REQUESTS	(5u)				//!< Number of times a firmware block should be requested before giving up
+#ifndef MY_OTA_RETRY
 #define MY_OTA_RETRY			(5u)				//!< Number of times to request a fw block before giving up
+#endif
+#ifndef MY_OTA_RETRY_DELAY
 #define MY_OTA_RETRY_DELAY		(500u)				//!< Number of milliseconds before re-requesting a FW block
+#endif
 #ifndef MCUBOOT_PRESENT
 #define FIRMWARE_START_OFFSET	(10u)				//!< Start offset for firmware in flash (DualOptiboot wants to keeps a signature first)
 #else
@@ -103,7 +106,7 @@
  *
  * Supports smaller FIRMWARE_BLOCK_SIZE, RLE and NVM for nRF5 with mcuboot. The
  * extension is enabled per default when mcuboot is present or full FIRMWARE_BLOCK_SIZE
- * exeeds MAX_PAYLOAD.
+ * exeeds MAX_PAYLOAD_SIZE.
  */
 #define FIRMWARE_PROTOCOL_31
 #endif

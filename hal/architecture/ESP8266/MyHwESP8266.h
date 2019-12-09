@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,6 +18,11 @@
  */
 #ifndef MyHwESP8266_h
 #define MyHwESP8266_h
+
+#include <SPI.h>
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
+#include <EEPROM.h>
 
 #ifdef __cplusplus
 #include <Arduino.h>
@@ -44,6 +49,7 @@
 #define hwMillis() millis()
 // The use of randomSeed switch to pseudo random number. Keep hwRandomNumberInit empty
 #define hwRandomNumberInit()
+#define hwGetSleepRemaining() (0ul)
 
 bool hwInit(void);
 void hwReadConfigBlock(void *buf, void *addr, size_t length);
@@ -52,6 +58,13 @@ void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 //#define MY_HW_HAS_GETENTROPY
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
+
 
 /**
  * Restore interrupt state.

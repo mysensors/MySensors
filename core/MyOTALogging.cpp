@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -22,7 +22,7 @@
 // global variables
 static bool inOTALog = false;
 
-void OTALog(uint8_t logNode, bool enableAck, const char *fmt, ... )
+void OTALog(uint8_t logNode, const bool requestEcho, const char *fmt, ... )
 {
 	// Avoid recursion
 	if (inOTALog==true) {
@@ -30,7 +30,7 @@ void OTALog(uint8_t logNode, bool enableAck, const char *fmt, ... )
 	}
 	inOTALog = true;
 
-	MyMessage msg(NODE_SENSOR_ID, I_LOG_MESSAGE);
+	MyMessage msg(NODE_SENSOR_ID, V_CUSTOM);
 	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
 	va_list args;
 
@@ -59,16 +59,17 @@ void OTALog(uint8_t logNode, bool enableAck, const char *fmt, ... )
 	}
 
 	// Configure message
-	msg.sender = getNodeId();
+	msg.setSender(getNodeId());
 	msg.setDestination(logNode);
-	mSetCommand(msg, C_INTERNAL);
-	mSetRequestAck(msg, enableAck);
+	msg.setCommand(C_INTERNAL);
+	msg.setType(I_LOG_MESSAGE);
+	msg.setRequestEcho(requestEcho);
 
 	// Send package
-	for (int pos = 0; pos<n; pos+=MAX_PAYLOAD) {
+	for (int pos = 0; pos < n; pos += MAX_PAYLOAD_SIZE) {
 		uint8_t length = strlen(&fmtBuffer[pos]);
-		if (length>MAX_PAYLOAD) {
-			length = MAX_PAYLOAD;
+		if (length > MAX_PAYLOAD_SIZE) {
+			length = MAX_PAYLOAD_SIZE;
 		}
 		(void)_sendRoute(msg.set((char*)&fmtBuffer[pos]));
 	}
@@ -109,8 +110,8 @@ inline void OTALogPrint(const MyMessage &message)
 	}
 
 	// FLush buffer, when node id changes
-	if ((OTALogBufferNode!=BROADCAST_ADDRESS) && ((OTALogBufferNode != message.sender) ||
-	        (OTALogBufferSensor != message.sensor))) {
+	if ((OTALogBufferNode!=BROADCAST_ADDRESS) && ((OTALogBufferNode != message.getSender()) ||
+	        (OTALogBufferSensor != message.getSensor()))) {
 		OTALogPrintPrefix();
 		MY_SERIALDEVICE.print(OTALogfmtBuffer);
 		MY_SERIALDEVICE.println("...");
@@ -124,8 +125,8 @@ inline void OTALogPrint(const MyMessage &message)
 	OTALogfmtBufferPos += strlen(str);
 
 	// Store node ID and sensor ID
-	OTALogBufferNode = message.sender;
-	OTALogBufferSensor = message.sensor;
+	OTALogBufferNode = message.getSender();
+	OTALogBufferSensor = message.getSensor();
 
 	// Print out buffered lines ending with \n
 	char *EOLpos;

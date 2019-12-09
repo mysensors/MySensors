@@ -25,6 +25,7 @@
  * @details  Two Wire Interface library.
  * @{
  */
+#if defined(__AVR__) || defined(DOXYGEN)  // AVR only
 #include "PinIO.h"
 #include <util/atomic.h>
 #include <Arduino.h>
@@ -54,20 +55,21 @@ bool PinIO::begin(uint8_t pin)
 	return true;
 }
 //------------------------------------------------------------------------------
-/** Configure the pin
+/** Configure the pin.
  *
- * @param[in] mode Configure as output mode if true else input mode.
- * @param[in] data For output mode set pin high if true else low.
- *                 For input mode enable 20K pullup if true else Hi-Z.
+ * @param[in] mode: INPUT or OUTPUT.
+ * @param[in] level If mode is OUTPUT, set level high/low.
+ *                  If mode is INPUT, enable or disable the pin's 20K pullup.
  *
  * This function may be used with interrupts enabled or disabled.
  * The previous interrupt state will be restored.
  */
-void PinIO::config(bool mode, bool data)
+void PinIO::config(uint8_t mode, bool level)
 {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 		modeI(mode);
-		writeI(data);
+		writeI(level);
 	}
 }
+#endif  // __AVR__
 /** @} */

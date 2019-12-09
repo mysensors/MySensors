@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -69,12 +69,35 @@ volatile uint32_t lastBlink = 0;
 volatile double flow = 0;
 bool pcReceived = false;
 uint32_t oldPulseCount = 0;
-uint32_t newBlink = 0;
 double oldflow = 0;
-double volume =0;
 double oldvolume =0;
 uint32_t lastSend =0;
 uint32_t lastPulse =0;
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
+#else
+#define IRQ_HANDLER_ATTR
+#endif
+
+void IRQ_HANDLER_ATTR onPulse()
+{
+	if (!SLEEP_MODE) {
+		uint32_t newBlink = micros();
+		uint32_t interval = newBlink-lastBlink;
+
+		if (interval!=0) {
+			lastPulse = millis();
+			if (interval<500000L) {
+				// Sometimes we get interrupt on RISING,  500000 = 0.5 second debounce ( max 120 l/min)
+				return;
+			}
+			flow = (60000000.0 /interval) / ppl;
+		}
+		lastBlink = newBlink;
+	}
+	pulseCount++;
+}
 
 void setup()
 {
@@ -153,13 +176,13 @@ void loop()
 		}
 	}
 	if (SLEEP_MODE) {
-		sleep(SEND_FREQUENCY);
+		sleep(SEND_FREQUENCY, false);
 	}
 }
 
 void receive(const MyMessage &message)
 {
-	if (message.type==V_VAR1) {
+	if (message.getType()==V_VAR1) {
 		uint32_t gwPulseCount=message.getULong();
 		pulseCount += gwPulseCount;
 		flow=oldflow=0;
@@ -169,21 +192,3 @@ void receive(const MyMessage &message)
 	}
 }
 
-void onPulse()
-{
-	if (!SLEEP_MODE) {
-		uint32_t newBlink = micros();
-		uint32_t interval = newBlink-lastBlink;
-
-		if (interval!=0) {
-			lastPulse = millis();
-			if (interval<500000L) {
-				// Sometimes we get interrupt on RISING,  500000 = 0.5 second debounce ( max 120 l/min)
-				return;
-			}
-			flow = (60000000.0 /interval) / ppl;
-		}
-		lastBlink = newBlink;
-	}
-	pulseCount++;
-}

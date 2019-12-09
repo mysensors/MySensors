@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -15,6 +15,29 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
+ *
+ * TransportHAL debug log messages:
+ *
+ * |E| SYS | SUB   | Message										| Comment
+ * |-|-----|-------|----------------------------|---------------------------------------------------------------------
+ * | | THA | INIT  |														| Initialize transportHAL
+ * | | THA | INIT  | PSK=%%s										| Load PSK for transport encryption (%AES)
+ * | | THA | SAD   | ADDR=%%d										| Set transport address (ADDR)
+ * | | THA | GAD   | ADDR=%%d										| Get trnasport address (ADDR)
+ * | | THA | DATA  | AVAIL											| Message available
+ * | | THA | SAN   | RES=%%d										| Transport sanity check, result (RES)
+ * | | THA | RCV   | MSG=%%s										| Receive message (MSG)
+ * | | THA | RCV   | DECRYPT										| Decrypt received message
+ * | | THA | RCV   | PLAIN=%%s									| Decrypted message (PLAIN)
+ * |!| THA | RCV   | PVER=%%d										| Message protocol version (PVER) mismatch
+ * |!| THA | RCV   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
+ * | | THA | RCV   | MSG LEN=%%d								| Length of received message (LEN)
+ * | | THA | SND   | MSG=%%s										| Send message (MSG)
+ * | | THA | SND   | ENCRYPT										| Encrypt message to send (%AES)
+ * | | THA | SND   | CIP=%%s										| Ciphertext of encypted message (CIP)
+ * | | THA | SND   | MSG LEN=%%d,RES=%%d				| Sending message with length (LEN), result (RES)
+ *
+ *
  */
 
 #ifndef MyTransportHAL_h
@@ -61,15 +84,15 @@ typedef enum {
 * @brief Initialize transport HW
 * @return true if initialization successful
 */
-bool transportInit(void);
+bool transportHALInit(void);
 /**
 * @brief Set node address
 */
-void transportSetAddress(const uint8_t address);
+void transportHALSetAddress(const uint8_t address);
 /**
 * @brief Retrieve node address
 */
-uint8_t transportGetAddress(void) __attribute__((unused));
+uint8_t transportHALGetAddress(void);
 /**
 * @brief Send message
 * @param to recipient
@@ -78,74 +101,76 @@ uint8_t transportGetAddress(void) __attribute__((unused));
 * @param noACK do not wait for ACK
 * @return true if message sent successfully
 */
-bool transportSend(const uint8_t to, const void *data, const uint8_t len,
-                   const bool noACK = false);
+bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, const uint8_t len,
+                      const bool noACK);
 /**
 * @brief Verify if RX FIFO has pending messages
 * @return true if message available in RX FIFO
 */
-bool transportAvailable(void);
+bool transportHALDataAvailable(void);
 /**
 * @brief Sanity check for transport: is transport HW still responsive?
 * @return true if transport HW is ok
 */
-bool transportSanityCheck(void);
+bool transportHALSanityCheck(void);
 /**
 * @brief Receive message from FIFO
-* @return length of received message (header + payload)
+* @param inMsg
+* @param msgLength length of received message (header + payload)
+* @return True if valid message received
 */
-uint8_t transportReceive(void *data);
+bool transportHALReceive(MyMessage *inMsg, uint8_t *msgLength);
 /**
 * @brief Power down transport HW (if corresponding MY_XYZ_POWER_PIN defined)
 */
-void transportPowerDown(void);
+void transportHALPowerDown(void);
 /**
 * @brief Power up transport HW (if corresponding MY_XYZ_POWER_PIN defined)
 */
-void transportPowerUp(void);
+void transportHALPowerUp(void);
 /**
 * @brief Set transport HW to sleep (no power down)
 */
-void transportSleep(void);
+void transportHALSleep(void);
 /**
 * @brief Set transport HW to standby
 */
-void transportStandBy(void);
+void transportHALStandBy(void);
 /**
 * @brief transportGetSendingRSSI
 * @return RSSI of outgoing message (via ACK packet)
 */
-int16_t transportGetSendingRSSI(void);
+int16_t transportHALGetSendingRSSI(void);
 /**
 * @brief transportGetReceivingRSSI
 * @return RSSI of incoming message
 */
-int16_t transportGetReceivingRSSI(void);
+int16_t transportHALGetReceivingRSSI(void);
 /**
 * @brief transportGetSendingSNR
 * @return SNR of outgoing message (via ACK packet)
 */
-int16_t transportGetSendingSNR(void);
+int16_t transportHALGetSendingSNR(void);
 /**
 * @brief transportGetReceivingSNR
 * @return SNR of incoming message
 */
-int16_t transportGetReceivingSNR(void);
+int16_t transportHALGetReceivingSNR(void);
 /**
 * @brief transportGetTxPowerPercent
 * @return TX power level in percent
 */
-int16_t transportGetTxPowerPercent(void);
+int16_t transportHALGetTxPowerPercent(void);
 /**
 * @brief transportSetTxPowerPercent
 * @param powerPercent power level in percent
 * @return True if power level set
 */
-bool transportSetTxPowerPercent(const uint8_t powerPercent) __attribute__((unused));
+bool transportHALSetTxPowerPercent(const uint8_t powerPercent);
 /**
 * @brief transportGetTxPowerLevel
 * @return TX power in dBm
 */
-int16_t transportGetTxPowerLevel(void);
+int16_t transportHALGetTxPowerLevel(void);
 
 #endif // MyTransportHAL_h

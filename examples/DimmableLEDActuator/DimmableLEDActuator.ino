@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -85,13 +85,13 @@ void loop()
 
 void receive(const MyMessage &message)
 {
-	if (message.type == V_LIGHT || message.type == V_DIMMER) {
+	if (message.getType() == V_LIGHT || message.getType() == V_DIMMER) {
 
 		//  Retrieve the power or dim level from the incoming request message
 		int requestedLevel = atoi( message.data );
 
 		// Adjust incoming level if this is a V_LIGHT variable update [0 == off, 1 == on]
-		requestedLevel *= ( message.type == V_LIGHT ? 100 : 1 );
+		requestedLevel *= ( message.getType() == V_LIGHT ? 100 : 1 );
 
 		// Clip incoming level to valid range of 0 to 100
 		requestedLevel = requestedLevel > 100 ? 100 : requestedLevel;

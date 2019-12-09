@@ -54,10 +54,12 @@ bool NRF5_setTxPowerPercent(const uint8_t powerPercent)
 #endif
 		return true;
 	}
+	/* duplicate condition
 	if (dbm > (int8_t)RADIO_TXPOWER_TXPOWER_Neg4dBm) {
 		NRF_RADIO->TXPOWER = RADIO_TXPOWER_TXPOWER_0dBm;
 		return true;
 	}
+	*/
 	if (dbm > (int8_t)RADIO_TXPOWER_TXPOWER_Neg4dBm) {
 		NRF_RADIO->TXPOWER = RADIO_TXPOWER_TXPOWER_0dBm;
 		return true;

@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -47,46 +47,55 @@
 #undef MY_ESP8266_HOSTNAME // cleanup
 #endif
 
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
+#ifndef MY_MQTT_USER
+#define MY_MQTT_USER NULL
+#endif
+
+#ifndef MY_MQTT_PASSWORD
+#define MY_MQTT_PASSWORD NULL
+#endif
+
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if !defined(MY_WIFI_SSID)
+#error ESP8266/ESP32 MQTT gateway: MY_WIFI_SSID not defined!
+#endif
 #endif
 
 #if defined MY_CONTROLLER_IP_ADDRESS
-IPAddress _brokerIp(MY_CONTROLLER_IP_ADDRESS);
+#define _brokerIp IPAddress(MY_CONTROLLER_IP_ADDRESS)
 #endif
 
 #if defined(MY_IP_ADDRESS)
-IPAddress _MQTT_clientIp(MY_IP_ADDRESS);
+#define _MQTT_clientIp IPAddress(MY_IP_ADDRESS)
 #if defined(MY_IP_GATEWAY_ADDRESS)
-IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+#define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
-IPAddress _gatewayIp(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1);
+#define _gatewayIp IPAddress(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1)
 #endif /* End of MY_IP_GATEWAY_ADDRESS */
 
 #if defined(MY_IP_SUBNET_ADDRESS)
-IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+#define _subnetIp IPAddress(MY_IP_SUBNET_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-IPAddress _subnetIp(255, 255, 255, 0);
+#define _subnetIp IPAddress(255, 255, 255, 0)
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 
-#if defined(MY_GATEWAY_ESP8266)  || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 #define EthernetClient WiFiClient
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
 #else
 uint8_t _MQTT_clientMAC[] = { MY_MAC_ADDRESS };
-#endif /* End of MY_GATEWAY_ESP8266 */
+#endif /* End of MY_GATEWAY_ESPxy */
 
 #if defined(MY_GATEWAY_TINYGSM)
 #if defined(MY_GSM_RX) && defined(MY_GSM_TX)
 SoftwareSerial SerialAT(MY_GSM_RX, MY_GSM_TX);
 #endif
 static TinyGsm modem(SerialAT);
-static TinyGsmClient _MQTT_gsmClient(modem);
-static PubSubClient _MQTT_client(_MQTT_gsmClient);
+static TinyGsmClient _MQTT_ethClient(modem);
 #if defined(MY_GSM_BAUDRATE)
 uint32_t rate = MY_GSM_BAUDRATE;
 #else /* Else part of MY_GSM_BAUDRATE */
@@ -94,10 +103,9 @@ uint32_t rate = 0;
 #endif /* End of MY_GSM_BAUDRATE */
 #else /* Else part of MY_GATEWAY_TINYGSM */
 static EthernetClient _MQTT_ethClient;
-static PubSubClient _MQTT_client(_MQTT_ethClient);
 #endif /* End of MY_GATEWAY_TINYGSM */
 
-
+static PubSubClient _MQTT_client(_MQTT_ethClient);
 static bool _MQTT_connecting = true;
 static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
@@ -108,13 +116,13 @@ bool gatewayTransportSend(MyMessage &message)
 		return false;
 	}
 	setIndication(INDICATION_GW_TX);
-	char *topic = protocolFormatMQTTTopic(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
+	char *topic = protocolMyMessage2MQTT(MY_MQTT_PUBLISH_TOPIC_PREFIX, message);
 	GATEWAY_DEBUG(PSTR("GWT:TPS:TOPIC=%s,MSG SENT\n"), topic);
 #if defined(MY_MQTT_CLIENT_PUBLISH_RETAIN)
-	bool retain = mGetCommand(message) == C_SET ||
-	              (mGetCommand(message) == C_INTERNAL && message.type == I_BATTERY_LEVEL);
+	const bool retain = message.getCommand() == C_SET ||
+	                    (message.getCommand() == C_INTERNAL && message.getType() == I_BATTERY_LEVEL);
 #else
-	bool retain = false;
+	const bool retain = false;
 #endif /* End of MY_MQTT_CLIENT_PUBLISH_RETAIN */
 	return _MQTT_client.publish(topic, message.getString(_convBuffer), retain);
 }
@@ -122,41 +130,45 @@ bool gatewayTransportSend(MyMessage &message)
 void incomingMQTT(char *topic, uint8_t *payload, unsigned int length)
 {
 	GATEWAY_DEBUG(PSTR("GWT:IMQ:TOPIC=%s, MSG RECEIVED\n"), topic);
-	_MQTT_available = protocolMQTTParse(_MQTT_msg, topic, payload, length);
+	_MQTT_available = protocolMQTT2MyMessage(_MQTT_msg, topic, payload, length);
 	setIndication(INDICATION_GW_RX);
 }
 
 bool reconnectMQTT(void)
 {
-	GATEWAY_DEBUG(PSTR("GWT:RMQ:MQTT RECONNECT\n"));
+	GATEWAY_DEBUG(PSTR("GWT:RMQ:CONNECTING...\n"));
 	// Attempt to connect
-	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID
-#if defined(MY_MQTT_USER) && defined(MY_MQTT_PASSWORD)
-	                         , MY_MQTT_USER, MY_MQTT_PASSWORD
-#endif
-	                        )) {
-		GATEWAY_DEBUG(PSTR("GWT:RMQ:MQTT CONNECTED\n"));
-
+	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID, MY_MQTT_USER, MY_MQTT_PASSWORD)) {
+		GATEWAY_DEBUG(PSTR("GWT:RMQ:OK\n"));
 		// Send presentation of locally attached sensors (and node if applicable)
 		presentNode();
+		// Once connected, publish subscribe
+		if (__builtin_constant_p(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)) {
+			// to save some memory
+			_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
+		} else {
+			char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+")];
+			(void)strncpy(inTopic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX, strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1);
+			(void)strcat(inTopic, "/+/+/+/+/+");
+			_MQTT_client.subscribe(inTopic);
+		}
 
-		// Once connected, publish an announcement...
-		//_MQTT_client.publish("outTopic","hello world");
-		// ... and resubscribe
-		_MQTT_client.subscribe(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "/+/+/+/+/+");
 		return true;
 	}
+	delay(1000);
+	GATEWAY_DEBUG(PSTR("!GWT:RMQ:FAIL\n"));
 	return false;
 }
 
 bool gatewayTransportConnect(void)
 {
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-	while (WiFi.status() != WL_CONNECTED) {
-		wait(500);
+	if (WiFi.status() != WL_CONNECTED) {
 		GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING...\n"));
+		delay(1000);
+		return false;
 	}
-	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"),WiFi.localIP().toString().c_str());
+	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"), WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
@@ -234,31 +246,17 @@ bool gatewayTransportInit(void)
 
 	_MQTT_client.setCallback(incomingMQTT);
 
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+	// Turn off access point
+	WiFi.mode(WIFI_STA);
 #if defined(MY_GATEWAY_ESP8266)
-	// Turn off access point
-	WiFi.mode(WIFI_STA);
-#if defined(MY_HOSTNAME)
 	WiFi.hostname(MY_HOSTNAME);
-#endif /* End of MY_ESP8266_HOSTNAME */
-#if defined(MY_IP_ADDRESS)
-	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
-#endif /* End of MY_IP_ADDRESS */
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
-#endif
-	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #elif defined(MY_GATEWAY_ESP32)
-	// Turn off access point
-	WiFi.mode(WIFI_STA);
-#if defined(MY_HOSTNAME)
 	WiFi.setHostname(MY_HOSTNAME);
-#endif /* End of MY_HOSTNAME */
+#endif
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
-#endif
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #endif
 
@@ -273,8 +271,14 @@ bool gatewayTransportAvailable(void)
 	if (_MQTT_connecting) {
 		return false;
 	}
-	//keep lease on dhcp address
-	//Ethernet.maintain();
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+	if (WiFi.status() != WL_CONNECTED) {
+#if defined(MY_GATEWAY_ESP32)
+		(void)gatewayTransportInit();
+#endif
+		return false;
+	}
+#endif
 	if (!_MQTT_client.connected()) {
 		//reinitialise client
 		if (gatewayTransportConnect()) {

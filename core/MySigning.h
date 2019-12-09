@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -765,7 +765,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * | | SGN | PRE | SGN NREQ,FROM='node'			| Node 'node' does not require signing
  * |!| SGN | PRE | SGN NREQ,FROM='node' REJ	| Node 'node' does not require signing but used to (requirement remain unchanged)
  * | | SGN | PRE | WHI REQ									| Whitelisting required
- * | | SGN | PRE | WHI REQ;TO='node'				| Tell 'node' that we require whitelisting
+ * | | SGN | PRE | WHI REQ,TO='node'				| Tell 'node' that we require whitelisting
  * | | SGN | PRE | WHI REQ,FROM='node'			| Node 'node' require whitelisting
  * | | SGN | PRE | WHI NREQ									| Whitelisting not required
  * | | SGN | PRE | WHI NREQ,TO='node'				| Tell 'node' that we do not require whitelisting
@@ -791,7 +791,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * | | SGN | VER | LEFT='number'						| 'number' of failed verifications left in a row before node is locked
  * |!| SGN | VER | STATE  									| Security system in a invalid state (personalization data tampered)
  * | | SGN | SKP | MSG CMD='cmd',TYPE='type'| Message with command 'cmd' and type 'type' does not need to be signed
- * | | SGN | SKP | ACK CMD='cmd',TYPE='type'| ACK messages does not need to be signed
+ * | | SGN | SKP | ECHO CMD='cmd',TYPE='type'| ECHO messages does not need to be signed
  * | | SGN | NCE | LEFT='number'						| 'number' of nonce requests between successful verifications left before node is locked
  * | | SGN | NCE | XMT,TO='node'						| Nonce data transmitted to 'node'
  * |!| SGN | NCE | XMT,TO='node' FAIL				| Nonce data not properly transmitted to 'node'
@@ -892,5 +892,16 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * Also, if whitelisting is used, make sure the proper serial is paired with the proper node ID at the destination.
  * Whitelisting preferences are communicated with the signing presentation (done automatically from nodes to gateway but
  * has to be explicitly done by sketch for node to node communication). @see signerPresentation
+ *
+ * @subsection MySigningTroubleshootingSymptomStTampered Signing backend reports tampered even after personalization
+ *
+ * The signing backend validates that the secure elements in EEPROM remain unmodified after personalization using a checksum. If the check fails,
+ * the backend reports
+ * @code
+ * !SGN:PER:Tampered
+ * @endcode
+ * This usually indicate that the sketch has modified the secure elements in EEPROM, but if you experience this even after a node is freshly
+ * personalized on a atmega device, it could be that the EESAVE fuse bit is not set which mean that the EEPROM is erased when a new firmware is flashed.
+ * You will need to enable the EESAVE bit in order to have the security personalization persist in the node.
  */
 /** @}*/

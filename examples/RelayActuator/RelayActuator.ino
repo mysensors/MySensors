@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -82,14 +82,14 @@ void loop()
 void receive(const MyMessage &message)
 {
 	// We only expect one type of message from controller. But we better check anyway.
-	if (message.type==V_STATUS) {
+	if (message.getType()==V_STATUS) {
 		// Change relay state
-		digitalWrite(message.sensor-1+RELAY_PIN, message.getBool()?RELAY_ON:RELAY_OFF);
+		digitalWrite(message.getSensor()-1+RELAY_PIN, message.getBool()?RELAY_ON:RELAY_OFF);
 		// Store state in eeprom
-		saveState(message.sensor, message.getBool());
+		saveState(message.getSensor(), message.getBool());
 		// Write some debug info
 		Serial.print("Incoming change for sensor:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(message.getBool());
 	}

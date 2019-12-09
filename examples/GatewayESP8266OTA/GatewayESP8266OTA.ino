@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -19,7 +19,7 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 - Henrik EKblad
+ * Version 1.0 - Henrik Ekblad
  * Contribution by tekka,
  * Contribution by a-lurker and Anticimex,
  * Contribution by Norbert Truchsess <norbert.truchsess@t-online.de>
@@ -69,8 +69,8 @@
 #define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Set the hostname for the WiFi Client. This is the hostname
-// it will pass to the DHCP server if not static.
-// #define MY_HOSTNAME "sensor-ota-gateway"
+// passed to the DHCP server if not static.
+#define MY_HOSTNAME "ESP8266_GW"
 
 // Enable UDP communication
 //#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
@@ -96,7 +96,7 @@
 #define MY_INCLUSION_MODE_FEATURE
 
 // Enable Inclusion mode button on gateway
-// #define MY_INCLUSION_BUTTON_FEATURE
+//#define MY_INCLUSION_BUTTON_FEATURE
 // Set inclusion mode duration (in seconds)
 #define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
@@ -110,12 +110,6 @@
 #define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
 #define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
-
-#if defined(MY_USE_UDP)
-#include <WiFiUDP.h>
-#else
-#include <ESP8266WiFi.h>
-#endif
 
 #include <ArduinoOTA.h>
 #include <MySensors.h>

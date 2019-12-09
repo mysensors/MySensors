@@ -47,27 +47,29 @@ extern MyMessage _msgTmp;
 #undef MY_ESP8266_HOSTNAME // cleanup
 #endif
 
-#ifndef MY_WIFI_BSSID
-#define MY_WIFI_BSSID NULL
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if !defined(MY_WIFI_SSID)
+#error ESP8266/ESP32 gateway: MY_WIFI_SSID not defined!
+#endif
 #endif
 
 #if defined(MY_CONTROLLER_IP_ADDRESS)
-IPAddress _ethernetControllerIP(MY_CONTROLLER_IP_ADDRESS);
+#define _ethernetControllerIP IPAddress(MY_CONTROLLER_IP_ADDRESS)
 #endif
 
 #if defined(MY_IP_ADDRESS)
-IPAddress _ethernetGatewayIP(MY_IP_ADDRESS);
+#define _ethernetGatewayIP IPAddress(MY_IP_ADDRESS)
 #if defined(MY_IP_GATEWAY_ADDRESS)
-IPAddress _gatewayIp(MY_IP_GATEWAY_ADDRESS);
+#define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
-IPAddress _gatewayIp(_ethernetGatewayIP[0], _ethernetGatewayIP[1], _ethernetGatewayIP[2], 1);
+#define _gatewayIp IPAddress(_ethernetGatewayIP[0], _ethernetGatewayIP[1], _ethernetGatewayIP[2], 1)
 #endif /* End of MY_IP_GATEWAY_ADDRESS */
 #if defined(MY_IP_SUBNET_ADDRESS)
-IPAddress _subnetIp(MY_IP_SUBNET_ADDRESS);
+#define _subnetIp IPAddress(MY_IP_SUBNET_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-IPAddress _subnetIp(255, 255, 255, 0);
+#define _subnetIp IPAddress(255, 255, 255, 0)
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 
@@ -119,15 +121,11 @@ static EthernetClient client = EthernetClient();
 static inputBuffer inputString;
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
-#ifndef MY_IP_ADDRESS
-void gatewayTransportRenewIP();
-#endif
-
 // On W5100 boards with SPI_EN exposed we can use the real SPI bus together with radio
 // (if we enable it during usage)
-#if defined(MY_W5100_SPI_EN)
-void _w5100_spi_en(bool enable)
+void _w5100_spi_en(const bool enable)
 {
+#if defined(MY_W5100_SPI_EN)
 	if (enable) {
 		// Pull up pin
 		hwPinMode(MY_W5100_SPI_EN, INPUT);
@@ -137,9 +135,35 @@ void _w5100_spi_en(bool enable)
 		hwPinMode(MY_W5100_SPI_EN, OUTPUT);
 		hwDigitalWrite(MY_W5100_SPI_EN, LOW);
 	}
-}
 #else
-#define _w5100_spi_en(x)
+	(void)enable;
+#endif
+}
+
+#if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
+void gatewayTransportRenewIP(void)
+{
+	/* renew/rebind IP address
+	 0 - nothing happened
+	 1 - renew failed
+	 2 - renew success
+	 3 - rebind failed
+	 4 - rebind success
+	 */
+	static uint32_t _nextIPRenewal = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
+	const uint32_t now = hwMillis();
+
+	// http://playground.arduino.cc/Code/TimingRollover
+	if ((int32_t)(now - _nextIPRenewal) < 0) {
+		return;
+	}
+	if (Ethernet.maintain() & ~(0x06)) {
+		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
+		return;
+	}
+	_w5100_spi_en(false);
+	_nextIPRenewal = now + MY_IP_RENEWAL_INTERVAL_MS;
+}
 #endif
 
 bool gatewayTransportInit(void)
@@ -147,26 +171,22 @@ bool gatewayTransportInit(void)
 	_w5100_spi_en(true);
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-#if defined(MY_WIFI_SSID)
 	// Turn off access point
 	WiFi.mode(WIFI_STA);
-#if defined(MY_HOSTNAME)
 #if defined(MY_GATEWAY_ESP8266)
 	WiFi.hostname(MY_HOSTNAME);
 #elif defined(MY_GATEWAY_ESP32)
 	WiFi.setHostname(MY_HOSTNAME);
-#endif
 #endif
 #ifdef MY_IP_ADDRESS
 	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 #endif
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 	while (WiFi.status() != WL_CONNECTED) {
-		wait(500);
+		delay(1000);
 		GATEWAY_DEBUG(PSTR("GWT:TIN:CONNECTING...\n"));
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
-#endif
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
 #else
@@ -204,7 +224,7 @@ bool gatewayTransportInit(void)
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
 		GATEWAY_DEBUG(PSTR("GWT:TIN:ETH OK\n"));
 		_w5100_spi_en(false);
-		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
+		gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(F(MSG_GW_STARTUP_COMPLETE)));
 		_w5100_spi_en(true);
 		presentNode();
 	} else {
@@ -228,7 +248,7 @@ bool gatewayTransportInit(void)
 bool gatewayTransportSend(MyMessage &message)
 {
 	int nbytes = 0;
-	char *_ethernetMsg = protocolFormat(message);
+	char *_ethernetMessage = protocolMyMessage2Serial(message);
 
 	setIndication(INDICATION_GW_TX);
 
@@ -240,7 +260,7 @@ bool gatewayTransportSend(MyMessage &message)
 #else
 	_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-	_ethernetServer.write(_ethernetMsg, strlen(_ethernetMsg));
+	_ethernetServer.write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
 	// returns 1 if the packet was sent successfully
 	nbytes = _ethernetServer.endPacket();
 #else /* Else part of MY_USE_UDP */
@@ -263,19 +283,19 @@ bool gatewayTransportSend(MyMessage &message)
 			return false;
 		}
 	}
-	nbytes = client.write((const uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
+	nbytes = client.write((const uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 	// Send message to connected clients
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
-			nbytes += clients[i].write((uint8_t*)_ethernetMsg, strlen(_ethernetMsg));
+			nbytes += clients[i].write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
 		}
 	}
-#else /* Else part of MY_GATEWAY_ESP8266 */
-	nbytes = _ethernetServer.write(_ethernetMsg);
-#endif /* End of MY_GATEWAY_ESP8266 */
+#else /* Else part of MY_GATEWAY_ESPxx*/
+	nbytes = _ethernetServer.write(_ethernetMessage);
+#endif /* End of MY_GATEWAY_ESPxx */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 	_w5100_spi_en(false);
 	return (nbytes > 0);
@@ -296,10 +316,9 @@ bool _readFromClient(uint8_t i)
 				inputString[i].string[inputString[i].idx] = 0;
 				GATEWAY_DEBUG(PSTR("GWT:RFC:C=%" PRIu8 ",MSG=%s\n"), i, inputString[i].string);
 				inputString[i].idx = 0;
-				if (protocolParse(_ethernetMsg, inputString[i].string)) {
+				if (protocolSerial2MyMessage(_ethernetMsg, inputString[i].string)) {
 					return true;
 				}
-
 			} else {
 				// add it to the inputString:
 				inputString[i].string[inputString[i].idx++] = inChar;
@@ -326,7 +345,7 @@ bool _readFromClient(void)
 				inputString.string[inputString.idx] = 0;
 				GATEWAY_DEBUG(PSTR("GWT:RFC:MSG=%s\n"), inputString.string);
 				inputString.idx = 0;
-				if (protocolParse(_ethernetMsg, inputString.string)) {
+				if (protocolSerial2MyMessage(_ethernetMsg, inputString.string)) {
 					return true;
 				}
 
@@ -360,12 +379,11 @@ bool gatewayTransportAvailable(void)
 	int packet_size = _ethernetServer.parsePacket();
 
 	if (packet_size) {
-		//GATEWAY_DEBUG(PSTR("UDP packet available. Size:%" PRIu8 "\n"), packet_size);
 		_ethernetServer.read(inputString.string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 		inputString.string[packet_size] = 0;
 		GATEWAY_DEBUG(PSTR("GWT:TSA:UDP MSG=%s\n"), inputString.string);
 		_w5100_spi_en(false);
-		const bool ok = protocolParse(_ethernetMsg, inputString.string);
+		const bool ok = protocolSerial2MyMessage(_ethernetMsg, inputString.string);
 		if (ok) {
 			setIndication(INDICATION_GW_RX);
 		}
@@ -381,7 +399,7 @@ bool gatewayTransportAvailable(void)
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
 			GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
 			_w5100_spi_en(false);
-			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
+			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(F(MSG_GW_STARTUP_COMPLETE)));
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
@@ -398,7 +416,7 @@ bool gatewayTransportAvailable(void)
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX)
-	// ESP8266: Go over list of clients and stop any that are no longer connected.
+	// ESP8266/ESP32: Go over list of clients and stop any that are no longer connected.
 	// If the server has a new client connection it will be assigned to a free slot.
 	bool allSlotsOccupied = true;
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
@@ -474,29 +492,4 @@ MyMessage& gatewayTransportReceive(void)
 	return _ethernetMsg;
 }
 
-#if !defined(MY_IP_ADDRESS) && !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_ESP32) && !defined(MY_GATEWAY_LINUX)
-void gatewayTransportRenewIP(void)
-{
-	/* renew/rebind IP address
-	 0 - nothing happened
-	 1 - renew failed
-	 2 - renew success
-	 3 - rebind failed
-	 4 - rebind success
-	 */
-	static unsigned long next_time = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
-	unsigned long now = hwMillis();
 
-	// http://playground.arduino.cc/Code/TimingRollover
-	if ((long)(now - next_time) < 0) {
-		return;
-	}
-	if (Ethernet.maintain() & ~(0x06)) {
-		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
-		/* Error occurred -> IP was not renewed */
-		return;
-	}
-	_w5100_spi_en(false);
-	next_time = now + MY_IP_RENEWAL_INTERVAL_MS;
-}
-#endif

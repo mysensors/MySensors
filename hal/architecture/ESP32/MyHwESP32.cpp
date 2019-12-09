@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -141,34 +141,4 @@ int8_t hwCPUTemperature(void)
 uint16_t hwFreeMem(void)
 {
 	return static_cast<uint16_t>(ESP.getFreeHeap());
-}
-
-void hwDebugPrint(const char *fmt, ...)
-{
-#ifndef MY_DISABLED_SERIAL
-	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-#ifdef MY_GATEWAY_SERIAL
-	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
-	           C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-	MY_DEBUGDEVICE.print(fmtBuffer);
-#else
-	// prepend timestamp
-	MY_DEBUGDEVICE.print(hwMillis());
-	MY_DEBUGDEVICE.print(F(" "));
-#endif
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#ifdef MY_GATEWAY_SERIAL
-	// Truncate message if this is gateway node
-	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
-	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#endif
-	va_end(args);
-	MY_DEBUGDEVICE.print(fmtBuffer);
-	MY_DEBUGDEVICE.flush();
-#else
-	(void)fmt;
-#endif
 }

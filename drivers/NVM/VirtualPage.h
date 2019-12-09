@@ -134,6 +134,6 @@ private:
 	uint32_t get_page_erase_cycles(uint32_t *address);
 };
 
-extern VirtualPageClass VirtualPage;
+extern VirtualPageClass VirtualPage; //!< extern VirtualPageClass
 
 /** @} */

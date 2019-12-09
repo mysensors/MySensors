@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -33,8 +33,8 @@
 // Allow sending logs without MY_DEBUG_OTA enabled
 #define MY_OTA_LOG_SENDER_FEATURE
 
-// Disable ACK for debug messages
-//#define MY_DEBUG_OTA_DISABLE_ACK
+// Disable echoing of debug messages
+//#define MY_DEBUG_OTA_DISABLE_ECHO
 
 // Enable and select radio type attached
 #define MY_RADIO_RF24
@@ -69,6 +69,6 @@ void loop()
 	// A debug message
 	DEBUG_OUTPUT(PSTR("DEBUG\nc=%" PRId16 "\nmillis=%" PRId32 "\n"), c, hwMillis());
 
-	// Send a log message with ACK to a node
+	// Send a log message to a node, requesting that the message is echoed back to this node
 	OTALog(0, true, PSTR("LOG\nc=%" PRId16 "\nmillis=%" PRId32 "\n"), c, hwMillis());
 }

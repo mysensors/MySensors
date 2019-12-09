@@ -4,7 +4,7 @@
 # Original work: https://github.com/TMRh20/RF24/blob/master/configure
 
 function help {
-cat <<EOF
+cat <<EOF	
 configure script for MySensors gateway.
 Options:
 
@@ -17,7 +17,7 @@ SPI driver options:
                                 Device path. [/dev/spidev0.0]
 
 Building options:
-    --soc=[BCM2835|BCM2836|BCM2837|AM33XX|A10|A13|A20|H3]
+    --soc=[BCM2711|BCM2835|BCM2836|BCM2837|AM33XX|A10|A13|A20|H3]
                                 SoC type to be used. [configure autodetected]
     --cpu-flags=<CPUFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
     --extra-cflags=<CFLAGS>     Extra C flags passed to C compilation. []
@@ -62,10 +62,10 @@ MySensors options:
                                 MQTT publish topic prefix.
     --my-mqtt-subscribe-topic-prefix=<PREFIX>
                                 MQTT subscribe topic prefix.
-    --my-transport=[none|rf24|rs485|rfm95|rfm69]
+    --my-transport=[none|rf24|rfm69|rfm95|rs485]
                                 Set the transport to be used to communicate with other nodes. [rf24]
     --my-rf24-channel=<0-125>   RF channel for the sensor net. [76]
-    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_LOW]
+    --my-rf24-pa-level=[RF24_PA_MAX|RF24_PA_HIGH|RF24_PA_LOW|RF24_PA_MIN]
                                 RF24 PA level. [RF24_PA_MAX]
     --my-rf24-ce-pin=<PIN>      Pin number to use for rf24 Chip-Enable.
     --my-rf24-cs-pin=<PIN>      Pin number to use for rf24 Chip-Select.
@@ -183,6 +183,10 @@ function detect_machine {
                         soc="BCM2837"
                         tp="rpi3"
                         ;;
+                    3)
+                        soc="BCM2711"
+                        tp="rpi4"
+                        ;;                        
                 esac
             fi
         elif [[ $hardware == "BCM2708"* ]]; then
@@ -261,6 +265,9 @@ function gcc_cpu_flags {
     BCM2837)
         flags="-march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
         ;;
+    BCM2711)
+        flags="-march=armv8-a+crc -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+        ;;
     AM33XX)
         flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
         ;;
@@ -318,7 +325,7 @@ for opt do
         CFLAGS="$optarg"
         ;;
     --extra-cxxflags=*)
-        CXXFLAGS="$optarg"
+        CXXFLAGS="$optarg $CXXFLAGS"
         ;;
     --extra-ldflags=*)
         LDFLAGS="$optarg"
@@ -542,6 +549,7 @@ BINDIR=${BINDIR:-bin}
 GATEWAY_DIR=${GATEWAY_DIR:-${PREFIX}/bin}
 CC=${CC:-gcc}
 CXX=${CXX:-g++}
+CXXFLAGS="$CXXFLAGS -std=c++11"
 
 if [ -z "${SOC}" ]; then
     printf "${SECTION} Detecting target machine.\n"
@@ -556,7 +564,7 @@ if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags $SOC)
 fi
 
-if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
+if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" || $SOC == "BCM2711" ]]; then
     CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
 else
     printf "${SECTION} Checking GPIO Sysfs.\n"
@@ -569,7 +577,7 @@ fi
 
 if [ -z "${SPI_DRIVER}" ]; then
     printf "${SECTION} Detecting SPI driver.\n"
-    if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" ]]; then
+    if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" || $SOC == "BCM2711" ]]; then
         SPI_DRIVER=BCM
     elif [[ $(eval 'ls /dev/spidev* 2>/dev/null') ]]; then
         SPI_DRIVER=SPIDEV
@@ -584,8 +592,8 @@ fi
 if [ -n "${SPI_DRIVER}" ]; then
     case ${SPI_DRIVER} in
         BCM)
-            if [[ $SOC != "BCM2835" && $SOC != "BCM2836" && $SOC != "BCM2837" ]]; then
-                die "BCM SPI driver is only supported for SOCs BCM2835, BCM2836 or BCM2837" 5
+            if [[ $SOC != "BCM2835" && $SOC != "BCM2836" && $SOC != "BCM2837" && $SOC != "BCM2711" ]]; then
+                die "BCM SPI driver is only supported for SOCs BCM2835, BCM2836, BCM2837 or BCM2711" 5
             fi
             CPPFLAGS="-DLINUX_SPI_BCM $CPPFLAGS"
             ;;
@@ -625,10 +633,10 @@ elif [[ ${transport_type} == "rf24" ]]; then
     CPPFLAGS="-DMY_RADIO_RF24 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm69" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM69 -DMY_RFM69_NEW_DRIVER $CPPFLAGS"
-elif [[ ${transport_type} == "rs485" ]]; then
-    CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 elif [[ ${transport_type} == "rfm95" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
+elif [[ ${transport_type} == "rs485" ]]; then
+    CPPFLAGS="-DMY_RS485 $CPPFLAGS"
 else
     die "Invalid transport type." 3
 fi
@@ -665,10 +673,11 @@ else
     printf "  ${OK} Encryption: Disabled.\n"
 fi
 
-printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
-
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
+
+printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
+printf "  ${OK} CXXFLAGS: $CXXFLAGS\n"
 
 printf "${SECTION} Detecting init system.\n"
 if [ "${NO_INIT}" ];  then

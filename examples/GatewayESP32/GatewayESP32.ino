@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -41,8 +41,11 @@
 #define MY_WIFI_SSID "MySSID"
 #define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
+// Enable UDP communication
+//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS below
+
 // Set the hostname for the WiFi Client. This is the hostname
-// it will pass to the DHCP server if not static.
+// passed to the DHCP server if not static.
 #define MY_HOSTNAME "ESP32_GW"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
@@ -57,6 +60,11 @@
 
 // How many clients should be able to connect to this gateway (default 1)
 #define MY_GATEWAY_MAX_CLIENTS 2
+
+// Controller ip address. Enables client mode (default is "server" mode).
+// Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere.
+//#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
+//#define MY_CONTROLLER_URL_ADDRESS "my.controller.org"
 
 #include <MySensors.h>
 

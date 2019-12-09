@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -17,34 +17,12 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-// This code is taken from https://github.com/Cathedrow/Cryptosuite (Peter Knight) and is lightly modified for MySensors use
-
-#ifndef MyCryptoESP32_h
-#define MyCryptoESP32_h
+#ifndef MyCryptoGeneric_h
+#define MyCryptoGeneric_h
 
 #include "hal/crypto/MyCryptoHAL.h"
-
-#define HASH_LENGTH 32	//!< HASH_LENGTH
-#define BLOCK_LENGTH 64	//!< BLOCK_LENGTH
-
-/**
-* @brief buffer for SHA256 calculator
-*/
-union _SHA256buffer_t {
-	uint8_t b[BLOCK_LENGTH];			//!< SHA256 b
-	uint32_t w[BLOCK_LENGTH / 4];	//!< SHA256 w
-};
-
-/**
-* @brief state variables for SHA256 calculator
-*/
-union _SHA256state_t {
-	uint8_t b[HASH_LENGTH];	//!< SHA256 b
-	uint32_t w[HASH_LENGTH / 4]; //!< SHA256 w
-};
-
-// SHA256 HMAC padding bytes
-#define HMAC_IPAD 0x36	//!< HMAC_IPAD
-#define HMAC_OPAD 0x5c	//!< HMAC_OPAD
+#include "hal/crypto/generic/drivers/AES/AES.cpp"
+#include "hal/crypto/generic/drivers/SHA256/sha256.cpp"
+#include "hal/crypto/generic/drivers/HMAC_SHA256/hmac_sha256.cpp"
 
 #endif

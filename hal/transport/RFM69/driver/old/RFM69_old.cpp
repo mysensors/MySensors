@@ -30,7 +30,6 @@
 // **********************************************************************************
 #include "RFM69_old.h"
 #include "RFM69registers_old.h"
-#include <SPI.h>
 
 volatile uint8_t RFM69::DATA[RFM69_MAX_DATA_LEN];
 volatile uint8_t RFM69::_mode;        // current transceiver state
@@ -94,7 +93,7 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 	hwPinMode(_slaveSelectPin, OUTPUT);
 	hwPinMode(_interruptPin, INPUT);
 
-	SPI.begin();
+	RFM69_SPI.begin();
 	unsigned long start = hwMillis();
 	const uint8_t timeout = 50;
 	do {
@@ -132,7 +131,7 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 		return false;
 	}
 
-	//SPI.usingInterrupt(_interruptNum);
+	//RFM69_SPI.usingInterrupt(_interruptNum);
 	attachInterrupt(_interruptNum, RFM69::isr0, RISING);
 
 	selfPointer = this;
@@ -393,14 +392,14 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 
 	// write to FIFO
 	select();
-	SPI.transfer(REG_FIFO | 0x80);
-	SPI.transfer(bufferSize + 3);
-	SPI.transfer(toAddress);
-	SPI.transfer(_address);
-	SPI.transfer(CTLbyte);
+	RFM69_SPI.transfer(REG_FIFO | 0x80);
+	RFM69_SPI.transfer(bufferSize + 3);
+	RFM69_SPI.transfer(toAddress);
+	RFM69_SPI.transfer(_address);
+	RFM69_SPI.transfer(CTLbyte);
 
 	for (uint8_t i = 0; i < bufferSize; i++) {
-		SPI.transfer(((uint8_t *)buffer)[i]);
+		RFM69_SPI.transfer(((uint8_t *)buffer)[i]);
 	}
 	unselect();
 
@@ -415,7 +414,7 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 }
 
 // internal function - interrupt gets called when a packet is received
-void RFM69::interruptHandler()
+void IRQ_HANDLER_ATTR RFM69::interruptHandler()
 {
 	//hwPinMode(4, OUTPUT);
 	//hwDigitalWrite(4, 1);
@@ -423,10 +422,10 @@ void RFM69::interruptHandler()
 		//RSSI = readRSSI();
 		setMode(RFM69_MODE_STANDBY);
 		select();
-		SPI.transfer(REG_FIFO & 0x7F);
-		PAYLOADLEN = SPI.transfer(0);
+		RFM69_SPI.transfer(REG_FIFO & 0x7F);
+		PAYLOADLEN = RFM69_SPI.transfer(0);
 		PAYLOADLEN = PAYLOADLEN > 66 ? 66 : PAYLOADLEN; // precaution
-		TARGETID = SPI.transfer(0);
+		TARGETID = RFM69_SPI.transfer(0);
 		if(!(_promiscuousMode || TARGETID == _address ||
 		        TARGETID ==
 		        RFM69_BROADCAST_ADDR) // match this node's address, or broadcast address or anything in promiscuous mode
@@ -440,8 +439,8 @@ void RFM69::interruptHandler()
 		}
 
 		DATALEN = PAYLOADLEN - 3;
-		SENDERID = SPI.transfer(0);
-		uint8_t CTLbyte = SPI.transfer(0);
+		SENDERID = RFM69_SPI.transfer(0);
+		uint8_t CTLbyte = RFM69_SPI.transfer(0);
 
 		ACK_RECEIVED = CTLbyte & RFM69_CTL_SENDACK; // extract ACK-received flag
 		ACK_REQUESTED = CTLbyte & RFM69_CTL_REQACK; // extract ACK-requested flag
@@ -449,7 +448,7 @@ void RFM69::interruptHandler()
 		interruptHook(CTLbyte);     // TWS: hook to derived class interrupt function
 
 		for (uint8_t i = 0; i < DATALEN; i++) {
-			DATA[i] = SPI.transfer(0);
+			DATA[i] = RFM69_SPI.transfer(0);
 		}
 		if (DATALEN < RFM69_MAX_DATA_LEN) {
 			DATA[DATALEN] = 0; // add null at end of string
@@ -462,7 +461,7 @@ void RFM69::interruptHandler()
 }
 
 // internal function
-void RFM69::isr0()
+void IRQ_HANDLER_ATTR RFM69::isr0()
 {
 	selfPointer->interruptHandler();
 }
@@ -511,9 +510,9 @@ void RFM69::encrypt(const char* key)
 	setMode(RFM69_MODE_STANDBY);
 	if (key != 0) {
 		select();
-		SPI.transfer(REG_AESKEY1 | 0x80);
+		RFM69_SPI.transfer(REG_AESKEY1 | 0x80);
 		for (uint8_t i = 0; i < 16; i++) {
-			SPI.transfer(key[i]);
+			RFM69_SPI.transfer(key[i]);
 		}
 		unselect();
 	}
@@ -537,8 +536,8 @@ int16_t RFM69::readRSSI(bool forceTrigger)
 uint8_t RFM69::readReg(uint8_t addr)
 {
 	select();
-	SPI.transfer(addr & 0x7F);
-	uint8_t regval = SPI.transfer(0);
+	RFM69_SPI.transfer(addr & 0x7F);
+	uint8_t regval = RFM69_SPI.transfer(0);
 	unselect();
 	return regval;
 }
@@ -546,8 +545,8 @@ uint8_t RFM69::readReg(uint8_t addr)
 void RFM69::writeReg(uint8_t addr, uint8_t value)
 {
 	select();
-	SPI.transfer(addr | 0x80);
-	SPI.transfer(value);
+	RFM69_SPI.transfer(addr | 0x80);
+	RFM69_SPI.transfer(value);
 	unselect();
 }
 
@@ -561,9 +560,9 @@ void RFM69::select()
 	_SPSR = SPSR;
 #endif
 	// set RFM69 SPI settings
-	SPI.setDataMode(SPI_MODE0);
-	SPI.setBitOrder(MSBFIRST);
-	SPI.setClockDivider(RFM69_CLOCK_DIV);
+	RFM69_SPI.setDataMode(SPI_MODE0);
+	RFM69_SPI.setBitOrder(MSBFIRST);
+	RFM69_SPI.setClockDivider(RFM69_CLOCK_DIV);
 	hwDigitalWrite(_slaveSelectPin, LOW);
 }
 
@@ -650,8 +649,8 @@ void RFM69::readAllRegs()
 	Serial.println("Address - HEX - BIN");
 	for (uint8_t regAddr = 1; regAddr <= 0x4F; regAddr++) {
 		select();
-		SPI.transfer(regAddr & 0x7F); // send address + r/w bit
-		uint8_t regVal = SPI.transfer(0);
+		RFM69_SPI.transfer(regAddr & 0x7F); // send address + r/w bit
+		uint8_t regVal = RFM69_SPI.transfer(0);
 		unselect();
 
 		Serial.print(regAddr, HEX);

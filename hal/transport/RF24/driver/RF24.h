@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -36,8 +36,7 @@
 *
 * |E| SYS  | SUB  | Message              | Comment
 * |-|------|------|----------------------|---------------------------------------------------------------------
-* | | RF24 | INIT |                      | Initialise RF24 radio
-* | | RF24 | INIT | PIN,CE=%%d,CS=%%d    | Pin configuration: chip enable (CE), chip select (CS)
+* | | RF24 | INIT | PIN,CE=%%d,CS=%%d    | Initialise RF24 radio, pin configuration: chip enable (CE), chip select (CS)
 * |!| RF24 | INIT | SANCHK FAIL          | Sanity check failed, check wiring or replace module
 * | | RF24 | SPP  | PCT=%%d,TX LEVEL=%%d | Set TX level, input TX percent (PCT)
 * | | RF24 | RBR  | REG=%%d,VAL=%%d      | Read register (REG), value=(VAL)
@@ -61,6 +60,10 @@
 #define __RF24_H__
 
 #include "RF24registers.h"
+
+#if !defined(RF24_SPI)
+#define RF24_SPI hwSPI //!< default SPI
+#endif
 
 #if defined(ARDUINO_ARCH_AVR)
 #define DEFAULT_RF24_CE_PIN				(9)		//!< DEFAULT_RF24_CE_PIN
@@ -91,30 +94,6 @@
 #define RF24_SPI_DATA_MODE				SPI_MODE0	//!< RF24_SPI_DATA_MODE
 
 #define RF24_BROADCAST_ADDRESS	(255u)	//!< RF24_BROADCAST_ADDRESS
-
-#if defined(ARDUINO) && !defined(__arm__) && !defined(RF24_SPI)
-#include <SPI.h>
-#if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RF24_SPI_DATA_MODE>
-RF24_SPI;
-#else
-#define RF24_SPI SPI			//!< SPI
-#endif
-#else
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#if defined(__arm__) || defined(__linux__)
-#include <SPI.h>
-#else
-extern HardwareSPI SPI;		//!<  SPI
-#endif
-
-#if !defined(RF24_SPI)
-#define RF24_SPI SPI			//!<  SPI
-#endif
-#endif
 
 // verify RF24 IRQ defs
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
@@ -218,7 +197,7 @@ LOCAL uint8_t RF24_getStatus(void);
 * @brief RF24_getFIFOStatus
 * @return
 */
-LOCAL uint8_t RF24_getFIFOStatus(void);
+LOCAL uint8_t RF24_getFIFOStatus(void) __attribute__((unused));
 /**
 * @brief RF24_openWritingPipe
 * @param recipient
@@ -365,8 +344,9 @@ LOCAL uint8_t RF24_getObserveTX(void);
 /**
 * @brief RF24_setStatus
 * @param status
+* @return status byte before setting new status
 */
-LOCAL void RF24_setStatus(const uint8_t status);
+LOCAL uint8_t RF24_setStatus(const uint8_t status);
 /**
 * @brief RF24_enableFeatures
 */

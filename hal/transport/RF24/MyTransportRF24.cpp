@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -19,18 +19,12 @@
 
 #include "hal/transport/RF24/driver/RF24.h"
 
-#if defined(MY_RF24_ENABLE_ENCRYPTION)
-#include "drivers/AES/AES.cpp"
-AES RF24_aes;
-uint8_t RF24_dataenc[32] = {0};
-#endif
-
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 #include "drivers/CircularBuffer/CircularBuffer.h"
 
 typedef struct _transportQueuedMessage {
 	uint8_t m_len;                        // Length of the data
-	uint8_t m_data[MAX_MESSAGE_LENGTH];   // The raw data
+	uint8_t m_data[MAX_MESSAGE_SIZE];   // The raw data
 } transportQueuedMessage;
 
 /** Buffer to store queued messages in. */
@@ -62,20 +56,6 @@ static void transportRxCallback(void)
 
 bool transportInit(void)
 {
-#if defined(MY_RF24_ENABLE_ENCRYPTION)
-	uint8_t RF24_psk[16];
-#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
-	(void)memset(RF24_psk, 0, 16);
-	(void)memcpy(RF24_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
-#else
-	hwReadConfigBlock((void *)RF24_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-#endif
-	//set up AES-key
-	RF24_aes.set_key(RF24_psk, 16);
-	// Make sure it is purged from memory when set
-	(void)memset(RF24_psk, 0, 16);
-#endif
-
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	RF24_registerReceiveCallback( transportRxCallback );
 #endif
@@ -95,21 +75,10 @@ uint8_t transportGetAddress(void)
 
 bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
-#if defined(MY_RF24_ENABLE_ENCRYPTION)
-	// copy input data because it is read-only
-	(void)memcpy(RF24_dataenc,data,len);
-	// has to be adjusted, WIP!
-	RF24_aes.set_IV(0);
-	const uint8_t finalLength = len > 16 ? 32 : 16;
-	//encrypt data
-	RF24_aes.cbc_encrypt(RF24_dataenc, RF24_dataenc, finalLength / 16);
-	return RF24_sendMessage(to, RF24_dataenc, finalLength, noACK);
-#else
 	return RF24_sendMessage(to, data, len, noACK);
-#endif
 }
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 #if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
 	(void)RF24_isDataAvailable;				// Prevent 'defined but not used' warning
@@ -136,14 +105,6 @@ uint8_t transportReceive(void *data)
 	}
 #else
 	len = RF24_readMessage(data);
-#endif
-#if defined(MY_RF24_ENABLE_ENCRYPTION)
-	// has to be adjusted, WIP!
-	RF24_aes.set_IV(0);
-	// decrypt data
-	if (RF24_aes.cbc_decrypt((uint8_t *)data, (uint8_t *)data, len > 16 ? 2 : 1) != AES_SUCCESS) {
-		len = 0;
-	}
 #endif
 	return len;
 }

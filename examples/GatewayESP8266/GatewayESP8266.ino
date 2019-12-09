@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -19,7 +19,7 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 - Henrik EKblad
+ * Version 1.0 - Henrik Ekblad
  * Contribution by a-lurker and Anticimex,
  * Contribution by Norbert Truchsess <norbert.truchsess@t-online.de>
  * Contribution by Ivo Pullens (ESP8266 support)
@@ -68,11 +68,11 @@
 #define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Enable UDP communication
-//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS below
+//#define MY_USE_UDP  // If using UDP you need to set MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS below
 
 // Set the hostname for the WiFi Client. This is the hostname
 // it will pass to the DHCP server if not static.
-//#define MY_HOSTNAME "sensor-gateway"
+#define MY_HOSTNAME "ESP8266_GW"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
 //#define MY_IP_ADDRESS 192,168,178,87
@@ -90,6 +90,7 @@
 // Controller ip address. Enables client mode (default is "server" mode).
 // Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere.
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
+//#define MY_CONTROLLER_URL_ADDRESS "my.controller.org"
 
 // Enable inclusion mode
 //#define MY_INCLUSION_MODE_FEATURE
@@ -110,11 +111,6 @@
 //#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
 //#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
 
-#if defined(MY_USE_UDP)
-#include <WiFiUdp.h>
-#endif
-
-#include <ESP8266WiFi.h>
 #include <MySensors.h>
 
 void setup()

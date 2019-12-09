@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -48,8 +48,8 @@
 
 #define MYSENSORS_LIBRARY_VERSION_MAJOR							2							//!< Major release version
 #define MYSENSORS_LIBRARY_VERSION_MINOR							3							//!< Minor release version
-#define MYSENSORS_LIBRARY_VERSION_PATCH							1							//!< Patch version
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE					"beta"						//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
+#define MYSENSORS_LIBRARY_VERSION_PATCH							2							//!< Patch version
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE					""							//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
 #define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER				0xFF						//!< incremental counter, starting at 0x00. 0xFF for final release
 
 

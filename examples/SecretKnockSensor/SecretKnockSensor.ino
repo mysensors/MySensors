@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -181,8 +181,8 @@ void listenToSecretKnock()
 	}
 
 	int currentKnockNumber = 0;               // Position counter for the array.
-	int startTime = millis();                 // Reference for when this knock started.
-	int now = millis();
+	uint32_t startTime = millis();                 // Reference for when this knock started.
+	uint32_t now;
 
 	do {                                      // Listen for the next knock or wait for it to timeout.
 		knockSensorValue = digitalRead(knockSensor);
@@ -397,7 +397,7 @@ void chirp(int playTime, int delayTime)
 void receive(const MyMessage &message)
 {
 	// We only expect one type of message from controller. But we better check anyway.
-	if (message.type==V_LOCK_STATUS) {
+	if (message.getType()==V_LOCK_STATUS) {
 		// Change relay state
 		setLockState(message.getBool(), false);
 

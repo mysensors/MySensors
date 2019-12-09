@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -67,8 +67,7 @@ uint32_t SLEEP_TIME = 30000; // Sleep time between reads (in milliseconds)
 //VARIABLES
 float Ro = 10000.0;    // this has to be tuned 10K Ohm
 int val = 0;           // variable to store the value coming from the sensor
-float valMQ =0.0;
-float lastMQ =0.0;
+uint16_t lastMQ = 0;
 float           LPGCurve[3]  =  {2.3,0.21,-0.47};   //two points are taken from the curve.
 //with these two points, a line is formed which is "approximately equivalent"
 //to the original curve.
@@ -149,18 +148,18 @@ Remarks: This function assumes that the sensor is in clean air. It use
 float MQCalibration(int mq_pin)
 {
 	int i;
-	float val=0;
+	float inVal=0;
 
 	for (i=0; i<CALIBARAION_SAMPLE_TIMES; i++) {          //take multiple samples
-		val += MQResistanceCalculation(analogRead(mq_pin));
+		inVal += MQResistanceCalculation(analogRead(mq_pin));
 		delay(CALIBRATION_SAMPLE_INTERVAL);
 	}
-	val = val/CALIBARAION_SAMPLE_TIMES;                   //calculate the average value
+	inVal = inVal/CALIBARAION_SAMPLE_TIMES;                   //calculate the average value
 
-	val = val/RO_CLEAN_AIR_FACTOR;                        //divided by RO_CLEAN_AIR_FACTOR yields the Ro
+	inVal = inVal/RO_CLEAN_AIR_FACTOR;                        //divided by RO_CLEAN_AIR_FACTOR yields the Ro
 	//according to the chart in the datasheet
 
-	return val;
+	return inVal;
 }
 /*****************************  MQRead *********************************************
 Input:   mq_pin - analog channel

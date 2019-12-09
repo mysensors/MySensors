@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -27,10 +27,26 @@
 #define MyHwHAL_h
 
 /**
- * @def MY_HWID_PADDING_BYTE
- * @brief HwID padding byte
- */
+* @def INVALID_INTERRUPT_NUM
+* @brief Invalid interrupt
+*/
+#define INVALID_INTERRUPT_NUM	(0xFFu)
+
+/**
+* @def MY_HWID_PADDING_BYTE
+* @brief HwID padding byte
+*/
 #define MY_HWID_PADDING_BYTE	(0xAAu)
+
+/**
+* @def IRQ_HANDLER_ATTR
+* @brief ESP8266/ESP32 IRQ handlers need to be stored in IRAM
+*/
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
+#else
+#define IRQ_HANDLER_ATTR
+#endif
 
 // Implement these as functions or macros
 /*
@@ -74,7 +90,7 @@ int8_t hwSleep(uint32_t ms);
  * @param ms         Time to sleep, in [ms].
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms);
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms);
 
 /**
  * Sleep for a defined time, using minimum power, or until woken by one of the interrupts.
@@ -85,7 +101,8 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms);
  * @param ms          Time to sleep, in [ms].
  * @return MY_WAKE_UP_BY_TIMER when woken by timer, or interrupt number when woken by interrupt.
  */
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+               const  uint8_t mode2,
                uint32_t ms);
 
 /**
@@ -121,7 +138,17 @@ int8_t hwCPUTemperature(void);
 uint16_t hwFreeMem(void);
 
 #if defined(DEBUG_OUTPUT_ENABLED)
-void hwDebugPrint(const char *fmt, ... );
+/**
+ * Debug print
+ * @param fmt
+ */
+void hwDebugPrint(const char *fmt, ...);
+/**
+ * Convert buffer to hex string
+ * @param buf
+ * @param sz
+ */
+static void hwDebugBuf2Str(const uint8_t *buf, size_t sz) __attribute__((unused));
 #endif
 
 /**

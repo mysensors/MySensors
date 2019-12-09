@@ -7,13 +7,19 @@
     "type": "git",
     "url": "https://github.com/mysensors/MySensors.git"
   },
-  "version": "2.3.1",
+  "version": "2.3.2",
   "frameworks": "arduino",
   "platforms": "*",
   "export": {
     "exclude": [
       "tests",
       "Documentation",
+      ".mystools",
+      "projects",
+      "examples_linux",
+      "initscripts",
+      "configure",
+      ".ci",
       "Doxyfile"
     ]
   }

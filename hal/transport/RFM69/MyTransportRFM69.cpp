@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -59,14 +59,10 @@ uint8_t transportGetAddress(void)
 
 bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool noACK)
 {
-	if (noACK) {
-		(void)RFM69_sendWithRetry(to, data, len, 0, 0);
-		return true;
-	}
-	return RFM69_sendWithRetry(to, data, len);
+	return RFM69_sendWithRetry(to, data, len, noACK);
 }
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 	RFM69_handler();
 	return RFM69_available();
@@ -79,7 +75,12 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void *data)
 {
-	return RFM69_receive((uint8_t *)data, MAX_MESSAGE_LENGTH);
+	return RFM69_receive((uint8_t *)data, MAX_MESSAGE_SIZE);
+}
+
+void transportEncrypt(const char *key)
+{
+	RFM69_encrypt(key);
 }
 
 void transportSleep(void)
@@ -185,6 +186,11 @@ bool transportInit(void)
 	return false;
 }
 
+void transportEncrypt(const char *key)
+{
+	_radio.encrypt(key);
+}
+
 void transportSetAddress(const uint8_t address)
 {
 	_address = address;
@@ -205,7 +211,7 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 	return _radio.sendWithRetry(to, data, len);
 }
 
-bool transportAvailable(void)
+bool transportDataAvailable(void)
 {
 	return _radio.receiveDone();
 }
@@ -218,7 +224,7 @@ bool transportSanityCheck(void)
 uint8_t transportReceive(void *data)
 {
 	// save payload length
-	const uint8_t dataLen = _radio.DATALEN < MAX_MESSAGE_LENGTH? _radio.DATALEN : MAX_MESSAGE_LENGTH;
+	const uint8_t dataLen = _radio.DATALEN < MAX_MESSAGE_SIZE ? _radio.DATALEN : MAX_MESSAGE_SIZE;
 	(void)memcpy((void *)data, (void *)_radio.DATA, dataLen);
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.ACKRequested()) {
@@ -283,5 +289,13 @@ bool transportSetTxPowerLevel(const uint8_t powerLevel)
 	(void)powerLevel;
 	return false;
 }
+
+bool transportSetTxPowerPercent(const uint8_t powerPercent)
+{
+	// not implemented
+	(void)powerPercent;
+	return false;
+}
+
 
 #endif

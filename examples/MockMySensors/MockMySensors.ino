@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -1254,12 +1254,12 @@ void custom()
 
 void receive(const MyMessage &message)
 {
-	switch (message.type) {
+	switch (message.getType()) {
 #ifdef ID_S_ARMED
 	case V_ARMED:
 		isArmed = message.getBool();
 		Serial.print("Incoming change for ID_S_ARMED:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println((isArmed ? "Armed":"Disarmed" ));
 #ifdef ID_S_DOOR
@@ -1277,20 +1277,20 @@ void receive(const MyMessage &message)
 
 	case V_STATUS: // V_LIGHT:
 #ifdef ID_S_LIGHT
-		if(message.sensor==ID_S_LIGHT) {
+		if(message.getSensor()==ID_S_LIGHT) {
 			isLightOn =  message.getBool();
 			Serial.print("Incoming change for ID_S_LIGHT:");
-			Serial.print(message.sensor);
+			Serial.print(message.getSensor());
 			Serial.print(", New status: ");
 			Serial.println((isLightOn ? "On":"Off"));
 			light(); // temp ack
 		}
 #endif
 		//    #ifdef ID_S_HEATER
-		//        if(message.sensor == ID_S_HEATER){
+		//        if(message.getSensor() == ID_S_HEATER){
 		//          heater_status = message.getBool();
 		//          Serial.print("Incoming change for ID_S_HEATER:");
-		//          Serial.print(message.sensor);
+		//          Serial.print(message.getSensor());
 		//          Serial.print(", New status: ");
 		//          Serial.println(heater_status);
 		//          heater();//temp ack
@@ -1307,7 +1307,7 @@ void receive(const MyMessage &message)
 		}
 		dimmerVal= message.getInt();
 		Serial.print("Incoming change for ID_S_DIMMER:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(message.getInt());
 		dimmer();// temp ack
@@ -1318,7 +1318,7 @@ void receive(const MyMessage &message)
 	case V_UP:
 		coverState=1;
 		Serial.print("Incoming change for ID_S_COVER:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println("V_UP");
 		cover(); // temp ack
@@ -1327,7 +1327,7 @@ void receive(const MyMessage &message)
 	case V_DOWN:
 		coverState=-1;
 		Serial.print("Incoming change for ID_S_COVER:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println("V_DOWN");
 		cover(); //temp ack
@@ -1336,7 +1336,7 @@ void receive(const MyMessage &message)
 	case V_STOP:
 		coverState=0;
 		Serial.print("Incoming change for ID_S_COVER:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println("V_STOP");
 		cover(); //temp ack
@@ -1347,11 +1347,11 @@ void receive(const MyMessage &message)
 	case V_HVAC_SETPOINT_HEAT:
 
 #ifdef ID_S_HEATER
-		if(message.sensor == ID_S_HEATER) {
+		if(message.getSensor() == ID_S_HEATER) {
 			heater_setpoint=message.getFloat();
 
 			Serial.print("Incoming set point for ID_S_HEATER:");
-			Serial.print(message.sensor);
+			Serial.print(message.getSensor());
 			Serial.print(", New status: ");
 			Serial.println(heater_setpoint,1);
 			heater();//temp ack
@@ -1359,10 +1359,10 @@ void receive(const MyMessage &message)
 #endif
 
 #ifdef ID_S_HVAC
-		if(message.sensor == ID_S_HVAC) {
+		if(message.getSensor() == ID_S_HVAC) {
 			hvac_SetPointHeat=message.getFloat();
 			Serial.print("Incoming set point for ID_S_HVAC:");
-			Serial.print(message.sensor);
+			Serial.print(message.getSensor());
 			Serial.print(", New status: ");
 			Serial.println(hvac_SetPointHeat,1);
 			hvac();//temp ack
@@ -1372,10 +1372,10 @@ void receive(const MyMessage &message)
 
 	case V_HVAC_FLOW_STATE:
 #ifdef ID_S_HEATER
-		if(message.sensor == ID_S_HEATER) {
+		if(message.getSensor() == ID_S_HEATER) {
 			heater_flow_state=message.getString();
 			Serial.print("Incoming flow state change for ID_S_HEATER:");
-			Serial.print(message.sensor);
+			Serial.print(message.getSensor());
 			Serial.print(", New status: ");
 			Serial.println(heater_flow_state);
 			heater();//temp ack
@@ -1383,11 +1383,11 @@ void receive(const MyMessage &message)
 #endif
 
 #ifdef ID_S_HVAC
-		if(message.sensor == ID_S_HVAC) {
+		if(message.getSensor() == ID_S_HVAC) {
 			hvac_FlowState=message.getString();
 
 			Serial.print("Incoming set point for ID_S_HVAC:");
-			Serial.print(message.sensor);
+			Serial.print(message.getSensor());
 			Serial.print(", New status: ");
 			Serial.println(hvac_FlowState);
 			hvac();//temp ack
@@ -1399,7 +1399,7 @@ void receive(const MyMessage &message)
 	case V_LOCK_STATUS:
 		isLocked =  message.getBool();
 		Serial.print("Incoming change for ID_S_LOCK:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(message.getBool()?"Locked":"Unlocked");
 		lock(); //temp ack
@@ -1410,7 +1410,7 @@ void receive(const MyMessage &message)
 	case V_IR_SEND:
 		irVal = message.getLong();
 		Serial.print("Incoming change for ID_S_IR:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(irVal);
 		ir(); // temp ack
@@ -1418,7 +1418,7 @@ void receive(const MyMessage &message)
 	case V_IR_RECEIVE:
 		irVal = message.getLong();
 		Serial.print("Incoming change for ID_S_IR:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(irVal);
 		ir(); // temp ack
@@ -1429,7 +1429,7 @@ void receive(const MyMessage &message)
 	case V_SCENE_ON:
 		sceneVal = message.getInt();
 		Serial.print("Incoming change for ID_S_SCENE_CONTROLLER:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.print(scenes[sceneVal]);
 		Serial.println(" On");
@@ -1438,7 +1438,7 @@ void receive(const MyMessage &message)
 	case V_SCENE_OFF:
 		sceneVal = message.getInt();
 		Serial.print("Incoming change for ID_S_SCENE_CONTROLLER:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.print(scenes[sceneVal]);
 		Serial.println(" Off");
@@ -1450,7 +1450,7 @@ void receive(const MyMessage &message)
 	case V_RGB:
 		rgbState=message.getString();
 		Serial.print("Incoming flow state change for ID_S_RGB_LIGHT:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(rgbState);
 		rgbLight(); // temp ack
@@ -1462,7 +1462,7 @@ void receive(const MyMessage &message)
 	case V_RGBW:
 		rgbwState=message.getString();
 		Serial.print("Incoming flow state change for ID_S_RGBW_LIGHT:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(rgbwState);
 		rgbwLight();
@@ -1480,7 +1480,7 @@ void receive(const MyMessage &message)
 		hvac_SetPointCool=message.getFloat();
 
 		Serial.print("Incoming set point for ID_S_HVAC:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(hvac_SetPointCool,1);
 		hvac();//temp ack
@@ -1490,7 +1490,7 @@ void receive(const MyMessage &message)
 		hvac_Speed=message.getString();
 
 		Serial.print("Incoming set point for ID_S_HVAC:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(hvac_Speed);
 		hvac();//temp ack
@@ -1500,7 +1500,7 @@ void receive(const MyMessage &message)
 		hvac_FlowMode=message.getString();
 
 		Serial.print("Incoming set point for ID_S_HVAC:");
-		Serial.print(message.sensor);
+		Serial.print(message.getSensor());
 		Serial.print(", New status: ");
 		Serial.println(hvac_FlowMode);
 		hvac();//temp ack
@@ -1509,7 +1509,7 @@ void receive(const MyMessage &message)
 
 	default:
 		Serial.print("Unknown/Unimplemented message type: ");
-		Serial.println(message.type);
+		Serial.println(message.getType());
 	}
 
 }

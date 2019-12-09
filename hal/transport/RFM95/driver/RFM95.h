@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -81,6 +81,10 @@
 
 #include "RFM95registers.h"
 
+#if !defined(RFM95_SPI)
+#define RFM95_SPI hwSPI //!< default SPI
+#endif
+
 // default PIN assignments, can be overridden
 #if defined(ARDUINO_ARCH_AVR)
 #if defined(__AVR_ATmega32U4__)
@@ -110,25 +114,6 @@
 // SPI settings
 #define RFM95_SPI_DATA_ORDER		MSBFIRST		//!< SPI data order
 #define RFM95_SPI_DATA_MODE			SPI_MODE0		//!< SPI mode
-
-#if defined (ARDUINO) && !defined (__arm__) && !defined (RFM95_SPI)
-#include <SPI.h>
-#if defined(MY_SOFTSPI)
-SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, RFM95_SPI_DATA_MODE>RFM95_SPI;
-#else
-#define RFM95_SPI SPI					//!< SPI
-#endif
-#else
-#if defined(__arm__) || defined(__linux__)
-#include <SPI.h>
-#else
-extern HardwareSPI SPI;				//!< SPI
-#endif
-
-#if !defined(RFM95_SPI)
-#define RFM95_SPI SPI					//!< SPI
-#endif
-#endif
 
 // RFM95 radio configurations: reg_1d, reg_1e, reg_26 (see datasheet)
 #define RFM95_BW125CR45SF128 RFM95_BW_125KHZ | RFM95_CODING_RATE_4_5, RFM95_SPREADING_FACTOR_128CPS | RFM95_RX_PAYLOAD_CRC_ON, RFM95_AGC_AUTO_ON //!< 0x72,0x74,0x04
@@ -417,13 +402,11 @@ LOCAL void RFM95_sendACK(const uint8_t recipient, const rfm95_sequenceNumber_t s
 * @param recipient
 * @param buffer
 * @param bufferSize
-* @param retries
-* @param retryWaitTime
+* @param noACK
 * @return True if packet successfully sent
 */
 LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void *buffer,
-                               const uint8_t bufferSize, const uint8_t retries = RFM95_RETRIES,
-                               const uint32_t retryWaitTime = RFM95_RETRY_TIMEOUT_MS);
+                               const uint8_t bufferSize, const bool noACK);
 /**
 * @brief Wait until no channel activity detected
 * @return True if no channel activity detected, False if timeout occured

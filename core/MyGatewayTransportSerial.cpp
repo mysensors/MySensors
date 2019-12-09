@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -33,7 +33,7 @@ MyMessage _serialMsg;
 bool gatewayTransportSend(MyMessage &message)
 {
 	setIndication(INDICATION_GW_TX);
-	MY_SERIALDEVICE.print(protocolFormat(message));
+	MY_SERIALDEVICE.print(protocolMyMessage2Serial(message));
 	// Serial print is always successful
 	return true;
 }
@@ -56,7 +56,7 @@ bool gatewayTransportAvailable(void)
 		if (_serialInputPos < MY_GATEWAY_MAX_RECEIVE_LENGTH - 1) {
 			if (inChar == '\n') {
 				_serialInputString[_serialInputPos] = 0;
-				const bool ok = protocolParse(_serialMsg, _serialInputString);
+				const bool ok = protocolSerial2MyMessage(_serialMsg, _serialInputString);
 				if (ok) {
 					setIndication(INDICATION_GW_RX);
 				}

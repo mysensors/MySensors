@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2018 Sensnology AB
+* Copyright (C) 2013-2019 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -20,7 +20,10 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 #include "Arduino.h"
+
+TaskHandle_t loopTaskHandle = NULL;
 
 #if CONFIG_AUTOSTART_ARDUINO
 
@@ -30,20 +33,25 @@
 #define ARDUINO_RUNNING_CORE 1
 #endif
 
-void MySensorsTask(void *pvParameters)
+bool loopTaskWDTEnabled;
+
+void loopTask(void *pvParameters)
 {
 	_begin();			// Startup MySensors library
-	for (;;) {
-		micros();		// update overflow
+	for(;;) {
+		if(loopTaskWDTEnabled) {
+			esp_task_wdt_reset();
+		}
 		_process();		// Process incoming data
-		loop();		// Call sketch loop
+		loop();
 	}
 }
 
 extern "C" void app_main()
 {
+	loopTaskWDTEnabled = false;
 	initArduino();
-	xTaskCreatePinnedToCore(MySensorsTask, "MySensorsTask", 8192, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
+	xTaskCreatePinnedToCore(loopTask, "loopTask", 8192, NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
 }
 
 #endif

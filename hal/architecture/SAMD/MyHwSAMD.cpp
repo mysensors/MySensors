@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -106,7 +106,7 @@ int8_t hwSleep(uint32_t ms)
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
+int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
 	// TODO: Not supported!
 	(void)interrupt;
@@ -115,7 +115,8 @@ int8_t hwSleep(uint8_t interrupt, uint8_t mode, uint32_t ms)
 	return MY_SLEEP_NOT_POSSIBLE;
 }
 
-int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mode2,
+int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
+               const uint8_t mode2,
                uint32_t ms)
 {
 	// TODO: Not supported!
@@ -252,36 +253,4 @@ uint16_t hwFreeMem(void)
 {
 	// TODO: Not supported!
 	return FUNCTION_NOT_SUPPORTED;
-}
-
-void hwDebugPrint(const char *fmt, ... )
-{
-#ifndef MY_DISABLED_SERIAL
-	if (MY_DEBUGDEVICE) {
-		char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-#ifdef MY_GATEWAY_SERIAL
-		// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-		snprintf(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
-		         C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-		MY_DEBUGDEVICE.print(fmtBuffer);
-#else
-		// prepend timestamp
-		MY_DEBUGDEVICE.print(hwMillis());
-		MY_DEBUGDEVICE.print(" ");
-#endif
-		va_list args;
-		va_start(args, fmt);
-		vsnprintf(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#ifdef MY_GATEWAY_SERIAL
-		// Truncate message if this is gateway node
-		fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
-		fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#endif
-		va_end(args);
-		MY_DEBUGDEVICE.print(fmtBuffer);
-		//	MY_SERIALDEVICE.flush();
-	}
-#else
-	(void)fmt;
-#endif
 }

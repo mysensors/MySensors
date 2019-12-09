@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,8 +18,6 @@
  *
  *******************************
  */
-#include <stdint.h>
-#include <pins_arduino.h>
 #define MY_DEBUG
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_RADIO_RF24

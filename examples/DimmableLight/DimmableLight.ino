@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -90,7 +90,7 @@ void loop()
 
 void receive(const MyMessage &message)
 {
-	if (message.type == V_LIGHT) {
+	if (message.getType() == V_LIGHT) {
 		Serial.println( "V_LIGHT command received..." );
 
 		int lstate= atoi( message.data );
@@ -112,7 +112,7 @@ void receive(const MyMessage &message)
 		//When receiving a V_LIGHT command we switch the light between OFF and the last received dimmer value
 		//This means if you previously set the lights dimmer value to 50%, and turn the light ON
 		//it will do so at 50%
-	} else if (message.type == V_DIMMER) {
+	} else if (message.getType() == V_DIMMER) {
 		Serial.println( "V_DIMMER command received..." );
 		int dimvalue= atoi( message.data );
 		if ((dimvalue<0)||(dimvalue>100)) {

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -233,7 +233,7 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	return true;
 }
 
-LOCAL void RFM95_interruptHandler(void)
+LOCAL void IRQ_HANDLER_ATTR RFM95_interruptHandler(void)
 {
 	// set flag
 	RFM95_irq = true;
@@ -539,24 +539,24 @@ LOCAL bool RFM95_executeATC(const rfm95_RSSI_t currentRSSI, const rfm95_RSSI_t t
 }
 
 LOCAL bool RFM95_sendWithRetry(const uint8_t recipient, const void *buffer,
-                               const uint8_t bufferSize, const uint8_t retries, const uint32_t retryWaitTime)
+                               const uint8_t bufferSize, const bool noACK)
 {
-	for (uint8_t retry = 0; retry <= retries; retry++) {
+	for (uint8_t retry = 0; retry < RFM95_RETRIES; retry++) {
 		RFM95_DEBUG(PSTR("RFM95:SWR:SEND,TO=%" PRIu8 ",SEQ=%" PRIu16 ",RETRY=%" PRIu8 "\n"), recipient,
 		            RFM95.txSequenceNumber,
 		            retry);
 		rfm95_controlFlags_t flags = 0u;
-		RFM95_setACKRequested(flags, (recipient != RFM95_BROADCAST_ADDRESS));
+		RFM95_setACKRequested(flags, !noACK);
 		// send packet
 		if (!RFM95_send(recipient, (uint8_t *)buffer, bufferSize, flags, !retry)) {
 			return false;
 		}
 		(void)RFM95_setRadioMode(RFM95_RADIO_MODE_RX);
-		if (recipient == RFM95_BROADCAST_ADDRESS) {
+		if (noACK) {
 			return true;
 		}
 		const uint32_t enterMS = hwMillis();
-		while (hwMillis() - enterMS < retryWaitTime && !RFM95.dataReceived) {
+		while (hwMillis() - enterMS < RFM95_RETRY_TIMEOUT_MS && !RFM95.dataReceived) {
 			RFM95_handler();
 			if (RFM95.ackReceived) {
 				const uint8_t sender = RFM95.currentPacket.header.sender;

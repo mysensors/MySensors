@@ -6,7 +6,7 @@
    network topology allowing messages to be routed to nodes.
 
    Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-   Copyright (C) 2013-2018 Sensnology AB
+   Copyright (C) 2013-2019 Sensnology AB
    Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
 
    Documentation: http://www.mysensors.org
@@ -43,7 +43,7 @@
 #define MY_WIFI_PASSWORD "MyVerySecretPassword"
 
 // Set the hostname for the WiFi Client. This is the hostname
-// it will pass to the DHCP server if not static.
+// passed to the DHCP server if not static.
 #define MY_HOSTNAME "ESP32_GW"
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
@@ -70,8 +70,6 @@
 //#define MY_DEFAULT_TX_LED_PIN  27  // Transmit Data led pin
 
 //#define MY_WITH_LEDS_BLINKING_INVERSE  // At the time of Error, Receive, Transmit the pin is at a high level
-
-
 
 #include <ArduinoOTA.h>
 #include <MySensors.h>

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -26,8 +26,17 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
+#include <avr/boot.h>
 #include <util/atomic.h>
+#include <SPI.h>
 
+// Fast IO driver
+#include "drivers/DigitalWriteFast/digitalWriteFast.h"
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#include "hal/architecture/AVR/drivers/DigitalIO/DigitalIO.h"
+#endif
 
 #ifdef __cplusplus
 #include <Arduino.h>
@@ -68,7 +77,13 @@ bool hwInit(void);
 #define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((const void *)__buf, (void *)__pos, (uint32_t)__length)
 
 inline void hwRandomNumberInit(void);
-void hwInternalSleep(uint32_t ms);
+uint32_t hwInternalSleep(uint32_t ms);
+
+#if defined(MY_SOFTSPI)
+SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, 0> hwSPI; //!< hwSPI
+#else
+#define hwSPI SPI //!< hwSPI
+#endif
 
 #ifndef DOXYGEN
 #define MY_CRITICAL_SECTION     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
