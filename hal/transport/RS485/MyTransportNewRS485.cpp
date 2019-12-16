@@ -96,18 +96,21 @@
 
 #if defined(__linux__)
 	SerialPort _dev = SerialPort(MY_RS485_HWSERIAL);
+#	ifdef MY_RS485_COLLISION_DETECTION
+#		error("MY_RS485_COLLISION_DETECTION only possible on micro controllers.")
+#	endif
 #elif defined(MY_RS485_HWSERIAL)
 	HardwareSerial& _dev = MY_RS485_HWSERIAL;
 #else
 	AltSoftSerial _dev;
 #	ifdef MY_RS485_COLLISION_DETECTION
-#		warning("MY_RS485_COLLISION_DETECTION not tested with software serial")
+#		warning("MY_RS485_COLLISION_DETECTION not tested with software serial.")
 #	endif
 #endif
 
 #ifdef MY_RS485_COLLISION_DETECTION
 #	if !defined(MY_RS485_RX_PIN) || !defined(MY_RS485_TX_PIN)
-#		error ("For MY_RS485_COLLISION_DETECTION MY_RS485_RX_PIN and MY_RS485_TX_PIN need to be defined")
+#		error ("For MY_RS485_COLLISION_DETECTION MY_RS485_RX_PIN and MY_RS485_TX_PIN need to be defined.")
 #	else
 #		define setPinModeRS485()	hwPinMode(MY_RS485_TX_PIN,OUTPUT); \
 									hwPinMode(MY_RS485_RX_PIN,INPUT)		
@@ -118,7 +121,7 @@
 #		define enableInterrups() interrupts()
 #		warning("INFO: Timer 2 will be used for MY_RS485_COLLISION_DETECTION")
 #	else
-#		error("MY_RS485_COLLISION_DETECTION not implemented for current architecture")
+#		error("MY_RS485_COLLISION_DETECTION not implemented for current architecture.")
 #	endif
 #else
 #define _uart_putc(x) _dev.write(x)
@@ -142,7 +145,7 @@
 		// (256 * 64) Timer0 overflow (256) for arduino core. Prescaler is set to 64 by default. 
 #		error "MY_RS485_COLLISION_DETECTION will disable the interrups for too long. Please reduce cpu clock or increase MY_RS485_BAUD_RATE."
 #	elif !defined(ARDUINO_ARCH_AVR)
-#		error("MY_RS485_COLLISION_DETECTION not implemented for current architecture"))
+#		error("MY_RS485_COLLISION_DETECTION not implemented for current architecture."))
 #	endif
 #else
 #	error " TCNT2_VAL_PER_BIT is undefined!"
