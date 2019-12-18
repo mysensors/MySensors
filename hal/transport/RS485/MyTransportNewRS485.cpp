@@ -130,16 +130,18 @@
 
 
 #if (F_CPU / MY_RS485_BAUD_RATE) < 256   // check maybe required prescaling
-#	define TCNT2_VAL_PER_BIT (F_CPU / MY_RS485_BAUD_RATE )
+	static const uint8_t TCNT2_VAL_PER_BIT = (uint8_t)(F_CPU / MY_RS485_BAUD_RATE );
+#	define TCNT2_VAL_PER_BIT_DEF
 #else
 #	if ((F_CPU / MY_RS485_BAUD_RATE / 8) < 256 ) // 8x prescaling required
 #		define USE_PRESCALER_8X
-#		define TCNT2_VAL_PER_BIT (F_CPU / MY_RS485_BAUD_RATE / 8)
+		static const uint8_t TCNT2_VAL_PER_BIT = (uint8_t)(F_CPU / MY_RS485_BAUD_RATE / 8);
+#		define TCNT2_VAL_PER_BIT_DEF
 #	endif
 #endif
 
 // double check if all conditions above have been analyzed
-#if defined(TCNT2_VAL_PER_BIT)
+#if defined(TCNT2_VAL_PER_BIT_DEF)
 #	if ((((F_CPU / MY_RS485_BAUD_RATE) * 11)  > (256 * 64)) && defined (ARDUINO_ARCH_AVR))
 		// (F_CPU / MY_RS485_BAUD_RATE) * 11) == clock cycles to transmit one uart byte (10 bit) + margin.
 		// (256 * 64) Timer0 overflow (256) for arduino core. Prescaler is set to 64 by default. 
@@ -304,6 +306,23 @@ typedef enum {
     CAN_RECESSIVE_LEVEL = 1
 } can_level_t;
 
+    // Start bit would be too long
+    // it will take some clock cycles until the start bit is actually written to the bus 
+    // anticipate this delay by subtracting some cnt values
+    #ifdef USE_PRESCALER_8X
+        static const uint8_t BIT_SETUP_TIME = 50/8;
+		static const uint8_t BUS_LOOP_DELAY = (uint8_t)((MY_RS485_BUS_LOOP_DELAY_NS * F_CPU / 1000000000 / 8) + 1);
+    #else
+        static const uint8_t BIT_SETUP_TIME = 50;
+		static const uint8_t BUS_LOOP_DELAY = ((uint8_t)(MY_RS485_BUS_LOOP_DELAY_NS * F_CPU + 1));
+    #endif 
+
+	#if (TCNT2_VAL_PER_BIT / 4 < BUS_LOOP_DELAY)
+		#error ("MY_RS485_BUS_LOOP_DELAY_NS is to long")
+	#elif (TCNT2_VAL_PER_BIT / 6 < BUS_LOOP_DELAY)
+		#warning ("MY_RS485_BUS_LOOP_DELAY_NS may be to long")
+	#endif
+
 bool _putBitReadback(bool b)
 {
 // check the current state of the CAN bus
@@ -312,6 +331,8 @@ bool _putBitReadback(bool b)
     rxVal = hwDigitalRead(MY_RS485_RX_PIN);
     uint8_t txVal;
     txVal = hwDigitalRead(MY_RS485_TX_PIN);
+
+	while(!(TIFR2 & _BV(OCF2A)))	//wait for timer overflow
 
     if (rxVal == CAN_DOMINANT_LEVEL && txVal != CAN_DOMINANT_LEVEL)
         return false; // some other node is sending a dominant bit
@@ -333,10 +354,12 @@ bool _putBitReadback(bool b)
     // One clock cycle at 8 MHz is 150 ns.
     // --> The rx signal should 'immediately' be stable after TX pin has been set
 	// Better be on the safe side and insert one NOP
-	asm("NOP");
-
+	//while((uint8_t)(TCNT2 - canTcnt2ValBitStart) < BUS_LOOP_DELAY);
     // ensure that the bit is set for 1/MY_RS485_BAUD_RATE time
-    while ((uint8_t)(TCNT2 - canTcnt2ValBitStart) < TCNT2_VAL_PER_BIT)
+    //while ((uint8_t)(TCNT2 - canTcnt2ValBitStart) < TCNT2_VAL_PER_BIT)
+	_delay_us(1);
+
+	while(!(TIFR2 & _BV(OCF2B)))	//wait for timer overflow
     {
         // check the output while waiting.
         // Do collisions occur, while a logical 1 (CAN recessive bit) is being transmitted?
@@ -346,9 +369,9 @@ bool _putBitReadback(bool b)
         if (b != (bool) rxVal)
             return false;
     }
-
+	TIFR2 = _BV(OCF2A) | _BV(OCF2B);
     // increase start value for next bit to transfer
-    canTcnt2ValBitStart += TCNT2_VAL_PER_BIT;
+   // canTcnt2ValBitStart += TCNT2_VAL_PER_BIT;
 
     return true;
 }
@@ -357,26 +380,14 @@ bool _putBitReadback(bool b)
 
 bool _putchReadback(uint8_t val)
 {
-	_dev.end();
 
 	disableInterrups();
-
-// TODO: is this BS with extra CAN RX/TX defines?
-	hwDigitalWrite(MY_RS485_TX_PIN, HIGH);
-	setPinModeRS485();
-
-    // Start bit would be too long
-    // it will take some clock cycles until the start bit is actually written to the bus 
-    // anticipate this delay by subtracting some cnt values
-    #ifdef USE_PRESCALER_8X
-        #define START_BIT_ANTI_DELAY_VALUE 32/8
-    #else
-        #define START_BIT_ANTI_DELAY_VALUE 32
-    #endif 
-
-    canTcnt2ValBitStart = TCNT2 - START_BIT_ANTI_DELAY_VALUE; 
-
-    // send Start Bit
+    //canTcnt2ValBitStart = TCNT2 - BIT_SETUP_TIME; 
+	TCNT2 = OCF2B;				//reset timer
+	TIFR2 = _BV(OCF2A);		//clear all overflow bits
+//	while(!(TIFR2 & _BV(OCF2A)));	//wait for timer overflow
+//	TIFR2 = _BV(OCF2A);
+	// send Start Bit
     if (!_putBitReadback(UART_START_VAL))
     {
 		goto _putchReadbackError;
@@ -398,13 +409,11 @@ bool _putchReadback(uint8_t val)
 		goto _putchReadbackError;
     }
 
-
-    _dev.begin(MY_RS485_BAUD_RATE);   // re-enable USART
+    //_dev.begin(MY_RS485_BAUD_RATE);   // re-enable USART
 	enableInterrups();
     return true;
 
 _putchReadbackError:	// using goto jump for code readability
-	_dev.begin(MY_RS485_BAUD_RATE);  // re-enable USART
 	enableInterrups();
     return false;
 }
@@ -416,31 +425,50 @@ bool _writeRS485Packet(const void *data, const uint8_t len)
     unsigned char cs = len;
     char *datap = (char *)data;
 
-	assertDE();
+	// Go for software UART
+# 	if defined(MY_RS485_COLLISION_DETECTION)
+	hwDigitalWrite(MY_RS485_TX_PIN, CAN_RECESSIVE_LEVEL);
+	setPinModeRS485();
+	_dev.end();
+#	endif
 
+	assertDE();
     for(uint8_t i=0; i<len; i++) {
 		cs += datap[i];
 	}
     // Start of header by writing SOH
     if(!_uart_putc(SOH))
-        return false;
+        goto _writeRS485PacketError;
 
-     if(!_uart_putc(cs)) // checksum
-        return false;
+    if(!_uart_putc(cs)) // checksum
+        goto _writeRS485PacketError;
 
     if(!_uart_putc(len)) // Length of text
-        return false;
+        goto _writeRS485PacketError;
     
     if(!_uart_putc(STX)) //Start of text
-        return false;
+        goto _writeRS485PacketError;
 
     for (uint8_t i = 0; i < len; i++)
     {
         if(!_uart_putc(datap[i])) // Text bytes
-            return false;
+            goto _writeRS485PacketError;
     }
 	deassertDE();
+
+# 	if defined(MY_RS485_COLLISION_DETECTION)
+	_dev.begin(MY_RS485_BAUD_RATE);  // re-enable USART
+#	endif
+
     return true;
+
+_writeRS485PacketError:	
+
+# 	if defined(MY_RS485_COLLISION_DETECTION)
+	_dev.begin(MY_RS485_BAUD_RATE);  // re-enable USART
+#	endif
+
+    return false;
 }
 
 
@@ -469,9 +497,7 @@ bool _transportPackage(const void* data, const uint8_t len)
                 // bus seems idle
                 // try to send bitwise for RS485_TRANSMIT_TRY_CNT times
 
-                assertDE();
                 bool ret = _writeRS485Packet(data, len);
-                deassertDE();
                 if ( ret )
                 {
                     // message has been successfully sent :)
@@ -511,13 +537,20 @@ bool transportInit(void)
 	setPinModeDE();
 #ifdef MY_RS485_COLLISION_DETECTION
     // activate timer CNT2 to send bits in equidistant time slices
+#	if defined(PRR)
     PRR &= ~_BV(PRTIM2); // ensure that Timer2 is enabled in PRR (Power Reduction Register)
-	TCCR2A = 0; // clear Timer2 settings
+#	else
+	PRR1 &= ~_BV(PRTIM2); // ensure that Timer2 is enabled in PRR (Power Reduction Register)
+#	endif
+	TCCR2A = _BV(WGM21); // set to CTC mode
 #	ifdef USE_PRESCALER_8X
     	TCCR2B = _BV(CS21); // set clkTS2 with prescaling factor of /8
 #	else
     	TCCR2B = _BV(CS20); // set clkTS2 source to non prescaling
 #	endif
+	OCR2A = TCNT2_VAL_PER_BIT;
+	OCR2B = TCNT2_VAL_PER_BIT - 50 ;
+
 #endif
 	return true;
 }
