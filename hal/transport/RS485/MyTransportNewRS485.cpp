@@ -56,6 +56,8 @@
 #include "SerialPort.h"
 #endif
 
+#include <util/crc16.h>		// need to be moved to the right place
+
 #define RS485_SEND_MESSAGE_TRY_CNT 10
 #define RS485_BUS_AQUISITION_TRY_CNT 50
 #define RS485_TRANSMIT_TRY_CNT 50
@@ -166,8 +168,8 @@ char _header[RS485_HEADER_LENGTH];
 unsigned char _recPhase;
 unsigned char _recPos;
 unsigned char _recLen;
-unsigned char _recCS;
-unsigned char _recCalcCS;
+unsigned char _recCRC;
+unsigned char _recCalcCRC;
 
 unsigned char _nodeId;
 unsigned char _hasNodeId = false;
@@ -177,8 +179,8 @@ unsigned char _packet_from;
 bool _packet_received;
 
 // Packet wrapping characters, defined in standard ASCII table
-#define SOH 1
-#define STX 2
+#define SOH 0x10
+#define STX 0x20
 
 //Reset the state machine and release the data pointer
 void _serialReset()
@@ -238,10 +240,10 @@ bool _serialProcess()
 		case 0:
 			memcpy(&_header[0],&_header[1],RS485_HEADER_LENGTH-1);
 			_header[RS485_HEADER_LENGTH-1] = inch;
-			if ((_header[0] == SOH) && (_header[3] == STX)) {	
-				_recCS = _header[1];
+			if (((_header[0] & 0xF0) == SOH) && (_header[3] == STX)) {	
+				_recCRC = _header[1];
 				_recLen = _header[2];
-				_recCalcCS = _recLen;
+				_recCalcCRC = _crc_ibutton_update(0,_recLen);
 				_recPhase = 1;
 				_recPos = 0;
 
@@ -263,7 +265,7 @@ bool _serialProcess()
 		// of bytes and store them in the _data array.
 		case 1:
 			_data[_recPos++] = inch;
-			_recCalcCS += inch;
+			_recCalcCRC = _crc_ibutton_update(_recCalcCRC,inch);
 			if (_recPos == _recLen) {
 				_recPhase = 2;
 			}
@@ -272,7 +274,7 @@ bool _serialProcess()
 			}
 
 		case 2:
-			if (_recCS == _recCalcCS) {
+			if (_recCRC == _recCalcCRC) {
 				//Check if we should process this message
 				//We reject the message if we are the sender
 				//Message not surpressed if node ID was not assigned to support auto id
@@ -422,7 +424,7 @@ _putchReadbackError:	// using goto jump for code readability
 // TODO: store stuff into uint16_t to save space?
 bool _writeRS485Packet(const void *data, const uint8_t len)
 {
-    unsigned char cs = len;
+    unsigned char crc = _crc_ibutton_update(0,len);
     char *datap = (char *)data;
 
 	// Go for software UART
@@ -434,13 +436,13 @@ bool _writeRS485Packet(const void *data, const uint8_t len)
 
 	assertDE();
     for(uint8_t i=0; i<len; i++) {
-		cs += datap[i];
+		crc = _crc_ibutton_update(crc,datap[i]);
 	}
     // Start of header by writing SOH
     if(!_uart_putc(SOH))
         goto _writeRS485PacketError;
 
-    if(!_uart_putc(cs)) // checksum
+    if(!_uart_putc(crc)) // checksum
         goto _writeRS485PacketError;
 
     if(!_uart_putc(len)) // Length of text
