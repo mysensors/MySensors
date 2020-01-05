@@ -1,0 +1,161 @@
+{
+	"folders":
+	[
+		{
+			"path": "..\\..\\"
+		}
+	],
+	"settings":
+	{
+		// Plugins that are nice to have but does not require any project specific settings:
+		// PackageControl (https://packagecontrol.io/installation) Practically mandatory if you indend to install plugins
+		// EditorConfig (https://github.com/sindresorhus/editorconfig-sublime) Automatically apply the default MySensors file encoding and settings
+		// DoxyDoxygen (https://github.com/20Tauri/DoxyDoxygen) Helps writig Doxygen tags and allows to generate documentation
+		// BracketHighlighter (https://github.com/facelessuser/BracketHighlighter) Highlights any type of brackets and provides easy navigation between them
+		// GitGutter (https://github.com/jisaacks/GitGutter) Provides access to file diffs through the gutter area
+		// OpenInclude (https://github.com/titoBouzout/Open-Include) Allows opening header files found in project without having to look them up
+		// SideBarEnhancements (https://github.com/SideBarEnhancements-org/SideBarEnhancements) Enhances the sidebar
+		// SyncedSideBar (https://github.com/TheSpyder/SyncedSideBar) Syncs the sidebar to the currently opened file
+
+		// EasyClangComplete is a clang based plugin that provides autocompletion features.
+		// Installation instructions is available here: https://github.com/niosus/EasyClangComplete
+
+		// MySensors core library uses some coding style rules. Artistic Style can be used to format the code according to these rules
+		// The below settings enable automatic formatting of the code upon saving in Sublime Text
+		// Artistic Style is avaliable here: http://astyle.sourceforge.net
+		// The plugin is available here: https://github.com/timonwong/SublimeAStyleFormatter
+		// The coding style is documented here: https://www.mysensors.org/download/contributing
+		"AStyleFormatter":
+		{
+			"debug": false,
+			"autoformat_on_save": true,
+			"options_c":
+			{
+				"additional_options_file": "$project_path/../../.mystools/astyle/config/style.cfg",
+				"use_only_additional_options": true
+			},
+			"options_c++":
+			{
+				"additional_options_file": "$project_path/../../.mystools/astyle/config/style.cfg",
+				"use_only_additional_options": true
+			},
+		},
+		"rulers": [100],
+	},
+	// MySensors core library uses cppcheck to do static code analysis.
+	// The below settings enable cppcheck as a linter for automatic code analysis during development.
+	// cppcheck is avaliable here: http://cppcheck.sourceforge.net
+	// The plugin is available here: https://github.com/SublimeLinter/SublimeLinter-cppcheck
+	// The framework for the plugin is available here: https://sublimelinter.readthedocs.io/en/latest/installation.html
+	"SublimeLinter":
+	{
+		"linters":
+		{
+			"cppcheck":
+			{
+				"@disable": false,
+				"args": ["--force", "--library=avr",
+				         "--suppressions-list=$project_path/../../.mystools/cppcheck/config/suppressions.cfg",
+				         "-I$project_path/../../", "-I$project_path/../../core",
+				         // Arduino IDE hardware location might differ on your system...
+				         "-I$project_path/../../../../../Apps/arduino/hardware/tools/avr/avr/include",
+				         "-DCPPCHECK", "--language=c++", "--inline-suppr"],
+				"enable": "style,information",
+				"excludes": [],
+				"std": []
+			},
+		}
+	},
+
+	// The project defines build targets for all Arduino based boards supported by MySensors.
+	// The plugin needed to do the build (which require the Arduino IDE to be installed) is
+	// available here: https://github.com/jacobrosenthal/arduino-cli
+	// You also need to make sure you set up sketch book paths properly and that you can
+	// build sketches and examples for the MySensors library in the IDE.
+	"build_systems":
+	[
+		{
+			"name": "MySensors",
+			"file_regex": "^(?'filename'.*.ino).*$",
+			"line_regex": "^.*:(?'line number'[0-9]+)(: )(?'error message'.*)$",
+			"selector": "source.arduino",
+			"shell": true,
+			"target": "arduinocli",
+			"variants":
+			[
+				{
+					"cmd": ["--board","MySensors:samd:mysensors_gw_native","--verify","$file"],
+					"name": "just build (SenseBenderGW)"
+				},
+				{
+					"cmd": ["--board","MySensors:samd:mysensors_gw_native","--upload","$file"],
+					"name": "build and upload (SenseBenderGW)"
+				},
+				{
+					"cmd": ["--board","MySensors:avr:MysensorsMicro:cpu=8Mhz","--verify","$file"],
+					"name": "just build (SenseBenderMicro 8Mhz)"
+				},
+				{
+					"cmd": ["--board","MySensors:avr:MysensorsMicro:cpu=8Mhz","--upload","$file"],
+					"name": "build and upload (SenseBenderMicro 8Mhz)"
+				},
+				{
+					"cmd": ["--board","MySensors:avr:MysensorsMicro:cpu=1Mhz","--verify","$file"],
+					"name": "just build (SenseBenderMicro 1Mhz)"
+				},
+				{
+					"cmd": ["--board","MySensors:avr:MysensorsMicro:cpu=1Mhz","--upload","$file"],
+					"name": "build and upload (SenseBenderMicro 1Mhz)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:pro:cpu=8MHzatmega328","--verify","$file"],
+					"name": "just build (ArduinoProMini 3.3V)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:pro:cpu=8MHzatmega328","--upload","$file"],
+					"name": "build and upload (ArduinoProMini 3.3V)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:pro:cpu=16MHzatmega328","--verify","$file"],
+					"name": "just build (ArduinoProMini 5V)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:pro:cpu=16MHzatmega328","--upload","$file"],
+					"name": "build and upload (ArduinoProMini 5V)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:nano:cpu=atmega328","--verify","$file"],
+					"name": "just build (ArduinoNano)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:nano:cpu=atmega328","--upload","$file"],
+					"name": "build and upload (ArduinoNano)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:uno","--verify","$file"],
+					"name": "just build (ArduinoUno)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:uno","--upload","$file"],
+					"name": "build and upload (ArduinoUno)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:mega:cpu=atmega2560","--verify","$file"],
+					"name": "just build (ArduinoMega)"
+				},
+				{
+					"cmd": ["--board","arduino:avr:mega:cpu=atmega2560","--upload","$file"],
+					"name": "build and upload (ArduinoMega)"
+				},
+				{
+					"cmd": ["--board","esp8266:esp8266:generic:CpuFrequency=80,FlashFreq=40,FlashMode=dio,UploadSpeed=115200,FlashSize=512K64,ResetMethod=ck,Debug=Disabled,DebugLevel=None____","--verify","$file"],
+					"name": "just build (ESP8266)"
+				},
+				{
+					"cmd": ["--board","esp8266:esp8266:generic:CpuFrequency=80,FlashFreq=40,FlashMode=dio,UploadSpeed=115200,FlashSize=512K64,ResetMethod=ck,Debug=Disabled,DebugLevel=None____","--upload","$file"],
+					"name": "build and upload (ESP8266)"
+				},
+			]
+		}
+	],
+}

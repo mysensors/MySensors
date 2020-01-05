@@ -1,0 +1,44 @@
+/**
+@mainpage MySensors library and examples documentation
+
+Are you a sketch developer/user, see @ref publics
+
+Are you a core/library developer, see @ref internals
+
+@copyright (C) 2013-2019 Sensnology AB
+
+Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+*/
+
+/*
+ * Doxygen groups that are spread across files/sections
+ */
+/**
+ * @defgroup publics MySensors public APIs and functionalities
+ * @brief The public APIs and functionalities are directly accessible to sketch developers/users.
+ *
+ * @defgroup internals MySensors internal APIs and functionalities
+ * @brief The interal APIs and functionalities should only be used by library developers/advanced
+ *        users.
+ *        
+*/
+
+/**
+ * @defgroup MyConfigGrp Library customisation
+ * @ingroup publics
+ *
+ * @brief The MySensors library can be customized in various ways.
+ *
+ * All customizations are set in the sketch. @note It is important to define any customizations
+ * before including the primary library header. @see MySensors.h
+ */
+/**
+ * @defgroup memorysavings Tips for reducing memory footprint
+ * @ingroup MyConfigGrp
+ * 
+ * @brief Some settings are optional but add significantly to the memory footprint size.
+ * 
+ * By disabeling optional features that you don't need you can save memory which can be a valuable
+ * resource on cheaper hardware like the atmega328p.
+ * These options can be defined in your sketch to disable such features.
+ */

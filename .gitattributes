@@ -1,5 +1,5 @@
 # Set default behaviour, in case users don't have core.autocrlf set.
-* text=auto
+* text eol=lf
 
 # Explicitly declare text files we want to always be normalized and converted 
 # to native line endings on checkout.
@@ -10,8 +10,13 @@
 *.xml text
 *.lua text
 
-
 # Denote all files that are truly binary and should not be modified.
 *.png binary
 *.jpg binary
 *.gif binary
+*.ttf binary
+*.eot binary
+*.svg binary
+*.woff binary
+*.epg binary
+*.jar binary

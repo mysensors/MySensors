@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>Log Parser | MySensors - Create your own Connected Home Experience</title>
+		<link rel="stylesheet" href="logparser.css" />
+	</head>
+	<body>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+		<div id="parser">
+			<h4>Paste log from gateway or node here:</h4>
+			<textarea class="form-control" @change="parse" rows="10" v-model="source"></textarea>
+			<button @click="parse" class="btn btn-primary">Parse</button>
+			<button @click="copy" class="btn btn-primary">Copy this log URL to clipboard</button>
+			<button @click="source=''" class="btn btn-default">Clear</button>
+			<h4>Human readable output:</h4>
+			<div class="table-responsive">
+				<table class="table table-condensed">
+					<tr>
+						<th>Node Id</th>
+						<th>Child Sensor</th>
+						<th>Command Type</th>
+						<th>Echo Req/Resp</th>
+						<th>Type</th>
+						<th>Payload</th>
+						<th>Description</th>
+					</tr>
+					<tr v-for="r in parsed">
+						<td v-for="c in r" v-html="c"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<script src="logparser.js"></script>
+	</body>
+</html>
+

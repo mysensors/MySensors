@@ -1,0 +1,19 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with UTF-8 encoding for every file
+[*]
+end_of_line = lf
+charset = utf-8
+
+# For all source code
+[*.{c,cpp,h,ino,sh}]
+insert_final_newline = true
+indent_style = tab
+indent_size = 2
+
+# Tab indentation also for makefiles
+[Makefile]
+indent_style = tab
