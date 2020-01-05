@@ -12,7 +12,7 @@ err()  { IFS=" "; >&2 printf "\e[91m%s\e[m\n" "$*"; exit 1;	}
 
 is_supported_os()
 {
-	[[ ${1} == darwin* ]] || [[ ${1} == linux-gnu* ]] || [[ ${1} == freebsd ]] || [[ ${1} == msys ]] || [[ ${1} == cygwin ]]
+	[[ ${1} == darwin* ]] || [[ ${1} == linux* ]] || [[ ${1} == freebsd ]] || [[ ${1} == msys ]] || [[ ${1} == cygwin ]]
 }
 
 is_installed()
