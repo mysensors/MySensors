@@ -224,7 +224,7 @@ var match = [
 	{ re: "MCO:BGN:INIT CP=([^,]+)", d: "Core initialization with capabilities <b>$1</b>" },
 	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, library version <b>$3</b>" },
 	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),REL=(.*),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, library version <b>$4</b>, release <b>$3</b>" },
-	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),FQ=(\\d+),REL=(.*),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, CPU frequency <b>$4</b> MHz, library version <b>$5</b>, release <b>$4</b>" },
+	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),FQ=(\\d+),REL=(.*),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, CPU frequency <b>$3</b> MHz, library version <b>$5</b>, release <b>$4</b>" },
 	{ re: "MCO:BGN:BFR", d: "Callback before()" },
 	{ re: "MCO:BGN:STP", d: "Callback setup()" },
 	{ re: "MCO:BGN:INIT OK,TSP=(.*)", d: "Core initialized, transport status <b>$1</b>, (1=initialized, 0=not initialized, NA=not available)" },
