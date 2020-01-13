@@ -1,4 +1,5 @@
 #!groovy
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '3')), [$class: 'ScannerJobProperty', doNotScan: false]])
 node {
 	deleteDir() // Purge workspace
 	// Checkout the repo to get the necessary groovy scripts (and place it in the required subdirectory)
