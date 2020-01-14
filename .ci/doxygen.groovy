@@ -10,21 +10,23 @@ def call(config) {
 		failedTotalAll: '', healthy: '', includePattern: '', messagesPattern: '',
 		parserConfigurations: [[parserName: 'Doxygen', pattern: config.repository_root+'doxygen.log']],
 		unHealthy: '', unstableTotalAll: '0'
-	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true,
-		reportDir: config.repository_root+'Documentation/html',
-		reportFiles: 'index.html', reportName: 'Doxygen HTML', reportTitles: ''])
 
 	if (!config.is_pull_request)
 	{
 		// Publish docs to API server
 		if (env.BRANCH_NAME == 'master') {
 			sh """#!/bin/bash
-						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:"""
+						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:
+						rm -rf ${config.repository_root}Documentation/html"""
 		} else if (env.BRANCH_NAME == 'development') {
 			sh """#!/bin/bash
-						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:beta"""
+						scp -r ${config.repository_root}Documentation/html docs@direct.openhardware.io:beta
+						rm -rf ${config.repository_root}Documentation/html"""
 		}
 	} else {
+		publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false,
+			reportDir: config.repository_root+'Documentation/html',
+			reportFiles: 'index.html', reportName: 'Doxygen HTML', reportTitles: ''])
 		if (currentBuild.currentResult == 'UNSTABLE') {
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Documentation)', 'Warnings found', '${BUILD_URL}warnings16Result/new')
 			error 'Terminating due to doxygen error'
