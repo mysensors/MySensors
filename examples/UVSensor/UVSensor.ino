@@ -90,6 +90,10 @@ void loop()
 		}
 	}
 
+	if(i==12) {
+		i--;
+	}
+
 	//calculate 1 decimal if possible
 	if (i>0) {
 		float vRange=uvIndexValue[i]-uvIndexValue[i-1];

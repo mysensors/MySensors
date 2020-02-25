@@ -193,6 +193,7 @@ bool signerCheckTimer(void)
 	return signerBackendCheckTimer();
 }
 
+// cppcheck-suppress constParameter
 bool signerSignMsg(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)
@@ -263,6 +264,7 @@ bool signerSignMsg(MyMessage &msg)
 
 }
 
+// cppcheck-suppress constParameter
 bool signerVerifyMsg(MyMessage &msg)
 {
 	bool verificationResult = true;
@@ -351,6 +353,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz)
 
 #if defined(MY_SIGNING_FEATURE)
 // Helper function to centralize signing/verification exceptions
+// cppcheck-suppress constParameter
 static bool skipSign(MyMessage &msg)
 {
 	bool ret = false;
@@ -394,6 +397,7 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 }
 
 // Helper to process presentation messages
+// cppcheck-suppress constParameter
 static bool signerInternalProcessPresentation(MyMessage &msg)
 {
 	const uint8_t sender = msg.getSender();
@@ -508,6 +512,7 @@ static bool signerInternalProcessPresentation(MyMessage &msg)
 }
 
 // Helper to process nonce request messages
+// cppcheck-suppress constParameter
 static bool signerInternalProcessNonceRequest(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)
@@ -537,6 +542,7 @@ static bool signerInternalProcessNonceRequest(MyMessage &msg)
 }
 
 // Helper to process nonce response messages
+// cppcheck-suppress constParameter
 static bool signerInternalProcessNonceResponse(MyMessage &msg)
 {
 #if defined(MY_SIGNING_FEATURE)

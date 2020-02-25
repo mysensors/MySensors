@@ -144,6 +144,7 @@ bool signerAtsha204GetNonce(MyMessage &msg)
 	return true;
 }
 
+// cppcheck-suppress constParameter
 void signerAtsha204PutNonce(MyMessage &msg)
 {
 	if (!init_ok) {

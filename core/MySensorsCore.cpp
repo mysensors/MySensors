@@ -310,7 +310,7 @@ controllerConfig_t getControllerConfig(void)
 	return _coreConfig.controllerConfig;
 }
 
-
+// cppcheck-suppress constParameter
 bool _sendRoute(MyMessage &message)
 {
 #if defined(MY_CORE_ONLY)

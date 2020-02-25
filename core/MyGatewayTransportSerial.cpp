@@ -30,6 +30,7 @@ char _serialInputString[MY_GATEWAY_MAX_RECEIVE_LENGTH];    // A buffer for incom
 uint8_t _serialInputPos;
 MyMessage _serialMsg;
 
+// cppcheck-suppress constParameter
 bool gatewayTransportSend(MyMessage &message)
 {
 	setIndication(INDICATION_GW_TX);

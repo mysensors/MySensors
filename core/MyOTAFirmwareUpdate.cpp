@@ -246,8 +246,8 @@ LOCAL bool _firmwareResponse(uint16_t block, uint8_t *data)
 			sprintf_P(prbuf,PSTR("%04" PRIX16 ":"), (uint16_t)addr);
 			MY_SERIALDEVICE.print(prbuf);
 			for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
-				uint8_t data = _flash_readByte(addr + i);
-				sprintf_P(prbuf,PSTR("%02" PRIX8 ""), (uint8_t)data);
+				uint8_t dataByte = _flash_readByte(addr + i);
+				sprintf_P(prbuf,PSTR("%02" PRIX8 ""), dataByte);
 				MY_SERIALDEVICE.print(prbuf);
 			}
 			OTA_DEBUG(PSTR("\n"));

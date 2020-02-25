@@ -110,6 +110,7 @@ static bool _MQTT_connecting = true;
 static bool _MQTT_available = false;
 static MyMessage _MQTT_msg;
 
+// cppcheck-suppress constParameter
 bool gatewayTransportSend(MyMessage &message)
 {
 	if (!_MQTT_client.connected()) {

@@ -28,6 +28,11 @@
 bool protocolSerial2MyMessage(MyMessage &message, char *inputString);
 
 // Format MyMessage to the protocol representation
-char *protocolMyMessage2Serial(MyMessage &message);
+char *protocolMyMessage2Serial(const MyMessage &message);
+
+char *protocolMyMessage2MQTT(const char *prefix, const MyMessage &message);
+
+bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
+                            const unsigned int length);
 
 #endif

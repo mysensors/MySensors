@@ -161,6 +161,7 @@ bool signerAtsha204SoftGetNonce(MyMessage &msg)
 	return true;
 }
 
+// cppcheck-suppress constParameter
 void signerAtsha204SoftPutNonce(MyMessage &msg)
 {
 	if (!_signing_init_ok) {
