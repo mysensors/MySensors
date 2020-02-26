@@ -19,7 +19,7 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 - tekka
+ * Version 1.1 - tekka
  *
  * DESCRIPTION
  * ATC mode settings and signal report functions, on RFM69 and RFM95 nodes
@@ -28,6 +28,9 @@
 
 // Enable debug prints
 #define MY_DEBUG
+
+// Enable signal report functionalities
+#define MY_SIGNAL_REPORT_ENABLED
 
 // Enable and select radio type attached
 
@@ -71,7 +74,7 @@ void setup()
 void presentation()
 {
 	// Send the sketch version information to the gateway and controller
-	sendSketchInfo("ATC", "1.0");
+	sendSketchInfo("ATC", "1.1");
 
 	// Register all sensors to gw (they will be created as child devices)
 	present(CHILD_ID_UPLINK_QUALITY, S_CUSTOM, "UPLINK QUALITY RSSI");
