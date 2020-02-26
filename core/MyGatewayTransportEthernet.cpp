@@ -245,6 +245,7 @@ bool gatewayTransportInit(void)
 	return true;
 }
 
+// cppcheck-suppress constParameter
 bool gatewayTransportSend(MyMessage &message)
 {
 	int nbytes = 0;

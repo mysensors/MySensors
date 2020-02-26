@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2019 Sensnology AB
+ * Copyright (C) 2013-2020 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -246,8 +246,8 @@ LOCAL bool _firmwareResponse(uint16_t block, uint8_t *data)
 			sprintf_P(prbuf,PSTR("%04" PRIX16 ":"), (uint16_t)addr);
 			MY_SERIALDEVICE.print(prbuf);
 			for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
-				uint8_t data = _flash_readByte(addr + i);
-				sprintf_P(prbuf,PSTR("%02" PRIX8 ""), (uint8_t)data);
+				uint8_t dataByte = _flash_readByte(addr + i);
+				sprintf_P(prbuf,PSTR("%02" PRIX8 ""), dataByte);
 				MY_SERIALDEVICE.print(prbuf);
 			}
 			OTA_DEBUG(PSTR("\n"));
