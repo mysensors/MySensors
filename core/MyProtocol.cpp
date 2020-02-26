@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2019 Sensnology AB
+ * Copyright (C) 2013-2020 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -88,7 +88,7 @@ bool protocolSerial2MyMessage(MyMessage &message, char *inputString)
 	return (index == 5);
 }
 
-char *protocolMyMessage2Serial(MyMessage &message)
+char *protocolMyMessage2Serial(const MyMessage &message)
 {
 	(void)snprintf_P(_fmtBuffer, (uint8_t)MY_GATEWAY_MAX_SEND_LENGTH,
 	                 PSTR("%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%" PRIu8 ";%s\n"), message.getSender(),
@@ -97,7 +97,7 @@ char *protocolMyMessage2Serial(MyMessage &message)
 	return _fmtBuffer;
 }
 
-char *protocolMyMessage2MQTT(const char *prefix, MyMessage &message)
+char *protocolMyMessage2MQTT(const char *prefix, const MyMessage &message)
 {
 	(void)snprintf_P(_fmtBuffer, (uint8_t)MY_GATEWAY_MAX_SEND_LENGTH,
 	                 PSTR("%s/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8 ""), prefix,

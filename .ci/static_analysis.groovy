@@ -23,10 +23,11 @@ def cppCheck(config) {
 			violationConfigs: [[pattern: '.*/cppcheck-avr\\.xml$', parser: 'CPPCHECK', reporter: 'Cppcheck'],]
 		]
 	])
+	// 20200226TK: Adjusted for CppCheck 1.90
 	ret = sh(returnStatus: true,
 		script: "#!/bin/bash +e\n"+
 				"cd ${config.repository_root}\n"+
-				"grep -q \"<td>0</td><td>total</td>\" cppcheck-avr_cppcheck_reports/index.html || exit_code=\$?\n"+
+				"grep -q \"0 total\" cppcheck-avr_cppcheck_reports/index.html || exit_code=\$?\n"+
 				"exit \$((exit_code == 0 ? 0 : 1))")
 	if (ret == 1) {
 		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (Code analysis - Cppcheck)', 'Issues found', '${BUILD_URL}CppCheck_20AVR/index.html')
