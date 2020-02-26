@@ -83,7 +83,14 @@
 #endif /* End of MY_IP_ADDRESS */
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_MQTT_CA_CERT) && defined(MY_MQTT_CLIENT_CERT) && defined(MY_MQTT_CLIENT_KEY)
+#define EthernetClient WiFiClientSecure
+BearSSL::X509List ca_cert(MY_MQTT_CA_CERT);
+BearSSL::X509List client_cert(MY_MQTT_CLIENT_CERT);
+BearSSL::PrivateKey client_key(MY_MQTT_CLIENT_KEY);
+#else
 #define EthernetClient WiFiClient
+#endif /* End of MY_MQTT_CA_CERT && MY_MQTT_CLIENT_CERT && MY_MQTT_CLIENT_KEY */
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
 #else
@@ -138,6 +145,7 @@ void incomingMQTT(char *topic, uint8_t *payload, unsigned int length)
 bool reconnectMQTT(void)
 {
 	GATEWAY_DEBUG(PSTR("GWT:RMQ:CONNECTING...\n"));
+
 	// Attempt to connect
 	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID, MY_MQTT_USER, MY_MQTT_PASSWORD)) {
 		GATEWAY_DEBUG(PSTR("GWT:RMQ:OK\n"));
@@ -260,6 +268,11 @@ bool gatewayTransportInit(void)
 #endif /* End of MY_IP_ADDRESS */
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #endif
+
+#if defined(MY_MQTT_CA_CERT) && defined(MY_MQTT_CLIENT_CERT) && defined(MY_MQTT_CLIENT_KEY)
+	_MQTT_ethClient.setTrustAnchors(&ca_cert);
+	_MQTT_ethClient.setClientRSACert(&client_cert, &client_key);
+#endif /* End of MY_MQTT_CA_CERT && MY_MQTT_CLIENT_CERT && MY_MQTT_CLIENT_KEY */
 
 	gatewayTransportConnect();
 
