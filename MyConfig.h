@@ -1486,6 +1486,63 @@
 //#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
 
 /**
+ * @def MY_MQTT_CA_CERT
+ * @brief Set a specific CA certificate needed to validate MQTT server against. Use the certificate as a trust anchor, accepting remote certificates signed by it.
+ *
+ * This define is mandatory when you need connect MQTT over SSL/TLS.
+ * Example: @code
+ *
+ * const char mqtt_ca_cert[] PROGMEM = R"EOF(
+ * ----- BEGIN THE CERTIFICATE -----
+ * XXX ... XXX
+ * ----- FINISH CERTIFICATE -----
+ * )EOF";
+ *
+ * #define MY_MQTT_CA_CERT mqtt_ca_cert
+ *
+ * @endcode
+ */
+//#define MY_MQTT_CA_CERT
+
+/**
+ * @def MY_MQTT_CLIENT_CERT
+ * @brief Set a client certificate to send to a MQTT server that requests one over TLS connection.
+ *
+ * This define is mandatory when you need connect MQTT over SSL/TLS.
+ * Example: @code
+ *
+ * const char mqtt_client_cert[] PROGMEM = R"EOF(
+ * ----- BEGIN THE CERTIFICATE -----
+ * XXX ... XXX
+ * ----- FINISH CERTIFICATE -----
+ * )EOF";
+ *
+ * #define MY_MQTT_CLIENT_CERT mqtt_client_cert
+ *
+ * @endcode
+ */
+//#define MY_MQTT_CLIENT_CERT
+
+/**
+ * @def MY_MQTT_CLIENT_KEY
+ * @brief Set a client private key to send to a MQTT server that requests one over TLS connection.
+ *
+ * This define is mandatory when you need connect MQTT over SSL/TLS.
+ * Example: @code
+ *
+ * const char mqtt_client_key[] PROGMEM = R"EOF(
+ * ----- START THE RSA PRIVATE KEY -----
+ * XXX ... XXX
+ * ----- FINISH THE RSA PRIVATE KEY -----
+ * )EOF";
+ *
+ * #define MY_MQTT_CLIENT_KEY mqtt_client_key
+ *
+ * @endcode
+ */
+//#define MY_MQTT_CLIENT_KEY
+
+/**
  * @def MY_IP_ADDRESS
  * @brief Static ip address of gateway. If not defined, DHCP will be used.
  *
@@ -2262,6 +2319,9 @@
 #define MY_MQTT_CLIENT_ID
 #define MY_MQTT_PUBLISH_TOPIC_PREFIX
 #define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX
+#define MY_MQTT_CA_CERT
+#define MY_MQTT_CLIENT_CERT
+#define MY_MQTT_CLIENT_KEY
 #define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
