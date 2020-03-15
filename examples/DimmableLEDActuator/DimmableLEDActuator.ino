@@ -27,7 +27,7 @@
  * <henrik.ekblad@gmail.com> Vera Arduino Sensor project.
  * Developed by Bruce Lacey, inspired by Hek's MySensor's example sketches.
  *
- * The circuit uses a MOSFET for Pulse-Wave-Modulation to dim the attached LED or LED strip.
+ * The circuit uses a MOSFET for Pulse-Width-Modulation (PWM) to dim the attached LED or LED strip.
  * The MOSFET Gate pin is connected to Arduino pin 3 (LED_PIN), the MOSFET Drain pin is connected
  * to the LED negative terminal and the MOSFET Source pin is connected to ground.
  *
