@@ -221,6 +221,9 @@ var types = {
 //mysgw: Client 0: 0;0;3;0;18;PING
 var rprefix =  "(?:\\d+ )?(?:mysgw: )?(?:Client 0: )?";
 var match = [
+
+	// MySensors core
+
 	{ re: "MCO:BGN:INIT CP=([^,]+)", d: "Core initialization with capabilities <b>$1</b>" },
 	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, library version <b>$3</b>" },
 	{ re: "MCO:BGN:INIT (\\w+),CP=([^,]+),REL=(.*),VER=(.*)", d: "Core initialization of <b>$1</b>, with capabilities <b>$2</b>, library version <b>$4</b>, release <b>$3</b>" },
@@ -244,6 +247,11 @@ var match = [
 	{ re: "!MCO:SLP:TNR", d: " Transport not ready, attempt to reconnect until timeout" },
 	{ re: "MCO:NLK:NODE LOCKED. UNLOCK: GND PIN (\\d+) AND RESET", d: "Node locked during booting, see signing documentation for additional information" },
 	{ re: "MCO:NLK:TPD", d: "Powerdown transport" },
+	{ re: "!MCO:PRO:RC=(-?\\d+)", d: "Recursive call detected in _process(), call level=<b>$1</b>" },
+	{ re: "!MCO:WAI:RC=(-?\\d+)", d: "Recursive call detected in wait(), call level=<b>$1</b>" },
+	
+	// transport state machine
+	
 	{ re: "TSM:INIT", d: "Transition to <b>Init</b> state" },
 	{ re: "TSM:INIT:STATID=(\\d+)", d: "Init static node id <b>$1</b>" },
 	{ re: "TSM:INIT:TSP OK", d: "Transport device configured and fully operational" },
@@ -272,6 +280,9 @@ var match = [
 	{ re: "TSM:FAIL:CNT=(\\d+)", d: "Transition to <b>Failure</b> state, consecutive failure counter is <b>$1</b>" },
 	{ re: "TSM:FAIL:PDT", d: "Power-down transport" },
 	{ re: "TSM:FAIL:RE-INIT", d: "Attempt to re-initialize transport" },
+	
+	// transport support functions
+	
 	{ re: "TSF:CKU:OK,FCTRL", d: "Uplink OK, flood control prevents pinging GW in too short intervals" },
 	{ re: "TSF:CKU:OK", d: "Uplink OK" },
 	{ re: "TSF:CKU:DGWC,O=(\\d+),N=(\\d+)", d: "Uplink check revealed changed network topology, old distance <b>$1</b>, new distance <b>$2</b>" },
