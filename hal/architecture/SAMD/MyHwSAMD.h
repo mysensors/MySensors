@@ -29,7 +29,11 @@
 #define CRYPTO_LITTLE_ENDIAN
 
 #ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE SerialUSB
+	#ifdef SERIAL_PORT_MONITOR
+		#define MY_SERIALDEVICE SERIAL_PORT_MONITOR
+	#else
+		#define MY_SERIALDEVICE SerialUSB
+	#endif
 #endif
 
 #ifndef MY_DEBUGDEVICE
