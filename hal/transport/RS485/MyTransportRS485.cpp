@@ -62,7 +62,7 @@
 #define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW)
 #else
 #define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW); delayMicroseconds(5)
-#define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIG)
+#define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIGH)
 #endif
 #else
 #define assertDE()
