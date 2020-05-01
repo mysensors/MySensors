@@ -17,7 +17,7 @@
 * version 2 as published by the Free Software Foundation.
 *
 * Based on maniacbug's RF24 library, copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
-* RF24 driver refactored and optimized for speed and size, copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
+* RF24 driver refactored and optimized for speed and size, copyright (C) 2017-2020 Olivier Mauti <olivier@mysensors.org>
 *
 * Definitions for Nordic nRF24L01+ radios:
 * https://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01P
@@ -37,6 +37,7 @@
 * |E| SYS  | SUB  | Message              | Comment
 * |-|------|------|----------------------|---------------------------------------------------------------------
 * | | RF24 | INIT | PIN,CE=%%d,CS=%%d    | Initialise RF24 radio, pin configuration: chip enable (CE), chip select (CS)
+* | | RF24 | INIT | IRQ=%%d              | IRQ handler attached to pin (IRQ)
 * |!| RF24 | INIT | SANCHK FAIL          | Sanity check failed, check wiring or replace module
 * | | RF24 | SPP  | PCT=%%d,TX LEVEL=%%d | Set TX level, input TX percent (PCT)
 * | | RF24 | RBR  | REG=%%d,VAL=%%d      | Read register (REG), value=(VAL)
@@ -48,8 +49,9 @@
 * | | RF24 | SPL  |                      | Stop listening
 * | | RF24 | SLP  |                      | Set radio to sleep
 * | | RF24 | SBY  |                      | Set radio to standby
+* |!| RF24 | IDA  | IRQ                  | IRQ triggered but FIFO empty
 * | | RF24 | TXM  | TO=%%d,LEN=%%d       | Transmit message to=(TO), length=(LEN)
-* |!| RF24 | TXM  | MAX_RT               | Max TX retries, no ACK received
+* |?| RF24 | TXM  | MAX_RT               | Max TX retries, no ACK received (if non-BC message)
 * |!| RF24 | GDP  | PYL INV              | Invalid payload size
 * | | RF24 | RXM  | LEN=%%d              | Read message, length=(LEN)
 * | | RF24 | STX  | LEVEL=%%d            | Set TX level, level=(LEVEL)
@@ -75,7 +77,6 @@
 #define DEFAULT_RF24_CE_PIN				(27)	//!< DEFAULT_RF24_CE_PIN
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define DEFAULT_RF24_CE_PIN				(22)	//!< DEFAULT_RF24_CE_PIN
-//#define DEFAULT_RF24_CS_PIN			(24)	//!< DEFAULT_RF24_CS_PIN
 #elif defined(ARDUINO_ARCH_STM32F1)
 #define DEFAULT_RF24_CE_PIN				(PB0)	//!< DEFAULT_RF24_CE_PIN
 #elif defined(TEENSYDUINO)
@@ -90,49 +91,20 @@
 #define LOCAL static		//!< static
 
 // SPI settings
-#define RF24_SPI_DATA_ORDER				MSBFIRST	//!< RF24_SPI_DATA_ORDER
-#define RF24_SPI_DATA_MODE				SPI_MODE0	//!< RF24_SPI_DATA_MODE
+#define RF24_SPI_DATA_ORDER     MSBFIRST	//!< RF24_SPI_DATA_ORDER
+#define RF24_SPI_DATA_MODE      SPI_MODE0	//!< RF24_SPI_DATA_MODE
 
-#define RF24_BROADCAST_ADDRESS	(255u)	//!< RF24_BROADCAST_ADDRESS
-
-// verify RF24 IRQ defs
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-#if !defined(MY_RF24_IRQ_PIN)
-#error Message buffering feature requires MY_RF24_IRQ_PIN to be defined!
-#endif
-// SoftSPI does not support usingInterrupt()
-#ifdef MY_SOFTSPI
-#error RF24 IRQ usage cannot be used with Soft SPI
-#endif
-// ESP8266 does not support usingInterrupt()
-#ifdef ARDUINO_ARCH_ESP8266
-#error RF24 IRQ usage cannot be used with ESP8266
-#endif
-#ifndef SPI_HAS_TRANSACTION
-#error RF24 IRQ usage requires transactional SPI support
-#endif
-#else
-#ifdef MY_RX_MESSAGE_BUFFER_SIZE
-#error Receive message buffering requires RF24 IRQ usage
-#endif
-#endif
-
+#define RF24_BROADCAST_ADDRESS  (255u)	//!< RF24_BROADCAST_ADDRESS
 
 // RF24 settings
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-#define RF24_CONFIGURATION (uint8_t) ((RF24_CRC_16 << 2) | (1 << RF24_MASK_TX_DS) | (1 << RF24_MASK_MAX_RT))		//!< MY_RF24_CONFIGURATION
-#else
-#define RF24_CONFIGURATION (uint8_t) (RF24_CRC_16 << 2)		//!< RF24_CONFIGURATION
-#endif
-#define RF24_FEATURE (uint8_t)( _BV(RF24_EN_DPL))	//!<  RF24_FEATURE
-#define RF24_RF_SETUP (uint8_t)(( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1) 		//!< RF24_RF_SETUP, +1 for Si24R1 and LNA
-
-// powerup delay
-#define RF24_POWERUP_DELAY_MS	(100u)		//!< Power up delay, allow VCC to settle, transport to become fully operational
-
-// pipes
-#define RF24_BROADCAST_PIPE		(1u)		//!< RF24_BROADCAST_PIPE
-#define RF24_NODE_PIPE			(0u)		//!< RF24_NODE_PIPE
+#define RF24_CONFIGURATION      (uint8_t) (RF24_CRC_16 << 2)		//!< RF24_CONFIGURATION
+#define RF24_FEATURE            (uint8_t)(_BV(RF24_EN_DPL))	//!<  RF24_FEATURE
+#define RF24_RF_SETUP           (uint8_t)(( ((MY_RF24_DATARATE & 0b10 ) << 4) | ((MY_RF24_DATARATE & 0b01 ) << 3) | (MY_RF24_PA_LEVEL << 1) ) + 1) 		//!< RF24_RF_SETUP, +1 for Si24R1 and LNA
+#define RF24_POWERUP_DELAY_MS   (100u)		//!< Power up delay, allow VCC to settle, transport to become fully operational
+#define RF24_TX_TIMEOUT_MS      (1000u)		//!< TX timeout
+#define MY_RF24_BC_RETRIES      (0u)		//!< TX retries for BC messages
+#define RF24_BROADCAST_PIPE     (1u)		//!< RF24_BROADCAST_PIPE
+#define RF24_NODE_PIPE          (0u)		//!< RF24_NODE_PIPE
 
 // functions
 /**
@@ -192,7 +164,7 @@ LOCAL void RF24_flushTX(void);
 * @brief RF24_getStatus
 * @return
 */
-LOCAL uint8_t RF24_getStatus(void);
+LOCAL uint8_t RF24_getStatus(void) __attribute__((unused));
 /**
 * @brief RF24_getFIFOStatus
 * @return
@@ -242,6 +214,11 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void *buf, const uint
 * @return
 */
 LOCAL uint8_t RF24_getDynamicPayloadSize(void);
+/**
+* @brief RF24_isFIFOempty
+* @return True if FIFO empty
+*/
+LOCAL bool RF24_isFIFOempty(void) __attribute__((unused));
 /**
 * @brief RF24_isDataAvailable
 * @return
@@ -385,22 +362,6 @@ LOCAL void RF24_disableConstantCarrierWave(void) __attribute__((unused));
 * @return True when power level >-64dBm for more than 40us.
 */
 LOCAL bool RF24_getReceivedPowerDetector(void) __attribute__((unused));
-
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-/**
-* @brief Callback type
-*/
-typedef void (*RF24_receiveCallbackType)(void);
-/**
-* @brief RF24_registerReceiveCallback
-* Register a callback, which will be called (from interrupt context) for every message received.
-* @note When a callback is registered, it _must_ retrieve the message from the nRF24
-* by calling RF24_readMessage(). Otherwise the interrupt will not get deasserted
-* and message reception will stop.
-* @param cb
-*/
-LOCAL void RF24_registerReceiveCallback(RF24_receiveCallbackType cb);
-#endif
 
 #endif // __RF24_H__
 

@@ -34,5 +34,18 @@ static uint8_t convertH2I(const char c) __attribute__((unused));
 */
 static char convertI2H(const uint8_t i) __attribute__((unused));
 
+/**
+ * @brief Do a timing neutral memory comparison.
+ *
+ * The function behaves similar to memcmp with the difference that it will
+ * always use the same number of instructions for a given number of bytes,
+ * no matter how the two buffers differ and the response is either 0 or -1.
+ *
+ * @param a First buffer for comparison.
+ * @param b Second buffer for comparison.
+ * @param sz The number of bytes to compare.
+ * @returns 0 if buffers match, -1 if they do not.
+ */
+static int timingneutralMemcmp(const void* a, const void* b, size_t sz) __attribute__((unused));
 
 #endif

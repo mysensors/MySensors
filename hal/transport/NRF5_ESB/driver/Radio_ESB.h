@@ -23,7 +23,6 @@
 #define __NRF5_ESB_H__
 
 #include "Radio.h"
-#include <Arduino.h>
 
 // Check maximum message length
 #if MAX_MESSAGE_SIZE > (32)
@@ -130,7 +129,7 @@ static uint8_t NRF5_ESB_getNodeID();
 
 static void NRF5_ESB_startListening();
 static bool NRF5_ESB_isDataAvailable();
-static uint8_t NRF5_ESB_readMessage(void *data);
+static uint8_t NRF5_ESB_readMessage(void *data, const uint8_t maxBufSize);
 
 static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len, const bool noACK);
 

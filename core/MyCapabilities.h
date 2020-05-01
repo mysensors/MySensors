@@ -87,6 +87,7 @@
  *
  * | Radio        | Indicator
  * |--------------|----------
+ * | Multiple     | M
  * | nRF24/nRF5   | N
  * | %RFM69 (old) | R
  * | %RFM69 (new) | P
@@ -94,6 +95,9 @@
  * | RS485        | S
  * | None         | -
  */
+#if (MY_TRANSPORT_COUNT > 1)
+#define MY_CAP_RADIO "M"
+#else
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB)
 #define MY_CAP_RADIO "N"
 #elif defined(MY_RADIO_RFM69)
@@ -111,7 +115,7 @@
 #else
 #define MY_CAP_RADIO "-"
 #endif
-
+#endif
 // Node type
 /**
  * @def MY_CAP_TYPE

@@ -256,8 +256,8 @@ bool signerAtsha204VerifyMsg(MyMessage &msg)
 		_signing_hmac[0] = SIGNING_IDENTIFIER;
 
 		// Compare the calculated signature with the provided signature
-		if (signerMemcmp(&msg.data[msg.getLength()], _signing_hmac,
-		                 min(MAX_PAYLOAD_SIZE - msg.getLength(), 32))) {
+		if (timingneutralMemcmp(&msg.data[msg.getLength()], _signing_hmac,
+		                        min(MAX_PAYLOAD_SIZE - msg.getLength(), 32))) {
 			return false;
 		} else {
 			return true;

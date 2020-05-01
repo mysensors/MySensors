@@ -321,36 +321,6 @@ bool signerVerifyMsg(MyMessage &msg)
 	return verificationResult;
 }
 
-int signerMemcmp(const void* a, const void* b, size_t sz)
-{
-	int retVal;
-	size_t i;
-	int done = 0;
-	const uint8_t* ptrA = (const uint8_t*)a;
-	const uint8_t* ptrB = (const uint8_t*)b;
-	for (i=0; i < sz; i++) {
-		if (ptrA[i] == ptrB[i]) {
-			if (done > 0) {
-				done = 1;
-			} else {
-				done = 0;
-			}
-		}	else {
-			if (done > 0) {
-				done = 2;
-			} else {
-				done = 3;
-			}
-		}
-	}
-	if (done > 0) {
-		retVal = -1;
-	} else {
-		retVal = 0;
-	}
-	return retVal;
-}
-
 #if defined(MY_SIGNING_FEATURE)
 // Helper function to centralize signing/verification exceptions
 // cppcheck-suppress constParameter
@@ -401,6 +371,11 @@ static void prepareSigningPresentation(MyMessage &msg, uint8_t destination)
 static bool signerInternalProcessPresentation(MyMessage &msg)
 {
 	const uint8_t sender = msg.getSender();
+#if defined(MY_GATEWAY_FEATURE) && (F_CPU > 16*1000000ul)
+	// let's slow down things a bit - on fast GWs we may send messages before slow node's radio switches from TX->RX
+	delay(50);
+#endif
+
 #if defined(MY_SIGNING_FEATURE)
 	if (msg.data[0] != SIGNING_PRESENTATION_VERSION_1) {
 		SIGN_DEBUG(PSTR("!SGN:PRE:VER=%" PRIu8 "\n"),

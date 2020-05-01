@@ -17,7 +17,7 @@
 * version 2 as published by the Free Software Foundation.
 *
 * Based on maniacbug's RF24 library, copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
-* RF24 driver refactored and optimized for speed and size, copyright (C) 2017 Olivier Mauti <olivier@mysensors.org>
+* RF24 driver refactored and optimized for speed and size, copyright (C) 2017-2020 Olivier Mauti <olivier@mysensors.org>
 */
 
 #include "RF24.h"
@@ -29,12 +29,12 @@
 #define RF24_DEBUG(x,...)	//!< DEBUG null
 #endif
 
+#if defined(MY_RF24_USE_INTERRUPTS)
+volatile bool RF24_irq;
+#endif
+
 LOCAL uint8_t RF24_BASE_ID[MY_RF24_ADDR_WIDTH] = { MY_RF24_BASE_RADIO_ID };
 LOCAL uint8_t RF24_NODE_ADDRESS = RF24_BROADCAST_ADDRESS;
-
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-LOCAL RF24_receiveCallbackType RF24_receiveCallback = NULL;
-#endif
 
 #if defined(__linux__)
 uint8_t RF24_spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
@@ -97,6 +97,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t
 		status = *prx; // status is 1st byte of receive buffer
 	}
 #else
+	// first byte retrieved is status byte
 	status = RF24_SPI.transfer(cmd);
 	while ( len-- ) {
 		if (readMode) {
@@ -314,12 +315,24 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void *buf, const uint
 	RF24_flushTX();
 	if (noACK) {
 		// noACK messages are only sent once
-		RF24_setRetries(RF24_SET_ARD, 0);
+		RF24_setRetries(RF24_SET_ARD, MY_RF24_BC_RETRIES);
 	}
 	// this command is affected in clones (e.g. Si24R1):  flipped NoACK bit when using W_TX_PAYLOAD_NO_ACK / W_TX_PAYLOAD
 	// AutoACK is disabled on the broadcasting pipe - NO_ACK prevents resending
 	(void)RF24_spiMultiByteTransfer(RF24_CMD_WRITE_TX_PAYLOAD, (uint8_t *)buf, len, false);
 	// go, TX starts after ~10us, CE high also enables PA+LNA on supported HW
+#if defined(MY_RF24_USE_INTERRUPTS)
+	RF24_irq = false;
+	RF24_ce(HIGH);
+	const uint32_t enteringMS = hwMillis();
+	while (!RF24_irq && (hwMillis() - enteringMS < RF24_TX_TIMEOUT_MS)) {
+		doYield();
+	}
+	RF24_DEBUG(PSTR("RF24:TXM:ST=%" PRIu8 ",FI=%" PRIu8 ",IRQ=%" PRIu8 "\n"), RF24_getStatus(),
+	           RF24_getFIFOStatus(), RF24_irq); //
+	// reset IRQ only if RX FIFO empty
+	RF24_irq = !RF24_isFIFOempty();
+#else
 	RF24_ce(HIGH);
 	// timeout counter to detect HW issues
 	uint16_t timeout = 0xFFFF;
@@ -327,6 +340,7 @@ LOCAL bool RF24_sendMessage(const uint8_t recipient, const void *buf, const uint
 		doYield();
 	}
 	// timeout value after successful TX on 16Mhz AVR ~ 65500, i.e. msg is transmitted after ~36 loop cycles
+#endif
 	RF24_ce(LOW);
 	// reset interrupts
 	const uint8_t RF24_status = RF24_setStatus(_BV(RF24_RX_DR) | _BV(RF24_TX_DS) | _BV(RF24_MAX_RT));
@@ -356,15 +370,25 @@ LOCAL uint8_t RF24_getDynamicPayloadSize(void)
 	return result;
 }
 
-LOCAL bool RF24_isDataAvailable(void)
+LOCAL bool RF24_isFIFOempty(void)
 {
 	// prevent debug message flooding
-#if defined(MY_DEBUG_VERBOSE_RF24)
+#if defined(MY_DEBUG_VERBOSE_RF24) && !defined(MY_RF24_USE_INTERRUPTS)
 	const uint8_t value = RF24_spiMultiByteTransfer(RF24_CMD_READ_REGISTER | (RF24_REGISTER_MASK &
 	                      (RF24_REG_FIFO_STATUS)), NULL, 1, true);
-	return (bool)(!(value & _BV(RF24_RX_EMPTY)));
+	return value & _BV(RF24_RX_EMPTY);
 #else
-	return (bool)(!(RF24_getFIFOStatus() & _BV(RF24_RX_EMPTY)) );
+	return RF24_getFIFOStatus() & _BV(RF24_RX_EMPTY);
+#endif
+}
+
+LOCAL bool RF24_isDataAvailable(void)
+{
+#if defined(MY_RF24_USE_INTERRUPTS)
+	return RF24_irq;
+#else
+	// polling FIFO status
+	return (!RF24_isFIFOempty());
 #endif
 }
 
@@ -375,6 +399,10 @@ LOCAL uint8_t RF24_readMessage(void *buf)
 	RF24_spiMultiByteTransfer(RF24_CMD_READ_RX_PAYLOAD, (uint8_t *)buf, len, true);
 	// clear RX interrupt
 	(void)RF24_setStatus(_BV(RF24_RX_DR));
+#if defined(MY_RF24_USE_INTERRUPTS)
+	// clear IRQ flag
+	RF24_irq = false;
+#endif
 	return len;
 }
 
@@ -453,60 +481,10 @@ LOCAL bool RF24_getReceivedPowerDetector(void)
 	// slightly different and takes at least 128us to become active.
 	return (RF24_readByteRegister(RF24_REG_RPD) & _BV(RF24_RPD)) != 0;
 }
-
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+#if defined(MY_RF24_USE_INTERRUPTS)
 LOCAL void IRQ_HANDLER_ATTR RF24_irqHandler(void)
 {
-	if (RF24_receiveCallback) {
-#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
-		// Will stay for a while (several 100us) in this interrupt handler. Any interrupts from serial
-		// rx coming in during our stay will not be handled and will cause characters to be lost.
-		// As a workaround we re-enable interrupts to allow nested processing of other interrupts.
-		// Our own handler is disconnected to prevent recursive calling of this handler.
-		detachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
-		interrupts();
-#endif
-		// Read FIFO until empty.
-		// Procedure acc. to datasheet (pg. 63):
-		// 1.Read payload, 2.Clear RX_DR IRQ, 3.Read FIFO_status, 4.Repeat when more data available.
-		// Datasheet (ch. 8.5) states, that the nRF de-asserts IRQ after reading STATUS.
-
-#if defined(__linux__)
-		// Start checking if RX-FIFO is not empty, as we might end up here from an interrupt
-		// for a message we've already read.
-		if (RF24_isDataAvailable()) {
-			do {
-				RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
-			} while (RF24_isDataAvailable());
-		} else {
-			// Occasionally interrupt is triggered but no data is available - clear RX interrupt only
-			RF24_setStatus(_BV(RF24_RX_DR));
-			logNotice("RF24: Recovered from a bad interrupt trigger.\n");
-		}
-#else
-		// Start checking if RX-FIFO is not empty, as we might end up here from an interrupt
-		// for a message we've already read.
-		while (RF24_isDataAvailable()) {
-			RF24_receiveCallback();		// Must call RF24_readMessage(), which will clear RX_DR IRQ !
-		}
-#endif
-
-#if defined(MY_GATEWAY_SERIAL) && !defined(__linux__)
-		// Restore our interrupt handler.
-		noInterrupts();
-		attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
-#endif
-	} else {
-		// clear RX interrupt
-		RF24_setStatus(_BV(RF24_RX_DR));
-	}
-}
-
-LOCAL void RF24_registerReceiveCallback(RF24_receiveCallbackType cb)
-{
-	MY_CRITICAL_SECTION {
-		RF24_receiveCallback = cb;
-	}
+	RF24_irq = true;
 }
 #endif
 
@@ -518,7 +496,7 @@ LOCAL bool RF24_initialize(void)
 	hwPinMode(MY_RF24_POWER_PIN, OUTPUT);
 #endif
 	RF24_powerUp();
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+#if defined(MY_RF24_USE_INTERRUPTS)
 	hwPinMode(MY_RF24_IRQ_PIN,INPUT);
 #endif
 	hwPinMode(MY_RF24_CE_PIN, OUTPUT);
@@ -530,12 +508,9 @@ LOCAL bool RF24_initialize(void)
 
 	// Initialize SPI
 	RF24_SPI.begin();
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-	// assure SPI can be used from interrupt context
-	// Note: ESP8266 & SoftSPI currently do not support interrupt usage for SPI,
-	// therefore it is unsafe to use MY_RF24_IRQ_PIN with ESP8266/SoftSPI!
-	RF24_SPI.usingInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN));
-	// attach interrupt
+#if defined(MY_RF24_USE_INTERRUPTS)
+	RF24_irq = false;
+	RF24_DEBUG(PSTR("RF24:INIT:IRQ=%" PRIu8 "\n"), MY_RF24_IRQ_PIN);
 	attachInterrupt(digitalPinToInterrupt(MY_RF24_IRQ_PIN), RF24_irqHandler, FALLING);
 #endif
 	// power up and standby
@@ -572,6 +547,6 @@ LOCAL bool RF24_initialize(void)
 	RF24_flushRX();
 	RF24_flushTX();
 	// reset interrupts
-	RF24_setStatus(_BV(RF24_TX_DS) | _BV(RF24_MAX_RT) | _BV(RF24_RX_DR));
+	(void)RF24_setStatus(_BV(RF24_TX_DS) | _BV(RF24_MAX_RT) | _BV(RF24_RX_DR));
 	return true;
 }
