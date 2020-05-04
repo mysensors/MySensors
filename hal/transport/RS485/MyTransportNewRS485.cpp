@@ -56,7 +56,27 @@
 #include "SerialPort.h"
 #endif
 
-#include <util/crc16.h>		// need to be moved to the right place
+#if defined(__AVR_ATmega328P__)
+	#include <crc16.h>		// need to be moved to the right place
+#else
+uint8_t _crc_ibutton_update(uint8_t crc, uint8_t data)
+{
+	uint8_t i;
+	crc = crc ^ data;
+	for (i = 0; i < 8; i++)
+	{
+		if (crc & 0x01)
+			crc = (crc >> 1) ^ 0x8C;
+		else
+			crc >>= 1;
+	}  
+   	return crc;
+}
+#endif
+
+#if defined(ARDUINO_ARCH_ESP32)
+#	define _delay_us(x) ets_delay_us(x);
+#endif
 
 #define RS485_SEND_MESSAGE_TRY_CNT 10
 #define RS485_BUS_AQUISITION_TRY_CNT 50
@@ -143,17 +163,21 @@
 #endif
 
 // double check if all conditions above have been analyzed
-#if defined(TCNT2_VAL_PER_BIT_DEF)
-#	if ((((F_CPU / MY_RS485_BAUD_RATE) * 11)  > (256 * 64)) && defined (ARDUINO_ARCH_AVR))
+#if defined(MY_RS485_COLLISION_DETECTION)
+#	if defined(TCNT2_VAL_PER_BIT_DEF)
+#		if ((((F_CPU / MY_RS485_BAUD_RATE) * 11)  > (256 * 64)) && defined (ARDUINO_ARCH_AVR))
 		// (F_CPU / MY_RS485_BAUD_RATE) * 11) == clock cycles to transmit one uart byte (10 bit) + margin.
 		// (256 * 64) Timer0 overflow (256) for arduino core. Prescaler is set to 64 by default. 
-#		error "MY_RS485_COLLISION_DETECTION will disable the interrups for too long. Please reduce cpu clock or increase MY_RS485_BAUD_RATE."
-#	elif !defined(ARDUINO_ARCH_AVR)
-#		error("MY_RS485_COLLISION_DETECTION not implemented for current architecture."))
+#			error "MY_RS485_COLLISION_DETECTION will disable the interrups for too long. Please reduce cpu clock or increase MY_RS485_BAUD_RATE."
+#		elif !defined(ARDUINO_ARCH_AVR)
+#			error("MY_RS485_COLLISION_DETECTION not implemented for current architecture."))
+#		endif
+#	else
+#		error " TCNT2_VAL_PER_BIT is undefined!"
 #	endif
-#else
-#	error " TCNT2_VAL_PER_BIT is undefined!"
 #endif
+
+
 
 //storage variables
 unsigned char _recCommand;
@@ -472,7 +496,6 @@ _writeRS485PacketError:
 
     return false;
 }
-
 
 bool _transportPackage(const void* data, const uint8_t len)
 {
