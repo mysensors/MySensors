@@ -628,6 +628,7 @@ void doYield(void)
 #if !defined(MY_SLEEP_HANDLER)
 void sleepHandler(bool sleep)
 {
+	(void)sleep;
 	// empty function, resolves AVR-specific GCC optimization bug (<5.5) if handler not used
 	// see here: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=77326
 }
