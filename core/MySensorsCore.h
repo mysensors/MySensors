@@ -301,12 +301,6 @@ bool wait(const uint32_t waitingMS, const mysensors_command_t cmd, const uint8_t
  */
 void doYield(void);
 
-/**
- * Sleep handler will be called right before and right after entering sleep mode.
- * Applications can define own handler to optimize powering down peripherals before entering sleep.
- * @param sleep true if entering sleep, false if exiting
- */
-void sleepHandler(bool sleep);
 
 /**
  * Sleep (PowerDownMode) the MCU and radio. Wake up on timer.
