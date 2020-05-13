@@ -1217,6 +1217,16 @@
 #ifndef MY_SMART_SLEEP_WAIT_DURATION_MS
 #define MY_SMART_SLEEP_WAIT_DURATION_MS (500ul)
 #endif
+
+/**
+ * @def MY_SLEEP_HANDLER
+ * @brief Define this to enable the custom pre- & post-sleep handler.
+ *
+ * Sleep handler is invoked right before entering the sleep function, as well a just after the sleep
+ * completes. Applications can use this handler to turn off peripherals or put pins into a best
+ * possible low power state according to the concrete hardware design.
+ */
+//#define MY_SLEEP_HANDLER
 /** @}*/ // End of SleepSettingGrpPub group
 
 /**
@@ -1352,7 +1362,6 @@
 #else
 #define MY_INCLUSION_BUTTON_PRESSED (LOW)
 #endif
-
 
 /**************************************
 * Ethernet Gateway Transport Defaults
@@ -2329,6 +2338,7 @@
 #define MY_DISABLE_REMOTE_RESET
 #define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
 #define MY_LOCK_DEVICE
+#define MY_SLEEP_HANDLER
 // core
 #define MY_CORE_ONLY
 // GW
