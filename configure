@@ -348,7 +348,7 @@ for opt do
         ;;
     --service-name=*)
         SERVICE_NAME="$optarg"
-        CPPFLAGS="-DMY_SERVICE_NAME=\"${optarg}\" $CPPFLAGS"
+        CPPFLAGS="-DSERVICENAME=\"${optarg}\" $CPPFLAGS"
         ;;
     --no-clean*)
         NO_CLEAN="1"

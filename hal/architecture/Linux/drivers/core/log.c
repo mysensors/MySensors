@@ -28,8 +28,8 @@
 #include <time.h>
 #include <errno.h>
 
-#ifndef MY_SERVICE_NAME
-#define MY_SERVICE_NAME "mysgw"
+#ifndef SERVICENAME
+#define SERVICENAME "mysgw"
 #endif
 
 #define STR_HELPER(x) #x //!< Helper macro, STR_HELPER()
@@ -147,7 +147,7 @@ void vlog(int level, const char *fmt, va_list args)
 		date[strftime(date, sizeof(date), "%b %d %H:%M:%S", lt)] = '\0';
 
 		if (_log_file_fp != NULL) {
-			fprintf(_log_file_fp, "%s %s %-5s ", date, STR(MY_SERVICE_NAME), _log_level_names[level]);
+			fprintf(_log_file_fp, "%s %s %-5s ", date, STR(SERVICENAME), _log_level_names[level]);
 			vfprintf(_log_file_fp, fmt, args);
 			fflush(_log_file_fp);
 		}
@@ -155,10 +155,10 @@ void vlog(int level, const char *fmt, va_list args)
 		if (!_log_quiet) {
 #ifdef LOG_DISABLE_COLOR
 			(void)_log_level_colors;
-			fprintf(stderr, "%s %s %-5s ", date, STR(MY_SERVICE_NAME) _log_level_names[level]);
+			fprintf(stderr, "%s %s %-5s ", date, STR(SERVICENAME) _log_level_names[level]);
 			vfprintf(stderr, fmt, args);
 #else
-			fprintf(stderr, "%s %s %s%-5s\x1b[0m ", date, STR(MY_SERVICE_NAME), _log_level_colors[level],
+			fprintf(stderr, "%s %s %s%-5s\x1b[0m ", date, STR(SERVICENAME), _log_level_colors[level],
 			        _log_level_names[level]);
 			vfprintf(stderr, fmt, args);
 #endif
