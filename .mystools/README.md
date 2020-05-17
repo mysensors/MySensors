@@ -127,25 +127,26 @@ sudo make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS
 ### Install AStyle
 
 # Download
-iwr 'https://sourceforge.net/projects/astyle/files/astyle/astyle%202.05.1/AStyle_2.05.1_windows.zip/download' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile astyle.2.05.zip
+iwr 'https://netix.dl.sourceforge.net/project/astyle/astyle/astyle%203.1/AStyle_3.1_windows.zip' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile astyle.3.1.zip
 
 # Unzip the filed & move the C:\Program Files
-expand-archive astyle.2.05.zip
-mv .\astyle.2.05 'C:\Program Files\AStyle\'
+expand-archive astyle.3.1.zip
+mv .\astyle.3.1.zip\AStyle 'C:\Program Files\AStyle'
 
 # Add AStyle to your path
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\AStyle\bin")
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\AStyle\bin", [EnvironmentVariableTarget]::Machine)
 
 ### Install Cppcheck (either 64-bit or 32-bit depending upon your version of Windows - pick one below)
 
 # 64-bit
-iwr 'http://github.com/danmar/cppcheck/releases/download/1.76.1/cppcheck-1.76.1-x64-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-1.76.1-Setup.msi
+iwr 'https://github.com/danmar/cppcheck/releases/download/1.88/cppcheck-1.88-x64-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-1.88-Setup.msi
 
 # 32-bit
-iwr 'http://github.com/danmar/cppcheck/releases/download/1.76.1/cppcheck-1.76.1-x86-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-1.76.1-Setup.msi
+iwr 'https://github.com/danmar/cppcheck/releases/download/1.88/cppcheck-1.88-x86-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-1.88-Setup.msi
 
 # Launch installer to install Cppcheck
-& .\cppcheck-1.76.1-Setup.msi
+& .\cppcheck-1.88-Setup.msi
 
 ### Add Cppcheck to your path
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\Cppcheck", [EnvironmentVariableTarget]::Machine)

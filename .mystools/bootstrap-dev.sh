@@ -21,13 +21,13 @@ check_tool_prerequisite()
 		local version=$(${1} --version 2>&1 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')
 		if [ $(ver ${version}) -lt $(ver ${2}) ]; then
 			warn "Found ${1} ${version} however, version ${2} or greater is required..."
-			return 1
+			sleep 3 && return 1
 		else
 			log "Found ${1} ${version}"
 		fi
 	else
 		warn "${1} not installed or not in current path."
-		return 1
+		sleep 3 && return 1
 	fi
 }
 
@@ -89,3 +89,5 @@ configure_git_tool_aliases || err "Failed to create git aliases due to error $?.
 bootstrap_version "--set"
 
 info "Successfully configured your repo for MySensors development... Thanks for your support!"
+
+sleep 3
