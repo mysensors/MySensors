@@ -523,7 +523,18 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	return -127; // not implemented yet
+	uint32_t Temperature = 0;
+
+	for (byte i = 0; i < 10; i++) {
+		NRF_TEMP->TASKS_START = 1;
+		while (!(NRF_TEMP->EVENTS_DATARDY)) {}
+		Temperature += NRF_TEMP->TEMP;
+		wait(10);
+	}
+
+	//10 values for average
+	//Temperature in degC (0.25deg steps)
+	return (int8_t)(Temperature / 40);
 }
 
 uint16_t hwFreeMem(void)
