@@ -23,7 +23,7 @@
 * Pinout STM32F103C8 dev board:
 * http://wiki.stm32duino.com/images/a/ae/Bluepillpinout.gif
 *
-* Wiring 
+* Wiring
 * --------------------------------------------------
 RFM69 	CLK		MISO		MOSI	CSN		CE		IRQ
 SPI1		PA5		PA6			PA7		PA4		NA		PA3 (default)
@@ -37,12 +37,12 @@ bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
 	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
-	#if defined(MY_GATEWAY_SERIAL)
+#if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
 #endif
 #endif
 
-		return true;
+	return true;
 }
 
 void hwReadConfigBlock(void *buf, void *addr, size_t length)
