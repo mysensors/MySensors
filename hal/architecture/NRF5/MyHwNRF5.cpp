@@ -523,7 +523,7 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	uint32_t Temperature = 0;
+	int32_t Temperature = 0;
 
 	for (byte i = 0; i < 10; i++) {
 		NRF_TEMP->TASKS_START = 1;
