@@ -122,7 +122,7 @@ uint16_t hwCPUVoltage(void)
 
 uint16_t hwCPUFrequency(void)
 {
-	return F_CPU/100000UL;
+	return HAL_RCC_GetSysClockFreq()/1000000UL;
 }
 
 int8_t hwCPUTemperature(void)
