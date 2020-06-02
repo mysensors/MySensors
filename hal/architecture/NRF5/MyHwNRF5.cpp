@@ -523,12 +523,28 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-	int32_t Temperature = 0;
+	int32_t volatile Temperature = 0;
+
+	nrf_temp_init();
 
 	for (byte i = 0; i < 10; i++) {
-		NRF_TEMP->TASKS_START = 1;
-		while (!(NRF_TEMP->EVENTS_DATARDY)) {}
-		Temperature += NRF_TEMP->TEMP;
+
+		NRF_TEMP->TASKS_START = 1; /** Start the temperature measurement. */
+
+		/* Busy wait while temperature measurement is not finished, you can skip waiting if you enable interrupt for DATARDY event and read the result in the interrupt. */
+		/*lint -e{845} // A zero has been given as right argument to operator '|'" */
+		while (NRF_TEMP->EVENTS_DATARDY == 0) {
+			// Do nothing.
+		}
+
+		NRF_TEMP->EVENTS_DATARDY = 0;
+
+		/**@note Workaround for PAN_028 rev2.0A anomaly 29 - TEMP: Stop task clears the TEMP register. */
+		Temperature += nrf_temp_read();
+
+		/**@note Workaround for PAN_028 rev2.0A anomaly 30 - TEMP: Temp module analog front end does not power down when DATARDY event occurs. */
+		NRF_TEMP->TASKS_STOP = 1; /** Stop the temperature measurement. */
+
 		wait(10);
 	}
 
