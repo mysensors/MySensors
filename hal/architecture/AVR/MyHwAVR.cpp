@@ -347,7 +347,7 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-#if defined(__AVR_ATmega168A__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328BP__) || defined(__AVR_ATmega32U4__)
+#if defined(__AVR_ATmega168A__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega32U4__)
 	// Set the internal reference and mux.
 	ADMUX = (_BV(REFS1) | _BV(REFS0) | _BV(MUX3));
 	ADCSRA |= _BV(ADEN);  // enable the ADC
