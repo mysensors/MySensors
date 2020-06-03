@@ -95,9 +95,10 @@
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 //#define MY_CONTROLLER_URL_ADDRESS "my.controller.org"
 
-// The MAC address can be anything you want but should be unique on your network.
+// The MAC address can be anything you want but MUST be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
-// Note that most of the Arduino examples use  "DEAD BEEF FEED" for the MAC address.
+// Note that most of the Arduino examples use "DEAD BEEF FEED" for the MAC address
+// so make sure you don't have multiple Arduinos using the same MAC address.
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 
 
