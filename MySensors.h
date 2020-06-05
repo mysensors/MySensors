@@ -319,8 +319,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
  * @see MY_RAM_ROUTING_TABLE_FEATURE
  */
 #define MY_RAM_ROUTING_TABLE_ENABLED
-#else
-#if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
+#elif defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
