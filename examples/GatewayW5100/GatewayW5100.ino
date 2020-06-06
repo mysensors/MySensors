@@ -84,9 +84,6 @@
 //#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
 //#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
-// Renewal period if using DHCP
-//#define MY_IP_RENEWAL_INTERVAL 60000
-
 // The port to keep open on node server mode / or port to contact in client mode
 #define MY_PORT 5003
 
