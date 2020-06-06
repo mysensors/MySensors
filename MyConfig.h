@@ -1423,7 +1423,7 @@
 
 /**
 * @def MY_HOSTNAME
-* @brief Hostname of your device
+* @brief Hostname of your device. Only supported on ESP8266 and ESP32.
 */
 #ifndef MY_HOSTNAME
 #define MY_HOSTNAME "MYSENSORS_DEVICE"
@@ -2352,7 +2352,6 @@
 #define MY_WIFI_SSID
 #define MY_WIFI_BSSID
 #define MY_WIFI_PASSWORD
-#define MY_HOSTNAME
 #define MY_GATEWAY_LINUX
 #define MY_GATEWAY_TINYGSM
 #define MY_GATEWAY_MQTT_CLIENT
