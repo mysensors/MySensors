@@ -153,7 +153,6 @@ void gatewayTransportRenewIP(void)
 	if (Ethernet.maintain() & ~(0x06)) {
 		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
 	}
-	_w5100_spi_en(false);
 }
 #endif
 
