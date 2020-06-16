@@ -545,7 +545,7 @@ int8_t hwCPUTemperature(void)
 		/**@note Workaround for PAN_028 rev2.0A anomaly 30 - TEMP: Temp module analog front end does not power down when DATARDY event occurs. */
 		NRF_TEMP->TASKS_STOP = 1; /** Stop the temperature measurement. */
 
-		wait(10);
+		delay(10);
 	}
 
 	//10 values for average
