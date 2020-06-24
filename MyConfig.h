@@ -1583,14 +1583,6 @@
 //#define MY_USE_UDP
 
 /**
- * @def MY_IP_RENEWAL_INTERVAL_MS
- * @brief DHCP, default renewal setting in milliseconds.
- */
-#ifndef MY_IP_RENEWAL_INTERVAL_MS
-#define MY_IP_RENEWAL_INTERVAL_MS (60*1000ul)
-#endif
-
-/**
  * @def MY_MAC_ADDRESS
  * @brief Ethernet MAC address.
  * @note This needs to be unique on the network.
