@@ -84,9 +84,6 @@
 //#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
 //#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
-// Renewal period if using DHCP
-//#define MY_IP_RENEWAL_INTERVAL 60000
-
 // The port to keep open on node server mode / or port to contact in client mode
 #define MY_PORT 5003
 
@@ -95,9 +92,10 @@
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 //#define MY_CONTROLLER_URL_ADDRESS "my.controller.org"
 
-// The MAC address can be anything you want but should be unique on your network.
+// The MAC address can be anything you want but MUST be unique on your network.
 // Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
-// Note that most of the Arduino examples use  "DEAD BEEF FEED" for the MAC address.
+// Note that most of the Arduino examples use "DEAD BEEF FEED" for the MAC address
+// so make sure you don't have multiple Arduinos using the same MAC address.
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 
 

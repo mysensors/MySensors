@@ -1423,7 +1423,7 @@
 
 /**
 * @def MY_HOSTNAME
-* @brief Hostname of your device
+* @brief Hostname of your device. Only supported on ESP8266 and ESP32.
 */
 #ifndef MY_HOSTNAME
 #define MY_HOSTNAME "MYSENSORS_DEVICE"
@@ -1581,14 +1581,6 @@
  * @note This is not supported on ENC28J60 and Linux based GWs.
  */
 //#define MY_USE_UDP
-
-/**
- * @def MY_IP_RENEWAL_INTERVAL_MS
- * @brief DHCP, default renewal setting in milliseconds.
- */
-#ifndef MY_IP_RENEWAL_INTERVAL_MS
-#define MY_IP_RENEWAL_INTERVAL_MS (60*1000ul)
-#endif
 
 /**
  * @def MY_MAC_ADDRESS
@@ -2352,7 +2344,6 @@
 #define MY_WIFI_SSID
 #define MY_WIFI_BSSID
 #define MY_WIFI_PASSWORD
-#define MY_HOSTNAME
 #define MY_GATEWAY_LINUX
 #define MY_GATEWAY_TINYGSM
 #define MY_GATEWAY_MQTT_CLIENT
