@@ -150,19 +150,9 @@ void gatewayTransportRenewIP(void)
 	 3 - rebind failed
 	 4 - rebind success
 	 */
-	static uint32_t _nextIPRenewal = hwMillis() + MY_IP_RENEWAL_INTERVAL_MS;
-	const uint32_t now = hwMillis();
-
-	// http://playground.arduino.cc/Code/TimingRollover
-	if ((int32_t)(now - _nextIPRenewal) < 0) {
-		return;
-	}
 	if (Ethernet.maintain() & ~(0x06)) {
 		GATEWAY_DEBUG(PSTR("!GWT:TRC:IP RENEW FAIL\n"));
-		return;
 	}
-	_w5100_spi_en(false);
-	_nextIPRenewal = now + MY_IP_RENEWAL_INTERVAL_MS;
 }
 #endif
 

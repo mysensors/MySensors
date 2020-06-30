@@ -311,7 +311,15 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 // RAM ROUTING TABLE
-#if defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
+#ifdef DOXYGEN
+/**
+ * @def MY_RAM_ROUTING_TABLE_ENABLED
+ * @brief Automatically set if RAM routing table is enabled
+ *
+ * @see MY_RAM_ROUTING_TABLE_FEATURE
+ */
+#define MY_RAM_ROUTING_TABLE_ENABLED
+#elif defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(TEENSYDUINO) || defined(__linux__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
@@ -324,16 +332,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 // #define MY_RAM_ROUTING_TABLE_ENABLED
 #endif // __avr_atmega1280__, __avr_atmega1284__, __avr_atmega2560__
 #endif // ARDUINO_ARCH_AVR
-#endif
-#ifdef DOXYGEN
-/**
- * @def MY_RAM_ROUTING_TABLE_ENABLED
- * @brief Automatically set if RAM routing table is enabled
- *
- * @see MY_RAM_ROUTING_TABLE_FEATURE
- */
-#define MY_RAM_ROUTING_TABLE_ENABLED
-#endif
+#endif // DOXYGEN
 
 // SOFTSERIAL
 #if defined(MY_GSM_TX) != defined(MY_GSM_RX)

@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+* @brief Config file
+*/
 struct config {
 	int verbose;
 	int log_file;
