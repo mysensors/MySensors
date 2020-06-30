@@ -22,7 +22,6 @@
 
 #include <IWatchdog.h>
 #include <itoa.h>
-#include <EEPROM.h>
 #include <SPI.h>
 
 #ifdef __cplusplus
@@ -32,7 +31,11 @@
 #define CRYPTO_LITTLE_ENDIAN
 
 #ifndef MY_SERIALDEVICE
-#define MY_SERIALDEVICE Serial
+#if SERIAL_UART_INSTANCE == 2 //On Nucleo board UART 2 connect to ST-LINK
+#define MY_SERIALDEVICE Serial2
+#else 
+#define MY_SERIALDEVICE Serial 
+#endif
 #endif
 
 #ifndef MY_DEBUGDEVICE

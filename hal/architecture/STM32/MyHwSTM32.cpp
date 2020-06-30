@@ -47,20 +47,29 @@ bool hwInit(void)
 
 void hwReadConfigBlock(void *buf, void *addr, size_t length)
 {
+	//MY_SERIALDEVICE.println(F("START hwReadConfigBlock"));
 	uint8_t *dst = static_cast<uint8_t *>(buf);
 	int offs = reinterpret_cast<int>(addr);
+
+	eeprom_buffer_fill();
 	while (length-- > 0) {
-		*dst++ = EEPROM.read(offs++);
+		*dst++ = eeprom_buffered_read_byte(offs++);
 	}
+	//MY_SERIALDEVICE.println(F("END hwReadConfigBlock"));
 }
 
 void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 {
+	//MY_SERIALDEVICE.println(F("START hwWriteConfigBlock"));
 	uint8_t *src = static_cast<uint8_t *>(buf);
 	int offs = reinterpret_cast<int>(addr);
+
 	while (length-- > 0) {
-		EEPROM.write(offs++, *src++);
+		eeprom_buffered_write_byte(offs++, *src++);
 	}
+	//MY_SERIALDEVICE.println(F("START FLUSH"));
+	eeprom_buffer_flush();
+	//MY_SERIALDEVICE.println(F("END hwWriteConfigBlock"));
 }
 
 uint8_t hwReadConfig(const int addr)
@@ -110,7 +119,11 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
 
 bool hwUniqueID(unique_id_t *uniqueID)
 {
-	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)0x1FFFF7E0, 16); // FlashID + ChipID
+	//Fill ID with FF
+	(void)memset((uint8_t *)uniqueID,  0xFF, 16);
+	//Read device ID
+	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)UID_BASE, 12);
+
 	return true;
 }
 
