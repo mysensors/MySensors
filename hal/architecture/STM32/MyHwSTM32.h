@@ -31,10 +31,11 @@
 #define CRYPTO_LITTLE_ENDIAN
 
 #ifndef MY_SERIALDEVICE
-#if SERIAL_UART_INSTANCE == 2 //On Nucleo board UART 2 connect to ST-LINK
+// On Nucleo board UART 2 connect to ST-LINK
+#if SERIAL_UART_INSTANCE == 2
 #define MY_SERIALDEVICE Serial2
-#else 
-#define MY_SERIALDEVICE Serial 
+#else
+#define MY_SERIALDEVICE Serial
 #endif
 #endif
 
