@@ -66,7 +66,12 @@
 #endif
 
 #if defined(ARDUINO_ARCH_AVR)
+#if !defined(__LGT8F_SSOP20__) //LGT8F328
 #define DEFAULT_RF24_CE_PIN				(9)		//!< DEFAULT_RF24_CE_PIN
+#else //defined(__LGT8F_SSOP20__)
+#define DEFAULT_RF24_CE_PIN				7		//!< DEFAULT_RF24_CE_PIN
+#endif //defined(__LGT8F_SSOP20__)
+
 #elif defined(ARDUINO_ARCH_ESP8266)
 #define DEFAULT_RF24_CE_PIN				(4)		//!< DEFAULT_RF24_CE_PIN
 #elif defined(ARDUINO_ARCH_ESP32)

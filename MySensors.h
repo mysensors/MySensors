@@ -60,9 +60,15 @@
 #elif defined(ARDUINO_ARCH_ESP32)
 #include "hal/architecture/ESP32/MyHwESP32.cpp"
 #include "hal/crypto/ESP32/MyCryptoESP32.cpp"
+
 #elif defined(ARDUINO_ARCH_AVR)
+#if !defined(ARDUINO_AVR_LARDU_328E) //LGT8F328
 #include "hal/architecture/AVR/MyHwAVR.cpp"
+#else //defined(ARDUINO_AVR_LARDU_328E)
+#include "hal/architecture/LGT8F328P/MyHwLGT8F328P.cpp"
+#endif //defined(ARDUINO_AVR_LARDU_328E)
 #include "hal/crypto/AVR/MyCryptoAVR.cpp"
+
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "hal/architecture/SAMD/MyHwSAMD.cpp"
@@ -433,7 +439,12 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // HW mains
 #if defined(ARDUINO_ARCH_AVR)
+#if !defined(ARDUINO_AVR_LARDU_328E) //LGT8F328
 #include "hal/architecture/AVR/MyMainAVR.cpp"
+#else //defined(ARDUINO_AVR_LARDU_328E)
+#include "hal/architecture/LGT8F328P/MyMainLGT8F328P.cpp"
+#endif //defined(ARDUINO_AVR_LARDU_328E)
+
 #elif defined(ARDUINO_ARCH_SAMD)
 #include "hal/architecture/SAMD/MyMainSAMD.cpp"
 #elif defined(ARDUINO_ARCH_ESP8266)
