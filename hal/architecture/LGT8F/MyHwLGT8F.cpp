@@ -17,7 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#include "MyHwLGT8F328P.h"
+#include "MyHwLGT8F.h"
 #include <PMU.h>
 
 bool hwInit(void)

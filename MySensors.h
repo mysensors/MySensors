@@ -65,7 +65,7 @@
 #if !defined(ARDUINO_AVR_LARDU_328E) //LGT8F328
 #include "hal/architecture/AVR/MyHwAVR.cpp"
 #else //defined(ARDUINO_AVR_LARDU_328E)
-#include "hal/architecture/LGT8F328P/MyHwLGT8F.cpp"
+#include "hal/architecture/LGT8F/MyHwLGT8F.cpp"
 #endif //defined(ARDUINO_AVR_LARDU_328E)
 #include "hal/crypto/AVR/MyCryptoAVR.cpp"
 
@@ -442,7 +442,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if !defined(ARDUINO_AVR_LARDU_328E) //LGT8F328
 #include "hal/architecture/AVR/MyMainAVR.cpp"
 #else //defined(ARDUINO_AVR_LARDU_328E)
-#include "hal/architecture/LGT8F328P/MyMainLGT8F.cpp"
+#include "hal/architecture/LGT8F/MyMainLGT8F.cpp"
 #endif //defined(ARDUINO_AVR_LARDU_328E)
 
 #elif defined(ARDUINO_ARCH_SAMD)

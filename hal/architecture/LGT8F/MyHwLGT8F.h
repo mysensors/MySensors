@@ -17,8 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
-#ifndef MyHwLGT8F328P_h
-#define MyHwLGT8F328P_h
+#ifndef MyHwLGT8F_h
+#define MyHwLGT8F_h
 
 // #include <avr/eeprom.h>
 #include <EEPROM.h>
