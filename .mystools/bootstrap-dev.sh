@@ -75,7 +75,7 @@ check_git_remote "upstream" "${mysrepo}" || {
 #3
 log "Checking tool/utility prerequisites..."
 check_tool_prerequisite "astyle" "3.1"   || err "Install AStyle 3.1 or greater and re-run ${0}"
-check_tool_prerequisite "cppcheck" "1.88" || err "Install Cppcheck 1.88 or greater and re-run ${0}"
+check_tool_prerequisite "cppcheck" "2.1" || err "Install Cppcheck 2.1 or greater and re-run ${0}"
 check_tool_prerequisite "git" "2.0" || err "Install git 2.0 or greater and re-run ${0}"
 
 #4

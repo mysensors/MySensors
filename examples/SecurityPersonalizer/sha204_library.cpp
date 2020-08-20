@@ -169,7 +169,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
 					break;
 				}
 			}
-
+			//cppcheck-suppress knownConditionTrueFalse
 			if (timeout_count == 0) {
 				status = SWI_FUNCTION_RETCODE_TIMEOUT;
 				break;
