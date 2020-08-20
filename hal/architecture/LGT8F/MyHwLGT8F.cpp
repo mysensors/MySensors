@@ -28,6 +28,9 @@ bool hwInit(void)
 #if defined(MY_GATEWAY_SERIAL)
 	while (!MY_SERIALDEVICE) {}
 #endif
+#else
+    //Disable serial
+  PRR |= (1 << RUART0);
 #endif
 	return true;
 }
@@ -104,7 +107,14 @@ void hwPowerDown(const uint8_t wdto)
 	PORTD |= 0x3F;
 #endif// defined(LGT8F_POWERSAVING)
 	
-    ADCSRA &= ~(1 << ADEN);
+#if defined(__LGT8FX8P__)
+	//Disable ADC	
+	//PMU.sleep not sleep when ADC is enabled
+	ADCSRA &= ~(1 << ADEN);
+	//DISABLE ADC 
+	//PRR |= (1 << PRADC);
+
+#endif
     PMU.sleep(PM_POFFS1, wdto);
 
     // uncomment following to save more power if you just use them in pull_up
@@ -122,16 +132,38 @@ void hwPowerDown(const uint8_t wdto)
 
 uint32_t hwInternalSleep(uint32_t ms)
 {
-	// Sleeping with watchdog only supports multiples of 64ms(@32KHz clock).
-	// Round up to next multiple of 64ms, to assure we sleep at least the
+	// WDP3 - WDP0
+	// 32KHZ / 2MHZ
+	// Sleeping with watchdog only supports multiples of 64ms/1ms.
+	// Round up to next multiple of 16ms, to assure we sleep at least the
 	// requested amount of time. Sleep of 0ms will not sleep at all!
-	ms += 63u;
+	//9
+	
+#if defined(__LGT8FX8E__) 
+		const uint16_t treshold = 128u;
+#else
+		const uint16_t treshold = 64u;
+#endif
 
-	while (!interruptWakeUp() && ms >= 64) {
-		for (uint8_t period = 9u; ; --period) {
-			const uint16_t comparatorMS = 1 << (period + 6);
+	ms += (treshold - 1);
+	while (!interruptWakeUp() && ms >= treshold) {
+		for (uint8_t period = 7u; ; --period) {
+
+#if defined(__LGT8FX8E__) 
+		//328D can sleep with same parameters, like a p-series, but something went wrong.
+		//instead of 8s it sleep only 7.5s in shifted "period"
+			uint16_t comparatorMS = 1 << (period + 7);
+#else
+			uint16_t comparatorMS = 1 << (period + 6);
+#endif
+			if (comparatorMS >= 1000) //round 1024..8192 to 1000..8000 ms
+						comparatorMS = (comparatorMS / 1000) * 1000;
 			if ( ms >= comparatorMS) {
-				// debug(PSTR(LOG_SLEEP "hwInternalSleep,ms=%lu,period=%u,comparatorMS=%u\n"),ms,period,comparatorMS);
+
+				//Serial.print("ms sleep ");	Serial.print(comparatorMS);
+				//Serial.print(" period ");		Serial.print(period);
+				//Serial.print(" remain ");		Serial.println(ms - comparatorMS);
+
 				hwPowerDown(period); // 32s => 9, 64ms => 0
 				ms -= comparatorMS;
 				break;
@@ -314,7 +346,7 @@ uint16_t hwCPUVoltage(void)
 uint16_t hwCPUFrequency(void)	//TODO：lgt8f
 {
 	// return frequency in 1/10MHz (accuracy +- 10%)
-	return F_CPU / 100000UL;;
+	return F_CPU / 100000UL;
 }
 
 int8_t hwCPUTemperature(void)	//TODO：lgt8f
