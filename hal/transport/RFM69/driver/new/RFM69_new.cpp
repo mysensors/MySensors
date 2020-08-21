@@ -748,7 +748,7 @@ LOCAL bool RFM69_isModeReady(void)
 	uint16_t timeout = 0xFFFF;
 	while (!(RFM69_readReg(RFM69_REG_IRQFLAGS1) & RFM69_IRQFLAGS1_MODEREADY) && timeout--) {
 	};
-	return timeout;
+	return (bool)timeout;
 }
 
 LOCAL void RFM69_encrypt(const char *key)
