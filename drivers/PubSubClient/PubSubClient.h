@@ -21,17 +21,17 @@
 #define MQTT_VERSION MQTT_VERSION_3_1_1
 #endif
 
-// MQTT_MAX_PACKET_SIZE : Maximum packet size
+// MQTT_MAX_PACKET_SIZE : Maximum packet size. Override with setBufferSize().
 #ifndef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 128
+#define MQTT_MAX_PACKET_SIZE 256
 #endif
 
-// MQTT_KEEPALIVE : keepAlive interval in Seconds
+// MQTT_KEEPALIVE : keepAlive interval in Seconds. Override with setKeepAlive()
 #ifndef MQTT_KEEPALIVE
 #define MQTT_KEEPALIVE 15
 #endif
 
-// MQTT_SOCKET_TIMEOUT: socket timeout interval in Seconds
+// MQTT_SOCKET_TIMEOUT: socket timeout interval in Seconds. Override with setSocketTimeout()
 #ifndef MQTT_SOCKET_TIMEOUT
 #define MQTT_SOCKET_TIMEOUT 15
 #endif
@@ -83,20 +83,23 @@
 #define MQTT_CALLBACK_SIGNATURE void (*callback)(char*, uint8_t*, unsigned int)
 #endif
 
-#define CHECK_STRING_LENGTH(l,s) if (l+2+strlen(s) > MQTT_MAX_PACKET_SIZE) {_client->stop();return false;}
+#define CHECK_STRING_LENGTH(l,s) if (l+2+strnlen(s, this->bufferSize) > this->bufferSize) {_client->stop();return false;}
 
 /** PubSubClient class */
 class PubSubClient : public Print
 {
 private:
 	Client* _client;
-	uint8_t buffer[MQTT_MAX_PACKET_SIZE];
+	uint8_t* buffer;
+	uint16_t bufferSize;
+	uint16_t keepAlive;
+	uint16_t socketTimeout;
 	uint16_t nextMsgId;
 	unsigned long lastOutActivity;
 	unsigned long lastInActivity;
 	bool pingOutstanding;
 	MQTT_CALLBACK_SIGNATURE;
-	uint16_t readPacket(uint8_t*);
+	uint32_t readPacket(uint8_t*);
 	bool readByte(uint8_t * result);
 	bool readByte(uint8_t * result, uint16_t * index);
 	bool write(uint8_t header, uint8_t* buf, uint16_t length);
@@ -113,7 +116,7 @@ private:
 	int _state;
 public:
 	PubSubClient(); //!< PubSubClient
-	explicit PubSubClient(Client& client); //!< PubSubClient
+	PubSubClient(Client& client); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, Client& client); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, Client& client, Stream&); //!< PubSubClient
 	PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client); //!< PubSubClient
@@ -130,12 +133,19 @@ public:
 	PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client,
 	             Stream&); //!< PubSubClient
 
+	~PubSubClient();
+
 	PubSubClient& setServer(IPAddress ip, uint16_t port); //!< setServer
 	PubSubClient& setServer(uint8_t * ip, uint16_t port); //!< setServer
 	PubSubClient& setServer(const char * domain, uint16_t port); //!< setServer
 	PubSubClient& setCallback(MQTT_CALLBACK_SIGNATURE); //!< setCallback
 	PubSubClient& setClient(Client& client); //!< setClient
 	PubSubClient& setStream(Stream& stream); //!< setStream
+	PubSubClient& setKeepAlive(uint16_t keepAlive); //!< setKeepAlive
+	PubSubClient& setSocketTimeout(uint16_t timeout); //!< setSocketTimeout
+
+	bool setBufferSize(uint16_t size); //!< setBufferSize
+	uint16_t getBufferSize(); //!< getBufferSize
 
 	bool connect(const char* id); //!< connect
 	bool connect(const char* id, const char* user, const char* pass); //!< connect
@@ -177,6 +187,7 @@ public:
 	bool loop(); //!< loop
 	bool connected(); //!< connected
 	int state(); //!< state
+
 };
 
 
