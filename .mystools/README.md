@@ -92,7 +92,7 @@ One or more required tools not found.  Install required tools and re-run .mystoo
 
 To finish the bootstrap process, you will need to install the required
 tools for your specific operating system as follows.  Currently we use
-Astyle 3.1 or later and Cppcheck 1.88 or later.  Once you have
+Astyle 3.1 or later and Cppcheck 2.1 or later.  Once you have
 installed AStyle and Cppcheck, re-run bootstrap-dev.sh to finish
 configuring your development environment.
 
@@ -114,7 +114,7 @@ Tested with Ubuntu 18-04 LTS and 19.04
 apt-get install astyle
 git clone https://github.com/danmar/cppcheck.git
 cd cppcheck/
-git checkout 1.89 # or later version if available
+git checkout 2.1 # or later version if available
 mkdir build && cd build && cmake .. && cmake --build .
 sudo make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
 ```
@@ -137,16 +137,13 @@ mv .\astyle.3.1.zip\AStyle 'C:\Program Files\AStyle'
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\AStyle\bin")
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\AStyle\bin", [EnvironmentVariableTarget]::Machine)
 
-### Install Cppcheck (either 64-bit or 32-bit depending upon your version of Windows - pick one below)
+### Install Cppcheck x64
 
 # 64-bit
-iwr 'https://github.com/danmar/cppcheck/releases/download/1.88/cppcheck-1.88-x64-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-1.88-Setup.msi
-
-# 32-bit
-iwr 'https://github.com/danmar/cppcheck/releases/download/1.88/cppcheck-1.88-x86-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-1.88-Setup.msi
+iwr 'https://github.com/danmar/cppcheck/releases/download/2.1/cppcheck-2.1-x64-Setup.msi' -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox -OutFile cppcheck-2.1-x64-Setup.msi
 
 # Launch installer to install Cppcheck
-& .\cppcheck-1.88-Setup.msi
+& .\cppcheck-2.1-x64-Setup.msi
 
 ### Add Cppcheck to your path
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\Cppcheck", [EnvironmentVariableTarget]::Machine)
@@ -174,7 +171,7 @@ cd astyle/build/gcc && sudo make shared release shared static install
 ```
 git clone https://github.com/danmar/cppcheck.git
 cd cppcheck/
-git checkout 1.89 # or later version if available)
+git checkout 2.1 # or later version if available)
 mkdir build && cd build && cmake .. && cmake --build .
 sudo make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
 ```
