@@ -179,6 +179,17 @@ static bool NRF5_ESB_initialize()
 	// Stop timer when CC0 reached
 	NRF5_RADIO_TIMER->SHORTS =
 	    TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
+	// Reset timer
+	NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
+
+	// Reset compare events
+#ifdef NRF51
+	for (uint8_t i=0; i<4; i++) {
+#else
+	for (uint8_t i=0; i<6; i++) {
+#endif
+		NRF5_RADIO_TIMER->EVENTS_COMPARE[i] = 0;
+	}
 
 	// Enable interrupt
 	NRF5_RADIO_TIMER->INTENSET = TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos;
@@ -339,6 +350,7 @@ void NRF5_ESB_starttx()
 		NRF_RADIO->SHORTS = NRF5_ESB_SHORTS_TX;
 
 		// reset timer
+		NRF_RESET_EVENT(NRF5_RADIO_TIMER->EVENTS_COMPARE[3]);
 		_stopTimer();
 		NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
 		// Set retransmit time
@@ -516,19 +528,6 @@ inline void _stopTimer()
 	NRF5_RADIO_TIMER->TASKS_STOP = 1;
 	// NRF52 PAN#78
 	NRF5_RADIO_TIMER->TASKS_SHUTDOWN = 1;
-
-	// Reset timer
-	NRF5_RADIO_TIMER->TASKS_CLEAR = 1;
-
-	// Reset compare events
-#ifdef NRF51
-	for (uint8_t i=0; i<4; i++) {
-#else
-	for (uint8_t i=0; i<6; i++) {
-#endif
-		NRF5_RADIO_TIMER->EVENTS_COMPARE[i] = 0;
-	}
-
 }
 
 inline void _stopACK()
@@ -698,6 +697,7 @@ extern "C" {
 	{
 		if (NRF5_RADIO_TIMER->EVENTS_COMPARE[3] == 1) {
 			_stopTimer();
+			NRF_RESET_EVENT(NRF5_RADIO_TIMER->EVENTS_COMPARE[1]);
 			if (ack_received == false) {
 				// missing ACK, start TX again
 				NRF5_ESB_starttx();
