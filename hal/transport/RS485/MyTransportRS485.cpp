@@ -62,7 +62,7 @@
 #define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW)
 #else
 #define assertDE() hwDigitalWrite(MY_RS485_DE_PIN, LOW); delayMicroseconds(5)
-#define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIG)
+#define deassertDE() hwDigitalWrite(MY_RS485_DE_PIN, HIGH)
 #endif
 #else
 #define assertDE()
@@ -260,14 +260,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 		}
 	}
 
-#if defined(MY_RS485_DE_PIN)
-#if !defined(MY_RS485_DE_INVERSE)
-	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
-#else
-	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
-#endif
-	delayMicroseconds(5);
-#endif
+	assertDE();
 
 	// Start of header by writing multiple SOH
 	for(byte w=0; w<MY_RS485_SOH_COUNT; w++) {
@@ -311,11 +304,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 	_dev.flush();
 #endif
 #endif
-#if !defined(MY_RS485_DE_INVERSE)
-	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
-#else
-	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
-#endif
+	deassertDE();
 #endif
 	return true;
 }
@@ -330,11 +319,7 @@ bool transportInit(void)
 	_nodeId = AUTO;
 #if defined(MY_RS485_DE_PIN)
 	hwPinMode(MY_RS485_DE_PIN, OUTPUT);
-#if !defined(MY_RS485_DE_INVERSE)
-	hwDigitalWrite(MY_RS485_DE_PIN, LOW);
-#else
-	hwDigitalWrite(MY_RS485_DE_PIN, HIGH);
-#endif
+	deassertDE();
 #endif
 	return true;
 }
