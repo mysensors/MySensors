@@ -142,11 +142,14 @@ bool _serialProcess()
 		// Case 0 looks for the header.  Bytes arrive in the serial interface and get
 		// shifted through a header buffer.  When the start and end characters in
 		// the buffer match the SOH/STX pair, and the destination station ID matches
-		// our ID, save the header information and progress to the next state.
+		// our ID or BROADCAST_ADDRESS, save the header information and progress to
+		// the next state.
 		case 0:
 			memcpy(&_header[0],&_header[1],5);
 			_header[5] = inch;
-			if ((_header[0] == SOH) && (_header[5] == STX) && (_header[1] != _header[2])) {
+			if ((_header[0] == SOH) && (_header[5] == STX) &&
+			        ((_header[1] == (char)_nodeId) ||
+			         (_header[1] == (char)BROADCAST_ADDRESS && _header[2] != (char)_nodeId))) {
 				_recCalcCS = 0;
 				_recStation = _header[1];
 				_recSender = _header[2];
@@ -161,16 +164,6 @@ bool _serialProcess()
 
 				//Avoid _data[] overflow
 				if (_recLen >= MY_RS485_MAX_MESSAGE_LENGTH) {
-					_serialReset();
-					break;
-				}
-
-				//Check if we should process this message
-				//We reject the message if we are the sender
-				//We reject if we are not the receiver and message is not a broadcast
-				if ((_recSender == _nodeId) ||
-				        (_recStation != _nodeId &&
-				         _recStation != BROADCAST_ADDRESS)) {
 					_serialReset();
 					break;
 				}
@@ -334,6 +327,7 @@ bool transportInit(void)
 	// Reset the state machine
 	_dev.begin(MY_RS485_BAUD_RATE);
 	_serialReset();
+	_nodeId = AUTO;
 #if defined(MY_RS485_DE_PIN)
 	hwPinMode(MY_RS485_DE_PIN, OUTPUT);
 #if !defined(MY_RS485_DE_INVERSE)
