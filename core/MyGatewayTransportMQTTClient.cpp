@@ -194,7 +194,7 @@ bool gatewayTransportConnect(void)
 	              Ethernet.localIP()[0],
 	              Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
 	// give the Ethernet interface a second to initialize
-	delay(1000);
+	delay(MY_MQTT_ETH_INIT_DELAY);
 #endif
 	return true;
 }
