@@ -159,7 +159,11 @@ bool reconnectMQTT(void)
 
 		return true;
 	}
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	delay(1000);
+#else
+	delay(MY_MQTT_ETH_CLIENT_CONNECTION_TIMEOUT);
+#endif
 	GATEWAY_DEBUG(PSTR("!GWT:RMQ:FAIL\n"));
 	return false;
 }
@@ -247,7 +251,10 @@ bool gatewayTransportInit(void)
 #else
 	_MQTT_client.setServer(MY_CONTROLLER_URL_ADDRESS, MY_PORT);
 #endif /* End of MY_CONTROLLER_IP_ADDRESS */
-
+	// ESP platform doesn't support connection timeout
+#if !defined(MY_GATEWAY_ESP8266) && !defined(MY_GATEWAY_ESP32)
+	_MQTT_ethClient.setConnectionTimeout(MY_MQTT_ETH_CLIENT_CONNECTION_TIMEOUT);
+#endif
 	_MQTT_client.setCallback(incomingMQTT);
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
