@@ -4,7 +4,7 @@
    Proposed and developed by Fred Larsen
    ___________________________________________________________________________
 
-    Copyright 2010-2019 Giovanni Blu Mitolo gioscarab@gmail.com
+    Copyright 2010-2020 Giovanni Blu Mitolo gioscarab@gmail.com
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -43,6 +43,9 @@ public:
 
 	virtual uint8_t get_max_attempts() = 0;
 
+	/* Returns the recommended receive time for this strategy: */
+
+	virtual uint16_t get_receive_time() = 0;
 
 	/* Handle a collision: */
 

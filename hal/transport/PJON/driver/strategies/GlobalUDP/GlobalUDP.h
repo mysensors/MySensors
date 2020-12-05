@@ -38,6 +38,11 @@
 #define GUDP_MAX_REMOTE_NODES               10
 #endif
 
+// Recommended receive time for this strategy, in microseconds
+#ifndef GUDP_RECEIVE_TIME
+#define GUDP_RECEIVE_TIME 0
+#endif
+
 #define GUDP_DEFAULT_PORT                    7000
 #define GUDP_MAGIC_HEADER   (uint32_t) 0x0DFAC3FF
 
@@ -82,7 +87,7 @@ class GlobalUDP
 			// First get PJON sender id from incoming packet
 			PJON_Packet_Info packet_info;
 			PJONTools::parse_header(message, packet_info);
-			uint8_t sender_id = packet_info.sender_id;
+			uint8_t sender_id = packet_info.tx.id;
 			if (sender_id == 0) {
 				return;    // If parsing fails, it will be 0
 			}
@@ -171,6 +176,14 @@ public:
 	static uint8_t get_max_attempts()
 	{
 		return 10;
+	};
+
+
+	/* Returns the recommended receive time for this strategy: */
+
+	static uint16_t get_receive_time()
+	{
+		return GUDP_RECEIVE_TIME;
 	};
 
 

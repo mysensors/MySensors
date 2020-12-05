@@ -31,7 +31,7 @@
    necessary to tweak timing constants in Timing.h.
    ___________________________________________________________________________
 
-   Copyright 2010-2019 Giovanni Blu Mitolo gioscarab@gmail.com
+   Copyright 2010-2020 Giovanni Blu Mitolo gioscarab@gmail.com
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -86,6 +86,11 @@
 #define AS_ESC            187
 
 #include "Timing.h"
+
+// Recommended receive time for this strategy, in microseconds
+#ifndef AS_RECEIVE_TIME
+#define AS_RECEIVE_TIME 1000
+#endif
 
 class AnalogSampling
 {
@@ -167,6 +172,14 @@ public:
 	static uint8_t get_max_attempts()
 	{
 		return AS_MAX_ATTEMPTS;
+	};
+
+
+	/* Returns the recommended receive time for this strategy: */
+
+	static uint16_t get_receive_time()
+	{
+		return AS_RECEIVE_TIME;
 	};
 
 

@@ -34,6 +34,11 @@
 #endif
 #define LUDP_MAGIC_HEADER        (uint32_t) 0x0DFAC3D0
 
+// Recommended receive time for this strategy, in microseconds
+#ifndef LUDP_RECEIVE_TIME
+#define LUDP_RECEIVE_TIME 0
+#endif
+
 class LocalUDP
 {
 	bool _udp_initialized = false;
@@ -89,6 +94,14 @@ public:
 	static uint8_t get_max_attempts()
 	{
 		return 10;
+	};
+
+
+	/* Returns the recommended receive time for this strategy: */
+
+	static uint16_t get_receive_time()
+	{
+		return LUDP_RECEIVE_TIME;
 	};
 
 

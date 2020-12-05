@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2019 Sensnology AB
+ * Copyright (C) 2013-2020 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -21,7 +21,7 @@
  *
  */
 
-PJON<SoftwareBitBang> bus;
+PJONSoftwareBitBang bus;
 
 // debug
 #if defined(MY_DEBUG_VERBOSE_PJON)
@@ -71,7 +71,7 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t length, con
 
 void _receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info)
 {
-	PJON_DEBUG(PSTR("PJON:RCV:TO=%" PRIu8 ",LEN=%" PRIu8 "\n"), packet_info.receiver_id, length);
+	PJON_DEBUG(PSTR("PJON:RCV:TO=%" PRIu8 ",LEN=%" PRIu8 "\n"), packet_info.rx.id, length);
 	if (!_packet_received) {
 		_packet_len = length;
 		_packet_received = true;

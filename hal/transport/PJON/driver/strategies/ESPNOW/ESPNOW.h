@@ -31,6 +31,11 @@
 #define EN_MAX_REMOTE_NODES               10
 #endif
 
+// Recommended receive time for this strategy, in microseconds
+#ifndef EN_RECEIVE_TIME
+#define EN_RECEIVE_TIME 0
+#endif
+
 #define EN_MAGIC_HEADER (uint8_t*)"\xEE\xFE\x0E\xEF"
 
 class ESPNOW
@@ -59,10 +64,13 @@ class ESPNOW
 		return _espnow_initialised;
 	};
 
-	int16_t find_remote_node(uint8_t id)
+	int16_t find_remote_node(uint8_t id, uint8_t* mac)
 	{
 		for(uint8_t i = 0; i < _remote_node_count; i++)
-			if(_remote_id[i] == id) {
+			if(
+			    ((_remote_id[i] == id) && (id != PJON_NOT_ASSIGNED)) ||
+			    (memcmp(_remote_mac, mac, ESP_NOW_ETH_ALEN) == 0)
+			) {
 				return i;
 			}
 		return -1;
@@ -75,7 +83,7 @@ class ESPNOW
 			// First get PJON sender id from incoming packet
 			PJON_Packet_Info packet_info;
 			PJONTools::parse_header(message, packet_info);
-			uint8_t sender_id = packet_info.sender_id;
+			uint8_t sender_id = packet_info.tx.id;
 			if(sender_id == 0) {
 				ESP_LOGE("ESPNOW", "AutoRegister parsing failed");
 				return; // If parsing fails, it will be 0
@@ -86,19 +94,22 @@ class ESPNOW
 			en.get_sender(sender_mac);
 
 			// See if PJON id is already registered, add if not
-			int16_t pos = find_remote_node(sender_id);
+			int16_t pos = find_remote_node(sender_id, sender_mac);
 			if(pos == -1) {
 				ESP_LOGI("ESPNOW", "Autoregister new sender %d",sender_id);
 				add_node(sender_id, sender_mac);
-			} else if(memcmp(_remote_mac[pos], sender_mac, ESP_NOW_ETH_ALEN) != 0) {
+			} else if(memcmp(_remote_mac[pos], sender_mac, ESP_NOW_ETH_ALEN) == 0) {
 				// Update mac of existing node
 				ESP_LOGI(
 				    "ESPNOW",
-				    "Update sender mac %d %d:%d:%d",
+				    "Update sender sender_id(%d) [%02X:%02X:%02X:%02X:%02X:%02X]",
 				    sender_id,
+				    sender_mac[0],
 				    sender_mac[1],
 				    sender_mac[2],
-				    sender_mac[3]
+				    sender_mac[3],
+				    sender_mac[4],
+				    sender_mac[5]
 				);
 				memcpy(_remote_mac[pos], sender_mac, ESP_NOW_ETH_ALEN);
 			}
@@ -176,6 +187,14 @@ public:
 	};
 
 
+	/* Returns the recommended receive time for this strategy: */
+
+	static uint16_t get_receive_time()
+	{
+		return EN_RECEIVE_TIME;
+	};
+
+
 	/* Handle a collision (empty because handled on Ethernet level): */
 
 	void handle_collision() { };
@@ -231,10 +250,12 @@ public:
 	{
 		if(length > 0) {
 			uint8_t id = data[0]; // Package always starts with a receiver id
+			PJON_Packet_Info packet_info; // use parser to get intended recipient MAC
+			PJONTools::parse_header(data, packet_info);
 			if(id == 0) { // Broadcast, send to all receivers
 				en.send_frame(data, length);
 			} else { // To a specific receiver
-				int16_t pos = find_remote_node(id);
+				int16_t pos = find_remote_node(id, packet_info.rx.mac);
 				if(pos != -1) {
 					en.send_frame(data, length, _remote_mac[pos]);
 				} else { //Broadcast - any replies will get registered

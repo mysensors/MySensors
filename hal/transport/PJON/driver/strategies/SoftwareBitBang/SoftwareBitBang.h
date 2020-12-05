@@ -2,10 +2,10 @@
 /* SoftwareBitBang
    1 or 2 wires software-defined asynchronous serial data link layer
    used as a Strategy by PJON (included in version v3.0)
-   Compliant with PJDL (Padded Jittering Data Link) specification v4.0
+   Compliant with PJDL (Padded Jittering Data Link) specification v5.0
    ___________________________________________________________________________
 
-    Copyright 2010-2019 Giovanni Blu Mitolo gioscarab@gmail.com
+    Copyright 2010-2020 Giovanni Blu Mitolo gioscarab@gmail.com
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,16 +28,20 @@
 
 // Used to signal communication failure
 #define SWBB_FAIL       65535
-
 // Used for pin handling
 #define SWBB_NOT_ASSIGNED 255
 
 /* Transmission speed modes (see Timing.h)
-  MODE   1: 1.95kB/s - 15625Bd
+  MODE   1: 1.97kB/s - 15808Bd
   MODE   2: 2.21kB/s - 17696Bd
-  MODE   3: 2.94kB/s - 23529Bd
-  MODE   4: 3.40kB/s - 27210Bd */
+  MODE   3: 3.10kB/s - 24844Bd
+  MODE   4: 3.34kB/s - 26755Bd */
 #include "Timing.h"
+
+// Recommended receive time for this strategy, in microseconds
+#ifndef SWBB_RECEIVE_TIME
+#define SWBB_RECEIVE_TIME 1000
+#endif
 
 class SoftwareBitBang
 {
@@ -70,6 +74,7 @@ public:
 	bool can_start()
 	{
 		PJON_IO_MODE(_input_pin, INPUT);
+		// Look for ongoing transmission for 1 padding bit + 9 data bits
 		PJON_DELAY_MICROSECONDS(SWBB_BIT_SPACER / 2);
 		if(PJON_IO_READ(_input_pin)) {
 			return false;
@@ -88,6 +93,12 @@ public:
 		if(PJON_IO_READ(_input_pin)) {
 			return false;
 		}
+		// Delay for the maximum expected latency and then check again
+		PJON_DELAY_MICROSECONDS(SWBB_LATENCY);
+		if(PJON_IO_READ(_input_pin)) {
+			return false;
+		}
+		// Delay for a small random time and then check again
 		PJON_DELAY_MICROSECONDS(PJON_RANDOM(SWBB_COLLISION_DELAY));
 		if(PJON_IO_READ(_input_pin)) {
 			return false;
@@ -101,6 +112,14 @@ public:
 	static uint8_t get_max_attempts()
 	{
 		return SWBB_MAX_ATTEMPTS;
+	};
+
+
+	/* Returns the recommended receive time for this strategy: */
+
+	static uint16_t get_receive_time()
+	{
+		return SWBB_RECEIVE_TIME;
 	};
 
 
@@ -157,10 +176,7 @@ public:
 		}
 		uint16_t response = SWBB_FAIL;
 		uint32_t time = PJON_MICROS();
-		while(
-		    response == SWBB_FAIL &&
-		    (uint32_t)(PJON_MICROS() - SWBB_RESPONSE_TIMEOUT) <= time
-		) {
+		while((uint32_t)(PJON_MICROS() - time) < _timeout) {
 			PJON_IO_WRITE(_input_pin, LOW);
 			if(sync()) {
 				response = receive_byte();
@@ -170,6 +186,8 @@ public:
 				PJON_IO_WRITE(_output_pin, HIGH);
 				PJON_DELAY_MICROSECONDS(SWBB_BIT_WIDTH / 4);
 				PJON_IO_PULL_DOWN(_output_pin);
+			} else {
+				return response;
 			}
 		}
 		return response;
@@ -184,7 +202,7 @@ public:
 		if(max_length == PJON_PACKET_MAX_LENGTH) {
 			uint32_t time = PJON_MICROS();
 			// Look for a frame initializer
-			if(!sync() || !sync() || !sync()) {
+			if(!sync_preamble() || !sync() || !sync()) {
 				return SWBB_FAIL;
 			}
 			// Check its timing consistency
@@ -194,8 +212,7 @@ public:
 			) {
 				return SWBB_FAIL;
 			}
-		}
-		// Receive incoming bytes
+		} // Receive one byte
 		result = receive_byte();
 		if(result == SWBB_FAIL) {
 			return SWBB_FAIL;
@@ -252,7 +269,7 @@ public:
 		while( // If high Wait for low
 		    ((uint32_t)(PJON_MICROS() - time) < (SWBB_BIT_WIDTH / 4)) &&
 		    PJON_IO_READ(_input_pin)
-		);
+		); // Transmit response prepended with a synchronization pad
 		PJON_IO_MODE(_output_pin, OUTPUT);
 		pulse(1);
 		send_byte(response);
@@ -275,10 +292,11 @@ public:
 
 	void send_frame(uint8_t *data, uint16_t length)
 	{
+		_timeout = (length * SWBB_RESPONSE_OFFSET) + SWBB_LATENCY;
 		PJON_IO_MODE(_output_pin, OUTPUT);
 		pulse(3); // Send frame initializer
 		for(uint16_t b = 0; b < length; b++) {
-			send_byte(data[b]);    // Send data
+			send_byte(data[b]);    // Send each byte
 		}
 		PJON_IO_PULL_DOWN(_output_pin);
 	};
@@ -301,7 +319,7 @@ public:
 	not, interference, synchronization loss or simply absence of
 	communication is detected at byte level: */
 
-	bool sync()
+	bool sync(uint32_t spacer)
 	{
 		PJON_IO_PULL_DOWN(_input_pin);
 		if((_output_pin != _input_pin) && (_output_pin != SWBB_NOT_ASSIGNED)) {
@@ -310,7 +328,7 @@ public:
 		uint32_t time = PJON_MICROS();
 		while(
 		    PJON_IO_READ(_input_pin) &&
-		    ((uint32_t)(PJON_MICROS() - time) <= SWBB_BIT_SPACER)
+		    ((uint32_t)(PJON_MICROS() - time) <= spacer)
 		);
 		time = PJON_MICROS() - time;
 		if(time < SWBB_ACCEPTANCE) {
@@ -325,10 +343,30 @@ public:
 		return false;
 	};
 
+	bool sync()
+	{
+		return sync(SWBB_BIT_SPACER);
+	}
+
+	bool sync_preamble()
+	{
+		return sync(SWBB_BIT_SPACER * SWBB_MAX_PREAMBLE);
+	};
+
 	/* Emit synchronization pulse: */
 
 	void pulse(uint8_t n)
 	{
+#if SWBB_PREAMBLE != 1
+		if (n == 3) {
+			// Transmit preamble
+			PJON_IO_WRITE(_output_pin, HIGH);
+			PJON_DELAY_MICROSECONDS(SWBB_BIT_SPACER * SWBB_PREAMBLE);
+			PJON_IO_WRITE(_output_pin, LOW);
+			PJON_DELAY_MICROSECONDS(SWBB_BIT_WIDTH);
+			n--;
+		}
+#endif
 		while(n--) {
 			PJON_IO_WRITE(_output_pin, HIGH);
 			PJON_DELAY_MICROSECONDS(SWBB_BIT_SPACER);
@@ -361,6 +399,7 @@ public:
 	};
 
 private:
-	uint8_t _input_pin;
-	uint8_t _output_pin;
+	uint16_t _timeout;
+	uint8_t  _input_pin;
+	uint8_t  _output_pin;
 };

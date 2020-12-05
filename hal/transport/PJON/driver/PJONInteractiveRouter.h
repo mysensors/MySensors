@@ -1,9 +1,9 @@
 
 /*-O//\         __     __
   |-gfo\       |__| | |  | |\ | ®
-  |!y°o:\      |  __| |__| | \| 12.0
+  |!y°o:\      |  __| |__| | \| 13.0
   |y"s§+`\     multi-master, multi-media bus network protocol
- /so+:-..`\    Copyright 2010-2019 by Giovanni Blu Mitolo gioscarab@gmail.com
+ /so+:-..`\    Copyright 2010-2020 by Giovanni Blu Mitolo gioscarab@gmail.com
  |+/:ngr-*.`\
  |5/:%&-a3f.:;\
  \+//u/+g%{osv,,\
@@ -32,7 +32,7 @@ _____________________________________________________________________________
 This software is experimental and it is distributed "AS IS" without any
 warranty, use it at your own risk.
 
-Copyright 2010-2019 by Giovanni Blu Mitolo gioscarab@gmail.com
+Copyright 2010-2020 by Giovanni Blu Mitolo gioscarab@gmail.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ limitations under the License. */
 #include <PJONDynamicRouter.h>
 #include <PJONVirtualBusRouter.h>
 
-typedef void (* PJON_SendNotification)(
+typedef void (* PJON_Send_Notification)(
     const uint8_t * const payload,
     const uint16_t length,
     const uint8_t receiver_bus,
@@ -58,14 +58,14 @@ typedef void (* PJON_SendNotification)(
     const PJON_Packet_Info &packet_info
 );
 
-template<class RouterClass>
+template<class RouterClass = PJONSwitch>
 class PJONInteractiveRouter : public RouterClass
 {
 protected:
 	void *custom_pointer = NULL;
 	PJON_Receiver receiver = NULL;
 	PJON_Error error = NULL;
-	PJON_SendNotification sendnotification = NULL;
+	PJON_Send_Notification send_notification = NULL;
 	bool router = false;
 
 	virtual void dynamic_receiver_function(uint8_t *payload, uint16_t length,
@@ -75,16 +75,16 @@ protected:
 		// (If this device has a device id on the source bus, and it is equal to
 		// the packets receiver_id, the packet is for this device.)
 		bool packet_is_for_me = (
-		                            RouterClass::buses[RouterClass::current_bus]->device_id() != PJON_NOT_ASSIGNED &&
-		                            memcmp(RouterClass::buses[RouterClass::current_bus]->bus_id, packet_info.receiver_bus_id, 4) == 0 &&
-		                            RouterClass::buses[RouterClass::current_bus]->device_id() == packet_info.receiver_id
+		                            RouterClass::buses[RouterClass::current_bus]->tx.id != PJON_NOT_ASSIGNED &&
+		                            memcmp(RouterClass::buses[RouterClass::current_bus]->tx.bus_id, packet_info.rx.bus_id, 4) == 0 &&
+		                            RouterClass::buses[RouterClass::current_bus]->tx.id == packet_info.rx.id
 		                        );
 
 		// Take care of other's packets
 		if(!packet_is_for_me) {
 			RouterClass::dynamic_receiver_function(payload, length, packet_info);
 		} else if(packet_info.header & PJON_ACK_REQ_BIT) {
-			RouterClass::buses[RouterClass::current_bus]->send_synchronous_acknowledge();
+			RouterClass::buses[RouterClass::current_bus]->send_acknowledge();
 		}
 		// Call the receive callback _after_ the packet has been delivered
 		if(router || packet_is_for_me) {
@@ -115,8 +115,8 @@ protected:
 		RouterClass::send_packet(payload, length, receiver_bus, sender_bus, ack_sent, packet_info);
 
 		// Call any user registered send notification function
-		if (sendnotification) {
-			sendnotification(payload, length, receiver_bus, sender_bus, packet_info);
+		if (send_notification) {
+			send_notification(payload, length, receiver_bus, sender_bus, packet_info);
 		}
 	}
 
@@ -124,7 +124,7 @@ public:
 	PJONInteractiveRouter() : RouterClass() {}
 	PJONInteractiveRouter(
 	    uint8_t bus_count,
-	    PJONAny*buses[],
+	    PJONAny* const buses[],
 	    uint8_t default_gateway = PJON_NOT_ASSIGNED)
 		: RouterClass(bus_count, buses, default_gateway) {}
 
@@ -138,9 +138,9 @@ public:
 		error = e;
 	};
 
-	void set_sendnotification(PJON_SendNotification s)
+	void set_send_notification(PJON_Send_Notification s)
 	{
-		sendnotification = s;
+		send_notification = s;
 	};
 
 	void set_custom_ptr(void *custom_ptr)
@@ -162,4 +162,72 @@ public:
 	{
 		router = on;
 	};
+};
+
+// Specialized class to simplify declaration when using 2 buses
+template<class A, class B, class RouterClass = PJONSwitch>
+class PJONInteractiveRouter2 : public PJONInteractiveRouter<RouterClass>
+{
+	StrategyLink<A> linkA;
+	StrategyLink<B> linkB;
+	PJONAny busA, busB;
+public:
+	PJONInteractiveRouter2(uint8_t default_gateway = PJON_NOT_ASSIGNED)
+	{
+		PJON<Any>* buses[2] = { &busA, &busB };
+		PJONSimpleSwitch<Any>::connect_buses(2, buses, default_gateway);
+		busA.set_link(&linkA);
+		busB.set_link(&linkB);
+	};
+
+	PJONAny &get_bus(const uint8_t ix)
+	{
+		return ix == 0 ? busA : busB;
+	}
+
+	A &get_strategy_0()
+	{
+		return linkA.strategy;
+	}
+	B &get_strategy_1()
+	{
+		return linkB.strategy;
+	}
+};
+
+// Specialized class to simplify declaration when using 3 buses
+template<class A, class B, class C, class RouterClass = PJONSwitch>
+class PJONInteractiveRouter3 : public PJONInteractiveRouter<RouterClass>
+{
+	StrategyLink<A> linkA;
+	StrategyLink<B> linkB;
+	StrategyLink<C> linkC;
+	PJONAny busA, busB, busC;
+public:
+	PJONInteractiveRouter3(uint8_t default_gateway = PJON_NOT_ASSIGNED)
+	{
+		PJON<Any>* buses[3] = { &busA, &busB, &busC };
+		PJONSimpleSwitch<Any>::connect_buses(3, buses, default_gateway);
+		busA.set_link(&linkA);
+		busB.set_link(&linkB);
+		busC.set_link(&linkC);
+	};
+
+	PJONAny &get_bus(const uint8_t ix)
+	{
+		return ix == 0 ? busA : (ix == 1 ? busB : busC);
+	}
+
+	A &get_strategy_0()
+	{
+		return linkA.strategy;
+	}
+	B &get_strategy_1()
+	{
+		return linkB.strategy;
+	}
+	C &get_strategy_2()
+	{
+		return linkC.strategy;
+	}
 };

@@ -1,12 +1,12 @@
 ## ThroughLoRa
 
-**Medium:** Radio, Wire | **Pins used:** 6
+| Medium | Pins used | Inclusion |
+|--------|-----------|--------------------|
+| LoRa radio | 6     | `#include <PJONThroughLora.h>`|
 
 With `ThroughLora` strategy, PJON can run through a software or hardware SPI in order to communicate with supported LoRa modules. See [Supported Shields/Modules](https://github.com/gioblu/PJON/tree/master/src/strategies/ThroughLoRa#supported-shieldsmodules).
 
 This strategy is a wrapper around  [Arduino LoRa library](https://github.com/sandeepmistry/arduino-LoRa) created by [Sandeep Mistry](https://github.com/sandeepmistry) so all the credit to the specific LoRa implementation goes to him.
-
-Consider that, because of the inherent limitations of LoRa, the synchronous acknowledgement is not supported.
 
 ### Compatibility
 - ATmega88/168/328 16MHz (Diecimila, Duemilanove, Uno, Nano, Mini, Lillypad)
@@ -15,17 +15,16 @@ Consider that, because of the inherent limitations of LoRa, the synchronous ackn
 - STM32F103 ([Blue Pill](http://wiki.stm32duino.com/index.php?title=Blue_Pill))
 
 ### Getting started
-1. Define `PJON_INCLUDE_TL` before including PJON header `<PJON.h>`
-2. Pass the `ThroughLora` type as PJON template parameter to instantiate a PJON object ready to communicate through this Strategy.
-3. Configure the shield/module pins according to the correct connection. See [Hardware connection](#hardware-connection).
-4. Initialize the module with its specified frequency.
+1. Pass the `ThroughLora` type as PJON template parameter to instantiate a PJON object ready to communicate through this Strategy.
+2. Configure the shield/module pins according to the correct connection. See [Hardware connection](#hardware-connection).
+3. Initialize the module with its specified frequency.
 
 ```cpp
-#define PJON_INCLUDE_TL //Definition to enable ThroughLora strategy
 
-#include <PJON.h> //PJON header
+#include <PJONThroughLora.h>
 
-PJON<ThroughLora> bus; //PJON Lora bus instance
+PJONThroughLora bus; //PJON Lora bus instance
+
 bus.strategy.setPins(10,9,2); //CS pin, Reset pin, Interrupt pin
 bus.strategy.setFrequency(868100000UL); //initialize 868 MHZ module
 ```
@@ -54,7 +53,7 @@ bus.strategy.setFrequency(868100000UL); //initialize 868 MHZ module
 - `DIO0` pin is optional, it is only needed for receive callback mode. If `DIO0` pin is used, it **must** be interrupt capable via [`attachInterrupt(...)`](https://www.arduino.cc/en/Reference/AttachInterrupt).
 
 ### Usage Example
-Here are listed basic examples of a transmitter and receiver code. After tou include the necessary code to initialize the Lora module you can use the normal PJON functions to handle data communication.
+Here are listed basic examples of a transmitter and receiver code. After you include the necessary code to initialize the Lora module you can use the normal PJON functions to handle data communication.
 
 Keep in mind that to use the LoRa startegy you must download the [Arduino LoRa library](https://github.com/sandeepmistry/arduino-LoRa).
 
@@ -62,18 +61,15 @@ More examples can be found in https://github.com/gioblu/PJON/tree/master/example
 
 ### Transmitter
 ```cpp
-#define PJON_INCLUDE_TL
 
-#include <PJON.h>
+#include <PJONThroughLora.h>
 
-PJON<ThroughLora> bus(45);
+PJONThroughLora bus(45);
 
 void setup() {
   // Obligatory to initialize Radio with correct frequency
   bus.strategy.setFrequency(868100000UL);
   bus.begin();
-  // Synchronous acknowledgement is not supported
-  bus.set_synchronous_acknowledge(false);
   // Send B to device 44 every second
   bus.send_repeatedly(44, "B", 1, 1000000);
 };
@@ -86,12 +82,10 @@ void loop() {
 ### Receiver
 
 ```cpp
-#define PJON_INCLUDE_TL
-
-#include <PJON.h>
+#include <PJONThroughLora.h>
 
 // <Strategy name> bus(selected device id)
-PJON<ThroughLora> bus(44);
+PJONThroughLora bus(44);
 
 void setup() {
   pinMode(13, OUTPUT);
@@ -100,8 +94,6 @@ void setup() {
 
   // Obligatory to initialize Radio with correct frequency
   bus.strategy.setFrequency(868100000UL);
-  // Synchronous acknowledgement is not supported
-  bus.set_synchronous_acknowledge(false);
   // Optional
   bus.strategy.setSignalBandwidth(250E3);
   bus.begin();

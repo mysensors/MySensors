@@ -95,6 +95,7 @@ inform the reader of their definition as macros in the global scope.
 /* AVR ATmega88/168/328/328P - Arduino Duemilanove, Uno, Nano, Mini, Pro -- */
 
 #if defined(__AVR_ATmega88__)  || defined(__AVR_ATmega168__)  || \
+    defined(__AVR_ATmega168P__)|| \
     defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || \
     defined(__AVR_ATmega328PB__)
 #define PJON_IO_PIN_TO_PORT_REG(P) \
@@ -310,8 +311,9 @@ inform the reader of their definition as macros in the global scope.
 	do { if(__builtin_constant_p(P)) { \
 			PJON_IO_WRITE(P, LOW); \
 			PJON_IO_MODE(P, INPUT); \
-		} else \
+		} else { \
 			digitalWrite(P, LOW); \
-		pinMode(P, INPUT); \
+			pinMode(P, INPUT); \
+		} \
 	} while(0)
 #endif

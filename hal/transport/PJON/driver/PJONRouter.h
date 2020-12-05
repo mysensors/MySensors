@@ -1,9 +1,9 @@
 
 /*-O//\         __     __
   |-gfo\       |__| | |  | |\ | ®
-  |!y°o:\      |  __| |__| | \| 12.0
+  |!y°o:\      |  __| |__| | \| 13.0
   |y"s§+`\     multi-master, multi-media bus network protocol
- /so+:-..`\    Copyright 2010-2019 by Giovanni Blu Mitolo gioscarab@gmail.com
+ /so+:-..`\    Copyright 2010-2020 by Giovanni Blu Mitolo gioscarab@gmail.com
  |+/:ngr-*.`\
  |5/:%&-a3f.:;\
  \+//u/+g%{osv,,\
@@ -23,7 +23,7 @@ _____________________________________________________________________________
 This software is experimental and it is distributed "AS IS" without any
 warranty, use it at your own risk.
 
-Copyright 2010-2019 by Giovanni Blu Mitolo gioscarab@gmail.com
+Copyright 2010-2020 by Giovanni Blu Mitolo gioscarab@gmail.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,13 +57,13 @@ protected:
 
 	uint8_t find_bus_in_table(
 	    const uint8_t *bus_id,
-	    const uint8_t device_id,
+	    const uint8_t /* device_id */,
 	    uint8_t &start_bus
 	)
 	{
 		uint8_t start = start_bus - bus_count;
 		for(uint8_t i = start; i < table_size; i++) {
-			if(PJONTools::bus_id_equality(bus_id, remote_bus_ids[i])) {
+			if(memcmp(bus_id, remote_bus_ids[i], 4) == 0) {
 				start_bus = bus_count + i + 1; // Continue searching for matches
 				return remote_bus_via_attached_bus[i]; // Explicit bus id match
 			}
@@ -104,16 +104,85 @@ public:
 	PJONRouter() {};
 	PJONRouter(
 	    uint8_t bus_count,
-	    PJONAny *buses[],
+	    PJONAny * const buses[],
 	    uint8_t default_gateway = PJON_NOT_ASSIGNED
 	) : PJONSwitch(bus_count, buses, default_gateway) { };
 
 	void add(const uint8_t bus_id[], uint8_t via_attached_bus)
 	{
 		if(table_size < PJON_ROUTER_TABLE_SIZE) {
-			PJONTools::copy_bus_id(remote_bus_ids[table_size], bus_id);
+			memcpy(remote_bus_ids[table_size], bus_id, 4);
 			remote_bus_via_attached_bus[table_size] = via_attached_bus;
 			table_size++;
 		}
 	};
+};
+
+
+// Specialized class to simplify declaration when using 2 buses
+template<class A, class B>
+class PJONRouter2 : public PJONRouter
+{
+	StrategyLink<A> linkA;
+	StrategyLink<B> linkB;
+	PJONAny busA, busB;
+public:
+	PJONRouter2(uint8_t default_gateway = PJON_NOT_ASSIGNED)
+	{
+		PJON<Any>* buses[2] = { &busA, &busB };
+		PJONSimpleSwitch<Any>::connect_buses(2, buses, default_gateway);
+		busA.set_link(&linkA);
+		busB.set_link(&linkB);
+	};
+
+	PJONAny &get_bus(const uint8_t ix)
+	{
+		return ix == 0 ? busA : busB;
+	}
+
+	A &get_strategy_0()
+	{
+		return linkA.strategy;
+	}
+	B &get_strategy_1()
+	{
+		return linkB.strategy;
+	}
+};
+
+// Specialized class to simplify declaration when using 3 buses
+template<class A, class B, class C>
+class PJONRouter3 : public PJONRouter
+{
+	StrategyLink<A> linkA;
+	StrategyLink<B> linkB;
+	StrategyLink<C> linkC;
+	PJONAny busA, busB, busC;
+public:
+	PJONRouter3(uint8_t default_gateway = PJON_NOT_ASSIGNED)
+	{
+		PJON<Any> *buses[3] = { &busA, &busB, &busC };
+		PJONSimpleSwitch<Any>::connect_buses(3, buses, default_gateway);
+		busA.set_link(&linkA);
+		busB.set_link(&linkB);
+		busC.set_link(&linkC);
+	};
+
+	PJONAny &get_bus(const uint8_t ix)
+	{
+		return ix == 0 ? busA : (ix == 1 ? busB : busC);
+	}
+
+	A &get_strategy_0()
+	{
+		return linkA.strategy;
+	}
+	B &get_strategy_1()
+	{
+		return linkB.strategy;
+	}
+	C &get_strategy_2()
+	{
+		return linkC.strategy;
+	}
 };
