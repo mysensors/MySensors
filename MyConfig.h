@@ -543,7 +543,11 @@
  * - NRF5_BLE_1MBPS for 1Mbps BLE modulation
  */
 #ifndef MY_NRF5_ESB_MODE
+#ifdef NRF5_250KBPS
 #define MY_NRF5_ESB_MODE (NRF5_250KBPS)
+#else
+#define MY_NRF5_ESB_MODE (NRF5_1MBPS)
+#endif
 #endif
 
 /**
