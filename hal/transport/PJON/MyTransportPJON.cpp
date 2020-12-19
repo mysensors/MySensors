@@ -21,6 +21,9 @@
  *
  */
 
+// Set a higher polling duration if the device is executing long tasks
+#define PJON_POLLING_DURATION 1000
+
 PJONSoftwareBitBang bus;
 
 // debug
@@ -37,36 +40,17 @@ bool _packet_received;
 
 bool transportSend(const uint8_t to, const void *data, const uint8_t length, const bool noACK)
 {
-	(void)noACK;	// not implemented
 	const char *datap = static_cast<const char *>(data);
 	char *dataToSend = const_cast<char *>(datap);
-	uint8_t retry = 0;
-	uint16_t res = PJON_FAIL;
-	while(retry++ < MY_PJON_MAX_RETRIES) {
-		bus.receive();
-		// This is how many times to try and transmit before failing.
-		res = bus.send_packet(to, dataToSend, length);
-		PJON_DEBUG(PSTR("PJON:SND:TO=%" PRIu8 ",LEN=%" PRIu8 ",RET=%" PRIu8 "/%" PRIu8 "\n"), to, length,
-		           retry, MY_PJON_MAX_RETRIES);
-		switch(res) {
-		case PJON_ACK:
-			PJON_DEBUG(PSTR("PJON:SND:ACK\n"));
-			break;
-		case PJON_BUSY:
-			PJON_DEBUG(PSTR("!PJON:SND:BUSY\n"));
-			break;
-		case PJON_FAIL:
-			PJON_DEBUG(PSTR("!PJON:SND:FAIL\n"));
-			break;
-		default:
-			PJON_DEBUG(PSTR("!PJON:SND:RSP=%" PRIu8 "\n"), res);
-		}
-		if (res == PJON_ACK) {
-			return true;
-		}
+	uint16_t res = bus.send(to, dataToSend, length,
+	                        (noACK) ? (bus.config & ~PJON_ACK_REQ_BIT) : PJON_NO_HEADER);
+	bus.update();
+	if(res == PJON_FAIL) {
+		PJON_DEBUG(PSTR("!PJON:SND:FAIL\n"));
+		return false;
+	} else {
+		return true;
 	}
-	PJON_DEBUG(PSTR("!PJON:SND:TO=%" PRIu8 ",NACK\n"), to);
-	return res == PJON_ACK;
 }
 
 void _receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info)
@@ -101,7 +85,8 @@ uint8_t transportGetAddress(void)
 
 bool transportDataAvailable(void)
 {
-	bus.receive();
+	bus.receive(PJON_POLLING_DURATION);
+	bus.update();
 	return _packet_received;
 }
 
