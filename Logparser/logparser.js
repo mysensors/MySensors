@@ -320,7 +320,7 @@ var match = [
 	{ re: "TSF:LRT:OK", d: "Loading routing table successful" },
 	{ re: "TSF:SRT:OK", d: "Saving routing table successful" },
 	{ re: "!TSF:RTE:FPAR ACTIVE", d: "Finding parent active, message not sent" },
-	{ re: "!TSF:RTE:DST (\\d+) UNKNOWN", d: "Routing for destination <b>$1</b> unknown, sending message to parent" },
+	{ re: "!TSF:RTE:(\\d+) UNKNOWN", d: "Routing for destination <b>$1</b> unknown, sending message to parent" },
 	{ re: "!TSF:RTE:N2N FAIL", d: "Direct node-to-node communication failed - handing over to parent" },
 	{ re: "TSF:RRT:ROUTE N=(\\d+),R=(\\d+)", d: "Routing table, messages to node (<b>$1</b>) are routed via node (<b>$2</b>)"},
 	{ re: "!TSF:SND:TNR", d: "Transport not ready, message cannot be sent" },
