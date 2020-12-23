@@ -21,9 +21,7 @@
 
 #include "Radio.h"
 #include "Radio_ESB.h"
-#include "hal/architecture/NRF5/MyHwNRF5.h"
 #include "drivers/CircularBuffer/CircularBuffer.h"
-#include <stdio.h>
 
 // internal functions
 static uint8_t reverse_byte(uint8_t address);
@@ -32,12 +30,12 @@ inline void _stopACK();
 
 // RX Buffer
 static NRF5_ESB_Packet rx_circular_buffer_buffer[MY_NRF5_ESB_RX_BUFFER_SIZE];
-// Poiter to rx circular buffer
+// Pointer to rx circular buffer
 static NRF5_ESB_Packet rx_buffer;
 // Circular buffer
 static CircularBuffer<NRF5_ESB_Packet>
 rx_circular_buffer(rx_circular_buffer_buffer, MY_NRF5_ESB_RX_BUFFER_SIZE);
-// Dedect duplicate packages for every pipe available
+// Detect duplicate packages for every pipe available
 static volatile uint32_t package_ids[8];
 
 // TX Buffer
@@ -63,6 +61,15 @@ static int8_t tx_power_level = (MY_NRF5_ESB_PA_LEVEL << RADIO_TXPOWER_TXPOWER_Po
 static bool NRF5_ESB_initialize()
 {
 	NRF5_RADIO_DEBUG(PSTR("NRF5:INIT:ESB\n"));
+#if defined(MY_NRF5_PA_LNA)
+	NRF5_RADIO_DEBUG(PSTR("NRF5:INIT:PA LNA\n"));
+	hwPinMode(MY_NRF5_CPS_PIN, OUTPUT);
+	hwPinMode(MY_NRF5_CHL_PIN, OUTPUT);
+	hwPinMode(MY_NRF5_PA_PIN, OUTPUT);
+	hwPinMode(MY_NRF5_LNA_PIN, OUTPUT);
+	hwDigitalWrite(MY_NRF5_CHL_PIN, HIGH); // CHL = TX HIGH POWER
+	hwDigitalWrite(MY_NRF5_CPS_PIN, LOW); // CPS = RX/TX BYPASS
+#endif
 
 #if defined(SOFTDEVICE_PRESENT)
 	// Disable the SoftDevice; requires NRF5 SDK available
@@ -276,7 +283,10 @@ static void NRF5_ESB_startListening()
 	if (NRF_RADIO->POWER == 0) {
 		NRF5_ESB_initialize();
 	}
-
+#if defined(MY_NRF5_PA_LNA)
+	hwDigitalWrite(MY_NRF5_PA_PIN, LOW); // disable PA
+	hwDigitalWrite(MY_NRF5_LNA_PIN, HIGH); // enable LNA
+#endif
 #ifdef NRF52
 	// Fix PAN#102 and PAN#106
 	*((volatile uint32_t *)0x40001774) = (*((volatile uint32_t *)0x40001774) & 0xFFFFFFFE) | 0x01000000;
@@ -301,7 +311,7 @@ static bool NRF5_ESB_isDataAvailable()
 	return rx_circular_buffer.available() > 0;
 }
 
-static uint8_t NRF5_ESB_readMessage(void *data)
+static uint8_t NRF5_ESB_readMessage(void *data, const uint8_t maxBufSize)
 {
 	uint8_t ret = 0;
 
@@ -310,7 +320,7 @@ static uint8_t NRF5_ESB_readMessage(void *data)
 	// Nothing to read?
 	if (buffer != NULL) {
 		// copy content
-		memcpy(data, buffer->data, buffer->len);
+		(void)memcpy(data, (const void *)buffer->data, min(maxBufSize, buffer->len));
 		ret = buffer->len;
 		rssi_rx = 0-buffer->rssi;
 
@@ -331,6 +341,10 @@ static uint8_t NRF5_ESB_readMessage(void *data)
 void NRF5_ESB_endtx();
 void NRF5_ESB_starttx()
 {
+#if defined(MY_NRF5_PA_LNA)
+	hwDigitalWrite(MY_NRF5_PA_PIN, HIGH); // enable PA
+	hwDigitalWrite(MY_NRF5_LNA_PIN, HIGH); // enable LNA for ACK
+#endif
 	if (tx_retries > 0) {
 		// Prevent radio to write into TX memory while receiving
 		if (NRF_RADIO->PACKETPTR != (uint32_t)&tx_buffer) {
@@ -391,7 +405,7 @@ void NRF5_ESB_starttx()
 			NRF_RADIO->TASKS_DISABLE = 1;
 		}
 	} else {
-		// finised TX
+		// finished TX
 		NRF5_ESB_endtx();
 	}
 	tx_retries--;
@@ -399,6 +413,10 @@ void NRF5_ESB_starttx()
 
 void NRF5_ESB_endtx()
 {
+#if defined(MY_NRF5_PA_LNA)
+	hwDigitalWrite(MY_NRF5_PA_PIN, LOW); // disable PA
+	hwDigitalWrite(MY_NRF5_LNA_PIN, HIGH); // enable LNA
+#endif
 	// Clear PPI
 	NRF_PPI->CHENCLR = NRF5_ESB_PPI_BITS;
 	// Enable Ready interrupt
@@ -422,7 +440,6 @@ static bool NRF5_ESB_sendMessage(uint8_t recipient, const void *buf, uint8_t len
 	if (NRF_RADIO->POWER == 0) {
 		NRF5_ESB_initialize();
 	}
-
 	// check length and truncate data
 	if (len > MAX_MESSAGE_SIZE) {
 		len = MAX_MESSAGE_SIZE;
@@ -632,9 +649,9 @@ extern "C" {
 			NRF_RADIO->BCC = NRF5_ESB_BITCOUNTER;
 
 			// End of RX packet
-			if ((NRF_RADIO->STATE == RADIO_STATE_STATE_Rx) or
-			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxIdle) or
-			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxDisable) or
+			if ((NRF_RADIO->STATE == RADIO_STATE_STATE_Rx) ||
+			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxIdle) ||
+			        (NRF_RADIO->STATE == RADIO_STATE_STATE_RxDisable) ||
 			        (NRF_RADIO->STATE == RADIO_STATE_STATE_TxRu)) {
 				if (NRF_RADIO->CRCSTATUS) {
 					// Ensure no ACK package is received

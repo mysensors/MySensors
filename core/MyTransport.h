@@ -231,13 +231,22 @@
 #endif
 
 #define AUTO									(255u)			//!< ID 255 is reserved
-#define BROADCAST_ADDRESS			(255u)			//!< broadcasts are addressed to ID 255
 #define DISTANCE_INVALID			(255u)			//!< invalid distance when searching for parent
 #define MAX_HOPS							(254u)			//!< maximal number of hops for ping/pong
 #define INVALID_HOPS					(255u)			//!< invalid hops
 #define MAX_SUBSEQ_MSGS				(5u)				//!< Maximum number of subsequently processed messages in FIFO (to prevent transport deadlock if HW issue)
 #define UPLINK_QUALITY_WEIGHT	(0.05f)			//!< UPLINK_QUALITY_WEIGHT
 
+#define SESSION_KEY_SIZE			(16u)				//!< SESSION_KEY_SIZE
+#if !defined(SESSION_KEY_INTERVAL_MS)
+#define SESSION_KEY_INTERVAL_MS (60*1000ul)		//!< SESSION_KEY_INTERVAL_MS
+#endif
+#if !defined(SESSION_KEY_REQUEST_DELAY_MS)
+#define SESSION_KEY_REQUEST_DELAY_MS (10*1000ul)		//!< SESSION_KEY_REQUEST_DELAY_MS
+#endif
+#if !defined(SESSION_KEY_REQUEST_TIMEOUT_MS)
+#define SESSION_KEY_REQUEST_TIMEOUT_MS (5*1000ul)		//!< SESSION_KEY_REQUEST_TIMEOUT_MS
+#endif
 
 // parent node check
 #if defined(MY_PARENT_NODE_IS_STATIC) && !defined(MY_PARENT_NODE_ID)
@@ -275,6 +284,15 @@ typedef struct {
 	void(*Transition)(void);					//!< state transition function
 	void(*Update)(void);							//!< state update function
 } transportState_t;
+
+/**
+ * @brief This structure stores session states
+ */
+typedef struct {
+	uint8_t key[SESSION_KEY_SIZE];							//!< session key
+	uint32_t nextRenewal_ms;									//!< timestamp key renewal
+} sessionInformation_t;
+
 /**
 * @brief Datatype for internal RSSI storage
 */
@@ -547,6 +565,11 @@ void transportDisable(void);
 * @brief Reinitialise transport. Put transport to standby - If xxx_POWER_PIN set, power up and go to standby
 */
 void transportReInitialise(void);
+
+/**
+* @brief transportRenewSessionKey
+*/
+void transportRenewSessionKey(void);
 
 /**
 * @brief Get transport signal report

@@ -49,9 +49,10 @@
 * | | RFM69 | INIT | PIN,CS=%%d,IQP=%%d,IQN=%%d[,RST=%%d] | Pin configuration: chip select (CS), IRQ pin (IQP), IRQ number (IQN), Reset (RST)
 * | | RFM69 | INIT | HWV=%%d                              | HW version, see datasheet chapter 9
 * |!| RFM69 | INIT | SANCHK FAIL                          | Sanity check failed, check wiring or replace module
+* |!| RFM69 | SRM  | MODE=%%d                             | Set radio mode, see #rfm69_radio_mode_t
 * | | RFM69 | PTX  | NO ADJ                               | TX power level, no adjustment
 * | | RFM69 | PTX  | LEVEL=%%d dbM                        | TX power level, set to (LEVEL) dBm
-* | | RFM69 | SAC  | SEND ACK,TO=%%d,RSSI=%%d             | ACK sent to (TO), RSSI of incoming message (RSSI)
+* | | RFM69 | SAC  | TO=%%d,RSSI=%%d                      | Send ACK to (TO), RSSI of incoming message (RSSI)
 * | | RFM69 | ATC  | ADJ TXL,cR=%%d,tR=%%d..%%d,TXL=%%d   | Adjust TX level, current RSSI (cR), target RSSI range (tR), TX level (TXL)
 * | | RFM69 | SWR  | SEND,TO=%%d,SEQ=%%d,RETRY=%%d        | Send to (TO), sequence number (SWQ), retry if no ACK received (RETRY)
 * | | RFM69 | SWR  | ACK,FROM=%%d,SEQ=%%d,RSSI=%%d        | ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
@@ -126,19 +127,25 @@
 #endif
 #endif
 
-#define RFM69_FIFO_SIZE                  (0xFFu)		//!< Max number of bytes the Rx/Tx FIFO can hold
-#define RFM69_MAX_PACKET_LEN             (0x40u)		//!< This is the maximum number of bytes that can be carried 
+#define RFM69_FIFO_SIZE                  (0x42u)		//!< Max number of bytes the Rx/Tx FIFO can hold
+#define RFM69_MAX_PACKET_LEN             (RFM69_FIFO_SIZE)		//!< This is the maximum number of bytes that can be carried 
+
 #define RFM69_ATC_TARGET_RANGE_DBM       (2u)				//!< ATC target range +/- dBm
 #define RFM69_PACKET_HEADER_VERSION      (1u)				//!< RFM69 packet header version
 #define RFM69_MIN_PACKET_HEADER_VERSION  (1u)				//!< Minimal RFM69 packet header version
 
-#define RFM69_RETRIES                    (5u)				//!< Retries in case of failed transmission
+#define RFM69_TX_ATTEMPTS                (5u)				//!< TX attempts
 #define RFM69_RETRY_TIMEOUT_MS           (200ul)		//!< Timeout for ACK, adjustments needed if modem configuration changed (air time different)
 #define RFM69_MODE_READY_TIMEOUT_MS      (50ul)			//!< Timeout for mode ready
 
 #define RFM69_ACK_REQUESTED              (7u)				//!< RFM69 header, controlFlag, bit 7
 #define RFM69_ACK_RECEIVED               (6u)				//!< RFM69 header, controlFlag, bit 6
 #define RFM69_ACK_RSSI_REPORT            (5u)				//!< RFM69 header, controlFlag, bit 5
+
+#define RFM69_IV_SIZE_SHORT              (8u)				//!< RFM69_IV_SIZE_SHORT
+#define RFM69_HMAC_SIZE_SHORT            (20u)			//!< RFM69_HMAC_SIZE_SHORT
+#define RFM69_IV_SIZE_LONG               (16u)			//!< RFM69_IV_SIZE_LONG
+#define RFM69_HMAC_SIZE_LONG             (28u)			//!< RFM69_HMAC_SIZE_LONG
 
 #define RFM69_BROADCAST_ADDRESS          (255u)			//!< Broadcasting address 
 #define RFM69_TARGET_RSSI_DBM            (-75)			//!< RSSI target
@@ -170,12 +177,12 @@
 #define RFM69_FSTEP                      (RFM69_FXOSC / 524288.0f)	//!< FXOSC / 2^19 = 32MHz / 2^19 (p13 in datasheet)
 
 // helper macros
-#define RFM69_getACKRequested(__value) ((bool)bitRead(__value,RFM69_ACK_REQUESTED))						//!< getACKRequested
-#define RFM69_setACKRequested(__value, __flag) bitWrite(__value,RFM69_ACK_REQUESTED,__flag)		//!< setACKRequested
-#define RFM69_getACKReceived(__value) ((bool)bitRead(__value,RFM69_ACK_RECEIVED))							//!< getACKReceived
-#define RFM69_setACKReceived(__value, __flag) bitWrite(__value,RFM69_ACK_RECEIVED,__flag)			//!< setACKReceived
-#define RFM69_setACKRSSIReport(__value, __flag) bitWrite(__value,RFM69_ACK_RSSI_REPORT,__flag)//!< setACKRSSIReport
-#define RFM69_getACKRSSIReport(__value) ((bool)bitRead(__value,RFM69_ACK_RSSI_REPORT))				//!< getACKRSSIReport
+#define RFM69_getACKRequested(__value) ((bool)bitRead(__value, RFM69_ACK_REQUESTED))						//!< getACKRequested
+#define RFM69_setACKRequested(__value, __flag) bitWrite(__value, RFM69_ACK_REQUESTED, __flag)		//!< setACKRequested
+#define RFM69_getACKReceived(__value) ((bool)bitRead(__value, RFM69_ACK_RECEIVED))							//!< getACKReceived
+#define RFM69_setACKReceived(__value, __flag) bitWrite(__value, RFM69_ACK_RECEIVED, __flag)			//!< setACKReceived
+#define RFM69_setACKRSSIReport(__value, __flag) bitWrite(__value, RFM69_ACK_RSSI_REPORT, __flag)//!< setACKRSSIReport
+#define RFM69_getACKRSSIReport(__value) ((bool)bitRead(__value, RFM69_ACK_RSSI_REPORT))				//!< getACKRSSIReport
 
 // Register access
 #define RFM69_READ_REGISTER		(0x7Fu)			//!< reading register
@@ -313,6 +320,14 @@ typedef struct {
 } __attribute__((packed)) rfm69_packet_t;
 
 /**
+* @brief RFM69 last packet info
+*/
+typedef struct {
+	rfm69_sequenceNumber_t sequenceNumber;     //!< sequenceNumber
+	uint8_t sender;                            //!< sender
+} rfm69_last_packet_t;
+
+/**
 * @brief RFM69 internal variables
 */
 typedef struct {
@@ -321,25 +336,23 @@ typedef struct {
 	rfm69_sequenceNumber_t txSequenceNumber;   //!< RFM69_txSequenceNumber
 	rfm69_powerlevel_t powerLevel;             //!< TX power level dBm
 	uint8_t ATCtargetRSSI;                     //!< ATC: target RSSI
+	rfm69_last_packet_t lastPacket;            //!< Variable for deduplication mechanism
 	// 8 bit
 	rfm69_radio_mode_t radioMode : 3;          //!< current transceiver state
 	bool dataReceived : 1;                     //!< data received
 	bool ackReceived : 1;                      //!< ACK received
 	bool ATCenabled : 1;                       //!< ATC enabled
-	uint8_t reserved : 2;                      //!< Reserved
+bool msgOK :
+	1;                            //!< Flag if received message is ok or failed verification
+	uint8_t reserved : 1;                      //!< Reserved
 } rfm69_internal_t;
 
 #define LOCAL static		//!< static
 
 /**
-* @brief RFM69_handler
+* @brief RFM69_handling
 */
-LOCAL void RFM69_handler(void);
-
-/**
-* @brief Clear flags and FIFO
-*/
-LOCAL void RFM69_clearFIFO(void);
+LOCAL void RFM69_handling(void);
 
 /**
 * @brief Check for channel activity
@@ -350,7 +363,7 @@ LOCAL bool RFM69_channelFree(void);
 /**
 * @brief RFM69_interruptHandling
 */
-LOCAL void RFM69_interruptHandling(void);
+LOCAL void RFM69_RXFIFOHandling(void);
 
 /**
 * @brief Initialise the driver transport hardware and software
@@ -386,24 +399,11 @@ LOCAL bool RFM69_available(void);
 LOCAL uint8_t RFM69_receive(uint8_t *buf, const uint8_t maxBufSize);
 
 /**
-* @brief RFM69_sendFrame
+* @brief RFM69_send
 * @param packet
-* @param increaseSequenceCounter
 * @return True if packet sent
 */
-LOCAL bool RFM69_sendFrame(rfm69_packet_t *packet, const bool increaseSequenceCounter = true);
-
-/**
-* @brief RFM69_send
-* @param recipient
-* @param data
-* @param len
-* @param flags
-* @param increaseSequenceCounter
-* @return True if frame sent
-*/
-LOCAL bool RFM69_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
-                      const rfm69_controlFlags_t flags, const bool increaseSequenceCounter = true);
+LOCAL bool RFM69_send(const rfm69_packet_t *packet);
 
 /**
 * @brief Sets the transmitter and receiver center frequency
@@ -456,7 +456,7 @@ LOCAL void RFM69_powerUp(void);
 * @brief RFM69_sendACK
 * @param recipient
 * @param sequenceNumber
-* @param RSSI (rfm95_RSSI_t)
+* @param RSSI (rfm69_RSSI_t)
 */
 LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t sequenceNumber,
                          const rfm69_RSSI_t RSSI);
@@ -470,8 +470,7 @@ LOCAL void RFM69_sendACK(const uint8_t recipient, const rfm69_sequenceNumber_t s
 * @return True if packet successfully sent
 */
 LOCAL bool RFM69_sendWithRetry(const uint8_t recipient, const void *buffer,
-                               const uint8_t bufferSize,
-                               const bool noACK);
+                               const uint8_t bufferSize, const bool noACK);
 
 /**
 * @brief RFM69_setRadioMode
@@ -527,7 +526,7 @@ LOCAL bool RFM69_sanityCheck(void);
 * @brief RFM69_encrypt Set encryption mode
 * @param key if key is null, encryption is disabled. Key has to be 16 bytes!
 */
-LOCAL void RFM69_encrypt(const char *key);
+LOCAL void RFM69_HWencryption(const char *key) __attribute__((unused));
 
 /**
 * @brief RFM69_setHighPowerRegs
@@ -554,7 +553,7 @@ LOCAL void RFM69_ATCmode(const bool onOff, const int16_t targetRSSI = RFM69_TARG
 * Read and display all RFM69 register contents.
 * @note define RFM69_REGISTER_DETAIL for register content decoding.
 */
-LOCAL void RFM69_readAllRegs(void);
+LOCAL void RFM69_readAllRegs(void) __attribute__((unused));
 
 #endif
 

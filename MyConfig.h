@@ -570,7 +570,7 @@
  * @brief Declare the amount of incoming messages that can be buffered at driver level.
  */
 #ifndef MY_NRF5_ESB_RX_BUFFER_SIZE
-#define MY_NRF5_ESB_RX_BUFFER_SIZE (20)
+#define MY_NRF5_ESB_RX_BUFFER_SIZE (5)
 #endif
 
 /**
@@ -2191,7 +2191,7 @@
 #define MY_DEBUG_VERBOSE_OTA_UPDATE //!< MY_DEBUG_VERBOSE_OTA_UPDATE
 #endif
 
-#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_GATEWAY) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95) || defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL)
+#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_GATEWAY) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95) || defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL) || defined(MY_DEBUG_VERBOSE_TRANSPORT_ENCRYPTION)
 #define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
 #ifndef MY_DEBUG_OTA
 #define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug

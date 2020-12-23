@@ -1,3 +1,4 @@
+
 /*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
@@ -16,6 +17,7 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  *
+ * MultiTransport implementation created by Olivier Mauti 2020 <olivier@mysensors.org>
  * -------------------------------------------------------------------------------
  *
  * Copyright (c) 2013, Majenko Technologies and S.J.Hoeksma
@@ -240,7 +242,7 @@ bool _serialProcess()
 	return true;
 }
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
+bool RS485_transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK)
 {
 	(void)noACK;	// not implemented
 	const char *datap = static_cast<char const *>(data);
@@ -329,7 +331,7 @@ bool transportSend(const uint8_t to, const void* data, const uint8_t len, const 
 
 
 
-bool transportInit(void)
+bool RS485_transportInit(void)
 {
 	// Reset the state machine
 	_dev.begin(MY_RS485_BAUD_RATE);
@@ -345,33 +347,38 @@ bool transportInit(void)
 	return true;
 }
 
-void transportSetAddress(const uint8_t address)
+void RS485_transportSetAddress(const uint8_t address)
 {
 	_nodeId = address;
 }
 
-uint8_t transportGetAddress(void)
+uint8_t RS485_transportGetAddress(void)
 {
 	return _nodeId;
 }
 
 
-bool transportDataAvailable(void)
+bool RS485_transportDataAvailable(void)
 {
 	_serialProcess();
 	return _packet_received;
 }
 
-bool transportSanityCheck(void)
+bool RS485_transportSanityCheck(void)
 {
 	// not implemented yet
 	return true;
 }
 
-uint8_t transportReceive(void* data)
+void RS485_transportTask(void)
+{
+	// not implemented
+}
+
+uint8_t RS485_transportReceive(void* data, const uint8_t maxBufSize)
 {
 	if (_packet_received) {
-		memcpy(data,_data,_packet_len);
+		(void)memcpy(data, (const void *)_data, min(maxBufSize, _packet_len));
 		_packet_received = false;
 		return _packet_len;
 	} else {
@@ -379,63 +386,63 @@ uint8_t transportReceive(void* data)
 	}
 }
 
-void transportPowerDown(void)
+void RS485_transportPowerDown(void)
 {
 	// Nothing to shut down here
 }
 
-void transportPowerUp(void)
+void RS485_transportPowerUp(void)
 {
 	// not implemented
 }
 
-void transportSleep(void)
+void RS485_transportSleep(void)
 {
 	// not implemented
 }
 
-void transportStandBy(void)
+void RS485_transportStandBy(void)
 {
 	// not implemented
 }
 
-int16_t transportGetSendingRSSI(void)
-{
-	// not implemented
-	return INVALID_RSSI;
-}
-
-int16_t transportGetReceivingRSSI(void)
+int16_t RS485_transportGetSendingRSSI(void)
 {
 	// not implemented
 	return INVALID_RSSI;
 }
 
-int16_t transportGetSendingSNR(void)
+int16_t RS485_transportGetReceivingRSSI(void)
+{
+	// not implemented
+	return INVALID_RSSI;
+}
+
+int16_t RS485_transportGetSendingSNR(void)
 {
 	// not implemented
 	return INVALID_SNR;
 }
 
-int16_t transportGetReceivingSNR(void)
+int16_t RS485_transportGetReceivingSNR(void)
 {
 	// not implemented
 	return INVALID_SNR;
 }
 
-int16_t transportGetTxPowerPercent(void)
+int16_t RS485_transportGetTxPowerPercent(void)
 {
 	// not implemented
 	return static_cast<int16_t>(100);
 }
 
-int16_t transportGetTxPowerLevel(void)
+int16_t RS485_transportGetTxPowerLevel(void)
 {
 	// not implemented
 	return static_cast<int16_t>(100);
 }
 
-bool transportSetTxPowerPercent(const uint8_t powerPercent)
+bool RS485_transportSetTxPowerPercent(const uint8_t powerPercent)
 {
 	// not possible
 	(void)powerPercent;

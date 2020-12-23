@@ -804,7 +804,7 @@ void _nodeLock(const char *str)
 		doYield();
 		(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID,C_INTERNAL, I_LOCKED).set(str));
 #if defined(MY_SENSOR_NETWORK)
-		transportSleep();
+		transportHALSleep();
 		CORE_DEBUG(PSTR("MCO:NLK:TSL\n"));	// sleep transport
 #endif
 		setIndication(INDICATION_SLEEP);

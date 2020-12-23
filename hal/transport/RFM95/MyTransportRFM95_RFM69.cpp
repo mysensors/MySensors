@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -19,7 +19,7 @@
  * MultiTransport implementation created by Olivier Mauti 2020 <olivier@mysensors.org>
  */
 
-#include "hal/transport/RFM95/driver/RFM95.h"
+#include "driver/RFM95_RFM69.h"
 
 bool RFM95_transportInit(void)
 {
@@ -48,7 +48,6 @@ bool RFM95_transportSend(const uint8_t to, const void *data, const uint8_t len, 
 
 bool RFM95_transportDataAvailable(void)
 {
-	RFM95_handling();
 	return RFM95_available();
 }
 
@@ -67,6 +66,12 @@ void RFM95_transportTask(void)
 #endif
 }
 
+void RFM95_transportEncrypt(const char *key)
+{
+	// for RFM69 compatibility
+	RFM95_encrypt(key);
+}
+
 bool RFM95_transportSanityCheck(void)
 {
 	return RFM95_sanityCheck();
@@ -74,8 +79,7 @@ bool RFM95_transportSanityCheck(void)
 
 uint8_t RFM95_transportReceive(void *data, const uint8_t maxBufSize)
 {
-	uint8_t len = RFM95_receive((uint8_t *)data, maxBufSize);
-	return len;
+	return RFM95_receive((uint8_t *)data, maxBufSize);
 }
 
 void RFM95_transportSleep(void)

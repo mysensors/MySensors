@@ -711,20 +711,6 @@ bool signerSignMsg(MyMessage &msg);
  */
 bool signerVerifyMsg(MyMessage &msg);
 
-/**
- * @brief Do a timing neutral memory comparison.
- *
- * The function behaves similar to memcmp with the difference that it will
- * always use the same number of instructions for a given number of bytes,
- * no matter how the two buffers differ and the response is either 0 or -1.
- *
- * @param a First buffer for comparison.
- * @param b Second buffer for comparison.
- * @param sz The number of bytes to compare.
- * @returns 0 if buffers match, -1 if they do not.
- */
-int signerMemcmp(const void* a, const void* b, size_t sz);
-
 #endif
 /** @}*/
 

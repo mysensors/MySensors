@@ -15,57 +15,32 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
  */
+#define MY_GATEWAY_SERIAL
+#define MY_RADIO_RF24
+#define MY_RADIO_RFM69
+#define MY_RADIO_RFM95
+//#define MY_RS485
+#define MY_RFM69_NEW_DRIVER
+#if !defined(MY_RF24_IRQ_PIN)
+#define MY_RF24_IRQ_PIN 1
+#endif
+#define MY_RF24_USE_INTERRUPTS
 
-#include "MyHelperFunctions.h"
+#define MY_DEBUG
+#define MY_DEBUG_VERBOSE_TRANSPORT_HAL
+#define MY_DEBUG_VERBOSE_TRANSPORT_QUEUE
+#define MY_DEBUG_VERBOSE_TRANSPORT_ENCRYPTION
 
-static uint8_t convertH2I(const char c)
-{
-	if (c <= '9') {
-		return c - '0';
-	} else if (c >= 'a') {
-		return c - 'a' + 10;
-	} else {
-		return c - 'A' + 10;
-	}
-}
+#define MY_DEBUG_VERBOSE_RF24
+#define MY_DEBUG_VERBOSE_RFM69
+#define MY_DEBUG_VERBOSE_RFM95
 
-static char convertI2H(const uint8_t i)
-{
-	const uint8_t k = i & 0x0F;
-	if (k <= 9) {
-		return '0' + k;
-	} else {
-		return 'A' + k - 10;
-	}
-}
+#define MY_RF24_ENABLE_ENCRYPTION
+#define MY_RFM69_ENABLE_ENCRYPTION
+#define MY_RFM69_ENABLE_SW_ENCRYPTION
+#define MY_RFM95_ENABLE_ENCRYPTION
 
-static int timingneutralMemcmp(const void* a, const void* b, size_t sz)
-{
-	int retVal;
-	size_t i;
-	int done = 0;
-	const uint8_t* ptrA = (const uint8_t*)a;
-	const uint8_t* ptrB = (const uint8_t*)b;
-	for (i = 0; i < sz; i++) {
-		if (ptrA[i] == ptrB[i]) {
-			if (done > 0) {
-				done = 1;
-			} else {
-				done = 0;
-			}
-		} else {
-			if (done > 0) {
-				done = 2;
-			} else {
-				done = 3;
-			}
-		}
-	}
-	if (done > 0) {
-		retVal = -1;
-	} else {
-		retVal = 0;
-	}
-	return retVal;
-}
+#include <MySensors.h>

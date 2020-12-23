@@ -30,9 +30,6 @@
 #ifndef MyOTALogging_h
 #define MyOTALogging_h
 
-#include "MySensorsCore.h"
-#include "MyTransport.h"
-
 /**
  * @brief Send a log message to a node
  *

@@ -15,13 +15,15 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
+ *
+ * MultiTransport implementation created by Olivier Mauti 2020 <olivier@mysensors.org>
  */
 
 #if defined(MY_RFM69_NEW_DRIVER)
 
 #include "hal/transport/RFM69/driver/new/RFM69_new.h"
 
-bool transportInit(void)
+bool RFM69_transportInit(void)
 {
 	const bool result = RFM69_initialise(MY_RFM69_FREQUENCY);
 #if defined(MY_GATEWAY_FEATURE) || defined(MY_RFM69_ATC_MODE_DISABLED)
@@ -30,86 +32,87 @@ bool transportInit(void)
 #else
 	RFM69_ATCmode(true, MY_RFM69_ATC_TARGET_RSSI_DBM);
 #endif
-
-#ifdef MY_RFM69_ENABLE_ENCRYPTION
-	uint8_t RFM69_psk[16];
-#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
-	(void)memset(RFM69_psk, 0, 16);
-	(void)memcpy(RFM69_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
-#else
-	hwReadConfigBlock((void *)RFM69_psk, (void*)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-#endif
-	RFM69_encrypt((const char *)RFM69_psk);
-	(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
-#else
-	(void)RFM69_encrypt;
-#endif
 	return result;
 }
 
-void transportSetAddress(const uint8_t address)
+void RFM69_transportSetAddress(const uint8_t address)
 {
 	RFM69_setAddress(address);
 }
 
-uint8_t transportGetAddress(void)
+uint8_t RFM69_transportGetAddress(void)
 {
 	return RFM69_getAddress();
 }
 
-bool transportSend(const uint8_t to, const void *data, uint8_t len, const bool noACK)
+bool RFM69_transportSend(const uint8_t to, const void *data, uint8_t len, const bool noACK)
 {
 	return RFM69_sendWithRetry(to, data, len, noACK);
 }
 
-bool transportDataAvailable(void)
+bool RFM69_transportDataAvailable(void)
 {
-	RFM69_handler();
 	return RFM69_available();
 }
 
-bool transportSanityCheck(void)
+void RFM69_transportTask(void)
+{
+	RFM69_handling();
+#if defined(MY_TRANSPORT_RX_QUEUE)
+	if (RFM69_available()) {
+		RXQueuedMessage_t *msgIn = transportHALGetQueueBuffer();
+		if (msgIn != NULL) {
+			msgIn->channel = TRANSPORT_RFM69_CHANNEL_ID;
+			msgIn->length = RFM69_receive((uint8_t *)&msgIn->data,
+			                              sizeof(msgIn->data));
+			(void)transportHALPushQueueBuffer(msgIn);
+		}
+	}
+#endif
+}
+
+void RFM69_transportEncrypt(const uint8_t *key)
+{
+	RFM69_HWencryption((const char *)key);
+}
+
+bool RFM69_transportSanityCheck(void)
 {
 	return RFM69_sanityCheck();
 }
 
-uint8_t transportReceive(void *data)
+uint8_t RFM69_transportReceive(void *data, const uint8_t maxBufSize)
 {
-	return RFM69_receive((uint8_t *)data, MAX_MESSAGE_SIZE);
+	return RFM69_receive((uint8_t *)data, maxBufSize);
 }
 
-void transportEncrypt(const char *key)
-{
-	RFM69_encrypt(key);
-}
-
-void transportSleep(void)
+void RFM69_transportSleep(void)
 {
 	(void)RFM69_sleep();
 }
 
-void transportStandBy(void)
+void RFM69_transportStandBy(void)
 {
 	(void)RFM69_standBy();
 }
 
-void transportPowerDown(void)
+void RFM69_transportPowerDown(void)
 {
 	(void)RFM69_powerDown();
 }
 
-void transportPowerUp(void)
+void RFM69_transportPowerUp(void)
 {
 	(void)RFM69_powerUp();
 }
 
-bool transportSetTxPowerLevel(const uint8_t powerLevel)
+bool RFM69_transportSetTxPowerLevel(const uint8_t powerLevel)
 {
 	// range 0..23
 	return RFM69_setTxPowerLevel(powerLevel);
 }
 
-void transportSetTargetRSSI(const int16_t targetSignalStrength)
+void RFM69_transportSetTargetRSSI(const int16_t targetSignalStrength)
 {
 #if !defined(MY_GATEWAY_FEATURE) && !defined(MY_RFM69_ATC_MODE_DISABLED)
 	RFM69_ATCmode(true, targetSignalStrength);
@@ -118,37 +121,37 @@ void transportSetTargetRSSI(const int16_t targetSignalStrength)
 #endif
 }
 
-int16_t transportGetSendingRSSI(void)
+int16_t RFM69_transportGetSendingRSSI(void)
 {
 	return RFM69_getSendingRSSI();
 }
 
-int16_t transportGetReceivingRSSI(void)
+int16_t RFM69_transportGetReceivingRSSI(void)
 {
 	return RFM69_getReceivingRSSI();
 }
 
-int16_t transportGetSendingSNR(void)
+int16_t RFM69_transportGetSendingSNR(void)
 {
 	return INVALID_SNR;
 }
 
-int16_t transportGetReceivingSNR(void)
+int16_t RFM69_transportGetReceivingSNR(void)
 {
 	return INVALID_SNR;
 }
 
-int16_t transportGetTxPowerPercent(void)
+int16_t RFM69_transportGetTxPowerPercent(void)
 {
 	return RFM69_getTxPowerPercent();
 }
 
-int16_t transportGetTxPowerLevel(void)
+int16_t RFM69_transportGetTxPowerLevel(void)
 {
 	return RFM69_getTxPowerLevel();
 }
 
-bool transportSetTxPowerPercent(const uint8_t powerPercent)
+bool RFM69_transportSetTxPowerPercent(const uint8_t powerPercent)
 {
 	return RFM69_setTxPowerPercent(powerPercent);
 }
@@ -160,7 +163,7 @@ bool transportSetTxPowerPercent(const uint8_t powerPercent)
 RFM69 _radio(MY_RFM69_CS_PIN, MY_RFM69_IRQ_PIN, MY_RFM69HW, MY_RFM69_IRQ_NUM);
 uint8_t _address;
 
-bool transportInit(void)
+bool RFM69_transportInit(void)
 {
 #if defined(MY_RFM69_POWER_PIN)
 	//hwPinMode(MY_RFM69_POWER_PIN, OUTPUT);
@@ -170,39 +173,33 @@ bool transportInit(void)
 #endif
 	// Start up the radio library (_address will be set later by the MySensors library)
 	if (_radio.initialize(MY_RFM69_FREQUENCY, _address, MY_RFM69_NETWORKID)) {
-#ifdef MY_RFM69_ENABLE_ENCRYPTION
-		uint8_t RFM69_psk[16];
-#ifdef MY_ENCRYPTION_SIMPLE_PASSWD
-		(void)memset(RFM69_psk, 0, 16);
-		(void)memcpy(RFM69_psk, MY_ENCRYPTION_SIMPLE_PASSWD, strnlen(MY_ENCRYPTION_SIMPLE_PASSWD, 16));
-#else
-		hwReadConfigBlock((void *)RFM69_psk, (void *)EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS, 16);
-#endif
-		_radio.encrypt((const char *)RFM69_psk);
-		(void)memset(RFM69_psk, 0, 16); // Make sure it is purged from memory when set
-#endif
 		return true;
 	}
 	return false;
 }
 
-void transportEncrypt(const char *key)
+void RFM69_transportTask(void)
 {
-	_radio.encrypt(key);
+	// not implemented
 }
 
-void transportSetAddress(const uint8_t address)
+void RFM69_transportEncrypt(const uint8_t *key)
+{
+	_radio.encrypt((const char *)key);
+}
+
+void RFM69_transportSetAddress(const uint8_t address)
 {
 	_address = address;
 	_radio.setAddress(address);
 }
 
-uint8_t transportGetAddress(void)
+uint8_t RFM69_transportGetAddress(void)
 {
 	return _address;
 }
 
-bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
+bool RFM69_transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
 	if (noACK) {
 		(void)_radio.sendWithRetry(to, data, len, 0, 0);
@@ -211,20 +208,20 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 	return _radio.sendWithRetry(to, data, len);
 }
 
-bool transportDataAvailable(void)
+bool RFM69_transportDataAvailable(void)
 {
 	return _radio.receiveDone();
 }
 
-bool transportSanityCheck(void)
+bool RFM69_transportSanityCheck(void)
 {
 	return _radio.sanityCheck();
 }
 
-uint8_t transportReceive(void *data)
+uint8_t RFM69_transportReceive(void *data, const uint8_t maxBufSize)
 {
 	// save payload length
-	const uint8_t dataLen = _radio.DATALEN < MAX_MESSAGE_SIZE ? _radio.DATALEN : MAX_MESSAGE_SIZE;
+	const uint8_t dataLen = _radio.DATALEN < maxBufSize ? _radio.DATALEN : maxBufSize;
 	(void)memcpy((void *)data, (void *)_radio.DATA, dataLen);
 	// Send ack back if this message wasn't a broadcast
 	if (_radio.ACKRequested()) {
@@ -233,57 +230,64 @@ uint8_t transportReceive(void *data)
 	return dataLen;
 }
 
-void transportSleep(void)
+void RFM69_transportSleep(void)
 {
 	_radio.sleep();
 }
 
-void transportStandBy(void)
+void RFM69_transportStandBy(void)
 {
 	_radio.standBy();
 }
 
-void transportPowerDown(void)
+void RFM69_transportPowerDown(void)
 {
 	_radio.powerDown();
 }
 
-void transportPowerUp(void)
+void RFM69_transportPowerUp(void)
 {
 	_radio.powerUp();
 }
 
-int16_t transportGetSendingRSSI(void)
+int16_t RFM69_transportGetSendingRSSI(void)
 {
 	return INVALID_RSSI;
 }
 
-int16_t transportGetReceivingRSSI(void)
+int16_t RFM69_transportGetReceivingRSSI(void)
 {
 	return _radio.RSSI;
 }
 
-int16_t transportGetSendingSNR(void)
+int16_t RFM69_transportGetSendingSNR(void)
 {
 	return INVALID_SNR;
 }
 
-int16_t transportGetReceivingSNR(void)
+int16_t RFM69_transportGetReceivingSNR(void)
 {
 	return INVALID_SNR;
 }
 
-int16_t transportGetTxPowerPercent(void)
+int16_t RFM69_transportGetTxPowerPercent(void)
 {
 	return INVALID_PERCENT;
 }
 
-int16_t transportGetTxPowerLevel(void)
+bool RFM69_transportSetTxPowerPercent(const uint8_t powerPercent)
+{
+	// not implemented
+	(void)powerPercent;
+	return false;
+}
+
+int16_t RFM69_transportGetTxPowerLevel(void)
 {
 	return INVALID_LEVEL;
 }
 
-bool transportSetTxPowerLevel(const uint8_t powerLevel)
+bool RFM69_transportSetTxPowerLevel(const uint8_t powerLevel)
 {
 	// not implemented
 	(void)powerLevel;

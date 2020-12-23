@@ -16,6 +16,8 @@
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
  *
+ * MultiTransport implementation created by Olivier Mauti 2020 <olivier@mysensors.org>
+ *
  * TransportHAL debug log messages:
  *
  * |E| SYS | SUB   | Message										| Comment
@@ -28,42 +30,32 @@
  * | | THA | SAN   | RES=%%d										| Transport sanity check, result (RES)
  * | | THA | RCV   | MSG=%%s										| Receive message (MSG)
  * | | THA | RCV   | DECRYPT										| Decrypt received message
+ * |!| THA | RCV   | HEADER											| Received message does not contain header
  * | | THA | RCV   | PLAIN=%%s									| Decrypted message (PLAIN)
  * |!| THA | RCV   | PVER=%%d										| Message protocol version (PVER) mismatch
  * |!| THA | RCV   | LEN=%%d,EXP=%%d						| Invalid message length (LEN), exptected length (EXP)
  * | | THA | RCV   | MSG LEN=%%d								| Length of received message (LEN)
+ * |!| THA | SND   | MSG NULL										| Outgoing message is null
  * | | THA | SND   | MSG=%%s										| Send message (MSG)
  * | | THA | SND   | ENCRYPT										| Encrypt message to send (%AES)
  * | | THA | SND   | CIP=%%s										| Ciphertext of encypted message (CIP)
  * | | THA | SND   | MSG LEN=%%d,RES=%%d				| Sending message with length (LEN), result (RES)
- *
  *
  */
 
 #ifndef MyTransportHAL_h
 #define MyTransportHAL_h
 
+#include "drivers/CircularBuffer/CircularBuffer.h"
+
+#define RX_QUEUE_MAX_MSG_LENGTH 32	//!< RX_QUEUE_MAX_MSG_LENGTH
+#define RX_QUEUE_BUFFER_SIZE 8			//!< RX_QUEUE_BUFFER_SIZE
+#define SIZE_CHANNEL_ROUTE 256			//!< SIZE_CHANNEL_ROUTE
+
 #define INVALID_SNR         ((int16_t)-256)	//!< INVALID_SNR
 #define INVALID_RSSI        ((int16_t)-256)	//!< INVALID_RSSI
 #define INVALID_PERCENT     ((int16_t)-100)	//!< INVALID_PERCENT
 #define INVALID_LEVEL       ((int16_t)-256)	//!< INVALID_LEVEL
-
-#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
-#if defined(MY_RADIO_NRF5_ESB)
-#error Receive message buffering not supported for NRF5 radio! Please define MY_NRF5_RX_BUFFER_SIZE
-#endif
-#if defined(MY_RADIO_RFM69)
-#error Receive message buffering not supported for RFM69!
-#endif
-#if defined(MY_RADIO_RFM95)
-#error Receive message buffering not supported for RFM95!
-#endif
-#if defined(MY_RS485)
-#error Receive message buffering not supported for RS485!
-#endif
-#elif defined(MY_RX_MESSAGE_BUFFER_SIZE)
-#error Receive message buffering requires message buffering feature enabled!
-#endif
 
 /**
 * @brief Signal report selector
@@ -79,6 +71,71 @@ typedef enum {
 	SR_NOT_DEFINED         //!< SR_NOT_DEFINED
 } signalReport_t;
 
+typedef enum {
+	TRANSPORT_ALL_CHANNEL_ID = 0,       //!< TRANSPORT_ALL_CHANNEL_ID
+#if defined(MY_RADIO_RF24)
+	TRANSPORT_RF24_CHANNEL_ID,      //!< TRANSPORT_RF24_CHANNEL_ID
+#endif
+#if defined(MY_RADIO_RFM69)
+	TRANSPORT_RFM69_CHANNEL_ID,     //!< TRANSPORT_RFM69_CHANNEL_ID
+#endif
+#if defined(MY_RADIO_RFM95)
+	TRANSPORT_RFM95_CHANNEL_ID,     //!< TRANSPORT_RFM95_CHANNEL_ID
+#endif
+#if defined(MY_RADIO_NRF5_ESB)
+	TRANSPORT_NRF5_ESB_CHANNEL_ID,  //!< TRANSPORT_NRF5_ESB_CHANNEL_ID
+#endif
+#if defined(MY_RS485)
+	TRANSPORT_RS485_CHANNEL_ID,     //!< TRANSPORT_RS485_CHANNEL_ID
+#endif
+} transportChannelID_t;
+
+/**
+* @brief RXQueuedMessage_t
+*/
+typedef struct {
+	transportChannelID_t channel;             //!< channel of origin
+	//bool encryptedMessage;                    //!< flag if message was encrypted
+	uint8_t length;                           //!< length of data
+	uint8_t data[RX_QUEUE_MAX_MSG_LENGTH];    //!< raw data
+} RXQueuedMessage_t;
+
+/**
+* @brief
+* @return true
+*/
+
+RXQueuedMessage_t *transportHALGetQueueBuffer(void);
+/**
+* @brief
+* @return true
+*/
+bool transportHALPushQueueBuffer(RXQueuedMessage_t *buffer);
+
+/**
+* @brief transportGetChannel
+* @param nodeId
+* @return transport channel ID
+*/
+transportChannelID_t transportGetChannel(const uint8_t nodeId) __attribute__((unused));
+
+/**
+* @brief transportUpdateChannel
+* @param nodeId
+* @param channel
+*/
+void transportUpdateChannel(const uint8_t nodeId,
+                            const transportChannelID_t channel) __attribute__((unused));
+
+/**
+* @brief transportResetChannels
+*/
+void transportResetChannels(void) __attribute__((unused));
+
+/**
+* @brief transportDebugChannels
+*/
+void transportDebugChannels(void) __attribute__((unused));
 
 /**
 * @brief Initialize transport HW
@@ -87,22 +144,27 @@ typedef enum {
 bool transportHALInit(void);
 /**
 * @brief Set node address
+* @param address
 */
 void transportHALSetAddress(const uint8_t address);
 /**
 * @brief Retrieve node address
 */
-uint8_t transportHALGetAddress(void);
+uint8_t transportHALGetAddress(void) __attribute__((unused));
 /**
 * @brief Send message
-* @param to recipient
-* @param data message to be sent
+* @param nextRecipient recipient
+* @param outMsg message to be sent
 * @param len length of message (header + payload)
 * @param noACK do not wait for ACK
 * @return true if message sent successfully
 */
 bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, const uint8_t len,
                       const bool noACK);
+/**
+* @brief transportHandler
+*/
+void transportHALHandler(void) __attribute__((unused));
 /**
 * @brief Verify if RX FIFO has pending messages
 * @return true if message available in RX FIFO
@@ -113,6 +175,11 @@ bool transportHALDataAvailable(void);
 * @return true if transport HW is ok
 */
 bool transportHALSanityCheck(void);
+/**
+* @brief transportHALRxCallback
+*/
+void transportHALRxCallback(const void *data, const uint8_t len,
+                            const transportChannelID_t channel);
 /**
 * @brief Receive message from FIFO
 * @param inMsg
@@ -166,7 +233,7 @@ int16_t transportHALGetTxPowerPercent(void);
 * @param powerPercent power level in percent
 * @return True if power level set
 */
-bool transportHALSetTxPowerPercent(const uint8_t powerPercent);
+bool transportHALSetTxPowerPercent(const uint8_t powerPercent) __attribute__((unused));
 /**
 * @brief transportGetTxPowerLevel
 * @return TX power in dBm

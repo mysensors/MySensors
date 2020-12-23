@@ -27,6 +27,12 @@ extern char _convBuf[MAX_PAYLOAD_SIZE * 2 + 1];
 #define TRANSPORT_DEBUG(x,...)	//!< debug NULL
 #endif
 
+/*
+#if defined(MY_TRANSPORT_ENCRYPTION)
+// for nodes, session key doesn't need to be stored
+static sessionInformation_t _sessionInformation;
+#endif
+*/
 
 // SM: transitions and update states
 static transportState_t stInit = { stInitTransition, stInitUpdate };
@@ -144,6 +150,12 @@ void stParentTransition(void)
 {
 	TRANSPORT_DEBUG(PSTR("TSM:FPAR\n"));	// find parent
 	setIndication(INDICATION_FIND_PARENT);
+	/*
+	#if defined(MY_TRANSPORT_ENCRYPTION)
+		// reset session key
+		_sessionInformation.nextRenewal_ms = 0;
+	#endif
+	*/
 	_transportSM.uplinkOk = false;
 	_transportSM.preferredParentFound = false;
 #if defined(MY_PARENT_NODE_IS_STATIC) || defined(MY_PASSIVE_NODE)
@@ -305,6 +317,16 @@ void stReadyTransition(void)
 void stReadyUpdate(void)
 {
 #if defined(MY_GATEWAY_FEATURE)
+	/*
+	#if defined(MY_TRANSPORT_ENCRYPTION)
+		if ((int32_t)(hwMillis() - _sessionInformation.nextRenewal_ms) > 0) {
+			transportRenewSessionKey();
+			(void)transportRouteMessage(build(_msgTmp, BROADCAST_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
+			                                  I_SESSION_KEY_RESPONSE).set(_sessionInformation.key, sizeof(_sessionInformation.key)));
+			_sessionInformation.nextRenewal_ms = hwMillis() + SESSION_KEY_INTERVAL_MS;
+		}
+	#endif
+	*/
 	if (!_lastNetworkDiscovery ||
 	        (hwMillis() - _lastNetworkDiscovery > MY_TRANSPORT_DISCOVERY_INTERVAL_MS)) {
 		_lastNetworkDiscovery = hwMillis();
@@ -596,7 +618,28 @@ bool transportSendRoute(MyMessage &message)
 	}
 	return result;
 }
-
+/*
+void transportRenewSessionKey(void)
+{
+#if defined(MY_GATEWAY_FEATURE) && defined(MY_TRANSPORT_ENCRYPTION)
+	TRANSPORT_DEBUG(PSTR("TSF:RSK:GEN\n"));
+#if defined(MY_HW_HAS_GETENTROPY)
+	while (hwGetentropy(&_sessionInformation.key,
+	                    sizeof(_sessionInformation.key)) != sizeof(_sessionInformation.key));
+#else
+	uint8_t buffer[32];
+	for (uint8_t i = 0; i < sizeof(buffer); i++) {
+		buffer[i] = random(256) ^ (hwMillis() & 0xFF);
+	}
+	uint8_t output[32];
+	SHA256(output, buffer, sizeof(buffer));
+	(void)memcpy((void *)_sessionInformation.key, (const void *)output,
+	             sizeof(_sessionInformation.key));
+#endif
+	(void)transportHALSetSessionKey(_sessionInformation.key, sizeof(_sessionInformation.key));
+#endif
+}
+*/
 // only be used inside transport
 bool transportWait(const uint32_t waitingMS, const uint8_t cmd, const uint8_t msgType)
 {
@@ -653,10 +696,8 @@ void transportProcessMessage(void)
 	if (!transportHALReceive(&_msg, &payloadLength)) {
 		return;
 	}
-	// get message length and limit size
-	const uint8_t msgLength = _msg.getLength();
-	// calculate expected length
 
+	const uint8_t msgLength = _msg.getLength();
 	const uint8_t command = _msg.getCommand();
 	const uint8_t type = _msg.getType();
 	const uint8_t sender = _msg.getSender();
@@ -764,7 +805,7 @@ void transportProcessMessage(void)
 					                _msg.getByte()); // node pinged
 #if defined(MY_GATEWAY_FEATURE) && (F_CPU>16000000)
 					// delay for fast GW and slow nodes
-					delay(5);
+					delay(50);
 #endif
 					(void)transportRouteMessage(build(_msgTmp, sender, NODE_SENSOR_ID, C_INTERNAL,
 					                                  I_PONG).set((uint8_t)1));
@@ -951,6 +992,8 @@ void transportProcessFIFO(void)
 	}
 #endif
 
+	transportHALHandler();
+
 	uint8_t _processedMessages = MAX_SUBSEQ_MSGS;
 	// process all msgs in FIFO or counter exit
 	while (transportHALDataAvailable() && _processedMessages--) {
@@ -978,12 +1021,15 @@ bool transportSendWrite(const uint8_t to, MyMessage &message)
 	// msg length changes if signed
 	const uint8_t totalMsgLength = HEADER_SIZE + ( message.getSigned() ? MAX_PAYLOAD_SIZE :
 	                               message.getLength() );
-	const bool noACK = _transportConfig.passiveMode || (to == BROADCAST_ADDRESS);
+	bool noACK = _transportConfig.passiveMode;
+	noACK |= to == BROADCAST_ADDRESS;
+	noACK |= (message.getCommand() == C_INTERNAL && (message.type == I_PING || message.type == I_PONG ||
+	          message.type == I_FIND_PARENT_RESPONSE
+	                                                ));
 	// send
 	setIndication(INDICATION_TX);
 	const bool result = transportHALSend(to, &message, totalMsgLength,
 	                                     noACK);
-
 	TRANSPORT_DEBUG(PSTR("%sTSF:MSG:SEND,%" PRIu8 "-%" PRIu8 "-%" PRIu8 "-%" PRIu8 ",s=%" PRIu8 ",c=%"
 	                     PRIu8 ",t=%" PRIu8 ",pt=%" PRIu8 ",l=%" PRIu8 ",sg=%" PRIu8 ",ft=%" PRIu8 ",st=%s:%s\n"),
 	                (noACK ? "?" : result ? "" : "!"), message.getSender(), message.getLast(),
