@@ -46,11 +46,16 @@
 #define NRF5_ESB_ACK_WAIT                                                      \
 	((NRF5_ESB_RAMP_UP_TIME << 1) + (9 << NRF5_ESB_byte_time()))
 
+/** Maximum time to transmit a complete packet after address event
+ **/
+#define NRF5_ESB_MAX_PACKET_TIME                                                \
+	((MAX_MESSAGE_SIZE+sizeof(nrf5_radio_packet_s)) << NRF5_ESB_byte_time())
+
 // auto retry delay in us, don't set this value < 1500us@250kbit
 #define NRF5_ESB_ARD (1500)
 
 // auto retry count with noACK is false
-#define NRF5_ESB_ARC_ACK (15)
+#define NRF5_ESB_ARC_ACK (3)
 
 // auto retry count with noACK is true
 #define NRF5_ESB_ARC_NOACK (3)
@@ -66,30 +71,36 @@
 #define NRF5_ESB_TX_ADDR (4)
 #define NRF5_ESB_TX_ADDR_MSK (0xffffff00UL)
 
-// BC address index
+// Broadcast address index
 #define NRF5_ESB_BC_ADDR (7)
 #define NRF5_ESB_BC_ADDR_MSK (0xffffffffUL)
 
+// Interrupt mask RX
+#define NRF5_EBS_RADIO_INT_RX (RADIO_INTENSET_ADDRESS_Msk | RADIO_INTENSET_END_Msk | RADIO_INTENSET_DISABLED_Msk)
+
+// Interrupt mask TX
+#define NRF5_EBS_RADIO_INT_TX (RADIO_INTENSET_ADDRESS_Msk | RADIO_INTENSET_DISABLED_Msk)
+
 // Shorts for RX mode
 #define NRF5_ESB_SHORTS_RX                                                     \
-	(RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_END_START_Msk |                 \
-	 RADIO_SHORTS_DISABLED_RXEN_Msk | RADIO_SHORTS_ADDRESS_BCSTART_Msk |         \
+	(RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_END_START_Msk |               \
+	 RADIO_SHORTS_DISABLED_RXEN_Msk |                                          \
 	 RADIO_SHORTS_ADDRESS_RSSISTART_Msk | RADIO_SHORTS_DISABLED_RSSISTOP_Msk)
 
 // Shorts for TX mode
 #define NRF5_ESB_SHORTS_TX                                                     \
-	(RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_END_START_Msk |                 \
-	 RADIO_SHORTS_DISABLED_TXEN_Msk | RADIO_SHORTS_ADDRESS_BCSTART_Msk)
+	(RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_END_START_Msk |               \
+	 RADIO_SHORTS_DISABLED_TXEN_Msk)
 
 // Shorts to switch from RX to TX
 #define NRF5_ESB_SHORTS_RX_TX                                                  \
-	(RADIO_SHORTS_END_DISABLE_Msk | RADIO_SHORTS_DISABLED_TXEN_Msk |             \
-	 RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_ADDRESS_BCSTART_Msk)
+	(RADIO_SHORTS_END_DISABLE_Msk | RADIO_SHORTS_DISABLED_TXEN_Msk |           \
+	 RADIO_SHORTS_READY_START_Msk)
 
 // Shorts to switch from TX to RX
 #define NRF5_ESB_SHORTS_TX_RX                                                  \
-	(RADIO_SHORTS_END_DISABLE_Msk | RADIO_SHORTS_DISABLED_RXEN_Msk |             \
-	 RADIO_SHORTS_READY_START_Msk | RADIO_SHORTS_ADDRESS_BCSTART_Msk |           \
+	(RADIO_SHORTS_END_DISABLE_Msk | RADIO_SHORTS_DISABLED_RXEN_Msk |           \
+	 RADIO_SHORTS_READY_START_Msk |           \
 	 RADIO_SHORTS_ADDRESS_RSSISTART_Msk | RADIO_SHORTS_DISABLED_RSSISTOP_Msk)
 
 // PPI Channels for TX
@@ -103,14 +114,9 @@
 #define NRF5_ESB_PPI_TIMER_START 15
 #define NRF5_ESB_PPI_TIMER_RADIO_DISABLE 22
 #endif
-#define NRF5_ESB_PPI_BITS                                                    \
-	((1 << NRF5_ESB_PPI_TIMER_START) |                                         \
+#define NRF5_ESB_PPI_BITS                                                     \
+	((1 << NRF5_ESB_PPI_TIMER_START) |                                        \
 	 (1 << NRF5_ESB_PPI_TIMER_RADIO_DISABLE))
-
-/** Bitcounter for Packet Control Field length
- * 6 Bits address length + 3 Bits S1 (NOACK + PID)
- */
-#define NRF5_ESB_BITCOUNTER (9)
 
 /** ramp up time
  * Time to activate radio TX or RX mode
@@ -166,9 +172,11 @@ typedef struct nrf5_radio_packet_s {
 } NRF5_ESB_Packet;
 
 #ifdef MY_DEBUG_VERBOSE_NRF5_ESB
-static uint32_t intcntr_bcmatch;
+static uint32_t intcntr_addrmatch;
 static uint32_t intcntr_ready;
 static uint32_t intcntr_end;
+static uint32_t intcntr_disabled;
+static uint32_t intcntr_timer_cc3;
 #endif
 
 #endif // __NRF5_H__
