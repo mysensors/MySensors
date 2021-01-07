@@ -421,6 +421,48 @@
 #endif
 
 /**
+ * @def MY_RF24_INVERTED_ACK
+ * @brief Assume that this node's radio auto-ack bit is reversed
+ *
+ * Define this if this node has a wireless chip with AutoACK bit reversed
+ * compared to wireless chip in the gateway. Read this for more details.
+ *
+ * There are a dozen nRF24L01+ clones out there in the wild. A few of them (SI24R01)
+ * have their AutoACK bit inverted, due to a bug in the original doc they ripped off
+ *
+ * If this define doesn't help with your setup (and your clones are even weirder),
+ * here are a few more tricks:
+ *
+ * 1. Assign a static Parent ID and Node ID for your node.
+ *
+ * #define MY_NODE_ID 1
+ * #define MY_PARENT_NODE_ID 0
+ * #define MY_PARENT_NODE_IS_STATIC
+ *
+ * However you loose the automated 'mesh' organisation function of the network.
+ * That is not fun, but it's okay for some leak sensors that should have this static
+ * anyway.
+ *
+ * 2. Try different speeds. Some of the fakes I got don't play along with genuine
+ * chips nicely when the speed is 250Kbps. 1Mbps and 2Mbps work fine.
+ *
+ * 3. Put your finger on the PCB antenna. If the thing starts working, you are missing
+ * a 1 pF capacitor on the module. See this post:
+ *
+ * https://ncrmnt.org/2021/01/03/nrf24l01-fixing-the-magic-finger-problem/
+ *
+ *
+ * Obligatory reading material:
+ *
+ * https://sigrok.org/wiki/Protocol_decoder:Nrf24l01 - A list of clones and their 'features'
+ * https://hackaday.com/2015/02/23/nordic-nrf24l01-real-vs-fake/ - Hack-a-Day article describing the problem
+ * https://forum.mysensors.org/topic/9947/nrf24l01-si24r1 - mysensors forum thread
+ * https://ncrmnt.org/2015/03/13/how-do-i-cost-optimize-nrf24l01/ - Missing components on some COB fakes
+ *
+ */
+//#define MY_RF24_INVERTED_ACK
+
+/**
  * @def MY_RF24_DATARATE
  * @brief RF24 data rate.
  *
