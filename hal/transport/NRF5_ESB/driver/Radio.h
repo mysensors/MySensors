@@ -65,7 +65,9 @@ typedef enum {
 typedef enum {
 	NRF5_1MBPS = RADIO_MODE_MODE_Nrf_1Mbit,
 	NRF5_2MBPS = RADIO_MODE_MODE_Nrf_2Mbit,
+#ifdef RADIO_MODE_MODE_Nrf_250Kbit
 	NRF5_250KBPS = RADIO_MODE_MODE_Nrf_250Kbit, // Deprecated!!!
+#endif
 	NRF5_BLE_1MBPS = RADIO_MODE_MODE_Ble_1Mbit,
 } nrf5_mode_e;
 

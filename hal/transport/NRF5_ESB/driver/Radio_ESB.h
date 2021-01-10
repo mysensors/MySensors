@@ -103,15 +103,19 @@
 	 RADIO_SHORTS_READY_START_Msk |           \
 	 RADIO_SHORTS_ADDRESS_RSSISTART_Msk | RADIO_SHORTS_DISABLED_RSSISTOP_Msk)
 
-// PPI Channels for TX
+/** PPI Channels for TX
+ * Not all NRF5 modules have the same number of PPI channels
+ * For regular PPI, select the highest possible channels
+ */
+#define NRF5_ESB_PPI_LAST_CHANNEL (PPI_CH_NUM - 1)
 #if (NRF5_RADIO_TIMER_IRQN != TIMER0_IRQn)
 // Use two regular PPI channels
-#define NRF5_ESB_PPI_TIMER_START 14
-#define NRF5_ESB_PPI_TIMER_RADIO_DISABLE 15
+#define NRF5_ESB_PPI_TIMER_START (NRF5_ESB_PPI_LAST_CHANNEL - 1)
+#define NRF5_ESB_PPI_TIMER_RADIO_DISABLE (NRF5_ESB_PPI_LAST_CHANNEL)
 #else
 // Use one regular PPI channel and one predefined PPI channel
 #define NRF5_ESB_USE_PREDEFINED_PPI
-#define NRF5_ESB_PPI_TIMER_START 15
+#define NRF5_ESB_PPI_TIMER_START (NRF5_ESB_PPI_LAST_CHANNEL)
 #define NRF5_ESB_PPI_TIMER_RADIO_DISABLE 22
 #endif
 #define NRF5_ESB_PPI_BITS                                                     \

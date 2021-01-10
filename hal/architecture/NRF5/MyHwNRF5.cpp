@@ -99,7 +99,7 @@ bool hwInit(void)
 	NRF_POWER->TASKS_CONSTLAT = 1;
 
 	// Enable cache on >= NRF52
-#ifndef NRF51
+#if !defined(NRF51) && !defined(NRF52805_XXAA)
 	NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Msk;
 #endif
 
