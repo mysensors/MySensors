@@ -8,7 +8,7 @@ is_installed "doxygen" || err "doxygen not found!"
 is_installed "java" || err "java not found!"
 
 # Find plantuml.jar. Using "which plantuml" is possible but we need the .jar file anyway.
-JAR_LIST=(/usr/share/java/plantuml.jar /usr/share/plantuml/plantuml.jar /usr/share/java/plantuml/plantuml.jar)
+JAR_LIST=(/usr/share/java/plantuml.jar /usr/share/plantuml/plantuml.jar /usr/share/java/plantuml/plantuml.jar /usr/local/Cellar/plantuml/1.2021.1/libexec/plantuml.jar)
 for jar in "${JAR_LIST[@]}" ; do
     if [ -f $jar ] ; then
         export PLANTUML_JAR_PATH=$jar
