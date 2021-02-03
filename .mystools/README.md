@@ -178,6 +178,19 @@ $ mkdir build && cd build && cmake .. && cmake --build .
 $ sudo make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
 ```
 
+### Documentation
+
+To generate the user documentation an optional set of tools is necessary.
+
+* doxygen
+* plantuml
+* java (for plantuml)
+
+Call the doxygen helper from the project-root folder to create the documentation.
+```
+$ ./Documentation/doxygen.sh
+```
+
 ### Implementation Details
 
 *This section is intended for developers curious about the
