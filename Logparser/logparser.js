@@ -219,7 +219,7 @@ var types = {
 ]};
 
 //mysgw: Client 0: 0;0;3;0;18;PING
-var rprefix =  "(?:\\d+ )?(?:mysgw: )?(?:Client 0: )?";
+var prefilter = /(?=[!?]?(MCO|TSM|TSF|THA|SGN))(?<result>.*)/;
 var match = [
 
 	// MySensors core
@@ -460,9 +460,8 @@ var match = [
 
 // Init regexes
 for (var i=0, len=match.length;i<len; i++) {
-	match[i].re = new RegExp("^" + rprefix + match[i].re);
+	match[i].re = new RegExp("^" + match[i].re);
 }
-var stripPrefix = new RegExp("^" + rprefix + "(.*)");
 
 function getQueryVariable(variable)
 {
@@ -474,31 +473,6 @@ function getQueryVariable(variable)
 	}
 	return(false);
 }
-
-var splitWithTail = function(value, separator, limit) {
-	var pattern, startIndex, m, parts = [];
-
-	if(!limit) {
-		return value.split(separator);
-	}
-
-	if(separator instanceof RegExp) {
-		pattern = new RegExp(separator.source, 'g' + (separator.ignoreCase ? 'i' : '') + (separator.multiline ? 'm' : ''));
-	} else {
-		pattern = new RegExp(separator.replace(/([.*+?^${}()|\[\]\/\\])/g, '\\$1'), 'g');
-	}
-
-	do {
-		startIndex = pattern.lastIndex;
-		if(m = pattern.exec(value)) {
-			parts.push(value.substr(startIndex, m.index - startIndex));
-		}
-	} while(m && parts.length < limit - 1);
-	parts.push(value.substr(pattern.lastIndex));
-
-	return parts;
-}
-
 
 new Vue({
 	el: "#parser",
@@ -538,9 +512,15 @@ new Vue({
 			var t = types[this.selector(cmd)]
 			return t !== undefined ? t[type] || "Undefined" : "Undefined";
 		},
-		match: function(msg) {
+		decode: function(msg) {
 			var self = this;
 			var found = false;
+			filtered = msg.match(prefilter);
+			if (filtered) {
+				msg = filtered.groups.result;
+			} else {
+				return;
+			}
 			for (var i=0, len=match.length;!found &&  i<len; i++) {
 				var r = match[i];
 				if (r.re.test(msg)) {
@@ -558,29 +538,8 @@ new Vue({
 			var self = this;
 			var rows = this.source.split("\n");
 			this.parsed = _.map(rows, function(r) {
-				//var p = r.split(";");
-				var p = splitWithTail(r, ";", 6);
-				if (p.length !== 6) {
-					var desc = self.match(r);
-
-					return ["","","","",desc?"":"Unknown", r,  desc];
-				}
-				var sel = self.selector(p[2]);
-				var desc = "";
-				if (p[2] == "3" && p[4] == "9") {
-					desc = self.match(p[5]);
-
-				}
-				var node = stripPrefix.exec(p[0]);
-				return  [
-					node[1],
-					p[1],
-					types.command[p[2]],
-					p[3]=="1"?"true":"false",
-					types[sel][p[4]],
-					p[5],
-					desc
-				];
+				var desc = self.decode(r);
+				return [r,  desc];
 			});
 		},
 		copy: function() {
