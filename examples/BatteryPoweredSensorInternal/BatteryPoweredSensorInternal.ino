@@ -58,9 +58,9 @@ void loop()
   long batteryMillivolts = hwCPUVoltage();
   int batteryPcnt = batteryMillivolts / FULL_BATTERY / 1000.0 * 100 + 0.5;
 #ifdef MY_DEBUG
-  Serial.print("Battery Voltage: ");
-  Serial.println(batteryMillivolts / 1000.0);
-  Serial.print("V");
+  Serial.print("Battery voltage: ");
+  Serial.print(batteryMillivolts / 1000.0);
+  Serial.println("V");
   Serial.print("Battery percent: ");
   Serial.print(batteryPcnt);
   Serial.println(" %");
