@@ -1114,6 +1114,9 @@
 /**
  *@def MY_TRANSPORT_N2N_FEATURE_DISABLED
  *@brief If defined, disables the direct node to node transport send attempts
+ *
+ * Use this function together with the option @ref MY_PARENT_NODE_IS_STATIC
+ * to ensure that all telegrams sent are routed exclusively through the associated parent node.
  */
 //#define MY_TRANSPORT_N2N_FEATURE_DISABLED
 
