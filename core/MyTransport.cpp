@@ -554,6 +554,8 @@ bool transportRouteMessage(MyMessage &message)
 			}
 			TRANSPORT_DEBUG(PSTR("!TSF:RTE:N2N FAIL\n"));
 		}
+#else
+		TRANSPORT_DEBUG(PSTR("TSF:RTE:N2N DIS\n"));
 #endif
 		route = _transportConfig.parentNodeId;	// not a repeater, all traffic routed via parent
 #endif
