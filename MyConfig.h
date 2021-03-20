@@ -204,6 +204,55 @@
  * @{
  */
 
+/**
+ * @defgroup PJONSettingGrpPub PJON
+ * @ingroup RadioSettingGrpPub
+ * @brief These options are specific to the PJON wired transport.
+ * @{
+ */
+
+/**
+ * @def MY_PJON
+ * @brief Define this to use the PJON wired transport for sensor network communication.
+ */
+//#define MY_PJON
+
+/**
+ * @def MY_PJON_PIN
+ * @brief Define this to change pin for PJON communication
+ */
+#ifndef MY_PJON_PIN
+#define MY_PJON_PIN		(12u)
+#endif
+
+/**
+ * @def MY_DEBUG_VERBOSE_PJON
+ * @brief Define this for verbose debug prints related to the %PJON driver.
+ */
+//#define MY_DEBUG_VERBOSE_PJON
+
+/**
+ * @def MY_PJON_MAX_RETRIES
+ * @brief Define this to change max send retry in PJON communication
+ */
+#ifndef MY_PJON_MAX_RETRIES
+#define MY_PJON_MAX_RETRIES	(5u)
+#endif
+
+#ifdef MY_PJON
+
+#ifndef PJON_STRATEGY_ALL
+#define PJON_STRATEGY_BITBANG
+#endif
+
+#define PJON_NOT_ASSIGNED		(253u)
+#define PJON_BROADCAST			(255u)
+
+#define SWBB_MAX_ATTEMPTS		(50u)
+#define PJON_INCLUDE_SWBB
+#endif
+
+/** @}*/ // End of PJONSettingGrpPub group
 
 /**
  * @defgroup RS485SettingGrpPub RS485
@@ -2226,7 +2275,7 @@
 #endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485) || defined(MY_PJON)
 #define MY_SENSOR_NETWORK
 #endif
 
@@ -2391,6 +2440,9 @@
 #define MY_RS485_DE_PIN
 #define MY_RS485_DE_INVERSE
 #define MY_RS485_HWSERIAL
+// PJON
+#define MY_PJON
+#define MY_DEBUG_VERBOSE_PJON
 // RF24
 #define MY_RADIO_RF24
 #define MY_RADIO_NRF24 //deprecated
