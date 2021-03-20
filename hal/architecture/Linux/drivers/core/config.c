@@ -31,6 +31,8 @@ static int _config_create(const char *config_file);
 static int _config_parse_int(char *token, const char *name, int *value);
 static int _config_parse_string(char *token, const char *name, char **value);
 
+struct config conf;
+
 int config_parse(const char *config_file)
 {
 	FILE *fptr;
