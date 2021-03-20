@@ -220,6 +220,7 @@ var types = {
 
 //mysgw: Client 0: 0;0;3;0;18;PING
 var rprefix =  "(?:\\d+ )?(?:mysgw: )?(?:Client 0: )?";
+var prefilter = /(?=[!?]?(MCO|TSM|TSF|THA|SGN))(?<result>.*)/;
 var match = [
 
 	// MySensors core
@@ -460,8 +461,9 @@ var match = [
 
 // Init regexes
 for (var i=0, len=match.length;i<len; i++) {
-	match[i].re = new RegExp("^" + rprefix + match[i].re);
+	match[i].re = new RegExp("^" + match[i].re);
 }
+
 var stripPrefix = new RegExp("^" + rprefix + "(.*)");
 
 function getQueryVariable(variable)
@@ -538,18 +540,25 @@ new Vue({
 			var t = types[this.selector(cmd)]
 			return t !== undefined ? t[type] || "Undefined" : "Undefined";
 		},
-		match: function(msg) {
+		decodeLog: function(msg) {
 			var self = this;
 			var found = false;
+
+			filtered = msg.match(prefilter);
+ 			if (filtered) {
+ 				msg = filtered.groups.result;
+ 			} else {
+ 				return;
+ 			}
 			for (var i=0, len=match.length;!found &&  i<len; i++) {
 				var r = match[i];
 				if (r.re.test(msg)) {
 					msg = msg.replace(r.re, r.d);
+					// lookup and replace numerical constants with their symbols
 					msg = msg.replace(/{command:(\d+)}/g, function(match, m1) { return types.command[m1] });
 					msg = msg.replace(/{pt:(\d+)}/g, function(match, m1) { return types.payloadtype[m1] });
-					return msg.replace(/{type:(\d+):(\d+)}/g, function(match, cmd, type) {
-						return self.type(cmd, type);
-					});
+					msg = msg.replace(/{type:(\d+):(\d+)}/g, function(match, cmd, type) { return self.type(cmd, type) });
+					return msg;
 				}
 			}
 		},
@@ -558,17 +567,17 @@ new Vue({
 			var self = this;
 			var rows = this.source.split("\n");
 			this.parsed = _.map(rows, function(r) {
-				//var p = r.split(";");
+				// attempt decode of serial protocol (e.g. `12;6;0;0;3;My Light\n`)
 				var p = splitWithTail(r, ";", 6);
 				if (p.length !== 6) {
-					var desc = self.match(r);
-
+					// probably not serial protocol, maybe debug log?
+					var desc = self.decodeLog(r);
 					return ["","","","",desc?"":"Unknown", r,  desc];
 				}
 				var sel = self.selector(p[2]);
 				var desc = "";
 				if (p[2] == "3" && p[4] == "9") {
-					desc = self.match(p[5]);
+					desc = self.decodeLog(p[5]);
 
 				}
 				var node = stripPrefix.exec(p[0]);
