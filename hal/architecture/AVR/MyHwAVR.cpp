@@ -101,7 +101,7 @@ void hwPowerDown(const uint8_t wdto)
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
 	sleep_enable();
-#if defined(__AVR_ATmega328P__)
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__)
 	sleep_bod_disable();
 #endif
 	// Enable interrupts & sleep until WDT or ext. interrupt
