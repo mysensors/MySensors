@@ -111,36 +111,30 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
                             const unsigned int length)
 {
 	char *str, *p;
-	uint8_t index = 0;
+	int8_t index = -1;
 	message.setSender(GATEWAY_ADDRESS);
 	message.setLast(GATEWAY_ADDRESS);
 	message.setEcho(false);
 
-        // Calculate length of actual prefix.
-        // The subscription prefix can contain wildcards, so the length of the subscription prefix
-        // can differ from the length of the actually used prefix.
-        // e.g. subscription prefix "+/mysensors", actual prefix "foo/mysensors"
-        uint8_t prefix_length = 0;
-        // Make a copy of the strings because strtok modifies the string
-        char topic2[strlen(topic)+1];
-        strcpy(topic2,topic);
-        char *str2, *save_pointer2;
-        char subscribe_topic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1];
-        strcpy(subscribe_topic,MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
-        char *str3, *save_pointer3;
-
-        for (str2=strtok_r(topic2,"/",&save_pointer2),str3 = strtok_r(subscribe_topic,"/", &save_pointer3); str3 ;
-          str2=strtok_r(NULL,"/",&save_pointer2),str3=strtok_r(NULL,"/",&save_pointer3)) {
-           prefix_length += strlen(str2) + 1; // the actual token and the delimiter
-           // GATEWAY_DEBUG(PSTR("GWT:TPS:prefixlen=%d, toktop=%s, tokpre=%s\n"), prefix_length, str2,str3);
-        }
-        // for (str = strtok_r(topic + strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1, "/", &p);
-        for (str = strtok_r(topic + prefix_length, "/", &p);
-
+	// The subscription prefix can contain wildcards, but only the + wildcard.
+	// e.g. subscription prefix "+/mysensors", actual prefix "foo/mysensors"
+	// To fetch only the part after the mqtt prefix, discard as many
+	// mqtt levels (between / characters) as in the subscription prefix.
+	// Make a copy of the subscribe prefix because strtok is allowed to change the string.
+	char subscribeTopicPrefix[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1];
+	strcpy(subscribeTopicPrefix,MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
+	char *strPrefix, *savePointerPrefix;
+	for (str = strtok_r(topic, "/", &p),
+	        strPrefix = strtok_r(subscribeTopicPrefix,"/", &savePointerPrefix);
 	        str && index < 5;
-	        str = strtok_r(NULL, "/", &p), index++
+	        str = strtok_r(NULL, "/", &p),
+	        strPrefix = strtok_r(NULL, "/", &savePointerPrefix)
 	    ) {
-	  // GATEWAY_DEBUG(PSTR("GWT:TPS:Index=%d, mqttstr=%s\n"), index, str);
+		// Increment index (init value is -1) if we have consumed the mqtt subscription prefix
+		if (!strPrefix) {
+			index++;
+		}
+		//GATEWAY_DEBUG(PSTR("GWT:TPS:Index=%d, mqttstr=%s, prefixtoken=%s\n"), index, str,strPrefix);
 		switch (index) {
 		case 0:
 			// Node id
@@ -185,5 +179,5 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 		}
 	}
 	// Return true if input valid
-	return (index == 5);
+	return (index == 4);
 }
