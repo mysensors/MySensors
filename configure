@@ -17,7 +17,7 @@ SPI driver options:
                                 Device path. [/dev/spidev0.0]
 
 Building options:
-    --soc=[BCM2711|BCM2835|BCM2836|BCM2837|AM33XX|A10|A13|A20|H3]
+    --soc=[BCM2711|BCM2835|BCM2836|BCM2837|AM33XX|A10|A13|A20|H3|RK3399]
                                 SoC type to be used. [configure autodetected]
     --cpu-flags=<CPUFLAGS>      CPU defining/optimizing flags to be used. [configure autodetected]
     --extra-cflags=<CFLAGS>     Extra C flags passed to C compilation. []
@@ -248,7 +248,10 @@ function detect_machine {
         soc="AM33XX"
         ;;
     *)
-        soc="unknown"
+        if [[ $machine == *"ROCK Pi 4"* ]]; then
+            soc="RK3399"
+            tp="RockPi4"
+        fi
     esac
     echo "${soc} ${tp} ${cpu}"
 }
@@ -283,11 +286,20 @@ function gcc_cpu_flags {
     H3)
         flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
         ;;
+    RK3399)
+        flags="-march=armv8-a+crc+crypto -mtune=cortex-a72.cortex-a53 -mfix-cortex-a53-835769 -mfix-cortex-a53-843419"
+        ;;
     *)
         flags=""
     esac
     echo ${flags}
 }
+
+ROCKPI4_PIN_MAP=(  
+      1   2  71   4  72   6  75 148   9 147
+    146 131 150  14 149 154  17 156  40  20
+     39 157  41  42  25  26  64  65  74  30
+     73 112  76  24 133 132 158 134  39 135 )
 
 # Default values
 debug=enable
@@ -297,7 +309,7 @@ signing=none
 signing_request_signatures=false
 encryption=false
 
-params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER"
+params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER TYPE"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -573,6 +585,17 @@ else
     else
         echo "  [WARNING] /sys/class/gpio/export not found."
     fi
+fi
+
+if [[ $TYPE == "RockPi4" ]]; then
+    FLTMP=$CPPFLAGS
+    pattern="(.+_PIN=)([0-9]+)(.*)"
+    while [[ $FLTMP =~ $pattern ]]; do
+        FLTMP=${BASH_REMATCH[3]}
+	CPPFLAGS=${BASH_REMATCH[1]}${ROCKPI4_PIN_MAP[${BASH_REMATCH[2]}-1]}
+    done
+    CPPFLAGS=$CPPFLAGS$FLTMP
+    CPPFLAGS="-DLINUX_ARCH_ROCKPI4 $CPPFLAGS"
 fi
 
 if [ -z "${SPI_DRIVER}" ]; then
