@@ -25,7 +25,7 @@
  *	  Copyright Thomas Studwell (2014,2015)
  * - MySensors generic radio driver implementation Copyright (C) 2017, 2018 Olivier Mauti <olivier@mysensors.org>
  *
- * Changes by : @tekka, @scalz, @marceloagno
+ * Changes by : @tekka, @scalz, @marceloagno, @docbender
  *
  * Definitions for Semtech SX1231/H radios:
  * https://www.semtech.com/uploads/documents/sx1231.pdf
@@ -56,11 +56,16 @@
 * | | RFM69 | SWR  | SEND,TO=%%d,SEQ=%%d,RETRY=%%d        | Send to (TO), sequence number (SWQ), retry if no ACK received (RETRY)
 * | | RFM69 | SWR  | ACK,FROM=%%d,SEQ=%%d,RSSI=%%d        | ACK received from (FROM), sequence nr (SEQ), ACK RSSI (RSSI)
 * |!| RFM69 | SWR  | NACK                                 | Message sent, no ACK received
+* |!| RFM69 | SWR  | NOIRQ                                | Interrupt from IRQ pin not received after message was sent
 * | | RFM69 | SPP  | PCT=%%d,TX LEVEL=%%d                 | Set TX level, input TX percent (PCT)
 * | | RFM69 | RSL  |                                      | Radio in sleep mode
 * | | RFM69 | RSB  |                                      | Radio in standby mode
+* | | RFM69 | RRX  |                                      | Radio in receive mode
+* | | RFM69 | RTX  |                                      | Radio in transmit mode
+* | | RFM69 | RSY  |                                      | Radio in synth mode
 * | | RFM69 | PWD  |                                      | Power down radio
 * | | RFM69 | PWU  |                                      | Power up radio
+* | | RFM69 | DUMP | %s                                   | Dump radio registers
 *
 * @brief API declaration for RFM69
 *
@@ -127,7 +132,7 @@
 #endif
 
 #define RFM69_FIFO_SIZE                  (0xFFu)		//!< Max number of bytes the Rx/Tx FIFO can hold
-#define RFM69_MAX_PACKET_LEN             (0x40u)		//!< This is the maximum number of bytes that can be carried 
+#define RFM69_MAX_PACKET_LEN             static_cast<size_t>(0x40u)	//!< This is the maximum number of bytes that can be carried 
 #define RFM69_ATC_TARGET_RANGE_DBM       (2u)				//!< ATC target range +/- dBm
 #define RFM69_PACKET_HEADER_VERSION      (1u)				//!< RFM69 packet header version
 #define RFM69_MIN_PACKET_HEADER_VERSION  (1u)				//!< Minimal RFM69 packet header version
