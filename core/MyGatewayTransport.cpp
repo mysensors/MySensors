@@ -27,6 +27,7 @@ extern MyMessage _msgTmp;
 
 inline void gatewayTransportProcess(void)
 {
+	//Serial.print("gatewayTransportProcess entered\n");
 	if (gatewayTransportAvailable()) {
 		_msg = gatewayTransportReceive();
 		if (_msg.getDestination() == GATEWAY_ADDRESS) {

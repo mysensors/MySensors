@@ -56,22 +56,26 @@ void _callbackTransportReady(void)
 
 void _process(void)
 {
+	//CORE_DEBUG(PSTR("_process 0\n"));
 #if defined(MY_DEBUG_VERBOSE_CORE)
 	if (processLock) {
 		CORE_DEBUG(PSTR("!MCO:PRO:RC=%" PRIu8 "\n"), processLock);	// recursive call detected
 	}
 	processLock++;
+	//CORE_DEBUG(PSTR("_process 1\n"));
 #endif
 	doYield();
-
+	//CORE_DEBUG(PSTR("_process 2\n"));
 #if defined(MY_INCLUSION_MODE_FEATURE)
 	inclusionProcess();
 #endif
 
 #if defined(MY_GATEWAY_FEATURE)
+	//CORE_DEBUG(PSTR("_process 3\n"));
 	gatewayTransportProcess();
+	//CORE_DEBUG(PSTR("_process 4\n"));
 #endif
-
+	//CORE_DEBUG(PSTR("_process 5\n"));
 #if defined(MY_SENSOR_NETWORK)
 	transportProcess();
 #endif
@@ -83,10 +87,12 @@ void _process(void)
 #if defined(MY_DEBUG_VERBOSE_CORE)
 	processLock--;
 #endif
+	//CORE_DEBUG(PSTR("_process --\n"));
 }
 
 void _infiniteLoop(void)
 {
+	CORE_DEBUG(PSTR("_infiniteLoop\n"));
 #if defined(__linux__)
 	exit(1);
 #else
@@ -98,6 +104,7 @@ void _infiniteLoop(void)
 
 void _begin(void)
 {
+	CORE_DEBUG(PSTR("_begin LF#0"));
 #if defined(MY_CORE_ONLY)
 	// initialize HW and run setup if present
 	(void)hwInit();
@@ -121,23 +128,23 @@ void _begin(void)
 
 #if defined(F_CPU)
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=%" PRIu16 ",REL=%"
-	                PRIu8 ",VER="
-	                MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU/1000000UL),
-	           MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
+		PRIu8 ",VER="
+		MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU / 1000000UL),
+		MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
 #else
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=NA,REL=%"
-	                PRIu8 ",VER="
-	                MYSENSORS_LIBRARY_VERSION "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
+		PRIu8 ",VER="
+		MYSENSORS_LIBRARY_VERSION "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
 #endif
 	if (!hwInitResult) {
 		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
 		setIndication(INDICATION_ERR_HW_INIT);
 		_infiniteLoop();
 	}
-
+	CORE_DEBUG(PSTR("LOLOLOL 1\n"));
 	// set defaults
 	_coreConfig.presentationSent = false;
-
+	CORE_DEBUG(PSTR("LOLOLOL\n"));
 	// Call sketch before() (if defined)
 	if (before) {
 		CORE_DEBUG(PSTR("MCO:BGN:BFR\n"));	// before callback
@@ -147,13 +154,13 @@ void _begin(void)
 #if defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	ledsInit();
 #endif
-
+	CORE_DEBUG(PSTR("LOLOLOL 2\n"));
 	signerInit();
-
+	CORE_DEBUG(PSTR("LOLOLOL 3\n"));
 	// Read latest received controller configuration from EEPROM
 	// Note: _coreConfig.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
-	hwReadConfigBlock((void *)&_coreConfig.controllerConfig, (void *)EEPROM_CONTROLLER_CONFIG_ADDRESS,
-	                  sizeof(controllerConfig_t));
+	hwReadConfigBlock((void*)&_coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS,
+		sizeof(controllerConfig_t));
 
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 	// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
@@ -172,12 +179,14 @@ void _begin(void)
 #endif
 
 	_checkNodeLock();
-
+	CORE_DEBUG(PSTR("LOLOLOL 4\n"));
 #if defined(MY_GATEWAY_FEATURE)
+	CORE_DEBUG(PSTR("MCO:BGN:INIT YES MY gateway\n"));
 #if defined(MY_INCLUSION_BUTTON_FEATURE)
 	inclusionInit();
 #endif
-
+	bool initialisedGateway = false;
+	CORE_DEBUG(PSTR("LOLOLOL 5\n"));
 	// initialise the transport driver
 	if (!gatewayTransportInit()) {
 		setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
@@ -185,8 +194,14 @@ void _begin(void)
 		// Nothing more we can do
 		_infiniteLoop();
 	}
+	else
+	{
+		initialisedGateway = true;
+	}
+#else
+	CORE_DEBUG(PSTR("MCO:BGN:INIT No MY gateway\n"));
 #endif
-
+CORE_DEBUG(PSTR("LOLOLOL 6\n"));
 	// Call sketch setup() (if defined)
 	if (setup) {
 		CORE_DEBUG(PSTR("MCO:BGN:STP\n"));	// setup callback
@@ -198,10 +213,21 @@ void _begin(void)
 #else
 	// no sensor network defined, call presentation & registration
 	_callbackTransportReady();
-	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=NA\n"));
+	CORE_DEBUG(PSTR("LOLOLOL 7\n"));
+	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=NA LF#2\n"));
+	if (initialisedGateway)
+	{
+		CORE_DEBUG(PSTR("initialisedGateway O!\n"));
+		PrintLF();
+	}
+	else
+	{
+		CORE_DEBUG(PSTR("NOT initialisedGateway -1!\n"));
+	}
 #endif
 	// reset wdt before handing over to loop
 	hwWatchdogReset();
+	CORE_DEBUG(PSTR("after hwWatchdogReset\n"));
 }
 
 
@@ -563,6 +589,7 @@ void wait(const uint32_t waitingMS)
 #endif
 	const uint32_t enteringMS = hwMillis();
 	while (hwMillis() - enteringMS < waitingMS) {
+		CORE_DEBUG(PSTR("Pre process 1"));
 		_process();
 	}
 #if defined(MY_DEBUG_VERBOSE_CORE)
@@ -584,6 +611,7 @@ bool wait(const uint32_t waitingMS, const mysensors_command_t cmd)
 	_msg.setCommand(C_INVALID_7);
 	bool expectedResponse = false;
 	while ((hwMillis() - enteringMS < waitingMS) && !expectedResponse) {
+		CORE_DEBUG(PSTR("Pre process 2"));
 		_process();
 		expectedResponse = (_msg.getCommand() == cmd);
 	}
@@ -607,6 +635,7 @@ bool wait(const uint32_t waitingMS, const mysensors_command_t cmd, const uint8_t
 	_msg.setCommand(C_INVALID_7);
 	bool expectedResponse = false;
 	while ( (hwMillis() - enteringMS < waitingMS) && !expectedResponse ) {
+		CORE_DEBUG(PSTR("Pre process 3"));
 		_process();
 		expectedResponse = (_msg.getCommand() == cmd && _msg.getType() == msgType);
 	}
@@ -661,6 +690,7 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		uint32_t sleepDeltaMS = 0;
 		while (!isTransportReady() && (sleepDeltaMS < sleepingTimeMS) &&
 		        (sleepDeltaMS < MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)) {
+			CORE_DEBUG(PSTR("Pre process 4"));
 			_process();
 			sleepDeltaMS = hwMillis() - sleepEnterMS;
 		}

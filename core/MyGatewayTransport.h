@@ -96,6 +96,8 @@ void gatewayTransportProcess(void);
  */
 bool gatewayTransportInit(void);
 
+void PrintLF(void);
+
 /**
  * @brief Send message to controller
  * @param message to send

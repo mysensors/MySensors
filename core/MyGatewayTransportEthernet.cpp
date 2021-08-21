@@ -95,12 +95,20 @@ typedef struct {
 #define EthernetUDP WiFiUDP
 #endif
 
+#if defined(MY_GATEWAY_BRIDGE)
+#define EthernetServer BridgeServer
+#define EthernetClient BridgeClient
+#define EthernetUDP BridgeUDP
+#endif
+
 #if defined(MY_GATEWAY_CLIENT_MODE)
 #if defined(MY_USE_UDP)
 EthernetUDP _ethernetServer;
 #endif /* End of MY_USE_UDP */
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_CLIENT_MODE */
 EthernetServer _ethernetServer(_ethernetGatewayPort, MY_GATEWAY_MAX_CLIENTS);
+#elif defined(MY_GATEWAY_BRIDGE) /* Elif part of MY_GATEWAY_BRIDGE */
+EthernetServer _ethernetServer; // Bridge server port is hardcoded as: 5555
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 EthernetServer _ethernetServer(_ethernetGatewayPort);
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
@@ -116,6 +124,9 @@ static EthernetClient client = EthernetClient();
 static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+#elif defined (MY_GATEWAY_BRIDGE)
+static EthernetClient client = EthernetClient();
+static inputBuffer inputString;
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 static EthernetClient client = EthernetClient();
 static inputBuffer inputString;
@@ -156,8 +167,20 @@ void gatewayTransportRenewIP(void)
 }
 #endif
 
+static bool bBridge = false;
+static bool bBridgeListen = false;
+
+void PrintLF()
+{
+	GATEWAY_DEBUG(PSTR("BRIDGE: %d\n"), bBridge);
+	GATEWAY_DEBUG(PSTR("BRIDGE LISTEN: %d\n"), bBridgeListen);
+}
+
 bool gatewayTransportInit(void)
 {
+
+	GATEWAY_DEBUG("gatewayTransportInit\n");
+	Serial.print("LF# gatewayTransportInit\n");
 	_w5100_spi_en(true);
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
@@ -179,6 +202,13 @@ bool gatewayTransportInit(void)
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
+#elif defined(MY_GATEWAY_BRIDGE)
+	GATEWAY_DEBUG("Init Bridge\n");
+	pinMode(13, OUTPUT);
+	digitalWrite(13, LOW);
+	Bridge.begin();
+	digitalWrite(13, HIGH);
+	bBridge = true;
 #else
 #if defined(MY_IP_GATEWAY_ADDRESS) && defined(MY_IP_SUBNET_ADDRESS)
 	// DNS server set to gateway ip
@@ -200,7 +230,7 @@ bool gatewayTransportInit(void)
 	delay(1000);
 #endif /* MY_GATEWAY_ESP8266 / MY_GATEWAY_ESP32 */
 
-#if defined(MY_GATEWAY_CLIENT_MODE)
+#if defined(MY_GATEWAY_CLIENT_MODE) // LF# for Bridge?
 #if defined(MY_USE_UDP)
 	_ethernetServer.begin(_ethernetGatewayPort);
 #else /* Else part of MY_USE_UDP */
@@ -227,7 +257,13 @@ bool gatewayTransportInit(void)
 	_ethernetServer.begin(_ethernetGatewayIP);
 #else
 	// we have to use pointers due to the constructor of EthernetServer
+#if defined (MY_GATEWAY_BRIDGE)
+	bBridgeListen = true;
+	_ethernetServer.noListenOnLocalhost();
+  Serial.print("LF# MY_GATEWAY_BRIDGE noListenOnLocalhost\n");
+#endif
 	_ethernetServer.begin();
+	Serial.print("LF# MY_GATEWAY_BRIDGE begin\n");
 #endif /* End of MY_GATEWAY_LINUX && MY_IP_ADDRESS */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
@@ -359,6 +395,8 @@ bool _readFromClient(void)
 
 bool gatewayTransportAvailable(void)
 {
+	GATEWAY_DEBUG(PSTR("gatewayTransportAvailable ethernet\n"));
+	Serial.print("gatewayTransportAvailable ethernet\n");
 	_w5100_spi_en(true);
 #if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
 	// renew IP address using DHCP
@@ -444,12 +482,18 @@ bool gatewayTransportAvailable(void)
 			return true;
 		}
 	}
-#else /* Else part of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
+#else /* Else part of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX || MY_GATEWAY_BRIDGE */
 	// W5100/ENC module does not have hasClient-method. We can only serve one client at the time.
+#if defined (MY_GATEWAY_BRIDGE)
+	//Serial.print("gatewayTransportAvailable MY_GATEWAY_BRIDGE accept\n");
+	EthernetClient newclient = _ethernetServer.accept();
+#else
 	EthernetClient newclient = _ethernetServer.available();
+#endif
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
 		if (client != newclient) {
+			Serial.print("NEW CLIENT!!!");
 			client.stop();
 			client = newclient;
 			GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
@@ -458,6 +502,10 @@ bool gatewayTransportAvailable(void)
 			_w5100_spi_en(true);
 			presentNode();
 		}
+	}
+	else
+	{
+		//Serial.print("gatewayTransportAvailable MY_GATEWAY_BRIDGE NEW client null\n");
 	}
 	if (client) {
 		if (!client.connected()) {
@@ -470,6 +518,10 @@ bool gatewayTransportAvailable(void)
 				return true;
 			}
 		}
+	}
+	else
+	{
+		//Serial.print("gatewayTransportAvailable MY_GATEWAY_BRIDGE client null\n");
 	}
 #endif /* End of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
