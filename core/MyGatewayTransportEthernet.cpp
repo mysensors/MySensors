@@ -108,7 +108,7 @@ EthernetUDP _ethernetServer;
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_CLIENT_MODE */
 EthernetServer _ethernetServer(_ethernetGatewayPort, MY_GATEWAY_MAX_CLIENTS);
 #elif defined(MY_GATEWAY_BRIDGE) /* Elif part of MY_GATEWAY_BRIDGE */
-EthernetServer _ethernetServer; // Bridge server port is hardcoded as: 5555
+EthernetServer _ethernetServer = EthernetServer(_ethernetGatewayPort);
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 EthernetServer _ethernetServer(_ethernetGatewayPort);
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
@@ -272,11 +272,13 @@ bool gatewayTransportInit(void)
 }
 
 // cppcheck-suppress constParameter
-bool gatewayTransportSend(MyMessage &message)
+bool gatewayTransportSend(MyMessage& message)
 {
+	Serial.print("LF# gatewayTransportSend\n");
 	int nbytes = 0;
-	char *_ethernetMessage = protocolMyMessage2Serial(message);
-
+	char* _ethernetMessage = protocolMyMessage2Serial(message);
+	Serial.print(_ethernetMessage);
+	Serial.print("\n");
 	setIndication(INDICATION_GW_TX);
 
 	_w5100_spi_en(true);
@@ -287,7 +289,7 @@ bool gatewayTransportSend(MyMessage &message)
 #else
 	_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-	_ethernetServer.write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
+	_ethernetServer.write((uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 	// returns 1 if the packet was sent successfully
 	nbytes = _ethernetServer.endPacket();
 #else /* Else part of MY_USE_UDP */
@@ -303,22 +305,28 @@ bool gatewayTransportSend(MyMessage &message)
 			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
-		} else {
+		}
+		else {
 			// connecting to the server failed!
 			GATEWAY_DEBUG(PSTR("!GWT:TPS:ETH FAIL\n"));
 			_w5100_spi_en(false);
 			return false;
 		}
-	}
-	nbytes = client.write((const uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
+		}
+	nbytes = client.write((const uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 	// Send message to connected clients
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
-			nbytes += clients[i].write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
+			nbytes += clients[i].write((uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 		}
+	}
+#elif defined(MY_GATEWAY_BRIDGE)
+	if (client && client.connected())
+	{
+		nbytes += client.write((uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 	}
 #else /* Else part of MY_GATEWAY_ESPxx*/
 	nbytes = _ethernetServer.write(_ethernetMessage);
@@ -395,8 +403,8 @@ bool _readFromClient(void)
 
 bool gatewayTransportAvailable(void)
 {
-	GATEWAY_DEBUG(PSTR("gatewayTransportAvailable ethernet\n"));
-	Serial.print("gatewayTransportAvailable ethernet\n");
+	//GATEWAY_DEBUG(PSTR("gatewayTransportAvailable ethernet\n"));
+	//Serial.print("gatewayTransportAvailable ethernet\n");
 	_w5100_spi_en(true);
 #if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
 	// renew IP address using DHCP
