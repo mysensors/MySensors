@@ -167,20 +167,8 @@ void gatewayTransportRenewIP(void)
 }
 #endif
 
-static bool bBridge = false;
-static bool bBridgeListen = false;
-
-void PrintLF()
-{
-	GATEWAY_DEBUG(PSTR("BRIDGE: %d\n"), bBridge);
-	GATEWAY_DEBUG(PSTR("BRIDGE LISTEN: %d\n"), bBridgeListen);
-}
-
 bool gatewayTransportInit(void)
 {
-
-	GATEWAY_DEBUG("gatewayTransportInit\n");
-	Serial.print("LF# gatewayTransportInit\n");
 	_w5100_spi_en(true);
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
@@ -208,7 +196,6 @@ bool gatewayTransportInit(void)
 	digitalWrite(13, LOW);
 	Bridge.begin();
 	digitalWrite(13, HIGH);
-	bBridge = true;
 #else
 #if defined(MY_IP_GATEWAY_ADDRESS) && defined(MY_IP_SUBNET_ADDRESS)
 	// DNS server set to gateway ip
@@ -258,12 +245,9 @@ bool gatewayTransportInit(void)
 #else
 	// we have to use pointers due to the constructor of EthernetServer
 #if defined (MY_GATEWAY_BRIDGE)
-	bBridgeListen = true;
 	_ethernetServer.noListenOnLocalhost();
-  Serial.print("LF# MY_GATEWAY_BRIDGE noListenOnLocalhost\n");
 #endif
 	_ethernetServer.begin();
-	Serial.print("LF# MY_GATEWAY_BRIDGE begin\n");
 #endif /* End of MY_GATEWAY_LINUX && MY_IP_ADDRESS */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
@@ -274,7 +258,6 @@ bool gatewayTransportInit(void)
 // cppcheck-suppress constParameter
 bool gatewayTransportSend(MyMessage& message)
 {
-	Serial.print("LF# gatewayTransportSend\n");
 	int nbytes = 0;
 	char* _ethernetMessage = protocolMyMessage2Serial(message);
 	Serial.print(_ethernetMessage);
@@ -305,13 +288,12 @@ bool gatewayTransportSend(MyMessage& message)
 			gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 			_w5100_spi_en(true);
 			presentNode();
-		}
-		else {
-			// connecting to the server failed!
-			GATEWAY_DEBUG(PSTR("!GWT:TPS:ETH FAIL\n"));
-			_w5100_spi_en(false);
-			return false;
-		}
+		} else {
+				// connecting to the server failed!
+				GATEWAY_DEBUG(PSTR("!GWT:TPS:ETH FAIL\n"));
+				_w5100_spi_en(false);
+				return false;
+			}
 		}
 	nbytes = client.write((const uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 #endif /* End of MY_USE_UDP */
@@ -403,8 +385,6 @@ bool _readFromClient(void)
 
 bool gatewayTransportAvailable(void)
 {
-	//GATEWAY_DEBUG(PSTR("gatewayTransportAvailable ethernet\n"));
-	//Serial.print("gatewayTransportAvailable ethernet\n");
 	_w5100_spi_en(true);
 #if !defined(MY_IP_ADDRESS) && defined(MY_GATEWAY_W5100)
 	// renew IP address using DHCP
@@ -501,7 +481,6 @@ bool gatewayTransportAvailable(void)
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
 		if (client != newclient) {
-			Serial.print("NEW CLIENT!!!");
 			client.stop();
 			client = newclient;
 			GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
