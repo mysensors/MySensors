@@ -134,7 +134,6 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 		if (!strPrefix) {
 			index++;
 		}
-		//GATEWAY_DEBUG(PSTR("GWT:TPS:Index=%d, mqttstr=%s, prefixtoken=%s\n"), index, str,strPrefix);
 		switch (index) {
 		case 0:
 			// Node id
