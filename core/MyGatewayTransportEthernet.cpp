@@ -490,10 +490,7 @@ bool gatewayTransportAvailable(void)
 			presentNode();
 		}
 	}
-	else
-	{
-		//Serial.print("gatewayTransportAvailable MY_GATEWAY_BRIDGE NEW client null\n");
-	}
+
 	if (client) {
 		if (!client.connected()) {
 			GATEWAY_DEBUG(PSTR("!GWT:TSA:ETH FAIL\n"));
@@ -505,10 +502,6 @@ bool gatewayTransportAvailable(void)
 				return true;
 			}
 		}
-	}
-	else
-	{
-		//Serial.print("gatewayTransportAvailable MY_GATEWAY_BRIDGE client null\n");
 	}
 #endif /* End of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */

@@ -63,6 +63,7 @@ void _process(void)
 	processLock++;
 #endif
 	doYield();
+
 #if defined(MY_INCLUSION_MODE_FEATURE)
 	inclusionProcess();
 #endif
@@ -70,6 +71,7 @@ void _process(void)
 #if defined(MY_GATEWAY_FEATURE)
 	gatewayTransportProcess();
 #endif
+
 #if defined(MY_SENSOR_NETWORK)
 	transportProcess();
 #endif
@@ -119,21 +121,23 @@ void _begin(void)
 
 #if defined(F_CPU)
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=%" PRIu16 ",REL=%"
-		PRIu8 ",VER="
-		MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU/1000000UL),
-		MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
+	                PRIu8 ",VER="
+	                MYSENSORS_LIBRARY_VERSION "\n"), (uint16_t)(F_CPU/1000000UL),
+	           MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
 #else
 	CORE_DEBUG(PSTR("MCO:BGN:INIT " MY_NODE_TYPE ",CP=" MY_CAPABILITIES ",FQ=NA,REL=%"
-		PRIu8 ",VER="
-		MYSENSORS_LIBRARY_VERSION "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
+	                PRIu8 ",VER="
+	                MYSENSORS_LIBRARY_VERSION "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);
 #endif
 	if (!hwInitResult) {
 		CORE_DEBUG(PSTR("!MCO:BGN:HW ERR\n"));
 		setIndication(INDICATION_ERR_HW_INIT);
 		_infiniteLoop();
 	}
+
 	// set defaults
 	_coreConfig.presentationSent = false;
+
 	// Call sketch before() (if defined)
 	if (before) {
 		CORE_DEBUG(PSTR("MCO:BGN:BFR\n"));	// before callback
@@ -143,11 +147,13 @@ void _begin(void)
 #if defined(MY_DEFAULT_TX_LED_PIN) || defined(MY_DEFAULT_RX_LED_PIN) || defined(MY_DEFAULT_ERR_LED_PIN)
 	ledsInit();
 #endif
+
 	signerInit();
+
 	// Read latest received controller configuration from EEPROM
 	// Note: _coreConfig.isMetric is bool, hence empty EEPROM (=0xFF) evaluates to true (default)
-	hwReadConfigBlock((void*)&_coreConfig.controllerConfig, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS,
-		sizeof(controllerConfig_t));
+	hwReadConfigBlock((void *)&_coreConfig.controllerConfig, (void *)EEPROM_CONTROLLER_CONFIG_ADDRESS,
+	                  sizeof(controllerConfig_t));
 
 #if defined(MY_OTA_FIRMWARE_FEATURE)
 	// Read firmware config from EEPROM, i.e. type, version, CRC, blocks
@@ -166,11 +172,12 @@ void _begin(void)
 #endif
 
 	_checkNodeLock();
+
 #if defined(MY_GATEWAY_FEATURE)
-	CORE_DEBUG(PSTR("MCO:BGN:INIT YES MY gateway\n"));
 #if defined(MY_INCLUSION_BUTTON_FEATURE)
 	inclusionInit();
 #endif
+
 	// initialise the transport driver
 	if (!gatewayTransportInit()) {
 		setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
@@ -178,10 +185,8 @@ void _begin(void)
 		// Nothing more we can do
 		_infiniteLoop();
 	}
-
-#else
-	CORE_DEBUG(PSTR("MCO:BGN:INIT No MY gateway\n"));
 #endif
+
 	// Call sketch setup() (if defined)
 	if (setup) {
 		CORE_DEBUG(PSTR("MCO:BGN:STP\n"));	// setup callback
@@ -197,7 +202,6 @@ void _begin(void)
 #endif
 	// reset wdt before handing over to loop
 	hwWatchdogReset();
-	CORE_DEBUG(PSTR("after hwWatchdogReset\n"));
 }
 
 
@@ -657,7 +661,6 @@ int8_t _sleep(const uint32_t sleepingMS, const bool smartSleep, const uint8_t in
 		uint32_t sleepDeltaMS = 0;
 		while (!isTransportReady() && (sleepDeltaMS < sleepingTimeMS) &&
 		        (sleepDeltaMS < MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS)) {
-			CORE_DEBUG(PSTR("Pre process 4"));
 			_process();
 			sleepDeltaMS = hwMillis() - sleepEnterMS;
 		}
