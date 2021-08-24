@@ -58,7 +58,11 @@ extern MyMessage _msgTmp;
 #endif
 
 #if defined(MY_IP_ADDRESS)
+#if defined(MY_GATEWAY_BRIDGE)
+#warning MY_IP_ADDRESS not used when Brigde gateway is configured, define IP Address in OpenWrt settings instead!
+#else
 #define _ethernetGatewayIP IPAddress(MY_IP_ADDRESS)
+#endif
 #if defined(MY_IP_GATEWAY_ADDRESS)
 #define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
@@ -102,6 +106,9 @@ typedef struct {
 #endif
 
 #if defined(MY_GATEWAY_CLIENT_MODE)
+#if defined (MY_GATEWAY_BRIDGE)
+#error Client mode is not supported when MY_GATEWAY_BRIDGE is used!
+#endif
 #if defined(MY_USE_UDP)
 EthernetUDP _ethernetServer;
 #endif /* End of MY_USE_UDP */
@@ -191,11 +198,8 @@ bool gatewayTransportInit(void)
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
 #elif defined(MY_GATEWAY_BRIDGE)
-	GATEWAY_DEBUG("Init Bridge\n");
-	pinMode(13, OUTPUT);
-	digitalWrite(13, LOW);
+	GATEWAY_DEBUG(PSTR("GWT:TIN:BRIDGE BEGIN...\n"));
 	Bridge.begin();
-	digitalWrite(13, HIGH);
 #else
 #if defined(MY_IP_GATEWAY_ADDRESS) && defined(MY_IP_SUBNET_ADDRESS)
 	// DNS server set to gateway ip
