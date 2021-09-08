@@ -31,11 +31,9 @@ int main(void)
 		if (loop) {
 			loop(); // Call sketch loop
 		}
-#if !defined(MY_DISABLED_SERIAL)
 		if (serialEventRun) {
 			serialEventRun();
 		}
-#endif
 	}
 	return 0;
 }
