@@ -19,6 +19,16 @@
 
 #include "MyHwAVR.h"
 
+#if defined(__AVR_ATtiny85__)
+	#define WR_REG WDTCR
+	#define SIGRD   RSIG    // Signature Row from Store Program Memory Control and Status Register
+	#define EIFR    GIFR    // External/General Interrupt Flag Register
+	#define WDTCSR  WDTCR   // WDT Control Register
+	#define TCCR1A  TCCR1   // Timer counter control
+	#define TIFR1   TIFR	  // Timer interrupt
+#endif
+
+
 bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
@@ -313,43 +323,71 @@ uint16_t hwCPUFrequency(void)
 	// save WDT & timer settings
 	const uint8_t WDTsave = WDTCSR;
 	const uint8_t TCCR1Asave = TCCR1A;
+#if defined(__AVR_ATtiny85__)
 	const uint8_t TCCR1Bsave = TCCR1B;
 	const uint8_t TCCR1Csave = TCCR1C;
+#endif
 	// setup timer1
-	TIFR1 = 0xFF;
 	TCNT1 = 0;
+#if defined(__AVR_ATtiny85__)
+	TIFR = 0xFF;
+	TCCR1 = 0;
+#else
+	TIFR1 = 0xFF;
 	TCCR1A = 0;
 	TCCR1C = 0;
+#endif
 	// set wdt
 	wdt_enable(WDTO_500MS);
 	// enable WDT interrupt mode => first timeout WDIF, 2nd timeout reset
 	WDTCSR |= (1 << WDIE);
 	wdt_reset();
+#if defined(__AVR_ATtiny85__)
+	// start timer1 with 8192 prescaling
+	TCCR1 = _BV(CS13) | _BV(CS12) | _BV(CS11);// | _BV(CS10);
+#else
 	// start timer1 with 1024 prescaling
 	TCCR1B = _BV(CS12) | _BV(CS10);
+#endif
 	// wait until wdt interrupt
 	while (bit_is_clear(WDTCSR,WDIF)) {};
 	// stop timer
+#if defined(__AVR_ATtiny85__)
+	TCCR1 = 0;
+#else
 	TCCR1B = 0;
+#endif
 	// restore WDT settings
 	wdt_reset();
 	WDTCSR |= (1 << WDCE) | (1 << WDE);
 	WDTCSR = WDTsave;
 	sei();
+#if defined(__AVR_ATtiny85__)
+	const uint16_t result = TCNT1 * 131072UL / 100000UL;
+#else
 	const uint16_t result = TCNT1 * 2048UL / 100000UL;
+#endif
 	// restore timer settings
 	TCCR1A = TCCR1Asave;
+#if defined(__AVR_ATtiny85__)
 	TCCR1B = TCCR1Bsave;
 	TCCR1C = TCCR1Csave;
+#endif
 	// return frequency in 1/10MHz (accuracy +- 10%)
 	return result;
 }
 
 int8_t hwCPUTemperature(void)
 {
-#if defined(__AVR_ATmega168A__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega32U4__)
+#if defined(__AVR_ATmega168A__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || \
+	defined(__AVR_ATmega328BP__) || defined(__AVR_ATmega32U4__) || \
+	defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
 	// Set the internal reference and mux.
+#if defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+	ADMUX = (_BV(REFS1) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1) | _BV(MUX0));
+#else
 	ADMUX = (_BV(REFS1) | _BV(REFS0) | _BV(MUX3));
+#endif
 	ADCSRA |= _BV(ADEN);  // enable the ADC
 	delay(20);            // wait for voltages to become stable.
 	ADCSRA |= _BV(ADSC);  // Start the ADC
