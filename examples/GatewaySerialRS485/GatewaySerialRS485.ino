@@ -34,6 +34,8 @@
 *
 * If your Arduino board has additional serial ports
 * you can use to connect the RS485 module.
+* Alternatively, use the Arduino SoftwareSerial library to use any of the supported
+* GPIO pins for communicating with the RS485 module.
 * Otherwise, the gateway uses AltSoftSerial to handle two serial
 * links on one Arduino. Use the following pins for RS485 link
 *
@@ -64,6 +66,11 @@
 
 // Enable this if RS485 is connected to a hardware serial port
 //#define MY_RS485_HWSERIAL Serial1
+
+// Enable if using SoftwareSerial to communicate with RS485 transceivers.
+// #include <SoftwareSerial.h>
+// SoftwareSerial RS485SoftwareSerial(D1, D2); // RX, TX
+// #define MY_RS485_SOFTWARESERIAL RS485SoftwareSerial
 
 // Enable serial gateway
 #define MY_GATEWAY_SERIAL
