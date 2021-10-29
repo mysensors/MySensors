@@ -323,7 +323,7 @@ uint16_t hwCPUFrequency(void)
 	// save WDT & timer settings
 	const uint8_t WDTsave = WDTCSR;
 	const uint8_t TCCR1Asave = TCCR1A;
-#if defined(__AVR_ATtiny85__)
+#if !defined(__AVR_ATtiny85__)
 	const uint8_t TCCR1Bsave = TCCR1B;
 	const uint8_t TCCR1Csave = TCCR1C;
 #endif
@@ -369,7 +369,7 @@ uint16_t hwCPUFrequency(void)
 #endif
 	// restore timer settings
 	TCCR1A = TCCR1Asave;
-#if defined(__AVR_ATtiny85__)
+#if !defined(__AVR_ATtiny85__)
 	TCCR1B = TCCR1Bsave;
 	TCCR1C = TCCR1Csave;
 #endif
