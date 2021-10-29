@@ -88,6 +88,8 @@ unsigned char _recCalcCS;
 
 #if defined(__linux__)
 SerialPort _dev = SerialPort(MY_RS485_HWSERIAL);
+#elif defined(MY_RS485_SOFTWARESERIAL)
+SoftwareSerial& _dev = MY_RS485_SOFTWARESERIAL;
 #elif defined(MY_RS485_HWSERIAL)
 HardwareSerial& _dev = MY_RS485_HWSERIAL;
 #else
