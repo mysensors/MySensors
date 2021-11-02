@@ -250,8 +250,9 @@ LOCAL void IRQ_HANDLER_ATTR RFM69_interruptHandler(void)
 
 LOCAL void RFM69_interruptHandling(void)
 {
+	const uint8_t regIrqFlags1 = RFM69_readReg(RFM69_REG_IRQFLAGS1);
 	const uint8_t regIrqFlags2 = RFM69_readReg(RFM69_REG_IRQFLAGS2);
-	if (RFM69.radioMode == RFM69_RADIO_MODE_RX && (regIrqFlags2 & RFM69_IRQFLAGS2_PAYLOADREADY)) {
+	if (RFM69.radioMode == RFM69_RADIO_MODE_RX && (regIrqFlags1 & RFM69_IRQFLAGS1_AUTOMODE)) {
 		(void)RFM69_setRadioMode(RFM69_RADIO_MODE_STDBY);
 		// use the fifo level irq as indicator if header bytes received
 		if (regIrqFlags2 & RFM69_IRQFLAGS2_FIFOLEVEL) {
@@ -733,6 +734,7 @@ LOCAL void RFM69_setConfiguration(void)
 		{ RFM69_REG_PAYLOADLENGTH, RFM69_MAX_PACKET_LEN }, // in variable length mode: the max frame size, not used in TX
 		{ RFM69_REG_NODEADRS, RFM69_BROADCAST_ADDRESS },	// init
 		{ RFM69_REG_BROADCASTADRS, RFM69_BROADCAST_ADDRESS },
+		{ RFM69_REG_AUTOMODES , RFM69_AUTOMODES_ENTER_PAYLOADREADY | RFM69_AUTOMODES_EXIT_FIFOEMPTY | RFM69_AUTOMODES_INTERMEDIATE_STANDBY },
 		{ RFM69_REG_FIFOTHRESH, RFM69_FIFOTHRESH_TXSTART_FIFOTHRESH | (RFM69_HEADER_LEN - 1) },	// start transmitting when rfm69 header loaded, fifo level irq when header bytes received (irq asserted when n bytes exceeded)
 		{ RFM69_REG_PACKETCONFIG2, RFM69_PACKET2_RXRESTARTDELAY_2BITS | RFM69_PACKET2_AUTORXRESTART_OFF | RFM69_PACKET2_AES_OFF },
 		{ RFM69_REG_TESTDAGC, RFM69_DAGC_IMPROVED_LOWBETA0 }, // continuous DAGC mode, use 0x30 if afc offset == 0
