@@ -1,3 +1,4 @@
+#if 0 // replaced by a call to schedule_recurrent_function_us()
 /*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
@@ -346,3 +347,4 @@ extern "C" void user_init(void)
 
 	system_init_done_cb(&init_done);
 }
+#endif
