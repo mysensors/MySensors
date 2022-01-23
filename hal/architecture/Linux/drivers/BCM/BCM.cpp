@@ -34,21 +34,14 @@ BCMClass::~BCMClass()
 	}
 }
 
-uint8_t BCMClass::init()
-{
-	if (!bcm2835_init()) {
-		logError("Failed to initialized bcm2835.\n");
-		exit(1);
-	}
-	initialized = 1;
-
-	return 1;
-}
-
 void BCMClass::pinMode(uint8_t gpio, uint8_t mode)
 {
 	if (!initialized) {
-		init();
+		if (!bcm2835_init()) {
+			logError("Failed to initialized bcm2835.\n");
+			exit(1);
+		}
+		initialized = 1;
 	}
 
 	bcm2835_gpio_fsel(gpio, mode);
@@ -57,7 +50,11 @@ void BCMClass::pinMode(uint8_t gpio, uint8_t mode)
 void BCMClass::digitalWrite(uint8_t gpio, uint8_t value)
 {
 	if (!initialized) {
-		init();
+		if (!bcm2835_init()) {
+			logError("Failed to initialized bcm2835.\n");
+			exit(1);
+		}
+		initialized = 1;
 	}
 
 	bcm2835_gpio_write(gpio, value);
@@ -68,13 +65,12 @@ void BCMClass::digitalWrite(uint8_t gpio, uint8_t value)
 uint8_t BCMClass::digitalRead(uint8_t gpio)
 {
 	if (!initialized) {
-		init();
+		if (!bcm2835_init()) {
+			logError("Failed to initialized bcm2835.\n");
+			exit(1);
+		}
+		initialized = 1;
 	}
 
 	return bcm2835_gpio_lev(gpio);
-}
-
-uint8_t BCMClass::isInitialized()
-{
-	return initialized;
 }

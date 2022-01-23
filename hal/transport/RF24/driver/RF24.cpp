@@ -36,7 +36,7 @@ LOCAL uint8_t RF24_NODE_ADDRESS = RF24_BROADCAST_ADDRESS;
 LOCAL RF24_receiveCallbackType RF24_receiveCallback = NULL;
 #endif
 
-#if defined(__linux__)
+#if defined(LINUX_SPI_BCM)
 uint8_t RF24_spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
 uint8_t RF24_spi_txbuff[32+1]
 ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
@@ -44,11 +44,7 @@ uint8_t RF24_spi_txbuff[32+1]
 
 LOCAL void RF24_csn(const bool level)
 {
-#if defined(__linux__)
-	(void)level;
-#else
 	hwDigitalWrite(MY_RF24_CS_PIN, level);
-#endif
 }
 
 LOCAL void RF24_ce(const bool level)
@@ -69,7 +65,7 @@ LOCAL uint8_t RF24_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t
 	RF24_csn(LOW);
 	// timing
 	delayMicroseconds(10);
-#ifdef __linux__
+#ifdef LINUX_SPI_BCM
 	uint8_t *prx = RF24_spi_rxbuff;
 	uint8_t *ptx = RF24_spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
@@ -522,9 +518,7 @@ LOCAL bool RF24_initialize(void)
 	hwPinMode(MY_RF24_IRQ_PIN,INPUT);
 #endif
 	hwPinMode(MY_RF24_CE_PIN, OUTPUT);
-#if !defined(__linux__)
 	hwPinMode(MY_RF24_CS_PIN, OUTPUT);
-#endif
 	RF24_ce(LOW);
 	RF24_csn(HIGH);
 

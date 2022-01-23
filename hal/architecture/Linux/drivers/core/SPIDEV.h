@@ -199,9 +199,8 @@ private:
 	static uint8_t initialized; //!< @brief SPI initialized flag.
 	static int fd; //!< @brief SPI device file descriptor.
 	static std::string device; //!< @brief Default SPI device.
-	static uint8_t mode; //!< @brief SPI mode.
 	static uint32_t speed; //!< @brief SPI speed.
-	static uint8_t bit_order; //!< @brief SPI bit order.
+	static uint32_t speed_temp; //!< @brief Used when doing transaction.
 	static struct spi_ioc_transfer tr; //!< @brief Auxiliar struct for data transfer.
 
 	static void init();

@@ -38,7 +38,7 @@
 rfm95_internal_t RFM95;	//!< internal variables
 volatile uint8_t RFM95_irq; //<! rfm95 irq flag
 
-#if defined(__linux__)
+#if defined(LINUX_SPI_BCM)
 // SPI RX and TX buffers (max packet len + 1 byte for the command)
 uint8_t RFM95_spi_rxbuff[RFM95_MAX_PACKET_LEN + 1];
 uint8_t RFM95_spi_txbuff[RFM95_MAX_PACKET_LEN + 1];
@@ -46,11 +46,7 @@ uint8_t RFM95_spi_txbuff[RFM95_MAX_PACKET_LEN + 1];
 
 LOCAL void RFM95_csn(const bool level)
 {
-#if defined(__linux__)
-	(void)level;
-#else
 	hwDigitalWrite(MY_RFM95_CS_PIN, level);
-#endif
 }
 
 LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_t len,
@@ -64,7 +60,7 @@ LOCAL uint8_t RFM95_spiMultiByteTransfer(const uint8_t cmd, uint8_t *buf, uint8_
 #endif
 
 	RFM95_csn(LOW);
-#if defined(__linux__)
+#if defined(LINUX_SPI_BCM)
 	uint8_t *prx = RFM95_spi_rxbuff;
 	uint8_t *ptx = RFM95_spi_txbuff;
 	uint8_t size = len + 1; // Add register value to transmit buffer
@@ -191,10 +187,8 @@ LOCAL bool RFM95_initialise(const uint32_t frequencyHz)
 	RFM95.ATCtargetRSSI = RFM95_RSSItoInternal(RFM95_TARGET_RSSI);
 
 	// SPI init
-#if !defined(__linux__)
 	hwDigitalWrite(MY_RFM95_CS_PIN, HIGH);
 	hwPinMode(MY_RFM95_CS_PIN, OUTPUT);
-#endif
 	RFM95_SPI.begin();
 
 	// Set LoRa mode (during sleep mode)

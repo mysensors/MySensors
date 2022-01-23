@@ -34,9 +34,6 @@ uint8_t SPIBCMClass::initialized = 0;
 void SPIBCMClass::begin()
 {
 	if (!initialized) {
-		if (!BCM.isInitialized()) {
-			BCM.init();
-		}
 		if (!bcm2835_spi_begin()) {
 			logError("You need root privilege to use SPI.\n");
 			exit(1);

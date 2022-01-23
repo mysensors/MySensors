@@ -37,10 +37,9 @@ SPIDEVClass SPIDEV = SPIDEVClass();
 uint8_t SPIDEVClass::initialized = 0;
 int SPIDEVClass::fd = -1;
 std::string SPIDEVClass::device = SPI_SPIDEV_DEVICE;
-uint8_t SPIDEVClass::mode = SPI_MODE0;
 uint32_t SPIDEVClass::speed = SPI_CLOCK_BASE;
-uint8_t SPIDEVClass::bit_order = MSBFIRST;
-struct spi_ioc_transfer SPIDEVClass::tr = {0,0,0,0,0,8,0,0,0,0};	// 8 bits_per_word, 0 cs_change
+uint32_t SPIDEVClass::speed_temp = SPI_CLOCK_BASE;
+struct spi_ioc_transfer SPIDEVClass::tr = {0,0,0,0,0,8,1,0,0,0};	// 8 bits_per_word, 1 cs_change
 
 SPIDEVClass::SPIDEVClass()
 {
@@ -79,21 +78,15 @@ void SPIDEVClass::end()
 	}
 }
 
-void SPIDEVClass::setBitOrder(uint8_t border)
+void SPIDEVClass::setBitOrder(uint8_t bit_order)
 {
 	pthread_mutex_lock(&spiMutex);
 
 	/*
 	 * bit order
 	 */
-	bit_order = border;
-	int ret = ioctl(fd, SPI_IOC_WR_LSB_FIRST, &bit_order);
-	if (ret == -1) {
-		logError("Can't set SPI bit order.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_LSB_FIRST, &bit_order);
+	int lsb_setting = bit_order;
+	int ret = ioctl(fd, SPI_IOC_WR_LSB_FIRST, &lsb_setting);
 	if (ret == -1) {
 		logError("Can't set SPI bit order.\n");
 		abort();
@@ -109,14 +102,7 @@ void SPIDEVClass::setDataMode(uint8_t data_mode)
 	/*
 	 * spi mode
 	 */
-	mode = data_mode;
-	int ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
-	if (ret == -1) {
-		logError("Can't set SPI mode.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_MODE, &mode);
+	int ret = ioctl(fd, SPI_IOC_WR_MODE, &data_mode);
 	if (ret == -1) {
 		logError("Can't set SPI mode.\n");
 		abort();
@@ -127,10 +113,6 @@ void SPIDEVClass::setDataMode(uint8_t data_mode)
 
 void SPIDEVClass::setClockDivider(uint16_t divider)
 {
-	if (divider == 0) {
-		return;
-	}
-
 	pthread_mutex_lock(&spiMutex);
 
 	/*
@@ -138,12 +120,6 @@ void SPIDEVClass::setClockDivider(uint16_t divider)
 	 */
 	speed = SPI_CLOCK_BASE / divider;
 	int ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-	if (ret == -1) {
-		logError("Can't set SPI max speed hz.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
 	if (ret == -1) {
 		logError("Can't set SPI max speed hz.\n");
 		abort();
@@ -219,63 +195,29 @@ void SPIDEVClass::beginTransaction(SPISettings settings)
 	/*
 	 * spi mode
 	 */
-	if (settings.dmode != mode) {
-		mode = settings.dmode;
-
-		ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
-		if (ret == -1) {
-			logError("Can't set spi mode.\n");
-			abort();
-		}
-
-		ret = ioctl(fd, SPI_IOC_RD_MODE, &mode);
-		if (ret == -1) {
-			logError("Can't set spi mode.\n");
-			abort();
-		}
+	ret = ioctl(fd, SPI_IOC_WR_MODE, &settings.dmode);
+	if (ret == -1) {
+		logError("Can't set spi mode.\n");
+		abort();
 	}
 
-	/*
-	 * speed
-	 */
-	if (settings.clock != speed) {
-		speed = settings.clock;
-
-		ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-		if (ret == -1) {
-			logError("Can't set SPI max speed hz.\n");
-			abort();
-		}
-
-		ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
-		if (ret == -1) {
-			logError("Can't set SPI max speed hz.\n");
-			abort();
-		}
-	}
+	// Save the current speed
+	speed_temp = speed;
+	speed = settings.clock;
 
 	/*
 	 * bit order
 	 */
-	if (settings.border != bit_order) {
-		bit_order = settings.border;
-
-		ret = ioctl(fd, SPI_IOC_WR_LSB_FIRST, &bit_order);
-		if (ret == -1) {
-			logError("Can't set SPI bit order.\n");
-			abort();
-		}
-
-		ret = ioctl(fd, SPI_IOC_RD_LSB_FIRST, &bit_order);
-		if (ret == -1) {
-			logError("Can't set SPI bit order.\n");
-			abort();
-		}
+	ret = ioctl(fd, SPI_IOC_WR_LSB_FIRST, &settings.border);
+	if (ret == -1) {
+		logError("Can't set bits per word.\n");
+		abort();
 	}
 }
 
 void SPIDEVClass::endTransaction()
 {
+	speed = speed_temp;
 	pthread_mutex_unlock(&spiMutex);
 }
 
@@ -306,13 +248,8 @@ void SPIDEVClass::init()
 	/*
 	 * spi mode
 	 */
+	uint8_t mode = SPI_MODE0;
 	int ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
-	if (ret == -1) {
-		logError("Can't set SPI mode.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_MODE, &mode);
 	if (ret == -1) {
 		logError("Can't set SPI mode.\n");
 		abort();
@@ -321,14 +258,8 @@ void SPIDEVClass::init()
 	/*
 	 * bits per word
 	 */
-	uint8_t bits = 8;	// 8 bits per word
+	uint8_t bits = 0;	// 0 corresponds to 8 bits per word
 	ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
-	if (ret == -1) {
-		logError("Can't set SPI bits per word.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &bits);
 	if (ret == -1) {
 		logError("Can't set SPI bits per word.\n");
 		abort();
@@ -337,13 +268,8 @@ void SPIDEVClass::init()
 	/*
 	 * max speed hz
 	 */
+	speed = SPI_CLOCK_BASE;
 	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-	if (ret == -1) {
-		logError("Can't set SPI max speed hz.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
 	if (ret == -1) {
 		logError("Can't set SPI max speed hz.\n");
 		abort();
@@ -352,13 +278,8 @@ void SPIDEVClass::init()
 	/*
 	 * bit order
 	 */
-	ret = ioctl(fd, SPI_IOC_WR_LSB_FIRST, &bit_order);
-	if (ret == -1) {
-		logError("Can't set SPI bit order.\n");
-		abort();
-	}
-
-	ret = ioctl(fd, SPI_IOC_RD_LSB_FIRST, &bit_order);
+	int lsb_setting = MSBFIRST;
+	ret = ioctl(fd, SPI_IOC_WR_LSB_FIRST, &lsb_setting);
 	if (ret == -1) {
 		logError("Can't set SPI bit order.\n");
 		abort();
