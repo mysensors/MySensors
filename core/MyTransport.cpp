@@ -18,6 +18,7 @@
  */
 
 #include "MyTransport.h"
+#include "MyMultiMessage.h"
 
 // debug
 #if defined(MY_DEBUG_VERBOSE_TRANSPORT)
@@ -825,11 +826,27 @@ void transportProcessMessage(void)
 #endif //defined(MY_OTA_LOG_RECEIVER_FEATURE)
 #if defined(MY_GATEWAY_FEATURE)
 		// Hand over message to controller
-		(void)gatewayTransportSend(_msg);
+		if (_msg.getType() == V_MULTI_MESSAGE) {
+			MyMessage msg2;
+			MyMultiMessage blob(&_msg);
+			while (blob.getNext(msg2)) {
+				(void)gatewayTransportSend(msg2);
+			}
+		} else {
+			(void)gatewayTransportSend(_msg);
+		}
 #endif
 		// Call incoming message callback if available
 		if (receive) {
-			receive(_msg);
+			if (_msg.getType() == V_MULTI_MESSAGE) {
+				MyMessage msg2;
+				MyMultiMessage blob(&_msg);
+				while (blob.getNext(msg2)) {
+					receive(msg2);
+				}
+			} else {
+				receive(_msg);
+			}
 		}
 	} else if (destination == BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("TSF:MSG:BC\n"));	// broadcast msg
