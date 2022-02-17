@@ -440,6 +440,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 #include "core/MyCapabilities.h"
 #include "core/MyMessage.cpp"
+#include "core/MyMultiMessage.cpp"
 #include "core/MySplashScreen.cpp"
 #include "core/MySensorsCore.cpp"
 
