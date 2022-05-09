@@ -1548,29 +1548,64 @@
 //#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
 
 /**
- * @def MY_MQTT_CA_CERT
- * @brief Set a specific CA certificate needed to validate MQTT server against. Use the certificate as a trust anchor, accepting remote certificates signed by it.
+ * @def MY_SSL_CERT_AUTHx
+ * @brief Up to three root Certificates Authorities could be defined to validate the mqtt server' certificate. The most secure.
  *
- * This define is mandatory when you need connect MQTT over SSL/TLS.
+ * This define is mandatory when you need connect MQTT over SSL/TLS. Certificate Authorities.
+ * The best method to validate server certificates. 
+ * Advised to retrieve root Certificate Authorities as they expire less often than server certificates.
+ * With let's encrypt you may need up to three Certificate Authorities
+ *
  * Example: @code
  *
- * const char mqtt_ca_cert[] PROGMEM = R"EOF(
+ * const char cert_isrgrootx1_Authority[] PROGMEM = R"EOF(
+ * ----- BEGIN THE CERTIFICATE -----
+ * XXX ... XXX
+ * ----- FINISH CERTIFICATE -----
+ * )EOF";
+ * 
+ * const char cert_isrgrootx2_Authority[] PROGMEM = R"EOF(
  * ----- BEGIN THE CERTIFICATE -----
  * XXX ... XXX
  * ----- FINISH CERTIFICATE -----
  * )EOF";
  *
- * #define MY_MQTT_CA_CERT mqtt_ca_cert
+ * const char cert_letsEncryptR3_Authority[] PROGMEM = R"EOF(
+ * ----- BEGIN THE CERTIFICATE -----
+ * XXX ... XXX
+ * ----- FINISH CERTIFICATE -----
+ * )EOF";
+ *
+ * #define MY_SSL_CERT_AUTH1 cert_isrgrootx1_Authority
+ * #define MY_SSL_CERT_AUTH1 cert_isrgrootx2_Authority
+ * #define MY_SSL_CERT_AUTH1 cert_letsEncryptR3_Authority
  *
  * @endcode
  */
-//#define MY_MQTT_CA_CERT
+//#define MY_SSL_CERT_AUTH1
 
 /**
- * @def MY_MQTT_CLIENT_CERT
+ * @def MY_SSL_FINGERPRINT
+ * @brief Server certificate validation with its fingerprint
+ *
+ * The finger print to validate the mqtt server certificate. This is less secure and less convenient
+ * than using certificate authorities.
+ * Command (3 lines...) to obtain the certificate finger print:
+ * $>openssl s_client -connect <hostname>:<host port> < /dev/null 2>/dev/null | \
+ *           openssl x509 -fingerprint -noout -in /dev/stdin \
+ *           awk -F= '{print $2}'
+ *
+ * Example: @code
+ * const char mqtt_fingerprint [] PROGMEM = "CA:CE:2B:ED:D3:32:A7:F1:8C:73:9E:9B:B7:D5:75:4A:10:61:E4:05";
+ * @endcode
+ */
+//#define MY_SSL_FINGERPRINT
+
+/**
+ * @def MY_SSL_CERT_CLIENT
  * @brief Set a client certificate to send to a MQTT server that requests one over TLS connection.
  *
- * This define is mandatory when you need connect MQTT over SSL/TLS.
+ * This define is mandatory when you need connect MQTT over SSL/TLS and client certificate is requested.
  * Example: @code
  *
  * const char mqtt_client_cert[] PROGMEM = R"EOF(
@@ -1579,17 +1614,17 @@
  * ----- FINISH CERTIFICATE -----
  * )EOF";
  *
- * #define MY_MQTT_CLIENT_CERT mqtt_client_cert
+ * #define MY_SSL_CERT_CLIENT mqtt_client_cert
  *
  * @endcode
  */
-//#define MY_MQTT_CLIENT_CERT
+//#define MY_SSL_CERT_CLIENT
 
 /**
- * @def MY_MQTT_CLIENT_KEY
- * @brief Set a client private key to send to a MQTT server that requests one over TLS connection.
+ * @def MY_SSL_KEY_CLIENT
+ * @brief Set the client private key generated with the MY_SSL_CERT_CLIENT.
  *
- * This define is mandatory when you need connect MQTT over SSL/TLS.
+ * This define is mandatory when you need connect MQTT over SSL/TLS and client certificate is requested.
  * Example: @code
  *
  * const char mqtt_client_key[] PROGMEM = R"EOF(
@@ -1598,11 +1633,11 @@
  * ----- FINISH THE RSA PRIVATE KEY -----
  * )EOF";
  *
- * #define MY_MQTT_CLIENT_KEY mqtt_client_key
+ * #define MY_SSL_KEY_CLIENT mqtt_client_key
  *
  * @endcode
  */
-//#define MY_MQTT_CLIENT_KEY
+//#define MY_SSL_KEY_CLIENT
 
 /**
  * @def MY_IP_ADDRESS
@@ -2373,9 +2408,12 @@
 #define MY_MQTT_CLIENT_ID
 #define MY_MQTT_PUBLISH_TOPIC_PREFIX
 #define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX
-#define MY_MQTT_CA_CERT
-#define MY_MQTT_CLIENT_CERT
-#define MY_MQTT_CLIENT_KEY
+#define MY_SSL_CERT_AUTH1
+#define MY_SSL_CERT_AUTH2
+#define MY_SSL_CERT_AUTH3
+#define MY_SSL_FINGERPRINT
+#define MY_SSL_CERT_CLIENT
+#define MY_SSL_KEY_CLIENT
 #define MY_SIGNAL_REPORT_ENABLED
 // general
 #define MY_WITH_LEDS_BLINKING_INVERSE
