@@ -119,7 +119,7 @@
  * MQTT_CLIENT configuration
  */
 #define MY_GATEWAY_MQTT_CLIENT
-//** MQTT broker if using URL instead of ip address.
+//** MQTT broker hostname.
 //   should correspond to the CN field in the mqtt server'
 //   certificate.
 #define MY_CONTROLLER_URL_ADDRESS mqtt_host
