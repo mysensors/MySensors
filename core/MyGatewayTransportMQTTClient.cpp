@@ -190,6 +190,11 @@ bool reconnectMQTT(void)
 {
 	GATEWAY_DEBUG(PSTR("GWT:RMQ:CONNECTING...\n"));
 
+#if defined(MY_GATEWAY_ESP8266_SECURE)
+// Date/time are retrieved to be able to validate certificates.
+        setClock();
+#endif
+
 	// Attempt to connect
 	if (_MQTT_client.connect(MY_MQTT_CLIENT_ID, MY_MQTT_USER, MY_MQTT_PASSWORD)) {
 		GATEWAY_DEBUG(PSTR("GWT:RMQ:OK\n"));
@@ -223,39 +228,6 @@ bool gatewayTransportConnect(void)
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"), WiFi.localIP().toString().c_str());
 
-#if defined(MY_GATEWAY_ESP8266_SECURE)
-// Certificate Authorities are stored in the X509 list
-// At least one is needed, but you may need two, or three
-// eg to validate one certificate from  LetsEncrypt two is needed
-#if defined(MY_SSL_CERT_AUTH1)
-        certAuth.append(MY_SSL_CERT_AUTH1);
-#if defined(MY_SSL_CERT_AUTH2)
-        certAuth.append(MY_SSL_CERT_AUTH2);
-#endif
-#if defined(MY_SSL_CERT_AUTH3)
-        certAuth.append(MY_SSL_CERT_AUTH3);
-#endif
-        _MQTT_ethClient.setTrustAnchors(&certAuth);
-#elif defined(MY_SSL_FINGERPRINT) //MY_SSL_CERT_AUTH1
-// Alternatively, the certificate could be validated with its
-// fingerprint, which is less secure
-        _MQTT_ethClient.setFingerprint(MY_SSL_FINGERPRINT);
-#else //MY_SSL_CERT_AUTH1
-// At last, an insecure connexion is accepted. Meaning the
-// server's certificate is not validated.
-        _MQTT_ethClient.setInsecure();
-        GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING WITH INSECURE SETTING...\n"));
-#endif //MY_SSL_CERT_AUTH1
-#if defined(MY_SSL_CERT_CLIENT) && defined(MY_SSL_KEY_CLIENT)
-// The server may required client certificate
-        clientCert.append(MY_SSL_CERT_CLIENT);
-        clientPrivKey.parse(MY_SSL_KEY_CLIENT);
-        _MQTT_ethClient.setClientRSACert(&clientCert, &clientPrivKey);
-#endif
-// Once the secure connexion settings are done, date/time are retrieved
-// to be able to validate certificates.
-        setClock();
-#endif //MY_GATEWAY_ESP8266_SECURE
 #elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
@@ -346,6 +318,37 @@ bool gatewayTransportInit(void)
 #endif /* End of MY_IP_ADDRESS */
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #endif
+
+#if defined(MY_GATEWAY_ESP8266_SECURE)
+// Certificate Authorities are stored in the X509 list
+// At least one is needed, but you may need two, or three
+// eg to validate one certificate from  LetsEncrypt two is needed
+#if defined(MY_SSL_CERT_AUTH1)
+        certAuth.append(MY_SSL_CERT_AUTH1);
+#if defined(MY_SSL_CERT_AUTH2)
+        certAuth.append(MY_SSL_CERT_AUTH2);
+#endif
+#if defined(MY_SSL_CERT_AUTH3)
+        certAuth.append(MY_SSL_CERT_AUTH3);
+#endif
+        _MQTT_ethClient.setTrustAnchors(&certAuth);
+#elif defined(MY_SSL_FINGERPRINT) //MY_SSL_CERT_AUTH1
+// Alternatively, the certificate could be validated with its
+// fingerprint, which is less secure
+        _MQTT_ethClient.setFingerprint(MY_SSL_FINGERPRINT);
+#else //MY_SSL_CERT_AUTH1
+// At last, an insecure connexion is accepted. Meaning the
+// server's certificate is not validated.
+        _MQTT_ethClient.setInsecure();
+        GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING WITH INSECURE SETTING...\n"));
+#endif //MY_SSL_CERT_AUTH1
+#if defined(MY_SSL_CERT_CLIENT) && defined(MY_SSL_KEY_CLIENT)
+// The server may required client certificate
+        clientCert.append(MY_SSL_CERT_CLIENT);
+        clientPrivKey.parse(MY_SSL_KEY_CLIENT);
+        _MQTT_ethClient.setClientRSACert(&clientCert, &clientPrivKey);
+#endif
+#endif //MY_GATEWAY_ESP8266_SECURE
 
 	gatewayTransportConnect();
 
