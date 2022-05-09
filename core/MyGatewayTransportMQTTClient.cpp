@@ -17,6 +17,29 @@
 * version 2 as published by the Free Software Foundation.
 */
 
+/*
+ * Modified by Eric Grammatico <eric@grammatico.me>
+ *
+ * Added support to secured connexion to mqtt server thanks to WiFiClientSecure class.
+ * Please see comments in code. You can look for WiFiClientSecure, MY_GATEWAY_ESP8266_SECURE, 
+ * MY_SSL_CERT, MY_SSL_FINGERPRINT and MY_SSL_CERT_CLIENT in the code below to see what has 
+ * changed. No new method, no new class to be used by my_sensors. 
+ *
+ * The following constants have to be defined from the gateway code:
+ * MY_GATEWAY_ESP8266_SECURE    in place of MY_GATEWAY_ESP8266 to go to secure connexions.
+ * MY_SSL_CERT_AUTHx            Up to three root Certificates Authorities could be defined
+ *                              to validate the mqtt server' certificate. The most secure.
+ * MY_SSL_FINGERPRINT           Alternatively, the mqtt server' certificate finger print
+ *                              could be used. Less secure and less convenient as you'll 
+ *                              have to update the fingerprint each time the mqtt server'
+ *                              certificate is updated
+ *                              If neither MY_SSL_CERT_AUTH1 nor MY_SSL_FINGERPRINT are
+ *                              defined, insecure connexion will be established. The mqtt
+ *                              server' certificate will not be validated.
+ * MY_SSL_CERT_CLIENT           The mqtt server may require client certificate for 
+ * MY_SSL_KEY_CLIENT            authentication.
+ *
+ */
 
 // Topic structure: MY_MQTT_PUBLISH_TOPIC_PREFIX/NODE-ID/SENSOR-ID/CMD-TYPE/ACK-FLAG/SUB-TYPE
 
@@ -55,7 +78,7 @@
 #define MY_MQTT_PASSWORD NULL
 #endif
 
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
 #if !defined(MY_WIFI_SSID)
 #error ESP8266/ESP32 MQTT gateway: MY_WIFI_SSID not defined!
 #endif
@@ -69,7 +92,7 @@
 #define _MQTT_clientIp IPAddress(MY_IP_ADDRESS)
 #if defined(MY_IP_GATEWAY_ADDRESS)
 #define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
-#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
 // Assume the gateway will be the machine on the same network as the local IP
 // but with last octet being '1'
 #define _gatewayIp IPAddress(_MQTT_clientIp[0], _MQTT_clientIp[1], _MQTT_clientIp[2], 1)
@@ -77,20 +100,41 @@
 
 #if defined(MY_IP_SUBNET_ADDRESS)
 #define _subnetIp IPAddress(MY_IP_SUBNET_ADDRESS)
-#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
 #define _subnetIp IPAddress(255, 255, 255, 0)
 #endif /* End of MY_IP_SUBNET_ADDRESS */
 #endif /* End of MY_IP_ADDRESS */
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-#if defined(MY_MQTT_CA_CERT) && defined(MY_MQTT_CLIENT_CERT) && defined(MY_MQTT_CLIENT_KEY)
-#define EthernetClient WiFiClientSecure
-BearSSL::X509List ca_cert(MY_MQTT_CA_CERT);
-BearSSL::X509List client_cert(MY_MQTT_CLIENT_CERT);
-BearSSL::PrivateKey client_key(MY_MQTT_CLIENT_KEY);
-#else
 #define EthernetClient WiFiClient
-#endif /* End of MY_MQTT_CA_CERT && MY_MQTT_CLIENT_CERT && MY_MQTT_CLIENT_KEY */
+#elif defined(MY_GATEWAY_ESP8266_SECURE)
+#define EthernetClient WiFiClientSecure
+#if defined(MY_SSL_CERT_AUTH1)
+BearSSL::X509List certAuth; //List to store Certificat Authorities
+#endif
+#if defined(MY_SSL_CERT_CLIENT) && defined(MY_SSL_KEY_CLIENT)
+BearSSL::X509List clientCert; //Client public key
+BearSSL::PrivateKey clientPrivKey; //Client private key
+#endif
+// Set time via NTP, as required for x.509 validation
+// BearSSL checks NotBefore and NotAfter dates in certificates
+// Thus an approximated date/time is needed.
+void setClock() {
+  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
+  while (now < 8 * 3600 * 2) {
+    delay(500);
+    Serial.print(".");
+    now = time(nullptr);
+  }
+  Serial.println("");
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  Serial.print("Current time: ");
+  Serial.print(asctime(&timeinfo));
+}
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
 #else
@@ -161,18 +205,57 @@ bool reconnectMQTT(void)
 	}
 	delay(1000);
 	GATEWAY_DEBUG(PSTR("!GWT:RMQ:FAIL\n"));
+#if defined(MY_GATEWAY_ESP8266_SECURE)
+        char sslErr[256];
+        int errID = _MQTT_ethClient.getLastSSLError(sslErr, sizeof(sslErr));
+        GATEWAY_DEBUG(PSTR("!GWT:RMQ:(%d) %s\n"), errID, sslErr);
+#endif	
 	return false;
 }
 
 bool gatewayTransportConnect(void)
 {
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
 	if (WiFi.status() != WL_CONNECTED) {
 		GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING...\n"));
 		delay(1000);
 		return false;
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TPC:IP=%s\n"), WiFi.localIP().toString().c_str());
+
+#if defined(MY_GATEWAY_ESP8266_SECURE)
+// Certificate Authorities are stored in the X509 list
+// At least one is needed, but you may need two, or three
+// eg to validate one certificate from  LetsEncrypt two is needed
+#if defined(MY_SSL_CERT_AUTH1)
+        certAuth.append(MY_SSL_CERT_AUTH1);
+#if defined(MY_SSL_CERT_AUTH2)
+        certAuth.append(MY_SSL_CERT_AUTH2);
+#endif
+#if defined(MY_SSL_CERT_AUTH3)
+        certAuth.append(MY_SSL_CERT_AUTH3);
+#endif
+        _MQTT_ethClient.setTrustAnchors(&certAuth);
+#elif defined(MY_SSL_FINGERPRINT) //MY_SSL_CERT_AUTH1
+// Alternatively, the certificate could be validated with its
+// fingerprint, which is less secure
+        _MQTT_ethClient.setFingerprint(MY_SSL_FINGERPRINT);
+#else //MY_SSL_CERT_AUTH1
+// At last, an insecure connexion is accepted. Meaning the
+// server's certificate is not validated.
+        _MQTT_ethClient.setInsecure();
+        GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING WITH INSECURE SETTING...\n"));
+#endif //MY_SSL_CERT_AUTH1
+#if defined(MY_SSL_CERT_CLIENT) && defined(MY_SSL_KEY_CLIENT)
+// The server may required client certificate
+        clientCert.append(MY_SSL_CERT_CLIENT);
+        clientPrivKey.parse(MY_SSL_KEY_CLIENT);
+        _MQTT_ethClient.setClientRSACert(&clientCert, &clientPrivKey);
+#endif
+// Once the secure connexion settings are done, date/time are retrieved
+// to be able to validate certificates.
+        setClock();
+#endif //MY_GATEWAY_ESP8266_SECURE
 #elif defined(MY_GATEWAY_LINUX)
 #if defined(MY_IP_ADDRESS)
 	_MQTT_ethClient.bind(_MQTT_clientIp);
@@ -250,10 +333,10 @@ bool gatewayTransportInit(void)
 
 	_MQTT_client.setCallback(incomingMQTT);
 
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
 	// Turn off access point
 	WiFi.mode(WIFI_STA);
-#if defined(MY_GATEWAY_ESP8266)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE)
 	WiFi.hostname(MY_HOSTNAME);
 #elif defined(MY_GATEWAY_ESP32)
 	WiFi.setHostname(MY_HOSTNAME);
@@ -263,11 +346,6 @@ bool gatewayTransportInit(void)
 #endif /* End of MY_IP_ADDRESS */
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 #endif
-
-#if defined(MY_MQTT_CA_CERT) && defined(MY_MQTT_CLIENT_CERT) && defined(MY_MQTT_CLIENT_KEY)
-	_MQTT_ethClient.setTrustAnchors(&ca_cert);
-	_MQTT_ethClient.setClientRSACert(&client_cert, &client_key);
-#endif /* End of MY_MQTT_CA_CERT && MY_MQTT_CLIENT_CERT && MY_MQTT_CLIENT_KEY */
 
 	gatewayTransportConnect();
 
@@ -280,7 +358,7 @@ bool gatewayTransportAvailable(void)
 	if (_MQTT_connecting) {
 		return false;
 	}
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
 	if (WiFi.status() != WL_CONNECTED) {
 #if defined(MY_GATEWAY_ESP32)
 		(void)gatewayTransportInit();
