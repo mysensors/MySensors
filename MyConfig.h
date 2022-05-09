@@ -1577,8 +1577,8 @@
  * )EOF";
  *
  * #define MY_SSL_CERT_AUTH1 cert_isrgrootx1_Authority
- * #define MY_SSL_CERT_AUTH1 cert_isrgrootx2_Authority
- * #define MY_SSL_CERT_AUTH1 cert_letsEncryptR3_Authority
+ * #define MY_SSL_CERT_AUTH2 cert_isrgrootx2_Authority
+ * #define MY_SSL_CERT_AUTH3 cert_letsEncryptR3_Authority
  *
  * @endcode
  */
