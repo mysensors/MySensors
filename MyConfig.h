@@ -1548,7 +1548,7 @@
 //#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
 
 /**
- * @def MY_MQTT_CA_CERTx
+ * @def MY_MQTT_CA_CERT1
  * @brief Up to three root Certificates Authorities could be defined to validate the mqtt server' certificate. The most secure.
  *
  * This define is mandatory when you need connect MQTT over SSL/TLS. Certificate Authorities.
@@ -1583,7 +1583,17 @@
  * @endcode
  */
 //#define MY_MQTT_CA_CERT1
+
+/**
+ * @def MY_MQTT_CA_CERT2
+ * @brief Up to three root Certificates Authorities could be defined to validate the mqtt serv.
+*/
 //#define MY_MQTT_CA_CERT2
+
+/**
+ * @def MY_MQTT_CA_CERT3
+ * @brief Up to three root Certificates Authorities could be defined to validate the mqtt serv.
+*/
 //#define MY_MQTT_CA_CERT3
 
 
