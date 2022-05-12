@@ -2,7 +2,7 @@
 
 // The mqqt host and port
 const char* mqtt_host = "<mqtt_host>";
-const uint16_t mqtt_port = <mqtt_port>;
+const uint16_t mqtt_port = 8883; //Should be your mqtt broker' port
 
 //The finger print to validate the mqtt server certificate. This is less secure and less convenient
 // than using certificate authorities
@@ -10,7 +10,8 @@ const uint16_t mqtt_port = <mqtt_port>;
 // $>openssl s_client -connect <hostname>:<host port> < /dev/null 2>/dev/null | \
 //           openssl x509 -fingerprint -noout -in /dev/stdin \
 //           awk -F= '{print $2}'
-const char mqtt_fingerprint [] PROGMEM = "CA:EE:2B:ED:D3:23:A7:F1:8C:73:9E:9B:B7:D5:75:41:10:61:E4:05";
+const char mqtt_fingerprint [] PROGMEM =
+    "CA:EE:2B:ED:D3:23:A7:F1:8C:73:9E:9B:B7:D5:75:41:10:61:E4:05";
 
 //Certificate Authorities. The best method to validate server certificates
 // Advised to retrieve root Certificate Authorities as they expire less often

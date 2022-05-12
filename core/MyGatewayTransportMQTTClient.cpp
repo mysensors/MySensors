@@ -21,23 +21,23 @@
  * Modified by Eric Grammatico <eric@grammatico.me>
  *
  * Added support to secured connexion to mqtt server thanks to WiFiClientSecure class.
- * Please see comments in code. You can look for WiFiClientSecure, MY_GATEWAY_ESP8266_SECURE, 
- * MY_SSL_CERT, MY_SSL_FINGERPRINT and MY_SSL_CERT_CLIENT in the code below to see what has 
- * changed. No new method, no new class to be used by my_sensors. 
+ * Please see comments in code. You can look for WiFiClientSecure, MY_GATEWAY_ESP8266_SECURE,
+ * MY_MQTT_CA_CERT, MY_MQTT_FINGERPRINT and MY_MQTT_CLIENT_CERT in the code below to see what has
+ * changed. No new method, no new class to be used by my_sensors.
  *
  * The following constants have to be defined from the gateway code:
  * MY_GATEWAY_ESP8266_SECURE    in place of MY_GATEWAY_ESP8266 to go to secure connexions.
- * MY_SSL_CERT_AUTHx            Up to three root Certificates Authorities could be defined
+ * MY_MQTT_CA_CERTx            Up to three root Certificates Authorities could be defined
  *                              to validate the mqtt server' certificate. The most secure.
- * MY_SSL_FINGERPRINT           Alternatively, the mqtt server' certificate finger print
- *                              could be used. Less secure and less convenient as you'll 
+ * MY_MQTT_FINGERPRINT           Alternatively, the mqtt server' certificate finger print
+ *                              could be used. Less secure and less convenient as you'll
  *                              have to update the fingerprint each time the mqtt server'
  *                              certificate is updated
- *                              If neither MY_SSL_CERT_AUTH1 nor MY_SSL_FINGERPRINT are
+ *                              If neither MY_MQTT_CA_CERT1 nor MY_MQTT_FINGERPRINT are
  *                              defined, insecure connexion will be established. The mqtt
  *                              server' certificate will not be validated.
- * MY_SSL_CERT_CLIENT           The mqtt server may require client certificate for 
- * MY_SSL_KEY_CLIENT            authentication.
+ * MY_MQTT_CLIENT_CERT           The mqtt server may require client certificate for
+ * MY_MQTT_CLIENT_KEY            authentication.
  *
  */
 
@@ -68,6 +68,12 @@
 #warning MY_ESP8266_HOSTNAME is deprecated, use MY_HOSTNAME instead!
 #define MY_HOSTNAME MY_ESP8266_HOSTNAME
 #undef MY_ESP8266_HOSTNAME // cleanup
+#endif
+
+#ifdef MY_MQTT_CA_CERT
+#warning MY_MQTT_CA_CERT is deprecated, please use MY_MQTT_CA_CERT1 instead!
+#define MY_MQTT_CA_CERT1 MY_MQTT_CA_CERT
+//#undef MY_MQTT_CA_CERT // cleanup
 #endif
 
 #ifndef MY_MQTT_USER
@@ -109,31 +115,32 @@
 #define EthernetClient WiFiClient
 #elif defined(MY_GATEWAY_ESP8266_SECURE)
 #define EthernetClient WiFiClientSecure
-#if defined(MY_SSL_CERT_AUTH1)
+#if defined(MY_MQTT_CA_CERT1)
 BearSSL::X509List certAuth; //List to store Certificat Authorities
 #endif
-#if defined(MY_SSL_CERT_CLIENT) && defined(MY_SSL_KEY_CLIENT)
+#if defined(MY_MQTT_CLIENT_CERT) && defined(MY_MQTT_CLIENT_KEY)
 BearSSL::X509List clientCert; //Client public key
 BearSSL::PrivateKey clientPrivKey; //Client private key
 #endif
 // Set time via NTP, as required for x.509 validation
 // BearSSL checks NotBefore and NotAfter dates in certificates
 // Thus an approximated date/time is needed.
-void setClock() {
-  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+void setClock()
+{
+	configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
-  Serial.print("Waiting for NTP time sync: ");
-  time_t now = time(nullptr);
-  while (now < 8 * 3600 * 2) {
-    delay(500);
-    Serial.print(".");
-    now = time(nullptr);
-  }
-  Serial.println("");
-  struct tm timeinfo;
-  gmtime_r(&now, &timeinfo);
-  Serial.print("Current time: ");
-  Serial.print(asctime(&timeinfo));
+	Serial.print("Waiting for NTP time sync: ");
+	time_t now = time(nullptr);
+	while (now < 8 * 3600 * 2) {
+		delay(500);
+		Serial.print(".");
+		now = time(nullptr);
+	}
+	Serial.println("");
+	struct tm timeinfo;
+	gmtime_r(&now, &timeinfo);
+	Serial.print("Current time: ");
+	Serial.print(asctime(&timeinfo));
 }
 #elif defined(MY_GATEWAY_LINUX)
 // Nothing to do here
@@ -191,8 +198,8 @@ bool reconnectMQTT(void)
 	GATEWAY_DEBUG(PSTR("GWT:RMQ:CONNECTING...\n"));
 
 #if defined(MY_GATEWAY_ESP8266_SECURE)
-// Date/time are retrieved to be able to validate certificates.
-        setClock();
+	// Date/time are retrieved to be able to validate certificates.
+	setClock();
 #endif
 
 	// Attempt to connect
@@ -211,10 +218,10 @@ bool reconnectMQTT(void)
 	delay(1000);
 	GATEWAY_DEBUG(PSTR("!GWT:RMQ:FAIL\n"));
 #if defined(MY_GATEWAY_ESP8266_SECURE)
-        char sslErr[256];
-        int errID = _MQTT_ethClient.getLastSSLError(sslErr, sizeof(sslErr));
-        GATEWAY_DEBUG(PSTR("!GWT:RMQ:(%d) %s\n"), errID, sslErr);
-#endif	
+	char sslErr[256];
+	int errID = _MQTT_ethClient.getLastSSLError(sslErr, sizeof(sslErr));
+	GATEWAY_DEBUG(PSTR("!GWT:RMQ:(%d) %s\n"), errID, sslErr);
+#endif
 	return false;
 }
 
@@ -320,33 +327,33 @@ bool gatewayTransportInit(void)
 #endif
 
 #if defined(MY_GATEWAY_ESP8266_SECURE)
-// Certificate Authorities are stored in the X509 list
-// At least one is needed, but you may need two, or three
-// eg to validate one certificate from  LetsEncrypt two is needed
-#if defined(MY_SSL_CERT_AUTH1)
-        certAuth.append(MY_SSL_CERT_AUTH1);
-#if defined(MY_SSL_CERT_AUTH2)
-        certAuth.append(MY_SSL_CERT_AUTH2);
+	// Certificate Authorities are stored in the X509 list
+	// At least one is needed, but you may need two, or three
+	// eg to validate one certificate from  LetsEncrypt two is needed
+#if defined(MY_MQTT_CA_CERT1)
+	certAuth.append(MY_MQTT_CA_CERT1);
+#if defined(MY_MQTT_CA_CERT2)
+	certAuth.append(MY_MQTT_CA_CERT2);
 #endif
-#if defined(MY_SSL_CERT_AUTH3)
-        certAuth.append(MY_SSL_CERT_AUTH3);
+#if defined(MY_MQTT_CA_CERT3)
+	certAuth.append(MY_MQTT_CA_CERT3);
 #endif
-        _MQTT_ethClient.setTrustAnchors(&certAuth);
-#elif defined(MY_SSL_FINGERPRINT) //MY_SSL_CERT_AUTH1
-// Alternatively, the certificate could be validated with its
-// fingerprint, which is less secure
-        _MQTT_ethClient.setFingerprint(MY_SSL_FINGERPRINT);
-#else //MY_SSL_CERT_AUTH1
-// At last, an insecure connexion is accepted. Meaning the
-// server's certificate is not validated.
-        _MQTT_ethClient.setInsecure();
-        GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING WITH INSECURE SETTING...\n"));
-#endif //MY_SSL_CERT_AUTH1
-#if defined(MY_SSL_CERT_CLIENT) && defined(MY_SSL_KEY_CLIENT)
-// The server may required client certificate
-        clientCert.append(MY_SSL_CERT_CLIENT);
-        clientPrivKey.parse(MY_SSL_KEY_CLIENT);
-        _MQTT_ethClient.setClientRSACert(&clientCert, &clientPrivKey);
+	_MQTT_ethClient.setTrustAnchors(&certAuth);
+#elif defined(MY_MQTT_FINGERPRINT) //MY_MQTT_CA_CERT1
+	// Alternatively, the certificate could be validated with its
+	// fingerprint, which is less secure
+	_MQTT_ethClient.setFingerprint(MY_MQTT_FINGERPRINT);
+#else //MY_MQTT_CA_CERT1
+	// At last, an insecure connexion is accepted. Meaning the
+	// server's certificate is not validated.
+	_MQTT_ethClient.setInsecure();
+	GATEWAY_DEBUG(PSTR("GWT:TPC:CONNECTING WITH INSECURE SETTING...\n"));
+#endif //MY_MQTT_CA_CERT1
+#if defined(MY_MQTT_CLIENT_CERT) && defined(MY_MQTT_CLIENT_KEY)
+	// The server may required client certificate
+	clientCert.append(MY_MQTT_CLIENT_CERT);
+	clientPrivKey.parse(MY_MQTT_CLIENT_KEY);
+	_MQTT_ethClient.setClientRSACert(&clientCert, &clientPrivKey);
 #endif
 #endif //MY_GATEWAY_ESP8266_SECURE
 
