@@ -13,6 +13,9 @@ const uint16_t mqtt_port = 8883; //Should be your mqtt broker' port
 const char mqtt_fingerprint [] PROGMEM =
     "CA:EE:2B:ED:D3:23:A7:F1:8C:73:9E:9B:B7:D5:75:41:10:61:E4:05";
 
+/// @cond RAW_LITERALS
+// Doxygen doesn't seem to like raw literals
+
 //Certificate Authorities. The best method to validate server certificates
 // Advised to retrieve root Certificate Authorities as they expire less often
 // than server certificates. Here after letsencrypt Certificate Authorities are listed.
@@ -55,6 +58,7 @@ mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
 emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )CERT";
+
 
 // Root Certificate Authorities ISRG Root X2
 // https://letsencrypt.org/certs/isrg-root-x2.pem
@@ -132,3 +136,5 @@ const char key_client [] PROGMEM = R"CERT(
 )CERT";
 // end of certificate chain
 ////////////////////////////////////////////////////////////
+
+/// @endcond

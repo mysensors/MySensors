@@ -1604,9 +1604,11 @@
  * The finger print to validate the mqtt server certificate. This is less secure and less convenient
  * than using certificate authorities.
  * Command (3 lines...) to obtain the certificate finger print:
+ * @code
  * $>openssl s_client -connect <hostname>:<host port> < /dev/null 2>/dev/null | \
  *           openssl x509 -fingerprint -noout -in /dev/stdin \
  *           awk -F= '{print $2}'
+ * @endcode
  *
  * Example: @code
  * const char mqtt_fingerprint [] PROGMEM = "CA:CE:2B:MD:D3:32:A3:F1:8C:73:9E:1B:B7:D5:75:4A:10:61:E4:05";
