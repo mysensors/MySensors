@@ -1426,6 +1426,8 @@
  * @brief Define this for Ethernet GW based on the ENC28J60 module.
  * @def MY_GATEWAY_ESP8266
  * @brief Define this for Ethernet GW based on the ESP8266.
+ * @def MY_GATEWAY_ESP8266_SECURE
+ * @brief Define this for Ethernet GW based on the ESP8266 with TLS.
  * @def MY_GATEWAY_ESP32
  * @brief Define this for Ethernet GW based on the ESP32.
  * @def MY_GATEWAY_LINUX
