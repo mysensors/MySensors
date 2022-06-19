@@ -152,7 +152,7 @@ bool reconnectMQTT(void)
 		// Send presentation of locally attached sensors (and node if applicable)
 		presentNode();
 		// Once connected, publish subscribe
-		char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+")];
+		char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+") + 1];
 		(void)strncpy(inTopic, MY_MQTT_SUBSCRIBE_TOPIC_PREFIX, strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1);
 		(void)strcat(inTopic, "/+/+/+/+/+");
 		_MQTT_client.subscribe(inTopic);
