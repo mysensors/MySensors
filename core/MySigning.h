@@ -115,7 +115,7 @@
  * ...
  * @endcode
  * For the software backed signing backend on a board that does not provide a hardware based random
- * generator unit, an unconnected analog pin is required in order to set a random seed for the 
+ * generator unit, an unconnected analog pin is required in order to set a random seed for the
  * pseudo-random generator.
  * It is important that this pin is floating, or the output of the pseudo-random generator will be
  * predictable, and thus compromise the signatures. The setting is defined using
@@ -506,7 +506,7 @@
  * This needs to be addressed as well, and one way of doing this is to have Bob keep track of time
  * between a transmitted nonce and a signed message to verify. If Bob is asked for a nonce, Bob
  * knows that a signed message is going to arrive “soon”. Bob can then check that the signed
- * message arrives within a predefined timeframe. If the message was sent after a delay, Bob has thrown away the 
+ * message arrives within a predefined timeframe. If the message was sent after a delay, Bob has thrown away the
  * generated nonce thus making it impossible to verify the message.
  *
  * The flow can be described like this:
@@ -872,7 +872,7 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * the same node, only the nonce from a node that is the destination of the current message signing session will be
  * accepted. Any other nonces will be dropped. This should not happen as no node should send a nonce unless asked to,
  * and a node will only ask for a nonce to one destination for every signing session.<br>
- * If you see this message, please post the debugging details (with a description of your setup) on the MySensors 
+ * If you see this message, please post the debugging details (with a description of your setup) on the MySensors
  * forum so it can be investigated further.
  *
  * @subsection MySigningTroubleshootingSymptomNotSigned Message is not signed, but it should have been
