@@ -2,6 +2,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 MyMessage	KEYWORD1
+MyMultiMessage	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
