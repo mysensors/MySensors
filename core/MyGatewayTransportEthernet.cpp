@@ -58,7 +58,11 @@ extern MyMessage _msgTmp;
 #endif
 
 #if defined(MY_IP_ADDRESS)
+#if defined(MY_GATEWAY_BRIDGE)
+#warning MY_IP_ADDRESS not used when Brigde gateway is configured, define IP Address in OpenWrt settings instead!
+#else
 #define _ethernetGatewayIP IPAddress(MY_IP_ADDRESS)
+#endif
 #if defined(MY_IP_GATEWAY_ADDRESS)
 #define _gatewayIp IPAddress(MY_IP_GATEWAY_ADDRESS)
 #elif defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
@@ -95,12 +99,23 @@ typedef struct {
 #define EthernetUDP WiFiUDP
 #endif
 
+#if defined(MY_GATEWAY_BRIDGE)
+#define EthernetServer BridgeServer
+#define EthernetClient BridgeClient
+#define EthernetUDP BridgeUDP
+#endif
+
 #if defined(MY_GATEWAY_CLIENT_MODE)
+#if defined (MY_GATEWAY_BRIDGE)
+#error Client mode is not supported when MY_GATEWAY_BRIDGE is used!
+#endif
 #if defined(MY_USE_UDP)
 EthernetUDP _ethernetServer;
 #endif /* End of MY_USE_UDP */
 #elif defined(MY_GATEWAY_LINUX) /* Elif part of MY_GATEWAY_CLIENT_MODE */
 EthernetServer _ethernetServer(_ethernetGatewayPort, MY_GATEWAY_MAX_CLIENTS);
+#elif defined(MY_GATEWAY_BRIDGE) /* Elif part of MY_GATEWAY_BRIDGE */
+EthernetServer _ethernetServer = EthernetServer(_ethernetGatewayPort);
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 EthernetServer _ethernetServer(_ethernetGatewayPort);
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
@@ -116,6 +131,9 @@ static EthernetClient client = EthernetClient();
 static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+#elif defined (MY_GATEWAY_BRIDGE)
+static EthernetClient client = EthernetClient();
+static inputBuffer inputString;
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 static EthernetClient client = EthernetClient();
 static inputBuffer inputString;
@@ -179,6 +197,9 @@ bool gatewayTransportInit(void)
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
+#elif defined(MY_GATEWAY_BRIDGE)
+	GATEWAY_DEBUG(PSTR("GWT:TIN:BRIDGE BEGIN...\n"));
+	Bridge.begin();
 #else
 #if defined(MY_IP_GATEWAY_ADDRESS) && defined(MY_IP_SUBNET_ADDRESS)
 	// DNS server set to gateway ip
@@ -200,7 +221,7 @@ bool gatewayTransportInit(void)
 	delay(1000);
 #endif /* MY_GATEWAY_ESP8266 / MY_GATEWAY_ESP32 */
 
-#if defined(MY_GATEWAY_CLIENT_MODE)
+#if defined(MY_GATEWAY_CLIENT_MODE) // LF# for Bridge?
 #if defined(MY_USE_UDP)
 	_ethernetServer.begin(_ethernetGatewayPort);
 #else /* Else part of MY_USE_UDP */
@@ -227,6 +248,9 @@ bool gatewayTransportInit(void)
 	_ethernetServer.begin(_ethernetGatewayIP);
 #else
 	// we have to use pointers due to the constructor of EthernetServer
+#if defined (MY_GATEWAY_BRIDGE)
+	_ethernetServer.noListenOnLocalhost();
+#endif
 	_ethernetServer.begin();
 #endif /* End of MY_GATEWAY_LINUX && MY_IP_ADDRESS */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
@@ -236,11 +260,12 @@ bool gatewayTransportInit(void)
 }
 
 // cppcheck-suppress constParameter
-bool gatewayTransportSend(MyMessage &message)
+bool gatewayTransportSend(MyMessage& message)
 {
 	int nbytes = 0;
-	char *_ethernetMessage = protocolMyMessage2Serial(message);
-
+	char* _ethernetMessage = protocolMyMessage2Serial(message);
+	Serial.print(_ethernetMessage);
+	Serial.print("\n");
 	setIndication(INDICATION_GW_TX);
 
 	_w5100_spi_en(true);
@@ -251,7 +276,7 @@ bool gatewayTransportSend(MyMessage &message)
 #else
 	_ethernetServer.beginPacket(_ethernetControllerIP, MY_PORT);
 #endif /* End of MY_CONTROLLER_URL_ADDRESS */
-	_ethernetServer.write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
+	_ethernetServer.write((uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 	// returns 1 if the packet was sent successfully
 	nbytes = _ethernetServer.endPacket();
 #else /* Else part of MY_USE_UDP */
@@ -268,21 +293,26 @@ bool gatewayTransportSend(MyMessage &message)
 			_w5100_spi_en(true);
 			presentNode();
 		} else {
-			// connecting to the server failed!
-			GATEWAY_DEBUG(PSTR("!GWT:TPS:ETH FAIL\n"));
-			_w5100_spi_en(false);
-			return false;
+				// connecting to the server failed!
+				GATEWAY_DEBUG(PSTR("!GWT:TPS:ETH FAIL\n"));
+				_w5100_spi_en(false);
+				return false;
+			}
 		}
-	}
-	nbytes = client.write((const uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
+	nbytes = client.write((const uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 	// Send message to connected clients
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
-			nbytes += clients[i].write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
+			nbytes += clients[i].write((uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 		}
+	}
+#elif defined(MY_GATEWAY_BRIDGE)
+	if (client && client.connected())
+	{
+		nbytes += client.write((uint8_t*)_ethernetMessage, strlen(_ethernetMessage));
 	}
 #else /* Else part of MY_GATEWAY_ESPxx*/
 	nbytes = _ethernetServer.write(_ethernetMessage);
@@ -444,9 +474,14 @@ bool gatewayTransportAvailable(void)
 			return true;
 		}
 	}
-#else /* Else part of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
+#else /* Else part of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX || MY_GATEWAY_BRIDGE */
 	// W5100/ENC module does not have hasClient-method. We can only serve one client at the time.
+#if defined (MY_GATEWAY_BRIDGE)
+	//Serial.print("gatewayTransportAvailable MY_GATEWAY_BRIDGE accept\n");
+	EthernetClient newclient = _ethernetServer.accept();
+#else
 	EthernetClient newclient = _ethernetServer.available();
+#endif
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
 		if (client != newclient) {
@@ -459,6 +494,7 @@ bool gatewayTransportAvailable(void)
 			presentNode();
 		}
 	}
+
 	if (client) {
 		if (!client.connected()) {
 			GATEWAY_DEBUG(PSTR("!GWT:TSA:ETH FAIL\n"));

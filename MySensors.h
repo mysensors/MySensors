@@ -230,7 +230,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_REPEATER_FEATURE
 #endif
 
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_BRIDGE)
 // GATEWAY - ESP8266 / ESP32
 #include "core/MyGatewayTransportEthernet.cpp"
 #elif defined(MY_GATEWAY_LINUX)
