@@ -412,8 +412,9 @@ struct PJONTools {
 
 	static void parse_header(const uint8_t *packet, PJON_Packet_Info &info)
 	{
-		memset(&info, 0, sizeof info);
 		uint8_t index = 0;
+		info = PJON_Packet_Info{};
+
 		info.rx.id = packet[index++];
 		bool extended_length = packet[index] & PJON_EXT_LEN_BIT;
 		info.header = packet[index++];
