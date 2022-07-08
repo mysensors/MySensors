@@ -43,7 +43,11 @@
 * @brief ESP8266/ESP32 IRQ handlers need to be stored in IRAM
 */
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP8266) && ARDUINO_ESP8266_MAJOR == 3
+#define IRQ_HANDLER_ATTR IRAM_ATTR
+#else
 #define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
+#endif
 #else
 #define IRQ_HANDLER_ATTR
 #endif

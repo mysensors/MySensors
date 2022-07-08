@@ -68,12 +68,6 @@ MyMessage wattMsg(CHILD_ID, V_WATT);
 MyMessage kWhMsg(CHILD_ID, V_KWH);
 MyMessage pcMsg(CHILD_ID, V_VAR1);
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
-#else
-#define IRQ_HANDLER_ATTR
-#endif
-
 void IRQ_HANDLER_ATTR onPulse()
 {
 	if (!SLEEP_MODE) {
