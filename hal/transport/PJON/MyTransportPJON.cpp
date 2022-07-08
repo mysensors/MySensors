@@ -22,7 +22,10 @@
  */
 
 // Set a higher polling duration if the device is executing long tasks
+
+#ifndef PJON_POLLING_DURATION
 #define PJON_POLLING_DURATION 1000
+#endif
 
 PJONSoftwareBitBang bus;
 
