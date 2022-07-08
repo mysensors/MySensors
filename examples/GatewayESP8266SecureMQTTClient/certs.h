@@ -4,27 +4,31 @@
 const char* mqtt_host = "<mqtt_host>";
 const uint16_t mqtt_port = 8883; //Should be your mqtt broker' port
 
-//The finger print to validate the mqtt server certificate. This is less secure and less convenient
-// than using certificate authorities
-// Command (3 lines...) to obtain the certificate finger print:
-// $>openssl s_client -connect <hostname>:<host port> < /dev/null 2>/dev/null | \
-//           openssl x509 -fingerprint -noout -in /dev/stdin \
-//           awk -F= '{print $2}'
+/*
+*The finger print to validate the mqtt server certificate. This is less secure and less convenient
+* than using certificate authorities
+* Command (3 lines...) to obtain the certificate finger print:
+* $>openssl s_client -connect <hostname>:<host port> < /dev/null 2>/dev/null | \
+*           openssl x509 -fingerprint -noout -in /dev/stdin \
+*           awk -F= '{print $2}'
+*/
 const char mqtt_fingerprint [] PROGMEM =
     "CA:EE:2B:ED:D3:23:A7:F1:8C:73:9E:9B:B7:D5:75:41:10:61:E4:05";
 
 /// @cond RAW_LITERALS
 // Doxygen doesn't seem to like raw literals
 
-//Certificate Authorities. The best method to validate server certificates
-// Advised to retrieve root Certificate Authorities as they expire less often
-// than server certificates. Here after letsencrypt Certificate Authorities are listed.
-// They are available at https://letsencrypt.org/certificates/
-
-// Root Certificate Authorities ISRG Root X1
-// https://letsencrypt.org/certs/isrgrootx1.pem
-// Not Before: Jun  4 11:04:38 2015 GMT
-// Not After : Jun  4 11:04:38 2035 GMT
+/*
+*Certificate Authorities. The best method to validate server certificates
+* Advised to retrieve root Certificate Authorities as they expire less often
+* than server certificates. Here after letsencrypt Certificate Authorities are listed.
+* They are available at https://letsencrypt.org/certificates/
+*
+* Root Certificate Authorities ISRG Root X1
+* https://letsencrypt.org/certs/isrgrootx1.pem
+* Not Before: Jun  4 11:04:38 2015 GMT
+* Not After : Jun  4 11:04:38 2035 GMT
+*/
 const char cert_isrgrootx1_Authority [] PROGMEM = R"CERT(
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
@@ -59,11 +63,12 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )CERT";
 
-
-// Root Certificate Authorities ISRG Root X2
-// https://letsencrypt.org/certs/isrg-root-x2.pem
-// Not Before: Sep  4 00:00:00 2020 GMT
-// Not After : Sep 17 16:00:00 2040 GMT
+/*
+* Root Certificate Authorities ISRG Root X2
+*  https://letsencrypt.org/certs/isrg-root-x2.pem
+*  Not Before: Sep  4 00:00:00 2020 GMT
+*  Not After : Sep 17 16:00:00 2040 GMT
+*/
 const char cert_isrgrootx2_Authority [] PROGMEM = R"CERT(
 -----BEGIN CERTIFICATE-----
 MIICGzCCAaGgAwIBAgIQQdKd0XLq7qeAwSxs6S+HUjAKBggqhkjOPQQDAzBPMQsw
@@ -81,11 +86,13 @@ tL4ndQavEi51mI38AjEAi/V3bNTIZargCyzuFJ0nN6T5U6VR5CmD1/iQMVtCnwr1
 -----END CERTIFICATE-----
 )CERT";
 
-// This one shouldn't be needed....
-// Root Certificate Authorities Let’s Encrypt R3
-// https://letsencrypt.org/certs/lets-encrypt-r3.pem
-// Not Before: Sep  4 00:00:00 2020 GMT
-// Not After : Sep 15 16:00:00 2025 GMT
+/*
+* This one shouldn't be needed....
+*  Root Certificate Authorities Let’s Encrypt R3
+*  https://letsencrypt.org/certs/lets-encrypt-r3.pem
+*  Not Before: Sep  4 00:00:00 2020 GMT
+*  Not After : Sep 15 16:00:00 2025 GMT
+*/
 const char cert_letsEncryptR3_Authority [] PROGMEM = R"CERT(
 -----BEGIN CERTIFICATE-----
 MIIFFjCCAv6gAwIBAgIRAJErCErPDBinU/bWLiWnX1owDQYJKoZIhvcNAQELBQAw
@@ -119,10 +126,12 @@ nLRbwHOoq7hHwg==
 -----END CERTIFICATE-----
 )CERT";
 
-//The mqtt server may require client certificate for authentication.
-// The following are genereted and signed thanks to openssl.
-// The signing certificate is holded by the mqtt server.
-// Please see Client section in https://mosquitto.org/man/mosquitto-tls-7.html
+/*
+*The mqtt server may require client certificate for authentication.
+*  The following are genereted and signed thanks to openssl.
+*  The signing certificate is holded by the mqtt server.
+*  Please see Client section in https://mosquitto.org/man/mosquitto-tls-7.html
+*/
 const char cert_client [] PROGMEM = R"CERT(
 -----BEGIN CERTIFICATE-----
 ... ... ... ... ...
@@ -135,6 +144,5 @@ const char key_client [] PROGMEM = R"CERT(
 -----END RSA PRIVATE KEY-----
 )CERT";
 // end of certificate chain
-////////////////////////////////////////////////////////////
 
 /// @endcond
