@@ -75,12 +75,6 @@ double oldvolume =0;
 uint32_t lastSend =0;
 uint32_t lastPulse =0;
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
-#else
-#define IRQ_HANDLER_ATTR
-#endif
-
 void IRQ_HANDLER_ATTR onPulse()
 {
 	if (!SLEEP_MODE) {

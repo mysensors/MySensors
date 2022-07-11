@@ -18,6 +18,7 @@
  */
 
 #include "MyTransport.h"
+#include "MyMultiMessage.h"
 
 // debug
 #if defined(MY_DEBUG_VERBOSE_TRANSPORT)
@@ -545,15 +546,17 @@ bool transportRouteMessage(MyMessage &message)
 #endif
 		}
 #else
-		if (destination > GATEWAY_ADDRESS && destination < BROADCAST_ADDRESS) {
-			// node2node traffic: assume node is in vincinity. If transmission fails, hand over to parent
+		// not a repeater, all traffic routed via parent or N2N
+		route = _transportConfig.parentNodeId;
+		// Try node2node traffic if destination is not parent and is not a broadcast
+		if (destination != route && destination != BROADCAST_ADDRESS) {
+			// N2N: assume node is in vicinity. If transmission fails, hand over to parent
 			if (transportSendWrite(destination, message)) {
 				TRANSPORT_DEBUG(PSTR("TSF:RTE:N2N OK\n"));
 				return true;
 			}
 			TRANSPORT_DEBUG(PSTR("!TSF:RTE:N2N FAIL\n"));
 		}
-		route = _transportConfig.parentNodeId;	// not a repeater, all traffic routed via parent
 #endif
 	}
 	// send message
@@ -825,11 +828,27 @@ void transportProcessMessage(void)
 #endif //defined(MY_OTA_LOG_RECEIVER_FEATURE)
 #if defined(MY_GATEWAY_FEATURE)
 		// Hand over message to controller
-		(void)gatewayTransportSend(_msg);
+		if (_msg.getType() == V_MULTI_MESSAGE) {
+			MyMessage msg2;
+			MyMultiMessage blob(&_msg);
+			while (blob.getNext(msg2)) {
+				(void)gatewayTransportSend(msg2);
+			}
+		} else {
+			(void)gatewayTransportSend(_msg);
+		}
 #endif
 		// Call incoming message callback if available
 		if (receive) {
-			receive(_msg);
+			if (_msg.getType() == V_MULTI_MESSAGE) {
+				MyMessage msg2;
+				MyMultiMessage blob(&_msg);
+				while (blob.getNext(msg2)) {
+					receive(msg2);
+				}
+			} else {
+				receive(_msg);
+			}
 		}
 	} else if (destination == BROADCAST_ADDRESS) {
 		TRANSPORT_DEBUG(PSTR("TSF:MSG:BC\n"));	// broadcast msg

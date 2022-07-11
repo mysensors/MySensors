@@ -44,15 +44,15 @@
  *
  * If you do want the additional security layer signing provides, you pick the backend of your
  * choice in your sketch. Currently, two compatible backends are supported; @ref MY_SIGNING_ATSHA204
- * (hardware backed) and @ref MY_SIGNING_SOFT (software backed). There also exist a simplified
- * variant (@ref MY_SIGNING_SIMPLE_PASSWD) of the software backend which only require one setting
+ * (hardware backed) and @ref MY_SIGNING_SOFT (software backed). There also exists a simplified
+ * variant (@ref MY_SIGNING_SIMPLE_PASSWD) of the software backend which only requires one setting
  * to activate.
  *
  * If you use hardware backed signing, then connect the device as follows:
  * @image html MySigning/wiring.png
  * @note The pull-up resistor is optional but recommended.
  * @note If you change the default pin (A3) make sure you use a pin that supports input/output
- *       (ex. A6 & A7 on a Pro Mini are input only pins).
+ *       (e.g. A6 & A7 on a Pro Mini are input only pins).
  *
  * To use signing, you need to perform three major steps which are described below.
  *
@@ -65,12 +65,12 @@
  * ...
  * @endcode
  * Make sure to set the define before the inclusion of MySensors.h.
- * It is ok to mix @ref MY_SIGNING_SOFT and @ref MY_SIGNING_ATSHA204 in a network.
+ * It is OK to mix @ref MY_SIGNING_SOFT and @ref MY_SIGNING_ATSHA204 in a network.
  * They are fully compatible. It is however not recommended to use @ref MY_SIGNING_SOFT on nodes
  * that are publicly accessible (more on that later).
  *
  * If you use @ref MY_SIGNING_SOFT or @ref MY_SIGNING_ATSHA204 you also need to decide if the node
- * (or gateway) in question require messages to be signed in addition to the ability to generate
+ * (or gateway) in question requires messages to be signed in addition to the ability of generating
  * signatures for other nodes.
  * This has to be set by at least one of the nodes in a "pair" or nobody will actually start
  * calculating a signature for a message.
@@ -85,17 +85,17 @@
  * If @ref MY_SIGNING_WEAK_SECURITY is not set, any node that has presented itself with
  * signing/whitelisting requirements will be permanently marked as such by the receiver
  * (typically the gateway). The only way then to reset/revert this requirement is to clear the
- * EEPROM at the receiver (or disable @ref MY_SIGNING_REQUEST_SIGNATURES, but the preference will be
+ * EEPROM of the receiver (or disable @ref MY_SIGNING_REQUEST_SIGNATURES, but the preference will be
  * remembered if the request flag is re-enabled before EEPROM is cleared).<br>
  * If you want to have two nodes communicate securely directly with each other, the nodes that
- * require signatures must send a presentation message to all nodes it expect signed messages from
+ * require signatures must send a presentation message to all nodes from which it expects signed messages
  * (only the gateway is informed automatically). See @ref signerPresentation().<br>
  * A node can have three "states" with respect to signing:
  * 1. Node does not support signing in any way (neither @ref MY_SIGNING_ATSHA204,
  * @ref MY_SIGNING_SOFT nor @ref MY_SIGNING_SIMPLE_PASSWD is set)
- * 2. Node does support signing but don't require messages sent to it to be signed (neither
+ * 2. Node does support signing but donesn't require messages sent to it to be signed (neither
  * @ref MY_SIGNING_REQUEST_SIGNATURES nor @ref MY_SIGNING_SIMPLE_PASSWD is set)
- * 3. Node does support signing and require messages sent to it to be signed (@ref
+ * 3. Node does support signing and requires messages sent to it to be signed (@ref
  * MY_SIGNING_SOFT or @ref MY_SIGNING_ATSHA204 together with @ref MY_SIGNING_REQUEST_SIGNATURES or
  * @ref MY_SIGNING_SIMPLE_PASSWD are set)
  *
@@ -114,10 +114,10 @@
  * #include <MySensors.h>
  * ...
  * @endcode
- * For the software backed signing backend, an unconnected analog pin is required on boards that
- * does not provide a hardware based random generator unit to set a random seed for the
+ * For the software backed signing backend on a board that does not provide a hardware based random
+ * generator unit, an unconnected analog pin is required in order to set a random seed for the
  * pseudo-random generator.
- * It is important that the pin is floating, or the output of the pseudo-random generator will be
+ * It is important that this pin is floating, or the output of the pseudo-random generator will be
  * predictable, and thus compromise the signatures. The setting is defined using
  * @ref MY_SIGNING_SOFT_RANDOMSEED_PIN. The same configuration possibilities exist as with the other
  * configuration options.
@@ -130,7 +130,7 @@
  * ...
  * @endcode
  *
- * An example of a node that require signatures is available in @ref SecureActuator.ino.
+ * An example of a node that requires signatures is available in @ref SecureActuator.ino.
  *
  * <b>Thirdly</b>, if you use a signing backend and you don't use @ref MY_SIGNING_SIMPLE_PASSWD, you
  * need to personalize the node.
@@ -138,7 +138,7 @@
  * @anchor personalization If you use the ATSHA204A (@ref MY_SIGNING_ATSHA204), before any signing
  * operations can be done, the device needs to be <i>personalized</i>.
  * This can be a daunting process as it involves irreversibly writing configurations to the device,
- * which cannot be undone. I have however tried to simplify the process as much as possibly by
+ * which cannot be undone. I have however tried to simplify the process as much as possible by
  * creating a helper-sketch specifically for this purpose in @ref SecurityPersonalizer.ino
  * Note that you also need to do personalization for @ref MY_SIGNING_SOFT, but then the values are
  * stored in EEPROM.
@@ -146,7 +146,7 @@
  * To personalize a ATSHA204A do the following procedure:
  * 1. Enable @ref GENERATE_KEYS_ATSHA204A<br>
  *    This will lock the ATSHA204A and generate random keys for HMAC (signing) and %AES (encryption).
- *    Copy the keys generated and replace the corresponding definitions under
+ *    Copy the generated keys and replace the corresponding definitions under
  *    "User defined key data", specifically @ref MY_HMAC_KEY and @ref MY_AES_KEY.
  * 2. Disable @ref GENERATE_KEYS_ATSHA204A and enable @ref PERSONALIZE_ATSHA204A<br>
  *    This will store the HMAC key to the ATSHA204A and the %AES key to EEPROM. It will also write
@@ -157,7 +157,7 @@
  * To personalize for software signing do the following procedure:
  * 1. Enable @ref GENERATE_KEYS_SOFT<br>
  *    This will generate random keys for HMAC (signing) and %AES (encryption).
- *    Copy the keys generated and replace the corresponding definitions under
+ *    Copy the generated keys and replace the corresponding definitions under
  *    "User defined key data", specifically @ref MY_HMAC_KEY and @ref MY_AES_KEY.
  * 2. Disable @ref GENERATE_KEYS_SOFT and enable @ref PERSONALIZE_SOFT<br>
  *    This will store the HMAC key and the %AES key to EEPROM. It will also write
@@ -172,7 +172,7 @@
  * under "Hardware security peripherals" to determine if this is necessary.
  *
  * When you have personalized your first device after step 2 above, you can run the same sketch on
- * all devices in your network that needs to be personalized in a compatible manner. Pick
+ * all devices in your network that need to be personalized in a compatible manner. Pick
  * @ref PERSONALIZE_ATSHA204A or @ref PERSONALIZE_SOFT as needed by the hardware. When the
  * personalization has finished, you just program the sketch you plan to use (with the appropriate
  * signing flags set).
@@ -195,12 +195,12 @@
  * related message, it will fail, and enabling signing will put maximum strain on your RF link as
  * maximum sized packets are transmitted in the network). See @ref MySigningTroubleshootinggrp.
  * * All nodes and gateways in a network maintain a table where the signing preferences of all nodes
- * are stored. This is also stored in EEPROM so if a node or gateway reboots, the other nodes does
+ * are stored. This is also stored in EEPROM so if a node or gateway reboots, the other nodes do
  * not have to retransmit a signing presentation to the node for the node to start expecting signed
  * messages from other nodes.<br>
  * * By default, the signing preferences are not "downgradeable". That is, any node that at any
  * point in time has indicated a signing requirement will not be able to revert this requirement at
- * the receiving end (except by manual erase of the EEPROM).<br>
+ * the receiving end (except by manually erasing the EEPROM).<br>
  * If you for some reason need to be able to downgrade the security requirements, you can set
  * @ref MY_SIGNING_WEAK_SECURITY at the receiver to allow it to downgrade the security expectations
  * of the node in question.<br>
@@ -225,13 +225,13 @@
  *
  * One day your keyfob gets stolen or you lost it or it simply broke down.
  *
- * You now end up with a problem; you need some way of telling your door node that the keyfob in
- * question cannot be trusted any more. You could now repersonalize all your node to switch to a
+ * You now face a problem; you need some way of telling your door node that the keyfob in
+ * question cannot be trusted any more. You could now repersonalize all your nodes to switch to a
  * different PSK but this obviously is a hassle. How do you make sure that the "rogue" keyfob can be
  * removed from the "trusted chain"?
  *
  * The answer to this is whitelisting. You let your door node keep a whitelist of all nodes it
- * trusts. If you stop trusting a particular node, you remove it from the nodes whitelist
+ * trusts. If you stop trusting a particular node, you remove it from the node's whitelist
  * (by uploading a new sketch), and it will no longer be able to communicate signed messages to the
  * door node.
  *
@@ -239,7 +239,7 @@
  * case they are lost) you also need to take note of the serial number of the ATSHA device or the
  * software value stored in EEPROM. This is unique for each device. The serial number is printed
  * in a copy+paste friendly format by the personalizer for this purpose.<br>
- * The whitelist is stored on the node that require signatures. When a received message is
+ * The whitelist is stored on the node that requires signatures. When a received message is
  * verified, the serial of the sender is looked up in a list stored on the receiving node, and the
  * corresponding serial stored in the list for that sender is then included in the signature
  * verification process. The list is stored as the value of the flag that enables whitelisting,
@@ -249,18 +249,18 @@
  * the receiver. In the case of @ref MY_SIGNING_ATSHA204 this is the unique serial number programmed
  * into the circuit. This unique number is never transmitted over the air in clear text, so Eve will
  * not be able to figure out a "trusted" serial by snooping on the traffic.<br>
- * Instead the value is hashed together with the senders NodeId into the HMAC signature to produce
+ * Instead the value is hashed together with the sender's NodeId into the HMAC signature to produce
  * the final signature. The receiver will then take the originating NodeId of the signed message and
- * do the corresponding calculation with the serial it has stored in it's whitelist if it finds a
- * matching entry in it's whitelist.
+ * do the corresponding calculation with the serial it has stored in its whitelist if it finds a
+ * matching entry in its whitelist.
  *
  * Whitelisting is an optional alternative because it adds some code and configuration options which
  * might not be desirable for every user. So if you want the ability to use whitelists, you need to
  * enable @ref MY_SIGNING_NODE_WHITELISTING. You need to remember that the gateway will remember if
  * a node has presented it with a whitelisting requirement as described above, if you at some point
  * decide to remove the whitelist requirement.<br>
- * The whitelist is provided as value of the flag that enable it as follows (example is a node that
- * require signing as well):
+ * The whitelist is provided as value of the flag that enables it as follows (example is a node that
+ * requires signing as well):
  * @code{.cpp}
  * #define MY_SIGNING_ATSHA204
  * #define MY_SIGNING_REQUEST_SIGNATURES
@@ -289,8 +289,8 @@
  * #define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
  * @endcode
  * Remember that you always need to select a signing backend for all nodes that communicate to a
- * node that require whitelisting. Also, note that a node that use whitelisting will not accept
- * messages from nodes that are not present in it's whitelist.
+ * node that requires whitelisting. Also, note that a node that uses whitelisting will not accept
+ * messages from nodes that are not present in its whitelist.
  * And you have to personalize all nodes that use signing with a common HMAC key but different
  * serial numbers (@ref MY_SIGNING_ATSHA204 always has unique serials).
  *
@@ -312,7 +312,7 @@
  * "Securely located" in this context mean a node which is not physically publicly accessible.
  * Typically at least your gateway.<br>
  * "Public" in this context mean a node that is located outside your "trusted environment". This
- * includes sensors located outdoors, keyfobs etc.
+ * includes sensors located outdoors, keyfobs, etc.
  *
  * @subsection MySigninglock Securely located lock
  *
@@ -338,7 +338,7 @@
  * your gateway. You should lock the data (PSK) in this node then, because if someone were to steal
  * your patio motion sensor, they could rewrite the firmware and spoof your gateway to use it to
  * transmit a correctly signed message to your secure lock inside your house. But if you revoke your
- * gateway (and lock) PSK the outside sensor cannot be used for this anymore. Nor can it be changed
+ * gateway (and lock) PSK the outside sensor cannot be used for this anymore, neither can it be changed
  * in order to do it in the future. You can also use whitelisting to revoke your lost node.<br>
  * This is an unlikely use case because there really is no reason to sign sensor values. If you for
  * some reason want to obfuscate sensor data, encryption is a better alternative.<br>
@@ -364,7 +364,7 @@
 
  * @subsection MySigningkeyfob Keyfob for garage door opener
  *
- * Perhaps the most typical usecase for signed messages. Your keyfob should be totally locked down.
+ * This is perhaps the most typical use case for signed messages. Your keyfob should be totally locked down.
  * If the garage door opener is secured (and it should be) it can be unlocked. That way, if you
  * loose your keyfob, you can revoke the PSK in both the opener and your gateway,
  * thus rendering the keyfob useless without having to replace your nodes. You can also use
@@ -415,7 +415,7 @@
  * node. So it cannot be part of the signature, or the signature would be invalid when it arrives to
  * its destination. The signature also carries a byte with a signing identifier to prevent false
  * results from accidental mixing of incompatible signing backends in the network. Thus, the maximum
- * size for a payload is 29-7 bytes. Larger payloads are not possible to sign at the moment. Another
+ * size for a payload is 29-7 bytes. Signing larger payloads is not supported at this time. Another
  * thing to consider is that the strength of the signature is inversely proportional to the payload
  * size.
  *
@@ -430,7 +430,7 @@
  * Exactly how this is done can be reviewed in the source for the software backend
  * (MySigningAtsha204Soft.cpp) and the ATSHA204A
  * <a href="http://www.atmel.com/Images/Atmel-8885-CryptoAuth-ATSHA204A-Datasheet.pdf">datasheet
- * </a>. In the MySensors protocol, the following internal messagetypes handles signature
+ * </a>. In the MySensors protocol, the following internal messagetypes handle signature
  * requirements and nonce requests:<br>
  * @ref I_SIGNING_PRESENTATION <br>
  * @ref I_NONCE_REQUEST <br>
@@ -441,7 +441,7 @@
  *
  * @section MySigninggrpbackground Background and concepts
  *
- * Suppose two participants, Alice and Bob, wants to exchange a message. Alice sends a message to
+ * Suppose two participants, Alice and Bob, want to exchange a message. Alice sends a message to
  * Bob. In MySensors “language” Alice could be a gateway and Bob an actuator (light switch,
  * electronic lock, etc). But to be generic, we will substitute the term “gateway” with Alice and a
  * “node” with Bob (although the reverse relationship is also supported).
@@ -453,7 +453,7 @@
  * this is known as <i>authenticity</i>. Bob needs some way of determining that the message is
  * authentic from Alice, when Bob receives it. This prevents an eavesdropper, Eve, to trick Bob into
  * thinking it was Alice that sent a message Eve in fact transmitted. Bob also needs to know how to
- * determine if the message has been repeated. Eve could record a message sent by Alice that Bob
+ * determine whether the message has been repeated. Eve could record a message sent by Alice that Bob
  * accepted and then send the same message again. Eve could also in some way prevent Bob from
  * receiving the message and delay it in order to permit the message to arrive to Bob at a time Eve
  * chooses, instead of Alice. Such an attack is known as a <b>replay attack</b>.<br>
@@ -466,15 +466,15 @@
  * keeping the parts that authenticate the message. That way, Bob still trusts Alice to be the
  * source, but the contents of the message was not the content Alice sent. Bob needs to be able to
  * determine that the contents of the message was not altered after Alice sent it.<br>
- * Mallory would in this case be a <b>man-in-the-middle</b> attacker.<br>
- * <i>Integrity</i> permits Bob to verify that the messages received from Alice has not been
+ * In this case, Mallory would be a <b>man-in-the-middle</b> attacker.<br>
+ * <i>Integrity</i> permits Bob to verify that the message received from Alice has not been
  * tampered with.<br>
  * This is achieved by adding a <i>signature</i> to the message, which Bob can inspect to validate
  * that Alice is the author.
  * @image html MySigning/alicenfriends2.png
  *
- * The signing scheme used, needs to address both these attack scenarios. Neither Eve nor Mallory
- * must be permitted to interfere with the message exchange between Alice and Bob.
+ * The signing scheme used needs to address both these attack scenarios. Neither Eve nor Mallory
+ * may be permitted to interfere with the message exchange between Alice and Bob.
  *
  * The key challenge to implementing a secure signing scheme is to ensure that every signature is
  * different, even if the message is not. If not, <b>replay attacks</b> would be very hard to
@@ -493,21 +493,21 @@
  *
  * However, Mallory might be eavesdropping on the communication and snoop up the nonce in order to
  * generate a new valid signature for a different message. To counter this, both Alice and Bob keep
- * a secret that only they know. This secret is never transmitted over the air,
- * nor is it revealed to anybody. This secret is known as a
+ * a secret that only they know. This secret is never transmitted over the air
+ * or revealed to anybody. This secret is known as a
  * <a href="https://en.wikipedia.org/wiki/Pre-shared_key"> pre-shared key</a> (PSK).
  *
- * If Eve or Mallory are really sophisticated, he/she might use a <b>delayed replay attack</b>.
+ * If Eve or Mallory are really sophisticated, they might use a <b>delayed replay attack</b>.
  * This can be done by allowing Bob to transmit a nonce to Alice. But when Alice transmits the
- * uniquely signed message, Mallory prevents Bob from receiving it, to a point when Mallory
+ * uniquely signed message, Mallory prevents Bob from receiving it, until a time when Mallory
  * decides Bob should receive it. An example of such an attack is described
  * <a href="http://spencerwhyte.blogspot.se/2014/03/delay-attack-jam-intercept-and-replay.html">
  * here</a>.<br>
  * This needs to be addressed as well, and one way of doing this is to have Bob keep track of time
  * between a transmitted nonce and a signed message to verify. If Bob is asked for a nonce, Bob
- * knows that a signed message is going to arrive “soon”. Bob can then decide that if the signed
- * message does not arrive within a predefined timeframe, Bob throws away the generated nonce and
- * thus makes it impossible to verify the message if it arrives late.
+ * knows that a signed message is going to arrive “soon”. Bob can then check that the signed
+ * message arrives within a predefined timeframe. If the message was sent after a delay, Bob has thrown away the
+ * generated nonce thus making it impossible to verify the message.
  *
  * The flow can be described like this:
  * @image html MySigning/alicenbob.png
@@ -517,10 +517,10 @@
  * @section MySigninggrphow How this is done
  *
  * There exist many forms of message signature solutions to combat Eve and Mallory.<br>
- * Most of these solutions are quite complex in term of computations, so I elected to use an
+ * Most of these solutions are quite complex in terms of computation, so I elected to use an
  * algorithm that an external circuit is able to process. This has the added benefit of protecting
  * any keys and intermediate data used for calculating the signature so that even if someone were to
- * actually steal a sensor and disassembled it, they would not be able to extract the keys and other
+ * actually steal a sensor and disassemble it, they would not be able to extract the keys and other
  * information from the device.<br>
  * A common scheme for message signing (authenticity and integrity) is implemented using
  * <a href="http://en.wikipedia.org/wiki/Hash-based_message_authentication_code">HMAC</a> which in
@@ -531,11 +531,11 @@
  * is a (currently) virtually unbreakable combination. If SHA256 were to be hacked, a certain
  * <a href="http://en.wikipedia.org/wiki/Bitcoin">cryptocurrency</a> would immediately be rendered
  * worthless.<br>
- * The ATSHA device also contain a random number generator (RNG) which enables the generation of a
+ * The ATSHA device also contains a random number generator (RNG) which enables the generation of a
  * good nonce, as in, <i>non-predictable</i>.<br>
  * As I acknowledge that some might not want to use an additional external circuit, I have also
  * implemented a software version of the ATSHA device, capable of generating the same signatures as
- * the ATSHA device does. Because it is pure-software however, it does not provide as good nonces
+ * the ATSHA device does. Because it is pure-software, however, it does not provide as good nonces
  * (it uses the <a href="http://arduino.cc/en/reference/random">Arduino pseudo-random generator</a>)
  * and the HMAC key is stored in SW and is therefore readable if the memory is dumped. It also
  * naturally claims more flash space due to the more complex software. But for indoor
@@ -550,27 +550,27 @@
  * reason is that a gateway and a node does not really care about messages being readable or not by
  * “others”. It makes more sense that such guarantees are provided by the underlying transmission
  * layer (RF solution in this case). It is the information transmitted over the air that needs to be
- * secret (if user so desires). The “trust” level on the other hand needs to go all the way into the
+ * secret (if the user so desires). The “trust” level on the other hand needs to go all the way into the
  * sketches (who might have different requirements of trust depending on the message participant),
  * and for this reason, it is more important (and less complicated) to ensure authenticity and
- * <i>integrity</i> at protocol-level as message contents is still readable throughout the protocol
- * stack. But as soon as the message leaves the “stack” it can be scramble into “garbage” when
+ * <i>integrity</i> at the protocol-level as message content is still readable throughout the protocol
+ * stack. But as soon as the message leaves the “stack” it can be scrambled into “garbage” when
  * transmitted over the air and then reassembled by a receiving node before being fed in “the clear”
  * up the stack at the receiving end.
  *
- * There are methods and possibilities to provide encryption also in software, but if this is done,
- * it is my recommendation that this is done after integrity- and authentication information has
+ * There are also methods and possibilities to provide encryption in software, but if this is done,
+ * it is my recommendation that this is done after integrity and authentication information has
  * been provided to the message (if this is desired). Integrity and authentication is of course not
  * mandatory and some might be happy with only having encryption to cover their need for security.
  * I, however, have only focused on <i>integrity</i> and <i>authenticity</i> while at the same time
- * keeping the current message routing mechanisms intact and therefore leave the matter of
- * <i>secrecy</i> to be implemented in the “physical” transport layer. With the <i>integrity</i> and
+ * keeping the current message routing mechanisms intact and therefore leaving the matter of
+ * <i>secrecy</i> to be implemented in the “physical” transport layer. With <i>integrity</i> and
  * <i>authenticity</i> handled in the protocol it ought to be enough for a simple encryption
- * (nonce-less %AES with a PSK for instance) on the message as it is sent to the RF backend. Atmel
- * does provide such circuits as well but I have not investigated the matter further as it given the
+ * (nonce-less %AES with a PSK for instance) of the message as it is sent to the RF backend. Atmel
+ * does provide such circuits as well but I have not investigated the matter further given that the
  * current size of the ethernet gateway sketch is close to the size limit on an Arduino Nano, so it
  * will be difficult to fit this into some existing gateway designs.<br>
- * Also it is worth to consider that the state of a lock can just as readily be determined by simply
+ * It is also worth considering that the state of a lock can just as readily be determined by simply
  * looking at the door in question or attempting to open it, so obfuscating this information will
  * not necessarily deter an attacker in any way.<br>
  * Nevertheless, I do acknowledge that people find the fact that all information is sent “in the
@@ -625,13 +625,13 @@ void signerInit(void);
  * @brief Does signing specific presentation for a node.
  *
  * This function makes sure any signing related presentation info is shared with the other part.
- * The presentation of the gateways signing preferences is done in @ref signerProcessInternal().
+ * The presentation of the gateway's signing preferences is done in @ref signerProcessInternal().
  * \n@b Usage: This function should be called by the presentation routine of the MySensors library.
  * You only need to call this directly from a sketch to set up a node to node signed message exchange.
  * If you do call this directly from a sketch, and you at some point change your sketch to go from
- * requiring signing to not requiring signatures, you need to present this change to the node at least
- * once, so it can update its requirements tables accordingly. Or it will keep believing that this node
- * require signatures and attempt to send signed messages to it.
+ * requiring signing to not requiring signing, you need to present this change to the node at least
+ * once, so it can update its requirements tables accordingly, else it will keep believing that this node
+ * requires signatures and attempt to send signed messages to it.
  *
  * @param msg Message buffer to use.
  * @param destination Node ID of the destination.
@@ -641,7 +641,7 @@ void signerPresentation(MyMessage &msg, uint8_t destination);
 /**
  * @brief Manages internal signing message handshaking.
  *
- * This function takes care of signing related message handshaking such as nonce exchange.
+ * This function takes care of signing-related message handshaking such as nonce exchanges.
  * \n@b Usage: This function should be called by the incoming message handler before any further message
  * processing is performed on internal messages. This function should only be called for @ref C_INTERNAL class
  * messages.
@@ -655,7 +655,7 @@ bool signerProcessInternal(MyMessage &msg);
  * @brief Check timeout of verification session.
  *
  * Nonce will be purged if it takes too long for a signed message to be sent to the receiver.
- * \n@b Usage: This function should be called on regular intervals, typically within some process loop.
+ * \n@b Usage: This function should be called at regular intervals, typically within some process loop.
  *
  * @returns @c true if session is still valid.
  */
@@ -851,18 +851,18 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  *
  * The reason for this is that when signing is used, the messages transmitted become relatively large.<br>
  * Because of this, the message is more sensitive to noise, and the chance for a message to get scrambled
- * increase with the message size. Please refer to the troubleshooting section at the MySensors forum for
+ * increases with the message size. Please refer to the troubleshooting section in the MySensors forum for
  * information on how to improve radio performance.<br>
  * This is a good place to start: https://forum.mysensors.org/topic/666/debug-faq-and-how-ask-for-help
  *
  * @subsection MySigningTroubleshootingSymptomNonce Failed to generate nonce
  *
- * The signing backend failed to generate the nonce needed to sign a message. This indicate a hardware
+ * The signing backend failed to generate the nonce needed to sign a message. This indicates a hardware
  * problem. Please post the debug info on the forum together with a description of your hardware setup.
  *
  * @subsection MySigningTroubleshootingSymptomSign Failed to sign message
  *
- * The signing backend failed to sign the message. Typically this happens if your message is so large,
+ * The signing backend failed to sign the message. Typically this happens if your message is so large
  * that there is no room left in the buffer to store a signature.
  *
  * @subsection MySigningTroubleshootingSymptomWrongSource Nonce did not come from the destination (XX) of the message to be signed! It came from YY
@@ -872,8 +872,8 @@ int signerMemcmp(const void* a, const void* b, size_t sz);
  * the same node, only the nonce from a node that is the destination of the current message signing session will be
  * accepted. Any other nonces will be dropped. This should not happen as no node should send a nonce unless asked to,
  * and a node will only ask for a nonce to one destination for every signing session.<br>
- * If you see this message, please post the debugging details on the MySensors forum so it can be investigated further
- * together with a description of your setup.
+ * If you see this message, please post the debugging details (with a description of your setup) on the MySensors
+ * forum so it can be investigated further.
  *
  * @subsection MySigningTroubleshootingSymptomNotSigned Message is not signed, but it should have been
  *
