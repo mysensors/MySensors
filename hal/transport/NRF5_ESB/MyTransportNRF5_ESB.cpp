@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2022 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
  * https://github.com/mysensors/MySensors/graphs/contributors

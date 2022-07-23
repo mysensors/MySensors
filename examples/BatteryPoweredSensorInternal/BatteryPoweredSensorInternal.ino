@@ -6,7 +6,7 @@
    network topology allowing messages to be routed to nodes.
 
    Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-   Copyright (C) 2013-2020 Sensnology AB
+   Copyright (C) 2013-2022 Sensnology AB
    Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 
    Documentation: http://www.mysensors.org
@@ -48,27 +48,27 @@ void setup()
 
 void presentation()
 {
-  // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("Battery Meter", "1.0");
+	// Send the sketch version information to the gateway and Controller
+	sendSketchInfo("Battery Meter", "1.0");
 }
 
 void loop()
 {
-  // get the battery Voltage
-  long batteryMillivolts = hwCPUVoltage();
-  int batteryPcnt = batteryMillivolts / FULL_BATTERY / 1000.0 * 100 + 0.5;
+	// get the battery Voltage
+	long batteryMillivolts = hwCPUVoltage();
+	int batteryPcnt = batteryMillivolts / FULL_BATTERY / 1000.0 * 100 + 0.5;
 #ifdef MY_DEBUG
-  Serial.print("Battery voltage: ");
-  Serial.print(batteryMillivolts / 1000.0);
-  Serial.println("V");
-  Serial.print("Battery percent: ");
-  Serial.print(batteryPcnt);
-  Serial.println(" %");
+	Serial.print("Battery voltage: ");
+	Serial.print(batteryMillivolts / 1000.0);
+	Serial.println("V");
+	Serial.print("Battery percent: ");
+	Serial.print(batteryPcnt);
+	Serial.println(" %");
 #endif
 
-  if (oldBatteryPcnt != batteryPcnt) {
-    sendBatteryLevel(batteryPcnt);
-    oldBatteryPcnt = batteryPcnt;
-  }
-  sleep(SLEEP_TIME);
+	if (oldBatteryPcnt != batteryPcnt) {
+		sendBatteryLevel(batteryPcnt);
+		oldBatteryPcnt = batteryPcnt;
+	}
+	sleep(SLEEP_TIME);
 }
