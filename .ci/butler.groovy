@@ -2,11 +2,9 @@
 def call(config) {
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Butler)', 'Checking...', '${BUILD_URL}flowGraphTable/')
 	if (env.CHANGE_TARGET == 'master' &&
-		(env.CHANGE_AUTHOR != 'bblacey'     && env.CHANGE_AUTHOR != 'd00616'       &&
-		 env.CHANGE_AUTHOR != 'fallberg'    && env.CHANGE_AUTHOR != 'henrikekblad' &&
-		 env.CHANGE_AUTHOR != 'marceloaqno' && env.CHANGE_AUTHOR != 'mfalkvidd'    &&
-		 env.CHANGE_AUTHOR != 'scalz'       && env.CHANGE_AUTHOR != 'tbowmo'       &&
-		 env.CHANGE_AUTHOR != 'tekka007'    && env.CHANGE_AUTHOR != 'user2684'     &&
+		(env.CHANGE_AUTHOR != 'fallberg'    && env.CHANGE_AUTHOR != 'henrikekblad' && 
+		 env.CHANGE_AUTHOR != 'mfalkvidd'   && env.CHANGE_AUTHOR != 'scalz'        && 
+		 env.CHANGE_AUTHOR != 'tbowmo'      && env.CHANGE_AUTHOR != 'tekka007'     && 
 		 env.CHANGE_AUTHOR != 'Yveaux'))
 	{
 		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (Butler)', 'This pull request targets master. I am afraid that is not permitted for '+env.CHANGE_AUTHOR, '')

@@ -1,6 +1,6 @@
 #!groovy
 def buildArduino(config, String buildFlags, String sketch, String key) {
-	def root              = '/opt/arduino-1.8.13/'	
+	def root              = '/opt/arduino-1.8.19/'	
 	def build_path        = 'build'
 	def build_path_cmd    = ' -build-path '+build_path+' '
 	if (config.nightly_arduino_ide)
@@ -28,9 +28,9 @@ def parseWarnings(String key) {
 	warnings canResolveRelativePaths: false, canRunOnFailed: true, categoriesPattern: '',
  		defaultEncoding: '',
  		excludePattern: '''.*/EEPROM\\.h,.*/Dns\\.cpp,.*/socket\\.cpp,.*/util\\.h,.*/Servo\\.cpp,
- 											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,
+ 											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,.*/PJON/.*,
  											 .*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/libraries/Wire/.*,
- 											 .*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/esp32.*,
+ 											 .*/hardware/avr.*,.*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/esp32.*,
 											 .*/libraries/SD/.*,.*/libraries/Ethernet/.*''',
 
  		healthy: '', includePattern: '', messagesPattern: '',

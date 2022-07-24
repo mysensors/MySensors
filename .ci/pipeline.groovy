@@ -173,9 +173,12 @@ def call(Closure body) {
 					stage('nRF5 (examples)') {
 						arduino.buildnRF5(config, config.examples, 'Examples')
 					}
+					// Disable ESP8266 examples
+					/*
 					stage('ESP8266 (examples)') {
 						arduino.buildESP8266(config, config.examples, 'Examples')
 					}
+					*/
 					// No point in building examples for ESP32 yet
 					/*
 					stage('ESP32 (examples)') {
@@ -190,9 +193,12 @@ def call(Closure body) {
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
 					}
+					// Disable ArduinoMega examples
+					/*
 					stage('ArduinoMega (examples)') {
 						arduino.buildArduinoMega(config, config.examples, 'Examples')
 					}
+					*/
 				}
 			}, failFast: true
 		}
