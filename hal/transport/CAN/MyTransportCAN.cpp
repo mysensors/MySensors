@@ -7,7 +7,7 @@
 #define CAN_DEBUG(x,...)	//!< DEBUG null
 #endif
 MCP_CAN CAN0(CAN_CS);
-bool canInitialized=false;
+bool canInitialized = false;
 
 //input buffer for raw data (from library).
 long unsigned int rxId;
@@ -16,7 +16,7 @@ unsigned char rxBuf[8];
 unsigned char _nodeId;
 
 //message id updated for every outgoing mesage
-uint8_t message_id =0;
+uint8_t message_id = 0;
 
 //buffer element
 typedef struct {
@@ -163,10 +163,9 @@ long unsigned int _buildHeader(uint8_t messageId, uint8_t totalPartCount, uint8_
 	header += toAddress;//set destination address
 	header = header << 8;
 	header += fromAddress;//set source address
-	CAN_DEBUG(PSTR("CAN:SND:CANH=%" PRIu32 ",ID=%" PRIu8
-	               ",TOTAL=%" PRIu8 ",CURR=%" PRIu8 ",TO=%" PRIu8 ",FROM=%" PRIu8 "\n"), header, messageId,
-	          totalPartCount,
-	          currentPartNumber, toAddress, fromAddress);
+	CAN_DEBUG(PSTR("CAN:SND:CANH=%" PRIu32 ",ID=%" PRIu8 ",TOTAL=%" PRIu8 ",CURR=%" PRIu8 ",TO=%" PRIu8
+	               ",FROM=%" PRIu8 "\n"),
+	          header, messageId, totalPartCount, currentPartNumber, toAddress, fromAddress);
 	return header;
 }
 
@@ -203,9 +202,8 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 		}
 
 		CAN_DEBUG(PSTR("CAN:SND:LN=%" PRIu8 ",DTA0=%" PRIu8 ",DTA1=%" PRIu8 ",DTA2=%" PRIu8 ",DTA3=%" PRIu8
-		               ",DTA4=%" PRIu8 ",DTA5=%" PRIu8 ",DTA6=%" PRIu8 ",DTA7=%" PRIu8 "\n"), partLen, buff[0],
-		          buff[1],
-		          buff[2], buff[3], buff[4], buff[5], buff[6], buff[7]);
+		               ",DTA4=%" PRIu8 ",DTA5=%" PRIu8 ",DTA6=%" PRIu8 ",DTA7=%" PRIu8 "\n"),
+		          partLen, buff[0], buff[1], buff[2], buff[3], buff[4], buff[5], buff[6], buff[7]);
 
 		byte sndStat = CAN0.sendMsgBuf(_buildHeader(message_id, noOfFrames, currentFrame, to, _nodeId),
 		                               partLen, buff);
@@ -230,15 +228,12 @@ bool transportDataAvailable(void)
 		long unsigned int messageId = (rxId & 0x07000000) >> 24;
 #if defined(MY_DEBUG_VERBOSE_CAN)
 		long unsigned int to = (rxId & 0x0000FF00) >> 8;
-		CAN_DEBUG(PSTR("CAN:RCV:CANH=%" PRIu32 ",ID=%" PRIu32 {
-			",TOTAL=%"
-		} PRIu32 ",CURR=%" PRIu32 ",TO=%" PRIu32 ",FROM=%" PRIu32 "\n"), rxId, messageId,
-		totalPartCount,
-		currentPart, to, from);
+		CAN_DEBUG(PSTR("CAN:RCV:CANH=%" PRIu32 ",ID=%" PRIu32 ",TOTAL=%" PRIu32 ",CURR=%" PRIu32 ",TO=%"
+		               PRIu32 ",FROM=%" PRIu32 "\n"),
+		          rxId, messageId, totalPartCount, currentPart, to, from);
 		CAN_DEBUG(PSTR("CAN:RCV:LN=%" PRIu8 ",DTA0=%" PRIu8 ",DTA1=%" PRIu8 ",DTA2=%" PRIu8 ",DTA3=%" PRIu8
-		               ",DTA4=%" PRIu8 ",DTA5=%" PRIu8 ",DTA6=%" PRIu8 ",DTA7=%" PRIu8 "\n"), len, rxBuf[0],
-		          rxBuf[1],
-		          rxBuf[2], rxBuf[3], rxBuf[4], rxBuf[5], rxBuf[6], rxBuf[7]);
+		               ",DTA4=%" PRIu8 ",DTA5=%" PRIu8 ",DTA6=%" PRIu8 ",DTA7=%" PRIu8 "\n"),
+		          len, rxBuf[0], rxBuf[1], rxBuf[2], rxBuf[3], rxBuf[4], rxBuf[5], rxBuf[6], rxBuf[7]);
 #endif
 		uint8_t slot;
 		if (currentPart == 0) {
