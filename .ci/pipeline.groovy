@@ -37,18 +37,28 @@ def call(Closure body) {
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - Examples)', 'Not run yet...', '')
-/*
+		
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - Examples)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - Examples)', 'Not run yet...', '')
-*/
+		*/
+
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Examples)', 'Not run yet...', '')
+		
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Examples)', 'Not run yet...', '')
-/*
+		*/
+		
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Examples)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
-*/
+		*/
+		
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Examples)', 'Not run yet...', '')
+
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Examples)', 'Not run yet...', '')
+		*/
 	} else {
 		config.is_pull_request = false
 		echo "Building branch: "+env.BRANCH_NAME
