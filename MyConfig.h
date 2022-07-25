@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2022 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -278,39 +278,39 @@
  */
 //#define MY_DEBUG_VERBOSE_CAN
 /**
- * @def CAN_INT
+ * @def MY_CAN_INT
  * @brief Message arrived interrupt pin.
  */
-#ifndef CAN_INT
-#define CAN_INT (2u)
+#ifndef MY_CAN_INT
+#define MY_CAN_INT (2u)
 #endif
 /**
- * @def CAN_CS
+ * @def MY_CAN_CS
  * @brief Chip select pin.
  */
-#ifndef CAN_CS
-#define CAN_CS (10u)
+#ifndef MY_CAN_CS
+#define MY_CAN_CS (10u)
 #endif
 /**
- * @def CAN_SPEED
+ * @def MY_CAN_SPEED
  * @brief Baud rate. Allowed values can be found in mcp_can_dfs.h
  */
-#ifndef CAN_SPEED
-#define CAN_SPEED CAN_250KBPS
+#ifndef MY_CAN_SPEED
+#define MY_CAN_SPEED CAN_250KBPS
 #endif
 /**
- * @def CAN_CLOCK
+ * @def MY_CAN_CLOCK
  * @brief can clock. Allowed values can be found in mcp_can_dfs.h
  */
-#ifndef CAN_CLOCK
-#define CAN_CLOCK MCP_8MHZ
+#ifndef MY_CAN_CLOCK
+#define MY_CAN_CLOCK MCP_8MHZ
 #endif
 /**
- * @def CAN_BUF_SIZE
+ * @def MY_CAN_BUF_SIZE
  * @brief assemble buffer size. Since long messages can be sliced and arrive mixed with other messages, assemble buffer is required.
  */
-#ifndef CAN_BUF_SIZE
-#define CAN_BUF_SIZE (8u)
+#ifndef MY_CAN_BUF_SIZE
+#define MY_CAN_BUF_SIZE (8u)
 #endif
 
 /**

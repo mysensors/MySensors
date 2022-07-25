@@ -1,3 +1,24 @@
+/*
+ * The MySensors Arduino library handles the wireless radio link and protocol
+ * between your home built sensors/actuators and HA controller of choice.
+ * The sensors forms a self healing radio network with optional repeaters. Each
+ * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * network topology allowing messages to be routed to nodes.
+ *
+ * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+ * Copyright (C) 2013-2022 Sensnology AB
+ * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
+ *
+ * Documentation: http://www.mysensors.org
+ * Support Forum: http://forum.mysensors.org
+ *
+ * CAN bus transport added by Adam Słowik <slowik.adam@gmail.com>
+ * Copyright (C) 2022 Adam Słowik
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ */
 #include "hal/transport/CAN/driver/mcp_can.h"
 #include "hal/transport/CAN/driver/mcp_can.cpp"
 #include "MyTransportCAN.h"
@@ -6,7 +27,7 @@
 #else
 #define CAN_DEBUG(x,...)	//!< DEBUG null
 #endif
-MCP_CAN CAN0(CAN_CS);
+MCP_CAN CAN0(MY_CAN_CS);
 bool canInitialized = false;
 
 //input buffer for raw data (from library).
@@ -31,7 +52,7 @@ typedef struct {
 } CAN_Packet;
 
 //buffer
-CAN_Packet packets[CAN_BUF_SIZE];
+CAN_Packet packets[MY_CAN_BUF_SIZE];
 
 //filter incoming messages (MCP2515 feature).
 bool _initFilters()
@@ -55,21 +76,21 @@ bool _initFilters()
 	err += CAN0.init_Filt(4, 1, 0xFFFFFFFF);                // Init fifth filter.
 	err += CAN0.init_Filt(5, 1, 0xFFFFFFFF);                // Init sixth filter.
 	err += CAN0.setMode(MCP_NORMAL);
-	hwPinMode(CAN_INT, INPUT);
+	hwPinMode(MY_CAN_INT, INPUT);
 	return err == 0;
 }
 
 bool transportInit(void)
 {
-	CAN_DEBUG(PSTR("CAN:INIT:CS=%" PRIu8 ",INT=%" PRIu8 ",SPE=%" PRIu8 ",CLO=%" PRIu8 "\n"), CAN_CS,
-	          CAN_INT, CAN_SPEED, CAN_CLOCK);
+	CAN_DEBUG(PSTR("CAN:INIT:CS=%" PRIu8 ",INT=%" PRIu8 ",SPE=%" PRIu8 ",CLK=%" PRIu8 "\n"), MY_CAN_CS,
+	          MY_CAN_INT, MY_CAN_SPEED, MY_CAN_CLOCK);
 
-	if (CAN0.begin(MCP_STDEXT, CAN_SPEED, CAN_CLOCK) != CAN_OK) {
+	if (CAN0.begin(MCP_STDEXT, MY_CAN_SPEED, MY_CAN_CLOCK) != CAN_OK) {
 		canInitialized = false;
 		return false;
 	}
 	canInitialized = true;
-	for (uint8_t i = 0; i < CAN_BUF_SIZE; i++) {
+	for (uint8_t i = 0; i < MY_CAN_BUF_SIZE; i++) {
 		_cleanSlot(i);
 	}
 	return _initFilters();
@@ -90,21 +111,21 @@ void _cleanSlot(uint8_t slot)
 //find empty slot in buffer
 uint8_t _findCanPacketSlot()
 {
-	uint8_t slot = CAN_BUF_SIZE;
+	uint8_t slot = MY_CAN_BUF_SIZE;
 	uint8_t i;
-	for (i = 0; i < CAN_BUF_SIZE; i++) {
+	for (i = 0; i < MY_CAN_BUF_SIZE; i++) {
 		if (packets[i].locked) {
 			packets[i].age++;
 		} else {
 			slot = i;
 		}
 	}
-	if (slot < CAN_BUF_SIZE) {
+	if (slot < MY_CAN_BUF_SIZE) {
 		return slot;
 	}
 	//if empty slot not found. Clear oldest message.
 	slot = 0;
-	for (i = 1; i < CAN_BUF_SIZE; i++) {
+	for (i = 1; i < MY_CAN_BUF_SIZE; i++) {
 		if (packets[i].age > packets[slot].age) {
 			slot = i;
 		}
@@ -119,19 +140,22 @@ uint8_t _findCanPacketSlot()
 uint8_t _findCanPacketSlot(long unsigned int from, long unsigned int currentPart,
                            long unsigned int messageId)
 {
-	uint8_t slot = CAN_BUF_SIZE;
+	uint8_t slot = MY_CAN_BUF_SIZE;
 	uint8_t i;
-	for (i = 0; i < CAN_BUF_SIZE; i++) {
+	for (i = 0; i < MY_CAN_BUF_SIZE; i++) {
+#if defined(MY_DEBUG_VERBOSE_CAN_INTERNAL)
 		CAN_DEBUG(PSTR("CAN:RCV:LCK=%" PRIu8 ",ADDR=%" PRIu8
 		               ",PACK_ID=%" PRIu8 ",LAST_PART=%" PRIu8 "\n"), packets[i].locked, packets[i].address,
 		          packets[i].packetId,
 		          packets[i].lastReceivedPart);
+#endif
 		if (packets[i].locked && packets[i].address == from && packets[i].packetId == messageId &&
 		        packets[i].lastReceivedPart == currentPart) {
 			slot = i;
+			break;
 		}
 	}
-	if (slot == CAN_BUF_SIZE) {
+	if (slot == MY_CAN_BUF_SIZE) {
 		CAN_DEBUG(PSTR("!CAN:RCV:proper slot not found\n"));
 	}
 	return slot;
@@ -196,7 +220,6 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 		}
 		uint8_t buff[8];
 		uint8_t j = 0;
-		//        memcpy(buff,datap[currentFrame*8],partLen);
 		for (j = 0; j < partLen; j++) {
 			buff[j] = datap[currentFrame * 8 + j];
 		}
@@ -219,7 +242,7 @@ bool transportSend(const uint8_t to, const void *data, const uint8_t len, const 
 
 bool transportDataAvailable(void)
 {
-	if (!hwDigitalRead(CAN_INT)) {                       // If CAN_INT pin is low, read receive buffer
+	if (!hwDigitalRead(MY_CAN_INT)) {             // If CAN_INT pin is low, read receive buffer
 		CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
 		long unsigned int from = (rxId & 0x000000FF);
 		// cppcheck-suppress unreadVariable
@@ -244,7 +267,7 @@ bool transportDataAvailable(void)
 		} else {
 			slot = _findCanPacketSlot(from, currentPart, messageId);
 		}
-		if (slot != CAN_BUF_SIZE) {
+		if (slot != MY_CAN_BUF_SIZE) {
 			memcpy(packets[slot].data + packets[slot].len, rxBuf, len);
 			packets[slot].lastReceivedPart++;
 			packets[slot].len += len;
@@ -262,14 +285,14 @@ bool transportDataAvailable(void)
 
 uint8_t transportReceive(void *data)
 {
-	uint8_t slot = CAN_BUF_SIZE;
+	uint8_t slot = MY_CAN_BUF_SIZE;
 	uint8_t i;
-	for (i = 0; i < CAN_BUF_SIZE; i++) {
+	for (i = 0; i < MY_CAN_BUF_SIZE; i++) {
 		if (packets[i].ready) {
 			slot = i;
 		}
 	}
-	if (slot < CAN_BUF_SIZE) {
+	if (slot < MY_CAN_BUF_SIZE) {
 		memcpy(data, packets[slot].data, packets[slot].len);
 		i = packets[slot].len;
 		_cleanSlot(slot);
@@ -282,6 +305,7 @@ uint8_t transportReceive(void *data)
 void transportSetAddress(const uint8_t address)
 {
 	_nodeId = address;
+	_initFilters();
 }
 
 uint8_t transportGetAddress(void)
