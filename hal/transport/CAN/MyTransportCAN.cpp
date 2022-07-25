@@ -43,8 +43,9 @@ uint8_t message_id = 0;
 typedef struct {
 	uint8_t len;
 	uint8_t data[MAX_MESSAGE_SIZE];
+	bool packetReceived[4]; //Maximum number of frames
 	uint8_t address;
-	uint8_t lastReceivedPart;
+	uint8_t totalReceivedParts;
 	bool locked;
 	uint8_t age;
 	uint8_t packetId;
@@ -102,10 +103,14 @@ void _cleanSlot(uint8_t slot)
 	packets[slot].locked = false;
 	packets[slot].len = 0;
 	packets[slot].address = 0;
-	packets[slot].lastReceivedPart = 0;
+	packets[slot].totalReceivedParts = 0;
 	packets[slot].age = 0;
 	packets[slot].packetId = 0;
 	packets[slot].ready = false;
+	packets[slot].packetReceived[0]=false;
+	packets[slot].packetReceived[1]=false;
+	packets[slot].packetReceived[2]=false;
+	packets[slot].packetReceived[3]=false;
 }
 
 //find empty slot in buffer
@@ -147,16 +152,13 @@ uint8_t _findCanPacketSlot(long unsigned int from, long unsigned int currentPart
 		CAN_DEBUG(PSTR("CAN:RCV:LCK=%" PRIu8 ",ADDR=%" PRIu8
 		               ",PACK_ID=%" PRIu8 ",LAST_PART=%" PRIu8 "\n"), packets[i].locked, packets[i].address,
 		          packets[i].packetId,
-		          packets[i].lastReceivedPart);
+		          packets[i].totalReceivedParts);
 #endif
 		if (packets[i].locked && packets[i].address == from && packets[i].packetId == messageId &&
-		        packets[i].lastReceivedPart == currentPart) {
+		        packets[i].packetReceived[currentPart] == false) {
 			slot = i;
 			break;
 		}
-	}
-	if (slot == MY_CAN_BUF_SIZE) {
-		CAN_DEBUG(PSTR("!CAN:RCV:proper slot not found\n"));
 	}
 	return slot;
 }
@@ -259,26 +261,32 @@ bool transportDataAvailable(void)
 		          len, rxBuf[0], rxBuf[1], rxBuf[2], rxBuf[3], rxBuf[4], rxBuf[5], rxBuf[6], rxBuf[7]);
 #endif
 		uint8_t slot;
-		if (currentPart == 0) {
+		slot = _findCanPacketSlot(from, currentPart, messageId);
+		if (slot == MY_CAN_BUF_SIZE) {
 			slot = _findCanPacketSlot();
 			packets[slot].locked = true;
 			packets[slot].address = from;
 			packets[slot].packetId = messageId;
-		} else {
-			slot = _findCanPacketSlot(from, currentPart, messageId);
 		}
-		if (slot != MY_CAN_BUF_SIZE) {
-			memcpy(packets[slot].data + packets[slot].len, rxBuf, len);
-			packets[slot].lastReceivedPart++;
-			packets[slot].len += len;
-			CAN_DEBUG(PSTR("CAN:RCV:SLOT=%" PRIu8 ",PART=%" PRIu8 "\n"), slot, packets[slot].lastReceivedPart);
-			if (packets[slot].lastReceivedPart == totalPartCount) {
-				packets[slot].ready = true;
-				CAN_DEBUG(PSTR("CAN:RCV:SLOT=%" PRIu8 " complete\n"), slot);
-				return true;
+		memcpy(packets[slot].data + currentPart*8, rxBuf, len);
+		packets[slot].totalReceivedParts++;
+		packets[slot].len += len;
+		packets[slot].packetReceived[currentPart]=true;
+		CAN_DEBUG(PSTR("CAN:RCV:SLOT=%" PRIu8 ",PART=%" PRIu8 "\n"), slot,
+		          packets[slot].totalReceivedParts);
+		uint8_t i;
+		boolean ready = true;
+		for (i = 0; i < totalPartCount; i++) {
+			if (packets[slot].packetReceived[i]==false) {
+				ready=false;
+				break;
 			}
-
 		}
+		if (ready) {
+			CAN_DEBUG(PSTR("CAN:RCV:SLOT=%" PRIu8 " complete\n"), slot);
+		}
+		packets[slot].ready=ready;
+		return ready;
 	}
 	return false;
 }
