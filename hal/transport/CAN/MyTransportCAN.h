@@ -36,8 +36,7 @@
   | |     |      |                                 | interrupt pin (INT), CAN speed (SPE), CAN clock (CLK)
 * |!| CAN | RCV  | SLOT=%%d message dropped.       | clean buffer (SLOT) to make space for new message.
 * | | CAN | RCV  | LCK=%%d,ADDR=%%d,PACK_ID=%%d,   | Print current slot info. Is locked (LCK), send from (ADDR),
-* | |     |      | LAST_PART=%%d                   | packet id (PACK_ID), number of received parts (LAST_PART)
-* |!| CAN | RCV  | proper slot not found           | proper slot not found
+* | |     |      | RCV_PARTS=%%d                   | packet id (PACK_ID), number of received parts (RCV_PARTS)
 * | | CAN | SND  | CANH=%%d,ID=%%d,TOTAL=%%d,      | prints raw frame header (CANH), and decoded data from header:
 * | |     |      | CURR=%%d,TO=%%d,FROM=%%d        | message id (ID), total number of frames to be send (TOTAL),
 * | |     |      |                                 | current frame number (CURR), destination address (TO),

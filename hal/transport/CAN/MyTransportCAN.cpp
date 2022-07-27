@@ -150,7 +150,7 @@ uint8_t _findCanPacketSlot(long unsigned int from, long unsigned int currentPart
 	for (i = 0; i < MY_CAN_BUF_SIZE; i++) {
 #if defined(MY_DEBUG_VERBOSE_CAN_INTERNAL)
 		CAN_DEBUG(PSTR("CAN:RCV:LCK=%" PRIu8 ",ADDR=%" PRIu8
-		               ",PACK_ID=%" PRIu8 ",LAST_PART=%" PRIu8 "\n"), packets[i].locked, packets[i].address,
+		               ",PACK_ID=%" PRIu8 ",RCV_PARTS=%" PRIu8 "\n"), packets[i].locked, packets[i].address,
 		          packets[i].packetId,
 		          packets[i].totalReceivedParts);
 #endif
