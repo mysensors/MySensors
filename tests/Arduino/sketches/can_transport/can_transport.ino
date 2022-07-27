@@ -20,8 +20,9 @@
  */
 #define MY_DEBUG
 #define MY_CAN
-#define CAN_CS (10u)
+#define MY_CAN_CS (10u)
 #define MY_DEBUG_VERBOSE_CAN
+#define MY_DEBUG_VERBOSE_CAN_INTERNAL
 #include <MySensors.h>
 
 void setup()

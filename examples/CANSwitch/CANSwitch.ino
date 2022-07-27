@@ -33,6 +33,7 @@
 // Enable debug prints to serial monitor
 #define MY_DEBUG
 //#define MY_DEBUG_VERBOSE_CAN
+//#define MY_DEBUG_VERBOSE_CAN_INTERNAL
 
 // Enable and select radio type attached
 #define MY_CAN
