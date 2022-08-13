@@ -24,8 +24,8 @@ extern "C" void __libc_init_array(void);
 int main(void)
 {
 	init();
-#if defined(USBCON)
 	__libc_init_array();
+#if defined(USBCON)
 	USBDevice.init();
 	USBDevice.attach();
 #endif
