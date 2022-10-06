@@ -163,7 +163,7 @@
 #define MY_CAP_ARCH "E"
 #elif defined(ARDUINO_ARCH_ESP32)
 #define MY_CAP_ARCH "F"
-#elif defined(ARDUINO_ARCH_AVR)
+#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 #define MY_CAP_ARCH "A"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #define MY_CAP_ARCH "M"
