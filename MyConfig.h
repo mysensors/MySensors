@@ -2381,6 +2381,12 @@
 #define ARDUINO_ARCH_AVR
 
 /**
+ * @def ARDUINO_ARCH_MEGAAVR
+ * @brief Automatically set when building for megaAVR targets
+ */
+#define ARDUINO_ARCH_MEGAAVR
+
+/**
  * @def ARDUINO_ARCH_STM32F1
  * @brief Automatically set when building for STM32F1 targets
  */
