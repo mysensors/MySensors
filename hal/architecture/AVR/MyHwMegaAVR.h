@@ -74,6 +74,9 @@ extern char _convBuf[MAX_PAYLOAD_SIZE * 2 + 1];
 #define hwDigitalRead(__pin) digitalReadFast(__pin)
 #define hwPinMode(__pin, __value) pinModeFast(__pin, __value)
 
+void (*_beforeSleep)() ;
+void (*_afterSleep)() ;
+
 bool hwInit(void);
 void pit_reset();
 

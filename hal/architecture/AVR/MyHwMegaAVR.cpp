@@ -138,7 +138,9 @@ uint32_t hwPowerDown(uint32_t ms)
 #ifndef MY_DISABLED_SERIAL
 	MY_SERIALDEVICE.flush();
 #endif
-
+	if (_beforeSleep) {
+		_beforeSleep();
+	}
 	// disable ADC for power saving
 	ADC0.CTRLA &= ~ADC_ENABLE_bm;             // ADC off
 
@@ -181,6 +183,10 @@ uint32_t hwPowerDown(uint32_t ms)
 	}
 
 	ADC0.CTRLA |= ADC_ENABLE_bm;             // ADC on
+
+	if (_afterSleep) {
+		_afterSleep();
+	}
 
 	HARDWARE_DEBUG(PSTR("hwPowerUp(%" PRIu32 ")\n"), ms);
 	if (interruptWakeUp()) {
