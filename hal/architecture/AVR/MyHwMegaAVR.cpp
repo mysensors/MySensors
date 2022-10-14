@@ -56,7 +56,7 @@ static uint32_t sleepRemainingMs = 0ul;
 
 void wakeUp1(void)
 {
-	HARDWARE_DEBUG(PSTR("wakeUp1(%" PRIu8 ")\n"), _wakeUp1Interrupt);
+	HARDWARE_DEBUG(PSTR("HW:WU:1:%" PRIu8 "\n"), _wakeUp1Interrupt);
    // Disable sleep. When an interrupt occurs after attachInterrupt,
    // but before sleeping the CPU would not wake up.
    // Ref: http://playground.arduino.cc/Learning/ArduinoSleepCode
@@ -69,7 +69,7 @@ void wakeUp1(void)
 }
 void wakeUp2(void)
 {
-	HARDWARE_DEBUG(PSTR("wakeUp2(%" PRIu8 ")\n"), _wakeUp2Interrupt);
+	HARDWARE_DEBUG(PSTR("HW:WU:2:%" PRIu8 "\n"), _wakeUp2Interrupt);
    sleep_disable();
    detachInterrupt(_wakeUp2Interrupt);
    // First interrupt occurred will be reported only
@@ -133,7 +133,7 @@ uint8_t getSleepingPeriod(uint32_t ms)
 
 uint32_t hwPowerDown(uint32_t ms)
 {
-	HARDWARE_DEBUG(PSTR("hwPowerDown(%" PRIu32 ")\n"), ms);
+	HARDWARE_DEBUG(PSTR("HW:PD:%" PRIu32 "\n"), ms);
 	// Let serial prints finish (debug, log etc)
 #ifndef MY_DISABLED_SERIAL
 	MY_SERIALDEVICE.flush();
@@ -141,7 +141,6 @@ uint32_t hwPowerDown(uint32_t ms)
 	if (_beforeSleep) {
 		_beforeSleep();
 	}
-	// disable ADC for power saving
 	ADC0.CTRLA &= ~ADC_ENABLE_bm;             // ADC off
 
 	if (ms != PIT_SLEEP_FOREVER) {
@@ -159,7 +158,7 @@ uint32_t hwPowerDown(uint32_t ms)
 			hwPitRtcInit(period << 3);
 			sei();
 
-			HARDWARE_DEBUG(PSTR("   hwPowerDown(%" PRIu32 ", %" PRIu16 ", %" PRIu8 ")\n"), ms, comparatorMS, period << 3);
+			HARDWARE_DEBUG(PSTR("HW:PD:%" PRIu32 ", cMS=%" PRIu16 ", p=%" PRIu8 "\n"), ms, comparatorMS, period << 3);
 
 			set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 			sleep_enable();
@@ -188,7 +187,7 @@ uint32_t hwPowerDown(uint32_t ms)
 		_afterSleep();
 	}
 
-	HARDWARE_DEBUG(PSTR("hwPowerUp(%" PRIu32 ")\n"), ms);
+	HARDWARE_DEBUG(PSTR("HW:PU:%" PRIu32 "\n"), ms);
 	if (interruptWakeUp()) {
       return ms;
    }
@@ -245,13 +244,13 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
    // to prevent waking immediately again.
    // Ref: https://forum.arduino.cc/index.php?topic=59217.0
    if (interrupt1 != INVALID_INTERRUPT_NUM) {
-			HARDWARE_DEBUG(PSTR("attachInterrupt(%" PRIu8 ")\n"), interrupt1);
+			HARDWARE_DEBUG(PSTR("HW:AI1:%" PRIu8 "\n"), interrupt1);
 
       clearPendingInterrupt(interrupt1);
       attachInterrupt(interrupt1, wakeUp1, mode1);
    }
    if (interrupt2 != INVALID_INTERRUPT_NUM) {
-			HARDWARE_DEBUG(PSTR("attachInterrupt(%" PRIu8 ")\n"), interrupt2);
+			HARDWARE_DEBUG(PSTR("HW:AI2:%" PRIu8 "\n"), interrupt2);
       clearPendingInterrupt(interrupt2);
       attachInterrupt(interrupt2, wakeUp2, mode2);
    }
@@ -287,7 +286,7 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
 
 uint32_t hwGetSleepRemaining(void)
 {
-	HARDWARE_DEBUG(PSTR("hwGetSleepRemaining(%" PRIu32 ")\n"), sleepRemainingMs);
+	HARDWARE_DEBUG(PSTR("HW:REM:SLP:%" PRIu32 "\n"), sleepRemainingMs);
 	return sleepRemainingMs;
 }
 
@@ -348,17 +347,23 @@ bool hwUniqueID(unique_id_t *uniqueID)
 uint16_t hwCPUVoltage(void)
 {
 	analogReference(INTERNAL1V024);
-	int voltage = analogRead(ADC_VDDDIV10);
 
-	HARDWARE_DEBUG(PSTR("hwCPUVoltage( %" PRIi16 ")\n"), (voltage * 10));
+	for (uint8_t i = 0; i < 10; i++) { analogRead(ADC_VDDDIV10); }
 
-	return voltage  * (uint16_t) 10.24; // value in mV
+	uint16_t adc = analogRead(ADC_VDDDIV10);
+	HARDWARE_DEBUG(PSTR("HW:CPU:V:ADC:%" PRIu16 "\n"), adc);
+
+	uint16_t voltage = adc * (uint16_t) 10.24; // value in mV
+
+	HARDWARE_DEBUG(PSTR("HW:CPU:V:m:%" PRIi16 "\n"), voltage);
+
+	return voltage; // value in mV
 }
 
 uint16_t hwCPUFrequency(void)
 {
-	HARDWARE_DEBUG(PSTR("hwCPUVoltage( %" PRIu16 ")\n"), ( F_CPU / 100000UL));
 #ifdef F_CPU
+	HARDWARE_DEBUG(PSTR("HW:CPU:F:%" PRIu16 "\n"), ( F_CPU / 100000UL));
 	return F_CPU / 100000UL;
 #else
 	cli();
@@ -409,6 +414,8 @@ uint16_t hwCPUFrequency(void)
 	TCA0.SINGLE.EVCTRL = tcaEvCtrl;
 	TCA0.SINGLE.CTRLA = tcaCtrlA;
 
+	HARDWARE_DEBUG(PSTR("HW:CPU:F:%" PRIu16 "\n"), result);
+
 	// return frequency in 1/10MHz (accuracy +- 10%)
    return result;
 #endif
@@ -417,7 +424,7 @@ uint16_t hwCPUFrequency(void)
 int8_t hwCPUTemperature(void)
 {
 	analogReference(INTERNAL1V024);
-	uint16_t adc_reading = analogReadEnh(ADC_TEMPERATURE, 12);
+	uint16_t adc_reading = analogRead(ADC_TEMPERATURE);
 
 	int8_t sigrow_offset = SIGROW.TEMPSENSE1; // Read signed offset from signature row
 	uint8_t sigrow_gain = SIGROW.TEMPSENSE0; 	// Read unsigned gain/slope from signature row
@@ -427,6 +434,8 @@ int8_t hwCPUTemperature(void)
 	temp += 0x80; 														// Add 256/2 to get correct integer rounding on division below
 	temp >>= 8; 															// Divide result by 256 to get processed temperature in Kelvin
 	uint16_t temperature_in_K = temp;
+
+	HARDWARE_DEBUG(PSTR("HW:CPU:T:%" PRIi8 "\n"), temperature_in_K - 273.15);
 
 	return temperature_in_K - 273.15; 				// value in Celsius
 }
