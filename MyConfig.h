@@ -2544,5 +2544,12 @@
 #define MY_RFM95_MAX_POWER_LEVEL_DBM
 // SOFT-SPI
 #define MY_SOFTSPI
+
+/**
+ * @def MY_ROUTES_SIZE
+ * @brief Specifies the size allocated for routing table
+ */
+#define MY_ROUTES_SIZE
+
 #endif
 /** @}*/ // End of MyConfig group
