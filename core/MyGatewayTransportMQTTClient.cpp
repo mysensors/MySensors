@@ -85,7 +85,7 @@
 #endif
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
-#if !defined(MY_WIFI_SSID)
+#if !defined(MY_WIFI_SSID) && !defined(MY_EXTERNAL_WIFIMANAGER_USED)
 #error ESP8266/ESP32 MQTT gateway: MY_WIFI_SSID not defined!
 #endif
 #endif
@@ -323,7 +323,9 @@ bool gatewayTransportInit(void)
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
+#if !defined(MY_EXTERNAL_WIFIMANAGER_USED)
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
+#endif
 #endif
 
 #if defined(MY_GATEWAY_ESP8266_SECURE)

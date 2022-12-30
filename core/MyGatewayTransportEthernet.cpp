@@ -48,7 +48,7 @@ extern MyMessage _msgTmp;
 #endif
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
-#if !defined(MY_WIFI_SSID)
+#if !defined(MY_WIFI_SSID) && !defined(MY_EXTERNAL_WIFIMANAGER_USED)
 #error ESP8266/ESP32 gateway: MY_WIFI_SSID not defined!
 #endif
 #endif
@@ -171,12 +171,14 @@ bool gatewayTransportInit(void)
 #ifdef MY_IP_ADDRESS
 	WiFi.config(_ethernetGatewayIP, _gatewayIp, _subnetIp);
 #endif
+#if !defined(MY_EXTERNAL_WIFIMANAGER_USED)
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(1000);
 		GATEWAY_DEBUG(PSTR("GWT:TIN:CONNECTING...\n"));
 	}
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
+#endif
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
 #else
