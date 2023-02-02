@@ -30,6 +30,10 @@
  *                  at each device restart (due to arduino library
  *                  interrupt bug)
  *                * other tiny improvements
+ * Version 1.3 - Paolo Rendano
+ *                * change flow measurement unit to m3/h to adopt
+ *                  in home assistant as standard measurement unit
+ *                  for V_FLOW
  *
  * DESCRIPTION
  * Use this sensor to measure volume and flow of your house water meter.
@@ -78,8 +82,8 @@
 // flowvalue can only be reported when sleep mode is false.
 #define SLEEP_MODE false
 
-// Max flow (l/min) value to report. This filters outliers.
-#define MAX_FLOW 40
+// Max flow (m3/h) value to report. This filters outliers.
+#define MAX_FLOW 2.4d
 
 // Timeout (in milliseconds) to reset to 0 the flow
 // information (assuming no pulses if no flow)
@@ -129,10 +133,10 @@ void IRQ_HANDLER_ATTR onPulse()
 			lastPulse = millis();
 			if (interval<500000L) {
 				// Sometimes we get interrupt on RISING,
-        // 500000 = 0.5 second debounce ( max 120 l/min)
+        // 500000 = 0.5 second debounce ( max 7.2 m3/h)
 				return;
 			}
-			flow = (60000000.0 /interval) / ppl;
+			flow = (3600000.0 /interval) / ppl;
 		}
 		lastBlink = newBlink;
 	}
@@ -178,7 +182,7 @@ void setup()
 void presentation()
 {
 	// Send the sketch version information to the gateway and Controller
-	sendSketchInfo("Water Meter", "1.2");
+	sendSketchInfo("Water Meter", "1.3");
 
 	// Register this device as Water flow sensor
 	present(CHILD_ID, S_WATER);
@@ -206,14 +210,14 @@ void loop()
 		if (!SLEEP_MODE && flow != oldflow) {
 			oldflow = flow;
 #ifdef APP_DEBUG
-			Serial.print("l/min:");
+			Serial.print("m3/h:");
 			Serial.println(flow);
 #endif
 			// Check that we don't get unreasonable large flow value.
 			// could happen when long wraps or false interrupt triggered
 			if (flow<((uint32_t)MAX_FLOW)) {
         // Send flow value to gw
-				send(flowMsg.set(flow, 2));
+				send(flowMsg.set(flow, 4));
 			}
 		}
 
@@ -268,7 +272,7 @@ void checkAndFirstTimeInitValuesOnHomeAssistant() {
 #endif
     firstValuesMessageSent = true;
     // Send flow value to gw
-    send(flowMsg.set(0.0d, 2));
+    send(flowMsg.set(0.0d, 4));
     // Send volume value to gw
     send(volumeMsg.set(0.0d, 3));
     // Send pulsecount value to gw in VAR1
