@@ -21,6 +21,7 @@
  * REVISION HISTORY
  * Version 1.0 - Henrik Ekblad
  * Version 1.1 - GizMoCuz
+ * Version 1.2 - F-Systemes 
  *
  * DESCRIPTION
  * Use this sensor to measure volume and flow of your house water meter.
@@ -101,6 +102,12 @@ void IRQ_HANDLER_ATTR onPulse()
 
 void setup()
 {
+	if (!SLEEP_MODE) {
+		//Slow down Arduino clock for reduce consuption 
+		CLKPR = 0x80; // (1000-0000) Activate clock frequency change
+  	CLKPR = 0x01; // (0000-0001) configuration of division factor (/2 from 16MHz to 8MHz)
+	}
+	
 	// initialize our digital pins internal pullup resistor so one pulse switches from high to low (less distortion)
 	pinMode(DIGITAL_INPUT_SENSOR, INPUT_PULLUP);
 
@@ -117,7 +124,7 @@ void setup()
 void presentation()
 {
 	// Send the sketch version information to the gateway and Controller
-	sendSketchInfo("Water Meter", "1.1");
+	sendSketchInfo("Water Meter", "1.2");
 
 	// Register this device as Water flow sensor
 	present(CHILD_ID, S_WATER);
