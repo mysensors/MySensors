@@ -71,8 +71,8 @@ void hwWriteConfig(const int addr, uint8_t value)
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 	uint64_t val = ESP.getEfuseMac();
-	(void)memcpy((void *)uniqueID, (void *)&val, 8);
-	(void)memset((void *)(uniqueID + 8), MY_HWID_PADDING_BYTE, 8); // padding
+	(void)memcpy(static_cast<void *>(uniqueID), (void *)&val, 8);
+	(void)memset(static_cast<void *>(uniqueID + 8), MY_HWID_PADDING_BYTE, 8); // padding
 	return true;
 }
 
@@ -82,7 +82,7 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 	if (__length > 256) {
 		__length = 256;
 	}
-	uint8_t *dst = (uint8_t *)__buffer;
+	uint8_t *dst = static_cast<uint8_t *>(__buffer);
 	// get random numbers
 	for (size_t i = 0; i < __length; i++) {
 		dst[i] = (uint8_t)esp_random();
@@ -92,31 +92,51 @@ ssize_t hwGetentropy(void *__buffer, size_t __length)
 
 int8_t hwSleep(uint32_t ms)
 {
-	// TODO: Not supported!
-	(void)ms;
-	return MY_SLEEP_NOT_POSSIBLE;
+	esp_sleep_enable_timer_wakeup((uint64_t)ms * 1000);
+	esp_light_sleep_start();
+	return MY_WAKE_UP_BY_TIMER;
 }
 
 int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
-	// TODO: Not supported!
-	(void)interrupt;
-	(void)mode;
-	(void)ms;
-	return MY_SLEEP_NOT_POSSIBLE;
+	if(mode ==  FALLING) {
+		gpio_wakeup_enable((gpio_num_t)interrupt, GPIO_INTR_LOW_LEVEL);
+	} else if (mode == RISING) {
+		gpio_wakeup_enable((gpio_num_t)interrupt, GPIO_INTR_HIGH_LEVEL);
+	} else {
+		return MY_SLEEP_NOT_POSSIBLE;
+	}
+	esp_sleep_enable_gpio_wakeup();
+	esp_sleep_enable_timer_wakeup((uint64_t)ms * 1000);
+	esp_light_sleep_start();
+	gpio_wakeup_disable((gpio_num_t)interrupt);
+	return 0;
 }
 
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
                const uint8_t mode2,
                uint32_t ms)
 {
-	// TODO: Not supported!
-	(void)interrupt1;
-	(void)mode1;
-	(void)interrupt2;
-	(void)mode2;
-	(void)ms;
-	return MY_SLEEP_NOT_POSSIBLE;
+	if(mode1 ==  FALLING) {
+		gpio_wakeup_enable((gpio_num_t)interrupt1, GPIO_INTR_LOW_LEVEL);
+	} else if (mode1 == RISING) {
+		gpio_wakeup_enable((gpio_num_t)interrupt1, GPIO_INTR_HIGH_LEVEL);
+	} else {
+		return MY_SLEEP_NOT_POSSIBLE;
+	}
+	if(mode2 ==  FALLING) {
+		gpio_wakeup_enable((gpio_num_t)interrupt2, GPIO_INTR_LOW_LEVEL);
+	} else if (mode2 == RISING) {
+		gpio_wakeup_enable((gpio_num_t)interrupt2, GPIO_INTR_HIGH_LEVEL);
+	} else {
+		return MY_SLEEP_NOT_POSSIBLE;
+	}
+	esp_sleep_enable_gpio_wakeup();
+	esp_sleep_enable_timer_wakeup((uint64_t)ms * 1000);
+	esp_light_sleep_start();
+	gpio_wakeup_disable((gpio_num_t)interrupt1);
+	gpio_wakeup_disable((gpio_num_t)interrupt2);
+	return 0;
 }
 
 uint16_t hwCPUVoltage(void)
