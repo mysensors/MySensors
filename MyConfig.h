@@ -1030,6 +1030,12 @@
  */
 
 /**
+ * @def MY_RADIO_SX126x
+ * @brief Define this to use SX126x based radios for sensor network communication.
+ */
+//#define MY_RADIO_SX126x
+
+/**
  * @def MY_SX126x_CS_PIN
  * @brief sx126x SPI chip select pin.
  */
@@ -1139,7 +1145,7 @@
 
 
 /**
- * @def MY_SX126c_TXCO_STARTUP_DELAY
+ * @def MY_SX126c_TCXO_STARTUP_DELAY
  * @brief Time in ms it takes the TXCO to start up and stabilize
  *
  * Will be set to 10ms if @ref MY_SX126x_TCXO_VOLTAGE is set but @ref MY_SX126c_TCXO_STARTUP_DELAY
@@ -1220,7 +1226,7 @@
 
 /**
  * @def MY_SX126x_MAX_POWER_LEVEL_DBM
- * @def Sets the maximum allowable output power level. Default: 13dBm (20mW)
+ * @brief Sets the maximum allowable output power level. Default: 13dBm (20mW)
  *
  * Please check local regulations!
  */
@@ -1230,7 +1236,7 @@
 
 /**
  * @def MY_SX126x_MIN_POWER_LEVEL_DBM
- * @def Sets the minimum output power level. Used in ATC. Default: 0dBm (0.5mW)
+ * @brief Sets the minimum output power level. Used in ATC. Default: 0dBm (0.5mW)
  */
 #ifndef MY_SX126x_MIN_POWER_LEVEL_DBM
 #define MY_SX126x_MIN_POWER_LEVEL_DBM (-3)
@@ -2757,6 +2763,19 @@
 #define MY_RFM95_POWER_PIN
 #define MY_RFM95_TCXO
 #define MY_RFM95_MAX_POWER_LEVEL_DBM
+// SX126x
+#define MY_RADIO_SX126x
+#define MY_SX126x_TCXO_VOLTAGE
+#define MY_SX126c_TCXO_STARTUP_DELAY
+#define MY_SX126x_USE_TCXO
+#define MY_SX126x_USE_DIO2_ANT_SWITCH
+#define MY_SX126x_ANT_SWITCH_PIN
+#define MY_SX126x_POWER_PIN
+#define MY_SX126x_RESET_PIN
+#define MY_SX126x_BUSY_PIN
+#define MY_SX126x_DISABLE_ATC
+#define MY_SX126x_MIN_POWER_LEVEL_DBM
+#define MY_SX126x_MAX_POWER_LEVEL_DBM
 // SOFT-SPI
 #define MY_SOFTSPI
 #endif

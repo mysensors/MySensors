@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2023 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -115,9 +115,9 @@
 #endif
 
 // Frequency helpers
-#define SX126x_XTAL_FREQ ( double )32000000
-#define SX126x_FREQ_DIV  ( double )pow( 2.0, 25.0 )
-#define SX126x_FREQ_STEP ( double )( SX126x_XTAL_FREQ / SX126x_FREQ_DIV )
+#define SX126x_XTAL_FREQ ( double )32000000				//!< XTAL frequency
+#define SX126x_FREQ_DIV  ( double )pow( 2.0, 25.0 )		//!<  Frequency divider
+#define SX126x_FREQ_STEP ( double )( SX126x_XTAL_FREQ / SX126x_FREQ_DIV )	//!< Frequency step 
 
 // SX126x radio configurations: reg_1d, reg_1e, reg_26 (see datasheet)
 #define SX126x_BW125CR45SF128 SX126x_BW_125KHZ | SX126x_CODING_RATE_4_5, SX126x_SPREADING_FACTOR_128CPS | SX126x_RX_PAYLOAD_CRC_ON, SX126x_AGC_AUTO_ON									 //!< 0x72,0x74,0x04
@@ -177,13 +177,13 @@
 #define SX126x_SLEEP_WARM_START 0x04 //!< Retain configuration during sleep
 
 /**
- * \brief SX126x register adresses
+ * @brief SX126x register adresses
  */
 #define SX126x_REG_OCP           0x08E7 //!< Over current protection value
 #define SX126x_REG_LORASW		 0x0740 //!< LoRa SyncWord
 
 /**
- * \brief Commands for the SX126x chip
+ * @brief Commands for the SX126x chip
  */
 typedef enum sx126xCommands_e {
 	SX126x_RESET_STATS = 0x00,
@@ -230,7 +230,7 @@ typedef enum sx126xCommands_e {
 } sx126x_commands_t;
 
 /**
- * \brief Declares the oscillator in use while in standby mode
+ * @brief Declares the oscillator in use while in standby mode
  *
  * Using the STDBY_RC standby mode allow to reduce the energy consumption
  * STDBY_XOSC should be used for time critical applications
@@ -241,7 +241,7 @@ typedef enum {
 } sx126x_radioStandbyModes_t;
 
 /**
- * \brief Declares the power regulation used to power the device
+ * @brief Declares the power regulation used to power the device
  *
  * This command allows the user to specify if DC-DC or LDO is used for power regulation.
  * Using only LDO implies that the Rx or Tx current is doubled
@@ -252,7 +252,7 @@ typedef enum {
 } sx126x_radioRegulatorMode_t;
 
 /**
- * \brief Declares the possible packet type (i.e. modem) used
+ * @brief Declares the possible packet type (i.e. modem) used
  */
 typedef enum {
 	SX126x_PACKET_TYPE_GFSK = 0x00,
@@ -261,43 +261,43 @@ typedef enum {
 } sx126x_radioPacketTypes_t;
 
 /**
- * \brief data type to receive RX buffer status
+ * @brief data type to receive RX buffer status
  */
 typedef union {
 	struct {
-		uint8_t payloadLength;
-		uint8_t startPointer;
-	} fields;
-	uint8_t values[2];
+		uint8_t payloadLength;	//!< payloadLength
+		uint8_t startPointer;	//!< startPointer
+	} fields;					//!< fields
+	uint8_t values[2];			//!< values
 } sx126x_rxBufferStatus_t;
 
 /**
- * \brief data type to receive packet status
+ * @brief data type to receive packet status
  */
 typedef union {
 	struct {
-		uint8_t rawRssiPkt;
-		int8_t rawSnrPkt;
-		uint8_t rawSignalRssiPkt;
-	} fields;
-	uint8_t values[3];
+		uint8_t rawRssiPkt;		//!< rawRssiPkt
+		int8_t rawSnrPkt;		//!< rawSnrPkt
+		uint8_t rawSignalRssiPkt; //!< rawSignalRssiPkt
+	} fields;					//!< fields
+	uint8_t values[3];			//!< values
 } sx126x_packetStatus_t;
 
 /**
- * \brief sx126x sleep parameters
+ * @brief sx126x sleep parameters
  */
 typedef union {
 	struct {
 		bool wakeUpRTC : 1; //!< wake up on RTC timeout
-		uint8_t : 1;				//!< reserved for future use
+		uint8_t : 1;		//!< reserved for future use
 		bool warmStart : 1; //!< false: cold start. true: warm start with config retention
-		uint8_t : 5;
-	} fields;
-	uint8_t value;
+		uint8_t : 5;		//!< reserved
+	} fields;				//!< fields
+	uint8_t value;			//!< value
 } sx126x_sleepParams_t;
 
 /**
- * \brief SX126x operation Modes
+ * @brief SX126x operation Modes
  */
 typedef enum {
 	SX126x_MODE_SLEEP = 0x00, //!< SX126x is in sleep mode
@@ -311,7 +311,7 @@ typedef enum {
 } sx126x_radioModes_t;
 
 /**
- * \brief LoRa spreading factors
+ * @brief LoRa spreading factors
  */
 typedef enum {
 	LORA_SF5                                = 0x05,
@@ -325,7 +325,7 @@ typedef enum {
 } sx126x_loRaSpreadingFactors_t;
 
 /**
- * \brief LoRa Bandwiths
+ * @brief LoRa Bandwiths
  */
 typedef enum {
 	LORA_BW_500                             = 6,
@@ -341,7 +341,7 @@ typedef enum {
 } sx126x_loRaBandwidths_t;
 
 /**
- * \brief LoRa coding rates
+ * @brief LoRa coding rates
  */
 typedef enum {
 	LORA_CR_4_5                             = 0x01,
@@ -351,7 +351,7 @@ typedef enum {
 } sx126x_loRaCodingRates_t;
 
 /**
- * \brief LoRa CAD number of symbols
+ * @brief LoRa CAD number of symbols
  */
 typedef enum {
 	LORA_CAD_ON_1_SYMB  = 0x00,
@@ -362,7 +362,7 @@ typedef enum {
 } sx126x_loRaCADSymbols_t;
 
 /**
- * \brief CAD exit type
+ * @brief CAD exit type
  */
 typedef enum {
 	SX126x_CAD_ONLY = 0x00,
@@ -370,40 +370,40 @@ typedef enum {
 } sx126x_cadExitModes_t;
 
 /**
- * \brief CAD parameters type
+ * @brief CAD parameters type
  */
 typedef union {
 	struct {
-		sx126x_loRaCADSymbols_t cadSymbolsNum;
-		uint8_t cadDetPeak;
-		uint8_t cadDetMin;
-		sx126x_cadExitModes_t cadExitMode;
-		uint8_t cadTimeout1;
-		uint8_t cadTimeout2;
-		uint8_t cadTimeout3;
-	} fields;
-	uint8_t values[7];
+		sx126x_loRaCADSymbols_t cadSymbolsNum;		//!< cadSymbolsNum
+		uint8_t cadDetPeak;							//!< cadDetPeak
+		uint8_t cadDetMin;							//!< cadDetMin
+		sx126x_cadExitModes_t cadExitMode;			//!< cadExitMode
+		uint8_t cadTimeout1;						//!< cadTimeout1
+		uint8_t cadTimeout2;						//!< cadTimeout2
+		uint8_t cadTimeout3;						//!< cadTimeout3
+	} fields;										//!< fields
+	uint8_t values[7];								//!< values
 } sx126x_cadParameters_t;
 
 // Define CAD parameters
 
 /*!
- * \brief Typedef for the SX126x modulation settings
+ * @brief Typedef for the SX126x modulation settings
  */
 typedef struct {
 	union {
 		struct {
-			sx126x_loRaSpreadingFactors_t spreadingFactor;   //!< Spreading Factor for the LoRa modulation
-			sx126x_loRaBandwidths_t bandwidth;         //!< Bandwidth for the LoRa modulation
-			sx126x_loRaCodingRates_t codingRate;        //!< Coding rate for the LoRa modulation
-			bool lowDatarateOptimize; //!< Indicates if the modem uses the low datarate optimization
-		} fields;
-		uint8_t values[8];
+			sx126x_loRaSpreadingFactors_t spreadingFactor;  //!< Spreading Factor for the LoRa modulation
+			sx126x_loRaBandwidths_t bandwidth;         		//!< Bandwidth for the LoRa modulation
+			sx126x_loRaCodingRates_t codingRate;        	//!< Coding rate for the LoRa modulation
+			bool lowDatarateOptimize; 						//!< Indicates if the modem uses the low datarate optimization
+		} fields;											//!< fields
+		uint8_t values[8];									//!< values
 	};
 } sx126x_modulationParams_t;
 
 /**
- * \brief SX126x packet types
+ * @brief SX126x packet types
  */
 typedef enum {
 	PACKET_TYPE_GFSK                        = 0x00,
@@ -417,17 +417,17 @@ typedef enum {
 typedef struct {
 	union {
 		struct {
-			uint8_t paDutyCycle;
-			uint8_t hpMax;
-			uint8_t deviceSel;
-			uint8_t paLut = 0x01;
-		} fields;
-		uint8_t values[4];
+			uint8_t paDutyCycle;		//!< paDutyCycle
+			uint8_t hpMax;				//!< hpMax
+			uint8_t deviceSel;			//!< deviceSel
+			uint8_t paLut = 0x01;		//!< paLut
+		} fields;						//!< fields
+		uint8_t values[4];				//!< values
 	};
 } sx126x_paSettings_t;
 
 /**
- * \brief Ramping time for power amplifier
+ * @brief Ramping time for power amplifier
  */
 typedef enum {
 	RADIO_RAMP_10_US                        = 0x00,
@@ -446,10 +446,10 @@ typedef enum {
 typedef struct {
 	union {
 		struct {
-			uint8_t power;
-			sx126x_RampTimes_t rampTime;
-		} fields;
-		uint8_t values[2];
+			uint8_t power;					//!< power
+			sx126x_RampTimes_t rampTime;	//!< rampTime
+		} fields;							//!< fields
+		uint8_t values[2];					//!< values
 	};
 } sx126x_txSettings_t;
 
@@ -470,12 +470,12 @@ typedef int8_t sx126x_SNR_t;
 */
 typedef union {
 	struct {
-		uint8_t :5;
-		bool ackRssiReport :1;
-		bool ackReceived :1;
-		bool ackRequested :1;
-	} fields;
-	uint8_t values;
+		uint8_t :5;				//!< reserved
+		bool ackRssiReport :1;	//!< ackRssiReport
+		bool ackReceived :1;	//!< ackReceived
+		bool ackRequested :1;	//!< ackRequested
+	} fields;					//!< fields
+	uint8_t values;				//!< values
 } sx126x_controlFlags_t;
 
 /**
@@ -540,7 +540,7 @@ typedef struct {
 	volatile bool ackReceived : 1;			  //!< ACK received
 	volatile bool dataReceived : 1;			  //!< Data received
 	volatile bool txComplete : 1;			  //!< Transmission complete
-	volatile bool irqFired: 1;                //<!irq occured
+	volatile bool irqFired : 1;               //!< irq occured
 } sx126x_internal_t;
 
 /**
@@ -558,7 +558,7 @@ typedef enum {
 } sx126x_tcxoVoltage_t;
 
 /**
- * \brief IRQ masks
+ * @brief IRQ masks
  */
 typedef enum {
 	SX126x_IRQ_NONE                          = 0x0000,
