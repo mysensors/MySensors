@@ -7,9 +7,9 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   doxygen:
-    name: DoxyGen:
+    name: DoxyGen
     runs-on: ubuntu-latest
     steps:
       uses: mattnotmitt/doxygen-action@v1.9.5
       with:
-          doxyfile-path: 'docs/Doxygen'
+        doxyfile-path: 'docs/Doxygen'
