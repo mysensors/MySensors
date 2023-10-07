@@ -196,14 +196,6 @@ void transportHALPowerDown(void)
 	// hwPinMode(MY_RF24_CS_PIN, INPUT_PULLUP);
 	// #endif // MY_RF24_CS_PIN
 
-	// #ifdef MY_SCK_PIN
-	// hwPinMode(MY_SCK_PIN, INPUT_PULLUP);
-	// #endif // MY_SCK_PIN
-
-	// #ifdef MY_MO_PIN
-	// hwPinMode(MY_MO_PIN, INPUT_PULLUP);
-	// #endif // MY_MO_PIN
-
 	// #endif
 }
 
@@ -216,14 +208,6 @@ void transportHALPowerUp(void)
 	// #ifdef MY_RF24_CS_PIN
 	// hwPinMode(MY_RF24_CS_PIN, OUTPUT);
 	// #endif // MY_RF24_CS_PIN
-
-	// #ifdef MY_SCK_PIN
-	// hwPinMode(MY_SCK_PIN, OUTPUT);
-	// #endif // MY_SCK_PIN
-
-	// #ifdef MY_MO_PIN
-	// hwPinMode(MY_MO_PIN, OUTPUT);
-	// #endif // MY_MO_PIN
 
 	transportPowerUp();
 }
