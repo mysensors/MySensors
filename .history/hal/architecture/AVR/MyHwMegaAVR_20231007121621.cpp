@@ -56,6 +56,7 @@ static uint32_t sleepRemainingMs = 0ul;
 
 void wakeUp1(void)
 {
+	HARDWARE_DEBUG(PSTR("HW:WU:1:%" PRIu8 "\n"), _wakeUp1Interrupt);
    // Disable sleep. When an interrupt occurs after attachInterrupt,
    // but before sleeping the CPU would not wake up.
    // Ref: http://playground.arduino.cc/Learning/ArduinoSleepCode
@@ -68,6 +69,7 @@ void wakeUp1(void)
 }
 void wakeUp2(void)
 {
+	HARDWARE_DEBUG(PSTR("HW:WU:2:%" PRIu8 "\n"), _wakeUp2Interrupt);
    sleep_disable();
    detachInterrupt(_wakeUp2Interrupt);
    // First interrupt occurred will be reported only
@@ -131,6 +133,7 @@ uint8_t getSleepingPeriod(uint32_t ms)
 
 uint32_t hwPowerDown(uint32_t ms)
 {
+	HARDWARE_DEBUG(PSTR("HW:PD:%" PRIu32 "\n"), ms);
 	// Let serial prints finish (debug, log etc)
 #ifndef MY_DISABLED_SERIAL
 	MY_SERIALDEVICE.flush();
@@ -154,6 +157,8 @@ uint32_t hwPowerDown(uint32_t ms)
 			cli();
 			hwPitRtcInit(period << 3);
 			sei();
+
+			HARDWARE_DEBUG(PSTR("HW:PD:%" PRIu32 ", cMS=%" PRIu16 ", p=%" PRIu8 "\n"), ms, comparatorMS, period << 3);
 
 			set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 			sleep_enable();
@@ -182,6 +187,7 @@ uint32_t hwPowerDown(uint32_t ms)
 		_afterSleep();
 	}
 
+	HARDWARE_DEBUG(PSTR("HW:PU:%" PRIu32 "\n"), ms);
 	if (interruptWakeUp()) {
       return ms;
    }
@@ -238,10 +244,13 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
    // to prevent waking immediately again.
    // Ref: https://forum.arduino.cc/index.php?topic=59217.0
    if (interrupt1 != INVALID_INTERRUPT_NUM) {
+			HARDWARE_DEBUG(PSTR("HW:AI1:%" PRIu8 "\n"), interrupt1);
+
       clearPendingInterrupt(interrupt1);
       attachInterrupt(interrupt1, wakeUp1, mode1);
    }
    if (interrupt2 != INVALID_INTERRUPT_NUM) {
+			HARDWARE_DEBUG(PSTR("HW:AI2:%" PRIu8 "\n"), interrupt2);
       clearPendingInterrupt(interrupt2);
       attachInterrupt(interrupt2, wakeUp2, mode2);
    }

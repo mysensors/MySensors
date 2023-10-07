@@ -56,6 +56,7 @@ static uint32_t sleepRemainingMs = 0ul;
 
 void wakeUp1(void)
 {
+	HARDWARE_DEBUG(PSTR("HW:WU:1:%" PRIu8 "\n"), _wakeUp1Interrupt);
    // Disable sleep. When an interrupt occurs after attachInterrupt,
    // but before sleeping the CPU would not wake up.
    // Ref: http://playground.arduino.cc/Learning/ArduinoSleepCode
@@ -68,6 +69,7 @@ void wakeUp1(void)
 }
 void wakeUp2(void)
 {
+	HARDWARE_DEBUG(PSTR("HW:WU:2:%" PRIu8 "\n"), _wakeUp2Interrupt);
    sleep_disable();
    detachInterrupt(_wakeUp2Interrupt);
    // First interrupt occurred will be reported only

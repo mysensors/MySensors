@@ -52,6 +52,14 @@
 #define MY_DEBUGDEVICE MY_SERIALDEVICE
 #endif
 
+// debug
+#if defined(MY_DEBUG_VERBOSE_HARDWARE)
+#define HARDWARE_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
+extern char _convBuf[MAX_PAYLOAD_SIZE * 2 + 1];
+#else
+#define HARDWARE_DEBUG(x,...)	//!< debug NULL
+#endif
+
 // AVR temperature calibration reference: http://ww1.microchip.com/downloads/en/AppNotes/Atmel-8108-Calibration-of-the-AVRs-Internal-Temperature-Reference_ApplicationNote_AVR122.pdf
 #ifndef MY_AVR_TEMPERATURE_OFFSET
 #define MY_AVR_TEMPERATURE_OFFSET (324.31f)
