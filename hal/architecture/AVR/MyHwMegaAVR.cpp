@@ -25,8 +25,8 @@ void hwRtcInit(void)
 	while (RTC.STATUS > 0) { } /* Wait for all register to be synchronized */
 
 	RTC.CTRLA = RTC_PRESCALER_DIV32768_gc /* 32768 */
-							| 0 << RTC_RTCEN_bp       /* Enable: disabled */
-							| 0 << RTC_RUNSTDBY_bp;   /* Run In Standby: disabled */
+	            | 0 << RTC_RTCEN_bp       /* Enable: disabled */
+	            | 0 << RTC_RUNSTDBY_bp;   /* Run In Standby: disabled */
 
 	RTC.CLKSEL = RTC_CLKSEL_INT1K_gc; /* 32KHz divided by 32 */
 }
@@ -35,56 +35,56 @@ bool hwInit(void)
 {
 	hwRtcInit();
 #if !defined(MY_DISABLED_SERIAL)
-   MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 #if defined(MY_GATEWAY_SERIAL)
-   while (!MY_SERIALDEVICE) {}
+	while (!MY_SERIALDEVICE) {}
 #endif
 #endif
-   return true;
+	return true;
 }
 
 #define PIT_SLEEP_FOREVER      0
 
 volatile uint8_t _wokeUpByInterrupt =
-   INVALID_INTERRUPT_NUM;    // Interrupt number that woke the mcu.
+    INVALID_INTERRUPT_NUM;    // Interrupt number that woke the mcu.
 volatile uint8_t _wakeUp1Interrupt  =
-   INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp1-callback.
+    INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp1-callback.
 volatile uint8_t _wakeUp2Interrupt  =
-   INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
+    INVALID_INTERRUPT_NUM;    // Interrupt number for wakeUp2-callback.
 
 static uint32_t sleepRemainingMs = 0ul;
 
 void wakeUp1(void)
 {
-   // Disable sleep. When an interrupt occurs after attachInterrupt,
-   // but before sleeping the CPU would not wake up.
-   // Ref: http://playground.arduino.cc/Learning/ArduinoSleepCode
-   sleep_disable();
-   detachInterrupt(_wakeUp1Interrupt);
-   // First interrupt occurred will be reported only
-   if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt) {
-      _wokeUpByInterrupt = _wakeUp1Interrupt;
-   }
+	// Disable sleep. When an interrupt occurs after attachInterrupt,
+	// but before sleeping the CPU would not wake up.
+	// Ref: http://playground.arduino.cc/Learning/ArduinoSleepCode
+	sleep_disable();
+	detachInterrupt(_wakeUp1Interrupt);
+	// First interrupt occurred will be reported only
+	if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt) {
+		_wokeUpByInterrupt = _wakeUp1Interrupt;
+	}
 }
 void wakeUp2(void)
 {
-   sleep_disable();
-   detachInterrupt(_wakeUp2Interrupt);
-   // First interrupt occurred will be reported only
-   if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt) {
-      _wokeUpByInterrupt = _wakeUp2Interrupt;
-   }
+	sleep_disable();
+	detachInterrupt(_wakeUp2Interrupt);
+	// First interrupt occurred will be reported only
+	if (INVALID_INTERRUPT_NUM == _wokeUpByInterrupt) {
+		_wokeUpByInterrupt = _wakeUp2Interrupt;
+	}
 }
 
 inline bool interruptWakeUp(void)
 {
-   return _wokeUpByInterrupt != INVALID_INTERRUPT_NUM;
+	return _wokeUpByInterrupt != INVALID_INTERRUPT_NUM;
 }
 
 void clearPendingInterrupt(const uint8_t interrupt)
 {
-   // TODO: Check do I need that
-   //EIFR = _BV(interrupt);
+	// TODO: Check do I need that
+	//EIFR = _BV(interrupt);
 }
 
 void pit_reset()
@@ -93,7 +93,8 @@ void pit_reset()
 	RTC.PITINTCTRL = 0;
 }
 
-void hwPitRtcInit(uint8_t cycles) {
+void hwPitRtcInit(uint8_t cycles)
+{
 	while (RTC.PITSTATUS > 0) { }/* Wait for all register to be synchronized */
 
 	/*
@@ -111,7 +112,7 @@ void hwPitRtcInit(uint8_t cycles) {
 		RTC_PERIOD_CYC32768_gc = (0x0E<<3),  /* RTC Clock Cycles 32768
 	*/
 	RTC.PITCTRLA = cycles
-							| 1 << RTC_PITEN_bp;   /* Enable: enabled */
+	               | 1 << RTC_PITEN_bp;   /* Enable: enabled */
 
 	RTC.PITINTCTRL = 1 << RTC_PI_bp; /* Periodic Interrupt: enabled */
 }
@@ -120,8 +121,7 @@ uint8_t getSleepingPeriod(uint32_t ms)
 {
 	for (uint8_t period = 14u; period > 2; --period) {
 		const uint16_t comparatorMS = (32768 >> (15 - period));
-		if (ms >= comparatorMS)
-		{
+		if (ms >= comparatorMS) {
 			return period;
 		}
 	}
@@ -165,7 +165,7 @@ uint32_t hwPowerDown(uint32_t ms)
 			sei();
 
 			ms -= comparatorMS;
-   	}
+		}
 	} else {
 		// Eternal sleep
 		set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -183,96 +183,97 @@ uint32_t hwPowerDown(uint32_t ms)
 	}
 
 	if (interruptWakeUp()) {
-      return ms;
-   }
-   return 0ul;
+		return ms;
+	}
+	return 0ul;
 }
 
-ISR (RTC_PIT_vect) {
-   RTC.PITINTFLAGS = 1; // Clear interrupt flag
+ISR (RTC_PIT_vect)
+{
+	RTC.PITINTFLAGS = 1; // Clear interrupt flag
 }
 
 int8_t hwSleep(uint32_t ms)
 {
-   // Return what woke the mcu.
-   // Default: no interrupt triggered, timer wake up
-   int8_t ret = MY_WAKE_UP_BY_TIMER;
-   sleepRemainingMs = 0ul;
-   if (ms > 0u) {
-      // sleep for defined time
-      sleepRemainingMs = hwPowerDown(ms);
-   } else {
-      // sleep until ext interrupt triggered
-      hwPowerDown(PIT_SLEEP_FOREVER);
-   }
-   if (interruptWakeUp()) {
-      ret = static_cast<int8_t>(_wokeUpByInterrupt);
-   }
-   // Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
-   _wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+	// Return what woke the mcu.
+	// Default: no interrupt triggered, timer wake up
+	int8_t ret = MY_WAKE_UP_BY_TIMER;
+	sleepRemainingMs = 0ul;
+	if (ms > 0u) {
+		// sleep for defined time
+		sleepRemainingMs = hwPowerDown(ms);
+	} else {
+		// sleep until ext interrupt triggered
+		hwPowerDown(PIT_SLEEP_FOREVER);
+	}
+	if (interruptWakeUp()) {
+		ret = static_cast<int8_t>(_wokeUpByInterrupt);
+	}
+	// Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
+	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
 
-   return ret;
+	return ret;
 }
 
 int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
-   return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
+	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0u, ms);
 }
 
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t interrupt2,
                const uint8_t mode2,
                uint32_t ms)
 {
-   // ATMega328P supports following modes to wake from sleep: LOW, CHANGE, RISING, FALLING
-   // Datasheet states only LOW can be used with INT0/1 to wake from sleep, which is incorrect.
-   // Ref: http://gammon.com.au/interrupts
+	// ATMega328P supports following modes to wake from sleep: LOW, CHANGE, RISING, FALLING
+	// Datasheet states only LOW can be used with INT0/1 to wake from sleep, which is incorrect.
+	// Ref: http://gammon.com.au/interrupts
 
-   // Disable interrupts until going to sleep, otherwise interrupts occurring between attachInterrupt()
-   // and sleep might cause the ATMega to not wakeup from sleep as interrupt has already be handled!
-   cli();
-   // attach interrupts
-   _wakeUp1Interrupt  = interrupt1;
-   _wakeUp2Interrupt  = interrupt2;
+	// Disable interrupts until going to sleep, otherwise interrupts occurring between attachInterrupt()
+	// and sleep might cause the ATMega to not wakeup from sleep as interrupt has already be handled!
+	cli();
+	// attach interrupts
+	_wakeUp1Interrupt  = interrupt1;
+	_wakeUp2Interrupt  = interrupt2;
 
-   // Attach external interrupt handlers, and clear any pending interrupt flag
-   // to prevent waking immediately again.
-   // Ref: https://forum.arduino.cc/index.php?topic=59217.0
-   if (interrupt1 != INVALID_INTERRUPT_NUM) {
-      clearPendingInterrupt(interrupt1);
-      attachInterrupt(interrupt1, wakeUp1, mode1);
-   }
-   if (interrupt2 != INVALID_INTERRUPT_NUM) {
-      clearPendingInterrupt(interrupt2);
-      attachInterrupt(interrupt2, wakeUp2, mode2);
-   }
+	// Attach external interrupt handlers, and clear any pending interrupt flag
+	// to prevent waking immediately again.
+	// Ref: https://forum.arduino.cc/index.php?topic=59217.0
+	if (interrupt1 != INVALID_INTERRUPT_NUM) {
+		clearPendingInterrupt(interrupt1);
+		attachInterrupt(interrupt1, wakeUp1, mode1);
+	}
+	if (interrupt2 != INVALID_INTERRUPT_NUM) {
+		clearPendingInterrupt(interrupt2);
+		attachInterrupt(interrupt2, wakeUp2, mode2);
+	}
 
-   sleepRemainingMs = 0ul;
-   if (ms > 0u) {
-      // sleep for defined time
-      sleepRemainingMs = hwPowerDown(ms);
-   } else {
-      // sleep until ext interrupt triggered
-      hwPowerDown(PIT_SLEEP_FOREVER);
-   }
+	sleepRemainingMs = 0ul;
+	if (ms > 0u) {
+		// sleep for defined time
+		sleepRemainingMs = hwPowerDown(ms);
+	} else {
+		// sleep until ext interrupt triggered
+		hwPowerDown(PIT_SLEEP_FOREVER);
+	}
 
-   // Assure any interrupts attached, will get detached when they did not occur.
-   if (interrupt1 != INVALID_INTERRUPT_NUM) {
-      detachInterrupt(interrupt1);
-   }
-   if (interrupt2 != INVALID_INTERRUPT_NUM) {
-      detachInterrupt(interrupt2);
-   }
+	// Assure any interrupts attached, will get detached when they did not occur.
+	if (interrupt1 != INVALID_INTERRUPT_NUM) {
+		detachInterrupt(interrupt1);
+	}
+	if (interrupt2 != INVALID_INTERRUPT_NUM) {
+		detachInterrupt(interrupt2);
+	}
 
-   // Return what woke the mcu.
-   // Default: no interrupt triggered, timer wake up
-   int8_t ret = MY_WAKE_UP_BY_TIMER;
-   if (interruptWakeUp()) {
-      ret = static_cast<int8_t>(_wokeUpByInterrupt);
-   }
-   // Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
-   _wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+	// Return what woke the mcu.
+	// Default: no interrupt triggered, timer wake up
+	int8_t ret = MY_WAKE_UP_BY_TIMER;
+	if (interruptWakeUp()) {
+		ret = static_cast<int8_t>(_wokeUpByInterrupt);
+	}
+	// Clear woke-up-by-interrupt flag, so next sleeps won't return immediately.
+	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
 
-   return ret;
+	return ret;
 }
 
 uint32_t hwGetSleepRemaining(void)
@@ -282,63 +283,65 @@ uint32_t hwGetSleepRemaining(void)
 
 inline void hwRandomNumberInit(void)
 {
-   // This function initializes the random number generator with a seed
-   // of 32 bits.  This method is good enough to earn FIPS 140-2 conform
-   // random data. This should reach to generate 32 Bit for randomSeed().
-   uint32_t seed = 0;
-   uint32_t timeout = millis() + 20;
+	// This function initializes the random number generator with a seed
+	// of 32 bits.  This method is good enough to earn FIPS 140-2 conform
+	// random data. This should reach to generate 32 Bit for randomSeed().
+	uint32_t seed = 0;
+	uint32_t timeout = millis() + 20;
 
-   // Trigger floating effect of an unconnected pin
-   pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
-   pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
-   delay(10);
+	// Trigger floating effect of an unconnected pin
+	pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
+	pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
+	delay(10);
 
-   // Generate 32 bits of datas
-   for (uint8_t i=0; i<32; i++) {
-      const int pinValue = analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN);
-      // Wait until the analog value has changed
-      while ((pinValue == analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN)) && (timeout>=millis())) {
-         seed ^= (millis() << i);
-         // Check of data generation is slow
-         if (timeout<=millis()) {
-            // Trigger pin again
-            pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
-            pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
-            // Pause a short while
-            delay(seed % 10);
-            timeout = millis() + 20;
-         }
-      }
-   }
-   randomSeed(seed);
+	// Generate 32 bits of datas
+	for (uint8_t i=0; i<32; i++) {
+		const int pinValue = analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN);
+		// Wait until the analog value has changed
+		while ((pinValue == analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN)) && (timeout>=millis())) {
+			seed ^= (millis() << i);
+			// Check of data generation is slow
+			if (timeout<=millis()) {
+				// Trigger pin again
+				pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT_PULLUP);
+				pinMode(MY_SIGNING_SOFT_RANDOMSEED_PIN, INPUT);
+				// Pause a short while
+				delay(seed % 10);
+				timeout = millis() + 20;
+			}
+		}
+	}
+	randomSeed(seed);
 }
 
 bool hwUniqueID(unique_id_t *uniqueID)
 {
-   // padding
-   (void)memset(uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
-   // no unique ID for non-PB AVR, use HW specifics for diversification
-   *((uint8_t *)uniqueID) = SIGNATURE_2;
-   *((uint8_t *)uniqueID + 1) = SIGNATURE_1;
-   *((uint8_t *)uniqueID + 2) = SIGNATURE_0;
-   *((uint8_t *)uniqueID + 3) = SIGROW.DEVICEID0;
-   *((uint8_t *)uniqueID + 4) = SIGROW.DEVICEID1;
-   *((uint8_t *)uniqueID + 5) = SIGROW.DEVICEID2;
+	// padding
+	(void)memset(uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
+	// no unique ID for non-PB AVR, use HW specifics for diversification
+	*((uint8_t *)uniqueID) = SIGNATURE_2;
+	*((uint8_t *)uniqueID + 1) = SIGNATURE_1;
+	*((uint8_t *)uniqueID + 2) = SIGNATURE_0;
+	*((uint8_t *)uniqueID + 3) = SIGROW.DEVICEID0;
+	*((uint8_t *)uniqueID + 4) = SIGROW.DEVICEID1;
+	*((uint8_t *)uniqueID + 5) = SIGROW.DEVICEID2;
 
 	// SIGROW.SERNUM[9:0].
-   for(uint8_t idx = 0; idx < 10; idx++) {
-      *((uint8_t *)uniqueID + 6 + idx) = *(&SIGROW.SERNUM0 + idx);
-   }
+	for(uint8_t idx = 0; idx < 10; idx++) {
+		*((uint8_t *)uniqueID + 6 + idx) = *(&SIGROW.SERNUM0 + idx);
+	}
 
 
-   return true; // unique ID returned
+	return true; // unique ID returned
 }
 
 uint16_t hwCPUVoltage(void)
 {
 	analogReference(INTERNAL1V024);
 
-	for (uint8_t i = 0; i < 10; i++) { analogRead(ADC_VDDDIV10); }
+	for (uint8_t i = 0; i < 10; i++) {
+		analogRead(ADC_VDDDIV10);
+	}
 
 	uint16_t adc = analogRead(ADC_VDDDIV10);
 	uint16_t voltage = adc * (uint16_t) 10.24; // value in mV
@@ -364,19 +367,20 @@ uint16_t hwCPUFrequency(void)
 	TCA0.SINGLE.CNT = 0x0; /* Count: 0x0 */
 
 	TCA0.SINGLE.EVCTRL = 0 << TCA_SINGLE_CNTAEI_bp           /* Count on Event Input A: disabled */
-										| 0 << TCA_SINGLE_CNTBEI_bp            /* Count on Event Input B: disabled */
-										| TCA_SINGLE_EVACTA_CNT_POSEDGE_gc     /* Count on positive edge event */
-										| TCA_SINGLE_EVACTB_UPDOWN_gc;         /* Count on prescaled clock. Event controls count direction.
+	                     | 0 << TCA_SINGLE_CNTBEI_bp            /* Count on Event Input B: disabled */
+	                     | TCA_SINGLE_EVACTA_CNT_POSEDGE_gc     /* Count on positive edge event */
+	                     | TCA_SINGLE_EVACTB_UPDOWN_gc;         /* Count on prescaled clock. Event controls count direction.
 																															Up-count when event line is 0, down-count when event line
 																															is 1. */
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1024_gc         /* System Clock */
-										| 1 << TCA_SINGLE_ENABLE_bp            /* Module Enable: enabled */
-										| 0 << TCA_SINGLE_RUNSTDBY_bp;         /* Run Standby: disabled */
+	                    | 1 << TCA_SINGLE_ENABLE_bp            /* Module Enable: enabled */
+	                    | 0 << TCA_SINGLE_RUNSTDBY_bp;         /* Run Standby: disabled */
 
 	// set pit
-	while (RTC.PITSTATUS > 0) {}                             /* Wait for all register to be synchronized */
+	while (RTC.PITSTATUS >
+	        0) {}                             /* Wait for all register to be synchronized */
 	RTC.PITCTRLA = RTC_PERIOD_CYC16384_gc                    /* RTC Clock Cycles 16384 - 500ms */
-									| 1 << RTC_PITEN_bp;                      /* Enable: enabled */
+	               | 1 << RTC_PITEN_bp;                      /* Enable: enabled */
 	RTC.PITINTCTRL = 1 << RTC_PI_bp;                         /* Periodic Interrupt: enabled */
 
 	// wait for pit to interrupt
@@ -400,7 +404,7 @@ uint16_t hwCPUFrequency(void)
 	TCA0.SINGLE.CTRLA = tcaCtrlA;
 
 	// return frequency in 1/10MHz (accuracy +- 10%)
-   return result;
+	return result;
 #endif
 }
 
@@ -423,7 +427,7 @@ int8_t hwCPUTemperature(void)
 
 uint16_t hwFreeMem(void)
 {
-   extern int __heap_start, *__brkval;
-   int v;
-   return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+	extern int __heap_start, *__brkval;
+	int v;
+	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
