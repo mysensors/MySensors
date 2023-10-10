@@ -392,7 +392,6 @@ uint16_t hwCPUFrequency(void)
 
 	sei();
 
-	uint16_t count = TCA0.SINGLE.CNT;
 	const uint16_t result = (TCA0.SINGLE.CNT * 2048UL) / 100000UL;
 
 	// Reset timers
