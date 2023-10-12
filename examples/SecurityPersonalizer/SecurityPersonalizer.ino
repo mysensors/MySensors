@@ -1343,6 +1343,8 @@ static void	probe_and_print_peripherals(void)
 	    F("+--------------+--------------+--------------+------------------------------+--------+"));
 #if defined(ARDUINO_ARCH_AVR)
 	Serial.print(F("| AVR          | DETECTED     | N/A          | "));
+#elif defined(ARDUINO_ARCH_MEGAAVR)
+	Serial.print(F("| megaAVR      | DETECTED     | N/A          | "));
 #elif defined(ARDUINO_ARCH_ESP8266)
 	Serial.print(F("| ESP8266      | DETECTED     | N/A          | "));
 #elif defined(ARDUINO_ARCH_SAMD)

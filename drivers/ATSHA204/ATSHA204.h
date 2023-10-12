@@ -225,7 +225,7 @@
 
 /* Low level HW access macros */
 /* function calls is not working, as it will have too much overhead */
-#if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
+#if !defined(ARDUINO_ARCH_AVR) && !defined(ARDUINO_ARCH_MEGAAVR) // For everything else than AVR use pinMode / digitalWrite
 #define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
 #define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
 #define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)

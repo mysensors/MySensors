@@ -24,15 +24,15 @@
 doNothing:
 	nop
 	.size	doNothing, .-doNothing
- 
+
 #elif defined(ARDUINO_ARCH_NRF5)
 /* workaround to prevent compiler error */
 	.thumb_func
 doNothing:
 	nop
 	.size	doNothing, .-doNothing
- 
-#elif defined(ARDUINO_ARCH_AVR) 
+
+#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 
 #include "hal/crypto/AVR/drivers/SHA256/SHA256.S"
 

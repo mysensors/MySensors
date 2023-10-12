@@ -32,22 +32,26 @@
 #define MyEepromAddresses_h
 
 // EEPROM variable sizes, in bytes
-#define SIZE_NODE_ID						(1u)		//!< Size node ID
-#define SIZE_PARENT_NODE_ID					(1u)		//!< Size parent node ID
-#define SIZE_DISTANCE						(1u)		//!< Size GW distance
-#define SIZE_ROUTES							(256u)	//!< Size routing table
-#define SIZE_CONTROLLER_CONFIG				(23u)	//!< Size controller config
-#define SIZE_PERSONALIZATION_CHECKSUM	(1u)  //!< Size personalization checksum
-#define SIZE_FIRMWARE_TYPE					(2u)		//!< Size firmware type
-#define SIZE_FIRMWARE_VERSION				(2u)		//!< Size firmware version
-#define SIZE_FIRMWARE_BLOCKS				(2u)		//!< Size firmware blocks
-#define SIZE_FIRMWARE_CRC					(2u)		//!< Size firmware CRC
+#define SIZE_NODE_ID											(1u)		//!< Size node ID
+#define SIZE_PARENT_NODE_ID								(1u)		//!< Size parent node ID
+#define SIZE_DISTANCE											(1u)		//!< Size GW distance
+#ifdef MY_ROUTES_SIZE
+#define SIZE_ROUTES												(MY_ROUTES_SIZE)	//!< Size routing table 148 is the
+#else
+#define SIZE_ROUTES												(256u)	//!< Size routing table 148 is the
+#endif
+#define SIZE_CONTROLLER_CONFIG						(23u)	//!< Size controller config
+#define SIZE_PERSONALIZATION_CHECKSUM			(1u)  //!< Size personalization checksum
+#define SIZE_FIRMWARE_TYPE								(2u)		//!< Size firmware type
+#define SIZE_FIRMWARE_VERSION							(2u)		//!< Size firmware version
+#define SIZE_FIRMWARE_BLOCKS							(2u)		//!< Size firmware blocks
+#define SIZE_FIRMWARE_CRC									(2u)		//!< Size firmware CRC
 #define SIZE_SIGNING_REQUIREMENT_TABLE		(32u)	//!< Size signing requirement table
 #define SIZE_WHITELIST_REQUIREMENT_TABLE	(32u)	//!< Size whitelist requirement table
-#define SIZE_SIGNING_SOFT_HMAC_KEY			(32u)	//!< Size soft signing HMAC key
-#define SIZE_SIGNING_SOFT_SERIAL			(9u)		//!< Size soft signing serial
-#define SIZE_RF_ENCRYPTION_AES_KEY			(16u)	//!< Size RF AES encryption key
-#define SIZE_NODE_LOCK_COUNTER				(1u)		//!< Size node lock counter
+#define SIZE_SIGNING_SOFT_HMAC_KEY				(32u)	//!< Size soft signing HMAC key
+#define SIZE_SIGNING_SOFT_SERIAL					(9u)		//!< Size soft signing serial
+#define SIZE_RF_ENCRYPTION_AES_KEY				(16u)	//!< Size RF AES encryption key
+#define SIZE_NODE_LOCK_COUNTER						(1u)		//!< Size node lock counter
 
 
 /** @brief EEPROM start address */

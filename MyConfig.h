@@ -2608,6 +2608,12 @@
 #define ARDUINO_ARCH_AVR
 
 /**
+ * @def ARDUINO_ARCH_MEGAAVR
+ * @brief Automatically set when building for megaAVR targets
+ */
+#define ARDUINO_ARCH_MEGAAVR
+
+/**
  * @def ARDUINO_ARCH_STM32F1
  * @brief Automatically set when building for STM32F1 targets
  */
@@ -2778,5 +2784,12 @@
 #define MY_SX126x_MAX_POWER_LEVEL_DBM
 // SOFT-SPI
 #define MY_SOFTSPI
+
+/**
+ * @def MY_ROUTES_SIZE
+ * @brief Specifies the size allocated for routing table
+ */
+#define MY_ROUTES_SIZE
+
 #endif
 /** @}*/ // End of MyConfig group
