@@ -181,34 +181,10 @@ bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, cons
 void transportHALPowerDown(void)
 {
 	transportPowerDown();
-
-	// #ifdef ARDUINO_ARCH_MEGAAVR
-
-	// // #ifdef MY_RF24_POWER_PIN
-	// // hwPinMode(MY_RF24_POWER_PIN, INPUT_PULLUP);
-	// // #endif // MY_RF24_POWER_PIN
-
-	// #ifdef MY_RF24_CE_PIN
-	// hwPinMode(MY_RF24_CE_PIN, INPUT_PULLUP);
-	// #endif // MY_RF24_CE_PIN
-
-	// #ifdef MY_RF24_CS_PIN
-	// hwPinMode(MY_RF24_CS_PIN, INPUT_PULLUP);
-	// #endif // MY_RF24_CS_PIN
-
-	// #endif
 }
 
 void transportHALPowerUp(void)
 {
-	// 	#ifdef MY_RF24_CE_PIN
-	// hwPinMode(MY_RF24_CE_PIN, OUTPUT);
-	// #endif // MY_RF24_CE_PIN
-
-	// #ifdef MY_RF24_CS_PIN
-	// hwPinMode(MY_RF24_CS_PIN, OUTPUT);
-	// #endif // MY_RF24_CS_PIN
-
 	transportPowerUp();
 }
 
