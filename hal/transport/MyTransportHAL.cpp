@@ -174,7 +174,7 @@ bool transportHALSend(const uint8_t nextRecipient, const MyMessage *outMsg, cons
 #endif
 
 #ifdef MY_TRANSPORT_SEND_RETRIES
-	uint8_t retries = MY_TRANSPORT_RETRIES;
+	uint8_t retries = MY_TRANSPORT_SEND_RETRIES;
 	bool result = false; 
 	while (retries-- && (!result)) {
 		result = transportSend(nextRecipient, (void *)tx_data, finalLength, noACK);
