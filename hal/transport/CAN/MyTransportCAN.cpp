@@ -28,7 +28,7 @@
 #define CAN_DEBUG(x,...)	//!< DEBUG null
 #endif
 MCP_CAN CAN0(MY_CAN_CS);
-boolean canInitialized = false;
+bool canInitialized = false;
 
 //input buffer for raw data (from library).
 long unsigned int rxId;
@@ -43,20 +43,20 @@ uint8_t message_id = 0;
 typedef struct {
 	uint8_t len;
 	uint8_t data[MAX_MESSAGE_SIZE];
-	boolean packetReceived[4]; //Maximum number of frames
+	bool packetReceived[4]; //Maximum number of frames
 	uint8_t address;
 	uint8_t totalReceivedParts;
-	boolean locked;
+	bool locked;
 	uint8_t age;
 	uint8_t packetId;
-	boolean ready;
+	bool ready;
 } CAN_Packet;
 
 //buffer
 CAN_Packet packets[MY_CAN_BUF_SIZE];
 
 //filter incoming messages (MCP2515 feature).
-boolean _initFilters()
+bool _initFilters()
 {
 	if (!canInitialized) {
 		return false;
@@ -81,7 +81,7 @@ boolean _initFilters()
 	return err == 0;
 }
 
-boolean transportInit(void)
+bool transportInit(void)
 {
 	CAN_DEBUG(PSTR("CAN:INIT:CS=%" PRIu8 ",INT=%" PRIu8 ",SPE=%" PRIu8 ",CLK=%" PRIu8 "\n"), MY_CAN_CS,
 	          MY_CAN_INT, MY_CAN_SPEED, MY_CAN_CLOCK);
@@ -195,7 +195,7 @@ long unsigned int _buildHeader(uint8_t messageId, uint8_t totalPartCount, uint8_
 	return header;
 }
 
-boolean transportSend(const uint8_t to, const void *data, const uint8_t len, const boolean noACK)
+bool transportSend(const uint8_t to, const void *data, const uint8_t len, const bool noACK)
 {
 	(void) noACK;    // some ack is provided by CAN itself. TODO implement application layer ack.
 	const char *datap = static_cast<char const *>(data);
@@ -242,7 +242,7 @@ boolean transportSend(const uint8_t to, const void *data, const uint8_t len, con
 	return true;
 }
 
-boolean transportDataAvailable(void)
+bool transportDataAvailable(void)
 {
 	if (!hwDigitalRead(MY_CAN_INT)) {             // If CAN_INT pin is low, read receive buffer
 		CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
@@ -275,7 +275,7 @@ boolean transportDataAvailable(void)
 		CAN_DEBUG(PSTR("CAN:RCV:SLOT=%" PRIu8 ",PART=%" PRIu8 "\n"), slot,
 		          packets[slot].totalReceivedParts);
 		uint8_t i;
-		boolean ready = true;
+		bool ready = true;
 		for (i = 0; i < totalPartCount; i++) {
 			if (packets[slot].packetReceived[i]==false) {
 				ready=false;
@@ -321,7 +321,7 @@ uint8_t transportGetAddress(void)
 	return _nodeId;
 }
 
-boolean transportSanityCheck(void)
+bool transportSanityCheck(void)
 {
 	// not implemented yet
 	return true;
@@ -383,7 +383,7 @@ int16_t transportGetTxPowerLevel(void)
 	return static_cast<int16_t>(100);
 }
 
-boolean transportSetTxPowerPercent(const uint8_t powerPercent)
+bool transportSetTxPowerPercent(const uint8_t powerPercent)
 {
 	// not possible
 	(void) powerPercent;
