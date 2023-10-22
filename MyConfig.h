@@ -509,7 +509,7 @@
  *
  * In some countries there might be limitations, in Germany for example only the range
  * 2400,0 - 2483,5 Mhz is allowed.
- * @see http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
+ * @see https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/MobilfunkDectWlanCBFunk/2013_10_WLAN_2,4GHz_pdf.pdf
  */
 #ifndef MY_RF24_CHANNEL
 #define MY_RF24_CHANNEL (76)
@@ -638,7 +638,7 @@
  * - NRF5_BLE_1MBPS for 1Mbps BLE modulation
  */
 #ifndef MY_NRF5_ESB_MODE
-#ifdef NRF5_250KBPS
+#ifdef RADIO_MODE_MODE_Nrf_250Kbit
 #define MY_NRF5_ESB_MODE (NRF5_250KBPS)
 #else
 #define MY_NRF5_ESB_MODE (NRF5_1MBPS)
@@ -1063,6 +1063,232 @@
  */
 //#define MY_RFM95_TCXO
 /** @}*/ // End of RFM95SettingGrpPub group
+
+/**
+ * @defgroup SX126xSettingGrpPub SX126x
+ * @ingroup TransportSettingGrpPub
+ * @brief These options are specific to the %SX126x family of wireless transport modules.
+ *
+ * The following chips are supported by this driver:
+ * - Semtech sx1261
+ * - Semtech sx1262
+ * @{
+ */
+
+/**
+ * @def MY_RADIO_SX126x
+ * @brief Define this to use SX126x based radios for sensor network communication.
+ */
+//#define MY_RADIO_SX126x
+
+/**
+ * @def MY_SX126x_CS_PIN
+ * @brief sx126x SPI chip select pin.
+ */
+#ifndef MY_SX126x_CS_PIN
+#define MY_SX126x_CS_PIN DEFAULT_SX126x_CS_PIN
+#endif
+
+/**
+ * @def MY_SX126x_IRQ_PIN
+ * @brief xs126x IRQ pin (DIO1)
+ */
+#ifndef MY_SX126x_IRQ_PIN
+#define MY_SX126x_IRQ_PIN DEFAULT_SX126x_IRQ_PIN
+#endif
+
+/**
+ * @def MY_SX126x_FREQUENCY
+ * @brief The frequency to use.
+ *
+ * - SX126x_169MHZ
+ * - SX126x_315MHZ
+ * - SX126x_434MHZ
+ * - SX126x_868MHZ
+ * - SX126x_915MHZ
+ * - Custom frequency in Hz
+ *
+ * This must match the hardware version of the SX126x radio.
+ * Additional information: https://en.wikipedia.org/wiki/Short_Range_Devices
+ */
+#ifndef MY_SX126x_FREQUENCY
+#define MY_SX126x_FREQUENCY (SX126x_868MHZ)
+#endif
+
+/**
+ * @def MY_SX126x_LORA_SF
+ * @brief The LoRa spreading factor to use
+ *
+ * can be LORA_SF5, LORA_SF6, LORA_SF7, LORA_SF8, LORA_SF9, LORA_SF10,
+ * LORA_SF11 or LORA_SF12
+ *
+ * default is LORA_SF7
+ */
+#ifndef MY_SX126x_LORA_SF
+#define MY_SX126x_LORA_SF LORA_SF7
+#endif
+
+/**
+ * @def MY_SX126x_LORA_BW
+ * @brief The LoRa bandwidth to use
+ *
+ * possible values
+ *  | value       | Bandwith  |
+ *  |-------------|-----------|
+ *  | LORA_BW_500 | 500 kHz   |
+ *  | LORA_BW_250 | 250 kHz   |
+ *  | LORA_BW_125 | 125 kHz   |
+ *  | LORA_BW_062 | 62.5 kHz  |
+ *  | LORA_BW_041 | 41.67 kHz |
+ *  | LORA_BW_031 | 31.25 kHz |
+ *  | LORA_BW_020 | 20.83 kHz |
+ *  | LORA_BW_015 | 15.63 kHz |
+ *  | LORA_BW_010 | 10.45 kHz |
+ *  | LORA_BW_007 | 7.81 kHz  |
+ *
+ * default is LORA_BW_125
+ */
+#ifndef MY_SX126x_LORA_BW
+#define MY_SX126x_LORA_BW LORA_BW_125
+#endif
+
+/**
+ * @def MY_SX126x_LORA_CR
+ * @brief The LoRa coding rate to use
+ *
+ * Possible values are
+ * | value       | Coding rate |
+ * |-------------|-------------|
+ * | LORA_CR_4_5 | 4/5         |
+ * | LORA_CR_4_6 | 4/6         |
+ * | LORA_CR_4_7 | 4/7         |
+ * | LORA_CR_4_8 | 4/8         |
+ *
+ * Default is LORA_CR_4_5
+ */
+#ifndef MY_SX126x_LORA_CR
+#define MY_SX126x_LORA_CR LORA_CR_4_5
+#endif
+
+/**
+ * @def MY_SX126x_TCXO_VOLTAGE
+ * @brief TCXO output voltage for internal TCXO control
+ *
+ * If set, DIO3 will be used to provide power to the TCXO when needed
+ *
+ * SX126x_TCXO_1V6 1.6V TCXO voltage
+ * SX126x_TCXO_1V7 1.7V TCXO voltage
+ * SX126x_TCXO_1V8 1.8V TCXO voltage
+ * SX126x_TCXO_2V2 2.2V TCXO voltage
+ * SX126x_TCXO_2V4 2.4V TCXO voltage
+ * SX126x_TCXO_2V7 2.7V TCXO voltage
+ * SX126x_TCXO_3V0 3.0V TCXO voltage
+ * SX126x_TCXO_3V3 3.3V TCXO voltage
+ *
+ * However, the TCXO output voltage is at most 200mV below the supply voltage.
+ **/
+//#define MY_SX126x_TCXO_VOLTAGE (SX126x_TCXO_3V3)
+
+
+/**
+ * @def MY_SX126c_TCXO_STARTUP_DELAY
+ * @brief Time in ms it takes the TXCO to start up and stabilize
+ *
+ * Will be set to 10ms if @ref MY_SX126x_TCXO_VOLTAGE is set but @ref MY_SX126c_TCXO_STARTUP_DELAY
+ * is not set.
+ **/
+#if !defined(MY_SX126c_TCXO_STARTUP_DELAY) && defined(MY_SX126x_TCXO_VOLTAGE)
+#define MY_SX126c_TCXO_STARTUP_DELAY (10)
+#endif
+
+/**
+ * @def MY_SX126x_USE_TCXO
+ * @brief The board has a TCXO for SX126x frequency generation
+ *
+ * This will be forced if @ref MY_SX126x_TCXO_VOLTAGE or @ref MY_SX126c_TCXO_STARTUP_DELAY are set
+ **/
+#if !defined(MY_SX126x_USE_TCXO) && defined(MY_SX126x_TCXO_VOLTAGE)
+#define MY_SX126x_USE_TCXO
+#endif
+
+/**
+ * @def MY_SX126x_USE_DIO2_ANT_SWITCH
+ * @brief Use DIO2 as antenna switch output.
+ */
+//#define MY_SX126x_USE_DIO2_ANT_SWITCH
+
+/**
+ * @def MY_SX126x_ANT_SWITCH_PIN
+ * @brief Pin to switch antenna circuit between RX and TX mode
+ *
+ * Not needed if DIO2 is connected to the antenna switch circuit. Then you have to set
+ * @ref MY_SX126x_USE_DIO2_ANT_SWITCH
+ */
+//#define MY_SX126x_ANT_SWITCH_PIN (GPIO3)
+
+/**
+ * @def MY_SX126x_VARIANT
+ * @brief details if it's a sx1261 or sx1262
+ *
+ * - 1: sx1261
+ * - 2: sx1262
+ * If not set, sx1262 is selected
+ */
+#if !defined(MY_SX126x_VARIANT)
+#define MY_SX126x_VARIANT (1)
+#endif
+
+/**
+ * @def MY_SX126x_POWER_PIN
+ * @brief Define this to use the SX126x power pin (optional).
+ */
+//#define MY_SX126x_POWER_PIN (3)
+
+/**
+ * @def MY_SX126x_RESET_PIN
+ * @brief Define this to use the SX126x reset pin (optional).
+ */
+//#define MY_SX126x_RESET_PIN (47)
+
+/**
+ * @def MY_SX126x_BUSY_PIN
+ * @brief Defines this to use the SX126x busy pin (optional).
+ */
+//#define MY_SX126x_BUSY_PIN (39)
+
+/**
+ * @def MY_SX126x_DISABLE_ATC
+ * @brief If defined, ATC will be disabled
+ */
+//#define MY_SX126x_DISABLE_ATC
+
+/**
+ * @def MY_SX126x_ATC_TARGET_DBM
+ * @brief Sets the target RSSI level for the ATC. Defaults to -70dBm
+ */
+#ifndef MY_SX126x_ATC_TARGET_DBM
+#define MY_SX126x_ATC_TARGET_DBM (-70)
+#endif
+
+/**
+ * @def MY_SX126x_MAX_POWER_LEVEL_DBM
+ * @brief Sets the maximum allowable output power level. Default: 13dBm (20mW)
+ *
+ * Please check local regulations!
+ */
+#ifndef MY_SX126x_MAX_POWER_LEVEL_DBM
+#define MY_SX126x_MAX_POWER_LEVEL_DBM (20)
+#endif
+
+/**
+ * @def MY_SX126x_MIN_POWER_LEVEL_DBM
+ * @brief Sets the minimum output power level. Used in ATC. Default: 0dBm (0.5mW)
+ */
+#ifndef MY_SX126x_MIN_POWER_LEVEL_DBM
+#define MY_SX126x_MIN_POWER_LEVEL_DBM (-3)
+#endif
+
+/** @}*/ // End of SX126xSettingGrpPub group
 
 /**
  * @defgroup SoftSpiSettingGrpPub Soft SPI
@@ -2343,7 +2569,7 @@
 #define MY_DEBUG_VERBOSE_OTA_UPDATE //!< MY_DEBUG_VERBOSE_OTA_UPDATE
 #endif
 
-#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_GATEWAY) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95) || defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL)
+#if defined(MY_DEBUG) || defined(MY_DEBUG_VERBOSE_CORE) || defined(MY_DEBUG_VERBOSE_TRANSPORT) || defined(MY_DEBUG_VERBOSE_GATEWAY) || defined(MY_DEBUG_VERBOSE_SIGNING) || defined(MY_DEBUG_VERBOSE_OTA_UPDATE) || defined(MY_DEBUG_VERBOSE_RF24) || defined(MY_DEBUG_VERBOSE_NRF5_ESB) || defined(MY_DEBUG_VERBOSE_RFM69) || defined(MY_DEBUG_VERBOSE_RFM95) || defined(MY_DEBUG_VERBOSE_SX126x) || defined(MY_DEBUG_VERBOSE_TRANSPORT_HAL)
 #define DEBUG_OUTPUT_ENABLED	//!< DEBUG_OUTPUT_ENABLED
 #ifndef MY_DEBUG_OTA
 #define DEBUG_OUTPUT(x,...)		hwDebugPrint(x, ##__VA_ARGS__)	//!< debug
@@ -2362,6 +2588,7 @@
 #undef MY_DEBUG_VERBOSE_RFM69
 #undef MY_DEBUG_VERBOSE_RFM69_REGISTERS
 #undef MY_DEBUG_VERBOSE_RFM95
+#undef MY_DEBUG_VERBOSE_SX126x
 #endif
 #else
 #define DEBUG_OUTPUT(x,...)								//!< debug NULL
@@ -2374,7 +2601,7 @@
 #endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485) || defined(MY_PJON) || defined(MY_CAN)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RADIO_SX126x) || defined(MY_RS485) || defined(MY_PJON) || defined(MY_CAN)
 #define MY_SENSOR_NETWORK
 #endif
 
@@ -2425,6 +2652,12 @@
  * @brief Automatically set when building for AVR targets
  */
 #define ARDUINO_ARCH_AVR
+
+/**
+ * @def ARDUINO_ARCH_MEGAAVR
+ * @brief Automatically set when building for megaAVR targets
+ */
+#define ARDUINO_ARCH_MEGAAVR
 
 /**
  * @def ARDUINO_ARCH_STM32F1
@@ -2585,7 +2818,27 @@
 #define MY_RFM95_POWER_PIN
 #define MY_RFM95_TCXO
 #define MY_RFM95_MAX_POWER_LEVEL_DBM
+// SX126x
+#define MY_RADIO_SX126x
+#define MY_SX126x_TCXO_VOLTAGE
+#define MY_SX126c_TCXO_STARTUP_DELAY
+#define MY_SX126x_USE_TCXO
+#define MY_SX126x_USE_DIO2_ANT_SWITCH
+#define MY_SX126x_ANT_SWITCH_PIN
+#define MY_SX126x_POWER_PIN
+#define MY_SX126x_RESET_PIN
+#define MY_SX126x_BUSY_PIN
+#define MY_SX126x_DISABLE_ATC
+#define MY_SX126x_MIN_POWER_LEVEL_DBM
+#define MY_SX126x_MAX_POWER_LEVEL_DBM
 // SOFT-SPI
 #define MY_SOFTSPI
+
+/**
+ * @def MY_ROUTES_SIZE
+ * @brief Specifies the size allocated for routing table
+ */
+#define MY_ROUTES_SIZE
+
 #endif
 /** @}*/ // End of MyConfig group

@@ -258,6 +258,7 @@ function detect_machine {
 
 function gcc_cpu_flags {
     local soc=$1
+    local cpu=$2
     case $soc in
     BCM2835)
         flags="-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
@@ -266,10 +267,18 @@ function gcc_cpu_flags {
         flags="-march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
         ;;
     BCM2837)
-        flags="-march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+        if [[ ${cpu} == "aarch64" ]]; then
+            flags="-march=armv8-a+crc -mtune=cortex-a53"
+        else
+            flags="-march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+        fi
         ;;
     BCM2711)
-        flags="-march=armv8-a+crc -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+        if [[ ${cpu} == "aarch64" ]]; then
+            flags="-march=armv8-a+crc -mtune=cortex-a72"
+        else
+            flags="-march=armv8-a+crc -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+        fi
         ;;
     AM33XX)
         flags="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard"
@@ -573,7 +582,7 @@ if [ -z "${SOC}" ]; then
 fi
 
 if [ -z "${CPUFLAGS}" ]; then
-    CPUFLAGS=$(gcc_cpu_flags $SOC)
+    CPUFLAGS=$(gcc_cpu_flags "${SOC}" "${CPU}")
 fi
 
 if [[ $SOC == "BCM2835" || $SOC == "BCM2836" || $SOC == "BCM2837" || $SOC == "BCM2711" ]]; then

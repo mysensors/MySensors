@@ -37,18 +37,28 @@ def call(Closure body) {
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsGW - Examples)', 'Not run yet...', '')
-/*
+		
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF52832 - Examples)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF51822 - Examples)', 'Not run yet...', '')
-*/
+		*/
+
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Examples)', 'Not run yet...', '')
+		
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Examples)', 'Not run yet...', '')
-/*
+		*/
+		
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Examples)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
-*/
+		*/
+		
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Examples)', 'Not run yet...', '')
+
+		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Examples)', 'Not run yet...', '')
+		*/
 	} else {
 		config.is_pull_request = false
 		echo "Building branch: "+env.BRANCH_NAME
@@ -173,9 +183,12 @@ def call(Closure body) {
 					stage('nRF5 (examples)') {
 						arduino.buildnRF5(config, config.examples, 'Examples')
 					}
+					// Disable ESP8266 examples
+					/*
 					stage('ESP8266 (examples)') {
 						arduino.buildESP8266(config, config.examples, 'Examples')
 					}
+					*/
 					// No point in building examples for ESP32 yet
 					/*
 					stage('ESP32 (examples)') {
@@ -190,9 +203,12 @@ def call(Closure body) {
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
 					}
+					// Disable ArduinoMega examples
+					/*
 					stage('ArduinoMega (examples)') {
 						arduino.buildArduinoMega(config, config.examples, 'Examples')
 					}
+					*/
 				}
 			}, failFast: true
 		}

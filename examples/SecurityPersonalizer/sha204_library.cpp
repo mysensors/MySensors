@@ -11,7 +11,7 @@
 
 atsha204Class::atsha204Class(uint8_t pin)
 {
-#if defined(ARDUINO_ARCH_AVR)
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 	device_pin = digitalPinToBitMask(pin);	// Find the bit value of the pin
 	uint8_t port = digitalPinToPort(pin);	// temoporarily used to get the next three registers
 
