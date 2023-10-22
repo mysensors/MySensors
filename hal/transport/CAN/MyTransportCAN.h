@@ -58,8 +58,8 @@
 * | | CAN | RCV  | SLOT=%%d complete               | message in buffer under (SLOT) is complete.
 *
 */
-bool _initFilters();
-bool transportInit(void);
+boolean _initFilters();
+boolean transportInit(void);
 
 void _cleanSlot(uint8_t slot);
 
@@ -68,9 +68,9 @@ uint8_t _findCanPacketSlot();
 uint8_t _findCanPacketSlot(long unsigned int from, long unsigned int currentPart,
                            long unsigned int messageId);
 
-bool transportSend(const uint8_t to, const void* data, const uint8_t len, const bool noACK);
+boolean transportSend(const uint8_t to, const void* data, const uint8_t len, const boolean noACK);
 
-bool transportDataAvailable(void);
+boolean transportDataAvailable(void);
 
 uint8_t transportReceive(void* data);
 
@@ -78,7 +78,7 @@ void transportSetAddress(const uint8_t address);
 
 uint8_t transportGetAddress(void);
 
-bool transportSanityCheck(void);
+boolean transportSanityCheck(void);
 
 void transportPowerDown(void);
 
@@ -100,4 +100,4 @@ int16_t transportGetTxPowerPercent(void);
 
 int16_t transportGetTxPowerLevel(void);
 
-bool transportSetTxPowerPercent(const uint8_t powerPercent);
+boolean transportSetTxPowerPercent(const uint8_t powerPercent);
