@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2022 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -30,7 +30,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stropts.h>
 #include <errno.h>
 #include <sched.h>
 #include "log.h"
@@ -43,12 +42,24 @@ struct ThreadArgs {
 volatile bool interruptsEnabled = true;
 static pthread_mutex_t intMutex = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_t *threadIds[64] = {NULL};
+static pthread_t *threadIds[256] = {NULL};
 
 // sysFds:
 //	Map a file descriptor from the /sys/class/gpio/gpioX/value
-static int sysFds[64] = {
+static int sysFds[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -131,7 +142,7 @@ void attachInterrupt(uint8_t gpioPin, void (*func)(), uint8_t mode)
 	FILE *fd;
 	char fName[40];
 	char c;
-	int count, i;
+	int count;
 
 	if (threadIds[gpioPin] == NULL) {
 		threadIds[gpioPin] = new pthread_t;
@@ -191,7 +202,7 @@ void attachInterrupt(uint8_t gpioPin, void (*func)(), uint8_t mode)
 
 	if (sysFds[gpioPin] == -1) {
 		snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/value", gpioPin);
-		if ((sysFds[gpioPin] = open(fName, O_RDWR)) < 0) {
+		if ((sysFds[gpioPin] = open(fName, O_RDONLY)) < 0) {
 			logError("Error reading pin %d: %s\n", gpioPin, strerror(errno));
 			exit(1);
 		}
@@ -199,7 +210,7 @@ void attachInterrupt(uint8_t gpioPin, void (*func)(), uint8_t mode)
 
 	// Clear any initial pending interrupt
 	ioctl(sysFds[gpioPin], FIONREAD, &count);
-	for (i = 0; i < count; ++i) {
+	for (int i = 0; i < count; ++i) {
 		if (read(sysFds[gpioPin], &c, 1) == -1) {
 			logError("attachInterrupt: failed to read pin status: %s\n", strerror(errno));
 		}

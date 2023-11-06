@@ -1,6 +1,6 @@
 #!groovy
 def buildArduino(config, String buildFlags, String sketch, String key) {
-	def root              = '/opt/arduino-1.8.13/'	
+	def root              = '/opt/arduino-1.8.19/'	
 	def build_path        = 'build'
 	def build_path_cmd    = ' -build-path '+build_path+' '
 	if (config.nightly_arduino_ide)
@@ -28,9 +28,9 @@ def parseWarnings(String key) {
 	warnings canResolveRelativePaths: false, canRunOnFailed: true, categoriesPattern: '',
  		defaultEncoding: '',
  		excludePattern: '''.*/EEPROM\\.h,.*/Dns\\.cpp,.*/socket\\.cpp,.*/util\\.h,.*/Servo\\.cpp,
- 											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,
+ 											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,.*/PJON/.*,
  											 .*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/libraries/Wire/.*,
- 											 .*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/esp32.*,
+ 											 .*/hardware/avr.*,.*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/esp32.*,
 											 .*/libraries/SD/.*,.*/libraries/Ethernet/.*''',
 
  		healthy: '', includePattern: '', messagesPattern: '',
@@ -51,6 +51,7 @@ def buildMySensorsMicro(config, sketches, String key) {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
@@ -87,6 +88,7 @@ def buildMySensorsGw(config, sketches, String key) {
 			if (sketches[sketch].path != config.library_root+'examples/BatteryPoweredSensor/BatteryPoweredSensor.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
@@ -123,6 +125,7 @@ def buildArduinoUno(config, sketches, String key) {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32OTA/GatewayESP32OTA.ino' &&
@@ -157,6 +160,7 @@ def buildArduinoMega(config, sketches, String key) {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32OTA/GatewayESP32OTA.ino' &&
@@ -191,6 +195,7 @@ def buildSTM32F1(config, sketches, String key) {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
 			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32OTA/GatewayESP32OTA.ino' &&
@@ -280,6 +285,7 @@ def buildESP32(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino' &&
 					sketches[sketch].path != config.library_root+'examples/MotionSensorRS485/MotionSensorRS485.ino' &&
@@ -316,6 +322,7 @@ def buildnRF5(config, sketches, String key) {
 					sketches[sketch].path != config.library_root+'examples/DustSensorDSM/DustSensorDSM.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayGSMMQTTClient/GatewayGSMMQTTClient.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
 					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&

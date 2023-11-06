@@ -4,7 +4,7 @@
 /* Local data and function prototypes */
 
 static uint8_t device_pin;
-#ifdef ARDUINO_ARCH_AVR
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 static volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
 #endif
 static void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc);
@@ -107,6 +107,7 @@ static uint8_t swi_receive_bytes(uint8_t count, uint8_t *buffer)
 				}
 			}
 
+			//cppcheck-suppress knownConditionTrueFalse
 			if (timeout_count == 0) {
 				status = SWI_FUNCTION_RETCODE_TIMEOUT;
 				break;
@@ -415,7 +416,7 @@ static uint8_t sha204c_check_crc(uint8_t *response)
 
 void atsha204_init(uint8_t pin)
 {
-#if defined(ARDUINO_ARCH_AVR)
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 	device_pin = digitalPinToBitMask(pin);  // Find the bit value of the pin
 	uint8_t port = digitalPinToPort(pin); // temoporarily used to get the next three registers
 

@@ -11,7 +11,7 @@
 
 atsha204Class::atsha204Class(uint8_t pin)
 {
-#if defined(ARDUINO_ARCH_AVR)
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 	device_pin = digitalPinToBitMask(pin);	// Find the bit value of the pin
 	uint8_t port = digitalPinToPort(pin);	// temoporarily used to get the next three registers
 
@@ -169,7 +169,7 @@ uint8_t atsha204Class::swi_receive_bytes(uint8_t count, uint8_t *buffer)
 					break;
 				}
 			}
-
+			//cppcheck-suppress knownConditionTrueFalse
 			if (timeout_count == 0) {
 				status = SWI_FUNCTION_RETCODE_TIMEOUT;
 				break;

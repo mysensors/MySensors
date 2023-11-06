@@ -283,7 +283,7 @@
 
 /* Low level HW access macros */
 /* function calls is not working, as it will have too much overhead */
-#if !defined(ARDUINO_ARCH_AVR) // For everything else than AVR use pinMode / digitalWrite
+#if !defined(ARDUINO_ARCH_AVR) && !defined(ARDUINO_ARCH_MEGAAVR) // For everything else than AVR use pinMode / digitalWrite
 #define SHA204_SET_OUTPUT() pinMode(device_pin, OUTPUT)
 #define SHA204_SET_INPUT() pinMode(device_pin, INPUT)
 #define SHA204_POUT_HIGH() digitalWrite(device_pin, HIGH)
@@ -304,7 +304,7 @@ class atsha204Class
 {
 private:
 	uint8_t device_pin;
-#ifdef ARDUINO_ARCH_AVR
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 	volatile uint8_t *device_port_DDR, *device_port_OUT, *device_port_IN;
 #endif
 	void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc);

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2022 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -39,7 +39,9 @@ struct config {
 	char *soft_hmac_key;
 	char *soft_serial_key;
 	char *aes_key;
-} conf;
+};
+
+extern struct config conf;
 
 int config_parse(const char *config_file);
 void config_cleanup(void);

@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2022 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -183,6 +183,7 @@ typedef enum {
 	V_VAR					= 54,	//!< S_POWER, Reactive power: volt-ampere reactive (var)
 	V_VA					= 55,	//!< S_POWER, Apparent power: volt-ampere (VA)
 	V_POWER_FACTOR			= 56,	//!< S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
+	V_MULTI_MESSAGE			= 57,	//!< Special type, multiple sensors in one message
 } mysensors_data_t;
 #endif
 

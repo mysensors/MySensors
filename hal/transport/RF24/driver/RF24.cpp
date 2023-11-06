@@ -6,7 +6,7 @@
 * network topology allowing messages to be routed to nodes.
 *
 * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-* Copyright (C) 2013-2020 Sensnology AB
+* Copyright (C) 2013-2022 Sensnology AB
 * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 *
 * Documentation: http://www.mysensors.org
@@ -409,7 +409,7 @@ LOCAL int16_t RF24_getTxPowerLevel(void)
 LOCAL uint8_t RF24_getTxPowerPercent(void)
 {
 	// report TX level in %, 0 (LOW) = 25%, 3 (MAX) = 100
-	const uint8_t result = 25 + (((RF24_readByteRegister(RF24_REG_RF_SETUP) >> 2) & 3) * 25);
+	const uint8_t result = 25 + (((RF24_readByteRegister(RF24_REG_RF_SETUP) >> 1) & 3) * 25);
 	return result;
 }
 LOCAL bool RF24_setTxPowerLevel(const uint8_t newPowerLevel)
