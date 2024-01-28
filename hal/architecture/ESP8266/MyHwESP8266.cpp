@@ -17,6 +17,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#include <Schedule.h>
 #include "MyHwESP8266.h"
 
 bool hwInit(void)
@@ -29,7 +30,12 @@ bool hwInit(void)
 #endif
 #endif
 	EEPROM.begin(EEPROM_size);
-	return true;
+	// register _process() to be called at most every 1us,
+	// at every loop() or yield()
+	return schedule_recurrent_function_us([]() {
+		_process();
+		return true;
+	}, 1);
 }
 
 void hwReadConfigBlock(void *buf, void *addr, size_t length)
