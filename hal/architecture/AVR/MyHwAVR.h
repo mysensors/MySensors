@@ -54,7 +54,11 @@
 
 // AVR temperature calibration reference: http://ww1.microchip.com/downloads/en/AppNotes/Atmel-8108-Calibration-of-the-AVRs-Internal-Temperature-Reference_ApplicationNote_AVR122.pdf
 #ifndef MY_AVR_TEMPERATURE_OFFSET
+#if defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+#define MY_AVR_TEMPERATURE_OFFSET (259.00f)
+#else
 #define MY_AVR_TEMPERATURE_OFFSET (324.31f)
+#endif
 #endif
 
 #ifndef MY_AVR_TEMPERATURE_GAIN
