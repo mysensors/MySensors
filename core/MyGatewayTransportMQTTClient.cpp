@@ -85,7 +85,7 @@
 #endif
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP8266_SECURE) || defined(MY_GATEWAY_ESP32)
-#if !defined(MY_WIFI_SSID)
+#if !defined(MY_WIFI_SSID) && !defined(MY_EXTERNAL_WIFIMANAGER_USED)
 #error ESP8266/ESP32 MQTT gateway: MY_WIFI_SSID not defined!
 #endif
 #endif
@@ -219,7 +219,10 @@ bool reconnectMQTT(void)
 	GATEWAY_DEBUG(PSTR("!GWT:RMQ:FAIL\n"));
 #if defined(MY_GATEWAY_ESP8266_SECURE)
 	char sslErr[256];
-	int errID = _MQTT_ethClient.getLastSSLError(sslErr, sizeof(sslErr));
+#if defined(MY_DEBUG_VERBOSE_GATEWAY)
+	int errID = 
+#endif
+		_MQTT_ethClient.getLastSSLError(sslErr, sizeof(sslErr));
 	GATEWAY_DEBUG(PSTR("!GWT:RMQ:(%d) %s\n"), errID, sslErr);
 #endif
 	return false;
@@ -323,7 +326,9 @@ bool gatewayTransportInit(void)
 #if defined(MY_IP_ADDRESS)
 	WiFi.config(_MQTT_clientIp, _gatewayIp, _subnetIp);
 #endif /* End of MY_IP_ADDRESS */
+#if !defined(MY_EXTERNAL_WIFIMANAGER_USED)
 	(void)WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD, 0, MY_WIFI_BSSID);
+#endif
 #endif
 
 #if defined(MY_GATEWAY_ESP8266_SECURE)
