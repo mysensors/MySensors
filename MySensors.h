@@ -296,12 +296,17 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #else
 #define _PJONCNT 0	//!< _PJONCNT
 #endif
+#if defined(MY_CAN)
+#define __CANCNT 1	//!< __CANCNT
+#else
+#define __CANCNT 0	//!< __CANCNT
+#endif
 #if defined(MY_RADIO_SX126x)
 #define __SX126xCNT 1   //!< __SX126xCNT
 #else
 #define __SX126xCNT 0   //!< __SX126xCNT
 #endif
-#if (__RF24CNT + __NRF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT + _PJONCNT + __SX126xCNT > 1)
+#if (__RF24CNT + __NRF5ESBCNT + __RFM69CNT + __RFM95CNT + __RS485CNT + _PJONCNT + __SX126xCNT + __CANCNT > 1)
 #error Only one forward link driver can be activated
 #endif
 #endif //DOXYGEN
@@ -312,7 +317,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #endif
 
 // TRANSPORT INCLUDES
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485) || defined (MY_PJON) || defined(MY_RADIO_SX126x)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485) || defined (MY_PJON) || defined(MY_RADIO_SX126x) || defined(MY_CAN)
 #include "hal/transport/MyTransportHAL.h"
 #include "core/MyTransport.h"
 
@@ -396,6 +401,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #elif defined(MY_RADIO_RFM95)
 #include "hal/transport/RFM95/driver/RFM95.cpp"
 #include "hal/transport/RFM95/MyTransportRFM95.cpp"
+#elif defined(MY_CAN)
+#include "hal/transport/CAN/MyTransportCAN.cpp"
 #elif defined(MY_PJON)
 #include "hal/transport/PJON/driver/PJON.h"
 #include "hal/transport/PJON/driver/PJONSoftwareBitBang.h"
