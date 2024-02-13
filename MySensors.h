@@ -96,11 +96,11 @@
 #define _BV(x) (1<<(x))	//!< _BV
 #endif
 
-#if !defined(min) && !defined(__linux__)
+#if !defined(min) && !defined(__linux__) && !defined(ARDUINO_ARCH_ESP8266)
 #define min(a,b) ((a)<(b)?(a):(b)) //!< min
 #endif
 
-#if !defined(max) && !defined(__linux__)
+#if !defined(max) && !defined(__linux__) && !defined(ARDUINO_ARCH_ESP8266)
 #define max(a,b) ((a)>(b)?(a):(b)) //!< max
 #endif
 
