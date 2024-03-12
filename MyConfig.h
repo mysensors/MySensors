@@ -442,7 +442,7 @@
  * - RF24_PA_MAX = 0dBm
  */
 #ifndef MY_RF24_PA_LEVEL
-#define MY_RF24_PA_LEVEL (RF24_PA_HIGH)
+#define MY_RF24_PA_LEVEL (RF24_PA_MAX)
 #endif
 
 /**
