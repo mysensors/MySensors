@@ -131,7 +131,7 @@ void *interruptHandler(void *args)
 		}
 	}
 	// Adding gpiod closing instructions
-	gpiod_line_release(line);	
+	gpiod_line_release(line);
 
 	close(fd);
 
@@ -220,14 +220,6 @@ void detachInterrupt(uint8_t gpioPin)
 		close(sysFds[gpioPin]);
 		sysFds[gpioPin] = -1;
 	}
-
-//	FILE *fp = fopen("/sys/class/gpio/unexport", "w");
-//	if (fp == NULL) {
-//		logError("Unable to unexport pin %d for interrupt\n", gpioPin);
-//		exit(1);
-//	}
-//	fprintf(fp, "%d", gpioPin);
-//	fclose(fp);
 }
 
 void interrupts()
