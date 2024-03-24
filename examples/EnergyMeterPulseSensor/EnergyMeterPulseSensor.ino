@@ -6,7 +6,7 @@
    network topology allowing messages to be routed to nodes.
 
    Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
-   Copyright (C) 2013-2020 Sensnology AB
+   Copyright (C) 2013-2022 Sensnology AB
    Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
 
    Documentation: http://www.mysensors.org
@@ -67,12 +67,6 @@ uint32_t lastSend;
 MyMessage wattMsg(CHILD_ID, V_WATT);
 MyMessage kWhMsg(CHILD_ID, V_KWH);
 MyMessage pcMsg(CHILD_ID, V_VAR1);
-
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#define IRQ_HANDLER_ATTR ICACHE_RAM_ATTR
-#else
-#define IRQ_HANDLER_ATTR
-#endif
 
 void IRQ_HANDLER_ATTR onPulse()
 {

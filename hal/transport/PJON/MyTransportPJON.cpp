@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2020 Sensnology AB
+ * Copyright (C) 2013-2022 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -22,7 +22,10 @@
  */
 
 // Set a higher polling duration if the device is executing long tasks
+
+#ifndef PJON_POLLING_DURATION
 #define PJON_POLLING_DURATION 1000
+#endif
 
 PJONSoftwareBitBang bus;
 
