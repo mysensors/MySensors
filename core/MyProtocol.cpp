@@ -111,14 +111,29 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
                             const unsigned int length)
 {
 	char *str, *p;
-	uint8_t index = 0;
+	int8_t index = -1;
 	message.setSender(GATEWAY_ADDRESS);
 	message.setLast(GATEWAY_ADDRESS);
 	message.setEcho(false);
-	for (str = strtok_r(topic + strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1, "/", &p);
+
+	// The subscription prefix can contain wildcards, but only the + wildcard.
+	// e.g. subscription prefix "+/mysensors", actual prefix "foo/mysensors"
+	// To fetch only the part after the mqtt prefix, discard as many
+	// mqtt levels (between / characters) as in the subscription prefix.
+	// Make a copy of the subscribe prefix because strtok is allowed to change the string.
+	char subscribeTopicPrefix[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + 1];
+	strcpy(subscribeTopicPrefix,MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
+	char *strPrefix, *savePointerPrefix;
+	for (str = strtok_r(topic, "/", &p),
+	        strPrefix = strtok_r(subscribeTopicPrefix,"/", &savePointerPrefix);
 	        str && index < 5;
-	        str = strtok_r(NULL, "/", &p), index++
+	        str = strtok_r(NULL, "/", &p),
+	        strPrefix = strtok_r(NULL, "/", &savePointerPrefix)
 	    ) {
+		// Increment index (init value is -1) if we have consumed the mqtt subscription prefix
+		if (!strPrefix) {
+			index++;
+		}
 		switch (index) {
 		case 0:
 			// Node id
@@ -163,5 +178,5 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 		}
 	}
 	// Return true if input valid
-	return (index == 5);
+	return (index == 4);
 }
