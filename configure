@@ -318,7 +318,7 @@ signing=none
 signing_request_signatures=false
 encryption=false
 
-params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER TYPE"
+params="SOC CFLAGS CXXFLAGS CPPFLAGS LDFLAGS LATE_LDFLAGS PREFIX CC CXX ARDUINO_LIB_DIR BUILDDIR BINDIR GATEWAY_DIR INIT_SYSTEM SPI_DRIVER TYPE"
 
 for opt do
     if [ "$opt" = "-h" ] || [ "$opt" = "--help" ]; then
@@ -707,6 +707,7 @@ fi
 
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
+LATE_LDFLAGS="-Wl,-Bstatic -lgpiod -Wl,-Bdynamic"
 
 printf "  ${OK} CPPFLAGS: $CPPFLAGS\n"
 printf "  ${OK} CXXFLAGS: $CXXFLAGS\n"

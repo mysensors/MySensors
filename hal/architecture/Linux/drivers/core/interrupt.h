@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include <gpiod.h>
+
 #define CHANGE 1
 #define FALLING 2
 #define RISING 3
