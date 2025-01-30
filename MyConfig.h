@@ -754,7 +754,7 @@
  * @brief %RFM69 Network ID. Use the same for all nodes that will talk to each other.
  */
 #ifndef MY_RFM69_NETWORKID
-#define MY_RFM69_NETWORKID (100)
+define MY_RFM69_NETWORKID (197)
 #endif
 
 /**
