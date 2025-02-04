@@ -24,53 +24,63 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <gpiod.h>
 #include "log.h"
-// Chip 0 on older Pi models, chip 4 on Pi 5.
-#define CHIP "/dev/gpiochip0"
+
 // Declare a single default instance
 GPIOClass GPIO = GPIOClass();
 
 GPIOClass::GPIOClass()
 {
-	struct gpiochip_info chip_info;
-	struct gpiod_line_request handle_request;
+	FILE *f;
+	DIR* dp;
+	char file[64];
 
-
-	int file_descriptor = open(CHIP, O_RDONLY);
-
-	if (file_descriptor < 0) {
-		printf("Failed opening GPIO chip.\n");
-		return 1;
+	dp = opendir("/sys/class/gpio");
+	if (dp == NULL) {
+		logError("Could not open /sys/class/gpio directory");
+		exit(1);
 	}
 
-	res = ioctl(file_descriptor, GPIO_GET_CHIPINFO_IOCTL, &chip_info);
+	lastPinNum = 0;
 
-	if (res < 0) {
-		printf("Failed getting chip information.\n");
-		close(file_descriptor);
-		return 1;
-	}
+	while (true) {
+		dirent *de = readdir(dp);
+		if (de == NULL) {
+			break;
+		}
 
+		if (strncmp("gpiochip", de->d_name, 8) == 0) {
+			snprintf(file, sizeof(file), "/sys/class/gpio/%s/base", de->d_name);
+			f = fopen(file, "r");
+			int base;
+			if (fscanf(f, "%d", &base) == EOF) {
+				logError("Failed to open %s\n", file);
+				base = 0;
+			}
+			fclose(f);
 
-	printf("GPIO chip information:\n");
-	printf("name: %s\n",chip_info.name);
-	printf("label: %s\n",chip_info.label);
-	printf("lines: %i\n", chip_info.lines);
+			snprintf(file, sizeof(file), "/sys/class/gpio/%s/ngpio", de->d_name);
+			f = fopen(file, "r");
+			int ngpio;
+			if (fscanf(f, "%d", &ngpio) == EOF) {
+				logError("Failed to open %s\n", file);
+				ngpio = 0;
+			}
+			fclose(f);
 
-	for (int i = 0; i < chip_info.lines; i++) {
-
-		struct gpioline_info line_info;
-
-		line_info.line_offset = i;
-
-		if (ioctl(file_descriptor, GPIO_GET_LINEINFO_IOCTL, &line_info) < 0) {
-			printf("Failed getting line %i info.\n", i);
-		} else {
-			printf("%d %s\n",i,line_info.name);
+			int max = ngpio + base - 1;
+			if (lastPinNum < max) {
+				lastPinNum = max;
+			}
 		}
 	}
+	closedir(dp);
 
+	exportedPins = new uint8_t[lastPinNum + 1];
+
+	for (int i = 0; i < lastPinNum + 1; ++i) {
+		exportedPins[i] = 0;
+	}
 }
 
 GPIOClass::GPIOClass(const GPIOClass& other)
@@ -83,81 +93,103 @@ GPIOClass::GPIOClass(const GPIOClass& other)
 	}
 }
 
-// destructor
 GPIOClass::~GPIOClass()
 {
-	close(handle_request.fd);
+	FILE *f;
 
-	// Tell the thread to finish
-	// TERM = 1;
+	for (int i = 0; i < lastPinNum + 1; ++i) {
+		if (exportedPins[i]) {
+			f = fopen("/sys/class/gpio/unexport", "w");
+			fprintf(f, "%d\n", i);
+			fclose(f);
+		}
+	}
 
-	// Give it time
-	sleep(1);
-
-	// Close resources
-	close(file_descriptor);
-
-	// Rejoin main thread with finished thread
-	pthread_join(reader_thread,NULL);
-
-	return 0;
-
+	delete [] exportedPins;
 }
 
 void GPIOClass::pinMode(uint8_t pin, uint8_t mode)
 {
-	// Request handle on writing line. Many can be requested instead of one.
+	FILE *f;
 
-	handle_request.lineoffsets[0] = pin;
-	handle_request.flags =
-	    (mode==INPUT?GPIOHANDLE_REQUEST_INPUT:GPIOHANDLE_REQUEST_OUTPUT;
-	     //| GPIOHANDLE_REQUEST_BIAS_PULL_DOWN;
-	     handle_request.lines = 1;
-
-	     res = ioctl(file_descriptor, GPIO_GET_LINEHANDLE_IOCTL, &handle_request);
-
-	if (res < 0) {
-	printf("Failed requesting write handle.\n");
-		close(file_descriptor);
-		return 1;
+	if (pin > lastPinNum) {
+		return;
 	}
+
+	f = fopen("/sys/class/gpio/export", "w");
+	fprintf(f, "%d\n", pin);
+	fclose(f);
+
+	int counter = 0;
+	char file[128];
+	sprintf(file, "/sys/class/gpio/gpio%d/direction", pin);
+
+	while ((f = fopen(file,"w")) == NULL) {
+		// Wait 10 seconds for the file to be accessible if not open on first attempt
+		sleep(1);
+		counter++;
+		if (counter > 10) {
+			logError("Could not open /sys/class/gpio/gpio%u/direction", pin);
+			exit(1);
+		}
+	}
+	if (mode == INPUT) {
+		fprintf(f, "in\n");
+	} else {
+		fprintf(f, "out\n");
+	}
+
+	exportedPins[pin] = 1;
+
+	fclose(f);
 }
 
 void GPIOClass::digitalWrite(uint8_t pin, uint8_t value)
 {
+	FILE *f;
+	char file[128];
 
-	// Request handle on writing line. Many can be requested instead of one.
-
-	handle_request.lineoffsets[0] = WRITE_GPIO;
-	handle_request.flags = GPIOHANDLE_REQUEST_OUTPUT | GPIOHANDLE_REQUEST_BIAS_PULL_DOWN;
-	handle_request.lines = 1;
-
-	gpiod_line_value line_value = (value==0?GPIOD_LINE_VALUE_INACTIVE:GPIOD_LINE_VALUE_ACTIVE);
-
-	res = gpio_line_request_set_value(handle_request,0,line_value);
-
-	if (res < 0) {
-		printf("Failed requesting write handle.\n");
-		return 1;
+	if (pin > lastPinNum) {
+		return;
 	}
+	if (0 == exportedPins[pin]) {
+		pinMode(pin, OUTPUT);
+	}
+
+	sprintf(file, "/sys/class/gpio/gpio%d/value", pin);
+	f = fopen(file, "w");
+
+	if (value == 0)	{
+		fprintf(f, "0\n");
+	} else {
+		fprintf(f, "1\n");
+	}
+
+	fclose(f);
 }
 
 uint8_t GPIOClass::digitalRead(uint8_t pin)
 {
+	FILE *f;
+	char file[128];
 
-	// Request handle on line. Many can be requested instead of one.
-
-	handle_request.lineoffsets[0] = pin;
-	handle_request.flags = GPIOHANDLE_REQUEST_INPUT;
-	handle_request.lines = 1;
-
-	res = gpiod_line_request_get_value(handle_request,0);
-
-	if (res < 0) {
-		printf("Failed requesting write handle.\n");
-		return 1;
+	if (pin > lastPinNum) {
+		return 0;
 	}
-	return res;
+	if (0 == exportedPins[pin]) {
+		pinMode(pin, INPUT);
+	}
+
+	sprintf(file, "/sys/class/gpio/gpio%d/value", pin);
+	f = fopen(file, "r");
+
+	int i;
+	if (fscanf(f, "%d", &i) == EOF) {
+		logError("digitalRead: failed to read pin %u\n", pin);
+		i = 0;
+	}
+	fclose(f);
+	return i;
 }
 
 uint8_t GPIOClass::digitalPinToInterrupt(uint8_t pin)
