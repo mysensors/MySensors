@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 
+// Ajout RRO
 #include <gpiod.h>
 
 #define CHANGE 1
