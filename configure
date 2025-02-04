@@ -577,10 +577,9 @@ if [ -z "${SOC}" ]; then
     info=($(detect_machine))
     SOC=${info[0]}
     TYPE=${info[1]}
-    CPU=${info[2]}
     printf "  ${OK} machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}.\n"
 fi
-
+CPU=$(eval "uname -m 2>/dev/null")
 if [ -z "${CPUFLAGS}" ]; then
     CPUFLAGS=$(gcc_cpu_flags "${SOC}" "${CPU}")
 fi
