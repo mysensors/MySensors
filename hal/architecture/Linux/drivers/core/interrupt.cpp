@@ -37,7 +37,6 @@
 struct ThreadArgs {
 	void (*func)();
 	int gpioPin;
-	struct gpiod_line *line;
 };
 
 volatile bool interruptsEnabled = true;
@@ -88,10 +87,10 @@ int piHiPri(const int pri)
 void *interruptHandler(void *args)
 {
 	int fd;
+	struct pollfd polls;
 	char c;
 	struct ThreadArgs *arguments = (struct ThreadArgs *)args;
 	int gpioPin = arguments->gpioPin;
-	struct gpiod_line *line = arguments->line;
 	void (*func)() = arguments->func;
 	delete arguments;
 
@@ -102,26 +101,28 @@ void *interruptHandler(void *args)
 		return NULL;
 	}
 
+	// Setup poll structure
+	polls.fd     = fd;
+	polls.events = POLLPRI | POLLERR;
+
 	while (1) {
 		// Wait for it ...
-		// New version
-		int ret = gpiod_line_event_wait(line, NULL);
+		int ret = poll(&polls, 1, -1);
 		if (ret < 0) {
 			logError("Error waiting for interrupt: %s\n", strerror(errno));
 			break;
 		}
-		struct gpiod_line_event event;
-		if (gpiod_line_event_read(line, &event) == 0) {
-			if (event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
-				logInfo("RISING Edge\n");
-			} else {
-				logInfo("FALLING Edge\n");
-			}
+		// Do a dummy read to clear the interrupt
+		//	A one character read appars to be enough.
+		if (lseek (fd, 0, SEEK_SET) < 0) {
+			logError("Interrupt handler error: %s\n", strerror(errno));
+			break;
 		}
-
+		if (read (fd, &c, 1) < 0) {
+			logError("Interrupt handler error: %s\n", strerror(errno));
+			break;
+		}
 		// Call user function.
-		logError("Calling user function\n");
-
 		pthread_mutex_lock(&intMutex);
 		if (interruptsEnabled) {
 			pthread_mutex_unlock(&intMutex);
@@ -130,8 +131,6 @@ void *interruptHandler(void *args)
 			pthread_mutex_unlock(&intMutex);
 		}
 	}
-	// Adding gpiod closing instructions
-	gpiod_line_release(line);	
 
 	close(fd);
 
@@ -154,53 +153,72 @@ void attachInterrupt(uint8_t gpioPin, void (*func)(), uint8_t mode)
 		usleep(1000);
 	}
 
-	char *chipname = "gpiochip0";
-	unsigned int line_num = gpioPin;
-	struct gpiod_line_event event;
-	struct gpiod_chip *chip;
-	struct gpiod_line *line;
-
-
-	chip = gpiod_chip_open_by_name(chipname);
-	if (!chip) {
-		logError("Open chip failed\n");
+	// Export pin for interrupt
+	if ((fd = fopen("/sys/class/gpio/export", "w")) == NULL) {
+		logError("attachInterrupt: Unable to export pin %d for interrupt: %s\n", gpioPin, strerror(errno));
 		exit(1);
 	}
+	fprintf(fd, "%d\n", gpioPin);
+	fclose(fd);
 
-	line = gpiod_chip_get_line(chip, line_num);
-	if (!line) {
-		logError("Get line failed\n");
-		exit(1);
+	// Wait a bit the system to create /sys/class/gpio/gpio<GPIO number>
+	usleep(1000);
+
+	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/direction", gpioPin) ;
+	if ((fd = fopen (fName, "w")) == NULL) {
+		logError("attachInterrupt: Unable to open GPIO direction interface for pin %d: %s\n",
+		         gpioPin, strerror(errno));
+		exit(1) ;
+	}
+	fprintf(fd, "in\n") ;
+	fclose(fd) ;
+
+	snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/edge", gpioPin) ;
+	if ((fd = fopen(fName, "w")) == NULL) {
+		logError("attachInterrupt: Unable to open GPIO edge interface for pin %d: %s\n", gpioPin,
+		         strerror(errno));
+		exit(1) ;
 	}
 
 	switch (mode) {
 	case CHANGE:
-		gpiod_line_request_both_edges_events(line, "gpiointerrupt");
+		fprintf(fd, "both\n");
 		break;
 	case FALLING:
-		gpiod_line_request_falling_edge_events(line, "gpiointerrupt");
+		fprintf(fd, "falling\n");
 		break;
 	case RISING:
-		gpiod_line_request_rising_edge_events(line, "gpiointerrupt");
+		fprintf(fd, "rising\n");
 		break;
 	case NONE:
+		fprintf(fd, "none\n");
 		break;
 	default:
 		logError("attachInterrupt: Invalid mode\n");
+		fclose(fd);
 		return;
 	}
+	fclose(fd);
 
 	if (sysFds[gpioPin] == -1) {
-		if ((sysFds[gpioPin] = gpiod_line_event_get_fd(line)) < 0) {
+		snprintf(fName, sizeof(fName), "/sys/class/gpio/gpio%d/value", gpioPin);
+		if ((sysFds[gpioPin] = open(fName, O_RDONLY)) < 0) {
 			logError("Error reading pin %d: %s\n", gpioPin, strerror(errno));
 			exit(1);
+		}
+	}
+
+	// Clear any initial pending interrupt
+	ioctl(sysFds[gpioPin], FIONREAD, &count);
+	for (int i = 0; i < count; ++i) {
+		if (read(sysFds[gpioPin], &c, 1) == -1) {
+			logError("attachInterrupt: failed to read pin status: %s\n", strerror(errno));
 		}
 	}
 
 	struct ThreadArgs *threadArgs = new struct ThreadArgs;
 	threadArgs->func = func;
 	threadArgs->gpioPin = gpioPin;
-	threadArgs->line = line;
 
 	// Create a thread passing the pin and function
 	pthread_create(threadIds[gpioPin], NULL, interruptHandler, (void *)threadArgs);
@@ -221,13 +239,13 @@ void detachInterrupt(uint8_t gpioPin)
 		sysFds[gpioPin] = -1;
 	}
 
-//	FILE *fp = fopen("/sys/class/gpio/unexport", "w");
-//	if (fp == NULL) {
-//		logError("Unable to unexport pin %d for interrupt\n", gpioPin);
-//		exit(1);
-//	}
-//	fprintf(fp, "%d", gpioPin);
-//	fclose(fp);
+	FILE *fp = fopen("/sys/class/gpio/unexport", "w");
+	if (fp == NULL) {
+		logError("Unable to unexport pin %d for interrupt\n", gpioPin);
+		exit(1);
+	}
+	fprintf(fp, "%d", gpioPin);
+	fclose(fp);
 }
 
 void interrupts()
