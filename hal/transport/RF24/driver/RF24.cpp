@@ -348,7 +348,7 @@ LOCAL uint8_t RF24_getDynamicPayloadSize(void)
 {
 	uint8_t result = RF24_spiMultiByteTransfer(RF24_CMD_READ_RX_PL_WID, NULL, 1, true);
 	// check if payload size invalid
-	if(result > 32) {
+	if(result > 32 || !result) {
 		RF24_DEBUG(PSTR("!RF24:GDP:PYL INV\n")); // payload len invalid
 		RF24_flushRX();
 		result = 0;
