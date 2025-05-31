@@ -184,6 +184,7 @@ typedef enum {
 	V_VA					= 55,	//!< S_POWER, Apparent power: volt-ampere (VA)
 	V_POWER_FACTOR			= 56,	//!< S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
 	V_MULTI_MESSAGE			= 57,	//!< Special type, multiple sensors in one message
+	V_TILT                  = 58   //!< S_COVER, Tilt position (Integer between 0-100)
 } mysensors_data_t;
 #endif
 
