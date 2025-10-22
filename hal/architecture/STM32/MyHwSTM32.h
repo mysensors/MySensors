@@ -61,8 +61,13 @@
 #endif
 
 // Printf format string compatibility
-#define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
-#define vsnprintf_P(s, n, f, ...) vsnprintf((s), (n), (f), __VA_ARGS__)
+// Note: STM32duino core already defines these in avr/pgmspace.h
+#ifndef snprintf_P
+#define snprintf_P(s, n, ...) snprintf((s), (n), __VA_ARGS__)
+#endif
+#ifndef vsnprintf_P
+#define vsnprintf_P(s, n, ...) vsnprintf((s), (n), __VA_ARGS__)
+#endif
 
 // Digital I/O macros - wrap Arduino functions
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
