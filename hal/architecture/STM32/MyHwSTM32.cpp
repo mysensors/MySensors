@@ -101,16 +101,13 @@ void hwWriteConfig(const int addr, uint8_t value)
 
 void hwWatchdogReset(void)
 {
-#ifdef IWDG
+#if defined(HAL_IWDG_MODULE_ENABLED) && defined(IWDG)
 	// Reset independent watchdog if enabled
-	// Note: Watchdog must be configured separately in sketch if needed
-	#if defined(HAL_IWDG_MODULE_ENABLED)
-	// Using STM32 HAL
-	// Implementation depends on whether user has initialized IWDG
-	// For safety, we only reset if it's running
-	#endif
+	// Use direct register write to reload watchdog counter
+	// This works whether IWDG was initialized by HAL or LL drivers
+	IWDG->KR = IWDG_KEY_RELOAD;
 #endif
-	// No-op if watchdog not enabled - safer default
+	// No-op if watchdog not enabled
 }
 
 void hwReboot(void)
@@ -188,7 +185,7 @@ bool hwUniqueID(unique_id_t *uniqueID)
 
 uint16_t hwCPUVoltage(void)
 {
-#if defined(AVREF) && defined(__HAL_RCC_ADC1_CLK_ENABLE)
+#if defined(VREF_AVAILABLE) && defined(AVREF) && defined(__HAL_RCC_ADC1_CLK_ENABLE)
 	// Read internal voltage reference to calculate VDD
 	// VREFINT is typically 1.2V (varies by STM32 family)
 
@@ -215,7 +212,7 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
-#if defined(ATEMP) && defined(__HAL_RCC_ADC1_CLK_ENABLE)
+#if defined(TEMP_SENSOR_AVAILABLE) && defined(ATEMP) && defined(__HAL_RCC_ADC1_CLK_ENABLE)
 	// Read internal temperature sensor
 	// Note: Requires calibration values for accurate results
 

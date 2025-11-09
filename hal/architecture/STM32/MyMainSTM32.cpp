@@ -21,19 +21,37 @@
  * @file MyMainSTM32.cpp
  * @brief Main entry point implementation for STM32
  *
- * This file integrates with the Arduino framework's main() function.
- * The STM32duino core provides its own main() that calls setup() and loop().
+ * This file provides the main() function that integrates MySensors with the
+ * STM32duino Arduino core. It overrides the default Arduino main() to inject
+ * MySensors _begin() and _process() calls around the user's sketch functions.
  */
 
 #include "MyHwSTM32.h"
 
-/**
- * @file MyMainSTM32.cpp
- * @brief Main entry point for STM32
- *
- * STM32duino core provides main() function and serialEvent() handlers.
- * No additional implementation needed - the framework handles setup()/loop() calls.
- */
+// Declare the sketch's setup() and loop() functions
+__attribute__((weak)) void setup(void);
+__attribute__((weak)) void loop(void);
 
-// Note: STM32duino core already provides weak serialEvent handlers
-// We don't need to redefine them here
+// Override Arduino's main() function
+int main(void)
+{
+	// Initialize Arduino core
+	init();
+
+#if defined(USBCON)
+	// Initialize USB if available
+	USBDevice.attach();
+#endif
+
+	_begin(); // Startup MySensors library
+
+	for(;;) {
+		_process();  // Process incoming data
+		if (loop) {
+			loop(); // Call sketch loop
+		}
+		// STM32duino doesn't use serialEventRun by default
+	}
+
+	return 0;
+}
