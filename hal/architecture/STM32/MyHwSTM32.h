@@ -69,6 +69,20 @@
 #define vsnprintf_P(s, n, ...) vsnprintf((s), (n), __VA_ARGS__)
 #endif
 
+// redefine 8 bit types of inttypes.h
+#undef PRId8
+#undef PRIi8
+#undef PRIo8
+#undef PRIu8
+#undef PRIx8
+#undef PRIX8
+#define PRId8		"d"
+#define PRIi8		"i"
+#define PRIo8		"o"
+#define PRIu8		"u"
+#define PRIx8		"x"
+#define PRIX8		"X"
+
 // Digital I/O macros - wrap Arduino functions
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
 #define hwDigitalRead(__pin) digitalRead(__pin)
