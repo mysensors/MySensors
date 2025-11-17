@@ -12,7 +12,7 @@ echo "No keywords are missing in keywords.txt - great!<br>" > missing_keywords.t
 echo "No keywords in code that don't exist in keywords.txt - great!<br>" > missing_keywords_2.txt
 echo "No keywords in code that don't have Doxygen comments and aren't blacklisted in keywords.txt - great!<br>" > missing_keywords_3.txt
 echo "No lines in keywords.txt using spaces instead of TAB (the Arduino IDE doesn't support space) - great!<br>" > tab_spaces_keywords.txt
-echo "No occurences of the deprecated boolean data type - great!<br>" >> booleans.txt
+echo "No occurrences of the deprecated boolean data type - great!<br>" > booleans.txt
 
 too_long_subjects=`awk 'length > 72' subjects.txt`
 if [ -n "$too_long_subjects" ]; then
@@ -44,7 +44,7 @@ if [ -n "$too_long_body_lines" ]; then
   result=1
 fi
 
-missing_keywords=$(for keyword in $(grep -A999 '#if DOXYGEN' MyConfig.h | grep -B999 '#endif' | grep '#define' | awk '{ print $2 '} | grep -e '^MY_'); do grep -q $keyword keywords.txt || echo $keyword; done)
+missing_keywords=$(for keyword in $(grep -A999 '#if DOXYGEN' MyConfig.h | grep -B999 '#endif' | grep '#define' | awk '{ print $2 }' | grep -e '^MY_'); do grep -q $keyword keywords.txt || echo $keyword; done)
 if [ -n "$missing_keywords" ]; then
   echo "<b>Keywords that are missing from keywords.txt:</b>" > missing_keywords.txt
   echo "$missing_keywords" >> missing_keywords.txt
@@ -55,7 +55,7 @@ fi
 missing_keywords_2=$(SOURCE_FILES="core/ drivers/ hal/ examples/ examples_linux/ MyConfig.h MySensors.h"; for keyword in $(grep -whore  'MY_[A-Z][A-Z_0-9]*' $SOURCE_FILES | sort -u ); do grep -q $keyword keywords.txt || echo $keyword; done)
 if [ -n "$missing_keywords_2" ]; then
   echo "<b>Keywords in code that don't exist in keywords.txt:</b>" > missing_keywords_2.txt
-  echo "If keywords aren't in keywords.txt, they will not be highlighted in the Arduino IDE. Highlighting makes the code easier to follow and helps spot spelling mistakes." > missing_keywords_2.txt
+  echo "If keywords aren't in keywords.txt, they will not be highlighted in the Arduino IDE. Highlighting makes the code easier to follow and helps spot spelling mistakes." >> missing_keywords_2.txt
   echo "$missing_keywords_2" >> missing_keywords_2.txt
   sed -i -e 's/$/<br>/' missing_keywords_2.txt
   result=1
@@ -64,7 +64,7 @@ fi
 missing_keywords_3=$(SOURCE_FILES="core/ drivers/ hal/ examples/ examples_linux/ MyConfig.h MySensors.h"; for keyword in $(grep -whore  'MY_[A-Z][A-Z_0-9]*' $SOURCE_FILES | sort -u ); do grep -q $keyword keywords.txt || echo $keyword; done)
 if [ -n "$missing_keywords_3" ]; then
   echo "<b>Keywords in code that don't have Doxygen comments and aren't blacklisted in keywords.txt:</b>" > missing_keywords_3.txt
-  echo "If keywords don't have Doxygen comments, they will not be available at https://www.mysensors.org/apidocs/index.html Add Doxygen comments to make it easier for users to find and understand how to use the new keywords." > missing_keywords_3.txt
+  echo "If keywords don't have Doxygen comments, they will not be available at https://www.mysensors.org/apidocs/index.html Add Doxygen comments to make it easier for users to find and understand how to use the new keywords." >> missing_keywords_3.txt
   echo "$missing_keywords_3" >> missing_keywords_3.txt
   sed -i -e 's/$/<br>/' missing_keywords_3.txt
   result=1
@@ -91,8 +91,8 @@ awk 'FNR==1{print "<br>"}1' too_long_subjects.txt leading_lowercases.txt trailin
 echo "<br>" >> butler.html
 if [ $result -ne 0 ]; then
 	echo "<b>I am afraid there are some issues with your commit messages and/or use of keywords.</b><br>" >> butler.html
-	echo "I highly recommend reading <a href="http://chris.beams.io/posts/git-commit">this guide</a> for tips on how to write a good commit message.<br>" >> butler.html
-	echo "More specifically, MySensors have some <a href="https://www.mysensors.org/download/contributing">code contribution guidelines</a> that I am afraid all contributers need to follow.<br>" >> butler.html
+	echo 'I highly recommend reading <a href="http://chris.beams.io/posts/git-commit">this guide</a> for tips on how to write a good commit message.<br>' >> butler.html
+	echo 'More specifically, MySensors have some <a href="https://www.mysensors.org/download/contributing">code contribution guidelines</a> that I am afraid all contributors need to follow.<br>' >> butler.html
 	echo "<br>" >> butler.html
 	echo "I can help guide you in how to change the commit message for a single-commit pull request:<br>" >> butler.html
 	echo "git checkout &lt;your_branch&gt;<br>" >> butler.html
@@ -111,9 +111,11 @@ fi
 astyle --options=.mystools/astyle/config/style.cfg -nq --recursive "*.h" "*.c" "*.cpp"
 git diff > restyling.patch
 if [ -s restyling.patch ]; then
-	echo "I am afraid your coding style is not entirely in line with the MySensors prefered style.<b><br>A mail with a patch has been sent to you that, if applied to your PR, will make it follow the MySensors coding standards.</b><br>" >> butler.html
+	echo "I am afraid your coding style is not entirely in line with the MySensors preferred style.<b><br>A mail with a patch has been sent to you that, if applied to your PR, will make it follow the MySensors coding standards.</b><br>" >> butler.html
 	echo "You can apply the patch using:<br>" >> butler.html
 	echo "git apply restyling.patch<br>" >> butler.html
+	echo "<br>" >> butler.html
+  	echo 'Download the patch here: <a href="restyling.patch">restyling.patch</a><br>' >> butler.html
 	echo "<br>" >> butler.html
 	result=1
 else
@@ -123,7 +125,7 @@ else
 fi
 
 if [ $result -ne 0 ]; then
-	echo "If you have any questions, please first read the <a href="https://www.mysensors.org/download/contributing">code contribution guidelines</a>.</b><br>" >> butler.html
+	echo 'If you have any questions, please first read the <a href="https://www.mysensors.org/download/contributing">code contribution guidelines</a>.</b><br>' >> butler.html
 	echo "<b>If you disagree to this, please discuss it in the GitHub pull request thread.</b><br>" >> butler.html
 	echo "<br>" >> butler.html
 fi
