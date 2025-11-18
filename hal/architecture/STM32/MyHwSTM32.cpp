@@ -84,9 +84,6 @@ void hwWriteConfigBlock(void *buf, void *addr, size_t length)
 	for (size_t i = 0; i < length; i++) {
 		EEPROM.update(pos + i, src[i]);
 	}
-
-	// Commit changes to flash (STM32duino EEPROM emulation)
-	// Note: This happens automatically on next read or explicit commit
 }
 
 uint8_t hwReadConfig(const int addr)
@@ -107,7 +104,6 @@ void hwWatchdogReset(void)
 	// This works whether IWDG was initialized by HAL or LL drivers
 	IWDG->KR = IWDG_KEY_RELOAD;
 #endif
-	// No-op if watchdog not enabled
 }
 
 void hwReboot(void)
@@ -162,20 +158,8 @@ bool hwUniqueID(unique_id_t *uniqueID)
 #ifdef UID_BASE
 	// STM32 unique device ID is stored at a fixed address
 	// Length is 96 bits (12 bytes) but we store 16 bytes for compatibility
-
-	uint32_t *id = (uint32_t *)UID_BASE;
-	uint8_t *dst = (uint8_t *)uniqueID;
-
-	// Copy 12 bytes of unique ID
-	for (uint8_t i = 0; i < 12; i++) {
-		dst[i] = ((uint8_t *)id)[i];
-	}
-
-	// Pad remaining bytes with zeros
-	for (uint8_t i = 12; i < 16; i++) {
-		dst[i] = 0;
-	}
-
+	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)UID_BASE, 12);
+	(void)memset(static_cast<void *>(uniqueID + 12), MY_HWID_PADDING_BYTE, 4); // padding
 	return true;
 #else
 	// Unique ID not available on this variant

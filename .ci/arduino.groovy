@@ -223,6 +223,41 @@ def buildSTM32F1(config, sketches, String key) {
 	}
 }
 
+def buildSTM32F4(config, sketches, String key) {
+	def fqbn = '-fqbn stm32duino:STM32F4:STM32F411CE:device_variant=blackpill_f411ce,upload_method=DFUUploadMethod,cpu_speed=speed_100mhz,opt=osstd'
+	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F4 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
+	try {
+		for (sketch = 0; sketch < sketches.size(); sketch++) {
+			if (sketches[sketch].path != config.library_root+'examples/GatewayESP8266/GatewayESP8266.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266MQTTClient/GatewayESP8266MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266SecureMQTTClient/GatewayESP8266SecureMQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP8266OTA/GatewayESP8266OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32/GatewayESP32.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32OTA/GatewayESP32OTA.ino' &&
+					sketches[sketch].path != config.library_root+'examples/GatewayESP32MQTTClient/GatewayESP32MQTTClient.ino' &&
+					sketches[sketch].path != config.library_root+'examples/SensebenderGatewaySerial/SensebenderGatewaySerial.ino') {
+				buildArduino(config, fqbn, sketches[sketch].path, key+'_STM32F4')
+			}
+		}
+	} catch (ex) {
+		echo "Build failed with: "+ ex.toString()
+		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (STM32F4 - '+key+')', 'Build error', '${BUILD_URL}')
+		throw ex
+	} finally {
+		parseWarnings(key+'_STM32F4')
+	}
+	if (currentBuild.currentResult == 'UNSTABLE') {
+		config.pr.setBuildStatus(config, 'ERROR', 'Toll gate (STM32F4 - '+key+')', 'Warnings found', '${BUILD_URL}warnings2Result/new')
+		if (config.is_pull_request) {
+			error 'Terminated due to warnings found'
+		}
+	} else if (currentBuild.currentResult == 'FAILURE') {
+		config.pr.setBuildStatus(config, 'FAILURE', 'Toll gate (STM32F4 - '+key+')', 'Build error', '${BUILD_URL}')
+	} else {
+		config.pr.setBuildStatus(config, 'SUCCESS', 'Toll gate (STM32F4 - '+key+')', 'Pass', '')
+	}
+}
+
 def buildESP8266(config, sketches, String key) {
 	def fqbn = '-fqbn=esp8266:esp8266:generic:xtal=80,vt=flash,exception=disabled,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=dout,eesz=512K,led=2,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=115200' 
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')

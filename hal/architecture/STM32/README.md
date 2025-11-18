@@ -7,7 +7,7 @@ This directory contains the Hardware Abstraction Layer (HAL) implementation for 
 The STM32 HAL enables MySensors to run on a wide range of STM32 microcontrollers, including:
 
 - **STM32F0** series (Cortex-M0)
-- **STM32F1** series (Cortex-M3) - Note: This is separate from the old STM32F1 maple implementation
+- **STM32F1** series (Cortex-M3)
 - **STM32F4** series (Cortex-M4 with FPU)
 - **STM32L0/L4** series (Low-power Cortex-M0+/M4)
 - **STM32G0/G4** series (Cortex-M0+/M4)
@@ -103,20 +103,9 @@ board = blackpill_f411ce
 ; Upload configuration
 upload_protocol = stlink
 
-; Build flags
-build_flags =
-    -D MY_DEBUG
-    -D MY_BAUD_RATE=115200
-    -D MY_GATEWAY_SERIAL
-    -D MY_RADIO_RF24
-    -D MY_RF24_CE_PIN=PB0
-    -D MY_RF24_CS_PIN=PA4
-    -D MY_RF24_PA_LEVEL=RF24_PA_LOW
-
 ; Library dependencies
 lib_deps =
     mysensors/MySensors@^2.4.0
-    ; Add radio-specific libraries if needed
 
 ; Monitor configuration
 monitor_speed = 115200
@@ -130,7 +119,7 @@ debug_tool = stlink
 Common `board` values for platformio.ini:
 - `blackpill_f401cc` - STM32F401CC Black Pill
 - `blackpill_f411ce` - STM32F411CE Black Pill (recommended)
-- `bluepill_f103c8` - STM32F103C8 Blue Pill (use old STM32F1 HAL instead)
+- `bluepill_f103c8` - STM32F103C8 Blue Pill
 - `nucleo_f401re` - STM32F401RE Nucleo
 - `nucleo_f411re` - STM32F411RE Nucleo
 - `genericSTM32F103C8` - Generic F103C8
@@ -144,6 +133,7 @@ Supported `upload_protocol` options:
 - `serial` - Serial bootloader (requires FTDI adapter)
 - `jlink` - Segger J-Link
 - `blackmagic` - Black Magic Probe
+- `hid` - HID Bootloader 2.0
 
 ## Arduino IDE Configuration
 

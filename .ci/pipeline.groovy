@@ -33,6 +33,7 @@ def call(Closure body) {
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (nRF5 - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Tests)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F4 - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
@@ -51,8 +52,9 @@ def call(Closure body) {
 		
 		/*
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - Examples)', 'Not run yet...', '')
-		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
 		*/
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
+		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F4 - Examples)', 'Not run yet...', '')
 		
 		config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (Arduino Uno - Examples)', 'Not run yet...', '')
 
@@ -156,6 +158,9 @@ def call(Closure body) {
 					stage('STM32F1 (tests)') {
 						arduino.buildSTM32F1(config, config.tests, 'Tests')
 					}
+					stage('STM32F4 (tests)') {
+						arduino.buildSTM32F1(config, config.tests, 'Tests')
+					}
 					stage('ArduinoUno (tests)') {
 						arduino.buildArduinoUno(config, config.tests, 'Tests')
 					}
@@ -195,11 +200,10 @@ def call(Closure body) {
 						arduino.buildESP32(config, config.examples, 'Examples')
 					}
 					*/
-					// No point in building examples for STM32F1 yet
-					/*
 					stage('STM32F1 (Examples)') {
 						arduino.buildSTM32F1(config, config.tests, 'Examples')
-					*/
+					stage('STM32F4 (Examples)') {
+						arduino.buildSTM32F1(config, config.tests, 'Examples')
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
 					}

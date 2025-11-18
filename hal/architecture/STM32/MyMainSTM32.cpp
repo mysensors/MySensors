@@ -28,30 +28,45 @@
 
 #include "MyHwSTM32.h"
 
-// Declare the sketch's setup() and loop() functions
-__attribute__((weak)) void setup(void);
-__attribute__((weak)) void loop(void);
-
-// Override Arduino's main() function
-int main(void)
+__attribute__((constructor(101))) void premain()
 {
-	// Initialize Arduino core
-	init();
-
-#if defined(USBCON)
-	// Initialize USB if available
-	USBDevice.attach();
+  // Required by FreeRTOS, see http://www.freertos.org/RTOS-Cortex-M3-M4.html
+#ifdef NVIC_PRIORITYGROUP_4
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+#endif
+#if (__CORTEX_M == 0x07U)
+  // Defined in CMSIS core_cm7.h
+#ifndef I_CACHE_DISABLED
+  SCB_EnableICache();
+#endif
+#ifndef D_CACHE_DISABLED
+  SCB_EnableDCache();
+#endif
 #endif
 
-	_begin(); // Startup MySensors library
-
-	for(;;) {
-		_process();  // Process incoming data
-		if (loop) {
-			loop(); // Call sketch loop
-		}
-		// STM32duino doesn't use serialEventRun by default
-	}
-
-	return 0;
+  init();
 }
+
+/*
+ * \brief Main entry point of Arduino application
+ */
+int main(void)
+{
+  initVariant();
+
+  _begin(); // Startup MySensors library
+
+  for (;;) {
+#if defined(CORE_CALLBACK)
+    CoreCallback();
+#endif
+    _process();  // Process incoming data
+	if (loop) {
+		loop(); // Call sketch loop
+	}
+    serialEventRun();
+  }
+
+  return 0;
+}
+

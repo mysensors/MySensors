@@ -70,9 +70,6 @@
 #include "drivers/extEEPROM/extEEPROM.cpp"
 #include "hal/architecture/SAMD/MyHwSAMD.cpp"
 #include "hal/crypto/generic/MyCryptoGeneric.cpp"
-#elif defined(ARDUINO_ARCH_STM32F1)
-#include "hal/architecture/STM32F1/MyHwSTM32F1.cpp"
-#include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32)
 #include "hal/architecture/STM32/MyHwSTM32.cpp"
 #include "hal/crypto/generic/MyCryptoGeneric.cpp"
@@ -339,7 +336,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(MY_RAM_ROUTING_TABLE_FEATURE) && defined(MY_REPEATER_FEATURE)
 // activate feature based on architecture
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32) || defined(TEENSYDUINO) || defined(__linux__) || defined(__ASR6501__) || defined (__ASR6502__)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_STM32) || defined(TEENSYDUINO) || defined(__linux__) || defined(__ASR6501__) || defined (__ASR6502__)
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 #if defined(__avr_atmega1280__) || defined(__avr_atmega1284__) || defined(__avr_atmega2560__) || defined(__avr_attiny3224__) || defined(__avr_attiny3227__)
@@ -475,8 +472,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/ESP32/MyMainESP32.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/Linux/MyMainLinuxGeneric.cpp"
-#elif defined(ARDUINO_ARCH_STM32F1)
-#include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
 #elif defined(ARDUINO_ARCH_STM32)
 #include "hal/architecture/STM32/MyMainSTM32.cpp"
 #elif defined(__ASR6501__) || defined(__ASR6502__)
