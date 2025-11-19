@@ -202,8 +202,10 @@ def call(Closure body) {
 					*/
 					stage('STM32F1 (Examples)') {
 						arduino.buildSTM32F1(config, config.tests, 'Examples')
+					}
 					stage('STM32F4 (Examples)') {
 						arduino.buildSTM32F1(config, config.tests, 'Examples')
+					}
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
 					}
