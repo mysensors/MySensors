@@ -189,7 +189,7 @@ def buildArduinoMega(config, sketches, String key) {
 }
 
 def buildSTM32F1(config, sketches, String key) {
-	def fqbn = '-fqbn STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C8,upload_method=DFUUploadMethod,cpu_speed=speed_72mhz,opt=osstd'
+	def fqbn = '-fqbn fqbn=STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C6,upload_method=swdMethod,xserial=generic,usb=none,xusb=FS,opt=osstd,dbg=none,rtlib=nano'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -224,7 +224,7 @@ def buildSTM32F1(config, sketches, String key) {
 }
 
 def buildSTM32F4(config, sketches, String key) {
-	def fqbn = '-fqbn STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=DFUUploadMethod,cpu_speed=speed_100mhz,opt=osstd'
+	def fqbn = '-fqbn STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=swdMethod,xserial=generic,usb=none,xusb=FS,opt=osstd,dbg=none,rtlib=nano'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F4 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
