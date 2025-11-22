@@ -80,7 +80,7 @@ if ! [ -f cppcheck-avr_cppcheck_reports/index.html ]; then
     exit 1
 fi
 
-if grep -q "0 total" cppcheck-avr_cppcheck_reports/index.html; then
+if grep -q "0</td><td>total" cppcheck-avr_cppcheck_reports/index.html; then
     exit 0
 else
     exit 1
