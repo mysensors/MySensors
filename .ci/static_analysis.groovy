@@ -25,6 +25,7 @@ find . -type f \\( -iname '*.c' -o -iname '*.cpp' -o -iname '*.ino' \\) \
         --platform=.mystools/cppcheck/config/avr.xml \
         --suppressions-list=.mystools/cppcheck/config/suppressions.cfg \
         --includes-file=.mystools/cppcheck/config/includes.cfg \
+        --language=c++ \
         --inline-suppr \
         --xml --xml-version=2 \
         2> cppcheck-avr.xml
