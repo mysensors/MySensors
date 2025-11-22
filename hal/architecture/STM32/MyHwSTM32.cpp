@@ -127,15 +127,15 @@ void hwRandomNumberInit(void)
 	for (uint8_t i = 0; i < 32; i++) {
 		uint32_t value = 0;
 
-		#ifdef TEMP_SENSOR_AVAILABLE
+#ifdef TEMP_SENSOR_AVAILABLE
 		// Try to read internal temperature sensor if available
 		value ^= analogRead(ATEMP);
-		#endif
+#endif
 
-		#ifdef VREF_AVAILABLE
+#ifdef VREF_AVAILABLE
 		// Mix in internal voltage reference reading
 		value ^= analogRead(AVREF);
-		#endif
+#endif
 
 		// Mix in current time
 		value ^= hwMillis();
@@ -154,7 +154,7 @@ void hwRandomNumberInit(void)
 #else
 	// Fallback: use millis as weak entropy source
 	randomSeed(hwMillis());
-#endif
+#endif // ADC1
 }
 
 bool hwUniqueID(unique_id_t *uniqueID)
@@ -218,7 +218,7 @@ int8_t hwCPUTemperature(void)
 
 	int32_t temp_raw = analogRead(ATEMP);
 
-	#ifdef TEMP110_CAL_ADDR
+#ifdef TEMP110_CAL_ADDR
 	// Use factory calibration if available (STM32F4, L4, etc.)
 	uint16_t *temp30_cal = (uint16_t *)TEMP30_CAL_ADDR;
 	uint16_t *temp110_cal = (uint16_t *)TEMP110_CAL_ADDR;
@@ -234,7 +234,7 @@ int8_t hwCPUTemperature(void)
 
 		return (int8_t)temp;
 	}
-	#endif
+#endif // TEMP110_CAL_ADDR
 
 	// Fallback: use typical values (less accurate)
 	// Typical slope: 2.5 mV/°C, V25 = 0.76V for STM32F4
