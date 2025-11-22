@@ -25,24 +25,52 @@ def buildArduino(config, String buildFlags, String sketch, String key) {
 }
 
 def parseWarnings(String key) {
-	warnings canResolveRelativePaths: false, canRunOnFailed: true, categoriesPattern: '',
- 		defaultEncoding: '',
- 		excludePattern: '''.*/EEPROM\\.h,.*/Dns\\.cpp,.*/socket\\.cpp,.*/util\\.h,.*/Servo\\.cpp,
- 											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,.*/PJON/.*,
- 											 .*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/libraries/Wire/.*,
- 											 .*/hardware/avr.*,.*/hardware/STM32F1.*,.*/hardware/esp8266.*,.*/hardware/esp32.*,
-											 .*/libraries/SD/.*,.*/libraries/Ethernet/.*''',
+    recordIssues(
+        enabledForFailure: true,      // like canRunOnFailed: true
+        tools: [
+            // Use your custom Groovy parser "Arduino/AVR"
+            // Adjust 'id' if your configured parser ID is different
+            analysisParser(
+                id: 'Arduino/AVR',
+                name: 'Arduino/AVR',
+                pattern: "compiler_${key}.log"
+            )
+        ],
+        // Replaces excludePattern: '...'
+        filters: [
+            excludeFile(pattern: '.*/EEPROM\\.h'),
+            excludeFile(pattern: '.*/Dns\\.cpp'),
+            excludeFile(pattern: '.*/socket\\.cpp'),
+            excludeFile(pattern: '.*/util\\.h'),
+            excludeFile(pattern: '.*/Servo\\.cpp'),
+            excludeFile(pattern: '.*/Adafruit_NeoPixel\\.cpp'),
+            excludeFile(pattern: '.*/UIPEthernet.*'),
+            excludeFile(pattern: '.*/SoftwareSerial\\.cpp'),
+            excludeFile(pattern: '.*/PJON/.*'),
+            excludeFile(pattern: '.*/pins_arduino\\.h'),
+            excludeFile(pattern: '.*/Stream\\.cpp'),
+            excludeFile(pattern: '.*/USBCore\\.cpp'),
+            excludeFile(pattern: '.*/libraries/Wire/.*'),
+            excludeFile(pattern: '.*/hardware/avr.*'),
+            excludeFile(pattern: '.*/hardware/STM32F1.*'),
+            excludeFile(pattern: '.*/hardware/esp8266.*'),
+            excludeFile(pattern: '.*/hardware/esp32.*'),
+            excludeFile(pattern: '.*/libraries/SD/.*'),
+            excludeFile(pattern: '.*/libraries/Ethernet/.*'),
+        ],
+        // Replaces unstableNewAll/unstableTotalAll = '0'  → unstable if there is any issue
+        qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
+    )
 
- 		healthy: '', includePattern: '', messagesPattern: '',
- 		parserConfigurations: [[parserName: 'Arduino/AVR', pattern: 'compiler_'+key+'.log']],
- 		unHealthy: '', unstableNewAll: '0', unstableTotalAll: '0'
-	sh """#!/bin/bash
-				echo "Compiler warnings/errors:"
-				printf "\\e[101m"
-				cat compiler_${key}.log
-				printf "\\e[0m"
-				rm compiler_${key}.log"""
+    // keep your colored log output
+    sh """#!/bin/bash
+        echo "Compiler warnings/errors:"
+        printf "\\e[101m"
+        cat compiler_${key}.log
+        printf "\\e[0m"
+        rm compiler_${key}.log"""
 }
+
 
 def buildMySensorsMicro(config, sketches, String key) {
 	def fqbn = '-fqbn=MySensors:avr:MysensorsMicro:cpu=1Mhz'
