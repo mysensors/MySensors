@@ -293,7 +293,8 @@ def call(Closure body) {
 				}
 			},
 			failFast: true
-		} finally {
+		}
+	} finally {
 		if (currentBuild.currentResult != 'SUCCESS') {
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate', 'Failed', '${BUILD_URL}flowGraphTable/')
 
