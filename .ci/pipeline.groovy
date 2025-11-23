@@ -222,7 +222,7 @@ def call(Closure body) {
 		currentBuild.result = 'FAILURE'
 		throw ex
 	} finally {
-		if (currentBuild.result != 'SUCCESS')
+		if (currentBuild.result && currentBuild.result != 'SUCCESS')
 		{
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate', 'Failed', '${BUILD_URL}flowGraphTable/')
 			if (config.is_pull_request) {
