@@ -189,7 +189,7 @@ def buildArduinoMega(config, sketches, String key) {
 }
 
 def buildSTM32F1(config, sketches, String key) {
-	def fqbn = '-fqbn fqbn=STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C6,upload_method=swdMethod,xserial=generic,usb=none,xusb=FS,opt=osstd,dbg=none,rtlib=nano'
+	def fqbn = '-fqbn STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C8,upload_method=swdMethod,xserial=generic,usb=none,xusb=FS,opt=osstd,dbg=none,rtlib=nano'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (STM32F1 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
