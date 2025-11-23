@@ -177,123 +177,122 @@ def call(Closure body) {
 					}
 				}
 			}, ArduinoBuilds: {
-					// Still lock the Arduino toolchain so different Jenkins jobs
-					// don't use /opt/arduino-* and ~/.arduino15 at the same time.
-					lock(quantity: 1, resource: 'arduinoEnv') {
-						parallel(
-							"ArduinoUno": {
-								stage('ArduinoUno (Tests)') {
-									arduino.buildArduinoUno(config, config.tests, 'Tests')
-								}
-								stage('ArduinoUno (Examples)') {
-									arduino.buildArduinoUno(config, config.examples, 'Examples')
-								}
-							},
-							"ESP32": {
-								stage('ESP32 (Tests)') {
-									arduino.buildESP32(config, config.tests, 'Tests')
-								}
-							},
-							"nRF52832": {
-								stage('nRF52832 (Tests)') {
-									arduino.buildnRF52832(config, config.tests, 'Tests')
-								}
-							},
-							"ESP8266": {
-								stage('ESP8266 (Tests)') {
-									arduino.buildESP8266(config, config.tests, 'Tests')
-								}
-							},
-							"nRF5": {
-								stage('nRF5 (Tests)') {
-									arduino.buildnRF5(config, config.tests, 'Tests')
-								}
-							},
-							"STM32F1": {
-								stage('STM32F1 (Tests)') {
-									arduino.buildSTM32F1(config, config.tests, 'Tests')
-								}
-							},
-							"STM32F4": {
-								stage('STM32F4 (Tests)') {
-									arduino.buildSTM32F4(config, config.tests, 'Tests')
-								}
+				// Still lock the Arduino toolchain so different Jenkins jobs
+				// don't use /opt/arduino-* and ~/.arduino15 at the same time.
+				lock(quantity: 1, resource: 'arduinoEnv') {
+					parallel(
+						"ArduinoUno": {
+							stage('ArduinoUno (Tests)') {
+								arduino.buildArduinoUno(config, config.tests, 'Tests')
 							}
-							/*
-							,
-							"MySensorsMicro": {
-								stage('MySensorsMicro (tests)') {
-									arduino.buildMySensorsMicro(config, config.tests, 'Tests')
-								}
-								stage('MySensorsMicro (examples)') {
-									arduino.buildMySensorsMicro(config, config.examples, 'Examples')
-								}
-							},
-							"MySensorsGW": {
-								stage('MySensorsGW (tests)') {
-									arduino.buildMySensorsGw(config, config.tests, 'Tests')
-								}
-								stage('MySensorsGW (examples)') {
-									arduino.buildMySensorsGw(config, config.examples, 'Examples')
-								}
-							},
-							"nRF51822": {
-								stage('nRF51822 (tests)') {
-									arduino.buildnRF51822(config, config.tests, 'Tests')
-								}
-								stage('nRF51822 (examples)') {
-									arduino.buildnRF51822(config, config.examples, 'Examples')
-								}
-							},
-							"ArduinoMega": {
-								stage('ArduinoMega (tests)') {
-									arduino.buildArduinoMega(config, config.tests, 'Tests')
-								}
-								stage('ArduinoMega (examples)') {
-									arduino.buildArduinoMega(config, config.examples, 'Examples')
-								}
-							},
-							"nRF52832Examples": {
-								stage('nRF52832 (examples)') {
-									arduino.buildnRF52832(config, config.examples, 'Examples')
-								}
-							},
-							"nRF5Examples": {
-								stage('nRF5 (examples)') {
-									arduino.buildnRF5(config, config.examples, 'Examples')
-								}
-							},
-							"ESP8266Examples": {
-								stage('ESP8266 (examples)') {
-									arduino.buildESP8266(config, config.examples, 'Examples')
-								}
-							},
-							"ESP32Examples": {
-								stage('ESP32 (examples)') {
-									arduino.buildESP32(config, config.examples, 'Examples')
-								}
-							},
-							"STM32F1Examples": {
-								stage('STM32F1 (Examples)') {
-									arduino.buildSTM32F1(config, config.tests, 'Examples')
-								}
-							},
-							"STM32F4Examples": {
-								stage('STM32F4 (Examples)') {
-									arduino.buildSTM32F4(config, config.tests, 'Examples')
-								}
-							},
-							"ArduinoMegaExamples": {
-								stage('ArduinoMega (examples)') {
-									arduino.buildArduinoMega(config, config.examples, 'Examples')
-								}
+							stage('ArduinoUno (Examples)') {
+								arduino.buildArduinoUno(config, config.examples, 'Examples')
 							}
-							*/
-						)
-					}
-				},
-				failFast: true
-			)
+						},
+						"ESP32": {
+							stage('ESP32 (Tests)') {
+								arduino.buildESP32(config, config.tests, 'Tests')
+							}
+						},
+						"nRF52832": {
+							stage('nRF52832 (Tests)') {
+								arduino.buildnRF52832(config, config.tests, 'Tests')
+							}
+						},
+						"ESP8266": {
+							stage('ESP8266 (Tests)') {
+								arduino.buildESP8266(config, config.tests, 'Tests')
+							}
+						},
+						"nRF5": {
+							stage('nRF5 (Tests)') {
+								arduino.buildnRF5(config, config.tests, 'Tests')
+							}
+						},
+						"STM32F1": {
+							stage('STM32F1 (Tests)') {
+								arduino.buildSTM32F1(config, config.tests, 'Tests')
+							}
+						},
+						"STM32F4": {
+							stage('STM32F4 (Tests)') {
+								arduino.buildSTM32F4(config, config.tests, 'Tests')
+							}
+						}
+						/*
+						,
+						"MySensorsMicro": {
+							stage('MySensorsMicro (tests)') {
+								arduino.buildMySensorsMicro(config, config.tests, 'Tests')
+							}
+							stage('MySensorsMicro (examples)') {
+								arduino.buildMySensorsMicro(config, config.examples, 'Examples')
+							}
+						},
+						"MySensorsGW": {
+							stage('MySensorsGW (tests)') {
+								arduino.buildMySensorsGw(config, config.tests, 'Tests')
+							}
+							stage('MySensorsGW (examples)') {
+								arduino.buildMySensorsGw(config, config.examples, 'Examples')
+							}
+						},
+						"nRF51822": {
+							stage('nRF51822 (tests)') {
+								arduino.buildnRF51822(config, config.tests, 'Tests')
+							}
+							stage('nRF51822 (examples)') {
+								arduino.buildnRF51822(config, config.examples, 'Examples')
+							}
+						},
+						"ArduinoMega": {
+							stage('ArduinoMega (tests)') {
+								arduino.buildArduinoMega(config, config.tests, 'Tests')
+							}
+							stage('ArduinoMega (examples)') {
+								arduino.buildArduinoMega(config, config.examples, 'Examples')
+							}
+						},
+						"nRF52832Examples": {
+							stage('nRF52832 (examples)') {
+								arduino.buildnRF52832(config, config.examples, 'Examples')
+							}
+						},
+						"nRF5Examples": {
+							stage('nRF5 (examples)') {
+								arduino.buildnRF5(config, config.examples, 'Examples')
+							}
+						},
+						"ESP8266Examples": {
+							stage('ESP8266 (examples)') {
+								arduino.buildESP8266(config, config.examples, 'Examples')
+							}
+						},
+						"ESP32Examples": {
+							stage('ESP32 (examples)') {
+								arduino.buildESP32(config, config.examples, 'Examples')
+							}
+						},
+						"STM32F1Examples": {
+							stage('STM32F1 (Examples)') {
+								arduino.buildSTM32F1(config, config.tests, 'Examples')
+							}
+						},
+						"STM32F4Examples": {
+							stage('STM32F4 (Examples)') {
+								arduino.buildSTM32F4(config, config.tests, 'Examples')
+							}
+						},
+						"ArduinoMegaExamples": {
+							stage('ArduinoMega (examples)') {
+								arduino.buildArduinoMega(config, config.examples, 'Examples')
+							}
+						}
+						*/
+					)
+				}
+			},
+			failFast: true
 		} finally {
 		if (currentBuild.currentResult != 'SUCCESS') {
 			config.pr.setBuildStatus(config, 'ERROR', 'Toll gate', 'Failed', '${BUILD_URL}flowGraphTable/')
