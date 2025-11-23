@@ -159,7 +159,7 @@ def call(Closure body) {
 						arduino.buildSTM32F1(config, config.tests, 'Tests')
 					}
 					stage('STM32F4 (tests)') {
-						arduino.buildSTM32F1(config, config.tests, 'Tests')
+						arduino.buildSTM32F4(config, config.tests, 'Tests')
 					}
 					stage('ArduinoUno (tests)') {
 						arduino.buildArduinoUno(config, config.tests, 'Tests')
@@ -204,7 +204,7 @@ def call(Closure body) {
 						arduino.buildSTM32F1(config, config.tests, 'Examples')
 					}
 					stage('STM32F4 (Examples)') {
-						arduino.buildSTM32F1(config, config.tests, 'Examples')
+						arduino.buildSTM32F4(config, config.tests, 'Examples')
 					}
 					stage('ArduinoUno (examples)') {
 						arduino.buildArduinoUno(config, config.examples, 'Examples')
