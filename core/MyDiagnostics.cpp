@@ -66,12 +66,12 @@ void PRINT(const char *fmt, ...)
 
 void PrintHex8(const uint8_t* data, uint16_t length)
 {
-    for (uint16_t i = 0; i < length; ++i) {
-        PRINT(PSTR("%02" PRIX8 " "), data[i]);
-        if ( ((i + 1u) % 16u == 0u) || (i + 1u == length) ) {
-            MY_SERIALDEVICE.println();
-        }
+	for (uint16_t i = 0; i < length; ++i) {
+  	PRINT(PSTR("%02" PRIX8 " "), data[i]);
+    if ( ((i + 1u) % 16u == 0u) || (i + 1u == length) ) {
+    	MY_SERIALDEVICE.println();
     }
+  }
 }
 
 void diagnosticsPrintSeparationLine(void)
