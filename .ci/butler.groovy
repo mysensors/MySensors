@@ -16,13 +16,13 @@ def call(config) {
 		dir(config.repository_root) {
 			step([$class: 'GitChangelogRecorder', config: [configFile: 'git-changelog-settings.json',
 				createFileTemplateContent: '''
-# Changelog
-{{#commits}}
-### {{{messageTitle}}}
-{{{messageBody}}}
-[{{hash}}](https://github.com/mysensors/MySensors/commit/{{hash}}) by {{authorName}} at *{{commitTime}}*
-{{/commits}}
-''',
+                # Changelog
+                {{#commits}}
+                ### {{{messageTitle}}}
+                {{{messageBody}}}
+                [{{hash}}](https://github.com/mysensors/MySensors/commit/{{hash}}) by {{authorName}} at *{{commitTime}}*
+                {{/commits}}
+                ''',
 				createFileTemplateFile: '', createFileUseTemplateContent: true,
 				createFileUseTemplateFile: false, customIssues: [[link: '', name: '', pattern: '', title: ''],
 				[link: '', name: '', pattern: '', title: '']], dateFormat: 'YYYY-MM-dd HH:mm:ss',
@@ -54,10 +54,10 @@ def call(config) {
 	dir(config.repository_root) {
 		step([$class: 'GitChangelogRecorder', config: [configFile: 'git-changelog-settings.json',
 			createFileTemplateContent: '''
-{{#commits}}
-{{{messageTitle}}}
-{{/commits}}
-''',
+            {{#commits}}
+            {{{messageTitle}}}
+            {{/commits}}
+            ''',
 			createFileTemplateFile: '', createFileUseTemplateContent: true,
 			createFileUseTemplateFile: false, customIssues: [[link: '', name: '', pattern: '', title: ''],
 			[link: '', name: '', pattern: '', title: '']], dateFormat: 'YYYY-MM-dd HH:mm:ss',
@@ -81,12 +81,12 @@ def call(config) {
 		])
 		step([$class: 'GitChangelogRecorder', config: [configFile: 'git-changelog-settings.json',
 			createFileTemplateContent: '''
-{{#commits}}
-{{#messageBodyItems}}
-{{.}}
-{{/messageBodyItems}}
-{{/commits}}
-''',
+            {{#commits}}
+            {{#messageBodyItems}}
+            {{.}}
+            {{/messageBodyItems}}
+            {{/commits}}
+            ''',
 			createFileTemplateFile: '', createFileUseTemplateContent: true,
 			createFileUseTemplateFile: false, customIssues: [[link: '', name: '', pattern: '', title: ''],
 			[link: '', name: '', pattern: '', title: '']], dateFormat: 'YYYY-MM-dd HH:mm:ss',

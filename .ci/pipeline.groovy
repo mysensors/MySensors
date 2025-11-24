@@ -1,7 +1,9 @@
 #!groovy
 
 def call(Closure body) {
-	def config = [:]
+	def config = [
+	    arduino_cli: '/opt/arduino-cli/arduino-cli',
+    ]
 	body.resolveStrategy = Closure.DELEGATE_FIRST
 	body.delegate = config
 	body()
@@ -30,20 +32,19 @@ def call(Closure body) {
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (Arduino Uno - Examples)', 'Not run yet...', '')
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (ESP32 - Tests)', 'Not run yet...', '')
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (ESP8266 - Tests)', 'Not run yet...', '')
-		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF52832 - Tests)', 'Not run yet...', '')
+		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF52 - Tests)', 'Not run yet...', '')
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (STM32F1 - Tests)', 'Not run yet...', '')
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (STM32F4 - Tests)', 'Not run yet...', '')
 
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsMicro - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsGW - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF51822 - Tests)', 'Not run yet...', '')
-		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF5 - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsGW - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF52832 - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF51822 - Examples)', 'Not run yet...', '')
-		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF5 - Examples)', 'Not run yet...', '')
+		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF52 - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (STM32F1 - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (STM32F4 - Examples)', 'Not run yet...', '')
 	}
@@ -146,7 +147,8 @@ def call(Closure body) {
 					)
 				}
 
-				config.tests    = findFiles(glob: "${config.library_root}tests/**/*.ino")
+				config.tests_fast = findFiles(glob: "${config.library_root}tests/fast/**/*.ino")
+				config.tests_nightly = findFiles(glob: "${config.library_root}tests/nightly/**/*.ino")
 				config.examples = findFiles(glob: "${config.library_root}examples/**/*.ino")
 			}
 
@@ -177,75 +179,120 @@ def call(Closure body) {
 					}
 				}
 			}, ArduinoBuilds: {
-				lock(quantity: 1, resource: 'arduinoEnv') {
-					stage('ArduinoUno (Tests)') {
-						arduino.buildArduinoUno(config, config.tests, 'Tests')
+				stage('ArduinoBuilds') {
+					// Run all Arduino builds in parallel
+					def arduinoBranches = [:]
+
+					arduinoBranches['ArduinoUno (Tests)'] = {
+						stage('ArduinoUno (Tests)') {
+							arduino.buildArduinoUno(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('ArduinoUno (Examples)') {
-						arduino.buildArduinoUno(config, config.examples, 'Examples')
+					arduinoBranches['ArduinoUno (Examples)'] = {
+						stage('ArduinoUno (Examples)') {
+							arduino.buildArduinoUno(config, config.examples, 'Examples')
+						}
 					}
-					stage('ESP32 (Tests)') {
-						arduino.buildESP32(config, config.tests, 'Tests')
+					arduinoBranches['nRF52 (Tests)'] = {
+						stage('nRF52 (Tests)') {
+							arduino.buildnRF52(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('nRF52832 (Tests)') {
-						arduino.buildnRF52832(config, config.tests, 'Tests')
+					arduinoBranches['STM32F1 (Tests)'] = {
+						stage('STM32F1 (Tests)') {
+							arduino.buildSTM32F1(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('ESP8266 (Tests)') {
-						arduino.buildESP8266(config, config.tests, 'Tests')
+					arduinoBranches['STM32F4 (Tests)'] = {
+						stage('STM32F4 (Tests)') {
+							arduino.buildSTM32F4(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('nRF5 (Tests)') {
-						arduino.buildnRF5(config, config.tests, 'Tests')
+					arduinoBranches['ESP32 (Tests)'] = {
+						stage('ESP32 (Tests)') {
+							arduino.buildESP32(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('STM32F1 (Tests)') {
-						arduino.buildSTM32F1(config, config.tests, 'Tests')
+					arduinoBranches['ESP8266 (Tests)'] = {
+						stage('ESP8266 (Tests)') {
+							arduino.buildESP8266(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('STM32F4 (Tests)') {
-						arduino.buildSTM32F4(config, config.tests, 'Tests')
-					}
+
 					/*
-					stage('MySensorsMicro (tests)') {
-						arduino.buildMySensorsMicro(config, config.tests, 'Tests')
+					arduinoBranches['MySensorsMicro (tests)'] = {
+						stage('MySensorsMicro (tests)') {
+							arduino.buildMySensorsMicro(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('MySensorsGW (tests)') {
-						arduino.buildMySensorsGw(config, config.tests, 'Tests')
+					arduinoBranches['MySensorsGW (tests)'] = {
+						stage('MySensorsGW (tests)') {
+							arduino.buildMySensorsGw(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('nRF51822 (tests)') {
-						arduino.buildnRF51822(config, config.tests, 'Tests')
+					arduinoBranches['nRF51822 (tests)'] = {
+						stage('nRF51822 (tests)') {
+							arduino.buildnRF51822(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('ArduinoMega (tests)') {
-						arduino.buildArduinoMega(config, config.tests, 'Tests')
+					arduinoBranches['ArduinoMega (tests)'] = {
+						stage('ArduinoMega (tests)') {
+							arduino.buildArduinoMega(config, config.tests_fast, 'Tests')
+						}
 					}
-					stage('MySensorsMicro (examples)') {
-						arduino.buildMySensorsMicro(config, config.examples, 'Examples')
+					arduinoBranches['MySensorsMicro (examples)'] = {
+						stage('MySensorsMicro (examples)') {
+							arduino.buildMySensorsMicro(config, config.examples, 'Examples')
+						}
 					}
-					stage('MySensorsGW (examples)') {
-						arduino.buildMySensorsGw(config, config.examples, 'Examples')
+					arduinoBranches['MySensorsGW (examples)'] = {
+						stage('MySensorsGW (examples)') {
+							arduino.buildMySensorsGw(config, config.examples, 'Examples')
+						}
 					}
-					stage('nRF52832 (examples)') {
-						arduino.buildnRF52832(config, config.examples, 'Examples')
+					arduinoBranches['nRF52832 (examples)'] = {
+						stage('nRF52832 (examples)') {
+							arduino.buildnRF52832(config, config.examples, 'Examples')
+						}
 					}
-					stage('nRF51822 (examples)') {
-						arduino.buildnRF51822(config, config.examples, 'Examples')
+					arduinoBranches['nRF51822 (examples)'] = {
+						stage('nRF51822 (examples)') {
+							arduino.buildnRF51822(config, config.examples, 'Examples')
+						}
 					}
-					stage('nRF5 (examples)') {
-						arduino.buildnRF5(config, config.examples, 'Examples')
+					arduinoBranches['nRF5 (examples)'] = {
+						stage('nRF5 (examples)') {
+							arduino.buildnRF5(config, config.examples, 'Examples')
+						}
 					}
-					stage('ESP8266 (examples)') {
-						arduino.buildESP8266(config, config.examples, 'Examples')
+					arduinoBranches['ESP8266 (examples)'] = {
+						stage('ESP8266 (examples)') {
+							arduino.buildESP8266(config, config.examples, 'Examples')
+						}
 					}
-					stage('ESP32 (examples)') {
-						arduino.buildESP32(config, config.examples, 'Examples')
+					arduinoBranches['ESP32 (examples)'] = {
+						stage('ESP32 (examples)') {
+							arduino.buildESP32(config, config.examples, 'Examples')
+						}
 					}
-					stage('STM32F1 (Examples)') {
-						arduino.buildSTM32F1(config, config.tests, 'Examples')
+					arduinoBranches['STM32F1 (Examples)'] = {
+						stage('STM32F1 (Examples)') {
+							arduino.buildSTM32F1(config, config.examples, 'Examples')
+						}
 					}
-					stage('STM32F4 (Examples)') {
-						arduino.buildSTM32F4(config, config.tests, 'Examples')
+					arduinoBranches['STM32F4 (Examples)'] = {
+						stage('STM32F4 (Examples)') {
+							arduino.buildSTM32F4(config, config.examples, 'Examples')
+						}
 					}
-					stage('ArduinoMega (examples)') {
-						arduino.buildArduinoMega(config, config.examples, 'Examples')
+					arduinoBranches['ArduinoMega (examples)'] = {
+						stage('ArduinoMega (examples)') {
+							arduino.buildArduinoMega(config, config.examples, 'Examples')
+						}
 					}
 					*/
+
+					parallel arduinoBranches
 				}
 			}, failFast: true
 		}
