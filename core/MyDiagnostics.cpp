@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2022 Sensnology AB
+ * Copyright (C) 2013-2026 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -67,11 +67,11 @@ void PRINT(const char *fmt, ...)
 void PrintHex8(const uint8_t* data, uint16_t length)
 {
 	for (uint16_t i = 0; i < length; ++i) {
-  	PRINT(PSTR("%02" PRIX8 " "), data[i]);
-    if ( ((i + 1u) % 16u == 0u) || (i + 1u == length) ) {
-    	MY_SERIALDEVICE.println();
-    }
-  }
+		PRINT(PSTR("%02" PRIX8 " "), data[i]);
+		if ( ((i + 1u) % 16u == 0u) || (i + 1u == length) ) {
+			MY_SERIALDEVICE.println();
+		}
+	}
 }
 
 void diagnosticsPrintSeparationLine(void)
@@ -948,7 +948,7 @@ void diagnosticsMainMenu(void)
 
 void diagnosticsRun(void)
 {
-	MY_SERIALDEVICE.println(F("\nMySensors HW diagnostics v1.0"));
+	MY_SERIALDEVICE.println(F("\nMySensors Diagnostics v1.0"));
 	diagnosticsPrintSeparationLine();
 	PRINT(PSTR("LIB: MySensors %s\n"), MYSENSORS_LIBRARY_VERSION);
 	PRINT(PSTR("REL: %" PRIu8 "\n"), MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER);

@@ -18,7 +18,7 @@
  *
  * Arduino core for ESP32: https://github.com/espressif/arduino-esp32
  *
- * MySensors ESP32 implementation, Copyright (C) 2017-2018 Olivier Mauti <olivier@mysensors.org>
+ * MySensors ESP32 implementation, Copyright (C) 2017-2026 Olivier Mauti <olivier@mysensors.org>
  *
  * Radio wiring ESP32(Node32s): RF24, RFM69, RFM95:
  *

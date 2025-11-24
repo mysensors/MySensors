@@ -18,7 +18,7 @@
  *
  * Arduino core for ESP32: https://github.com/espressif/arduino-esp32
  *
- * MySensors ESP32 implementation, Copyright (C) 2017-2019 Olivier Mauti <olivier@mysensors.org>
+ * MySensors ESP32 implementation, Copyright (C) 2017-2026 Olivier Mauti <olivier@mysensors.org>
  *
  */
 
