@@ -64,14 +64,14 @@ void PRINT(const char *fmt, ...)
 	MY_SERIALDEVICE.print(fmtBuffer);
 }
 
-void PrintHex8(const uint8_t *data, const uint16_t length)
+void PrintHex8(const uint8_t* data, uint16_t length)
 {
-	for (uint16_t i = 0; i < length; i++) {
-		PRINT(PSTR("%02" PRIX8 " "), data[i]);
-		if ((((i + 1) % 16 == 0) && (i < length)) || (i == length - 1)) {
-			MY_SERIALDEVICE.println();
-		}
-	}
+    for (uint16_t i = 0; i < length; ++i) {
+        PRINT(PSTR("%02" PRIX8 " "), data[i]);
+        if ( ((i + 1u) % 16u == 0u) || (i + 1u == length) ) {
+            MY_SERIALDEVICE.println();
+        }
+    }
 }
 
 void diagnosticsPrintSeparationLine(void)
@@ -88,78 +88,78 @@ void diagnosticsMySensorsEEPROMDump(void)
 	PRINT(PSTR("> MYS E2P START: 0x%04" PRIX16 "\n"), EEPROM_START);
 
 	MY_SERIALDEVICE.print(F("> NODE_ID="));
-	hwReadConfigBlock(buffer, EEPROM_NODE_ID_ADDRESS, SIZE_NODE_ID);
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_NODE_ID_ADDRESS), SIZE_NODE_ID);
 	PrintHex8(buffer, SIZE_NODE_ID);
 
 	MY_SERIALDEVICE.print(F("> PAR_ID="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_PARENT_NODE_ID_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_PARENT_NODE_ID_ADDRESS),
 	                  SIZE_PARENT_NODE_ID);
 	PrintHex8(buffer, SIZE_PARENT_NODE_ID);
 
 	MY_SERIALDEVICE.print(F("> D_GW="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_DISTANCE_ADDRESS, SIZE_DISTANCE);
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_DISTANCE_ADDRESS), SIZE_DISTANCE);
 	PrintHex8(buffer, SIZE_DISTANCE);
 
 	MY_SERIALDEVICE.println(F("> RTE TABLE:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *> EEPROM_ROUTES_ADDRESS, SIZE_ROUTES);
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_ROUTES_ADDRESS), SIZE_ROUTES);
 	PrintHex8(buffer, SIZE_ROUTES);
 
 	MY_SERIALDEVICE.println(F("> CTRL_CFG:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_CONTROLLER_CONFIG_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_CONTROLLER_CONFIG_ADDRESS),
 	                  SIZE_CONTROLLER_CONFIG);
 	PrintHex8(buffer, SIZE_CONTROLLER_CONFIG);
 
 	MY_SERIALDEVICE.print(F("> PERS_CRC="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_PERSONALIZATION_CHECKSUM_ADDRESS),
 	                  SIZE_PERSONALIZATION_CHECKSUM);
 	PrintHex8(buffer, SIZE_PERSONALIZATION_CHECKSUM);
 
 	MY_SERIALDEVICE.print(F("> FW_TYPE="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_FIRMWARE_TYPE_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_FIRMWARE_TYPE_ADDRESS),
 	                  SIZE_PERSONALIZATION_CHECKSUM);
 	PrintHex8(buffer, SIZE_PERSONALIZATION_CHECKSUM);
 
 	MY_SERIALDEVICE.print(F("> FW_VERS="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_FIRMWARE_VERSION_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_FIRMWARE_VERSION_ADDRESS),
 	                  SIZE_FIRMWARE_VERSION);
 	PrintHex8(buffer, SIZE_FIRMWARE_VERSION);
 
 	MY_SERIALDEVICE.print(F("> FW_BLOCKS="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_FIRMWARE_BLOCKS_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_FIRMWARE_BLOCKS_ADDRESS),
 	                  SIZE_FIRMWARE_BLOCKS);
 	PrintHex8(buffer, SIZE_FIRMWARE_BLOCKS);
 
 	MY_SERIALDEVICE.print(F("> FW_CRC="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_FIRMWARE_CRC_ADDRESS, SIZE_FIRMWARE_CRC);
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_FIRMWARE_CRC_ADDRESS), SIZE_FIRMWARE_CRC);
 	PrintHex8(buffer, SIZE_FIRMWARE_CRC);
 
 	MY_SERIALDEVICE.println(F("> SGN_REQ_TABLE:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_SIGNING_REQUIREMENT_TABLE_ADDRESS),
 	                  SIZE_SIGNING_REQUIREMENT_TABLE);
 	PrintHex8(buffer, SIZE_SIGNING_REQUIREMENT_TABLE);
 
 	MY_SERIALDEVICE.println(F("> WL_REQ_TABLE:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_WHITELIST_REQUIREMENT_TABLE_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_WHITELIST_REQUIREMENT_TABLE_ADDRESS),
 	                  SIZE_WHITELIST_REQUIREMENT_TABLE);
 	PrintHex8(buffer, SIZE_WHITELIST_REQUIREMENT_TABLE);
 
 	MY_SERIALDEVICE.println(F("> SGN_SOFT_KEY:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_SIGNING_SOFT_HMAC_KEY_ADDRESS),
 	                  SIZE_SIGNING_SOFT_HMAC_KEY);
 	PrintHex8(buffer, SIZE_SIGNING_SOFT_HMAC_KEY);
 
 	MY_SERIALDEVICE.println(F("> SGN_SOFT_SER:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_SIGNING_SOFT_SERIAL_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_SIGNING_SOFT_SERIAL_ADDRESS),
 	                  SIZE_SIGNING_SOFT_SERIAL);
 	PrintHex8(buffer, SIZE_SIGNING_SOFT_SERIAL);
 
 	MY_SERIALDEVICE.println(F("> AES_KEY:"));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS),
 	                  SIZE_RF_ENCRYPTION_AES_KEY);
 	PrintHex8(buffer, SIZE_RF_ENCRYPTION_AES_KEY);
 
 	MY_SERIALDEVICE.print(F("> NL_CNT="));
-	hwReadConfigBlock(buffer, reinterpret_cast<void *>EEPROM_NODE_LOCK_COUNTER_ADDRESS,
+	hwReadConfigBlock(buffer, reinterpret_cast<void *>(EEPROM_NODE_LOCK_COUNTER_ADDRESS),
 	                  SIZE_NODE_LOCK_COUNTER);
 	PrintHex8(buffer, SIZE_NODE_LOCK_COUNTER);
 
@@ -293,8 +293,8 @@ bool diagnosticsCryptoMenu(void)
 #endif
 	uint8_t temp_iv[16];
 	uint8_t temp_data[64];
-	(void)memcpy((void *)temp_iv, (const void *)aes_iv, sizeof(aes_iv));
-	(void)memcpy((void *)temp_data, (const void *)test_data, sizeof(temp_data));
+	(void)memcpy(temp_iv, aes_iv, sizeof(aes_iv));
+	(void)memcpy(temp_data, test_data, sizeof(temp_data));
 	AES128CBCEncrypt(temp_iv, temp_data, sizeof(test_data));
 	MY_SERIALDEVICE.print(F("- AES128 CBC encryption: "));
 	const uint8_t aes_ciphertext[64] = {
@@ -315,7 +315,7 @@ bool diagnosticsCryptoMenu(void)
 	(void)memcpy(temp_iv, aes_iv, sizeof(aes_iv));
 	AES128CBCDecrypt(temp_iv, temp_data, sizeof(temp_data));
 	MY_SERIALDEVICE.print(F("- AES128 CBC decryption: "));
-	if (memcmp((const void *)test_data, (const void *)temp_data, sizeof(temp_data)) == 0) {
+	if (memcmp(test_data, temp_data, sizeof(temp_data)) == 0) {
 		MY_SERIALDEVICE.println(F("OK"));
 	} else {
 		MY_SERIALDEVICE.println(F("FAIL!"));
@@ -325,7 +325,7 @@ bool diagnosticsCryptoMenu(void)
 #endif
 	MY_SERIALDEVICE.print(F("- SHA256: "));
 	uint8_t dest[64];
-	SHA256((uint8_t *)dest, (const uint8_t *)test_data, sizeof(test_data));
+	SHA256(dest, test_data, sizeof(test_data));
 #if defined(CRYPTO_OUTPUT)
 	MY_SERIALDEVICE.println(F("SHA256 input:"));
 	PrintHex8(test_data, sizeof(test_data));
@@ -618,7 +618,7 @@ void diagnosticsRF24Menu(void)
 				// disable ACK on all pipes
 				RF24_setAutoACK(0);
 				// clear result array
-				(void)memset((void *)values, 0, sizeof(values));
+				(void)memset(values, 0, sizeof(values));
 				for (uint8_t rep_counter = 0; rep_counter < 100; rep_counter++) {
 					for (uint8_t channel = 0; channel < num_channels; channel++) {
 						RF24_setChannel(channel);
@@ -767,8 +767,8 @@ void diagnosticsMCUMenu(void)
 	MY_SERIALDEVICE.println(F("ARCH: AVR"));
 #elif defined(ARDUINO_ARCH_SAMD)
 	MY_SERIALDEVICE.println(F("ARCH: SAMD"));
-#elif defined(ARDUINO_ARCH_STM32F1)
-	MY_SERIALDEVICE.println(F("ARCH: STM32F1"));
+#elif defined(ARDUINO_ARCH_STM32)
+	MY_SERIALDEVICE.println(F("ARCH: STM32"));
 #elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
 	MY_SERIALDEVICE.println(F("ARCH: NRF5"));
 #elif defined(__arm__) && defined(TEENSYDUINO)
