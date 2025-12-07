@@ -15,9 +15,9 @@ def buildLinux(config, String configuration, String key) {
 	warnings canComputeNew: false, canResolveRelativePaths: false,
 		defaultEncoding: '',
 		excludePattern: '''.*/EEPROM\\.h,.*/Dns\\.cpp,.*/socket\\.cpp,.*/util\\.h,.*/Servo\\.cpp,
-											 .*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,
-											 .*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/Wire\\.cpp,
-											 .*/hardware/esp8266.*,.*/libraries/SD/.*''',
+						.*/Adafruit_NeoPixel\\.cpp,.*/UIPEthernet.*,.*/SoftwareSerial\\.cpp,
+						.*/pins_arduino\\.h,.*/Stream\\.cpp,.*/USBCore\\.cpp,.*/Wire\\.cpp,
+						.*/hardware/.*,.*/libraries/.*''',
 		failedTotalAll: '', healthy: '', includePattern: '', messagesPattern: '',
 		parserConfigurations: [[parserName: 'GNU Make + GNU C Compiler (gcc)', pattern: config.library_root+'compiler_'+key+'.log']],
 		unHealthy: '', unstableTotalAll: '0'

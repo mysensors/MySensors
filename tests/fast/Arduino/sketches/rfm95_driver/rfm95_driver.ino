@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -15,29 +15,15 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
+ *
+ *******************************
  */
+#define MY_DEBUG
+#define MY_RADIO_RFM95
+#define MY_RFM95_ENABLE_ENCRYPTION
+#define MY_DEBUG_VERBOSE_RFM95
 
-#error This STM32F1 implementation is deprecated, use the STM32duino implementation instead
+#include <MySensors.h>
 
-// Force init to be called *first*, i.e. before static object allocation.
-// Otherwise, statically allocated objects that need libmaple may fail.
-__attribute__(( constructor (101))) void premain()
-{
-	init();
-}
-
-// Initialize library and handle sketch functions like we want to
-int main(void)
-{
-	_begin(); // Startup MySensors library
-	for(;;) {
-		_process();	// Process incoming data
-		if (loop) {	 // Call sketch loop
-			loop();
-		}
-		if (serialEventRun) {
-			serialEventRun();
-		}
-	}
-	return 0;
-}
+void setup() {}
+void loop() {}

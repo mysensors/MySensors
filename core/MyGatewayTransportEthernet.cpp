@@ -418,7 +418,7 @@ bool gatewayTransportAvailable(void)
 			}
 			//check if there are any new clients
 			if (_ethernetServer.hasClient()) {
-				clients[i] = _ethernetServer.available();
+				clients[i] = _ethernetServer.accept();
 				inputString[i].idx = 0;
 				GATEWAY_DEBUG(PSTR("GWT:TSA:C=%" PRIu8 ",CONNECTED\n"), i);
 				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
@@ -433,7 +433,7 @@ bool gatewayTransportAvailable(void)
 	if (allSlotsOccupied && _ethernetServer.hasClient()) {
 		//no free/disconnected spot so reject
 		GATEWAY_DEBUG(PSTR("!GWT:TSA:NO FREE SLOT\n"));
-		EthernetClient c = _ethernetServer.available();
+		EthernetClient c = _ethernetServer.accept();
 		c.stop();
 	}
 	// Loop over clients connect and read available data
@@ -446,7 +446,7 @@ bool gatewayTransportAvailable(void)
 	}
 #else /* Else part of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
 	// W5100/ENC module does not have hasClient-method. We can only serve one client at the time.
-	EthernetClient newclient = _ethernetServer.available();
+	EthernetClient newclient = _ethernetServer.accept();
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
 		if (client != newclient) {

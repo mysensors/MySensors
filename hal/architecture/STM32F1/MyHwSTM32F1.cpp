@@ -17,6 +17,8 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#error This STM32F1 implementation is deprecated, use the STM32duino implementation instead
+
 #include "MyHwSTM32F1.h"
 
 /*

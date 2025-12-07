@@ -147,7 +147,7 @@
  * @def MY_CAP_ARCH
  * @brief Indicate the architecture.
  *
- * @see ARDUINO_ARCH_SAMD, ARDUINO_ARCH_NRF5, ARDUINO_ARCH_ESP8266, ARDUINO_ARCH_ESP32, ARDUINO_ARCH_AVR, ARDUINO_ARCH_STM32F1, TEENSYDUINO
+ * @see ARDUINO_ARCH_SAMD, ARDUINO_ARCH_NRF5, ARDUINO_ARCH_ESP8266, ARDUINO_ARCH_ESP32, ARDUINO_ARCH_AVR, ARDUINO_ARCH_STM32, TEENSYDUINO
  *
  * | Architecture | Indicator
  * |--------------|----------
@@ -156,7 +156,7 @@
  * | ESP8266      | E
  * | ESP32        | F
  * | AVR          | A
- * | STM32F1      | M
+ * | STM32        | M
  * | TEENSY       | T
  * | Linux        | L
  * | Unknown      | -
@@ -171,7 +171,7 @@
 #define MY_CAP_ARCH "F"
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 #define MY_CAP_ARCH "A"
-#elif defined(ARDUINO_ARCH_STM32F1)
+#elif defined(ARDUINO_ARCH_STM32)
 #define MY_CAP_ARCH "M"
 #elif defined(__arm__) && defined(TEENSYDUINO)
 #define MY_CAP_ARCH "T"
