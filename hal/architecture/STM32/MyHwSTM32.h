@@ -90,7 +90,12 @@
 
 // Timing functions
 #define hwMillis() millis()
-#define hwGetSleepRemaining() (0ul)
+
+/**
+ * @brief Get remaining sleep time
+ * @return Remaining sleep time in milliseconds
+ */
+uint32_t hwGetSleepRemaining(void);
 
 /**
  * @brief Initialize hardware
@@ -177,31 +182,34 @@ uint16_t hwFreeMem(void);
 
 /**
  * @brief Sleep for specified milliseconds
- * @param ms Milliseconds to sleep
- * @return Actual sleep time or MY_SLEEP_NOT_POSSIBLE
- * @note Initial implementation returns MY_SLEEP_NOT_POSSIBLE
+ * @param ms Milliseconds to sleep (0 = sleep until interrupt)
+ * @return MY_WAKE_UP_BY_TIMER (-1) if woken by timer, MY_SLEEP_NOT_POSSIBLE (-2) on error
+ * @note Uses STOP mode with low-power regulator (10-50 µA sleep current)
+ * @note Maximum sleep time depends on RTC configuration (~18 hours)
  */
 int8_t hwSleep(uint32_t ms);
 
 /**
  * @brief Sleep with interrupt wake
- * @param interrupt Pin number for interrupt
+ * @param interrupt Arduino pin number for interrupt wake-up
  * @param mode Interrupt mode (RISING, FALLING, CHANGE)
- * @param ms Maximum sleep time
- * @return Actual sleep time or MY_SLEEP_NOT_POSSIBLE
- * @note Initial implementation returns MY_SLEEP_NOT_POSSIBLE
+ * @param ms Maximum sleep time in milliseconds (0 = no timeout)
+ * @return Interrupt number (0-255) if woken by interrupt, MY_WAKE_UP_BY_TIMER (-1) if timeout,
+ *         MY_SLEEP_NOT_POSSIBLE (-2) on error
+ * @note Supports wake-up on any GPIO pin via EXTI (critical for radio IRQ)
  */
 int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms);
 
 /**
  * @brief Sleep with dual interrupt wake
- * @param interrupt1 First pin number
- * @param mode1 First interrupt mode
- * @param interrupt2 Second pin number
- * @param mode2 Second interrupt mode
- * @param ms Maximum sleep time
- * @return Actual sleep time or MY_SLEEP_NOT_POSSIBLE
- * @note Initial implementation returns MY_SLEEP_NOT_POSSIBLE
+ * @param interrupt1 First Arduino pin number for interrupt wake-up
+ * @param mode1 First interrupt mode (RISING, FALLING, CHANGE)
+ * @param interrupt2 Second Arduino pin number for interrupt wake-up
+ * @param mode2 Second interrupt mode (RISING, FALLING, CHANGE)
+ * @param ms Maximum sleep time in milliseconds (0 = no timeout)
+ * @return Interrupt number that caused wake-up, MY_WAKE_UP_BY_TIMER (-1) if timeout,
+ *         MY_SLEEP_NOT_POSSIBLE (-2) on error
+ * @note Useful for hybrid sensors (e.g., button press OR periodic wake-up)
  */
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1,
                const uint8_t interrupt2, const uint8_t mode2, uint32_t ms);

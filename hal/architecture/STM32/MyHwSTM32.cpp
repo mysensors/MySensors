@@ -49,6 +49,23 @@
 
 #include "MyHwSTM32.h"
 
+// Sleep mode state variables
+static volatile uint8_t _wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+static volatile uint8_t _wakeUp1Interrupt = INVALID_INTERRUPT_NUM;
+static volatile uint8_t _wakeUp2Interrupt = INVALID_INTERRUPT_NUM;
+static uint32_t sleepRemainingMs = 0ul;
+
+// RTC handle for wake-up timer
+static RTC_HandleTypeDef hrtc = {0};
+static bool rtcInitialized = false;
+
+// Forward declarations for sleep helper functions
+static bool hwSleepInit(void);
+static bool hwSleepConfigureTimer(uint32_t ms);
+static void hwSleepRestoreSystemClock(void);
+static void wakeUp1ISR(void);
+static void wakeUp2ISR(void);
+
 bool hwInit(void)
 {
 #if !defined(MY_DISABLED_SERIAL)
@@ -254,36 +271,379 @@ uint16_t hwFreeMem(void)
 #endif
 }
 
+// ======================== Sleep Mode Helper Functions ========================
+
+/**
+ * @brief Initialize RTC for sleep wake-up timer
+ * @return true if successful, false on error
+ */
+static bool hwSleepInit(void)
+{
+	if (rtcInitialized) {
+		return true;
+	}
+
+	// Enable PWR clock
+	__HAL_RCC_PWR_CLK_ENABLE();
+
+	// Enable backup domain access
+	HAL_PWR_EnableBkUpAccess();
+
+	// Only reset backup domain if RTC is not already configured
+	// This prevents disrupting other peripherals when MySensors radio is initialized first
+	if ((RCC->BDCR & RCC_BDCR_RTCEN) != 0) {
+		// RTC already enabled - check if it's the right clock source
+		// If already configured, skip reset to avoid disrupting existing setup
+	} else {
+		// RTC not enabled - safe to reset backup domain for clean slate
+		__HAL_RCC_BACKUPRESET_FORCE();
+		HAL_Delay(10);
+		__HAL_RCC_BACKUPRESET_RELEASE();
+		HAL_Delay(10);
+	}
+
+	// Try LSE first (32.768 kHz external crystal - more accurate)
+	// Fall back to LSI if LSE is not available
+	bool useLSE = false;
+	uint32_t timeout;
+
+	// Check if LSE is already running
+	if ((RCC->BDCR & RCC_BDCR_LSERDY) != 0) {
+		// LSE already ready - use it
+		useLSE = true;
+	} else {
+		// Attempt to start LSE
+		RCC->BDCR |= RCC_BDCR_LSEON;
+		timeout = 2000000;  // LSE takes longer to start
+		while (((RCC->BDCR & RCC_BDCR_LSERDY) == 0) && (timeout-- > 0));
+
+		if (timeout > 0) {
+			// LSE started successfully
+			useLSE = true;
+		} else {
+			// LSE failed, check if LSI is already running
+			if ((RCC->CSR & RCC_CSR_LSIRDY) != 0) {
+				// LSI already ready - use it
+				useLSE = false;
+			} else {
+				// Try to start LSI
+				RCC->BDCR &= ~RCC_BDCR_LSEON;  // Disable LSE
+
+				// Enable LSI (internal ~32 kHz oscillator)
+				RCC->CSR |= RCC_CSR_LSION;
+				timeout = 1000000;
+				while (((RCC->CSR & RCC_CSR_LSIRDY) == 0) && (timeout-- > 0));
+
+				if (timeout == 0) {
+					return false;  // Both LSE and LSI failed
+				}
+				useLSE = false;
+			}
+		}
+	}
+
+	// Configure RTC clock source (only if not already configured correctly)
+	uint32_t currentRtcSel = (RCC->BDCR & RCC_BDCR_RTCSEL);
+	uint32_t desiredRtcSel = useLSE ? RCC_BDCR_RTCSEL_0 : RCC_BDCR_RTCSEL_1;
+
+	if (currentRtcSel != desiredRtcSel) {
+		// Need to change clock source - clear and set
+		RCC->BDCR &= ~RCC_BDCR_RTCSEL;  // Clear selection
+		RCC->BDCR |= desiredRtcSel;      // Set new selection
+	}
+	RCC->BDCR |= RCC_BDCR_RTCEN;  // Ensure RTC clock is enabled
+
+	// Initialize RTC peripheral
+	hrtc.Instance = RTC;
+	hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+
+	if (useLSE) {
+		// LSE: 32.768 kHz exact - perfect 1 Hz with these prescalers
+		hrtc.Init.AsynchPrediv = 127;   // (127+1) = 128
+		hrtc.Init.SynchPrediv = 255;    // (255+1) = 256, total = 32768
+	} else {
+		// LSI: ~32 kHz (variable) - approximate 1 Hz
+		hrtc.Init.AsynchPrediv = 127;
+		hrtc.Init.SynchPrediv = 249;    // Adjusted for typical LSI
+	}
+
+	hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+	hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+
+	// Check if RTC is already initialized (INITS bit in ISR register)
+	// If already initialized, we can skip HAL_RTC_Init which may fail
+	// when called after other peripherals (like SPI) are already running
+	if ((RTC->ISR & RTC_ISR_INITS) == 0) {
+		// RTC not yet initialized - call HAL_RTC_Init
+		if (HAL_RTC_Init(&hrtc) != HAL_OK) {
+			return false;
+		}
+	} else {
+		// RTC already initialized - just update the handle
+		// This allows us to use it for sleep even if something else initialized it
+		hrtc.State = HAL_RTC_STATE_READY;
+	}
+
+	// CRITICAL: Enable RTC wakeup interrupt in NVIC
+	// Without this, the MCU cannot wake from STOP mode via RTC
+	HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
+
+	rtcInitialized = true;
+	return true;
+}
+
+/**
+ * @brief Configure RTC wake-up timer for specified duration
+ * @param ms Milliseconds to sleep (0 = disable timer)
+ * @return true if successful, false on error
+ */
+static bool hwSleepConfigureTimer(uint32_t ms)
+{
+	if (!rtcInitialized) {
+		if (!hwSleepInit()) {
+			return false;
+		}
+	}
+
+	if (ms == 0) {
+		// Disable wake-up timer
+		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+		return true;
+	}
+
+	uint32_t wakeUpCounter;
+	uint32_t wakeUpClock;
+
+	// Choose appropriate clock and counter value based on sleep duration
+	if (ms <= 32000) {
+		// Up to 32 seconds: use RTCCLK/16 (2048 Hz, 0.488 ms resolution)
+		wakeUpClock = RTC_WAKEUPCLOCK_RTCCLK_DIV16;
+		// Counter = ms * 2048 / 1000 = ms * 2.048
+		// Use bit shift for efficiency: ms * 2048 = ms << 11
+		wakeUpCounter = (ms << 11) / 1000;
+		if (wakeUpCounter < 2) {
+			wakeUpCounter = 2;  // Minimum 2 ticks
+		}
+		if (wakeUpCounter > 0xFFFF) {
+			wakeUpCounter = 0xFFFF;
+		}
+	} else {
+		// More than 32 seconds: use CK_SPRE (1 Hz, 1 second resolution)
+		wakeUpClock = RTC_WAKEUPCLOCK_CK_SPRE_16BITS;
+		wakeUpCounter = ms / 1000;  // Convert to seconds
+		if (wakeUpCounter == 0) {
+			wakeUpCounter = 1;  // Minimum 1 second
+		}
+		if (wakeUpCounter > 0xFFFF) {
+			wakeUpCounter = 0xFFFF;  // Max ~18 hours
+		}
+	}
+
+	// Configure wake-up timer with interrupt
+	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, wakeUpCounter, wakeUpClock) != HAL_OK) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * @brief Restore system clock after wake-up from STOP mode
+ * @note After STOP mode, system clock defaults to HSI (16 MHz). We always call
+ *       SystemClock_Config() to restore the full clock configuration as the
+ *       Arduino core and peripherals expect it.
+ */
+static void hwSleepRestoreSystemClock(void)
+{
+	// After STOP mode, system runs on HSI (16 MHz)
+	// Always restore the system clock configuration to what the Arduino core expects
+	SystemClock_Config();
+}
+
+/**
+ * @brief ISR for wake-up interrupt 1
+ */
+static void wakeUp1ISR(void)
+{
+	_wokeUpByInterrupt = _wakeUp1Interrupt;
+}
+
+/**
+ * @brief ISR for wake-up interrupt 2
+ */
+static void wakeUp2ISR(void)
+{
+	_wokeUpByInterrupt = _wakeUp2Interrupt;
+}
+
+/**
+ * @brief RTC Wake-up Timer interrupt handler
+ */
+extern "C" void RTC_WKUP_IRQHandler(void)
+{
+	HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
+}
+
+// ======================== Public Sleep Functions ========================
+
+uint32_t hwGetSleepRemaining(void)
+{
+	return sleepRemainingMs;
+}
+
 int8_t hwSleep(uint32_t ms)
 {
-	// TODO: Implement low-power sleep mode
-	// For now, use simple delay
-	// Future: Use STM32 STOP or STANDBY mode with RTC wakeup
+	// Initialize RTC if needed
+	if (!rtcInitialized) {
+		if (!hwSleepInit()) {
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
+	}
 
-	(void)ms;
-	return MY_SLEEP_NOT_POSSIBLE;
+	// Configure RTC wake-up timer
+	if (ms > 0) {
+		if (!hwSleepConfigureTimer(ms)) {
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
+	}
+
+	// Reset sleep remaining
+	sleepRemainingMs = 0ul;
+
+	// CRITICAL: Clear wakeup flags before entering sleep
+	// This prevents spurious wakeups from previous events
+	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+
+	// Suspend SysTick to prevent 1ms interrupts during sleep
+	HAL_SuspendTick();
+
+	// NOTE: USB CDC will disconnect during STOP mode (expected behavior)
+	// USB peripheral requires system clock which is stopped in STOP mode
+	// After wake-up, the host will detect USB disconnect/reconnect
+	// This is normal and unavoidable when using STOP mode sleep
+
+	// Enter STOP mode with low-power regulator
+	// This achieves 10-50 µA sleep current on STM32F4
+	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+	// ====================================================================
+	// === MCU is in STOP mode here (10-50 µA), waiting for wake-up ===
+	// ====================================================================
+
+	// After wake-up: restore system clock (defaults to HSI)
+	hwSleepRestoreSystemClock();
+
+	// Resume SysTick
+	HAL_ResumeTick();
+
+	// CRITICAL: Clear wakeup flags after wake-up
+	// This ensures clean state for next sleep cycle
+	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+
+	// Disable wake-up timer
+	if (ms > 0) {
+		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+	}
+
+	// Always timer wake-up for this variant
+	return MY_WAKE_UP_BY_TIMER;
 }
 
 int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms)
 {
-	// TODO: Implement interrupt-based sleep
-	// Future: Configure EXTI and enter STOP mode
-
-	(void)interrupt;
-	(void)mode;
-	(void)ms;
-	return MY_SLEEP_NOT_POSSIBLE;
+	// Delegate to dual-interrupt variant with INVALID second interrupt
+	return hwSleep(interrupt, mode, INVALID_INTERRUPT_NUM, 0, ms);
 }
 
 int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1,
                const uint8_t interrupt2, const uint8_t mode2, uint32_t ms)
 {
-	// TODO: Implement dual-interrupt sleep
+	// Initialize RTC if needed
+	if (!rtcInitialized) {
+		if (!hwSleepInit()) {
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
+	}
 
-	(void)interrupt1;
-	(void)mode1;
-	(void)interrupt2;
-	(void)mode2;
-	(void)ms;
-	return MY_SLEEP_NOT_POSSIBLE;
+	// Configure RTC wake-up timer (if ms > 0)
+	if (ms > 0) {
+		if (!hwSleepConfigureTimer(ms)) {
+			return MY_SLEEP_NOT_POSSIBLE;
+		}
+	}
+
+	// Reset sleep remaining
+	sleepRemainingMs = 0ul;
+
+	// Configure interrupt wake-up sources
+	_wakeUp1Interrupt = interrupt1;
+	_wakeUp2Interrupt = interrupt2;
+	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+
+	// Attach interrupts in critical section (prevent premature wake-up)
+	MY_CRITICAL_SECTION {
+		if (interrupt1 != INVALID_INTERRUPT_NUM) {
+			attachInterrupt(digitalPinToInterrupt(interrupt1), wakeUp1ISR, mode1);
+		}
+		if (interrupt2 != INVALID_INTERRUPT_NUM) {
+			attachInterrupt(digitalPinToInterrupt(interrupt2), wakeUp2ISR, mode2);
+		}
+	}
+
+	// CRITICAL: Clear wakeup flags before entering sleep
+	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+
+	// Suspend SysTick
+	HAL_SuspendTick();
+
+	// NOTE: USB CDC will disconnect during STOP mode (expected behavior)
+	// See note in timer-only hwSleep() variant above
+
+	// Enter STOP mode with low-power regulator
+	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+	// ====================================================================
+	// === MCU is in STOP mode here (10-50 µA), waiting for wake-up ===
+	// ====================================================================
+
+	// After wake-up: restore system clock
+	hwSleepRestoreSystemClock();
+
+	// Resume SysTick
+	HAL_ResumeTick();
+
+	// CRITICAL: Clear wakeup flags after wake-up
+	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+
+	// Detach interrupts
+	if (interrupt1 != INVALID_INTERRUPT_NUM) {
+		detachInterrupt(digitalPinToInterrupt(interrupt1));
+	}
+	if (interrupt2 != INVALID_INTERRUPT_NUM) {
+		detachInterrupt(digitalPinToInterrupt(interrupt2));
+	}
+
+	// Disable wake-up timer
+	if (ms > 0) {
+		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+	}
+
+	// Determine wake-up source
+	int8_t ret = MY_WAKE_UP_BY_TIMER;  // Default: timer wake-up
+	if (_wokeUpByInterrupt != INVALID_INTERRUPT_NUM) {
+		ret = (int8_t)_wokeUpByInterrupt;  // Interrupt wake-up
+	}
+
+	// Reset interrupt tracking
+	_wokeUpByInterrupt = INVALID_INTERRUPT_NUM;
+	_wakeUp1Interrupt = INVALID_INTERRUPT_NUM;
+	_wakeUp2Interrupt = INVALID_INTERRUPT_NUM;
+
+	return ret;
 }
