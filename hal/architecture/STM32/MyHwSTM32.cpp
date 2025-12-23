@@ -586,10 +586,12 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1,
 
 	// Attach interrupts in critical section (prevent premature wake-up)
 	MY_CRITICAL_SECTION {
-		if (interrupt1 != INVALID_INTERRUPT_NUM) {
+		if (interrupt1 != INVALID_INTERRUPT_NUM)
+		{
 			attachInterrupt(digitalPinToInterrupt(interrupt1), wakeUp1ISR, mode1);
 		}
-		if (interrupt2 != INVALID_INTERRUPT_NUM) {
+		if (interrupt2 != INVALID_INTERRUPT_NUM)
+		{
 			attachInterrupt(digitalPinToInterrupt(interrupt2), wakeUp2ISR, mode2);
 		}
 	}
