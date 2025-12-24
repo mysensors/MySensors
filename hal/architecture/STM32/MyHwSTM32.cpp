@@ -305,7 +305,6 @@ static bool hwSleepInit(void)
 	// Try LSE first (32.768 kHz external crystal - more accurate)
 	// Fall back to LSI if LSE is not available
 	bool useLSE = false;
-	uint32_t timeout;
 
 	// Check if LSE is already running
 	if ((RCC->BDCR & RCC_BDCR_LSERDY) != 0) {
@@ -314,31 +313,29 @@ static bool hwSleepInit(void)
 	} else {
 		// Attempt to start LSE
 		RCC->BDCR |= RCC_BDCR_LSEON;
-		timeout = 2000000;  // LSE takes longer to start
-		while (((RCC->BDCR & RCC_BDCR_LSERDY) == 0) && (timeout-- > 0));
+		uint32_t timeout = 2000000;  // LSE takes longer to start
+		while (((RCC->BDCR & RCC_BDCR_LSERDY) == 0) && (--timeout > 0));
 
 		if (timeout > 0) {
 			// LSE started successfully
 			useLSE = true;
 		} else {
-			// LSE failed, check if LSI is already running
-			if ((RCC->CSR & RCC_CSR_LSIRDY) != 0) {
-				// LSI already ready - use it
-				useLSE = false;
-			} else {
-				// Try to start LSI
-				RCC->BDCR &= ~RCC_BDCR_LSEON;  // Disable LSE
+			// LSE failed - fall back to LSI
+			if ((RCC->CSR & RCC_CSR_LSIRDY) == 0) {
+				// LSI not ready, try to start it
+				RCC->BDCR &= ~RCC_BDCR_LSEON;  // Disable failed LSE
 
 				// Enable LSI (internal ~32 kHz oscillator)
 				RCC->CSR |= RCC_CSR_LSION;
 				timeout = 1000000;
-				while (((RCC->CSR & RCC_CSR_LSIRDY) == 0) && (timeout-- > 0));
+				while (((RCC->CSR & RCC_CSR_LSIRDY) == 0) && (--timeout > 0));
 
 				if (timeout == 0) {
 					return false;  // Both LSE and LSI failed
 				}
-				useLSE = false;
 			}
+			// LSI ready (either was already running or just started)
+			useLSE = false;
 		}
 	}
 
@@ -462,10 +459,8 @@ static bool hwSleepConfigureTimer(uint32_t ms)
 	// RTC counter runs at 1 Hz (configured in hwSleepInit)
 
 	// Read current counter value
-	uint32_t currentCounter = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1);  // F1 specific
-	// Note: On F1, we need to read CNT register directly
-	// The HAL doesn't provide a clean way, so use register access
-	currentCounter = RTC->CNTL | (RTC->CNTH << 16);
+	// Note: On F1, read CNT register directly (HAL doesn't provide a clean way)
+	uint32_t currentCounter = RTC->CNTL | (RTC->CNTH << 16);
 
 	// Calculate alarm value (counter + seconds)
 	// Convert ms to seconds (RTC runs at 1 Hz)
