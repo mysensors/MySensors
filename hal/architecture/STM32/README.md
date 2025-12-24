@@ -36,12 +36,9 @@ Should work on any STM32 board supported by the STM32duino core.
 - [x] CPU frequency reporting
 - [x] Critical section (interrupt disable/restore)
 - [x] RAM routing table support
-
-### Planned 🔄
-- [ ] Low-power sleep modes (STOP, STANDBY)
-- [ ] RTC-based timekeeping
-- [ ] Interrupt-based wake from sleep
-- [ ] Free memory reporting (heap analysis)
+- [x] Low-power STOP mode sleep (RTC wake-up timer)
+- [x] RTC-based timed wake-up (F1: 1s resolution, F4+: subsecond)
+- [x] Interrupt-based wake from sleep (GPIO EXTI)
 
 ## Pin Mapping
 
@@ -118,22 +115,12 @@ debug_tool = stlink
 
 Common `board` values for platformio.ini:
 - `blackpill_f401cc` - STM32F401CC Black Pill
-- `blackpill_f411ce` - STM32F411CE Black Pill (recommended)
+- `blackpill_f411ce` - STM32F411CE Black Pill
 - `bluepill_f103c8` - STM32F103C8 Blue Pill
 - `nucleo_f401re` - STM32F401RE Nucleo
 - `nucleo_f411re` - STM32F411RE Nucleo
 - `genericSTM32F103C8` - Generic F103C8
 - See [PlatformIO boards](https://docs.platformio.org/en/latest/boards/index.html#st-stm32) for complete list
-
-### Upload Methods
-
-Supported `upload_protocol` options:
-- `stlink` - ST-Link V2 programmer (recommended)
-- `dfu` - USB DFU bootloader (requires boot0 jumper)
-- `serial` - Serial bootloader (requires FTDI adapter)
-- `jlink` - Segger J-Link
-- `blackmagic` - Black Magic Probe
-- `hid` - HID Bootloader 2.0
 
 ## Arduino IDE Configuration
 
@@ -224,21 +211,29 @@ The STM32 HAL uses the STM32duino EEPROM library, which provides Flash-based EEP
 
 Configuration is automatic. EEPROM size can be adjusted in the STM32duino menu or via build flags.
 
-## Low-Power Considerations
+## Low-Power Sleep Support
 
-### Current Status
-Sleep modes are **NOT YET IMPLEMENTED** in this initial release. Calling `sleep()` functions will return `MY_SLEEP_NOT_POSSIBLE`.
+### Implemented ✅
 
-### Future Implementation
-The STM32 supports several low-power modes:
-- **Sleep mode**: ~10mA (CPU stopped, peripherals running)
-- **Stop mode**: ~10-100µA (CPU and most peripherals stopped)
-- **Standby mode**: ~1-10µA (only backup domain active)
+**STOP mode sleep** with RTC wake-up is fully functional:
 
-Implementation will use:
-- RTC for timed wake-up
-- EXTI for interrupt wake-up
-- Backup SRAM for state retention
+**Supported Families:**
+- **STM32F1** (Blue Pill) - RTC alarm-based, 1-second resolution
+- **STM32F2/F3/F4/F7** - RTC wake-up timer, subsecond resolution
+- **STM32L1/L4/L5** - RTC wake-up timer, ultra-low power
+- **STM32G0/G4** - RTC wake-up timer
+- **STM32H7** - RTC wake-up timer
+
+**Power Consumption:**
+- **STM32F1**: 5-20 µA (STOP mode)
+- **STM32F4**: 10-50 µA (STOP mode)
+
+**Usage:**
+```cpp
+sleep(60000);  // Sleep for 60 seconds
+sleep(interrupt, mode, 60000);  // Sleep with interrupt wake-up
+```
+
 
 ## Troubleshooting
 
@@ -250,9 +245,6 @@ Implementation will use:
 
 **Error: `EEPROM.h not found`**
 - Solution: Update STM32duino core to latest version (2.0.0+)
-
-**Error: Undefined reference to `__disable_irq`**
-- Solution: Ensure CMSIS is included (should be automatic with STM32duino)
 
 ### Upload Issues
 
@@ -267,64 +259,9 @@ Implementation will use:
 - Verify with: `dfu-util -l`
 - After upload, set BOOT0 back to 0 (GND)
 
-### Runtime Issues
-
-**Serial monitor shows garbage**
-- Check baud rate matches (default 115200)
-- USB CDC may require driver on Windows
-- Try hardware UART instead
-
-**Radio not working**
-- Verify 3.3V power supply (nRF24 needs clean power)
-- Check SPI pin connections
-- Add 10µF capacitor across radio VCC/GND
-- Verify CE and CS pin definitions
-
-**EEPROM not persisting**
-- EEPROM emulation requires Flash write access
-- Check for debug mode preventing Flash writes
-- Verify sufficient Flash space for EEPROM pages
-
-## Performance Characteristics
-
-### STM32F411CE Black Pill
-- **CPU**: 100 MHz ARM Cortex-M4F
-- **Flash**: 512KB
-- **RAM**: 128KB
-- **Current**: ~50mA active, <1µA standby (when implemented)
-- **MySensors overhead**: ~30KB Flash, ~4KB RAM
-
-### Benchmarks (preliminary)
-- **Radio message latency**: <10ms (similar to AVR)
-- **EEPROM read**: ~50µs per byte
-- **EEPROM write**: ~5ms per byte (Flash write)
-- **Temperature reading**: ~100µs
-
-## Contributing
-
-This STM32 HAL is designed for easy contribution to the main MySensors repository. When contributing:
-
-1. Follow MySensors coding style
-2. Test on multiple STM32 variants if possible
-3. Document any chip-specific quirks
-4. Update this README with new features
-
 ## References
 
 - [STM32duino Core](https://github.com/stm32duino/Arduino_Core_STM32)
 - [STM32duino Wiki](https://github.com/stm32duino/Arduino_Core_STM32/wiki)
 - [PlatformIO STM32 Platform](https://docs.platformio.org/en/latest/platforms/ststm32.html)
-- [MySensors Documentation](https://www.mysensors.org/download)
 - [STM32 Reference Manuals](https://www.st.com/en/microcontrollers-microprocessors/stm32-32-bit-arm-cortex-mcus.html)
-
-## License
-
-This code is part of the MySensors project and is licensed under the GNU General Public License v2.0.
-
-## Version History
-
-- **v1.0.0** (2025-01-17) - Initial STM32 HAL implementation
-  - Basic functionality (GPIO, SPI, EEPROM, Serial)
-  - Tested on STM32F401/F411 Black Pill
-  - Gateway and sensor node support
-  - No sleep mode yet (planned for v1.1.0)

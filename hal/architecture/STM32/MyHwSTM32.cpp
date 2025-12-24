@@ -355,6 +355,40 @@ static bool hwSleepInit(void)
 
 	// Initialize RTC peripheral
 	hrtc.Instance = RTC;
+
+#if defined(STM32F1xx)
+	// ============================================================
+	// STM32F1: Legacy RTC with counter-based architecture
+	// ============================================================
+	// F1 RTC uses simple 32-bit counter with prescaler
+	// No calendar, no wake-up timer - use RTC Alarm instead
+
+	if (useLSE) {
+		// LSE: 32.768 kHz exact - set prescaler for 1 Hz tick
+		hrtc.Init.AsynchPrediv = 32767;  // (32767+1) = 32768 = 1 Hz
+	} else {
+		// LSI: ~40 kHz (STM32F1 LSI is typically 40kHz, not 32kHz)
+		hrtc.Init.AsynchPrediv = 39999;  // (39999+1) = 40000 = 1 Hz (approximate)
+	}
+
+	hrtc.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
+
+	// F1 RTC initialization is simpler
+	if (HAL_RTC_Init(&hrtc) != HAL_OK) {
+		return false;
+	}
+
+	// CRITICAL: Enable RTC Alarm interrupt in NVIC (F1 uses Alarm, not WKUP)
+	// Without this, the MCU cannot wake from STOP mode via RTC
+	HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+
+#else
+	// ============================================================
+	// STM32F2/F3/F4/F7/L1/L4/L5/G0/G4/H7: Modern RTC
+	// ============================================================
+	// Modern RTC with BCD calendar and dedicated wake-up timer
+
 	hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
 
 	if (useLSE) {
@@ -390,6 +424,8 @@ static bool hwSleepInit(void)
 	HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
 
+#endif // STM32F1xx
+
 	rtcInitialized = true;
 	return true;
 }
@@ -408,10 +444,54 @@ static bool hwSleepConfigureTimer(uint32_t ms)
 	}
 
 	if (ms == 0) {
-		// Disable wake-up timer
+#if defined(STM32F1xx)
+		// F1: Disable RTC Alarm
+		HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+#else
+		// Modern STM32: Disable wake-up timer
 		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+#endif
 		return true;
 	}
+
+#if defined(STM32F1xx)
+	// ============================================================
+	// STM32F1: Use RTC Alarm for wake-up
+	// ============================================================
+	// F1 doesn't have wake-up timer, use alarm instead
+	// RTC counter runs at 1 Hz (configured in hwSleepInit)
+
+	// Read current counter value
+	uint32_t currentCounter = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1);  // F1 specific
+	// Note: On F1, we need to read CNT register directly
+	// The HAL doesn't provide a clean way, so use register access
+	currentCounter = RTC->CNTL | (RTC->CNTH << 16);
+
+	// Calculate alarm value (counter + seconds)
+	// Convert ms to seconds (RTC runs at 1 Hz)
+	uint32_t seconds = ms / 1000;
+	if (seconds == 0) {
+		seconds = 1;  // Minimum 1 second
+	}
+	if (seconds > 0xFFFFFFFF - currentCounter) {
+		// Overflow protection
+		seconds = 0xFFFFFFFF - currentCounter;
+	}
+
+	uint32_t alarmValue = currentCounter + seconds;
+
+	// Configure alarm
+	RTC_AlarmTypeDef sAlarm = {0};
+	sAlarm.Alarm = alarmValue;
+
+	if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK) {
+		return false;
+	}
+
+#else
+	// ============================================================
+	// STM32F2/F3/F4/F7/L1/L4/L5/G0/G4/H7: Use wake-up timer
+	// ============================================================
 
 	uint32_t wakeUpCounter;
 	uint32_t wakeUpClock;
@@ -445,6 +525,8 @@ static bool hwSleepConfigureTimer(uint32_t ms)
 	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, wakeUpCounter, wakeUpClock) != HAL_OK) {
 		return false;
 	}
+
+#endif // STM32F1xx
 
 	return true;
 }
@@ -481,10 +563,19 @@ static void wakeUp2ISR(void)
 /**
  * @brief RTC Wake-up Timer interrupt handler
  */
+#if defined(STM32F1xx)
+// F1: Use RTC Alarm interrupt
+extern "C" void RTC_Alarm_IRQHandler(void)
+{
+	HAL_RTC_AlarmIRQHandler(&hrtc);
+}
+#else
+// Modern STM32: Use dedicated wake-up timer interrupt
 extern "C" void RTC_WKUP_IRQHandler(void)
 {
 	HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
 }
+#endif
 
 // ======================== Public Sleep Functions ========================
 
@@ -514,7 +605,11 @@ int8_t hwSleep(uint32_t ms)
 
 	// CRITICAL: Clear wakeup flags before entering sleep
 	// This prevents spurious wakeups from previous events
+#if defined(STM32F1xx)
+	__HAL_RTC_ALARM_CLEAR_FLAG(&hrtc, RTC_FLAG_ALRAF);
+#else
 	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+#endif
 	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 	// Suspend SysTick to prevent 1ms interrupts during sleep
@@ -541,12 +636,20 @@ int8_t hwSleep(uint32_t ms)
 
 	// CRITICAL: Clear wakeup flags after wake-up
 	// This ensures clean state for next sleep cycle
+#if defined(STM32F1xx)
+	__HAL_RTC_ALARM_CLEAR_FLAG(&hrtc, RTC_FLAG_ALRAF);
+#else
 	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+#endif
 	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 	// Disable wake-up timer
 	if (ms > 0) {
+#if defined(STM32F1xx)
+		HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+#else
 		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+#endif
 	}
 
 	// Always timer wake-up for this variant
@@ -597,7 +700,11 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1,
 	}
 
 	// CRITICAL: Clear wakeup flags before entering sleep
+#if defined(STM32F1xx)
+	__HAL_RTC_ALARM_CLEAR_FLAG(&hrtc, RTC_FLAG_ALRAF);
+#else
 	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+#endif
 	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 	// Suspend SysTick
@@ -620,7 +727,11 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1,
 	HAL_ResumeTick();
 
 	// CRITICAL: Clear wakeup flags after wake-up
+#if defined(STM32F1xx)
+	__HAL_RTC_ALARM_CLEAR_FLAG(&hrtc, RTC_FLAG_ALRAF);
+#else
 	__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+#endif
 	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 	// Detach interrupts
@@ -633,7 +744,11 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1,
 
 	// Disable wake-up timer
 	if (ms > 0) {
+#if defined(STM32F1xx)
+		HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+#else
 		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+#endif
 	}
 
 	// Determine wake-up source
