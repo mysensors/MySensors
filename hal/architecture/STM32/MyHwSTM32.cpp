@@ -314,7 +314,9 @@ static bool hwSleepInit(void)
 		// Attempt to start LSE
 		RCC->BDCR |= RCC_BDCR_LSEON;
 		uint32_t timeout = 2000000;  // LSE takes longer to start
-		while (((RCC->BDCR & RCC_BDCR_LSERDY) == 0) && (--timeout > 0));
+		while (((RCC->BDCR & RCC_BDCR_LSERDY) == 0) && (timeout > 0)) {
+			timeout--;
+		}
 
 		if (timeout > 0) {
 			// LSE started successfully
@@ -328,14 +330,15 @@ static bool hwSleepInit(void)
 				// Enable LSI (internal ~32 kHz oscillator)
 				RCC->CSR |= RCC_CSR_LSION;
 				timeout = 1000000;
-				while (((RCC->CSR & RCC_CSR_LSIRDY) == 0) && (--timeout > 0));
+				while (((RCC->CSR & RCC_CSR_LSIRDY) == 0) && (timeout > 0)) {
+					timeout--;
+				}
 
 				if (timeout == 0) {
 					return false;  // Both LSE and LSI failed
 				}
 			}
 			// LSI ready (either was already running or just started)
-			useLSE = false;
 		}
 	}
 
