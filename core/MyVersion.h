@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2025 Sensnology AB
+ * Copyright (C) 2013-2026 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,7 +18,7 @@
  */
 
 /**
-* @file Version.h
+* @file MyVersion.h
 *
 * @defgroup Versiongrp Version
 * @ingroup internals
@@ -40,8 +40,8 @@
 * | 2.2.0       | 0x020200FF  | final
 */
 
-#ifndef Version_h
-#define Version_h
+#ifndef MyVersion_h
+#define MyVersion_h
 
 #define STR_HELPER(x) #x			//!< Helper macro, STR_HELPER()
 #define STR(x) STR_HELPER(x)	//!< Helper macro, STR()
@@ -49,8 +49,8 @@
 #define MYSENSORS_LIBRARY_VERSION_MAJOR							2							//!< Major release version
 #define MYSENSORS_LIBRARY_VERSION_MINOR							4							//!< Minor release version
 #define MYSENSORS_LIBRARY_VERSION_PATCH							0							//!< Patch version
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE					"alpha"							//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
-#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER				0x01						//!< incremental counter, starting at 0x00. 0xFF for final release
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE					"rc.1"							//!< Pre-release suffix, i.e. alpha, beta, rc.1, etc
+#define MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER				0x02						//!< incremental counter, starting at 0x00. 0xFF for final release
 
 
 #if (MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER != 0xFF)
@@ -61,5 +61,5 @@
 
 #define MYSENSORS_LIBRARY_VERSION_INT ( ((uint32_t)MYSENSORS_LIBRARY_VERSION_MAJOR) << 24 | ((uint32_t)MYSENSORS_LIBRARY_VERSION_MINOR) << 16 | ((uint32_t)MYSENSORS_LIBRARY_VERSION_PATCH) << 8 | ((uint32_t)MYSENSORS_LIBRARY_VERSION_PRERELEASE_NUMBER) ) //!< numerical versioning
 
-#endif // Version_h
+#endif // MyVersion_h
 /** @}*/
