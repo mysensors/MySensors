@@ -67,11 +67,11 @@ void hwWriteConfig(const int addr, uint8_t value)
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 	// padding
-	(void)memset((uint8_t *)uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
+	(void)memset(reinterpret_cast<uint8_t *>(uniqueID), MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
 	uint32_t val = ESP.getChipId();
-	(void)memcpy((uint8_t *)uniqueID, &val, 4);
+	(void)memcpy(reinterpret_cast<uint8_t *>(uniqueID), &val, 4);
 	val = ESP.getFlashChipId();
-	(void)memcpy((uint8_t *)uniqueID + 4, &val, 4);
+	(void)memcpy(reinterpret_cast<uint8_t *>(uniqueID) + 4, &val, 4);
 	return true;
 }
 

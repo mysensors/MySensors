@@ -94,10 +94,12 @@ int8_t hwSleep(const uint8_t interrupt1, const uint8_t mode1, const uint8_t inte
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 #if defined(__MKL26Z64__)
-	(void)memcpy((uint8_t *)uniqueID, &SIM_UIDMH, 12);
-	(void)memset((uint8_t *)uniqueID + 12, MY_HWID_PADDING_BYTE, 4);
+	// padding
+	(void)memset(reinterpret_cast<uint8_t *>(uniqueID), MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
+	(void)memcpy(reinterpret_cast<uint8_t *>(uniqueID), &SIM_UIDMH, 12);
 #else
-	(void)memcpy((uint8_t *)uniqueID, &SIM_UIDH, 16);
+	// No padding required, as unique ID is already 16 bytes
+	(void)memcpy(reinterpret_cast<uint8_t *>(uniqueID), &SIM_UIDH, 16);
 #endif
 	return true;
 }

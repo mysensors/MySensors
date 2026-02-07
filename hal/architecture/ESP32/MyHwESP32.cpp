@@ -70,9 +70,10 @@ void hwWriteConfig(const int addr, uint8_t value)
 
 bool hwUniqueID(unique_id_t *uniqueID)
 {
+	// padding
+	(void)memset(reinterpret_cast<uint8_t *>(uniqueID), MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
 	uint64_t val = ESP.getEfuseMac();
-	(void)memcpy(static_cast<void *>(uniqueID), (void *)&val, 8);
-	(void)memset(static_cast<void *>(uniqueID + 8), MY_HWID_PADDING_BYTE, 8); // padding
+	(void)memcpy(reinterpret_cast<uint8_t *>(uniqueID), (void *)&val, 8);
 	return true;
 }
 

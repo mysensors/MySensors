@@ -173,10 +173,9 @@ void hwRandomNumberInit(void)
 bool hwUniqueID(unique_id_t *uniqueID)
 {
 #ifdef UID_BASE
-	// STM32 unique device ID is stored at a fixed address
-	// Length is 96 bits (12 bytes) but we store 16 bytes for compatibility
-	(void)memcpy((uint8_t *)uniqueID, (uint32_t *)UID_BASE, 12);
-	(void)memset(static_cast<void *>(uniqueID + 12), MY_HWID_PADDING_BYTE, 4); // padding
+	// padding
+	(void)memset(reinterpret_cast<uint8_t *>(uniqueID), MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
+	(void)memcpy(reinterpret_cast<uint8_t *>(uniqueID), (uint32_t *)UID_BASE, 12);
 	return true;
 #else
 	// Unique ID not available on this variant
