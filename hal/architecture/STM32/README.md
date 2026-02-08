@@ -6,9 +6,11 @@ This directory contains the Hardware Abstraction Layer (HAL) implementation for 
 
 The STM32 HAL enables MySensors to run on a wide range of STM32 microcontrollers, including:
 
-- **STM32F0** series (Cortex-M0)
 - **STM32F1** series (Cortex-M3)
 - **STM32F4** series (Cortex-M4 with FPU)
+
+Not tested / implemented:
+- **STM32F0** series (Cortex-M0)
 - **STM32L0/L4** series (Low-power Cortex-M0+/M4)
 - **STM32G0/G4** series (Cortex-M0+/M4)
 - **STM32H7** series (Cortex-M7)
@@ -16,6 +18,7 @@ The STM32 HAL enables MySensors to run on a wide range of STM32 microcontrollers
 ## Supported Boards
 
 Tested on:
+- **STM32F103C8 Blue Pill** (72 MHz, 64KB Flash, 20KB RAM)
 - **STM32F401CC Black Pill** (84 MHz, 256KB Flash, 64KB RAM)
 - **STM32F411CE Black Pill** (100 MHz, 512KB Flash, 128KB RAM)
 

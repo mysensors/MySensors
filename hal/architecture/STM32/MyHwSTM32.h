@@ -20,12 +20,12 @@
 #ifndef MyHwSTM32_h
 #define MyHwSTM32_h
 
-#include <SPI.h>
-#include <EEPROM.h>
-
 #ifdef __cplusplus
 #include <Arduino.h>
 #endif
+
+#include <SPI.h>
+#include <EEPROM.h>
 
 // Crypto endianness
 #define CRYPTO_LITTLE_ENDIAN
@@ -46,18 +46,20 @@
 #endif
 
 /**
- * @brief Temperature sensor offset calibration
+ * @brief Temperature sensor offset calibration (integer)
  * @note Adjust based on your specific STM32 chip calibration
+ * @note Calibration model: T_corrected = (T_raw - offset) / gain
  */
 #ifndef MY_STM32_TEMPERATURE_OFFSET
-#define MY_STM32_TEMPERATURE_OFFSET (0.0f)
+#define MY_STM32_TEMPERATURE_OFFSET (0)
 #endif
 
 /**
- * @brief Temperature sensor gain calibration
+ * @brief Temperature sensor gain calibration (integer, scaled x100)
+ * @note Default 100 means gain = 1.0. Use 110 for gain = 1.1, etc.
  */
 #ifndef MY_STM32_TEMPERATURE_GAIN
-#define MY_STM32_TEMPERATURE_GAIN (1.0f)
+#define MY_STM32_TEMPERATURE_GAIN (100)
 #endif
 
 // Printf format string compatibility
@@ -112,6 +114,15 @@ void hwWatchdogReset(void);
  * @brief Reboot the system
  */
 void hwReboot(void);
+
+/**
+ * @brief Read internal temperature sensor via HAL ADC
+ * @return Raw 12-bit ADC value, or -1 on error
+ * @note Works on all STM32 families. On F1, the temperature sensor is on
+ *       ADC1 channel 16 and requires TSVREFE bit to be set in ADC_CR2.
+ *       On F4/L4/G4 etc., analogRead(ATEMP) works when ATEMP is defined.
+ */
+int32_t hwReadInternalTemp(void);
 
 /**
  * @brief Initialize random number generator
@@ -181,11 +192,12 @@ int8_t hwCPUTemperature(void);
 uint16_t hwFreeMem(void);
 
 /**
- * @brief Sleep for specified milliseconds
- * @param ms Milliseconds to sleep (0 = sleep until interrupt)
+ * @brief Sleep for specified milliseconds (timer wake-up only)
+ * @param ms Milliseconds to sleep (must be > 0)
  * @return MY_WAKE_UP_BY_TIMER (-1) if woken by timer, MY_SLEEP_NOT_POSSIBLE (-2) on error
- * @note Uses STOP mode with low-power regulator (10-50 µA sleep current)
- * @note Maximum sleep time depends on RTC configuration (~18 hours)
+ * @note Uses STOP mode with low-power regulator
+ * @note Maximum sleep time: ~65535 seconds on F1, ~18 hours on modern STM32
+ * @note ms=0 returns MY_SLEEP_NOT_POSSIBLE (use interrupt variant for indefinite sleep)
  */
 int8_t hwSleep(uint32_t ms);
 
@@ -193,7 +205,7 @@ int8_t hwSleep(uint32_t ms);
  * @brief Sleep with interrupt wake
  * @param interrupt Arduino pin number for interrupt wake-up
  * @param mode Interrupt mode (RISING, FALLING, CHANGE)
- * @param ms Maximum sleep time in milliseconds (0 = no timeout)
+ * @param ms Maximum sleep time in milliseconds (0 = no timeout, interrupt only)
  * @return Interrupt number (0-255) if woken by interrupt, MY_WAKE_UP_BY_TIMER (-1) if timeout,
  *         MY_SLEEP_NOT_POSSIBLE (-2) on error
  * @note Supports wake-up on any GPIO pin via EXTI (critical for radio IRQ)
@@ -206,7 +218,7 @@ int8_t hwSleep(const uint8_t interrupt, const uint8_t mode, uint32_t ms);
  * @param mode1 First interrupt mode (RISING, FALLING, CHANGE)
  * @param interrupt2 Second Arduino pin number for interrupt wake-up
  * @param mode2 Second interrupt mode (RISING, FALLING, CHANGE)
- * @param ms Maximum sleep time in milliseconds (0 = no timeout)
+ * @param ms Maximum sleep time in milliseconds (0 = no timeout, interrupt only)
  * @return Interrupt number that caused wake-up, MY_WAKE_UP_BY_TIMER (-1) if timeout,
  *         MY_SLEEP_NOT_POSSIBLE (-2) on error
  * @note Useful for hybrid sensors (e.g., button press OR periodic wake-up)
