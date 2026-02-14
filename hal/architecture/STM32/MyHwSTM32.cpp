@@ -485,6 +485,40 @@ static bool hwSleepInit(void)
 	HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
 
+#elif defined(STM32U0xx)
+	// ============================================================
+	// STM32U0: Modern RTC with ICSR register (instead of ISR)
+	// ============================================================
+	// Similar to other modern STM32 families but with renamed registers
+	// and combined RTC/TAMP interrupt vector
+
+	hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+
+	if (useLSE) {
+		hrtc.Init.AsynchPrediv = 127;  // 128
+		hrtc.Init.SynchPrediv  = 255;  // 256, total = 32768
+	} else {
+		hrtc.Init.AsynchPrediv = 127;
+		hrtc.Init.SynchPrediv  = 249;  // Adjusted for typical ~32 kHz LSI
+	}
+
+	hrtc.Init.OutPut         = RTC_OUTPUT_DISABLE;
+	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+	hrtc.Init.OutPutType     = RTC_OUTPUT_TYPE_OPENDRAIN;
+
+	// Check if RTC is already initialized (avoid reinit conflicts with SPI etc.)
+	if ((RTC->ICSR & RTC_ICSR_INITS) == 0) {
+		if (HAL_RTC_Init(&hrtc) != HAL_OK) {
+			return false;
+		}
+	} else {
+		hrtc.State = HAL_RTC_STATE_READY;
+	}
+
+	// Configure interrupt for RTC wake_up timer
+	HAL_NVIC_SetPriority(RTC_TAMP_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(RTC_TAMP_IRQn);
+
 #else
 	// ============================================================
 	// STM32F2/F3/F4/F7/L1/L4/L5/G0/G4/H7: Modern RTC
@@ -574,6 +608,41 @@ static bool hwSleepConfigureTimer(uint32_t ms)
 	// Enable alarm interrupt in RTC
 	RTC->CRH |= RTC_CRH_ALRIE;
 
+#elif defined(STM32U0xx)
+	// ============================================================
+	// STM32U0: Use wake-up timer
+	// ============================================================
+	// STM32U0 HAL requires a 4th argument: WakeUpAutoClr (auto-clear of wakeup flag)
+
+	uint32_t wakeUpCounter;
+	uint32_t wakeUpClock;
+
+	if (ms <= 32000) {
+		// Up to 32 seconds: use RTCCLK/16 (2048 Hz, ~0.49 ms resolution)
+		wakeUpClock   = RTC_WAKEUPCLOCK_RTCCLK_DIV16;
+		wakeUpCounter = (ms << 11) / 1000;  // ms * 2048 / 1000
+		if (wakeUpCounter < 2) {
+			wakeUpCounter = 2;
+		}
+		if (wakeUpCounter > 0xFFFF) {
+			wakeUpCounter = 0xFFFF;
+		}
+	} else {
+		// Over 32 seconds: use CK_SPRE (1 Hz, 1 second resolution)
+		wakeUpClock   = RTC_WAKEUPCLOCK_CK_SPRE_16BITS;
+		wakeUpCounter = ms / 1000;
+		if (wakeUpCounter == 0) {
+			wakeUpCounter = 1;
+		}
+		if (wakeUpCounter > 0xFFFF) {
+			wakeUpCounter = 0xFFFF;  // Max ~18 hours
+		}
+	}
+
+	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, wakeUpCounter, wakeUpClock, 0) != HAL_OK) {
+		return false;
+	}
+
 #else
 	// ============================================================
 	// STM32F2/F3/F4/F7/L1/L4/L5/G0/G4/H7: Use wake-up timer
@@ -648,6 +717,12 @@ extern "C" void RTC_Alarm_IRQHandler(void)
 	// Lean handler: clear flags directly instead of going through HAL
 	EXTI->PR = EXTI_PR_PR17;         // Clear EXTI line 17 pending
 	RTC->CRL &= ~RTC_CRL_ALRF;      // Clear RTC alarm flag
+}
+#elif defined(STM32U0xx)
+// STM32U0: Combined RTC/TAMP interrupt (no separate RTC_WKUP vector)
+extern "C" void RTC_TAMP_IRQHandler(void)
+{
+	HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
 }
 #else
 extern "C" void RTC_WKUP_IRQHandler(void)
