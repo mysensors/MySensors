@@ -209,7 +209,7 @@ bool reconnectMQTT(void)
 		presentNode();
 		// Once connected, publish subscribe
 		char inTopic[strlen(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX) + strlen("/+/+/+/+/+") + 1];
-  		(void)snprintf(inTopic, sizeof(inTopic), "%s/+/+/+/+/+", MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
+		(void)snprintf(inTopic, sizeof(inTopic), "%s/+/+/+/+/+", MY_MQTT_SUBSCRIBE_TOPIC_PREFIX);
 		_MQTT_client.subscribe(inTopic);
 
 		return true;
