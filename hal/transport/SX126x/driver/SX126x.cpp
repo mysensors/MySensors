@@ -121,7 +121,7 @@ static bool SX126x_initialise()
 #error MY_SX126x_USE_DIO2_ANT_SWITCH and MY_SX126x_ANT_SWITCH_PIN both defined which makes no sense
 #endif
 #if !defined(MY_SX126x_USE_DIO2_ANT_SWITCH) && !defined(MY_SX126x_ANT_SWITCH_PIN)
-#error Eighter MY_SX126x_USE_DIO2_ANT_SWITCH or MY_SX126x_ANT_SWITCH_PIN has to be defined
+#error Either MY_SX126x_USE_DIO2_ANT_SWITCH or MY_SX126x_ANT_SWITCH_PIN has to be defined
 #endif
 #if defined(MY_SX126x_USE_DIO2_ANT_SWITCH)
 	SX126x_sendCommand(SX126x_SET_RFSWITCHMODE, true);
@@ -292,15 +292,14 @@ static void SX126x_sleep(void)
 
 static bool SX126x_txPower(sx126x_powerLevel_t power)
 {
-	sx126x_paSettings_t paSettings = { 0, 0, 0, 0x01 };
-	paSettings.fields.paLut = 0x01;
+	sx126x_paSettings_t paSettings = {};
 #if (SX126x_VARIANT == 1)
 	paSettings.fields.hpMax = 0x00;
 	paSettings.fields.deviceSel = 0x01;
 	if (power >= 15) {
 		paSettings.fields.paDutyCycle = 0x06;
 	} else {
-		paSettings.fields.paDutyCylce = 0x04;
+		paSettings.fields.paDutyCycle = 0x04;
 	}
 	if (power >=14) {
 		power = 14;
@@ -308,7 +307,7 @@ static bool SX126x_txPower(sx126x_powerLevel_t power)
 		power = -3;
 	}
 	SX126x_sendRegister(SX126x_REG_OCP, 0x18); // 80mA over current protection
-#else if (SX126xVARIANT == 2)
+#elif (SX126xVARIANT == 2)
 	paSettings.fields.deviceSel = 0x00;
 	power = constrain(power, -9, 22);
 	power = constrain(power, MY_SX126x_MIN_POWER_LEVEL_DBM, MY_SX126x_MAX_POWER_LEVEL_DBM);
@@ -333,7 +332,7 @@ static void SX126x_sendCommand(sx126x_commands_t command, uint8_t *buffer, uint1
 	SX126x_busy();
 	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
 	SX126x_SPI.transfer(command);
-	for (int i = 0; i < size; i++) {
+	for (uint16_t i = 0; i < size; i++) {
 		SX126x_SPI.transfer(buffer[i]);
 	}
 	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
@@ -355,7 +354,7 @@ static void SX126x_readCommand(sx126x_commands_t command, uint8_t *buffer, uint1
 	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
 	SX126x_SPI.transfer(command);
 	SX126x_SPI.transfer(0x00);
-	for (int i = 0; i < size; i++) {
+	for (uint16_t i = 0; i < size; i++) {
 		buffer[i] = SX126x_SPI.transfer(0x00);
 	}
 	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
@@ -366,7 +365,7 @@ void SX126x_sendRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
 {
 	SX126x_busy();
 	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
-	SX126x_SPI.transferBytes(NULL, buffer, size);
+	SX126x_SPI.transfer(buffer, size);
 	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
 	SX126x_busy();
 }
@@ -516,12 +515,11 @@ static bool SX126x_sendWithRetry(const uint8_t recipient, const void *buffer,
 		while (hwMillis() - enterCSMAMS < randDelayCSMA) {
 			doYield();
 		}
-		if (SX126x.ATCenabled) {
-			SX126x_txPower(SX126x.powerLevel + 2); //increase power, maybe we are far away from gateway
-		}
-		return false;
 	}
-
+	if (SX126x.ATCenabled) {
+		SX126x_txPower(SX126x.powerLevel + 2); //increase power, maybe we are far away from gateway
+	}
+	return false;
 }
 
 static bool SX126x_send(const uint8_t recipient, uint8_t *data, const uint8_t len,
@@ -756,7 +754,7 @@ static void SX126x_ATC()
 	             SX126x.targetRSSI,
 	             newPowerLevel
 	            );
-	if (newPowerLevel != SX126x.powerLevel) {
+	if (newPowerLevel != oldPowerLevel) {
 		SX126x_txPower(newPowerLevel);
 	}
 }
