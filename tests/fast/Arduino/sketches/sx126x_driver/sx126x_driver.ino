@@ -19,8 +19,8 @@
  *******************************
  */
 #define MY_DEBUG
-#define MY_RADIO_RF24
-MY_DEBUG_VERBOSE_RF24
+#define MY_RADIO_SX126x
+#define MY_DEBUG_VERBOSE_SX126x
 
 #include <MySensors.h>
 
