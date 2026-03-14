@@ -204,7 +204,7 @@ static void SX126x_handle()
 				sx126x_rxBufferStatus_t bufferStatus;
 				sx126x_packetStatus_t packetStatus;
 				SX126x_readCommand(SX126x_GET_RXBUFFERSTATUS, bufferStatus.values, 2);
-				bufferStatus.fields.payloadLength = min(bufferStatus.fields.payloadLength, SX126x_MAX_PACKET_LEN);
+				bufferStatus.fields.payloadLength = min(bufferStatus.fields.payloadLength, (uint8_t)SX126x_MAX_PACKET_LEN);
 				SX126x.currentPacket.payloadLen = bufferStatus.fields.payloadLength - SX126x_HEADER_LEN;
 				SX126x_readBuffer(
 				    bufferStatus.fields.startPointer,
@@ -453,7 +453,7 @@ static bool SX126x_sanityCheck()
 	}
 	SX126x_readCommand(SX126x_GET_ERROR, buf, 2);
 	if (buf[0] & 0x7F || buf[1] & 0x01) {
-		SX126x_DEBUG(PSTR("!SX126x:INIT:ERR:0x%02X%02X"), buf[1], buf[2]);
+		SX126x_DEBUG(PSTR("!SX126x:INIT:ERR:0x%02X%02X"), buf[0], buf[1]);
 		return false;
 	}
 
