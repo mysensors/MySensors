@@ -633,7 +633,7 @@ void diagnosticsRF24Menu(void)
 				}
 
 				for (uint8_t i = 0; i < num_channels; i++) {
-					PRINT(PSTR("%" PRIX8), min(0xf, values[i]));
+					PRINT(PSTR("%" PRIX8), min(0xf, int(values[i])));
 				}
 
 				MY_SERIALDEVICE.println();
