@@ -20,7 +20,7 @@
  */
 #define MY_DEBUG
 #define MY_RADIO_RF24
-MY_DEBUG_VERBOSE_RF24
+#define MY_DEBUG_VERBOSE_RF24
 
 #include <MySensors.h>
 
