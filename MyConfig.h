@@ -1068,6 +1068,14 @@
 #endif
 
 /**
+ * @def MY_SX126x_IRQ_NUM
+ * @brief SX126x IRQ number.
+ */
+#ifndef MY_SX126x_IRQ_NUM
+#define MY_SX126x_IRQ_NUM digitalPinToInterrupt(DEFAULT_SX126x_IRQ_PIN)
+#endif
+
+/**
  * @def MY_SX126x_FREQUENCY
  * @brief The frequency to use.
  *
