@@ -205,7 +205,7 @@ static void SX126x_handle()
 				sx126x_packetStatus_t packetStatus;
 				SX126x_readCommand(SX126x_GET_RXBUFFERSTATUS, bufferStatus.values, 2);
 				bufferStatus.fields.payloadLength = min(bufferStatus.fields.payloadLength, 
-														(uint8_t)SX126x_MAX_PACKET_LEN);
+					(uint8_t)SX126x_MAX_PACKET_LEN);
 				SX126x.currentPacket.payloadLen = bufferStatus.fields.payloadLength - SX126x_HEADER_LEN;
 				SX126x_readBuffer(
 				    bufferStatus.fields.startPointer,
