@@ -362,9 +362,9 @@ int8_t hwCPUTemperature(void)
 #endif
 }
 
-uint16_t hwFreeMem(void)
+ uint16_t __attribute__((noinline)) hwFreeMem(void)
 {
 	extern int __heap_start, *__brkval;
-	int v;
-	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+    volatile int v;
+    return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
