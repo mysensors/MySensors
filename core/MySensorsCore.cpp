@@ -813,7 +813,7 @@ void _nodeLock(const char *str)
 		CORE_DEBUG(PSTR("MCO:NLK:TSL\n"));	// sleep transport
 #endif
 		setIndication(INDICATION_SLEEP);
-		(void)hwSleep((uint32_t)1000*60*30); // Sleep for 30 min before resending LOCKED message
+		(void)hwSleep((uint32_t)1000u * 60u * 30u); // Sleep for 30 min before resending LOCKED message
 		setIndication(INDICATION_WAKEUP);
 	}
 #else

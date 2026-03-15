@@ -146,9 +146,11 @@ bool protocolMQTT2MyMessage(MyMessage &message, char *topic, uint8_t *payload,
 				message.set(bvalue, blen);
 			} else {
 				// terminate string
-				char *value = (char *)payload;
-				value[length] = '\0';
-				message.set((const char*)payload);
+				char value[MAX_PAYLOAD_SIZE + 1];
+				const uint8_t payloadLen = (uint8_t)min((unsigned int)MAX_PAYLOAD_SIZE, length);
+				(void)memcpy(value, payload, payloadLen);
+				value[payloadLen] = '\0';
+				message.set(value);
 			}
 			break;
 		}
