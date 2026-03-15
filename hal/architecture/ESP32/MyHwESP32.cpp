@@ -79,10 +79,6 @@ bool hwUniqueID(unique_id_t *uniqueID)
 
 ssize_t hwGetentropy(void *__buffer, size_t __length)
 {
-	// cut length if > 256
-	if (__length > 256) {
-		__length = 256;
-	}
 	uint8_t *dst = static_cast<uint8_t *>(__buffer);
 	// get random numbers
 	for (size_t i = 0; i < __length; i++) {

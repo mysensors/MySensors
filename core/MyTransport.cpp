@@ -1065,6 +1065,9 @@ void transportSaveRoutingTable(void)
 
 void transportSetRoute(const uint8_t node, const uint8_t route)
 {
+	if (node >= SIZE_ROUTES) {
+		return;
+	}
 #if defined(MY_RAM_ROUTING_TABLE_ENABLED)
 	_transportRoutingTable.route[node] = route;
 #else
