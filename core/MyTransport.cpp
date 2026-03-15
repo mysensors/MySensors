@@ -1065,6 +1065,7 @@ void transportSaveRoutingTable(void)
 
 void transportSetRoute(const uint8_t node, const uint8_t route)
 {
+	// cppcheck-suppress knownConditionTrueFalse
 	if (node >= SIZE_ROUTES) {
 		return;
 	}
