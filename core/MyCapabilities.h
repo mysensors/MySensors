@@ -83,7 +83,7 @@
  * @def MY_CAP_TRANSPORT
  * @brief Indicate the type of transport selected.
  *
- * @see MY_RADIO_RF24, MY_RADIO_NRF5_ESB, MY_RADIO_RFM69, MY_RFM69_NEW_DRIVER, MY_RADIO_RFM95, MY_RS485, MY_PJON, MY_RADIO_SX126x
+ * @see MY_RADIO_RF24, MY_RADIO_NRF5_ESB, MY_RADIO_RFM69, MY_RFM69_NEW_DRIVER, MY_RADIO_RFM95, MY_RS485, MY_PJON, MY_RADIO_SX126x, MY_RADIO_CC1101
  *
  * | Transport    | Indicator
  * |--------------|----------
@@ -94,6 +94,7 @@
  * | RS485        | S
  * | PJSON        | J
  * | SX126x       | X
+ * | CC1101       | C
  * | None         | -
  */
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB)
@@ -114,6 +115,8 @@
 #define MY_CAP_TRANSPORT "J"
 #elif defined(MY_RADIO_SX126x)
 #define MY_CAP_TRANSPORT "X"
+#elif defined(MY_RADIO_CC1101)
+#define MY_CAP_TRANSPORT "C"
 #else
 #define MY_CAP_TRANSPORT "-"
 #endif

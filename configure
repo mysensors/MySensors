@@ -669,6 +669,8 @@ elif [[ ${transport_type} == "rfm95" ]]; then
     CPPFLAGS="-DMY_RADIO_RFM95 $CPPFLAGS"
 elif [[ ${transport_type} == "rs485" ]]; then
     CPPFLAGS="-DMY_RS485 $CPPFLAGS"
+elif [[ ${transport_type} == "cc1101" ]]; then
+    CPPFLAGS="-DMY_RADIO_CC1101 $CPPFLAGS"
 else
     die "Invalid transport type ${transport_type}." 3
 fi
