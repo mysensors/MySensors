@@ -55,8 +55,27 @@ Options for modem config (MY_CC1101_MODEM_CONFIGURATION)
 
 // default PIN assignments, can be overridden
 #if defined(ARDUINO_ARCH_AVR)
-#define DEFAULT_CC1101_GD0_PIN (2) //!< DEFAULT_CC1101_GD0_PIN
-#define DEFAULT_CC1101_GD2_PIN (3) //!< DEFAULT_CC1101_GD2_PIN
+#if defined(__AVR_ATmega32U4__)
+#define DEFAULT_CC1101_GD0_PIN                  (3)                             //!< DEFAULT_CC1101_GD0_PIN
+#else
+#define DEFAULT_CC1101_GD0_PIN                  (2)                             //!< DEFAULT_CC1101_GD0_PIN
+#endif
+#elif defined(ARDUINO_ARCH_ESP8266)
+#define DEFAULT_CC1101_GD0_PIN                  (5)                             //!< DEFAULT_CC1101_GD0_PIN
+#elif defined(ARDUINO_ARCH_ESP32)
+#define DEFAULT_CC1101_GD0_PIN                  (16)
+//!< DEFAULT_CC1101_GD0_PIN
+#define DEFAULT_CC1101_GD0_NUM                  digitalPinToInterrupt(DEFAULT_CC1101_GD0_PIN)           //!< DEFAULT_CC1101_GD0_NUM
+#elif defined(ARDUINO_ARCH_SAMD)
+#define DEFAULT_CC1101_GD0_PIN                  (2)                             //!< DEFAULT_CC1101_GD0_PIN
+#elif defined(LINUX_ARCH_RASPBERRYPI)
+#define DEFAULT_CC1101_GD0_PIN                  (22)                    //!< DEFAULT_CC1101_GD0_PIN
+#elif defined(ARDUINO_ARCH_STM32)
+#define DEFAULT_CC1101_GD0_PIN                  (PA3)                   //!< DEFAULT_CC1101_GD0_PIN
+#elif defined(TEENSYDUINO)
+#define DEFAULT_CC1101_GD0_PIN                  (8)                             //!< DEFAULT_CC1101_GD0_PIN
+#else
+#define DEFAULT_CC1101_GD0_PIN                  (2)                             //!< DEFAULT_CC1101_GD0_PIN
 #endif
 
 #ifndef DEFAULT_CC1101_CS_PIN
