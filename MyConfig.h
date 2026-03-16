@@ -1269,6 +1269,141 @@
 /** @}*/ // End of SX126xSettingGrpPub group
 
 /**
+ * @defgroup CC1101SettingGrpPub CC1101
+ * @ingroup TransportSettingGrpPub
+ * @brief These options are specific to the %CC1101 family of wireless transport modules.
+ *
+ * The following chips are supported by this driver:
+ * - TI CC1101
+ * @{
+ */
+
+/**
+ * @def MY_RADIO_CC1101
+ * @brief Define this to use CC1101 based radios for sensor network communication.
+ */
+//#define MY_RADIO_CC1101
+
+/**
+ * @def MY_CC1101_CS_PIN
+ * @brief CC1101 SPI chip select pin.
+ */
+#ifndef MY_CC1101_CS_PIN
+#define MY_CC1101_CS_PIN DEFAULT_CC1101_CS_PIN
+#endif
+
+/**
+ * @def MY_CC1101_GD0_PIN
+ * @brief cc1101 GD0 pin
+ */
+#ifndef MY_CC1101_GD0_PIN
+#define MY_CC1101_GD0_PIN DEFAULT_CC1101_GD0_PIN
+#endif
+#define MY_CC1101_GD0_NUM digitalPinToInterrupt(MY_CC1101_GD0_PIN)
+
+/**
+ * @def MY_CC1101_FREQUENCY
+ * @brief The base frequency to use.
+ *
+ * - CC1101_315MHZ
+ * - CC1101_433MHZ
+ * - CC1101_868MHZ
+ * - CC1101_915MHZ
+ *
+ * This must match the hardware version of the CC1101 radio.
+ * Additional information: https://en.wikipedia.org/wiki/Short_Range_Devices
+ */
+#ifndef MY_CC1101_FREQUENCY
+#define MY_CC1101_FREQUENCY (CC1101_433MHZ)
+#endif
+
+/**
+ * @def MY_CC1101_CHANNEL
+ * @brief The channel number to use.
+ *
+ * The actual carrier frequency is given by the base frequency, plus
+ * the channel bandwidth x channel number.
+ *
+ * The defaults of this driver set a base frequency of 433.1MHz, a bandwidth
+ * of 200KHz and channel 4, giving a carrier frequency of 433.9MHz.
+ */
+#ifndef MY_CC1101_CHANNEL
+#define MY_CC1101_CHANNEL 4
+#endif
+
+/**
+ * @def MY_CC1101_SYNC_WORD
+ * @brief Sync word can be used to differentiate multiple networks on a channel.
+ *
+ * The CC1101 radio transmits this at the start of each packet and on reception
+ * discards packets with mismatched sync words. You can change this to create
+ * multiple logical networks on the same radio channel, or avoid interference
+ * from nearby CC1101 based radios not in your network.
+ */
+//#define MY_CC1101_SYNC_WORD 0xF543
+
+/**
+ * @def MY_CC1101_MODEM_CONFIGURATION
+ * @brief Defines the model speed and modulation parameters.
+ *
+ * Available options (all 2FSK modulation):
+ *
+ * - CC1101_MODEM_S_BR4_8_FD20 - 4.8kBaud
+ * - CC1101_MODEM_M_BR38_4_FD20 - 38.4kBaud [default]
+ * - CC1101_MODEM_F_BR100_FD50 - 100kBaud
+ * - CC1101_MODEM_XF_BR250_FD125 - 250kBaud
+ *
+ * Slower speeds can provide for longer range, though as they have a
+ * longer transmit time, they can consume more power overall.
+ *
+ */
+//#define MY_CC1101_MODEM_CONFIGURATION CC1101_MODEM_M_BR38_4_FD20
+
+/**
+ * @def MY_CC1101_POWER_LEVEL
+ * @brief Sets the transmit power level.
+ *
+ * There are 8 options, CC1101_POWER_[0-7] which range from
+ * -30dBm to 10dBm.
+ *
+ *  For nodes this defaults to CC1101_POWER_AUTO which uses signal reports
+ *  to automatically adjust the level.
+ *
+ *  For gateways, this defaults to CC1101_POWER_6. Using AUTO for gateways
+ *  and repeaters may be a problem if there are multiple nodes that will
+ *  have different reception quality, so only use AUTO if nodes have similar
+ *  distance and reception.
+ *
+ **/
+//#define MY_CC1101_POWER_LEVEL CC1101_POWER_AUTO
+
+/**
+ * @def MY_CC1101_ATC_TARGET_DBM
+ * @brief Sets the target RSSI level for the ATC. Defaults to -50dBm
+ */
+#ifndef MY_CC1101_ATC_TARGET_DBM
+#define MY_CC1101_ATC_TARGET_DBM (-50)
+#endif
+
+/**
+ * @def MY_CC1101_MAX_POWER_LEVEL
+ * @brief Sets the maximum allowable output power level for AUTO. Default: 10dBm (10mW)
+ *
+ * Please check local regulations!
+ */
+//#define MY_CC1101_MAX_POWER_LEVEL (7)
+
+/**
+ * @def MY_CC1101_MIN_POWER_LEVEL
+ * @brief Sets the minimum allowable output power level for AUTO. Default: -30dBm (0.001mW)
+ */
+//#define MY_CC1101_MIN_POWER_LEVEL (0)
+
+/** @}*/ // End of CC1101SettingGrpPub group
+
+
+
+/**
  * @defgroup SoftSpiSettingGrpPub Soft SPI
  * @ingroup TransportSettingGrpPub
  * @brief These options are specific the soft SPI driver for certain radio transport drivers.
@@ -2579,7 +2714,7 @@
 #endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
-#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RADIO_SX126x) || defined(MY_RS485) || defined(MY_PJON)
+#if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RADIO_SX126x) || defined(MY_RS485) || defined(MY_PJON) || defined(MY_RADIO_CC1101)
 #define MY_SENSOR_NETWORK
 #endif
 
