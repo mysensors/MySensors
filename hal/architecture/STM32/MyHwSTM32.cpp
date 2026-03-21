@@ -364,7 +364,7 @@ uint16_t hwFreeMem(void)
 
 /**
  * @brief Read current RTC counter value (portable)
- * @return 32-bit counter on F1, subsecond-approximated tick on modern STM32
+ * @return Sleep time remaining in ms on modern STM32, time in seconds on F1
  */
 static uint32_t hwRtcGetCounter(void)
 {
@@ -378,7 +378,10 @@ static uint32_t hwRtcGetCounter(void)
 	// Must read date after time to unlock shadow registers
 	RTC_DateTypeDef sDate = {0};
 	HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-	return (uint32_t)(sTime.Hours * 3600 + sTime.Minutes * 60 + sTime.Seconds);
+	uint32_t prediv_s = hrtc.Init.SynchPrediv;  // e.g. 255
+	uint32_t elapsed_subsec_ms = ((prediv_s - sTime.SubSeconds) * 1000) / (prediv_s + 1);
+	return (uint32_t)(sTime.Hours * 3600000u + sTime.Minutes * 60000u
+	                  + sTime.Seconds * 1000u + elapsed_subsec_ms);
 #endif
 }
 
@@ -946,20 +949,19 @@ static int8_t hwSleepInternal(const uint8_t interrupt1, const uint8_t mode1,
 		// Calculate sleep remaining
 		if (ms > 0) {
 			const uint32_t sleepEndCounter = hwRtcGetCounter();
-			uint32_t elapsedSeconds;
+			uint32_t elapsedMs;
 
 #if defined(STM32F1xx)
-			elapsedSeconds = sleepEndCounter - sleepStartCounter;
+			elapsedMs = (sleepEndCounter - sleepStartCounter)*1000;
 #else
 			// Handle midnight rollover (86400 seconds in a day)
 			if (sleepEndCounter >= sleepStartCounter) {
-				elapsedSeconds = sleepEndCounter - sleepStartCounter;
+				elapsedMs = sleepEndCounter - sleepStartCounter;
 			} else {
-				elapsedSeconds = (86400 - sleepStartCounter) + sleepEndCounter;
+				elapsedMs = (86400000ul - sleepStartCounter) + sleepEndCounter;
 			}
 #endif
 
-			const uint32_t elapsedMs = elapsedSeconds * 1000;
 			sleepRemainingMs = (elapsedMs < ms) ? (ms - elapsedMs) : 0;
 		}
 	}
