@@ -477,11 +477,6 @@ static bool hwSleepInit(void)
 	EXTI->PR = EXTI_PR_PR17;
 	NVIC_ClearPendingIRQ(RTC_Alarm_IRQn);
 
-	// Configure EXTI line 17 for RTC Alarm wake-up from STOP mode
-	// Without EXTI, the alarm flag is set but the CPU does not wake
-	EXTI->IMR |= EXTI_IMR_MR17;     // Unmask EXTI line 17
-	EXTI->RTSR |= EXTI_RTSR_TR17;   // Rising edge trigger
-
 	HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
 
@@ -807,6 +802,10 @@ static int8_t hwSleepInternal(const uint8_t interrupt1, const uint8_t mode1,
 		// Clear all wake-up flags before entering STOP mode
 #if defined(STM32F1xx)
 		RTC->CRL &= ~RTC_CRL_ALRF;
+		// Configure EXTI line 17 for RTC Alarm wake-up from STOP mode
+		// Without EXTI, the alarm flag is set but the CPU does not wake
+		EXTI->IMR |= EXTI_IMR_MR17;     // Unmask EXTI line 17
+		EXTI->RTSR |= EXTI_RTSR_TR17;   // Rising edge trigger
 		EXTI->PR = EXTI_PR_PR17;
 		NVIC_ClearPendingIRQ(RTC_Alarm_IRQn);
 #else
