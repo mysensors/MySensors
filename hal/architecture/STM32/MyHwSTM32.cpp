@@ -264,6 +264,12 @@ bool hwUniqueID(unique_id_t *uniqueID)
 
 uint16_t hwCPUVoltage(void)
 {
+	// For STM32WL, STM32U0 and others that define helper macro
+#if defined(__HAL_ADC_CALC_VREFANALOG_VOLTAGE)
+	analogReadResolution(12);
+	uint32_t vrefint = analogRead(AVREF);
+	return (uint16_t) __HAL_ADC_CALC_VREFANALOG_VOLTAGE(vrefint, LL_ADC_RESOLUTION_12B);
+#else
 #if defined(AVREF) && defined(__HAL_RCC_ADC1_CLK_ENABLE)
 	// Force 12-bit resolution for predictable raw values
 	analogReadResolution(12);
@@ -281,7 +287,8 @@ uint16_t hwCPUVoltage(void)
 		return (uint16_t)((1200UL * 4095UL) / vrefint);
 #endif
 	}
-#endif
+#endif // AVREF and __HAL_RCC . . .
+#endif // __HAL_ADC_CALC_VREFANALOG_VOLTAGE
 
 	return 3300;
 }
@@ -295,6 +302,11 @@ uint16_t hwCPUFrequency(void)
 
 int8_t hwCPUTemperature(void)
 {
+#if defined(__HAL_ADC_CALC_TEMPERATURE) // Use helper macro for STM32WL and some others
+	int32_t VRef = hwCPUVoltage();
+	return (int8_t) __HAL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION_12B );
+#else
+
 	// cppcheck-suppress knownConditionTrueFalse
 	int32_t temp_raw = hwReadInternalTemp();
 
@@ -328,6 +340,7 @@ int8_t hwCPUTemperature(void)
 #endif
 
 	return (int8_t)(((temp - MY_STM32_TEMPERATURE_OFFSET) * 100) / MY_STM32_TEMPERATURE_GAIN);
+#endif // defined __HAL_ADC_CALC_TEMPERATURE
 }
 
 extern "C" caddr_t _sbrk(int incr);
@@ -398,7 +411,9 @@ static bool hwSleepInit(void)
 	__DSB();
 #else
 	// Modern STM32 (F2/F3/F4/F7/L0/L1/L4/L5/G0/G4/H7)
-	__HAL_RCC_PWR_CLK_ENABLE();
+#if !defined(STM32WLxx)
+	__HAL_RCC_PWR_CLK_ENABLE(); // N/A for STM32WL. Clock is alway on.
+#endif // !STM32WLxx
 	HAL_PWR_EnableBkUpAccess();
 #endif
 
@@ -412,7 +427,28 @@ static bool hwSleepInit(void)
 
 	// ---- Select RTC clock source: try LSE, fall back to LSI ----
 	bool useLSE = false;
-
+#ifdef STM32WLxx
+	/* Check if LSE is ready */
+	if (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY)) {
+		useLSE = true;
+	} else {
+		/* Check if LSI is ready */
+		if (__HAL_RCC_GET_FLAG(RCC_FLAG_LSIRDY)) {
+			useLSE = false;
+		} else {
+			// Neither ready — try enabling LSI as fallback
+			__HAL_RCC_LSI_ENABLE();
+			uint32_t timeout = 1000000;
+			while (!__HAL_RCC_GET_FLAG(RCC_FLAG_LSIRDY) && (timeout > 0)) {
+				timeout--;
+			}
+			if (timeout == 0) {
+				return false;
+			}
+			useLSE = false;
+		}
+	}
+#else
 	if ((RCC->BDCR & RCC_BDCR_LSERDY) != 0) {
 		useLSE = true;
 	} else {
@@ -439,8 +475,21 @@ static bool hwSleepInit(void)
 			}
 		}
 	}
-
+#endif
 	// ---- Configure RTC clock source ----
+#ifdef STM32WLxx
+	RCC_PeriphCLKInitTypeDef  periphClk = {0};
+	periphClk.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+	periphClk.RTCClockSelection    = useLSE ? RCC_RTCCLKSOURCE_LSE :  RCC_RTCCLKSOURCE_LSI;
+	if (HAL_RCCEx_PeriphCLKConfig(&periphClk) != HAL_OK) {
+		return false;
+	}
+
+	/* ---- Enable the RTC peripheral clock ---- */
+	__HAL_RCC_RTC_ENABLE();
+	__HAL_RCC_RTCAPB_CLK_ENABLE();
+
+#else
 	uint32_t currentRtcSel = (RCC->BDCR & RCC_BDCR_RTCSEL);
 	uint32_t desiredRtcSel = useLSE ? RCC_BDCR_RTCSEL_0 : RCC_BDCR_RTCSEL_1;
 
@@ -451,7 +500,7 @@ static bool hwSleepInit(void)
 		RCC->BDCR |= desiredRtcSel;
 	}
 	RCC->BDCR |= RCC_BDCR_RTCEN;
-
+#endif
 	// ---- Initialize RTC peripheral ----
 	hrtc.Instance = RTC;
 
@@ -513,6 +562,40 @@ static bool hwSleepInit(void)
 	// Configure interrupt for RTC wake_up timer
 	HAL_NVIC_SetPriority(RTC_TAMP_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(RTC_TAMP_IRQn);
+#elif defined(STM32WLxx)
+	hrtc.Init.HourFormat     = RTC_HOURFORMAT_24;
+
+	/* Select prescaler values based on clock source */
+	if (useLSE) {
+		hrtc.Init.AsynchPrediv   = 127;        /* 32768 / 128 = 256 Hz        */
+		hrtc.Init.SynchPrediv    = 255;        /* 256 / 256   = 1 Hz calendar */
+	} else {
+		hrtc.Init.AsynchPrediv   = 127;        /* 32000 / 128 = 250 Hz        */
+		hrtc.Init.SynchPrediv    = 249;        /* 250 / 250   = 1 Hz calendar */
+	}
+
+	hrtc.Init.OutPut         = RTC_OUTPUT_DISABLE;
+	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+	hrtc.Init.OutPutType     = RTC_OUTPUT_TYPE_OPENDRAIN;
+	hrtc.Init.OutPutRemap    = RTC_OUTPUT_REMAP_NONE;
+	hrtc.Init.OutPutPullUp   = RTC_OUTPUT_PULLUP_NONE;
+	hrtc.Init.BinMode        = RTC_BINARY_NONE;
+	if ((RTC->ICSR & RTC_ICSR_INITS) == 0) {
+		if (HAL_RTC_Init(&hrtc) != HAL_OK) {
+			return false;
+		}
+	} else {
+		hrtc.State = HAL_RTC_STATE_READY;
+	}
+
+	// Configure interrupt for RTC wake_up timer
+#if defined(CORE_CM0PLUS) // Dual Core STM32WL
+	HAL_NVIC_SetPriority(RTC_LSECSS_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(RTC_LSECSS_IRQn);
+#else // Single Core STM32WL
+	HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
+#endif // CORE_CM0Plus
 
 #else
 	// ============================================================
@@ -603,9 +686,9 @@ static bool hwSleepConfigureTimer(uint32_t ms)
 	// Enable alarm interrupt in RTC
 	RTC->CRH |= RTC_CRH_ALRIE;
 
-#elif defined(STM32U0xx)
+#elif defined(STM32U0xx)  || defined(STM32WLxx)
 	// ============================================================
-	// STM32U0: Use wake-up timer
+	// STM32U0 & STM32WL: Use wake-up timer
 	// ============================================================
 	// STM32U0 HAL requires a 4th argument: WakeUpAutoClr (auto-clear of wakeup flag)
 
@@ -633,6 +716,11 @@ static bool hwSleepConfigureTimer(uint32_t ms)
 			wakeUpCounter = 0xFFFF;  // Max ~18 hours
 		}
 	}
+
+#if defined(STM32WLxx)
+	// Clear wakeup flag (WUTE + WUTIE) for STM32WL
+	HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+#endif
 
 	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, wakeUpCounter, wakeUpClock, 0) != HAL_OK) {
 		return false;
@@ -719,6 +807,21 @@ extern "C" void RTC_TAMP_IRQHandler(void)
 {
 	HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
 }
+#elif defined(STM32WLxx)
+
+#if defined(CORE_CM0PLUS)  // Dual processor STM32WL
+extern "C" void RTC_LSECSS_IRQHandler(void)
+#else
+extern "C" void RTC_WKUP_IRQHandler(void)
+#endif
+{
+	HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
+}
+extern "C" void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef * /* hrtc */)
+{
+	/* intentionally empty – wake-up is the only action needed */
+}
+
 #else
 extern "C" void RTC_WKUP_IRQHandler(void)
 {
@@ -836,6 +939,7 @@ static int8_t hwSleepInternal(const uint8_t interrupt1, const uint8_t mode1,
 		EXTI->PR = EXTI_PR_PR17;
 #else
 		__HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+		HAL_RTC_WaitForSynchro(&hrtc);
 #endif
 		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
