@@ -8,6 +8,7 @@ The STM32 HAL enables MySensors to run on a wide range of STM32 microcontrollers
 
 - **STM32F1** series (Cortex-M3)
 - **STM32F4** series (Cortex-M4 with FPU)
+- **STM32WL** series (Cortex-M4 with SX126x radio)
 
 Not tested / implemented:
 - **STM32F0** series (Cortex-M0)
@@ -21,6 +22,7 @@ Tested on:
 - **STM32F103C8 Blue Pill** (72 MHz, 64KB Flash, 20KB RAM)
 - **STM32F401CC Black Pill** (84 MHz, 256KB Flash, 64KB RAM)
 - **STM32F411CE Black Pill** (100 MHz, 512KB Flash, 128KB RAM)
+- **STM32WLE5JC WIO-E5** (48 MHz, 256KB Flash, 64KB RAM)
 
 Should work on any STM32 board supported by the STM32duino core.
 
@@ -226,6 +228,7 @@ Configuration is automatic. EEPROM size can be adjusted in the STM32duino menu o
 - **STM32L1/L4/L5** - RTC wake-up timer, ultra-low power
 - **STM32G0/G4** - RTC wake-up timer
 - **STM32H7** - RTC wake-up timer
+- **STM32WL** - RTC wake-up timer, subsecond resolution, ultra-low power
 
 **Power Consumption:**
 - **STM32F1**: 5-20 µA (STOP mode)
