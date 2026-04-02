@@ -118,7 +118,8 @@ typedef enum {
 	S_INFO					= 36,	//!< LCD text device / Simple information device on controller, V_TEXT
 	S_GAS					= 37,	//!< Gas meter, V_FLOW, V_VOLUME
 	S_GPS					= 38,	//!< GPS Sensor, V_POSITION
-	S_WATER_QUALITY			= 39	//!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS
+	S_WATER_QUALITY			= 39,	//!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS
+	S_INPUT					= 40	//!< Digital input V_STATUS, V_TRIPPED
 } mysensors_sensor_t;
 
 /// @brief Type of sensor data (for set/req/echo messages)
