@@ -119,7 +119,11 @@ typedef enum {
 	S_GAS					= 37,	//!< Gas meter, V_FLOW, V_VOLUME
 	S_GPS					= 38,	//!< GPS Sensor, V_POSITION
 	S_WATER_QUALITY			= 39,	//!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS
-	S_INPUT					= 40	//!< Digital input V_STATUS, V_TRIPPED
+	S_INPUT					= 40,	//!< Digital input V_STATUS, V_TRIPPED
+	S_SELECT				= 41,	//!< Dropdown selectors V_SELECT, V_SELECTED
+	S_FAN					= 42,	//!< Fan with speed and direction V_PERCENTAGE and V_DIR
+	S_NUMBER				= 43,	//!< number value V_NUMBER, V_NUMBER_MIN, V_NUMBER_MAX
+	S_RGBWW					= 44	//!< RGB light with an additional White hot and White cold component. Send data using V_RGBWW. Also supports V_WATT
 } mysensors_sensor_t;
 
 /// @brief Type of sensor data (for set/req/echo messages)
@@ -185,7 +189,14 @@ typedef enum {
 	V_VA					= 55,	//!< S_POWER, Apparent power: volt-ampere (VA)
 	V_POWER_FACTOR			= 56,	//!< S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
 	V_MULTI_MESSAGE			= 57,	//!< Special type, multiple sensors in one message
-	V_TILT                  = 58   //!< S_COVER, Tilt position (Integer between 0-100)
+	V_TILT                  = 58,   //!< S_COVER, Tilt position (Integer between 0-100)
+	V_RGBWW					= 59,	//!< S_RGBW_LIGHT. Sent as ASCII hex: RRGGBBWWWW (WWWW=white cold&hot component)
+	V_SELECT				= 60,	//!< S_SELECT list element to be displayed as enum value
+	V_SELECTED				= 61,	//!< S_SELECT selected list item
+	V_DIR					= 62,	//!< S_FAN direction CW/CCW
+	V_NUMBER				= 63,	//!< S_NUMBER value 
+	V_NUMBER_MIN			= 64,	//!< S_NUMBER minimal value
+	V_NUMBER_MAX			= 65	//!< S_NUMBER maximum value
 } mysensors_data_t;
 #endif
 
