@@ -250,22 +250,19 @@ LOCAL bool _firmwareResponse(uint16_t block, uint8_t *data)
 		}
 #else
 		bool repeat = false;
-		do
-		{
+		do {
 			repeat = false;
 			_flash_writeBytes( ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET,
-				               data, FIRMWARE_BLOCK_SIZE);
+								data, FIRMWARE_BLOCK_SIZE);
 
 			// wait until flash written
 			while (_flash_busy()) {}
 
 			// read data from flash and check if it match
 			uint32_t addr = ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET;
-			for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) 
-			{
+			for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
 				uint8_t data_r = _flash_readByte(addr + i);
-				if(data_r != data[i])
-				{
+				if(data_r != data[i]) {
 					repeat = true;
 #ifdef OTA_EXTRA_FLASH_DEBUG
 					MY_SERIALDEVICE.print(data[i],HEX);
@@ -276,11 +273,11 @@ LOCAL bool _firmwareResponse(uint16_t block, uint8_t *data)
 				}
 			}
 			
-			if(repeat)
+			if(repeat) {
 				delay(10);
+			}
 
-		}
-		while(repeat);
+		} while(repeat);
 #endif
 		// wait until flash written
 		//while (_flash_busy()) {}
