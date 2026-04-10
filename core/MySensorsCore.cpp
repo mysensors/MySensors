@@ -255,6 +255,7 @@ void presentNode(void)
 	(void)present(NODE_SENSOR_ID, S_ARDUINO_NODE);
 #endif
 
+#if !defined(MY_DISABLE_CONFIG_REQUEST)
 	// Send a configuration exchange request to controller
 	// Node sends parent node. Controller answers with latest node configuration
 	(void)_sendRoute(build(_msgTmp, GATEWAY_ADDRESS, NODE_SENSOR_ID, C_INTERNAL,
@@ -262,6 +263,7 @@ void presentNode(void)
 
 	// Wait configuration reply.
 	(void)wait(2000, C_INTERNAL, I_CONFIG);
+#endif
 
 #endif
 
