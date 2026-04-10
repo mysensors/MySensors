@@ -699,7 +699,8 @@ void transportProcessMessage(void)
 	_transportSM.msgReceived = true;
 
 	// Is message addressed to this node?
-	if (destination == _transportConfig.nodeId || (destination == BROADCAST_ADDRESS && command == C_SET)) {
+	if (destination == _transportConfig.nodeId || (destination == BROADCAST_ADDRESS &&
+	        command == C_SET)) {
 		// null terminate data
 		_msg.data[msgLength] = 0u;
 		// Check if sender requests an echo.
