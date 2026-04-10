@@ -107,6 +107,22 @@ LOCAL bool firmwareOTAUpdateProcess(void)
 				_flash_blockErase32K(0);
 				// wait until flash erased
 				while ( _flash_busy() ) {}
+
+#if defined(__AVR_ATmega1284P__)
+				// erase lower 128K -> max flash size for ATMEGA1284
+				_flash_blockErase32K(0x008000);
+				// wait until flash erased
+				while ( _flash_busy() ) {}
+
+				_flash_blockErase32K(0x010000);
+				// wait until flash erased
+				while ( _flash_busy() ) {}
+
+				_flash_blockErase32K(0x018000);
+				// wait until flash erased
+				while ( _flash_busy() ) {}
+#endif
+
 				_firmwareBlock = _nodeFirmwareConfig.blocks;
 				_firmwareUpdateOngoing = true;
 				// reset flags
@@ -233,11 +249,38 @@ LOCAL bool _firmwareResponse(uint16_t block, uint8_t *data)
 			Flash.write_block( (uint32_t *)addr, (uint32_t *)data, FIRMWARE_BLOCK_SIZE>>2);
 		}
 #else
-		_flash_writeBytes( ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET,
-		                   data, FIRMWARE_BLOCK_SIZE);
+		bool repeat = false;
+		do {
+			repeat = false;
+			_flash_writeBytes( ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET,
+			                   data, FIRMWARE_BLOCK_SIZE);
+
+			// wait until flash written
+			while (_flash_busy()) {}
+
+			// read data from flash and check if it match
+			uint32_t addr = ((_firmwareBlock - 1) * FIRMWARE_BLOCK_SIZE) + FIRMWARE_START_OFFSET;
+			for(uint8_t i=0; i<FIRMWARE_BLOCK_SIZE; i++) {
+				uint8_t data_r = _flash_readByte(addr + i);
+				if(data_r != data[i]) {
+					repeat = true;
+#ifdef OTA_EXTRA_FLASH_DEBUG
+					MY_SERIALDEVICE.print(data[i],HEX);
+					MY_SERIALDEVICE.print(" != ");
+					MY_SERIALDEVICE.print(data_r,HEX);
+					MY_SERIALDEVICE.println();
+#endif
+				}
+			}
+
+			if(repeat) {
+				delay(10);
+			}
+
+		} while(repeat);
 #endif
 		// wait until flash written
-		while (_flash_busy()) {}
+		//while (_flash_busy()) {}
 #ifdef OTA_EXTRA_FLASH_DEBUG
 		{
 			char prbuf[8];
