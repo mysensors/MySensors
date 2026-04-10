@@ -1629,6 +1629,14 @@
  *        Incompatible libraries are unable to send sensor data.
  */
 #define MY_CORE_COMPATIBILITY_CHECK
+
+/**
+ * @def MY_DISABLE_CONFIG_REQUEST
+ * @brief If defined, configuration exchange request to controller will not be send.
+ *        I_CONFIG request add 2s of delay if controller not support it. 
+ */
+//#define MY_DISABLE_CONFIG_REQUEST
+
 /** @}*/ // End of CoreSettingGrpPub group
 
 /**
