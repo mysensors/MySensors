@@ -194,7 +194,7 @@ typedef enum {
 	V_SELECT				= 60,	//!< S_SELECT list element to be displayed as enum value
 	V_SELECTED				= 61,	//!< S_SELECT selected list item
 	V_DIR					= 62,	//!< S_FAN direction CW/CCW
-	V_NUMBER				= 63,	//!< S_NUMBER value 
+	V_NUMBER				= 63,	//!< S_NUMBER value
 	V_NUMBER_MIN			= 64,	//!< S_NUMBER minimal value
 	V_NUMBER_MAX			= 65	//!< S_NUMBER maximum value
 } mysensors_data_t;
