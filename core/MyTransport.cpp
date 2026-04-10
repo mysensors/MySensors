@@ -67,7 +67,7 @@ static uint32_t _lastSanityCheck;		//!< last sanity check
 
 // regular network discovery, sends I_DISCOVER_REQUESTS to update routing table
 // sufficient to have GW triggering requests to also update repeater nodes
-#if defined(MY_GATEWAY_FEATURE)
+#if defined(MY_GATEWAY_FEATURE) && !defined(MY_RS485)
 static uint32_t _lastNetworkDiscovery;	//!< last network discovery
 #endif
 
@@ -83,7 +83,7 @@ void stInitTransition(void)
 #if defined(MY_TRANSPORT_SANITY_CHECK)
 	_lastSanityCheck = hwMillis();
 #endif
-#if defined(MY_GATEWAY_FEATURE)
+#if defined(MY_GATEWAY_FEATURE) && !defined(MY_RS485)
 	_lastNetworkDiscovery = 0;
 #endif
 #if defined(MY_RAM_ROUTING_TABLE_ENABLED)
@@ -305,7 +305,7 @@ void stReadyTransition(void)
 // stReadyUpdate: monitors link
 void stReadyUpdate(void)
 {
-#if defined(MY_GATEWAY_FEATURE)
+#if defined(MY_GATEWAY_FEATURE) && !defined(MY_RS485)
 	if (!_lastNetworkDiscovery ||
 	        (hwMillis() - _lastNetworkDiscovery > MY_TRANSPORT_DISCOVERY_INTERVAL_MS)) {
 		_lastNetworkDiscovery = hwMillis();
