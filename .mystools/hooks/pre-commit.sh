@@ -20,6 +20,6 @@ done
 ###
 #  cppcheck
 #
-#git cppcheck --cached || err "Correct the errors until cppcheck passes using 'git cppcheck --cached'."
+git cppcheck --cached || err "Correct the errors until cppcheck passes using 'git cppcheck --cached'."
 
 exit 0
