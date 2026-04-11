@@ -1632,8 +1632,8 @@
 
 /**
  * @def MY_DISABLE_CONFIG_REQUEST
- * @brief If defined, configuration exchange request to controller will not be send.
- *        I_CONFIG request add 2s of delay if controller not support it.
+ * @brief If defined, configuration exchange request to controller will not be sent.
+ *        I_CONFIG request adds 2s of delay if controller does not support it.
  */
 //#define MY_DISABLE_CONFIG_REQUEST
 
