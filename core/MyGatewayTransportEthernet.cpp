@@ -454,7 +454,7 @@ bool gatewayTransportAvailable(void)
 
 #if defined(__AVR_ATmega1284P__)
 
-	// check for new connections
+	// check for new connections.
 	EthernetClient newclient = _ethernetServer.available();
 	if (newclient) {
 		for (int i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
