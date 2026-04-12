@@ -145,7 +145,9 @@ bool _serialProcess()
 		// our ID or BROADCAST_ADDRESS, save the header information and progress to
 		// the next state.
 		case 0:
-			memmove(&_header[0],&_header[1],5);
+			for (uint8_t i = 0; i < 5; i++) {
+				_header[i] = _header[i+1];
+			}
 			_header[5] = inch;
 			if ((_header[0] == SOH) && (_header[5] == STX) &&
 			        ((_header[1] == (char)_nodeId) ||
