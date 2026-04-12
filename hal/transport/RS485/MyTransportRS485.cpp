@@ -145,8 +145,8 @@ bool _serialProcess()
 		// our ID or BROADCAST_ADDRESS, save the header information and progress to
 		// the next state.
 		case 0:
-			for (uint8_t i = 0; i < 5; i++) {
-				_header[i] = _header[i+1];
+			for (uint8_t n = 0; n < 5; n++) {
+				_header[n] = _header[n+1];
 			}
 			_header[5] = inch;
 			if ((_header[0] == SOH) && (_header[5] == STX) &&
