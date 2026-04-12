@@ -136,7 +136,7 @@ bool EthernetServer::hasClient()
 	return !new_clients.empty();
 }
 
-EthernetClient EthernetServer::available()
+EthernetClient EthernetServer::accept()
 {
 	if (new_clients.empty()) {
 		return EthernetClient();
@@ -187,7 +187,7 @@ void EthernetServer::_accept()
 	char ipstr[INET_ADDRSTRLEN];
 
 	sin_size = sizeof client_addr;
-	new_fd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
+	new_fd = ::accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
 	if (new_fd == -1) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK) {
 			logError("accept: %s\n", strerror(errno));

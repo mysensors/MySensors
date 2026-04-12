@@ -72,7 +72,7 @@ public:
 	 *
 	 * @return a EthernetClient object; if no new client has connected, this object will evaluate to false.
 	 */
-	EthernetClient available();
+	EthernetClient accept();
 	/**
 	 * @brief Write a byte to all clients.
 	 *
