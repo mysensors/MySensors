@@ -1589,10 +1589,10 @@
 
 /**
  * @def MY_TRANSPORT_SEND_RETRIES
- * @brief If defined to a positive number N, the node will try to send the payload to the 
+ * @brief If defined to a positive number N, the node will try to send the payload to the
  * uplink up to N times before actually failing. Useful when working in a noisy environment
- * @note Setting this option too high will 
- * 
+ * @note Setting this option too high will
+ *
  */
 //#define MY_TRANSPORT_SEND_RETRIES (5)
 
