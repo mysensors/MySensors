@@ -136,7 +136,8 @@ void GPIOClass::digitalWrite(uint8_t pin, uint8_t value)
 	if (this->requests[pin] != nullptr) {
 		this->pinMode(pin, OUTPUT);
 	}
-	if (gpiod_line_request_set_value(this->requests[pin], pin, value==0?GPIOD_LINE_VALUE_INACTIVE:GPIOD_LINE_VALUE_ACTIVE) != 0) {
+	if (gpiod_line_request_set_value(this->requests[pin], pin,
+	                                 value==0?GPIOD_LINE_VALUE_INACTIVE:GPIOD_LINE_VALUE_ACTIVE) != 0) {
 		logError("Could not set value for GPIO line\n");
 		exit(1);
 	}
@@ -184,7 +185,8 @@ int GPIOClass::_piHiPri(const int pri)
 	return sched_setscheduler (0, SCHED_RR, &sched) ;
 }
 
-void GPIOClass::_interruptHandlerDetachInterrupt(void *arg) {
+void GPIOClass::_interruptHandlerDetachInterrupt(void *arg)
+{
 	struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
 	if (gpiod_line_settings_set_edge_detection(line_settings, GPIOD_LINE_EDGE_NONE) != 0) {
 		logError("Failed to set pin edge detection mode\n");
@@ -207,7 +209,8 @@ void GPIOClass::_interruptHandlerDetachInterrupt(void *arg) {
 	gpiod_line_config_free(line_config);
 }
 
-void GPIOClass::_interruptHandlerEventBufferRelease(void *arg) {
+void GPIOClass::_interruptHandlerEventBufferRelease(void *arg)
+{
 	struct gpiod_edge_event_buffer *buf = static_cast<struct gpiod_edge_event_buffer *>(arg);
 	gpiod_edge_event_buffer_free(buf);
 }
@@ -266,7 +269,8 @@ void *GPIOClass::_interruptHandler(void *args)
 	return nullptr;
 }
 
-void GPIOClass::attachInterrupt(uint8_t pin, void (*func)(), uint8_t mode) {
+void GPIOClass::attachInterrupt(uint8_t pin, void (*func)(), uint8_t mode)
+{
 	if (pin >= MAX_PIN) {
 		logError("pin number too high");
 		exit(1);
@@ -289,19 +293,19 @@ void GPIOClass::attachInterrupt(uint8_t pin, void (*func)(), uint8_t mode) {
 	}
 	auto edge = GPIOD_LINE_EDGE_NONE;
 	switch (mode) {
-		case CHANGE:
-			edge = GPIOD_LINE_EDGE_BOTH;
-			break;
-		case FALLING:
-			edge = GPIOD_LINE_EDGE_FALLING;
-			break;
-		case RISING:
-			edge = GPIOD_LINE_EDGE_RISING;
-			break;
-		case NONE:
-		default:
-			logError("attachInterrupt: Invalid mode\n");
-			exit(1);
+	case CHANGE:
+		edge = GPIOD_LINE_EDGE_BOTH;
+		break;
+	case FALLING:
+		edge = GPIOD_LINE_EDGE_FALLING;
+		break;
+	case RISING:
+		edge = GPIOD_LINE_EDGE_RISING;
+		break;
+	case NONE:
+	default:
+		logError("attachInterrupt: Invalid mode\n");
+		exit(1);
 	}
 	if (gpiod_line_settings_set_edge_detection(line_settings, edge) != 0) {
 		logError("Failed to set pin edge detection mode\n");
@@ -357,7 +361,8 @@ void GPIOClass::attachInterrupt(uint8_t pin, void (*func)(), uint8_t mode) {
 	// Create a thread passing the pin and function
 	pthread_create(this->threadIds[pin], nullptr, GPIOClass::_interruptHandler, (void *)threadArgs);
 }
-void GPIOClass::detachInterrupt(uint8_t pin) {
+void GPIOClass::detachInterrupt(uint8_t pin)
+{
 	if (pin >= MAX_PIN) {
 		logError("pin number too high");
 		exit(1);
@@ -370,12 +375,14 @@ void GPIOClass::detachInterrupt(uint8_t pin) {
 	}
 }
 
-void GPIOClass::interrupts() {
+void GPIOClass::interrupts()
+{
 	pthread_mutex_lock(&intMutex);
 	interruptsEnabled = true;
 	pthread_mutex_unlock(&intMutex);
 }
-void GPIOClass::noInterrupts() {
+void GPIOClass::noInterrupts()
+{
 	pthread_mutex_lock(&intMutex);
 	interruptsEnabled = false;
 	pthread_mutex_unlock(&intMutex);
