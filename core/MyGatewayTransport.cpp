@@ -37,6 +37,7 @@ inline void gatewayTransportProcess(void)
 				_msgTmp = _msg;
 				// Reply without echo flag, otherwise we would end up in an eternal loop
 				_msgTmp.setRequestEcho(false);
+				_msgTmp.setEcho(false);
 				_msgTmp.setEcho(true);
 				_msgTmp.setSender(getNodeId());
 				_msgTmp.setDestination(_msg.getSender());
