@@ -55,7 +55,7 @@
 #define MY_GATEWAY_W5100
 
 // W5100 Ethernet module SPI enable (optional if using a shield/module that manages SPI_EN signal)
-//#define MY_W5100_SPI_EN 4
+#define MY_W5100_SPI_EN 4
 
 // Enable Soft SPI for NRF radio (note different radio wiring is required)
 // The W5100 ethernet module seems to have a hard time co-operate with
