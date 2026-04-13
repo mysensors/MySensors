@@ -118,6 +118,11 @@ static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 static EthernetClient client = EthernetClient();
+
+#if defined(__AVR_ATmega1284P__)
+static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
+#endif
+
 static inputBuffer inputString;
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
@@ -446,7 +451,46 @@ bool gatewayTransportAvailable(void)
 	}
 #else /* Else part of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
 	// W5100/ENC module does not have hasClient-method. We can only serve one client at the time.
+
+#if defined(__AVR_ATmega1284P__)
+
+	// check for new connections.
 	EthernetClient newclient = _ethernetServer.accept();
+	if (newclient) {
+		for (int i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
+			if (!clients[i]) {
+				clients[i] = newclient;
+
+				GATEWAY_DEBUG(PSTR("NEW CLIENT\n"));
+				client = newclient;
+				GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
+				_w5100_spi_en(false);
+				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
+				_w5100_spi_en(true);
+				presentNode();
+
+				break;
+			}
+		}
+	}
+
+	// handle all active clients
+	for (int i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
+		if (clients[i] && clients[i].connected()) {
+			client = clients[i];
+			if (_readFromClient()) {
+				setIndication(INDICATION_GW_RX);
+				_w5100_spi_en(false);
+				return true;
+			}
+		} else {
+			clients[i].stop();
+		}
+	}
+
+#else
+	EthernetClient newclient = _ethernetServer.accept();
+
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
 		if (client != newclient) {
@@ -471,6 +515,7 @@ bool gatewayTransportAvailable(void)
 			}
 		}
 	}
+#endif /* End of __AVR_ATmega1284P__*/
 #endif /* End of MY_GATEWAY_ESP8266 || MY_GATEWAY_LINUX */
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 	_w5100_spi_en(false);
