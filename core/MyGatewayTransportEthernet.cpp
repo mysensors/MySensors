@@ -148,7 +148,9 @@ void gatewayTransportRenewIP(void)
 
 bool gatewayTransportInit(void)
 {
+#if defined(MY_GATEWAY_W5100)
 	Ethernet.init(MY_W5100_SPI_EN);
+#endif
 
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 	// Turn off access point
