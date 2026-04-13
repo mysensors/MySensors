@@ -126,7 +126,7 @@ static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString;
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
-#if !defined(MY_W5100_SPI_EN)
+#if defined(MY_GATEWAY_W5100) && !defined(MY_W5100_SPI_EN)
 #error MY_W5100_SPI_EN is mandatory from version 2.0.0 of the Ethernet library
 #endif
 
