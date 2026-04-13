@@ -455,7 +455,7 @@ bool gatewayTransportAvailable(void)
 #if defined(__AVR_ATmega1284P__)
 
 	// check for new connections.
-	EthernetClient newclient = _ethernetServer.available();
+	EthernetClient newclient = _ethernetServer.accept();
 	if (newclient) {
 		for (int i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
 			if (!clients[i]) {
@@ -489,7 +489,7 @@ bool gatewayTransportAvailable(void)
 	}
 
 #else
-	EthernetClient newclient = _ethernetServer.available();
+	EthernetClient newclient = _ethernetServer.accept();
 
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
