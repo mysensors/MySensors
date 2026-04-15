@@ -314,6 +314,9 @@ LOCAL bool _firmwareResponse(uint16_t block, uint8_t *data)
 				// wait until flash ready
 				while (_flash_busy()) {}
 #endif
+#if defined(MY_GATEWAY_W5100)
+				presentBootloaderInformation();
+#endif
 				hwReboot();
 			} else {
 				setIndication(INDICATION_ERR_FW_CHECKSUM);

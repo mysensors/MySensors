@@ -54,7 +54,17 @@ inline void gatewayTransportProcess(void)
 				} else {
 					(void)_processInternalCoreMessage();
 				}
-			} else {
+			}
+#if defined(MY_GATEWAY_W5100) && defined(MY_OTA_FIRMWARE_FEATURE)
+			else if (_msg.getCommand() == C_STREAM) {
+				if(_msg.getType() == ST_FIRMWARE_CONFIG_REQUEST) {
+					presentBootloaderInformation();
+				} else if(firmwareOTAUpdateProcess()) {
+					return; // OTA FW update processing indicated no further action needed
+				}
+			}
+#endif
+			else {
 				// Call incoming message callback if available
 				if (receive) {
 					receive(_msg);
