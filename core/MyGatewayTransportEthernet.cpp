@@ -116,13 +116,11 @@ static EthernetClient client = EthernetClient();
 static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
 static bool clientsConnected[MY_GATEWAY_MAX_CLIENTS];
 static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
+#elif defined(__AVR_ATmega1284P__)
+static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
+static inputBuffer inputString[MY_GATEWAY_MAX_CLIENTS];
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 static EthernetClient client = EthernetClient();
-
-#if defined(__AVR_ATmega1284P__)
-static EthernetClient clients[MY_GATEWAY_MAX_CLIENTS];
-#endif
-
 static inputBuffer inputString;
 #endif /* End of MY_GATEWAY_CLIENT_MODE */
 
@@ -262,7 +260,7 @@ bool gatewayTransportSend(MyMessage &message)
 #endif /* End of MY_USE_UDP */
 #else /* Else part of MY_GATEWAY_CLIENT_MODE */
 	// Send message to connected clients
-#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
+#if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(__AVR_ATmega1284P__)
 	for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 		if (clients[i] && clients[i].connected()) {
 			nbytes += clients[i].write((uint8_t *)_ethernetMessage, strlen(_ethernetMessage));
@@ -278,7 +276,7 @@ bool gatewayTransportSend(MyMessage &message)
 #if defined(MY_USE_UDP)
 // Nothing to do here
 #else
-#if (defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX)) && !defined(MY_GATEWAY_CLIENT_MODE)
+#if (defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32) || defined(MY_GATEWAY_LINUX) || defined(__AVR_ATmega1284P__)) && !defined(MY_GATEWAY_CLIENT_MODE)
 bool _readFromClient(uint8_t i)
 {
 	while (clients[i].connected() && clients[i].available()) {
@@ -429,11 +427,10 @@ bool gatewayTransportAvailable(void)
 	EthernetClient newclient = _ethernetServer.accept();
 	if (newclient) {
 		for (int i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
-			if (!clients[i]) {
+			if (!clients[i] || !clients[i].connected()) {
 				clients[i] = newclient;
 
-				GATEWAY_DEBUG(PSTR("NEW CLIENT\n"));
-				client = newclient;
+				//client = newclient;
 				GATEWAY_DEBUG(PSTR("GWT:TSA:ETH OK\n"));
 				gatewayTransportSend(buildGw(_msgTmp, I_GATEWAY_READY).set(MSG_GW_STARTUP_COMPLETE));
 				presentNode();
@@ -445,19 +442,27 @@ bool gatewayTransportAvailable(void)
 
 	// handle all active clients
 	for (int i = 0; i < MY_GATEWAY_MAX_CLIENTS; i++) {
-		if (clients[i] && clients[i].connected()) {
-			client = clients[i];
-			if (_readFromClient()) {
-				setIndication(INDICATION_GW_RX);
-				return true;
+		if (clients[i]) {
+
+			// if client disconnected and no data available - remove
+			if (!clients[i].connected() && !clients[i].available()) {
+				clients[i].stop();
+				continue;
 			}
-		} else {
-			clients[i].stop();
+
+			// if data available - read
+			if (clients[i].available()) {
+				//client = clients[i];
+				if (_readFromClient(i)) {
+					setIndication(INDICATION_GW_RX);
+					return true;
+				}
+			}
 		}
 	}
 
 #else
-	EthernetClient newclient = _ethernetServer.accept();
+	EthernetClient newclient = _ethernetServer.available();
 
 	// if a new client connects make sure to dispose any previous existing sockets
 	if (newclient) {
