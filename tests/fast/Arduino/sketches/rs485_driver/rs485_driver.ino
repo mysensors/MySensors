@@ -22,6 +22,7 @@
 #define MY_RS485
 #define MY_RS485_DE_PIN 2
 #define MY_RS485_BAUD_RATE 9600
+#define MY_RS485_HWSERIAL Serial1
 
 #include <MySensors.h>
 
