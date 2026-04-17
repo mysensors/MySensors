@@ -2102,6 +2102,12 @@
 //#define MY_MQTT_CLIENT_KEY
 
 /**
+ * @def MY_IP_CONFIGURATION_EEPROM
+ * @brief If defined IP configuration is taken from eeprom.
+ */
+//#define MY_IP_CONFIGURATION_EEPROM
+
+/**
  * @def MY_IP_ADDRESS
  * @brief Static ip address of gateway. If not defined, DHCP will be used.
  *
