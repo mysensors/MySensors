@@ -35,11 +35,11 @@ def call(Closure body) {
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF52 - Tests)', 'Not run yet...', '')
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (STM32F1 - Tests)', 'Not run yet...', '')
 		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (STM32F4 - Tests)', 'Not run yet...', '')
+		cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
 
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsMicro - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsGW - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF51822 - Tests)', 'Not run yet...', '')
-		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (Arduino Mega - Tests)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsMicro - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (MySensorsGW - Examples)', 'Not run yet...', '')
 		// cfg.pr.setBuildStatus(cfg, 'PENDING', 'Toll gate (nRF52832 - Examples)', 'Not run yet...', '')
@@ -218,6 +218,11 @@ def call(Closure body) {
 							arduino.buildESP8266(config, config.tests_fast, 'Tests')
 						}
 					}
+					arduinoBranches['ArduinoMega (tests)'] = {
+						stage('ArduinoMega (tests)') {
+							arduino.buildArduinoMega(config, config.tests_fast, 'Tests')
+						}
+					}
 
 					/*
 					arduinoBranches['MySensorsMicro (tests)'] = {
@@ -235,11 +240,7 @@ def call(Closure body) {
 							arduino.buildnRF51822(config, config.tests_fast, 'Tests')
 						}
 					}
-					arduinoBranches['ArduinoMega (tests)'] = {
-						stage('ArduinoMega (tests)') {
-							arduino.buildArduinoMega(config, config.tests_fast, 'Tests')
-						}
-					}
+					
 					arduinoBranches['MySensorsMicro (examples)'] = {
 						stage('MySensorsMicro (examples)') {
 							arduino.buildMySensorsMicro(config, config.examples, 'Examples')
