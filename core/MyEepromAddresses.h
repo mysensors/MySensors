@@ -52,6 +52,10 @@
 #define SIZE_SIGNING_SOFT_SERIAL					(9u)		//!< Size soft signing serial
 #define SIZE_RF_ENCRYPTION_AES_KEY				(16u)	//!< Size RF AES encryption key
 #define SIZE_NODE_LOCK_COUNTER						(1u)		//!< Size node lock counter
+#define SIZE_DHCP                 (1u) //!< Size of DHCP enable flag
+#define SIZE_IP                   (4u) //!< Size of IP address
+#define SIZE_MAC                  (6u) //!< Size of MAC address
+
 
 
 /** @brief EEPROM start address */
@@ -88,8 +92,26 @@
 #define EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS (EEPROM_SIGNING_SOFT_SERIAL_ADDRESS + SIZE_SIGNING_SOFT_SERIAL)
 /** @brief Address node lock counter. This is set with @ref SecurityPersonalizer.ino */
 #define EEPROM_NODE_LOCK_COUNTER_ADDRESS (EEPROM_RF_ENCRYPTION_AES_KEY_ADDRESS + SIZE_RF_ENCRYPTION_AES_KEY)
+
+#if defined(MY_IP_CONFIGURATION_EEPROM)
+/** @brief  DHCP enable flag */
+#define   EEPROM_GW_DHCP                (EEPROM_NODE_LOCK_COUNTER_ADDRESS + SIZE_NODE_LOCK_COUNTER) //start about 291 / 0x123
+/** @brief  GW IP address */
+#define   EEPROM_GW_IP                  (EEPROM_GW_DHCP+SIZE_DHCP)
+/** @brief  GW IP mask */
+#define   EEPROM_GW_IP_MASK             (EEPROM_GW_IP + SIZE_IP)
+/** @brief  mysensors gateway gateway ip address */
+#define   EEPROM_GW_IP_GW               (EEPROM_GW_IP_MASK + SIZE_IP)
+/** @brief  dns server ip address */
+#define   EEPROM_GW_IP_DNS              (EEPROM_GW_IP_GW + SIZE_IP)
+/** @brief  MAC address */
+#define   EEPROM_GW_IP_MAC              (EEPROM_GW_IP_DNS + SIZE_IP)
+/** @brief First free address for sketch static configuration */
+#define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_GW_IP_MAC + SIZE_MAC)
+#else
 /** @brief First free address for sketch static configuration */
 #define EEPROM_LOCAL_CONFIG_ADDRESS (EEPROM_NODE_LOCK_COUNTER_ADDRESS + SIZE_NODE_LOCK_COUNTER)
+#endif
 
 #endif // MyEepromAddresses_h
 

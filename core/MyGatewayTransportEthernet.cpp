@@ -169,6 +169,31 @@ bool gatewayTransportInit(void)
 	GATEWAY_DEBUG(PSTR("GWT:TIN:IP: %s\n"), WiFi.localIP().toString().c_str());
 #elif defined(MY_GATEWAY_LINUX)
 	// Nothing to do here
+#elif defined(MY_IP_CONFIGURATION_EEPROM)
+
+	hwReadConfigBlock(&_ethernetGatewayMAC, EEPROM_GW_IP_MAC, SIZE_MAC);
+	uint8_t isDHCP = hwReadConfig(EEPROM_GW_DHCP);
+
+	if(isDHCP == 1) {
+		if (!Ethernet.begin(_ethernetGatewayMAC)) {
+			return false;
+		}
+	} else {
+		uint8_t ip[SIZE_IP];
+		uint8_t mask[SIZE_IP];
+		uint8_t dns[SIZE_IP];
+		uint8_t gw[SIZE_IP];
+
+		hwReadConfigBlock(&ip, EEPROM_GW_IP, SIZE_IP);
+		hwReadConfigBlock(&mask, EEPROM_GW_IP_MASK, SIZE_IP);
+		hwReadConfigBlock(&dns, EEPROM_GW_IP_DNS, SIZE_IP);
+		hwReadConfigBlock(&gw, EEPROM_GW_IP_GW, SIZE_IP);
+
+		// MAC, IP, DNS, GATEWAY, MASK
+		Ethernet.begin(_ethernetGatewayMAC, IPAddress(ip[0],ip[1],ip[2],ip[3]), IPAddress(dns[0],dns[1],
+		               dns[2],dns[3]), IPAddress(gw[0],gw[1],gw[2],gw[3]),IPAddress(mask[0],mask[1],mask[2],mask[3]) );
+	}
+
 #else
 #if defined(MY_IP_GATEWAY_ADDRESS) && defined(MY_IP_SUBNET_ADDRESS)
 	// DNS server set to gateway ip
