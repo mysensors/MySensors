@@ -184,11 +184,11 @@ void _begin(void)
 #endif
 
 	// initialise the transport driver
-	if (!gatewayTransportInit()) {
+	// gateway without communication is pointles, so try until it works.
+	while(!gatewayTransportInit()) {
 		setIndication(INDICATION_ERR_INIT_GWTRANSPORT);
 		CORE_DEBUG(PSTR("!MCO:BGN:TSP FAIL\n"));
-		// Nothing more we can do
-		_infiniteLoop();
+		delay(2000);
 	}
 #endif
 
