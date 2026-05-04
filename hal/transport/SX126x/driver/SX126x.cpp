@@ -660,7 +660,7 @@ static void SX126x_tx()
 		hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_LPTX);
 #endif
 	} else {
-#ifdef MY_SX126x_RF_SWITCH_HPTX)
+#ifdef MY_SX126x_RF_SWITCH_HPTX
 		hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_HPTX);
 #endif
 	}

@@ -22,8 +22,8 @@
 bool transportInit(void)
 {
 	const bool result = SX126x_initialise();
-#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_SX126x_ATC_MODE_DISABLED)
-	SX126x_setATC(true, SX126x_TARGET_RSSI);
+#if !defined(MY_GATEWAY_FEATURE) && !defined(MY_SX126x_DISABLE_ATC)
+	SX126x_setATC(true, MY_SX126x_ATC_TARGET_DBM);
 #endif
 	return result;
 }

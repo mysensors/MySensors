@@ -144,7 +144,6 @@
 #define SX126x_BROADCAST_ADDRESS (255u)	 //!< Broadcasting address
 #define SX126x_ATC_TARGET_RANGE_DBM (2u) //!< ATC target range +/- dBm
 #define SX126x_RSSI_OFFSET (137u)		 //!< RSSI offset
-#define SX126x_TARGET_RSSI (-70)		 //!< RSSI target
 #define SX126x_PROMISCUOUS (false)		 //!< SX126x promiscuous mode
 
 #if (MY_SX126x_MAX_POWER_LEVEL_DBM) <= (MY_SX126x_MIN_POWER_LEVEL_DBM)
@@ -692,7 +691,7 @@ static void SX126x_handle();
 
 /**
  * @brief Sets TX power of the module
- * @param power the output power in dDm, -3..15 for sx1261, -3..22 for sx1262
+ * @param power the output power in dDm, -17..15 for sx1261, -9..22 for sx1262
  */
 static bool SX126x_txPower(sx126x_powerLevel_t power);
 
