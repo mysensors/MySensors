@@ -592,6 +592,30 @@ typedef enum {
 } sx126x_irqMasks_t;
 
 /**
+ * @brief PA Capabilities
+ */
+#if (MY_SX126x_VARIANT == 1)
+const bool hasLPA = true;  // LP only
+const bool hasHPA = false;
+#endif // VARIANT == 1
+#if (MY_SX126x_VARIANT == 2)
+const bool hasLPA = false;
+const bool hasHPA = true; // HP only
+#endif // VARIANT == 2
+#if (MY_SX126x_VARIANT == 3)
+#if defined(MY_SX126x_RF_SWITCH_LPTX)
+const bool hasLPA = true;
+#else
+const bool hasLPA = false;
+#endif // LPTX defined
+#if defined(MY_SX126x_RF_SWITCH_HPTX)
+const bool hasHPA = true; // HP only
+#else
+const bool hasHPA = false;
+#endif // HPTX defined
+#endif // Variant == 3
+
+/**
  * @brief Sends a command to the SX126x
  * @param command SX126x command
  * @param buffer parameters

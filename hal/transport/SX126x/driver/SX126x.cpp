@@ -33,6 +33,10 @@
 
 //Global status variable
 static sx126x_internal_t SX126x;
+const uint8_t clampLP = 0xC8; // default
+const uint8_t clampHP = 0xDE;  // defaule | 0x1D per datasheet
+bool hpClampFixed = false; // false = default = clampLP is set
+bool useLPA = true;  // true if we are using the LPA, fals for HPA
 
 //helper funcions
 #define SX126x_internalToSNR(internalSNR) internalSNR/4
@@ -88,6 +92,11 @@ static bool SX126x_initialise()
 	hwPinMode(MY_SX126x_ANT_SWITCH_PIN, OUTPUT);
 	hwDigitalWrite(MY_SX126x_ANT_SWITCH_PIN, LOW);
 	SX126x_DEBUG(PSTR("SX126x:INIT:ASWPIN=%u\n"), MY_SX126x_ANT_SWITCH_PIN);
+#endif
+#ifdef MY_SX126x_RF_SWITCH_PIN
+	hwPinMode(MY_SX126x_RF_SWITCH_PIN, OUTPUT);
+	hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_IDLE);
+	SX126x_DEBUG(PSTR("SX126x:INIT:RFWPIN=%u MY_SX126x_RF_SWITCH_IDLE\n"), MY_SX126x_RF_SWITCH_PIN);
 #endif
 
 
@@ -211,9 +220,6 @@ static void SX126x_handle()
 			//Transmission done
 			if (irqStatus & SX126x_IRQ_TX_DONE) {
 				SX126x.txComplete = true;
-#ifdef MY_SX126x_ANT_SWITCH_PIN
-				hwDigitalWrite(MY_SX126x_ANT_SWITCH_PIN, LOW);
-#endif
 				SX126x_rx();
 			}
 
@@ -240,7 +246,7 @@ static void SX126x_handle()
 					                     !SX126x.currentPacket.header.controlFlags.fields.ackRequested;
 					SX126x.dataReceived = !SX126x.ackReceived;
 				}
-				//SX126x_rx();
+				SX126x_rx(); // Go to RX for next message
 			}
 
 			//CAD done
@@ -289,6 +295,16 @@ static void SX126x_wakeUp()
 static void SX126x_standBy()
 {
 	SX126x_deviceReady();
+#ifdef MY_SX126x_ANT_SWITCH_PIN
+	hwDigitalWrite(MY_SX126x_ANT_SWITCH_PIN, LOW);
+#endif
+#ifdef MY_SX126x_RF_SWITCH_PIN
+	hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_IDLE);
+#endif
+#ifdef MY_SX126x_RF_ENABLE_PIN
+	hwDigitalWrite(MY_SX126x_RF_ENABLE_PIN, LOW);
+#endif
+
 	SX126x_sendCommand(SX126x_SET_STANDBY, SX126x_STDBY_RC);
 	SX126x.radioMode = SX126x_MODE_STDBY_RC;
 }
@@ -318,31 +334,49 @@ static void SX126x_sleep(void)
 
 static bool SX126x_txPower(sx126x_powerLevel_t power)
 {
-	sx126x_paSettings_t paSettings = {};
-#if (SX126x_VARIANT == 1)
-	paSettings.fields.hpMax = 0x00;
-	paSettings.fields.deviceSel = 0x01;
-	if (power >= 15) {
-		paSettings.fields.paDutyCycle = 0x06;
-	} else {
-		paSettings.fields.paDutyCycle = 0x04;
-	}
-	if (power >=14) {
-		power = 14;
-	} else if (power <= -3) {
-		power = -3;
-	}
-	SX126x_sendRegister(SX126x_REG_OCP, 0x18); // 80mA over current protection
-#elif (SX126xVARIANT == 2)
-	paSettings.fields.deviceSel = 0x00;
-	power = constrain(power, -9, 22);
-	power = constrain(power, MY_SX126x_MIN_POWER_LEVEL_DBM, MY_SX126x_MAX_POWER_LEVEL_DBM);
-	SX126x.powerLevel = power;
-	paSettings.fields.paDutyCycle = 0x04;
-	paSettings.fields.hpMax = 0x07;
-	SX126x_sendRegister(SX126x_REG_OCP, 0x38); // 160mA over current protection
-#endif
+	power = constrain(power, MY_SX126x_MIN_POWER_LEVEL_DBM,
+	                  MY_SX126x_MAX_POWER_LEVEL_DBM); // Constarin to user desired settings
 
+	// Determine Power Amplifier to use
+	if((hasLPA && hasHPA) && (power > 14)) {
+		useLPA = false;
+	} else if (!hasLPA && hasHPA) {
+		useLPA = false;
+	} else {
+		useLPA = true;
+	}
+
+	sx126x_paSettings_t paSettings = { 0, 0, 0, 0x01 };
+	paSettings.fields.paLut = 0x01; // TODO:  I think this is redundant
+	if (useLPA) { // use LP PA
+		power = constrain(power, -17, 15); // Constrain to PA capability
+		paSettings.fields.hpMax = 0x00;
+		paSettings.fields.deviceSel = 0x01;
+		// Power Optimizations
+		if (power == 15) {
+			paSettings.fields.paDutyCycle = 0x06;
+			power = 14; // Power setting required to get desired output power
+		} else {
+			paSettings.fields.paDutyCycle = 0x04;
+		}
+		if(hpClampFixed) {
+			SX126x_sendRegister(0x08D8, clampLP);  // turn off hpClampFix if using LP PA
+			hpClampFixed = false;
+		}
+		SX126x_sendRegister(SX126x_REG_OCP, 0x18); // 80mA over current protection
+	} else { // use HP PA
+		power = constrain(power, -9, 22);
+		paSettings.fields.hpMax = 0x07;
+		paSettings.fields.deviceSel = 0x00;
+		paSettings.fields.paDutyCycle = 0x04;
+		if(!hpClampFixed) {
+			SX126x_sendRegister(0x08D8, clampHP);  // turn on hpClampFix
+			hpClampFixed = true;
+		}
+		// Future effort: Add additional PA optimizations here
+
+		SX126x_sendRegister(SX126x_REG_OCP, 0x38); // 160mA over current protection
+	}
 	SX126x_sendCommand(SX126x_SET_PACONFIG, paSettings.values, 4);
 	sx126x_txSettings_t txSettings;
 	txSettings.fields.power = power;
@@ -540,14 +574,16 @@ static bool SX126x_sendWithRetry(const uint8_t recipient, const void *buffer,
 			doYield();
 		}
 		SX126x_DEBUG(PSTR("!SX126x:SWR:NACK\n"));
-		const uint32_t enterCSMAMS = hwMillis();
+		const uint32_t enterCSMAMS = hwMillis(); // wait for a clear channel
 		const uint16_t randDelayCSMA = start % 100;
 		while (hwMillis() - enterCSMAMS < randDelayCSMA) {
 			doYield();
 		}
-	}
-	if (SX126x.ATCenabled) {
-		SX126x_txPower(SX126x.powerLevel + 2); //increase power, maybe we are far away from gateway
+
+		if (SX126x.ATCenabled) {
+			SX126x_txPower(SX126x.powerLevel + 2); //increase power, maybe we are far away from gateway
+		}
+		return false;
 	}
 	return false;
 }
@@ -615,18 +651,43 @@ static void SX126x_readBuffer(const uint8_t offset, uint8_t *buffer, const uint8
 
 static void SX126x_tx()
 {
+#ifdef MY_SX126x_ANT_SWITCH_PIN
+	hwDigitalWrite(MY_SX126x_ANT_SWITCH_PIN, HIGH);
+#endif
+#ifdef MY_SX126x_RF_SWITCH_PIN
+	if (useLPA) {
+#ifdef MY_SX126x_RF_SWITCH_LPTX
+		hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_LPTX);
+#endif
+	} else {
+#ifdef MY_SX126x_RF_SWITCH_HPTX)
+		hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_HPTX);
+#endif
+	}
+#endif
+#ifdef MY_SX126x_RF_ENABLE_PIN
+	hwDigitalWrite(MY_SX126x_RF_ENABLE_PIN, HIGH);
+#endif
 	uint8_t timeout[3] = { 0x00, 0x00, 0x00 }; //no timeout
 	SX126x_deviceReady();
 	SX126x_setIrqMask(SX126x_IRQ_TX_DONE);
 	SX126x_sendCommand(SX126x_SET_TX, timeout, 3);
-#ifdef MY_SX126x_ANT_SWITCH_PIN
-	hwDigitalWrite(MY_SX126x_ANT_SWITCH_PIN, HIGH);
-#endif
+	SX126x_busy(); // Wait till ramp up is complete
 	SX126x.radioMode = SX126x_MODE_TX;
 }
 
 static void SX126x_rx()
 {
+#ifdef MY_SX126x_ANT_SWITCH_PIN
+	hwDigitalWrite(MY_SX126x_ANT_SWITCH_PIN, LOW);
+#endif
+#ifdef MY_SX126x_RF_SWITCH_PIN
+	hwDigitalWrite(MY_SX126x_RF_SWITCH_PIN, MY_SX126x_RF_SWITCH_RX);
+#endif
+#ifdef MY_SX126x_RF_ENABLE_PIN
+	hwDigitalWrite(MY_SX126x_RF_ENABLE_PIN, HIGH);
+#endif
+
 	uint8_t timeout[3] = { 0x00, 0x00, 0x00 }; //no timeout, go into standby after reception
 	SX126x_deviceReady();
 	SX126x_setIrqMask(SX126x_IRQ_RX_DONE | SX126x_IRQ_CRC_ERROR | SX126x_IRQ_RX_TX_TIMEOUT);
@@ -722,7 +783,7 @@ static bool SX126x_cad()
 static bool SX126x_packetAvailable()
 {
 	if (SX126x.radioMode != SX126x_MODE_RX && SX126x.radioMode != SX126x_MODE_TX) {
-		//if we are not sending or already in receive, go into receive;
+		//if we are not sending or not already in receive, go into receive;
 		SX126x_rx();
 	}
 	return SX126x.dataReceived;
@@ -775,7 +836,6 @@ static void SX126x_ATC()
 	int8_t delta;
 	sx126x_powerLevel_t newPowerLevel;
 	delta = SX126x.targetRSSI - SX126x_internalToRSSI(SX126x.currentPacket.ACK.RSSI);
-	sx126x_powerLevel_t oldPowerLevel = SX126x.powerLevel;
 	newPowerLevel = SX126x.powerLevel + delta / 2;
 	newPowerLevel = constrain(newPowerLevel, MY_SX126x_MIN_POWER_LEVEL_DBM,
 	                          MY_SX126x_MAX_POWER_LEVEL_DBM);
@@ -784,7 +844,7 @@ static void SX126x_ATC()
 	             SX126x.targetRSSI,
 	             newPowerLevel
 	            );
-	if (newPowerLevel != oldPowerLevel) {
+	if (newPowerLevel != SX126x.powerLevel) {
 		SX126x_txPower(newPowerLevel);
 	}
 }
@@ -862,8 +922,8 @@ static uint8_t SX126x_getTxPowerPercent(void)
 static bool SX126x_setTxPowerPercent(const uint8_t newPowerPercent)
 {
 	const sx126x_powerLevel_t newPowerLevel = static_cast<sx126x_powerLevel_t>
-	        (MY_SX126x_MIN_POWER_LEVEL_DBM + (MY_SX126x_MAX_POWER_LEVEL_DBM
-	                - MY_SX126x_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));
+	    (MY_SX126x_MIN_POWER_LEVEL_DBM + (MY_SX126x_MAX_POWER_LEVEL_DBM
+	                                      - MY_SX126x_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));
 	SX126x_DEBUG(PSTR("SX126x:SPP:PCT=%u,TX LEVEL=%n\n"), newPowerPercent, newPowerLevel);
 	return SX126x_txPower(newPowerLevel);
 }
