@@ -80,10 +80,17 @@
 #define _SX126x_h
 
 #include <stdint.h>
+#if defined(SUBGHZSPI_BASE)
+#include <SubGhz.h>
+#endif
 
 // SX126x hardware defaults
+#if defined(SUBGHZSPI_BASE)
+#define SX126x_SPI SubGhz.SPI //!< STM32WL SPI
+#else
 #if !defined(SX126x_SPI)
 #define SX126x_SPI hwSPI //!< default SPI
+#endif
 #endif
 
 // default PIN assignments, can be overridden
@@ -102,7 +109,7 @@
 #define DEFAULT_SX126x_IRQ_PIN			(2)				//!< DEFAULT_SX126x_IRQ_PIN
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define DEFAULT_SX126x_IRQ_PIN			(22)			//!< DEFAULT_SX126x_IRQ_PIN
-#elif defined(ARDUINO_ARCH_STM32)
+#elif defined(ARDUINO_ARCH_STM32) && !defined(SUBGHZSPI_BASE)
 #define DEFAULT_SX126x_IRQ_PIN			(PA3)			//!< DEFAULT_SX126x_IRQ_PIN
 #elif defined(TEENSYDUINO)
 #define DEFAULT_SX126x_IRQ_PIN			(8)				//!< DEFAULT_SX126x_IRQ_PIN
@@ -110,8 +117,17 @@
 #define DEFAULT_SX126x_IRQ_PIN			(2)				//!< DEFAULT_SX126x_IRQ_PIN
 #endif
 
-#ifndef DEFAULT_SX126x_CS_PIN
+#if !defined(DEFAULT_SX126x_CS_PIN) && !defined(SUBGHZSPI_BASE)
 #define DEFAULT_SX126x_CS_PIN			(SS)			//!< DEFAULT_SX126x_CS_PIN
+#endif
+
+// cs Pin Handling
+#if defined(SUBGHZSPI_BASE)
+#define SET_SX126x_CS_LOW()   SubGhz.setNssActive(true)
+#define SET_SX126x_CS_HIGH()  SubGhz.setNssActive(false)
+#else
+#define SET_SX126x_CS_LOW()   hwDigitalWrite(MY_SX126x_CS_PIN, LOW)
+#define SET_SX126x_CS_HIGH()  hwDigitalWrite(MY_SX126x_CS_PIN, HIGH)
 #endif
 
 // Frequency helpers

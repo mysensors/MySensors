@@ -51,6 +51,7 @@ static bool SX126x_initialise()
 {
 	// setting pin modes
 	SX126x_DEBUG(PSTR("SX126x:INIT\n"));
+#if !defined(SUBGHZSPI_BASE)
 #if defined(MY_SX126x_POWER_PIN)
 	hwPinMode(MY_SX_126x_POWER_PIN, OUTPUT);
 	SX126x_powerUp();
@@ -64,7 +65,18 @@ static bool SX126x_initialise()
 	hwPinMode(MY_SX126x_IRQ_PIN, INPUT);
 	SX126x_DEBUG(PSTR("SX126x:INIT:IRQPIN=%u\n"), MY_SX126x_IRQ_PIN);
 #endif
-#if defined(MY_SX126x_RESET_PIN)
+#if !defined(__linux__)
+	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	hwPinMode(MY_SX126x_CS_PIN, OUTPUT);
+#endif
+#endif // !SUBGHZSPI_BASE
+#if defined(SUBGHZSPI_BASE)
+	SubGhz.setResetActive(true);
+	delay(SX126x_POWERUP_DELAY_MS);
+	SubGhz.setResetActive(false);
+	delay(SX126x_POWERUP_DELAY_MS);
+	SX126x_DEBUG(PSTR("SX126x:INIT:RST INTERNAL\n"));
+#elif defined(MY_SX126x_RESET_PIN)
 	hwPinMode(MY_SX126x_RESET_PIN, OUTPUT);
 	hwDigitalWrite(MY_SX126x_RESET_PIN, LOW);
 	delay(SX126x_POWERUP_DELAY_MS);
@@ -78,10 +90,7 @@ static bool SX126x_initialise()
 	SX126x_DEBUG(PSTR("SX126x:INIT:ASWPIN=%u\n"), MY_SX126x_ANT_SWITCH_PIN);
 #endif
 
-#if !defined(__linux__)
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
-	hwPinMode(MY_SX126x_CS_PIN, OUTPUT);
-#endif
+
 	SX126x_SPI.begin();
 
 	SX126x.address = SX126x_BROADCAST_ADDRESS;
@@ -156,7 +165,11 @@ static bool SX126x_initialise()
 	SX126x_setPacketParameters(0xFF);
 
 	// disable and clear all interrupts
+#if defined(SUBGHZSPI_BASE)
+	SubGhz.attachInterrupt(SX126x_interruptHandler);
+#else
 	attachInterrupt(MY_SX126x_IRQ_NUM, SX126x_interruptHandler, RISING);
+#endif
 	SX126x_setIrqMask(SX126x_IRQ_NONE);
 	SX126x_clearIrq(SX126x_IRQ_ALL);
 
@@ -172,15 +185,20 @@ static bool SX126x_initialise()
 
 static void SX126x_interruptHandler()
 {
+#if defined(SUBGHZSPI_BASE)
+	SubGhz.disableInterrupt();  // prevent level-triggered re-fire
+#else
 	noInterrupts();
+#endif
 	SX126x.irqFired = true;
-	SX126x.radioMode = SX126x_MODE_STDBY_RC;
+#if !defined(SUBGHZSPI_BASE)
 	interrupts();
+#endif
 }
 
 static void SX126x_handle()
 {
-#ifdef MY_SX126x_IRQ_PIN
+#if defined(MY_SX126x_IRQ_PIN) || defined(SUBGHZSPI_BASE)
 	if (SX126x.irqFired) {
 #endif
 		uint32_t irqStatus = SX126x_IRQ_NONE;
@@ -239,8 +257,12 @@ static void SX126x_handle()
 
 			SX126x_clearIrq(SX126x_IRQ_ALL);
 			SX126x.irqFired = false;
+#if defined(SUBGHZSPI_BASE)
+			SubGhz.clearPendingInterrupt();
+			SubGhz.enableInterrupt();
+#endif
 		}
-#ifdef MY_SX126x_IRQ_PIN
+#if defined(MY_SX126x_IRQ_PIN) || defined(SUBGHZSPI_BASE)
 	}
 #endif
 }
@@ -257,10 +279,10 @@ void SX126x_deviceReady(void)
 static void SX126x_wakeUp()
 {
 	noInterrupts();
-	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
+	SET_SX126x_CS_LOW();
 	SX126x_SPI.transfer(SX126x_GET_STATUS);
 	SX126x_SPI.transfer(0x00);
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	SET_SX126x_CS_HIGH();
 	interrupts();
 }
 
@@ -273,7 +295,10 @@ static void SX126x_standBy()
 
 static void SX126x_busy(void)
 {
-#ifdef MY_SX126x_BUSY_PIN
+#if defined(SUBGHZSPI_BASE)
+	while (SubGhz.isBusy()) {
+	}
+#elif defined(MY_SX126x_BUSY_PIN)
 	while (hwDigitalRead(MY_SX126x_BUSY_PIN) == 1) {
 	}
 #else
@@ -331,12 +356,12 @@ static bool SX126x_txPower(sx126x_powerLevel_t power)
 static void SX126x_sendCommand(sx126x_commands_t command, uint8_t *buffer, uint16_t size)
 {
 	SX126x_busy();
-	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
+	SET_SX126x_CS_LOW();
 	SX126x_SPI.transfer(command);
 	for (uint16_t i = 0; i < size; i++) {
 		SX126x_SPI.transfer(buffer[i]);
 	}
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	SET_SX126x_CS_HIGH();
 	if (command != SX126x_SET_SLEEP) {
 		SX126x_busy();
 	}
@@ -352,22 +377,26 @@ static void SX126x_sendCommand(sx126x_commands_t command, uint8_t parameter)
 static void SX126x_readCommand(sx126x_commands_t command, uint8_t *buffer, uint16_t size)
 {
 	SX126x_busy();
-	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
+	SET_SX126x_CS_LOW();
 	SX126x_SPI.transfer(command);
 	SX126x_SPI.transfer(0x00);
 	for (uint16_t i = 0; i < size; i++) {
 		buffer[i] = SX126x_SPI.transfer(0x00);
 	}
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	SET_SX126x_CS_HIGH();
 	SX126x_busy();
 }
 
 void SX126x_sendRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
 {
 	SX126x_busy();
-	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
-	SX126x_SPI.transfer(buffer, size);
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	SET_SX126x_CS_LOW();
+#if defined(SUBGHZSPI_BASE)
+	SX126x_SPI.transfer(NULL, buffer, size);
+#else
+	SX126x_SPI.transferBytes(NULL, buffer, size);
+#endif
+	SET_SX126x_CS_HIGH();
 	SX126x_busy();
 }
 
@@ -560,27 +589,27 @@ static bool SX126x_sendPacket(sx126x_packet_t *packet)
 static void SX126x_sendBuffer(const uint8_t offset, const uint8_t *buffer, const uint8_t size)
 {
 	SX126x_busy();
-	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
+	SET_SX126x_CS_LOW();
 	SX126x_SPI.transfer(SX126x_WRITE_BUFFER);
 	SX126x_SPI.transfer(offset);
 	for (int i = 0; i < size; i++) {
 		SX126x_SPI.transfer(buffer[i]);
 	}
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	SET_SX126x_CS_HIGH();
 	SX126x_busy();
 }
 
 static void SX126x_readBuffer(const uint8_t offset, uint8_t *buffer, const uint8_t size)
 {
 	SX126x_busy();
-	hwDigitalWrite(MY_SX126x_CS_PIN, LOW);
+	SET_SX126x_CS_LOW();
 	SX126x_SPI.transfer(SX126x_READ_BUFFER);
 	SX126x_SPI.transfer(offset);
 	SX126x_SPI.transfer(0x00); //discard status byte
 	for (int i = 0; i < size; i++) {
 		buffer[i] = SX126x_SPI.transfer(0x00);
 	}
-	hwDigitalWrite(MY_SX126x_CS_PIN, HIGH);
+	SET_SX126x_CS_HIGH();
 	SX126x_busy();
 }
 
