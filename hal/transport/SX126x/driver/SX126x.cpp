@@ -57,7 +57,7 @@ static bool SX126x_initialise()
 	SX126x_DEBUG(PSTR("SX126x:INIT\n"));
 #if !defined(SUBGHZSPI_BASE)
 #if defined(MY_SX126x_POWER_PIN)
-	hwPinMode(MY_SX_126x_POWER_PIN, OUTPUT);
+	hwPinMode(MY_SX126x_POWER_PIN, OUTPUT);
 	SX126x_powerUp();
 	SX126x_DEBUG(PSTR("SX126x:INIT:PWRPIN=%u\n"), MY_SX126x_POWER_PIN);
 #endif
@@ -346,8 +346,8 @@ static bool SX126x_txPower(sx126x_powerLevel_t power)
 		useLPA = true;
 	}
 
-	sx126x_paSettings_t paSettings = { 0, 0, 0, 0x01 };
-	paSettings.fields.paLut = 0x01; // TODO:  I think this is redundant
+	sx126x_paSettings_t paSettings{ };
+	paSettings.fields.paLut = 0x01;
 	if (useLPA) { // use LP PA
 		power = constrain(power, -17, 15); // Constrain to PA capability
 		paSettings.fields.hpMax = 0x00;
@@ -383,7 +383,7 @@ static bool SX126x_txPower(sx126x_powerLevel_t power)
 	txSettings.fields.rampTime = RADIO_RAMP_200_US;
 	SX126x_sendCommand(SX126x_SET_TXPARAMS, txSettings.values, 2);
 	SX126x.powerLevel = power;
-	SX126x_DEBUG(PSTR("SX126x:PTC:LEVEL=%d"), SX126x.powerLevel);
+	SX126x_DEBUG(PSTR("SX126x:PTC:LEVEL=%d\n"), SX126x.powerLevel);
 	return true;
 }
 
@@ -421,20 +421,25 @@ static void SX126x_readCommand(sx126x_commands_t command, uint8_t *buffer, uint1
 	SX126x_busy();
 }
 
-void SX126x_sendRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
+static void SX126x_sendRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
 {
 	SX126x_busy();
 	SET_SX126x_CS_LOW();
-#if defined(SUBGHZSPI_BASE)
-	SX126x_SPI.transfer(NULL, buffer, size);
-#else
-	SX126x_SPI.transferBytes(NULL, buffer, size);
-#endif
+
+	// SX126x write-register command (0x0D)
+	SX126x_SPI.transfer(SX126x_WRITE_REGISTER);
+	SX126x_SPI.transfer((uint8_t)(address >> 8));
+	SX126x_SPI.transfer((uint8_t)(address & 0xFF));
+
+	for (uint16_t i = 0; i < size; i++) {
+		SX126x_SPI.transfer(buffer[i]);
+	}
+
 	SET_SX126x_CS_HIGH();
 	SX126x_busy();
 }
 
-void SX126x_sendRegister(uint16_t address, uint8_t value)
+static void SX126x_sendRegister(uint16_t address, uint8_t value)
 {
 	SX126x_sendRegisters(address, &value, 1);
 }
@@ -583,7 +588,6 @@ static bool SX126x_sendWithRetry(const uint8_t recipient, const void *buffer,
 		if (SX126x.ATCenabled) {
 			SX126x_txPower(SX126x.powerLevel + 2); //increase power, maybe we are far away from gateway
 		}
-		return false;
 	}
 	return false;
 }
@@ -858,16 +862,16 @@ static void SX126x_setATC(bool onOff, int8_t targetRSSI)
 void SX126x_powerUp()
 {
 #ifdef MY_SX126x_POWER_PIN
-	hwDigitalWrite(SX126x_POWER_PIN, HIGH);
-	SX126x_DEBUG(PSTR("SX126x:PWU\n");
+	hwDigitalWrite(MY_SX126x_POWER_PIN, HIGH);
+	SX126x_DEBUG(PSTR("SX126x:PWU\n"));
 #endif
 }
 
 void SX126x_powerDown()
 {
 #ifdef MY_SX126x_POWER_PIN
-	hwDigitalWrite(SX126x_POWER_PIN, LOW);
-	SX126x_DEBUG(PSTR("SX126x:PWD\n");
+	hwDigitalWrite(MY_SX126x_POWER_PIN, LOW);
+	SX126x_DEBUG(PSTR("SX126x:PWD\n"));
 #endif
 }
 

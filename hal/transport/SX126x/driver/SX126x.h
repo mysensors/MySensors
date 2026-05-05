@@ -435,7 +435,7 @@ typedef struct {
 			uint8_t paDutyCycle;		//!< paDutyCycle
 			uint8_t hpMax;				//!< hpMax
 			uint8_t deviceSel;			//!< deviceSel
-			uint8_t paLut = 0x01;		//!< paLut
+			uint8_t paLut;				//!< paLut
 		} fields;						//!< fields
 		uint8_t values[4];				//!< values
 	};
@@ -594,23 +594,23 @@ typedef enum {
  * @brief PA Capabilities
  */
 #if (MY_SX126x_VARIANT == 1)
-const bool hasLPA = true;  // LP only
-const bool hasHPA = false;
+static const bool hasLPA = true;  // LP only
+static const bool hasHPA = false;
 #endif // VARIANT == 1
 #if (MY_SX126x_VARIANT == 2)
-const bool hasLPA = false;
-const bool hasHPA = true; // HP only
+static const bool hasLPA = false;
+static const bool hasHPA = true; // HP only
 #endif // VARIANT == 2
 #if (MY_SX126x_VARIANT == 3)
 #if defined(MY_SX126x_RF_SWITCH_LPTX)
-const bool hasLPA = true;
+static const bool hasLPA = true;
 #else
-const bool hasLPA = false;
+static const bool hasLPA = false;
 #endif // LPTX defined
 #if defined(MY_SX126x_RF_SWITCH_HPTX)
-const bool hasHPA = true; // HP only
+static const bool hasHPA = true; // HP only
 #else
-const bool hasHPA = false;
+static const bool hasHPA = false;
 #endif // HPTX defined
 #endif // Variant == 3
 
@@ -652,6 +652,16 @@ static void SX126x_sendRegisters(uint16_t address, uint8_t *buffer, uint16_t siz
  * @param value value to write
  */
 static void SX126x_sendRegister(uint16_t address, uint8_t value);
+
+/**
+ * @brief Provide power to the SX126x
+ **/
+void SX126x_powerUp();
+
+/**
+ * @brief Power down the SX126x
+ **/
+void SX126x_powerDown();
 
 /**
 * @brief Initialise the driver transport hardware and software

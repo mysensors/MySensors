@@ -1326,7 +1326,7 @@
 
 /**
  * @def MY_SX126x_RF_ENABLE_PIN
- * @brief Additional Pin to enableantenna circuit
+ * @brief Additional Pin to enable antenna circuit
  *
  * Some modules have an additional RF enable pin (E.G. NUCLEO-WL55JC FE_CTRL3) .
  * Use this to define the enable pin.
@@ -1337,13 +1337,13 @@
  * @def MY_SX126x_RF_SWITCH_PIN
  * @brief Additional Pin to switch antenna circuit between RX and TX, and Idle mode
  *
- * Some modules have additional RF swich pins.  Use this to define and additional pin.
- * Define behavior in different modes using MY_SX126X_RF_SWITCH_IDLE, TX, and RX
+ * Some modules have additional RF switch pins.  Use this to define and additional pin.
+ * Define behavior in different modes using MY_SX126x_RF_SWITCH_IDLE, TX, and RX
  */
-//#define MY_SX126x_RF_SWITCH_PIN (PC5)
+//#define MY_SX126x_RF_SWITCH_PIN (PC4)
 
 /**
- * @def MY_SX126X_RF_SWITCH_IDLE
+ * @def MY_SX126x_RF_SWITCH_IDLE
  * @brief Idle State of additional RF switch pin
  *
  * @ref MY_SX126x_RF_SWITCH_PIN
@@ -1351,7 +1351,7 @@
 //#define MY_SX126x_RF_SWITCH_IDLE LOW
 
 /**
- * @def MY_SX126X_RF_SWITCH_LPTX
+ * @def MY_SX126x_RF_SWITCH_LPTX
  * @brief TX State of additional RF switch pin
  *
  * @ref MY_SX126x_RF_SWITCH_PIN
@@ -1359,7 +1359,7 @@
 //#define MY_SX126x_RF_SWITCH_LPTX LOW
 
 /**
- * @def MY_SX126X_RF_SWITCH_HPTX
+ * @def MY_SX126x_RF_SWITCH_HPTX
  * @brief TX State of additional RF switch pin
  *
  * @ref MY_SX126x_RF_SWITCH_PIN
