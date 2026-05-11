@@ -1084,6 +1084,7 @@
  * The following chips are supported by this driver:
  * - Semtech sx1261
  * - Semtech sx1262
+ * - STM32WL series
  * @{
  */
 
@@ -1248,11 +1249,12 @@
 
 /**
  * @def MY_SX126x_VARIANT
- * @brief details if it's a sx1261 or sx1262
+ * @brief details if it's a sx1261, sx1262, or STM32WL
  *
  * - 1: sx1261
  * - 2: sx1262
- * If not set, sx1262 is selected
+ * - 3: STM32WL
+ * If not set, sx1261 is selected
  */
 #if !defined(MY_SX126x_VARIANT)
 #define MY_SX126x_VARIANT (1)
@@ -1307,6 +1309,70 @@
 #ifndef MY_SX126x_MIN_POWER_LEVEL_DBM
 #define MY_SX126x_MIN_POWER_LEVEL_DBM (-3)
 #endif
+
+/**
+ * @def MY_SX126x_ENABLE_ENCRYPTION
+ * @brief Define this to enable software based %AES encryption.
+ *
+ * All nodes and gateway must have this enabled, and all must be personalized with the same %AES
+ * key.
+ * @see @ref personalization
+ *
+ * @warning This driver always sets the initialization vector to 0 so encryption is weak.
+ */
+//#define MY_SX126x_ENABLE_ENCRYPTION
+
+/* Additional Configuration for STM32WL Processors */
+
+/**
+ * @def MY_SX126x_RF_ENABLE_PIN
+ * @brief Additional Pin to enable antenna circuit
+ *
+ * Some modules have an additional RF enable pin (E.G. NUCLEO-WL55JC FE_CTRL3) .
+ * Use this to define the enable pin.
+ */
+//#define MY_SX126x_RF_ENABLE_PIN (PC3)
+
+/**
+ * @def MY_SX126x_RF_SWITCH_PIN
+ * @brief Additional Pin to switch antenna circuit between RX and TX, and Idle mode
+ *
+ * Some modules have additional RF switch pins.  Use this to define and additional pin.
+ * Define behavior in different modes using MY_SX126x_RF_SWITCH_IDLE, TX, and RX
+ */
+//#define MY_SX126x_RF_SWITCH_PIN (PC4)
+
+/**
+ * @def MY_SX126x_RF_SWITCH_IDLE
+ * @brief Idle State of additional RF switch pin
+ *
+ * @ref MY_SX126x_RF_SWITCH_PIN
+ */
+//#define MY_SX126x_RF_SWITCH_IDLE LOW
+
+/**
+ * @def MY_SX126x_RF_SWITCH_LPTX
+ * @brief TX State of additional RF switch pin
+ *
+ * @ref MY_SX126x_RF_SWITCH_PIN
+ */
+//#define MY_SX126x_RF_SWITCH_LPTX LOW
+
+/**
+ * @def MY_SX126x_RF_SWITCH_HPTX
+ * @brief TX State of additional RF switch pin
+ *
+ * @ref MY_SX126x_RF_SWITCH_PIN
+ */
+//#define MY_SX126x_RF_SWITCH_HPTX HIGH
+
+/**
+ * @def MY_SX126x_RF_SWITCH_RX
+ * @brief RX State of additional RF switch pin
+ *
+ * @ref MY_SX126x_RF_SWITCH_PIN
+ */
+//#define MY_SX126x_RF_SWITCH_RX LOW
 
 /** @}*/ // End of SX126xSettingGrpPub group
 
@@ -2536,6 +2602,9 @@
 #ifndef MY_RFM95_ENABLE_ENCRYPTION
 #define MY_RFM95_ENABLE_ENCRYPTION
 #endif
+#ifndef MY_SX126x_ENABLE_ENCRYPTION
+#define MY_SX126x_ENABLE_ENCRYPTION
+#endif
 #endif
 
 /**
@@ -2544,7 +2613,7 @@
  * @brief Helper flag to indicate that some encryption feature is enabled, set automatically
  * @see MY_RF24_ENABLE_ENCRYPTION, MY_RFM69_ENABLE_ENCRYPTION, MY_NRF5_ESB_ENABLE_ENCRYPTION, MY_RFM95_ENABLE_ENCRYPTION
  */
-#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION)
+#if defined(MY_RF24_ENABLE_ENCRYPTION) || defined(MY_RFM69_ENABLE_ENCRYPTION) || defined(MY_NRF5_ESB_ENABLE_ENCRYPTION) || defined(MY_RFM95_ENABLE_ENCRYPTION) || defined(MY_SX126x_ENABLE_ENCRYPTION)
 #define MY_ENCRYPTION_FEATURE
 #endif
 /** @}*/ // End of EncryptionSettingGrpPub group

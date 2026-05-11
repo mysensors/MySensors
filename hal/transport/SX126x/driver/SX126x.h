@@ -80,10 +80,17 @@
 #define _SX126x_h
 
 #include <stdint.h>
+#if defined(SUBGHZSPI_BASE)
+#include <SubGhz.h>
+#endif
 
 // SX126x hardware defaults
+#if defined(SUBGHZSPI_BASE)
+#define SX126x_SPI SubGhz.SPI //!< STM32WL SPI
+#else
 #if !defined(SX126x_SPI)
 #define SX126x_SPI hwSPI //!< default SPI
+#endif
 #endif
 
 // default PIN assignments, can be overridden
@@ -102,7 +109,7 @@
 #define DEFAULT_SX126x_IRQ_PIN			(2)				//!< DEFAULT_SX126x_IRQ_PIN
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define DEFAULT_SX126x_IRQ_PIN			(22)			//!< DEFAULT_SX126x_IRQ_PIN
-#elif defined(ARDUINO_ARCH_STM32)
+#elif defined(ARDUINO_ARCH_STM32) && !defined(SUBGHZSPI_BASE)
 #define DEFAULT_SX126x_IRQ_PIN			(PA3)			//!< DEFAULT_SX126x_IRQ_PIN
 #elif defined(TEENSYDUINO)
 #define DEFAULT_SX126x_IRQ_PIN			(8)				//!< DEFAULT_SX126x_IRQ_PIN
@@ -110,8 +117,17 @@
 #define DEFAULT_SX126x_IRQ_PIN			(2)				//!< DEFAULT_SX126x_IRQ_PIN
 #endif
 
-#ifndef DEFAULT_SX126x_CS_PIN
+#if !defined(DEFAULT_SX126x_CS_PIN) && !defined(SUBGHZSPI_BASE)
 #define DEFAULT_SX126x_CS_PIN			(SS)			//!< DEFAULT_SX126x_CS_PIN
+#endif
+
+// cs Pin Handling
+#if defined(SUBGHZSPI_BASE)
+#define SET_SX126x_CS_LOW()   SubGhz.setNssActive(true)
+#define SET_SX126x_CS_HIGH()  SubGhz.setNssActive(false)
+#else
+#define SET_SX126x_CS_LOW()   hwDigitalWrite(MY_SX126x_CS_PIN, LOW)
+#define SET_SX126x_CS_HIGH()  hwDigitalWrite(MY_SX126x_CS_PIN, HIGH)
 #endif
 
 // Frequency helpers
@@ -128,7 +144,6 @@
 #define SX126x_BROADCAST_ADDRESS (255u)	 //!< Broadcasting address
 #define SX126x_ATC_TARGET_RANGE_DBM (2u) //!< ATC target range +/- dBm
 #define SX126x_RSSI_OFFSET (137u)		 //!< RSSI offset
-#define SX126x_TARGET_RSSI (-70)		 //!< RSSI target
 #define SX126x_PROMISCUOUS (false)		 //!< SX126x promiscuous mode
 
 #if (MY_SX126x_MAX_POWER_LEVEL_DBM) <= (MY_SX126x_MIN_POWER_LEVEL_DBM)
@@ -420,7 +435,7 @@ typedef struct {
 			uint8_t paDutyCycle;		//!< paDutyCycle
 			uint8_t hpMax;				//!< hpMax
 			uint8_t deviceSel;			//!< deviceSel
-			uint8_t paLut = 0x01;		//!< paLut
+			uint8_t paLut;				//!< paLut
 		} fields;						//!< fields
 		uint8_t values[4];				//!< values
 	};
@@ -576,6 +591,30 @@ typedef enum {
 } sx126x_irqMasks_t;
 
 /**
+ * @brief PA Capabilities
+ */
+#if (MY_SX126x_VARIANT == 1)
+static const bool hasLPA = true;  // LP only
+static const bool hasHPA = false;
+#endif // VARIANT == 1
+#if (MY_SX126x_VARIANT == 2)
+static const bool hasLPA = false;
+static const bool hasHPA = true; // HP only
+#endif // VARIANT == 2
+#if (MY_SX126x_VARIANT == 3)
+#if defined(MY_SX126x_RF_SWITCH_LPTX)
+static const bool hasLPA = true;
+#else
+static const bool hasLPA = false;
+#endif // LPTX defined
+#if defined(MY_SX126x_RF_SWITCH_HPTX)
+static const bool hasHPA = true; // HP only
+#else
+static const bool hasHPA = false;
+#endif // HPTX defined
+#endif // Variant == 3
+
+/**
  * @brief Sends a command to the SX126x
  * @param command SX126x command
  * @param buffer parameters
@@ -615,6 +654,16 @@ static void SX126x_sendRegisters(uint16_t address, uint8_t *buffer, uint16_t siz
 static void SX126x_sendRegister(uint16_t address, uint8_t value);
 
 /**
+ * @brief Provide power to the SX126x
+ **/
+void SX126x_powerUp();
+
+/**
+ * @brief Power down the SX126x
+ **/
+void SX126x_powerDown();
+
+/**
 * @brief Initialise the driver transport hardware and software
 * @return True if initialisation succeeded
 */
@@ -652,7 +701,7 @@ static void SX126x_handle();
 
 /**
  * @brief Sets TX power of the module
- * @param power the output power in dDm, -3..15 for sx1261, -3..22 for sx1262
+ * @param power the output power in dDm, -17..15 for sx1261, -9..22 for sx1262
  */
 static bool SX126x_txPower(sx126x_powerLevel_t power);
 
