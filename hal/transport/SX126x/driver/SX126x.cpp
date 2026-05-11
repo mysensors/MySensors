@@ -926,8 +926,8 @@ static uint8_t SX126x_getTxPowerPercent(void)
 static bool SX126x_setTxPowerPercent(const uint8_t newPowerPercent)
 {
 	const sx126x_powerLevel_t newPowerLevel = static_cast<sx126x_powerLevel_t>
-	    (MY_SX126x_MIN_POWER_LEVEL_DBM + (MY_SX126x_MAX_POWER_LEVEL_DBM
-	                                      - MY_SX126x_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));
+	        (MY_SX126x_MIN_POWER_LEVEL_DBM + (MY_SX126x_MAX_POWER_LEVEL_DBM
+	                - MY_SX126x_MIN_POWER_LEVEL_DBM) * (newPowerPercent / 100.0f));
 	SX126x_DEBUG(PSTR("SX126x:SPP:PCT=%u,TX LEVEL=%n\n"), newPowerPercent, newPowerLevel);
 	return SX126x_txPower(newPowerLevel);
 }
