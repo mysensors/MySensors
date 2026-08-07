@@ -95,10 +95,18 @@ AltSoftSerial _dev;
 #endif
 
 unsigned char _nodeId;
-char _data[MY_RS485_MAX_MESSAGE_LENGTH];
-uint8_t _packet_len;
-unsigned char _packet_from;
-bool _packet_received;
+// Keep complete frames separate from the parser state. transportSend() calls
+// _serialProcess() for collision detection, so a subsequent frame must not
+// overwrite one that is waiting for transportReceive(). One slot is reserved
+// to distinguish a full queue from an empty queue.
+struct Rs485Packet {
+	char data[MY_RS485_MAX_MESSAGE_LENGTH];
+	uint8_t len;
+};
+Rs485Packet _rxQueue[MY_RS485_RX_BUFFER_SIZE];
+uint8_t _rxHead;
+uint8_t _rxTail;
+char _rxData[MY_RS485_MAX_MESSAGE_LENGTH];
 
 // Packet wrapping characters, defined in standard ASCII table
 #define SOH 1
@@ -164,7 +172,7 @@ bool _serialProcess()
 				_recPhase = 1;
 				_recPos = 0;
 
-				//Avoid _data[] overflow
+				//Avoid parser buffer overflow
 				if (_recLen >= MY_RS485_MAX_MESSAGE_LENGTH) {
 					_serialReset();
 					break;
@@ -177,10 +185,10 @@ bool _serialProcess()
 			}
 			break;
 
-		// Case 1 receives the data portion of the packet.  Read in "_recLen" number
-		// of bytes and store them in the _data array.
+		// Case 1 receives the data portion of the packet. Read in "_recLen" number
+		// of bytes and store them in the parser buffer.
 		case 1:
-			_data[_recPos++] = inch;
+			_rxData[_recPos++] = inch;
 			_recCalcCS += inch;
 			if (_recPos == _recLen) {
 				_recPhase = 2;
@@ -217,11 +225,16 @@ bool _serialProcess()
 					// hook.
 
 					switch (_recCommand) {
-					case ICSC_SYS_PACK:
-						_packet_from = _recSender;
-						_packet_len = _recLen;
-						_packet_received = true;
-						break;
+					case ICSC_SYS_PACK: {
+						const uint8_t next = (_rxHead + 1) % MY_RS485_RX_BUFFER_SIZE;
+						// Keep queued frames in order; drop the newest frame when full.
+						if (next != _rxTail) {
+							memcpy(_rxQueue[_rxHead].data, _rxData, _recLen);
+							_rxQueue[_rxHead].len = _recLen;
+							_rxHead = next;
+						}
+					}
+					break;
 					}
 				}
 			}
@@ -318,6 +331,8 @@ bool transportInit(void)
 	// Reset the state machine
 	_dev.begin(MY_RS485_BAUD_RATE);
 	_serialReset();
+	_rxHead = 0;
+	_rxTail = 0;
 	_nodeId = AUTO;
 #if defined(MY_RS485_DE_PIN)
 	hwPinMode(MY_RS485_DE_PIN, OUTPUT);
@@ -340,7 +355,7 @@ uint8_t transportGetAddress(void)
 bool transportDataAvailable(void)
 {
 	_serialProcess();
-	return _packet_received;
+	return _rxHead != _rxTail;
 }
 
 bool transportSanityCheck(void)
@@ -351,13 +366,13 @@ bool transportSanityCheck(void)
 
 uint8_t transportReceive(void* data)
 {
-	if (_packet_received) {
-		memcpy(data,_data,_packet_len);
-		_packet_received = false;
-		return _packet_len;
-	} else {
-		return (0);
+	if (_rxHead == _rxTail) {
+		return 0;
 	}
+	const uint8_t len = _rxQueue[_rxTail].len;
+	memcpy(data, _rxQueue[_rxTail].data, len);
+	_rxTail = (_rxTail + 1) % MY_RS485_RX_BUFFER_SIZE;
+	return len;
 }
 
 void transportPowerDown(void)
