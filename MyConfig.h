@@ -300,6 +300,21 @@
 #endif
 
 /**
+ * @def MY_RS485_RX_BUFFER_SIZE
+ * @brief Number of complete RS485 frames retained between parser and transport.
+ *
+ * One slot is reserved to distinguish a full queue from an empty queue, so
+ * the usable capacity is one less than this value. Increase this on systems
+ * that receive bursts of frames, keeping the available RAM in mind.
+ */
+#ifndef MY_RS485_RX_BUFFER_SIZE
+#define MY_RS485_RX_BUFFER_SIZE (4)
+#endif
+#if MY_RS485_RX_BUFFER_SIZE < 2 || MY_RS485_RX_BUFFER_SIZE > 255
+#error MY_RS485_RX_BUFFER_SIZE must be between 2 and 255
+#endif
+
+/**
  * @def MY_RS485_SOH_COUNT
  * @brief Use this in case of collisions on the bus. 3 might be a good setting.
  */
